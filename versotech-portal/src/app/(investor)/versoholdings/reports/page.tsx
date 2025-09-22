@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { AskRequestForm } from '@/components/forms/ask-request-form'
 import { 
   FileText,
   TrendingUp,
@@ -276,6 +277,9 @@ export default function ReportsPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Ask for Request Form - Fallback for custom needs */}
+        <AskRequestForm />
       </div>
     </AppLayout>
   )

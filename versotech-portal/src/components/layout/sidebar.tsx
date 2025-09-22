@@ -22,7 +22,8 @@ import {
   Database,
   ChevronLeft,
   ChevronRight,
-  LogOut
+  LogOut,
+  Handshake
 } from 'lucide-react'
 
 interface SidebarItem {
@@ -51,10 +52,17 @@ const investorNavItems: SidebarItem[] = [
     description: 'Portfolio overview and KPIs'
   },
   {
-    name: 'Holdings',
+    name: 'Active Deals',
+    href: '/versoholdings/deals',
+    icon: Handshake,
+    badge: 3,
+    description: 'Investment opportunities and participation'
+  },
+  {
+    name: 'My Holdings',
     href: '/versoholdings/holdings',
     icon: Building2,
-    description: 'Investment vehicles and positions'
+    description: 'Current positions and vehicles'
   },
   {
     name: 'Documents',
@@ -66,14 +74,14 @@ const investorNavItems: SidebarItem[] = [
     name: 'Tasks',
     href: '/versoholdings/tasks',
     icon: CheckSquare,
-    badge: 3,
+    badge: 2,
     description: 'Onboarding and compliance tasks'
   },
   {
     name: 'Messages',
     href: '/versoholdings/messages',
     icon: MessageSquare,
-    badge: 2,
+    badge: 1,
     description: 'Communication with VERSO team'
   },
   {
@@ -92,6 +100,20 @@ const staffNavItems: SidebarItem[] = [
     description: 'Operations overview and metrics'
   },
   {
+    name: 'Deals',
+    href: '/versotech/staff/deals',
+    icon: Handshake,
+    badge: 5,
+    description: 'Manage investment opportunities'
+  },
+  {
+    name: 'Approvals',
+    href: '/versotech/staff/approvals',
+    icon: CheckSquare,
+    badge: 12,
+    description: 'Review pending commitments'
+  },
+  {
     name: 'Investors',
     href: '/versotech/staff/investors',
     icon: Users,
@@ -107,7 +129,7 @@ const staffNavItems: SidebarItem[] = [
     name: 'Requests',
     href: '/versotech/staff/requests',
     icon: ClipboardList,
-    badge: 8,
+    badge: 3,
     description: 'Handle investor requests'
   },
   {
