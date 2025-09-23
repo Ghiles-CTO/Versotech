@@ -1,25 +1,183 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
-import { auditLogger, AuditActions } from '@/lib/audit'
-import { NextResponse } from 'next/server'
+import { auditLogger, AuditActions, AuditEntities } from '@/lib/audit'
+import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 
 // Validation schema for creating approvals
 const createApprovalSchema = z.object({
   entity_type: z.string().min(1, 'Entity type is required'),
-  entity_id: z.string().uuid('Valid entity ID is required'),
+  entity_id: z.string().uuid('Invalid entity ID'),
   action: z.enum(['approve', 'reject', 'revise']),
-  assigned_to: z.string().uuid('Valid assignee ID is required'),
+  notes: z.string().optional(),
   priority: z.enum(['low', 'normal', 'high']).default('normal'),
-  notes: z.string().optional()
+  assigned_to: z.string().uuid('Invalid assignee ID').optional()
 })
 
 const updateApprovalSchema = z.object({
   action: z.enum(['approve', 'reject', 'revise']).optional(),
   status: z.enum(['pending', 'approved', 'rejected']).optional(),
-  notes: z.string().optional()
+  notes: z.string().optional(),
+  assigned_to: z.string().uuid().optional()
 })
 
-export async function GET(request: Request) {
+export async function POST(request: NextRequest) {
+  try {
+    const supabase = await createClient()
+    const serviceSupabase = createServiceClient()
+    
+    // Get the authenticated user
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+
+    // Check if user is staff (only staff can create approvals)
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role, display_name')
+      .eq('id', user.id)
+      .single()
+
+    if (!profile || !['staff_admin', 'staff_ops', 'staff_rm'].includes(profile.role)) {
+      return NextResponse.json(
+        { error: 'Staff access required to create approvals' },
+        { status: 403 }
+      )
+    }
+
+    // Parse request body
+    const body = await request.json()
+    const validation = createApprovalSchema.safeParse(body)
+    
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: 'Invalid request data', details: validation.error.errors },
+        { status: 400 }
+      )
+    }
+
+    const { entity_type, entity_id, action, notes, priority, assigned_to } = validation.data
+
+    // Verify the entity exists (basic check)
+    let entityExists = false
+    let entityName = ''
+    
+    switch (entity_type) {
+      case 'deal_commitment':
+        const { data: commitment } = await supabase
+          .from('deal_commitments')
+          .select('id, investors(legal_name)')
+          .eq('id', entity_id)
+          .single()
+        entityExists = !!commitment
+        entityName = commitment?.investors?.legal_name || 'Unknown'
+        break
+        
+      case 'allocation':
+        const { data: allocation } = await supabase
+          .from('allocations')
+          .select('id, investors(legal_name)')
+          .eq('id', entity_id)
+          .single()
+        entityExists = !!allocation
+        entityName = allocation?.investors?.legal_name || 'Unknown'
+        break
+        
+      case 'document':
+        const { data: document } = await supabase
+          .from('documents')
+          .select('id, type')
+          .eq('id', entity_id)
+          .single()
+        entityExists = !!document
+        entityName = document?.type || 'Unknown'
+        break
+        
+      default:
+        return NextResponse.json(
+          { error: `Unsupported entity type: ${entity_type}` },
+          { status: 400 }
+        )
+    }
+
+    if (!entityExists) {
+      return NextResponse.json(
+        { error: `${entity_type} not found` },
+        { status: 404 }
+      )
+    }
+
+    // Create approval record
+    const { data: approval, error: approvalError } = await serviceSupabase
+      .from('approvals')
+      .insert({
+        entity_type,
+        entity_id,
+        action,
+        notes,
+        priority,
+        assigned_to,
+        requested_by: user.id,
+        status: 'pending'
+      })
+      .select(`
+        *,
+        requested_by_profile:requested_by (
+          display_name
+        ),
+        assigned_to_profile:assigned_to (
+          display_name
+        )
+      `)
+      .single()
+
+    if (approvalError) {
+      console.error('Approval creation error:', approvalError)
+      return NextResponse.json(
+        { error: 'Failed to create approval' },
+        { status: 500 }
+      )
+    }
+
+    // Log the approval creation
+    await auditLogger.log({
+      actor_user_id: user.id,
+      action: AuditActions.CREATE,
+      entity: 'approvals',
+      entity_id: approval.id,
+      metadata: {
+        entity_type,
+        target_entity_id: entity_id,
+        action,
+        priority,
+        assigned_to,
+        requested_by: profile.display_name,
+        entity_name: entityName
+      }
+    })
+
+    return NextResponse.json({
+      success: true,
+      approval_id: approval.id,
+      approval,
+      message: `Approval request created for ${entity_type}: ${entityName}`
+    })
+
+  } catch (error) {
+    console.error('Approval creation API error:', error)
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
+
+// GET endpoint to view approvals
+export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient()
     const { searchParams } = new URL(request.url)
@@ -34,16 +192,16 @@ export async function GET(request: Request) {
       )
     }
 
-    // Check if user is staff
+    // Check if user is staff (only staff can view approvals)
     const { data: profile } = await supabase
       .from('profiles')
       .select('role')
       .eq('id', user.id)
       .single()
 
-    if (!profile || !profile.role.startsWith('staff_')) {
+    if (!profile || !['staff_admin', 'staff_ops', 'staff_rm'].includes(profile.role)) {
       return NextResponse.json(
-        { error: 'Staff access required' },
+        { error: 'Staff access required to view approvals' },
         { status: 403 }
       )
     }
@@ -51,9 +209,10 @@ export async function GET(request: Request) {
     // Parse query parameters
     const status = searchParams.get('status') || 'pending'
     const entityType = searchParams.get('entity_type')
-    const assignedToMe = searchParams.get('assigned_to_me') === 'true'
-    const limit = parseInt(searchParams.get('limit') || '50')
+    const assignedTo = searchParams.get('assigned_to')
+    const priority = searchParams.get('priority')
 
+    // Build query
     let query = supabase
       .from('approvals')
       .select(`
@@ -72,62 +231,34 @@ export async function GET(request: Request) {
         )
       `)
       .eq('status', status)
-      .order('created_at', { ascending: false })
-      .limit(limit)
 
     if (entityType) {
       query = query.eq('entity_type', entityType)
     }
-
-    if (assignedToMe) {
-      query = query.eq('assigned_to', user.id)
+    if (assignedTo) {
+      query = query.eq('assigned_to', assignedTo)
+    }
+    if (priority) {
+      query = query.eq('priority', priority)
     }
 
     const { data: approvals, error } = await query
+      .order('created_at', { ascending: false })
 
     if (error) {
-      console.error('Approvals fetch error:', error)
+      console.error('Error fetching approvals:', error)
       return NextResponse.json(
         { error: 'Failed to fetch approvals' },
         { status: 500 }
       )
     }
 
-    // Get counts by status for dashboard
-    const { data: statusCounts } = await supabase
-      .from('approvals')
-      .select('status')
-      .eq('assigned_to', user.id)
-
-    const counts = {
-      pending: statusCounts?.filter(a => a.status === 'pending').length || 0,
-      approved: statusCounts?.filter(a => a.status === 'approved').length || 0,
-      rejected: statusCounts?.filter(a => a.status === 'rejected').length || 0
-    }
-
-    // Log access
-    await auditLogger.log({
-      actor_user_id: user.id,
-      action: AuditActions.READ,
-      entity: 'approvals',
-      entity_id: user.id,
-      metadata: {
-        endpoint: '/api/approvals',
-        status_filter: status,
-        entity_type_filter: entityType,
-        assigned_to_me: assignedToMe,
-        approval_count: approvals?.length || 0
-      }
-    })
-
     return NextResponse.json({
-      approvals: approvals || [],
-      counts,
-      hasData: (approvals && approvals.length > 0)
+      approvals: approvals || []
     })
 
   } catch (error) {
-    console.error('API /approvals GET error:', error)
+    console.error('Approvals GET API error:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -135,13 +266,14 @@ export async function GET(request: Request) {
   }
 }
 
-export async function POST(request: Request) {
+// PATCH endpoint to update approval status
+export async function PATCH(request: NextRequest) {
   try {
-    const supabase = await createServiceClient()
+    const supabase = await createClient()
+    const serviceSupabase = createServiceClient()
     
-    // Get the authenticated user from regular client
-    const regularSupabase = await createClient()
-    const { data: { user }, error: authError } = await regularSupabase.auth.getUser()
+    // Get the authenticated user
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
     
     if (authError || !user) {
       return NextResponse.json(
@@ -153,97 +285,98 @@ export async function POST(request: Request) {
     // Check if user is staff
     const { data: profile } = await supabase
       .from('profiles')
-      .select('role')
+      .select('role, display_name')
       .eq('id', user.id)
       .single()
 
-    if (!profile || !profile.role.startsWith('staff_')) {
+    if (!profile || !['staff_admin', 'staff_ops', 'staff_rm'].includes(profile.role)) {
       return NextResponse.json(
-        { error: 'Staff access required' },
+        { error: 'Staff access required to update approvals' },
         { status: 403 }
       )
     }
 
-    // Parse and validate request body
+    // Parse request body
     const body = await request.json()
-    const validatedData = createApprovalSchema.parse(body)
-
-    // Verify the assigned user exists and is staff
-    const { data: assignee } = await supabase
-      .from('profiles')
-      .select('id, role, display_name')
-      .eq('id', validatedData.assigned_to)
-      .single()
-
-    if (!assignee || !assignee.role.startsWith('staff_')) {
+    const { approval_id, ...updateData } = body
+    
+    const validation = updateApprovalSchema.safeParse(updateData)
+    
+    if (!validation.success) {
       return NextResponse.json(
-        { error: 'Invalid assignee - must be a staff member' },
+        { error: 'Invalid request data', details: validation.error.errors },
         { status: 400 }
       )
     }
 
-    // Create the approval request
-    const { data: approval, error } = await supabase
+    if (!approval_id) {
+      return NextResponse.json(
+        { error: 'Approval ID is required' },
+        { status: 400 }
+      )
+    }
+
+    // Prepare update data
+    const updates: any = validation.data
+    
+    // If status is being set to approved/rejected, set decided_by and decided_at
+    if (updates.status && ['approved', 'rejected'].includes(updates.status)) {
+      updates.decided_by = user.id
+      updates.decided_at = new Date().toISOString()
+    }
+
+    // Update the approval
+    const { data: approval, error: updateError } = await serviceSupabase
       .from('approvals')
-      .insert({
-        entity_type: validatedData.entity_type,
-        entity_id: validatedData.entity_id,
-        action: validatedData.action,
-        requested_by: user.id,
-        assigned_to: validatedData.assigned_to,
-        priority: validatedData.priority,
-        notes: validatedData.notes,
-        status: 'pending'
-      })
+      .update(updates)
+      .eq('id', approval_id)
       .select(`
         *,
         requested_by_profile:requested_by (
-          display_name,
-          email
+          display_name
         ),
         assigned_to_profile:assigned_to (
-          display_name,
-          email
+          display_name
+        ),
+        decided_by_profile:decided_by (
+          display_name
         )
       `)
       .single()
 
-    if (error) {
-      console.error('Approval creation error:', error)
+    if (updateError) {
+      console.error('Approval update error:', updateError)
       return NextResponse.json(
-        { error: 'Failed to create approval request' },
+        { error: 'Failed to update approval' },
         { status: 500 }
       )
     }
 
-    // Log creation
+    // Log the approval decision
     await auditLogger.log({
       actor_user_id: user.id,
-      action: AuditActions.CREATE,
+      action: AuditActions.UPDATE,
       entity: 'approvals',
-      entity_id: approval.id,
+      entity_id: approval_id,
       metadata: {
-        endpoint: '/api/approvals',
-        entity_type: validatedData.entity_type,
-        entity_id: validatedData.entity_id,
-        action: validatedData.action,
-        assigned_to: validatedData.assigned_to,
-        assignee_name: assignee.display_name,
-        priority: validatedData.priority
+        entity_type: approval.entity_type,
+        target_entity_id: approval.entity_id,
+        old_status: 'pending', // Could track this better
+        new_status: approval.status,
+        action: approval.action,
+        decided_by: profile.display_name,
+        notes: approval.notes
       }
     })
 
-    return NextResponse.json(approval, { status: 201 })
+    return NextResponse.json({
+      success: true,
+      approval,
+      message: `Approval ${approval.status} for ${approval.entity_type}`
+    })
 
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Invalid input', details: error.errors },
-        { status: 400 }
-      )
-    }
-
-    console.error('API /approvals POST error:', error)
+    console.error('Approval update API error:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

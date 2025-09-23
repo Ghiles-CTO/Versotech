@@ -132,6 +132,13 @@ export const AuditEntities = {
   MESSAGES: 'messages',
   REQUEST_TICKETS: 'request_tickets',
   CAPITAL_CALLS: 'capital_calls',
-  DISTRIBUTIONS: 'distributions'
+  DISTRIBUTIONS: 'distributions',
+  DEALS: 'deals',
+  RESERVATIONS: 'reservations',
+  ALLOCATIONS: 'allocations',
+  FEE_EVENTS: 'fee_events',
+  INVOICES: 'invoices',
+  BANK_TRANSACTIONS: 'bank_transactions',
+  PAYMENTS: 'payments'
 } as const
 

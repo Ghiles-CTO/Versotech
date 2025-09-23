@@ -22,8 +22,7 @@ import {
   Database,
   ChevronLeft,
   ChevronRight,
-  LogOut,
-  Handshake
+  LogOut
 } from 'lucide-react'
 
 interface SidebarItem {
@@ -54,15 +53,15 @@ const investorNavItems: SidebarItem[] = [
   {
     name: 'Active Deals',
     href: '/versoholdings/deals',
-    icon: Handshake,
-    badge: 3,
+    icon: TrendingUp,
+    badge: 2,
     description: 'Investment opportunities and participation'
   },
   {
-    name: 'My Holdings',
+    name: 'Holdings',
     href: '/versoholdings/holdings',
     icon: Building2,
-    description: 'Current positions and vehicles'
+    description: 'Investment vehicles and positions'
   },
   {
     name: 'Documents',
@@ -74,14 +73,14 @@ const investorNavItems: SidebarItem[] = [
     name: 'Tasks',
     href: '/versoholdings/tasks',
     icon: CheckSquare,
-    badge: 2,
+    badge: 3,
     description: 'Onboarding and compliance tasks'
   },
   {
     name: 'Messages',
     href: '/versoholdings/messages',
     icon: MessageSquare,
-    badge: 1,
+    badge: 2,
     description: 'Communication with VERSO team'
   },
   {
@@ -100,18 +99,17 @@ const staffNavItems: SidebarItem[] = [
     description: 'Operations overview and metrics'
   },
   {
-    name: 'Deals',
-    href: '/versotech/staff/deals',
-    icon: Handshake,
-    badge: 5,
-    description: 'Manage investment opportunities'
-  },
-  {
     name: 'Approvals',
     href: '/versotech/staff/approvals',
     icon: CheckSquare,
-    badge: 12,
-    description: 'Review pending commitments'
+    badge: 5,
+    description: 'Review and approve commitments'
+  },
+  {
+    name: 'Deals',
+    href: '/versotech/staff/deals',
+    icon: Building2,
+    description: 'Manage deal inventory and allocations'
   },
   {
     name: 'Investors',
@@ -129,7 +127,7 @@ const staffNavItems: SidebarItem[] = [
     name: 'Requests',
     href: '/versotech/staff/requests',
     icon: ClipboardList,
-    badge: 3,
+    badge: 8,
     description: 'Handle investor requests'
   },
   {

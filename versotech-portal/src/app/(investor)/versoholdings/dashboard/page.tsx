@@ -21,6 +21,8 @@ import {
 } from 'lucide-react'
 
 import { createClient } from '@/lib/supabase/server'
+import { getUserById } from '@/lib/simple-auth'
+import { cookies } from 'next/headers'
 import { measureTimeAsync } from '@/lib/performance'
 
 async function getPortfolioData() {
@@ -28,10 +30,10 @@ async function getPortfolioData() {
     try {
       const supabase = await createClient()
 
-      // Get the authenticated user
-      const { data: { user }, error: authError } = await supabase.auth.getUser()
-
-      if (authError || !user) {
+      // Get current user - auth already handled by AppLayout
+      const cookieStore = await cookies()
+      const sessionCookie = cookieStore.get('demo_session')
+      if (!sessionCookie) {
         return {
           kpis: {
             currentNAV: 0,
@@ -46,11 +48,30 @@ async function getPortfolioData() {
         }
       }
 
+      const session = JSON.parse(sessionCookie.value)
+      const user = getUserById(session.id)
+      if (!user) {
+        return {
+          kpis: {
+            currentNAV: 0,
+            totalContributed: 0,
+            totalDistributions: 0,
+            unfundedCommitment: 0,
+            unrealizedGain: 0,
+            unrealizedGainPct: 0
+          },
+          hasData: false,
+          vehicles: []
+        }
+      }
+
+      const supabaseUser = { id: user.id, email: user.email }
+
       // Get investor entities linked to this user
       const { data: investorLinks } = await supabase
         .from('investor_users')
         .select('investor_id')
-        .eq('user_id', user.id)
+        .eq('user_id', supabaseUser.id)
 
       if (!investorLinks || investorLinks.length === 0) {
         return {
@@ -276,60 +297,6 @@ export default async function InvestorDashboard() {
               </CardContent>
             </Card>
 
-            {/* Active Investment Opportunities - PRIMARY CTA */}
-            <Card className="lg:col-span-2 border-2 border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-xl">
-                  <Target className="h-6 w-6 text-blue-600" />
-                  Active Investment Opportunities
-                </CardTitle>
-                <CardDescription className="text-base">
-                  Exclusive deals available for immediate participation
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Example active deals - this should be dynamic */}
-                  <div className="p-4 bg-white rounded-lg border shadow-sm">
-                    <h4 className="font-semibold text-gray-900 mb-2">Revolut Secondary – 2025</h4>
-                    <div className="space-y-1 text-sm text-gray-600">
-                      <div>Units Available: <span className="font-medium text-green-600">2,847</span></div>
-                      <div>Price: <span className="font-medium">USD 45.60/unit</span></div>
-                      <div>Your Status: <span className="font-medium text-blue-600">Invited</span></div>
-                    </div>
-                    <Button size="sm" className="w-full mt-3">
-                      Participate Now
-                    </Button>
-                  </div>
-                  
-                  <div className="p-4 bg-white rounded-lg border shadow-sm">
-                    <h4 className="font-semibold text-gray-900 mb-2">REAL Empire Compartment IV</h4>
-                    <div className="space-y-1 text-sm text-gray-600">
-                      <div>Units Available: <span className="font-medium text-green-600">1,250</span></div>
-                      <div>Price: <span className="font-medium">EUR 120.00/unit</span></div>
-                      <div>Your Status: <span className="font-medium text-yellow-600">Reserved</span></div>
-                    </div>
-                    <Button size="sm" className="w-full mt-3" variant="outline">
-                      Finalize Commitment
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="flex gap-3 pt-2">
-                  <Link href="/versoholdings/deals" className="flex-1">
-                    <Button className="w-full" size="lg">
-                      <ArrowUpRight className="mr-2 h-5 w-5" />
-                      View All Deals
-                    </Button>
-                  </Link>
-                  <Button variant="outline" size="lg">
-                    <FileText className="mr-2 h-5 w-5" />
-                    Deal Guide
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
             {/* Quick Actions & Services */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
@@ -338,13 +305,17 @@ export default async function InvestorDashboard() {
                 <CardHeader>
                   <CardTitle>VERSO Services</CardTitle>
                   <CardDescription>
-                    Portfolio management and reporting
+                    Access to deal flow and transactional services
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <Button className="w-full justify-start" variant="outline">
                     <Building2 className="mr-2 h-4 w-4" />
                     Concluder™ Deal Room
+                  </Button>
+                  <Button className="w-full justify-start" variant="outline">
+                    <Target className="mr-2 h-4 w-4" />
+                    Off-Market Opportunities
                   </Button>
                   <Button className="w-full justify-start" variant="outline">
                     <FileText className="mr-2 h-4 w-4" />

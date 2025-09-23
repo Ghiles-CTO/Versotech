@@ -402,3 +402,4 @@ USING (
     WHERE dm.deal_id = request_tickets.deal_id AND dm.user_id = auth.uid()
   )
 );
+

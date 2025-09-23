@@ -1,29 +1,30 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
-import { auditLogger, AuditActions } from '@/lib/audit'
-import { NextResponse } from 'next/server'
+import { auditLogger, AuditActions, AuditEntities } from '@/lib/audit'
+import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 
-// Validation schema for creating commitments
+// Validation schema for creating deal commitments
 const createCommitmentSchema = z.object({
-  investor_id: z.string().uuid('Valid investor ID is required'),
-  requested_units: z.number().positive().optional(),
-  requested_amount: z.number().positive().optional(),
-  selected_fee_plan_id: z.string().uuid('Valid fee plan ID is required')
+  investor_id: z.string().uuid('Invalid investor ID'),
+  requested_units: z.number().positive('Requested units must be positive').optional(),
+  requested_amount: z.number().positive('Requested amount must be positive').optional(),
+  selected_fee_plan_id: z.string().uuid('Invalid fee plan ID').optional()
 }).refine(
-  (data) => data.requested_units || data.requested_amount,
-  'Either requested_units or requested_amount must be provided'
+  data => data.requested_units || data.requested_amount,
+  { message: "Either requested_units or requested_amount must be provided" }
 )
 
 export async function POST(
-  request: Request,
+  request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const supabase = await createServiceClient()
+    const dealId = params.id
+    const supabase = await createClient()
+    const serviceSupabase = createServiceClient()
     
-    // Get the authenticated user from regular client
-    const regularSupabase = await createClient()
-    const { data: { user }, error: authError } = await regularSupabase.auth.getUser()
+    // Get the authenticated user
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
     
     if (authError || !user) {
       return NextResponse.json(
@@ -32,44 +33,44 @@ export async function POST(
       )
     }
 
-    const dealId = params.id
-
-    // Parse and validate request body
+    // Parse request body
     const body = await request.json()
-    const validatedData = createCommitmentSchema.parse(body)
-
-    // Check if user is authorized to create commitments for this investor
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
-
-    if (!profile) {
+    const validation = createCommitmentSchema.safeParse(body)
+    
+    if (!validation.success) {
       return NextResponse.json(
-        { error: 'Profile not found' },
-        { status: 404 }
+        { error: 'Invalid request data', details: validation.error.errors },
+        { status: 400 }
       )
     }
 
-    // If not staff, check if user is linked to the investor
-    if (!profile.role.startsWith('staff_')) {
-      const { data: investorLink } = await supabase
-        .from('investor_users')
-        .select('investor_id')
-        .eq('user_id', user.id)
-        .eq('investor_id', validatedData.investor_id)
-        .single()
+    const { investor_id, requested_units, requested_amount, selected_fee_plan_id } = validation.data
 
-      if (!investorLink) {
-        return NextResponse.json(
-          { error: 'Not authorized to create commitments for this investor' },
-          { status: 403 }
-        )
-      }
+    // Verify user has permission to create commitments for this investor
+    const { data: investorLink } = await supabase
+      .from('investor_users')
+      .select('investor_id')
+      .eq('investor_id', investor_id)
+      .eq('user_id', user.id)
+      .single()
+
+    // Also check if user is staff
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role, display_name')
+      .eq('id', user.id)
+      .single()
+
+    const isStaff = profile?.role && ['staff_admin', 'staff_ops', 'staff_rm'].includes(profile.role)
+    
+    if (!investorLink && !isStaff) {
+      return NextResponse.json(
+        { error: 'Not authorized to create commitments for this investor' },
+        { status: 403 }
+      )
     }
 
-    // Verify deal and fee plan exist
+    // Verify deal exists and is open
     const { data: deal } = await supabase
       .from('deals')
       .select('id, name, status, offer_unit_price')
@@ -83,50 +84,42 @@ export async function POST(
       )
     }
 
-    const { data: feePlan } = await supabase
-      .from('fee_plans')
-      .select('id, name, deal_id')
-      .eq('id', validatedData.selected_fee_plan_id)
-      .eq('deal_id', dealId)
-      .single()
-
-    if (!feePlan) {
+    if (!['open', 'allocation_pending'].includes(deal.status)) {
       return NextResponse.json(
-        { error: 'Fee plan not found for this deal' },
+        { error: `Deal is not open for commitments. Current status: ${deal.status}` },
         { status: 400 }
       )
     }
 
-    // Calculate missing values
-    let finalRequestedUnits = validatedData.requested_units
-    let finalRequestedAmount = validatedData.requested_amount
-
-    if (!finalRequestedUnits && finalRequestedAmount && deal.offer_unit_price) {
-      finalRequestedUnits = finalRequestedAmount / deal.offer_unit_price
-    }
-
-    if (!finalRequestedAmount && finalRequestedUnits && deal.offer_unit_price) {
-      finalRequestedAmount = finalRequestedUnits * deal.offer_unit_price
+    // Get or create default fee plan if none specified
+    let finalFeeplanId = selected_fee_plan_id
+    
+    if (!finalFeeplanId) {
+      const { data: defaultFeePlan } = await supabase
+        .from('fee_plans')
+        .select('id')
+        .eq('deal_id', dealId)
+        .eq('is_default', true)
+        .single()
+      
+      finalFeeplanId = defaultFeePlan?.id
     }
 
     // Create the commitment
-    const { data: commitment, error } = await supabase
+    const { data: commitment, error: commitmentError } = await serviceSupabase
       .from('deal_commitments')
       .insert({
         deal_id: dealId,
-        investor_id: validatedData.investor_id,
-        requested_units: finalRequestedUnits,
-        requested_amount: finalRequestedAmount,
-        selected_fee_plan_id: validatedData.selected_fee_plan_id,
+        investor_id,
+        requested_units,
+        requested_amount,
+        selected_fee_plan_id: finalFeeplanId,
         status: 'submitted',
         created_by: user.id
       })
       .select(`
         *,
-        deals:deal_id (
-          name
-        ),
-        investors:investor_id (
+        investors (
           legal_name
         ),
         fee_plans:selected_fee_plan_id (
@@ -136,91 +129,79 @@ export async function POST(
       `)
       .single()
 
-    if (error) {
-      console.error('Commitment creation error:', error)
+    if (commitmentError) {
+      console.error('Commitment creation error:', commitmentError)
       return NextResponse.json(
         { error: 'Failed to create commitment' },
         { status: 500 }
       )
     }
 
-    // Create or update investor terms
-    await supabase
-      .from('investor_terms')
-      .upsert({
-        deal_id: dealId,
-        investor_id: validatedData.investor_id,
-        selected_fee_plan_id: validatedData.selected_fee_plan_id,
-        status: 'active'
-      }, {
-        onConflict: 'deal_id,investor_id',
-        ignoreDuplicates: false
-      })
-
-    // Generate term sheet (this would typically trigger an n8n workflow)
+    // TODO: Trigger n8n workflow to generate term sheet
+    // This would call an n8n webhook to generate a personalized term sheet PDF
     // For now, we'll create a placeholder term sheet record
-    const { data: termSheet } = await supabase
-      .from('term_sheets')
-      .insert({
-        deal_id: dealId,
-        investor_id: validatedData.investor_id,
-        fee_plan_id: validatedData.selected_fee_plan_id,
-        price_per_unit: deal.offer_unit_price,
-        currency: 'USD',
-        valid_until: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
-        status: 'draft',
-        terms_data: {
-          commitment_amount: finalRequestedAmount,
-          commitment_units: finalRequestedUnits,
-          offer_price: deal.offer_unit_price,
-          fee_plan: feePlan.name,
-          generated_at: new Date().toISOString()
-        },
-        created_by: user.id
-      })
-      .select()
-      .single()
 
-    // Update commitment with term sheet reference
-    if (termSheet) {
-      await supabase
-        .from('deal_commitments')
-        .update({ term_sheet_id: termSheet.id })
-        .eq('id', commitment.id)
+    let termSheetId = null
+    if (finalFeeplanId) {
+      const { data: termSheet, error: termSheetError } = await serviceSupabase
+        .from('term_sheets')
+        .insert({
+          deal_id: dealId,
+          investor_id,
+          fee_plan_id: finalFeeplanId,
+          price_per_unit: deal.offer_unit_price,
+          currency: 'USD',
+          valid_until: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
+          status: 'draft',
+          version: 1,
+          terms_data: {
+            requested_units,
+            requested_amount,
+            commitment_date: new Date().toISOString()
+          },
+          created_by: user.id
+        })
+        .select('id')
+        .single()
+
+      if (!termSheetError) {
+        termSheetId = termSheet.id
+        
+        // Update commitment with term sheet reference
+        await serviceSupabase
+          .from('deal_commitments')
+          .update({ term_sheet_id: termSheetId })
+          .eq('id', commitment.id)
+      }
     }
 
-    // Log commitment creation
+    // Log the commitment creation
     await auditLogger.log({
       actor_user_id: user.id,
       action: AuditActions.CREATE,
-      entity: 'deal_commitments',
+      entity: AuditEntities.DEALS,
       entity_id: commitment.id,
       metadata: {
-        endpoint: `/api/deals/${dealId}/commitments`,
-        deal_name: deal.name,
-        investor_id: validatedData.investor_id,
-        requested_units: finalRequestedUnits,
-        requested_amount: finalRequestedAmount,
-        fee_plan_name: feePlan.name,
-        term_sheet_id: termSheet?.id
+        deal_id: dealId,
+        investor_id,
+        requested_units: requested_units?.toString(),
+        requested_amount: requested_amount?.toString(),
+        fee_plan_id: finalFeeplanId,
+        term_sheet_id: termSheetId,
+        created_by: profile?.display_name
       }
     })
 
     return NextResponse.json({
+      success: true,
+      commitment_id: commitment.id,
+      term_sheet_id: termSheetId,
       commitment,
-      termSheet,
-      message: 'Commitment created successfully. Term sheet will be generated shortly.'
-    }, { status: 201 })
+      message: `Successfully created commitment for ${commitment.investors?.legal_name}`
+    })
 
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Invalid input', details: error.errors },
-        { status: 400 }
-      )
-    }
-
-    console.error('API /deals/[id]/commitments POST error:', error)
+    console.error('Commitment creation API error:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -228,11 +209,13 @@ export async function POST(
   }
 }
 
+// GET endpoint to view commitments for a deal
 export async function GET(
-  request: Request,
+  request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
+    const dealId = params.id
     const supabase = await createClient()
     
     // Get the authenticated user
@@ -245,16 +228,14 @@ export async function GET(
       )
     }
 
-    const dealId = params.id
-    const { searchParams } = new URL(request.url)
-    const status = searchParams.get('status')
-
-    let query = supabase
+    // Get commitments for this deal (RLS will filter appropriately)
+    const { data: commitments, error } = await supabase
       .from('deal_commitments')
       .select(`
         *,
-        investors:investor_id (
-          legal_name
+        investors (
+          legal_name,
+          country
         ),
         fee_plans:selected_fee_plan_id (
           name,
@@ -263,47 +244,44 @@ export async function GET(
         term_sheets:term_sheet_id (
           id,
           status,
-          valid_until,
-          doc_id
+          version,
+          valid_until
+        ),
+        created_by_profile:created_by (
+          display_name
         )
       `)
       .eq('deal_id', dealId)
       .order('created_at', { ascending: false })
 
-    if (status) {
-      query = query.eq('status', status)
-    }
-
-    const { data: commitments, error } = await query
-
     if (error) {
-      console.error('Commitments fetch error:', error)
+      console.error('Error fetching commitments:', error)
       return NextResponse.json(
         { error: 'Failed to fetch commitments' },
         { status: 500 }
       )
     }
 
-    // Log access
-    await auditLogger.log({
-      actor_user_id: user.id,
-      action: AuditActions.READ,
-      entity: 'deal_commitments',
-      entity_id: dealId,
-      metadata: {
-        endpoint: `/api/deals/${dealId}/commitments`,
-        commitment_count: commitments?.length || 0,
-        status_filter: status
-      }
-    })
+    // Calculate summary statistics
+    const totalUnits = commitments?.reduce((sum, c) => sum + parseFloat(c.requested_units || '0'), 0) || 0
+    const totalAmount = commitments?.reduce((sum, c) => sum + parseFloat(c.requested_amount || '0'), 0) || 0
+    const commitmentsByStatus = commitments?.reduce((acc, c) => {
+      acc[c.status] = (acc[c.status] || 0) + 1
+      return acc
+    }, {} as Record<string, number>) || {}
 
     return NextResponse.json({
       commitments: commitments || [],
-      hasData: (commitments && commitments.length > 0)
+      summary: {
+        total_units: totalUnits,
+        total_amount: totalAmount,
+        commitment_count: commitments?.length || 0,
+        by_status: commitmentsByStatus
+      }
     })
 
   } catch (error) {
-    console.error('API /deals/[id]/commitments GET error:', error)
+    console.error('Commitments GET API error:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

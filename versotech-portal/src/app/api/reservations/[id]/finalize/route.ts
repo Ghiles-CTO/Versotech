@@ -1,17 +1,17 @@
-import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/server'
 import { auditLogger, AuditActions, AuditEntities } from '@/lib/audit'
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(
-  request: Request,
+  request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const supabase = await createServiceClient()
+    const reservationId = params.id
+    const serviceSupabase = createServiceClient()
     
-    // Get the authenticated user from regular client
-    const regularSupabase = await createClient()
-    const { data: { user }, error: authError } = await regularSupabase.auth.getUser()
+    // Get the authenticated user from the service client
+    const { data: { user }, error: authError } = await serviceSupabase.auth.getUser()
     
     if (authError || !user) {
       return NextResponse.json(
@@ -20,33 +20,31 @@ export async function POST(
       )
     }
 
-    const reservationId = params.id
-
-    // Check if user is staff or has approval permissions
-    const { data: profile } = await supabase
+    // Check if user is staff (only staff can finalize allocations)
+    const { data: profile } = await serviceSupabase
       .from('profiles')
-      .select('role, title')
+      .select('role, display_name')
       .eq('id', user.id)
       .single()
 
-    if (!profile || !profile.role.startsWith('staff_')) {
+    if (!profile || !['staff_admin', 'staff_ops', 'staff_rm'].includes(profile.role)) {
       return NextResponse.json(
-        { error: 'Staff access required for finalizing allocations' },
+        { error: 'Staff access required to finalize allocations' },
         { status: 403 }
       )
     }
 
-    // Get reservation details first to validate
-    const { data: reservation } = await supabase
+    // Verify reservation exists and is still pending
+    const { data: reservation } = await serviceSupabase
       .from('reservations')
       .select(`
         *,
-        deals:deal_id (
+        deals (
           id,
           name,
           status
         ),
-        investors:investor_id (
+        investors (
           legal_name
         )
       `)
@@ -67,57 +65,47 @@ export async function POST(
       )
     }
 
-    // Check if reservation has expired
-    if (new Date(reservation.expires_at) < new Date()) {
+    if (reservation.expires_at && new Date(reservation.expires_at) < new Date()) {
       return NextResponse.json(
         { error: 'Reservation has expired' },
         { status: 400 }
       )
     }
 
-    // TODO: In a complete implementation, you would check for approvals here
-    // For now, we'll assume staff approval is sufficient
-    
-    // Call the database function to finalize the allocation
-    const { data: allocationId, error } = await supabase
+    // TODO: Check for approval in approvals table when approval system is implemented
+    // For now, we'll proceed with staff approval being implicit
+
+    // Call the database function to finalize allocation
+    const { data: allocationResult, error: allocationError } = await serviceSupabase
       .rpc('fn_finalize_allocation', {
         p_reservation_id: reservationId,
         p_approver_id: user.id
       })
 
-    if (error) {
-      console.error('Allocation finalization error:', error)
-      
-      if (error.message.includes('Reservation is not pending')) {
-        return NextResponse.json(
-          { error: 'Reservation is no longer available for allocation' },
-          { status: 400 }
-        )
-      }
-
+    if (allocationError) {
+      console.error('Allocation error:', allocationError)
       return NextResponse.json(
-        { error: 'Failed to finalize allocation' },
-        { status: 500 }
+        { error: allocationError.message || 'Failed to finalize allocation' },
+        { status: 400 }
       )
     }
 
-    // Fetch the created allocation with details
-    const { data: allocation } = await supabase
+    const allocationId = allocationResult
+
+    // Get the created allocation with details
+    const { data: allocation } = await serviceSupabase
       .from('allocations')
       .select(`
         *,
-        deals:deal_id (
-          id,
-          name
-        ),
-        investors:investor_id (
-          legal_name
-        ),
         allocation_lot_items (
+          lot_id,
           units,
-          share_lots:lot_id (
+          share_lots (
             unit_cost,
-            share_sources:source_id (
+            currency,
+            source_id,
+            share_sources (
+              kind,
               counterparty_name
             )
           )
@@ -126,32 +114,31 @@ export async function POST(
       .eq('id', allocationId)
       .single()
 
-    // Log allocation creation
+    // Log the allocation finalization
     await auditLogger.log({
       actor_user_id: user.id,
       action: AuditActions.CREATE,
-      entity: 'allocations',
+      entity: AuditEntities.ALLOCATIONS,
       entity_id: allocationId,
       metadata: {
-        endpoint: `/api/reservations/${reservationId}/finalize`,
+        reservation_id: reservationId,
         deal_id: reservation.deal_id,
-        deal_name: reservation.deals?.name,
         investor_id: reservation.investor_id,
-        investor_name: reservation.investors?.legal_name,
-        units: reservation.requested_units,
-        unit_price: reservation.proposed_unit_price,
-        total_value: reservation.requested_units * reservation.proposed_unit_price,
-        original_reservation_id: reservationId
+        units: reservation.requested_units.toString(),
+        unit_price: reservation.proposed_unit_price.toString(),
+        approver: profile.display_name
       }
     })
 
     return NextResponse.json({
+      success: true,
+      allocation_id: allocationId,
       allocation,
-      message: 'Allocation finalized successfully'
-    }, { status: 201 })
+      message: `Successfully allocated ${reservation.requested_units} units to ${reservation.investors?.legal_name}`
+    })
 
   } catch (error) {
-    console.error('API /reservations/[id]/finalize POST error:', error)
+    console.error('Allocation finalization API error:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

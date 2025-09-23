@@ -550,3 +550,4 @@ GRANT EXECUTE ON FUNCTION fn_finalize_allocation TO authenticated;
 GRANT EXECUTE ON FUNCTION fn_compute_fee_events TO authenticated;
 GRANT EXECUTE ON FUNCTION fn_invoice_fees TO authenticated;
 GRANT EXECUTE ON FUNCTION fn_deal_inventory_summary TO authenticated;
+

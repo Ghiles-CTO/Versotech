@@ -2,223 +2,121 @@
 
 import { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
-import { createClient } from '@/lib/supabase/client'
-import {
-  Package,
-  Timer,
-  TrendingDown,
-  AlertTriangle,
-  Users,
-  Clock,
-  Activity
-} from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
+import { TrendingUp, AlertCircle, RefreshCw } from 'lucide-react'
 
 interface InventorySummary {
+  units_available: number
+  active_reservations: number
+  utilization_percent: string
   total_units: number
-  available_units: number
-  reserved_units: number
-  allocated_units: number
+  last_updated?: string
 }
 
-interface RealtimeInventoryProps {
+interface RealTimeInventoryProps {
   dealId: string
-  initialSummary: InventorySummary
-  offerPrice?: number | null
-  currency?: string
+  initialData: InventorySummary
+  className?: string
 }
 
-export function RealtimeInventory({ 
-  dealId, 
-  initialSummary, 
-  offerPrice, 
-  currency = 'USD' 
-}: RealtimeInventoryProps) {
-  const [summary, setSummary] = useState<InventorySummary>(initialSummary)
-  const [activeViewers, setActiveViewers] = useState(1)
-  const [lastUpdated, setLastUpdated] = useState(new Date())
-  const supabase = createClient()
+export function RealTimeInventory({ dealId, initialData, className }: RealTimeInventoryProps) {
+  const [inventory, setInventory] = useState<InventorySummary>(initialData)
+  const [isLoading, setIsLoading] = useState(false)
+  const [lastUpdate, setLastUpdate] = useState<Date>(new Date())
 
-  // Subscribe to real-time updates
-  useEffect(() => {
-    const channel = supabase
-      .channel('inventory-updates')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'reservations',
-          filter: `deal_id=eq.${dealId}`,
-        },
-        () => {
-          // Refresh inventory summary when reservations change
-          refreshInventory()
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'allocations',
-          filter: `deal_id=eq.${dealId}`,
-        },
-        () => {
-          // Refresh inventory summary when allocations change
-          refreshInventory()
-        }
-      )
-      .subscribe()
-
-    // Simulate active viewers (in real app, this would track actual users)
-    const viewerInterval = setInterval(() => {
-      setActiveViewers(Math.floor(Math.random() * 8) + 1)
-    }, 10000)
-
-    return () => {
-      supabase.removeChannel(channel)
-      clearInterval(viewerInterval)
-    }
-  }, [dealId])
-
-  const refreshInventory = async () => {
+  const fetchInventoryUpdate = async () => {
     try {
-      const { data, error } = await supabase
-        .rpc('fn_deal_inventory_summary', { p_deal_id: dealId })
-        .single()
+      setIsLoading(true)
+      const response = await fetch(`/api/deals/${dealId}/inventory`, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
 
-      if (!error && data) {
-        setSummary(data)
-        setLastUpdated(new Date())
+      if (response.ok) {
+        const data = await response.json()
+        setInventory(data)
+        setLastUpdate(new Date())
       }
     } catch (error) {
-      console.error('Error refreshing inventory:', error)
+      console.error('Failed to fetch inventory update:', error)
+    } finally {
+      setIsLoading(false)
     }
   }
 
-  const allocationPercentage = summary.total_units > 0 ? 
-    ((summary.total_units - summary.available_units) / summary.total_units) * 100 : 0
+  // Auto-refresh every 30 seconds
+  useEffect(() => {
+    const interval = setInterval(fetchInventoryUpdate, 30000)
+    return () => clearInterval(interval)
+  }, [dealId])
 
-  const urgencyLevel = 
-    summary.available_units < summary.total_units * 0.1 ? 'critical' :
-    summary.available_units < summary.total_units * 0.3 ? 'high' :
-    summary.available_units < summary.total_units * 0.6 ? 'medium' : 'low'
-
-  const urgencyColors = {
-    critical: 'text-red-600',
-    high: 'text-orange-600', 
-    medium: 'text-yellow-600',
-    low: 'text-green-600'
-  }
-
-  const totalValue = offerPrice ? summary.total_units * offerPrice : null
+  const utilizationPercent = parseFloat(inventory.utilization_percent || '0')
+  const isLowInventory = inventory.units_available < 1000
 
   return (
-    <Card className={`${urgencyLevel === 'critical' ? 'border-red-300 bg-red-50' : ''}`}>
+    <Card className={className}>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Package className="h-5 w-5" />
-          Live Inventory Status
-          <Badge variant="outline" className="text-xs">
-            <Activity className="h-3 w-3 mr-1" />
-            LIVE
-          </Badge>
+        <CardTitle className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <TrendingUp className="h-5 w-5 text-blue-600" />
+            Live Inventory
+          </div>
+          <button
+            onClick={fetchInventoryUpdate}
+            disabled={isLoading}
+            className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 disabled:opacity-50"
+          >
+            <RefreshCw className={`h-3 w-3 ${isLoading ? 'animate-spin' : ''}`} />
+            {isLoading ? 'Updating...' : 'Refresh'}
+          </button>
         </CardTitle>
         <CardDescription>
-          Real-time availability • Updated {lastUpdated.toLocaleTimeString()}
+          Real-time share availability with reservation activity
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
-        
-        {/* Main Availability Display */}
-        <div className="text-center">
-          <div className={`text-3xl font-bold ${urgencyColors[urgencyLevel]}`}>
-            {summary.available_units.toLocaleString()}
+      <CardContent>
+        <div className="grid grid-cols-3 gap-4 mb-4">
+          <div className="text-center">
+            <p className="text-2xl font-bold text-blue-600">
+              {inventory.units_available.toLocaleString()}
+            </p>
+            <p className="text-sm text-gray-500">Units Available</p>
           </div>
-          <div className="text-lg text-gray-600">units remaining</div>
-          <div className="text-sm text-gray-500">
-            of {summary.total_units.toLocaleString()} total
-            {totalValue && (
-              <span> • {currency} {totalValue.toLocaleString()} total value</span>
-            )}
+          <div className="text-center">
+            <p className="text-2xl font-bold text-amber-600">
+              {inventory.active_reservations}
+            </p>
+            <p className="text-sm text-gray-500">Active Reservations</p>
           </div>
-        </div>
-
-        {/* Allocation Progress */}
-        <div>
-          <div className="flex justify-between text-sm mb-2">
-            <span>Allocation Progress</span>
-            <span>{allocationPercentage.toFixed(1)}%</span>
-          </div>
-          <Progress 
-            value={allocationPercentage} 
-            className={`h-3 ${urgencyLevel === 'critical' ? 'bg-red-100' : ''}`}
-          />
-        </div>
-
-        {/* Detailed Breakdown */}
-        <div className="grid grid-cols-2 gap-3 text-sm">
-          <div className="flex justify-between">
-            <span className="text-gray-600">Available</span>
-            <span className="font-medium text-green-600">
-              {summary.available_units.toLocaleString()}
-            </span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-gray-600">Reserved</span>
-            <span className="font-medium text-yellow-600">
-              {summary.reserved_units.toLocaleString()}
-            </span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-gray-600">Allocated</span>
-            <span className="font-medium text-blue-600">
-              {summary.allocated_units.toLocaleString()}
-            </span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-gray-600">Total</span>
-            <span className="font-medium">
-              {summary.total_units.toLocaleString()}
-            </span>
+          <div className="text-center">
+            <p className="text-2xl font-bold text-green-600">
+              {utilizationPercent.toFixed(1)}%
+            </p>
+            <p className="text-sm text-gray-500">Utilization</p>
           </div>
         </div>
 
-        {/* Urgency Alerts */}
-        {urgencyLevel === 'critical' && (
-          <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-            <div className="flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4 text-red-600" />
-              <span className="text-sm font-medium text-red-800">
-                Critical - Very limited availability remaining
-              </span>
-            </div>
+        <div className="space-y-2">
+          <div className="flex justify-between text-sm">
+            <span>Inventory Status</span>
+            <span>{inventory.total_units.toLocaleString()} total units</span>
+          </div>
+          <Progress value={utilizationPercent} className="h-2" />
+        </div>
+
+        {isLowInventory && (
+          <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-center gap-2">
+            <AlertCircle className="h-4 w-4 text-amber-600" />
+            <p className="text-sm text-amber-800">
+              Limited availability - only {inventory.units_available.toLocaleString()} units remaining
+            </p>
           </div>
         )}
 
-        {urgencyLevel === 'high' && (
-          <div className="p-3 bg-orange-50 border border-orange-200 rounded-lg">
-            <div className="flex items-center gap-2">
-              <TrendingDown className="h-4 w-4 text-orange-600" />
-              <span className="text-sm font-medium text-orange-800">
-                Limited availability - Act soon to secure your allocation
-              </span>
-            </div>
-          </div>
-        )}
-
-        {/* Activity Indicator */}
-        <div className="flex items-center justify-between text-xs text-gray-500 pt-2 border-t">
-          <div className="flex items-center gap-1">
-            <Users className="h-3 w-3" />
-            {activeViewers} {activeViewers === 1 ? 'investor' : 'investors'} viewing
-          </div>
-          <div className="flex items-center gap-1">
-            <Clock className="h-3 w-3" />
-            Last updated: {lastUpdated.toLocaleTimeString()}
-          </div>
+        <div className="mt-3 text-xs text-gray-500 text-center">
+          Last updated: {lastUpdate.toLocaleTimeString()}
         </div>
       </CardContent>
     </Card>

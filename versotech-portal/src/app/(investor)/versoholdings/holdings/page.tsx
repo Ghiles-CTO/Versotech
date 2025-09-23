@@ -3,11 +3,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
+import { getUserById } from '@/lib/simple-auth'
+import { cookies } from 'next/headers'
 import Link from 'next/link'
-import { 
+import {
   ArrowRight,
-  TrendingUp, 
+  TrendingUp,
   TrendingDown,
   DollarSign,
   Calendar,
@@ -16,30 +17,24 @@ import {
 
 export default async function InvestorHoldings() {
   const supabase = await createClient()
-  
-  // Get the authenticated user
-  const { data: { user }, error: authError } = await supabase.auth.getUser()
-  
-  if (authError || !user) {
-    redirect('/versoholdings/login')
-  }
 
-  // Get user profile to check role
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single()
+  // Get current user - AppLayout already handles auth checks
+  const cookieStore = await cookies()
+  const sessionCookie = cookieStore.get('demo_session')!
+  const session = JSON.parse(sessionCookie.value)
+  const user = getUserById(session.id)!
 
-  if (!profile || profile.role !== 'investor') {
-    redirect('/versoholdings/login')
+  // Map simple auth user to Supabase user format for the rest of the code
+  const supabaseUser = {
+    id: user.id,
+    email: user.email
   }
 
   // Get investor entities linked to this user
   const { data: investorLinks } = await supabase
     .from('investor_users')
     .select('investor_id')
-    .eq('user_id', user.id)
+    .eq('user_id', supabaseUser.id)
 
   let vehicles: any[] = []
 

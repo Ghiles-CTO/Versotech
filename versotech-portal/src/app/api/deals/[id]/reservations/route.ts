@@ -1,26 +1,27 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { auditLogger, AuditActions, AuditEntities } from '@/lib/audit'
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 
 // Validation schema for creating reservations
 const createReservationSchema = z.object({
-  investor_id: z.string().uuid('Valid investor ID is required'),
+  investor_id: z.string().uuid('Invalid investor ID'),
   requested_units: z.number().positive('Requested units must be positive'),
-  proposed_unit_price: z.number().positive('Unit price must be positive'),
-  hold_minutes: z.number().int().min(5).max(1440).default(30) // 5 minutes to 24 hours
+  proposed_unit_price: z.number().positive('Proposed unit price must be positive'),
+  hold_minutes: z.number().int().min(1).max(1440).default(30) // 1 min to 24 hours
 })
 
 export async function POST(
-  request: Request,
+  request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const supabase = await createServiceClient()
+    const dealId = params.id
+    const supabase = await createClient()
+    const serviceSupabase = createServiceClient()
     
-    // Get the authenticated user from regular client
-    const regularSupabase = await createClient()
-    const { data: { user }, error: authError } = await regularSupabase.auth.getUser()
+    // Get the authenticated user
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
     
     if (authError || !user) {
       return NextResponse.json(
@@ -29,41 +30,41 @@ export async function POST(
       )
     }
 
-    const dealId = params.id
-
-    // Parse and validate request body
+    // Parse request body
     const body = await request.json()
-    const validatedData = createReservationSchema.parse(body)
+    const validation = createReservationSchema.safeParse(body)
+    
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: 'Invalid request data', details: validation.error.errors },
+        { status: 400 }
+      )
+    }
 
-    // Check if user is authorized to create reservations for this investor
+    const { investor_id, requested_units, proposed_unit_price, hold_minutes } = validation.data
+
+    // Verify user has permission to create reservations for this investor
+    const { data: investorLink } = await supabase
+      .from('investor_users')
+      .select('investor_id')
+      .eq('investor_id', investor_id)
+      .eq('user_id', user.id)
+      .single()
+
+    // Also check if user is staff
     const { data: profile } = await supabase
       .from('profiles')
       .select('role')
       .eq('id', user.id)
       .single()
 
-    if (!profile) {
+    const isStaff = profile?.role && ['staff_admin', 'staff_ops', 'staff_rm'].includes(profile.role)
+    
+    if (!investorLink && !isStaff) {
       return NextResponse.json(
-        { error: 'Profile not found' },
-        { status: 404 }
+        { error: 'Not authorized to create reservations for this investor' },
+        { status: 403 }
       )
-    }
-
-    // If not staff, check if user is linked to the investor
-    if (!profile.role.startsWith('staff_')) {
-      const { data: investorLink } = await supabase
-        .from('investor_users')
-        .select('investor_id')
-        .eq('user_id', user.id)
-        .eq('investor_id', validatedData.investor_id)
-        .single()
-
-      if (!investorLink) {
-        return NextResponse.json(
-          { error: 'Not authorized to create reservations for this investor' },
-          { status: 403 }
-        )
-      }
     }
 
     // Verify deal exists and is open for reservations
@@ -82,93 +83,72 @@ export async function POST(
 
     if (!['open', 'allocation_pending'].includes(deal.status)) {
       return NextResponse.json(
-        { error: `Deal is not open for reservations. Status: ${deal.status}` },
+        { error: `Deal is not open for reservations. Current status: ${deal.status}` },
         { status: 400 }
       )
     }
 
-    // Call the database function to reserve inventory atomically
-    const { data: reservationId, error } = await supabase
+    // Call the database function to reserve inventory
+    const { data: reservationResult, error: reservationError } = await serviceSupabase
       .rpc('fn_reserve_inventory', {
         p_deal_id: dealId,
-        p_investor_id: validatedData.investor_id,
-        p_requested_units: validatedData.requested_units,
-        p_proposed_unit_price: validatedData.proposed_unit_price,
-        p_hold_minutes: validatedData.hold_minutes
+        p_investor_id: investor_id,
+        p_requested_units: requested_units,
+        p_proposed_unit_price: proposed_unit_price,
+        p_hold_minutes: hold_minutes
       })
 
-    if (error) {
-      console.error('Reservation creation error:', error)
-      
-      // Handle specific error cases
-      if (error.message.includes('Insufficient inventory')) {
-        return NextResponse.json(
-          { error: 'Insufficient inventory available for the requested amount' },
-          { status: 400 }
-        )
-      }
-      
-      if (error.message.includes('Deal is not available')) {
-        return NextResponse.json(
-          { error: 'Deal is not currently accepting reservations' },
-          { status: 400 }
-        )
-      }
-
+    if (reservationError) {
+      console.error('Reservation error:', reservationError)
       return NextResponse.json(
-        { error: 'Failed to create reservation' },
-        { status: 500 }
+        { error: reservationError.message || 'Failed to create reservation' },
+        { status: 400 }
       )
     }
 
-    // Fetch the created reservation with details
+    const reservationId = reservationResult
+
+    // Get the created reservation with details
     const { data: reservation } = await supabase
       .from('reservations')
       .select(`
         *,
-        investors:investor_id (
-          legal_name
-        ),
         reservation_lot_items (
+          lot_id,
           units,
-          share_lots:lot_id (
+          share_lots (
             unit_cost,
-            source_id,
-            share_sources:source_id (
-              counterparty_name
-            )
+            currency
           )
         )
       `)
       .eq('id', reservationId)
       .single()
 
-    // Log creation
+    // Log the reservation creation
     await auditLogger.log({
       actor_user_id: user.id,
       action: AuditActions.CREATE,
-      entity: 'reservations',
+      entity: AuditEntities.RESERVATIONS,
       entity_id: reservationId,
       metadata: {
-        endpoint: `/api/deals/${dealId}/reservations`,
-        deal_name: deal.name,
-        investor_id: validatedData.investor_id,
-        requested_units: validatedData.requested_units,
-        proposed_unit_price: validatedData.proposed_unit_price
+        deal_id: dealId,
+        investor_id,
+        requested_units: requested_units.toString(),
+        proposed_unit_price: proposed_unit_price.toString(),
+        hold_minutes
       }
     })
 
-    return NextResponse.json(reservation, { status: 201 })
+    return NextResponse.json({
+      success: true,
+      reservation_id: reservationId,
+      reservation,
+      message: `Successfully reserved ${requested_units} units for ${hold_minutes} minutes`
+    })
 
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Invalid input', details: error.errors },
-        { status: 400 }
-      )
-    }
-
-    console.error('API /deals/[id]/reservations POST error:', error)
+    console.error('Reservation API error:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -176,11 +156,13 @@ export async function POST(
   }
 }
 
+// Get reservations for a deal
 export async function GET(
-  request: Request,
+  request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
+    const dealId = params.id
     const supabase = await createClient()
     
     // Get the authenticated user
@@ -193,23 +175,23 @@ export async function GET(
       )
     }
 
-    const dealId = params.id
-    const { searchParams } = new URL(request.url)
-    const status = searchParams.get('status')
-    const limit = parseInt(searchParams.get('limit') || '50')
-
-    let query = supabase
+    // Get reservations for this deal (RLS will filter appropriately)
+    const { data: reservations, error } = await supabase
       .from('reservations')
       .select(`
         *,
-        investors:investor_id (
+        investors (
           legal_name
         ),
         reservation_lot_items (
+          lot_id,
           units,
-          share_lots:lot_id (
+          share_lots (
             unit_cost,
-            share_sources:source_id (
+            currency,
+            source_id,
+            share_sources (
+              kind,
               counterparty_name
             )
           )
@@ -217,42 +199,21 @@ export async function GET(
       `)
       .eq('deal_id', dealId)
       .order('created_at', { ascending: false })
-      .limit(limit)
-
-    if (status) {
-      query = query.eq('status', status)
-    }
-
-    const { data: reservations, error } = await query
 
     if (error) {
-      console.error('Reservations fetch error:', error)
+      console.error('Error fetching reservations:', error)
       return NextResponse.json(
         { error: 'Failed to fetch reservations' },
         { status: 500 }
       )
     }
 
-    // Log access
-    await auditLogger.log({
-      actor_user_id: user.id,
-      action: AuditActions.READ,
-      entity: 'reservations',
-      entity_id: dealId,
-      metadata: {
-        endpoint: `/api/deals/${dealId}/reservations`,
-        reservation_count: reservations?.length || 0,
-        status_filter: status
-      }
-    })
-
     return NextResponse.json({
-      reservations: reservations || [],
-      hasData: (reservations && reservations.length > 0)
+      reservations: reservations || []
     })
 
   } catch (error) {
-    console.error('API /deals/[id]/reservations GET error:', error)
+    console.error('Reservations GET API error:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

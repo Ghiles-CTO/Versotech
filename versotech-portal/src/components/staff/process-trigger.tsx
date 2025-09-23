@@ -7,13 +7,22 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
-import { 
-  PlayCircle, 
-  Clock, 
-  CheckCircle, 
+import {
+  PlayCircle,
+  Clock,
+  CheckCircle,
   XCircle,
   Loader2,
-  AlertCircle
+  AlertCircle,
+  BarChart3,
+  FileText,
+  Database,
+  MessageSquare,
+  Target,
+  TrendingUp,
+  Shield,
+  Calendar,
+  Users
 } from 'lucide-react'
 
 interface ProcessTriggerProps {
