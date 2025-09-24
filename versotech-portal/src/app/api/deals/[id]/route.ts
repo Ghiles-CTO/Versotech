@@ -4,14 +4,14 @@ import { NextResponse } from 'next/server'
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const supabase = await createClient()
-    
+
     // Get the authenticated user
     const { data: { user }, error: authError } = await supabase.auth.getUser()
-    
+
     if (authError || !user) {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -19,7 +19,7 @@ export async function GET(
       )
     }
 
-    const dealId = params.id
+    const { id: dealId } = await params
 
     // Get deal with related data
     const { data: deal, error } = await supabase

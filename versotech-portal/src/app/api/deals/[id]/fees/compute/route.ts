@@ -1,4 +1,4 @@
-import { createServiceClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { auditLogger, AuditActions, AuditEntities } from '@/lib/audit'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
@@ -14,10 +14,10 @@ export async function POST(
 ) {
   try {
     const dealId = params.id
-    const serviceSupabase = createServiceClient()
-    
+    const supabase = await createClient()
+
     // Get the authenticated user
-    const { data: { user }, error: authError } = await serviceSupabase.auth.getUser()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
     
     if (authError || !user) {
       return NextResponse.json(
@@ -27,7 +27,7 @@ export async function POST(
     }
 
     // Check if user is staff (only staff can compute fees)
-    const { data: profile } = await serviceSupabase
+    const { data: profile } = await supabase
       .from('profiles')
       .select('role, display_name')
       .eq('id', user.id)
@@ -53,6 +53,9 @@ export async function POST(
 
     const { as_of_date } = validation.data
     const computeDate = as_of_date || new Date().toISOString().split('T')[0]
+
+    // Now use service client for database operations
+    const serviceSupabase = createServiceClient()
 
     // Verify deal exists
     const { data: deal } = await serviceSupabase
@@ -137,15 +140,15 @@ export async function POST(
 // GET endpoint to view computed fee events
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const dealId = params.id
-    const serviceSupabase = createServiceClient()
+    const { id: dealId } = await params
+    const supabase = await createClient()
     const { searchParams } = new URL(request.url)
-    
+
     // Get the authenticated user
-    const { data: { user }, error: authError } = await serviceSupabase.auth.getUser()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
     
     if (authError || !user) {
       return NextResponse.json(
@@ -158,6 +161,9 @@ export async function GET(
     const status = searchParams.get('status') || 'accrued'
     const fromDate = searchParams.get('from_date')
     const toDate = searchParams.get('to_date')
+
+    // Use service client for database operations
+    const serviceSupabase = createServiceClient()
 
     // Build query
     let query = serviceSupabase

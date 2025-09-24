@@ -67,11 +67,23 @@ async function getPortfolioData() {
 
       const supabaseUser = { id: user.id, email: user.email }
 
+      console.log('🔍 DEBUG: Looking for user:', supabaseUser.id, supabaseUser.email)
+      console.log('🔍 DEBUG: User ID type:', typeof supabaseUser.id)
+
       // Get investor entities linked to this user
-      const { data: investorLinks } = await supabase
+      const { data: investorLinks, error: investorError } = await supabase
         .from('investor_users')
         .select('investor_id')
         .eq('user_id', supabaseUser.id)
+
+      console.log('🔍 DEBUG: investor_users query result:', { investorLinks, investorError })
+
+      // Try a test query to see if we can read investor_users at all
+      const { data: allLinks, error: allError } = await supabase
+        .from('investor_users')
+        .select('*')
+
+      console.log('🔍 DEBUG: All investor_users:', { allLinks, allError })
 
       if (!investorLinks || investorLinks.length === 0) {
         return {

@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { BrandHeader } from './brand-header'
-import { 
+import {
   LayoutDashboard,
   Building2,
   FileText,
@@ -22,7 +22,11 @@ import {
   Database,
   ChevronLeft,
   ChevronRight,
-  LogOut
+  LogOut,
+  HandHeart,
+  CreditCard,
+  Calculator,
+  Package
 } from 'lucide-react'
 
 interface SidebarItem {
@@ -135,6 +139,30 @@ const staffNavItems: SidebarItem[] = [
     href: '/versotech/staff/documents',
     icon: FileText,
     description: 'Document management and e-sign'
+  },
+  {
+    name: 'Introducers',
+    href: '/versotech/staff/introducers',
+    icon: HandHeart,
+    description: 'Manage introducer relationships'
+  },
+  {
+    name: 'Fees',
+    href: '/versotech/staff/fees',
+    icon: Calculator,
+    description: 'Fee plans and billing management'
+  },
+  {
+    name: 'Reconciliation',
+    href: '/versotech/staff/reconciliation',
+    icon: CreditCard,
+    description: 'Bank reconciliation and payments'
+  },
+  {
+    name: 'Doc Automation',
+    href: '/versotech/staff/documents/automation',
+    icon: Package,
+    description: 'Document templates and automation'
   },
   {
     name: 'Audit',

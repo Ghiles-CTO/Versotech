@@ -1,4 +1,4 @@
-import { createServiceClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { auditLogger, AuditActions, AuditEntities } from '@/lib/audit'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
@@ -15,10 +15,10 @@ export async function POST(
 ) {
   try {
     const dealId = params.id
-    const serviceSupabase = createServiceClient()
-    
+    const supabase = await createClient()
+
     // Get the authenticated user
-    const { data: { user }, error: authError } = await serviceSupabase.auth.getUser()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
     
     if (authError || !user) {
       return NextResponse.json(
@@ -28,7 +28,7 @@ export async function POST(
     }
 
     // Check if user is staff (only staff can generate invoices)
-    const { data: profile } = await serviceSupabase
+    const { data: profile } = await supabase
       .from('profiles')
       .select('role, display_name')
       .eq('id', user.id)
@@ -54,6 +54,9 @@ export async function POST(
 
     const { investor_id, up_to_date } = validation.data
     const invoiceDate = up_to_date || new Date().toISOString().split('T')[0]
+
+    // Use service client for database operations
+    const serviceSupabase = createServiceClient()
 
     // Verify deal exists
     const { data: deal } = await serviceSupabase
@@ -176,15 +179,15 @@ export async function POST(
 // GET endpoint to view invoices for a deal
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const dealId = params.id
-    const serviceSupabase = createServiceClient()
+    const { id: dealId } = await params
+    const supabase = await createClient()
     const { searchParams } = new URL(request.url)
-    
+
     // Get the authenticated user
-    const { data: { user }, error: authError } = await serviceSupabase.auth.getUser()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
     
     if (authError || !user) {
       return NextResponse.json(
@@ -196,6 +199,9 @@ export async function GET(
     // Parse query parameters
     const status = searchParams.get('status')
     const investorId = searchParams.get('investor_id')
+
+    // Use service client for database operations (RLS will still apply)
+    const serviceSupabase = createServiceClient()
 
     // Build query (RLS will handle access control)
     let query = serviceSupabase

@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server'
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const supabase = await createClient()
@@ -18,7 +18,7 @@ export async function GET(
       )
     }
 
-    const dealId = params.id
+    const { id: dealId } = await params
 
     // Get current inventory summary using the database function
     const { data: inventorySummary, error } = await supabase

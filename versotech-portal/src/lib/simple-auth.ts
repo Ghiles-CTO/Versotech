@@ -11,11 +11,11 @@ export interface DemoUser {
   department?: string
 }
 
-// Demo users database
+// Demo users database (using UUIDs to match database)
 export const DEMO_USERS: DemoUser[] = [
   // INVESTOR USERS
   {
-    id: 'inv-001',
+    id: '550e8400-e29b-41d4-a716-446655440001',
     email: 'investor@demo.com',
     password: 'demo123',
     role: 'investor',
@@ -23,7 +23,7 @@ export const DEMO_USERS: DemoUser[] = [
     avatar: '👨‍💼'
   },
   {
-    id: 'inv-002', 
+    id: '550e8400-e29b-41d4-a716-446655440002',
     email: 'sarah@investor.com',
     password: 'demo123',
     role: 'investor',
@@ -31,8 +31,8 @@ export const DEMO_USERS: DemoUser[] = [
     avatar: '👩‍💼'
   },
   {
-    id: 'inv-003',
-    email: 'family.office@demo.com', 
+    id: '550e8400-e29b-41d4-a716-446655440003',
+    email: 'family.office@demo.com',
     password: 'demo123',
     role: 'investor',
     displayName: 'Wellington Family Office',
@@ -41,30 +41,30 @@ export const DEMO_USERS: DemoUser[] = [
 
   // STAFF USERS
   {
-    id: 'staff-001',
+    id: '550e8400-e29b-41d4-a716-446655440011',
     email: 'admin@demo.com',
-    password: 'demo123', 
+    password: 'demo123',
     role: 'staff',
     displayName: 'Admin User',
     avatar: '👑',
     department: 'Administration'
   },
   {
-    id: 'staff-002',
+    id: '550e8400-e29b-41d4-a716-446655440012',
     email: 'manager@demo.com',
     password: 'demo123',
-    role: 'staff', 
+    role: 'staff',
     displayName: 'Portfolio Manager',
     avatar: '📊',
     department: 'Portfolio Management'
   },
   {
-    id: 'staff-003',
+    id: '550e8400-e29b-41d4-a716-446655440013',
     email: 'operations@demo.com',
     password: 'demo123',
     role: 'staff',
     displayName: 'Operations Team',
-    avatar: '⚙️', 
+    avatar: '⚙️',
     department: 'Operations'
   }
 ]

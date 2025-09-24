@@ -22,7 +22,7 @@ export default async function MessagesPage() {
           </p>
         </div>
             <div className="text-right">
-              <p className="text-sm text-gray-500">Investor: {profile.display_name}</p>
+              <p className="text-sm text-gray-500">Investor: {profile.displayName}</p>
               <p className="text-xs text-gray-400">End-to-end encrypted messaging</p>
                       </div>
                     </div>
