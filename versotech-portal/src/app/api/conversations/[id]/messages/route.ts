@@ -5,17 +5,18 @@ import { NextRequest, NextResponse } from 'next/server'
 // Get messages for a conversation
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const supabase = await createClient()
-    
+
     // Authenticate user
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { id: conversationId } = await params
     const { searchParams } = new URL(request.url)
     const limit = parseInt(searchParams.get('limit') || '50')
     const offset = parseInt(searchParams.get('offset') || '0')
@@ -32,7 +33,7 @@ export async function GET(
           role
         )
       `)
-      .eq('conversation_id', params.id)
+      .eq('conversation_id', conversationId)
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1)
 
@@ -55,17 +56,18 @@ export async function GET(
 // Send a new message
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const supabase = await createClient()
-    
+
     // Authenticate user
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { id: conversationId } = await params
     const { body, file_key } = await request.json()
 
     if (!body && !file_key) {
@@ -76,7 +78,7 @@ export async function POST(
     const { data: conversation } = await supabase
       .from('conversations')
       .select('id')
-      .eq('id', params.id)
+      .eq('id', conversationId)
       .single()
 
     if (!conversation) {
@@ -87,7 +89,7 @@ export async function POST(
     const { data: message, error: msgError } = await supabase
       .from('messages')
       .insert({
-        conversation_id: params.id,
+        conversation_id: conversationId,
         sender_id: user.id,
         body,
         file_key
@@ -115,7 +117,7 @@ export async function POST(
       entity: AuditEntities.MESSAGES,
       entity_id: message.id,
       metadata: {
-        conversation_id: params.id,
+        conversation_id: conversationId,
         has_body: !!body,
         has_attachment: !!file_key,
         message_length: body?.length || 0

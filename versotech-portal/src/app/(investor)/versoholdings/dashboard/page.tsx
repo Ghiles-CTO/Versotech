@@ -1,29 +1,20 @@
 import { AppLayout } from '@/components/layout/app-layout'
-import { KPICard } from '@/components/dashboard/kpi-card'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { RealtimeDashboard } from '@/components/dashboard/realtime-dashboard'
+import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
 import {
-  DollarSign,
-  TrendingUp,
-  PiggyBank,
-  Calendar,
-  FileText,
-  MessageSquare,
-  Plus,
   Building2,
   MapPin,
-  Target,
-  Clock,
-  ChevronRight,
-  ArrowUpRight
+  Target
 } from 'lucide-react'
 
 import { createClient } from '@/lib/supabase/server'
 import { getUserById } from '@/lib/simple-auth'
 import { cookies } from 'next/headers'
 import { measureTimeAsync } from '@/lib/performance'
+import { cn } from '@/lib/utils'
 
 async function getPortfolioData() {
   return measureTimeAsync('portfolio-data-fetch', async () => {
@@ -41,7 +32,10 @@ async function getPortfolioData() {
             totalDistributions: 0,
             unfundedCommitment: 0,
             unrealizedGain: 0,
-            unrealizedGainPct: 0
+            unrealizedGainPct: 0,
+            dpi: 0,
+            tvpi: 0,
+            irr: 0
           },
           hasData: false,
           vehicles: []
@@ -58,7 +52,10 @@ async function getPortfolioData() {
             totalDistributions: 0,
             unfundedCommitment: 0,
             unrealizedGain: 0,
-            unrealizedGainPct: 0
+            unrealizedGainPct: 0,
+            dpi: 0,
+            tvpi: 0,
+            irr: 0
           },
           hasData: false,
           vehicles: []
@@ -93,7 +90,10 @@ async function getPortfolioData() {
             totalDistributions: 0,
             unfundedCommitment: 0,
             unrealizedGain: 0,
-            unrealizedGainPct: 0
+            unrealizedGainPct: 0,
+            dpi: 0,
+            tvpi: 0,
+            irr: 0
           },
           hasData: false,
           vehicles: []
@@ -137,6 +137,18 @@ async function getPortfolioData() {
       const unrealizedGain = currentNAV - costBasis
       const unrealizedGainPct = costBasis > 0 ? (unrealizedGain / costBasis) * 100 : 0
 
+      // Calculate DPI, TVPI, and IRR from performance snapshots (latest)
+      const { data: latestPerformance } = await supabase
+        .from('performance_snapshots')
+        .select('dpi, tvpi, irr_net')
+        .in('investor_id', investorIds)
+        .order('snapshot_date', { ascending: false })
+        .limit(1)
+
+      const dpi = latestPerformance?.[0]?.dpi || (totalContributed > 0 ? totalDistributions / totalContributed : 0)
+      const tvpi = latestPerformance?.[0]?.tvpi || (totalContributed > 0 ? (currentNAV + totalDistributions) / totalContributed : 1)
+      const irr = latestPerformance?.[0]?.irr_net || 0
+
       // Get vehicle breakdown
       const { data: vehicleData } = await supabase
         .from('vehicles')
@@ -148,6 +160,14 @@ async function getPortfolioData() {
         .in('subscriptions.investor_id', investorIds)
         .eq('subscriptions.status', 'active')
 
+      // Get recent activity feed
+      const { data: recentActivity } = await supabase
+        .from('activity_feed')
+        .select('*')
+        .in('investor_id', investorIds)
+        .order('created_at', { ascending: false })
+        .limit(10)
+
       return {
         kpis: {
           currentNAV,
@@ -155,10 +175,14 @@ async function getPortfolioData() {
           totalDistributions,
           unfundedCommitment,
           unrealizedGain,
-          unrealizedGainPct
+          unrealizedGainPct,
+          dpi,
+          tvpi,
+          irr
         },
         hasData: totalContributed > 0 || currentNAV > 0,
-        vehicles: vehicleData || []
+        vehicles: vehicleData || [],
+        recentActivity: recentActivity || []
       }
     } catch (error) {
       console.error('Error fetching portfolio data:', error)
@@ -169,17 +193,36 @@ async function getPortfolioData() {
           totalDistributions: 0,
           unfundedCommitment: 0,
           unrealizedGain: 0,
-          unrealizedGainPct: 0
+          unrealizedGainPct: 0,
+          dpi: 0,
+          tvpi: 0,
+          irr: 0
         },
         hasData: false,
-        vehicles: []
+        vehicles: [],
+        recentActivity: []
       }
     }
   })
 }
 
+async function getInvestorIds(userId: string) {
+  const supabase = await createClient()
+  const { data: investorLinks } = await supabase
+    .from('investor_users')
+    .select('investor_id')
+    .eq('user_id', userId)
+
+  return investorLinks?.map(link => link.investor_id) || []
+}
+
 export default async function InvestorDashboard() {
-  const { kpis, hasData, vehicles } = await getPortfolioData()
+  const { kpis, hasData, vehicles, recentActivity } = await getPortfolioData()
+
+  // Get current user to get investor IDs for realtime subscriptions
+  const cookieStore = await cookies()
+  const sessionCookie = cookieStore.get('demo_session')
+  const investorIds = sessionCookie ? await getInvestorIds(JSON.parse(sessionCookie.value).id) : []
 
   return (
     <AppLayout brand="versoholdings">
@@ -216,182 +259,10 @@ export default async function InvestorDashboard() {
         </div>
 
         {hasData ? (
-          <>
-            {/* Portfolio KPIs */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <KPICard
-                title="Net Asset Value"
-                value={new Intl.NumberFormat('en-US', {
-                  style: 'currency',
-                  currency: 'USD',
-                  minimumFractionDigits: 0,
-                  maximumFractionDigits: 0
-                }).format(kpis.currentNAV)}
-                icon={DollarSign}
-                trend={kpis.unrealizedGainPct > 0 ? 'up' : kpis.unrealizedGainPct < 0 ? 'down' : 'neutral'}
-                trendValue={`${kpis.unrealizedGainPct > 0 ? '+' : ''}${kpis.unrealizedGainPct.toFixed(1)}%`}
-              />
-
-              <KPICard
-                title="Capital Contributed"
-                value={new Intl.NumberFormat('en-US', {
-                  style: 'currency',
-                  currency: 'USD',
-                  minimumFractionDigits: 0,
-                  maximumFractionDigits: 0
-                }).format(kpis.totalContributed)}
-                icon={PiggyBank}
-                description="Total capital called"
-              />
-
-              <KPICard
-                title="Distributions Received"
-                value={new Intl.NumberFormat('en-US', {
-                  style: 'currency',
-                  currency: 'USD',
-                  minimumFractionDigits: 0,
-                  maximumFractionDigits: 0
-                }).format(kpis.totalDistributions)}
-                icon={TrendingUp}
-                description="Cash returned to date"
-              />
-
-              <KPICard
-                title="Unfunded Commitment"
-                value={new Intl.NumberFormat('en-US', {
-                  style: 'currency',
-                  currency: 'USD',
-                  minimumFractionDigits: 0,
-                  maximumFractionDigits: 0
-                }).format(kpis.unfundedCommitment)}
-                icon={Calendar}
-                description="Remaining obligation"
-              />
-            </div>
-
-            {/* Investment Vehicles */}
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <div>
-                  <CardTitle>Investment Vehicles</CardTitle>
-                  <CardDescription>
-                    Your positions across VERSO's investment platforms
-                  </CardDescription>
-                </div>
-                <Link href="/versoholdings/holdings">
-                  <Button variant="outline" size="sm">
-                    View All Holdings
-                    <ChevronRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </Link>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {vehicles.slice(0, 3).map((vehicle) => (
-                    <Link key={vehicle.id} href={`/versoholdings/vehicle/${vehicle.id}`}>
-                      <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
-                        <div className="flex items-center gap-3">
-                          <div className="w-3 h-3 rounded-full bg-blue-600"></div>
-                          <div>
-                            <h3 className="font-semibold">{vehicle.name}</h3>
-                            <p className="text-sm text-gray-500 capitalize">
-                              {vehicle.type} • {vehicle.domicile}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <ArrowUpRight className="h-4 w-4 text-gray-400" />
-                        </div>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Quick Actions & Services */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-              {/* VERSO Services */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>VERSO Services</CardTitle>
-                  <CardDescription>
-                    Access to deal flow and transactional services
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <Button className="w-full justify-start" variant="outline">
-                    <Building2 className="mr-2 h-4 w-4" />
-                    Concluder™ Deal Room
-                  </Button>
-                  <Button className="w-full justify-start" variant="outline">
-                    <Target className="mr-2 h-4 w-4" />
-                    Off-Market Opportunities
-                  </Button>
-                  <Button className="w-full justify-start" variant="outline">
-                    <FileText className="mr-2 h-4 w-4" />
-                    Request Position Statement
-                  </Button>
-                  <Link href="/versoholdings/reports">
-                    <Button className="w-full justify-start" variant="outline">
-                      <Plus className="mr-2 h-4 w-4" />
-                      Custom Report Request
-                    </Button>
-                  </Link>
-                </CardContent>
-              </Card>
-
-              {/* Recent Activity */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Recent Activity</CardTitle>
-                  <CardDescription>
-                    Latest updates across your portfolio
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex items-center space-x-3 p-3 bg-slate-50 rounded-lg">
-                      <FileText className="h-5 w-5 text-blue-600" />
-                      <div className="flex-1">
-                        <p className="text-sm font-medium">Q4 Valuation Update</p>
-                        <p className="text-xs text-gray-500">VERSO FUND - Updated 2 days ago</p>
-                      </div>
-                      <Clock className="h-4 w-4 text-gray-400" />
-                    </div>
-
-                    <div className="flex items-center space-x-3 p-3 bg-slate-50 rounded-lg">
-                      <Calendar className="h-5 w-5 text-green-600" />
-                      <div className="flex-1">
-                        <p className="text-sm font-medium">Distribution Notice</p>
-                        <p className="text-xs text-gray-500">REAL Empire Compartment III</p>
-                      </div>
-                      <Clock className="h-4 w-4 text-gray-400" />
-                    </div>
-
-                    <div className="flex items-center space-x-3 p-3 bg-slate-50 rounded-lg">
-                      <Building2 className="h-5 w-5 text-amber-600" />
-                      <div className="flex-1">
-                        <p className="text-sm font-medium">New Deal Available</p>
-                        <p className="text-xs text-gray-500">Exclusive Luxembourg opportunity</p>
-                      </div>
-                      <Badge variant="secondary" className="text-xs">New</Badge>
-                    </div>
-                  </div>
-
-                  <div className="mt-4 pt-4 border-t">
-                    <Link href="/versoholdings/messages">
-                      <Button variant="ghost" size="sm" className="w-full">
-                        <MessageSquare className="mr-2 h-4 w-4" />
-                        View All Communications
-                      </Button>
-                    </Link>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </>
+          <RealtimeDashboard
+            initialData={{ kpis, vehicles, recentActivity }}
+            investorIds={investorIds}
+          />
         ) : (
           /* Welcome Screen for New Users */
           <div className="text-center py-12">

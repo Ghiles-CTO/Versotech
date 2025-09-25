@@ -160,15 +160,15 @@ export async function GET(
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const supabase = await createServiceClient()
-    
+
     // Get the authenticated user from regular client
     const regularSupabase = await createClient()
     const { data: { user }, error: authError } = await regularSupabase.auth.getUser()
-    
+
     if (authError || !user) {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -190,7 +190,7 @@ export async function PATCH(
       )
     }
 
-    const dealId = params.id
+    const { id: dealId } = await params
     const updates = await request.json()
 
     // Remove any fields that shouldn't be updated directly

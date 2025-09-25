@@ -5,18 +5,20 @@ import crypto from 'crypto'
 // Outbound webhook to n8n workflow
 export async function POST(
   request: NextRequest,
-  { params }: { params: { key: string } }
+  { params }: { params: Promise<{ key: string }> }
 ) {
   try {
     const supabase = await createClient()
-    
+
     // Authenticate user
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get user profile 
+    const { key: workflowKey } = await params
+
+    // Get user profile
     const { data: profile } = await supabase
       .from('profiles')
       .select('role, title')
@@ -31,7 +33,7 @@ export async function POST(
     const { data: workflow, error: workflowError } = await supabase
       .from('workflows')
       .select('*')
-      .eq('key', params.key)
+      .eq('key', workflowKey)
       .single()
 
     if (workflowError || !workflow) {
@@ -68,7 +70,7 @@ export async function POST(
 
     // Prepare payload for n8n
     const n8nPayload = {
-      action: params.key,
+      action: workflowKey,
       entity_type: payload.entity_type || 'generic',
       entity_id: payload.entity_id,
       payload,

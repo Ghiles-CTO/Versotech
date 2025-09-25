@@ -5,16 +5,18 @@ import crypto from 'crypto'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const supabase = await createClient()
-    
+
     // Authenticate user
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+
+    const { id: documentId } = await params
 
     // Get document with RLS enforcement (user can only see entitled documents)
     const { data: document, error: docError } = await supabase
@@ -25,7 +27,7 @@ export async function GET(
         vehicles:vehicle_id (name, type),
         created_by_profile:created_by (display_name, email)
       `)
-      .eq('id', params.id)
+      .eq('id', documentId)
       .single()
 
     if (docError || !document) {

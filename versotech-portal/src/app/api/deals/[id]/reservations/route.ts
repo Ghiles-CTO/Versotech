@@ -13,10 +13,10 @@ const createReservationSchema = z.object({
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const dealId = params.id
+    const { id: dealId } = await params
     const supabase = await createClient()
     const serviceSupabase = createServiceClient()
     

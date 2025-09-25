@@ -4,10 +4,10 @@ import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const reservationId = params.id
+    const { id: reservationId } = await params
     const serviceSupabase = createServiceClient()
     
     // Get the authenticated user from the service client
