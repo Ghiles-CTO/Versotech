@@ -1,22 +1,33 @@
+import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
+import { DEMO_COOKIE_NAME } from '@/lib/demo-session'
 
 export async function POST(request: NextRequest) {
   try {
-    const cookieStore = await cookies()
+    const supabase = await createClient()
     
-    // Clear session cookie
-    cookieStore.delete('demo_session')
+    // Sign out from Supabase
+    await supabase.auth.signOut()
     
-    return NextResponse.json({ 
-      success: true,
-      message: 'Signed out successfully' 
-    })
-
+    // Create response
+    const response = NextResponse.json({ success: true })
+    
+    // Clear all auth-related cookies
+    response.cookies.delete('sb-access-token')
+    response.cookies.delete('sb-refresh-token')
+    response.cookies.delete(DEMO_COOKIE_NAME)
+    
+    // Set them to empty with immediate expiry to ensure they're cleared
+    response.cookies.set('sb-access-token', '', { maxAge: 0, path: '/' })
+    response.cookies.set('sb-refresh-token', '', { maxAge: 0, path: '/' })
+    response.cookies.set(DEMO_COOKIE_NAME, '', { maxAge: 0, path: '/' })
+    
+    return response
   } catch (error) {
     console.error('Sign out error:', error)
     return NextResponse.json({ 
-      error: 'Sign out failed' 
+      success: false, 
+      error: 'Failed to sign out' 
     }, { status: 500 })
   }
 }

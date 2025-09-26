@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { createClient } from '@/lib/supabase/client'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -46,51 +47,83 @@ export function PerformanceTrends({ investorIds, selectedDealId, className }: Pe
   const [loading, setLoading] = useState(true)
   const [selectedPeriod, setSelectedPeriod] = useState<'12M' | '24M' | 'ALL'>('12M')
 
-  // Generate sample historical performance data
+  // Fetch real historical performance data from Supabase
   useEffect(() => {
-    const generateHistoricalData = (): PerformanceData[] => {
-      const months = selectedPeriod === '12M' ? 12 : selectedPeriod === '24M' ? 24 : 36
-      const data: PerformanceData[] = []
-      const startDate = new Date()
-      startDate.setMonth(startDate.getMonth() - months)
+    const fetchPerformanceData = async () => {
+      if (investorIds.length === 0) return
 
-      for (let i = 0; i < months; i++) {
-        const date = new Date(startDate)
-        date.setMonth(date.getMonth() + i)
+      setLoading(true)
+      try {
+        const supabase = createClient()
 
-        // Simulate realistic growth patterns
-        const baseNAV = 1000000
-        const growthFactor = 1 + (i * 0.015) + (Math.sin(i * 0.3) * 0.05) // 1.5% monthly growth with volatility
-        const nav = baseNAV * growthFactor
+        // Calculate date range based on selected period
+        const months = selectedPeriod === '12M' ? 12 : selectedPeriod === '24M' ? 24 : 36
+        const fromDate = new Date()
+        fromDate.setMonth(fromDate.getMonth() - months)
 
-        const contributions = Math.min(baseNAV, baseNAV * (i / months))
-        const distributions = i > 6 ? contributions * 0.15 * (i - 6) / months : 0
+        // Fetch real performance snapshots from database
+        const { data: snapshots, error } = await supabase
+          .from('performance_snapshots')
+          .select('*')
+          .in('investor_id', investorIds)
+          .gte('snapshot_date', fromDate.toISOString().split('T')[0])
+          .order('snapshot_date', { ascending: true })
 
-        const dpi = contributions > 0 ? distributions / contributions : 0
-        const tvpi = contributions > 0 ? (nav + distributions) / contributions : 1
-        const irr = 0.08 + (growthFactor - 1) * 0.5 // Base 8% IRR with performance adjustment
+        if (error) {
+          console.error('Error fetching performance data:', error)
+          setData([])
+          setLoading(false)
+          return
+        }
 
-        data.push({
-          period: date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' }),
-          date: date.toISOString().split('T')[0],
-          nav: Math.round(nav),
-          contributions: Math.round(contributions),
-          distributions: Math.round(distributions),
-          dpi: Math.round(dpi * 100) / 100,
-          tvpi: Math.round(tvpi * 100) / 100,
-          irr: Math.round(irr * 10000) / 100 // Convert to percentage
+        // Transform snapshots to chart data format
+        const performanceData: PerformanceData[] = []
+        const snapshotsByDate = new Map<string, any[]>()
+
+        // Group snapshots by date
+        snapshots?.forEach(snapshot => {
+          const date = snapshot.snapshot_date
+          if (!snapshotsByDate.has(date)) {
+            snapshotsByDate.set(date, [])
+          }
+          snapshotsByDate.get(date)!.push(snapshot)
         })
-      }
 
-      return data
+        // Aggregate data by date for multiple investors
+        Array.from(snapshotsByDate.entries())
+          .sort(([a], [b]) => a.localeCompare(b))
+          .forEach(([date, snapshots]) => {
+            const totalNav = snapshots.reduce((sum, s) => sum + (s.nav_value || 0), 0)
+            const totalContributed = snapshots.reduce((sum, s) => sum + (s.contributed || 0), 0)
+            const totalDistributed = snapshots.reduce((sum, s) => sum + (s.distributed || 0), 0)
+
+            // Calculate weighted averages for multiples
+            const avgDpi = totalContributed > 0 ? totalDistributed / totalContributed : 0
+            const avgTvpi = totalContributed > 0 ? (totalNav + totalDistributed) / totalContributed : 1
+            const avgIrr = snapshots.reduce((sum, s) => sum + (s.irr_net || 0), 0) / snapshots.length
+
+            performanceData.push({
+              period: new Date(date).toLocaleDateString('en-US', { month: 'short', year: '2-digit' }),
+              date,
+              nav: totalNav,
+              contributions: totalContributed,
+              distributions: totalDistributed,
+              dpi: Math.round(avgDpi * 100) / 100,
+              tvpi: Math.round(avgTvpi * 100) / 100,
+              irr: Math.round(avgIrr * 10000) / 100 // Convert to percentage
+            })
+          })
+
+        setData(performanceData)
+      } catch (error) {
+        console.error('Error in fetchPerformanceData:', error)
+        setData([])
+      } finally {
+        setLoading(false)
+      }
     }
 
-    setLoading(true)
-    // Simulate API call delay
-    setTimeout(() => {
-      setData(generateHistoricalData())
-      setLoading(false)
-    }, 300)
+    fetchPerformanceData()
   }, [selectedPeriod, investorIds, selectedDealId])
 
   const formatCurrency = (value: number) => {

@@ -20,13 +20,26 @@ export async function AppLayout({ children, brand }: AppLayoutProps) {
   }
 
   // Verify user has correct access for the brand
+  const isStaffRole = ['staff_admin', 'staff_ops', 'staff_rm'].includes(profile.role)
+  
+  console.log('[AppLayout] Profile check:', {
+    brand,
+    userRole: profile.role,
+    isStaffRole,
+    email: profile.email
+  })
+  
   if (brand === 'versoholdings' && profile.role !== 'investor') {
+    console.log('[AppLayout] Redirecting non-investor from versoholdings')
     redirect('/versotech/staff')
   }
   
-  if (brand === 'versotech' && profile.role !== 'staff') {
+  if (brand === 'versotech' && !isStaffRole) {
+    console.log('[AppLayout] Redirecting non-staff from versotech')
     redirect('/versoholdings/dashboard')
   }
+  
+  console.log('[AppLayout] Access granted for', profile.email, 'to', brand)
 
   return (
     <div className="flex h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-indigo-50/20">

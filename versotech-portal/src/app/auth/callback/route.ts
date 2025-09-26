@@ -1,88 +1,157 @@
-import { createClient } from '@/lib/supabase/server'
-import { NextResponse } from 'next/server'
-import { NextRequest } from 'next/server'
+﻿import { createClient } from '@/lib/supabase/server'
+import { NextRequest, NextResponse } from 'next/server'
+
+const STAFF_ROLES = new Set(['staff_admin', 'staff_ops', 'staff_rm'])
+const STAFF_DOMAINS = ['@versotech.com', '@verso.com']
+
+const resolveRedirectPath = (next: string | null, role: string) => {
+  const defaultPath = STAFF_ROLES.has(role) ? '/versotech/staff' : '/versoholdings/dashboard'
+
+  if (!next) {
+    return defaultPath
+  }
+
+  if (!next.startsWith('/')) {
+    return defaultPath
+  }
+
+  if (next.startsWith('/versotech') && !STAFF_ROLES.has(role)) {
+    return defaultPath
+  }
+
+  if (next.startsWith('/versoholdings') && STAFF_ROLES.has(role)) {
+    return defaultPath
+  }
+
+  return next
+}
+
+const deriveDisplayName = (email: string | null, metadata: Record<string, any>) => {
+  return (
+    metadata?.full_name ||
+    metadata?.display_name ||
+    email?.split('@')[0] ||
+    'User'
+  )
+}
+
+const isStaffEmail = (email: string | null) => {
+  if (!email) return false
+  return STAFF_DOMAINS.some((domain) => email.toLowerCase().endsWith(domain))
+}
 
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url)
   const code = requestUrl.searchParams.get('code')
   const error = requestUrl.searchParams.get('error')
-  const next = requestUrl.searchParams.get('next') // This will tell us which portal they chose
+  const next = requestUrl.searchParams.get('next')
+  const portalContext = requestUrl.searchParams.get('portal') ?? 'investor'
   const origin = requestUrl.origin
 
-  // Handle errors from Supabase
+  const investorLogin = `${origin}/versoholdings/login`
+  const staffLogin = `${origin}/versotech/login`
+
   if (error) {
-    console.error('Auth callback error:', error, requestUrl.searchParams.get('error_description'))
-    return NextResponse.redirect(`${origin}/versoholdings/login?error=auth_failed`)
+    console.error('[auth] OAuth callback error:', error, requestUrl.searchParams.get('error_description'))
+    const loginUrl = portalContext === 'staff' ? staffLogin : investorLogin
+    return NextResponse.redirect(`${loginUrl}?error=auth_failed`)
   }
 
-  if (code) {
-    try {
-      const supabase = await createClient()
-      
-      // Exchange the code for a session
-      const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
-      
-      if (exchangeError) {
-        console.error('Code exchange error:', exchangeError)
-        return NextResponse.redirect(`${origin}/versoholdings/login?error=auth_failed`)
-      }
-      
-      if (data?.user) {
-        console.log('User authenticated:', data.user.email)
-        console.log('Next parameter received:', next)
-        
-        // Determine the intended portal and role from the 'next' parameter
-        let intendedRole = 'investor' // default to investor
-        let redirectUrl = '/versoholdings/dashboard' // default redirect
+  if (!code) {
+    const loginUrl = portalContext === 'staff' ? staffLogin : investorLogin
+    return NextResponse.redirect(`${loginUrl}?error=auth_failed`)
+  }
 
-        // Check which portal they came from based on the 'next' parameter
-        if (next && (next.includes('versotech') || next.includes('staff'))) {
-          intendedRole = 'staff_admin'
-          redirectUrl = '/versotech/staff'
-          console.log('STAFF portal chosen - redirecting to:', redirectUrl)
-        } else if (next && next.includes('versoholdings')) {
-          intendedRole = 'investor'
-          redirectUrl = '/versoholdings/dashboard'
-          console.log('INVESTOR portal chosen - redirecting to:', redirectUrl)
-        } else {
-          console.log('DEFAULT to INVESTOR portal - redirecting to:', redirectUrl)
-        }
+  try {
+    const supabase = await createClient()
+    const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
 
-        // Try to get existing profile
-        let { data: profile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', data.user.id)
-          .single()
-
-        if (!profile) {
-          // Create a new profile with the intended role
-          const { data: newProfile } = await supabase
-            .from('profiles')
-            .insert({
-              id: data.user.id,
-              email: data.user.email,
-              role: intendedRole,
-              display_name: data.user.email?.split('@')[0] || 'User'
-            })
-            .select('*')
-            .single()
-
-          profile = newProfile
-          console.log(`Created new profile for ${data.user.email} with role: ${intendedRole}`)
-        }
-
-        // Always redirect to the portal they chose, regardless of existing role
-        // This respects user choice over automatic role assignment
-        console.log('Final redirect URL:', `${origin}${redirectUrl}`)
-        return NextResponse.redirect(`${origin}${redirectUrl}`)
-      }
-    } catch (err) {
-      console.error('Unexpected error in auth callback:', err)
-      return NextResponse.redirect(`${origin}/versoholdings/login?error=auth_failed`)
+    if (exchangeError || !data?.user) {
+      console.error('[auth] Failed to exchange code for session:', exchangeError)
+      const loginUrl = portalContext === 'staff' ? staffLogin : investorLogin
+      return NextResponse.redirect(`${loginUrl}?error=auth_failed`)
     }
-  }
 
-  // No code provided, redirect to login
-  return NextResponse.redirect(`${origin}/versoholdings/login?error=auth_failed`)
+    const user = data.user
+    const email = user.email?.toLowerCase() ?? null
+    const metadataRole = typeof user.user_metadata?.role === 'string' ? user.user_metadata.role : null
+
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id)
+      .single()
+
+    if (profileError && profileError.code !== 'PGRST116') {
+      console.error('[auth] Error loading user profile:', profileError)
+      const loginUrl = portalContext === 'staff' ? staffLogin : investorLogin
+      return NextResponse.redirect(`${loginUrl}?error=profile_not_found`)
+    }
+
+    let role = profile?.role ?? metadataRole ?? 'investor'
+
+    if (!profile) {
+      if (portalContext === 'staff') {
+        let staffRole: string | null = null
+
+        if (metadataRole && STAFF_ROLES.has(metadataRole)) {
+          staffRole = metadataRole
+        } else if (isStaffEmail(email)) {
+          staffRole = 'staff_ops'
+        }
+
+        if (!staffRole) {
+          await supabase.auth.signOut()
+          return NextResponse.redirect(`${staffLogin}?error=staff_access_required`)
+        }
+
+        role = staffRole
+      } else {
+        if (metadataRole && STAFF_ROLES.has(metadataRole)) {
+          role = metadataRole
+        } else {
+          role = 'investor'
+        }
+      }
+
+      const displayName = deriveDisplayName(email, user.user_metadata ?? {})
+
+      const { error: createError } = await supabase
+        .from('profiles')
+        .insert({
+          id: user.id,
+          email: user.email,
+          role,
+          display_name: displayName,
+          created_at: new Date().toISOString(),
+        })
+
+      if (createError) {
+        console.error('[auth] Failed to create profile during OAuth callback:', createError)
+        const loginUrl = portalContext === 'staff' ? staffLogin : investorLogin
+        return NextResponse.redirect(`${loginUrl}?error=profile_creation_failed`)
+      }
+    } else {
+      if (portalContext === 'staff' && !STAFF_ROLES.has(profile.role)) {
+        await supabase.auth.signOut()
+        return NextResponse.redirect(`${staffLogin}?error=staff_access_required`)
+      }
+
+      if (portalContext === 'investor' && STAFF_ROLES.has(profile.role)) {
+        const redirectUrl = new URL('/versotech/staff', origin)
+        return NextResponse.redirect(redirectUrl)
+      }
+
+      role = profile.role
+    }
+
+    const redirectPath = resolveRedirectPath(next, role)
+    const redirectUrl = new URL(redirectPath, origin)
+
+    return NextResponse.redirect(redirectUrl)
+  } catch (err) {
+    console.error('[auth] Unexpected error in OAuth callback:', err)
+    const loginUrl = portalContext === 'staff' ? staffLogin : investorLogin
+    return NextResponse.redirect(`${loginUrl}?error=auth_failed`)
+  }
 }

@@ -3,7 +3,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { createClient } from '@/lib/supabase/server'
-import { getUserById } from '@/lib/simple-auth'
 import Link from 'next/link'
 import {
   TrendingUp,
@@ -76,12 +75,12 @@ export default async function InvestorDealsPage() {
   const supabase = await createClient()
 
   // Get current user - AppLayout already handles auth checks
-  const cookieStore = await cookies()
-  const sessionCookie = cookieStore.get('demo_session')!
-  const session = JSON.parse(sessionCookie.value)
-  const user = getUserById(session.id)!
+  const { data: { user }, error: userError } = await supabase.auth.getUser()
 
-  // Map simple auth user to Supabase user format for the rest of the code
+  if (!user || userError) {
+    throw new Error('Authentication required')
+  }
+
   const supabaseUser = {
     id: user.id,
     email: user.email
@@ -425,6 +424,7 @@ export default async function InvestorDealsPage() {
     </AppLayout>
   )
 }
+
 
 
 

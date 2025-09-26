@@ -2,10 +2,15 @@ import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Building2, Users, Shield } from "lucide-react";
+import { AuthHandler } from "@/components/auth-handler";
+import { Suspense } from "react";
 
 export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-4">
+      <Suspense fallback={null}>
+        <AuthHandler />
+      </Suspense>
       <div className="w-full max-w-4xl space-y-8">
         
         {/* Header */}

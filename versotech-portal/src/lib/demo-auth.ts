@@ -144,21 +144,25 @@ export const DEMO_CREDENTIALS = {
     {
       email: 'admin@versotech.com',
       password: 'admin123',
+      name: 'Marcus Chen',
       description: 'Managing Director - Full Access'
     },
     {
       email: 'operations@versotech.com',
       password: 'ops123',
+      name: 'Sarah Williams',
       description: 'Head of Operations'
     },
     {
       email: 'relations@versotech.com',
       password: 'rm123',
+      name: 'David Rodriguez',
       description: 'Senior Relationship Manager'
     },
     {
       email: 'compliance@versotech.com',
       password: 'compliance123',
+      name: 'Emma Thompson',
       description: 'Chief Compliance Officer'
     }
   ]

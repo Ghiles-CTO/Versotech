@@ -1,5 +1,6 @@
 import { AppLayout } from '@/components/layout/app-layout'
 import { RealtimeDashboard } from '@/components/dashboard/realtime-dashboard'
+import { SessionGuard } from '@/components/auth/session-guard'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -11,8 +12,6 @@ import {
 } from 'lucide-react'
 
 import { createClient } from '@/lib/supabase/server'
-import { getUserById } from '@/lib/simple-auth'
-import { cookies } from 'next/headers'
 import { measureTimeAsync } from '@/lib/performance'
 import { cn } from '@/lib/utils'
 
@@ -21,30 +20,9 @@ async function getPortfolioData() {
     try {
       const supabase = await createClient()
 
-      // Get current user - auth already handled by AppLayout
-      const cookieStore = await cookies()
-      const sessionCookie = cookieStore.get('demo_session')
-      if (!sessionCookie) {
-        return {
-          kpis: {
-            currentNAV: 0,
-            totalContributed: 0,
-            totalDistributions: 0,
-            unfundedCommitment: 0,
-            unrealizedGain: 0,
-            unrealizedGainPct: 0,
-            dpi: 0,
-            tvpi: 0,
-            irr: 0
-          },
-          hasData: false,
-          vehicles: []
-        }
-      }
-
-      const session = JSON.parse(sessionCookie.value)
-      const user = getUserById(session.id)
-      if (!user) {
+      // Get current user from Supabase session
+      const { data: { user }, error: userError } = await supabase.auth.getUser()
+      if (!user || userError) {
         return {
           kpis: {
             currentNAV: 0,
@@ -133,21 +111,46 @@ async function getPortfolioData() {
         return sum + ((pos.units || 0) * (pos.last_nav || 0))
       }, 0) || 0
 
-      const costBasis = positions?.reduce((sum, pos) => sum + (pos.cost_basis || 0), 0) || 0
-      const unrealizedGain = currentNAV - costBasis
-      const unrealizedGainPct = costBasis > 0 ? (unrealizedGain / costBasis) * 100 : 0
-
-      // Calculate DPI, TVPI, and IRR from performance snapshots (latest)
+      // Get aggregated performance data from latest performance snapshots
       const { data: latestPerformance } = await supabase
         .from('performance_snapshots')
-        .select('dpi, tvpi, irr_net')
+        .select('nav_value, contributed, distributed, dpi, tvpi, irr_net')
         .in('investor_id', investorIds)
         .order('snapshot_date', { ascending: false })
-        .limit(1)
+        .limit(investorIds.length) // Get latest for each investor
 
-      const dpi = latestPerformance?.[0]?.dpi || (totalContributed > 0 ? totalDistributions / totalContributed : 0)
-      const tvpi = latestPerformance?.[0]?.tvpi || (totalContributed > 0 ? (currentNAV + totalDistributions) / totalContributed : 1)
-      const irr = latestPerformance?.[0]?.irr_net || 0
+      let finalNAV = currentNAV
+      let finalContributed = totalContributed
+      let finalDistributions = totalDistributions
+      let dpi = 0
+      let tvpi = 1
+      let irr = 0
+
+      if (latestPerformance && latestPerformance.length > 0) {
+        // Use aggregated data from performance snapshots instead of calculating client-side
+        const aggregatedNAV = latestPerformance.reduce((sum, perf) => sum + (perf.nav_value || 0), 0)
+        const aggregatedContributed = latestPerformance.reduce((sum, perf) => sum + (perf.contributed || 0), 0)
+        const aggregatedDistributed = latestPerformance.reduce((sum, perf) => sum + (perf.distributed || 0), 0)
+
+        // Use database values when available
+        finalNAV = aggregatedNAV || currentNAV
+        finalContributed = aggregatedContributed || totalContributed
+        finalDistributions = aggregatedDistributed || totalDistributions
+
+        // Calculate performance metrics
+        dpi = finalContributed > 0 ? finalDistributions / finalContributed : 0
+        tvpi = finalContributed > 0 ? (finalNAV + finalDistributions) / finalContributed : 1
+        irr = latestPerformance.reduce((sum, perf) => sum + (perf.irr_net || 0), 0) / latestPerformance.length
+      } else {
+        // Fallback to calculated values if no performance snapshots
+        dpi = finalContributed > 0 ? finalDistributions / finalContributed : 0
+        tvpi = finalContributed > 0 ? (finalNAV + finalDistributions) / finalContributed : 1
+        irr = 0
+      }
+
+      const costBasis = positions?.reduce((sum, pos) => sum + (pos.cost_basis || 0), 0) || 0
+      const unrealizedGain = finalNAV - costBasis
+      const unrealizedGainPct = costBasis > 0 ? (unrealizedGain / costBasis) * 100 : 0
 
       // Get vehicle breakdown
       const { data: vehicleData } = await supabase
@@ -170,9 +173,9 @@ async function getPortfolioData() {
 
       return {
         kpis: {
-          currentNAV,
-          totalContributed,
-          totalDistributions,
+          currentNAV: finalNAV,
+          totalContributed: finalContributed,
+          totalDistributions: finalDistributions,
           unfundedCommitment,
           unrealizedGain,
           unrealizedGainPct,
@@ -180,7 +183,7 @@ async function getPortfolioData() {
           tvpi,
           irr
         },
-        hasData: totalContributed > 0 || currentNAV > 0,
+        hasData: finalContributed > 0 || finalNAV > 0,
         vehicles: vehicleData || [],
         recentActivity: recentActivity || []
       }
@@ -220,13 +223,15 @@ export default async function InvestorDashboard() {
   const { kpis, hasData, vehicles, recentActivity } = await getPortfolioData()
 
   // Get current user to get investor IDs for realtime subscriptions
-  const cookieStore = await cookies()
-  const sessionCookie = cookieStore.get('demo_session')
-  const investorIds = sessionCookie ? await getInvestorIds(JSON.parse(sessionCookie.value).id) : []
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  const investorIds = user ? await getInvestorIds(user.id) : []
 
   return (
-    <AppLayout brand="versoholdings">
-      <div className="p-6 space-y-8">
+    <SessionGuard>
+      <AppLayout brand="versoholdings">
+        <div className="p-6 space-y-8">
 
         {/* VERSO Holdings Header */}
         <div className="border-b border-gray-200 pb-6">
@@ -309,7 +314,8 @@ export default async function InvestorDashboard() {
             </div>
           </div>
         )}
-      </div>
-    </AppLayout>
+        </div>
+      </AppLayout>
+    </SessionGuard>
   )
 }

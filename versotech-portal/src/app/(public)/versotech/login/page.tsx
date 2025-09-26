@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
-import { DEMO_CREDENTIALS } from '@/lib/simple-auth'
+import { DEMO_CREDENTIALS } from '@/lib/demo-auth'
+import { signUp, signIn, AuthError } from '@/lib/auth-client'
 import { 
   Loader2, 
   Eye, 
@@ -24,45 +25,62 @@ export default function StaffLogin() {
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [displayName, setDisplayName] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [isSignUp, setIsSignUp] = useState(false)
   const [message, setMessage] = useState<{ type: 'error' | 'success', text: string } | null>(null)
 
-  const handleSignIn = async (e: React.FormEvent) => {
+  const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
     setMessage(null)
 
     try {
-      const response = await fetch('/api/auth/signin', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email,
-          password,
-          portal: 'staff'
-        }),
-      })
+      if (isSignUp) {
+        if (!displayName.trim()) {
+          setMessage({
+            type: 'error',
+            text: 'Please enter your full name'
+          })
+          setIsLoading(false)
+          return
+        }
 
-      const result = await response.json()
-
-      if (!response.ok) {
+        // Sign up new staff user
+        await signUp(email, password, displayName, 'staff')
+        setMessage({
+          type: 'success',
+          text: 'Account created! Please check your email to verify your account.'
+        })
+        setIsSignUp(false)
+      } else {
+        // Sign in existing user
+        const result = await signIn(email, password, 'staff')
+        
+        console.log('[StaffLogin] SignIn result:', result)
+        
+        if (result?.success) {
+          if (result.user?.demo) {
+            window.location.href = result.redirect ?? '/versotech/staff'
+          } else {
+            router.replace(result.redirect ?? '/versotech/staff')
+          }
+        }
+      }
+    } catch (error) {
+      if (error instanceof AuthError) {
         setMessage({
           type: 'error',
-          text: result.error || 'Login failed'
+          text: error.message
         })
-        setIsLoading(false)
-        return
+      } else {
+        setMessage({
+          type: 'error',
+          text: 'Authentication failed. Please try again.'
+        })
       }
-
-      // Success - redirect to staff dashboard
-      router.push(result.redirect)
-
-    } catch (error) {
-      setMessage({
-        type: 'error',
-        text: 'Network error. Please try again.'
-      })
+    } finally {
       setIsLoading(false)
     }
   }
@@ -70,6 +88,15 @@ export default function StaffLogin() {
   const quickLogin = (demoEmail: string, demoPassword: string) => {
     setEmail(demoEmail)
     setPassword(demoPassword)
+    setIsSignUp(false)
+  }
+
+  const switchMode = () => {
+    setIsSignUp(!isSignUp)
+    setMessage(null)
+    setEmail('')
+    setPassword('')
+    setDisplayName('')
   }
 
   return (
@@ -92,10 +119,10 @@ export default function StaffLogin() {
             <CardHeader className="space-y-3 pb-6">
               <div className="flex items-center gap-2">
                 <Shield className="h-5 w-5 text-slate-700" />
-                <CardTitle className="text-xl">Staff Access</CardTitle>
+                <CardTitle className="text-xl">{isSignUp ? 'Create Staff Account' : 'Staff Access'}</CardTitle>
               </div>
               <CardDescription className="text-base">
-                Operations dashboard for workflow automation and management
+                {isSignUp ? 'Register a new staff account for operations access' : 'Operations dashboard for workflow automation and management'}
               </CardDescription>
             </CardHeader>
             
@@ -110,7 +137,23 @@ export default function StaffLogin() {
                 </div>
               )}
               
-              <form onSubmit={handleSignIn} className="space-y-5">
+              <form onSubmit={handleAuth} className="space-y-5">
+                {isSignUp && (
+                  <div className="space-y-2">
+                    <Label htmlFor="displayName" className="text-sm font-medium">Full Name</Label>
+                    <Input
+                      id="displayName"
+                      type="text"
+                      placeholder="Enter your full name"
+                      value={displayName}
+                      onChange={(e) => setDisplayName(e.target.value)}
+                      required={isSignUp}
+                      disabled={isLoading}
+                      className="h-11"
+                    />
+                  </div>
+                )}
+                
                 <div className="space-y-2">
                   <Label htmlFor="email" className="text-sm font-medium">Staff Email</Label>
                   <Input
@@ -152,22 +195,33 @@ export default function StaffLogin() {
                 
                 <Button 
                   type="submit" 
-                  disabled={isLoading || !email || !password}
+                  disabled={isLoading || !email || !password || (isSignUp && !displayName)}
                   className="w-full h-11 bg-slate-700 hover:bg-slate-800 text-white font-medium"
                 >
                   {isLoading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Authenticating...
+                      {isSignUp ? 'Creating Account...' : 'Authenticating...'}
                     </>
                   ) : (
                     <>
                       <Lock className="mr-2 h-4 w-4" />
-                      Access Operations
+                      {isSignUp ? 'Create Staff Account' : 'Access Operations'}
                     </>
                   )}
                 </Button>
               </form>
+              
+              <div className="text-center">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={switchMode}
+                  className="text-sm text-gray-600 hover:text-gray-900"
+                >
+                  {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
+                </Button>
+              </div>
             </CardContent>
           </Card>
 
@@ -195,8 +249,8 @@ export default function StaffLogin() {
 
           <div className="space-y-4">
             {DEMO_CREDENTIALS.staff.map((cred, index) => {
-              const icons = ['👑', '📊', '⚙️']
-              const colors = ['amber', 'blue', 'slate']
+              const icons = ['👑', '📊', '⚙️', '🔒']
+              const colors = ['amber', 'blue', 'slate', 'green']
               return (
                 <Card 
                   key={index} 

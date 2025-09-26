@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { User, Settings, LogOut, Shield, Building2 } from 'lucide-react'
 import { Profile } from '@/lib/auth'
+import { signOut } from '@/lib/auth-client'
 
 interface UserMenuProps {
   profile: Profile
@@ -24,21 +25,13 @@ export function UserMenu({ profile }: UserMenuProps) {
 
   const handleLogout = async () => {
     setIsLoggingOut(true)
-    
-    try {
-      const response = await fetch('/api/auth/logout', {
-        method: 'POST',
-      })
 
-      if (response.ok) {
-        // Redirect to home page
-        router.push('/')
-        // Force page refresh to clear all state
-        window.location.href = '/'
-      }
+    try {
+      await signOut()
+      router.push('/')
+      window.location.href = '/'
     } catch (error) {
       console.error('Logout failed:', error)
-      // Still redirect on error
       window.location.href = '/'
     }
   }

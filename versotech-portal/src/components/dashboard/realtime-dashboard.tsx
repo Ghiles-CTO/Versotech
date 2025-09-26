@@ -6,8 +6,7 @@ import { KPICard } from '@/components/dashboard/kpi-card'
 import { KPIDetailModal, KPIDetail } from '@/components/dashboard/kpi-detail-modal'
 import { PerformanceTrends } from '@/components/dashboard/performance-trends'
 import { DealContextSelector } from '@/components/dashboard/deal-context-selector'
-import { SmartInsights } from '@/components/dashboard/smart-insights'
-import { AIRecommendations } from '@/components/dashboard/ai-recommendations'
+// Removed fake AI/ML components - these were decorative and non-functional
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -309,26 +308,8 @@ export function RealtimeDashboard({ initialData, investorIds }: RealtimeDashboar
 
       if (dealError || !dealData) {
         console.error('Error fetching deal data:', dealError)
-        // Handle demo deals
-        if (dealId.startsWith('demo-')) {
-          console.log('Using demo deal data for:', dealId)
-          const demoData = {
-            kpis: {
-              currentNAV: originalData.kpis.currentNAV * 0.3, // Assuming 30% of portfolio in this deal
-              totalContributed: originalData.kpis.totalContributed * 0.3,
-              totalDistributions: originalData.kpis.totalDistributions * 0.3,
-              unfundedCommitment: originalData.kpis.unfundedCommitment * 0.3,
-              unrealizedGain: originalData.kpis.unrealizedGain * 0.3,
-              unrealizedGainPct: originalData.kpis.unrealizedGainPct,
-              dpi: originalData.kpis.dpi,
-              tvpi: originalData.kpis.tvpi,
-              irr: originalData.kpis.irr
-            },
-            vehicles: originalData.vehicles.slice(0, 1), // Show first vehicle only
-            recentActivity: originalData.recentActivity.filter(a => Math.random() > 0.5) // Random subset
-          }
-          setData(demoData)
-        }
+        // No deal found - reset to portfolio view instead of showing fake data
+        setData(originalData)
         return
       }
 
@@ -558,15 +539,8 @@ export function RealtimeDashboard({ initialData, investorIds }: RealtimeDashboar
         />
       </div>
 
-      {/* Performance Trends and Smart Insights */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        <div className="xl:col-span-2">
-          <PerformanceTrends investorIds={investorIds} selectedDealId={selectedDealId} />
-        </div>
-        <div className="xl:col-span-1">
-          <SmartInsights data={data} selectedDealId={selectedDealId} />
-        </div>
-      </div>
+      {/* Performance Trends */}
+      <PerformanceTrends investorIds={investorIds} selectedDealId={selectedDealId} />
 
       {/* Investment Vehicles */}
       <Card>
@@ -611,8 +585,7 @@ export function RealtimeDashboard({ initialData, investorIds }: RealtimeDashboar
         </CardContent>
       </Card>
 
-      {/* AI Recommendations */}
-      <AIRecommendations data={data} selectedDealId={selectedDealId} />
+      {/* Removed fake AI recommendations component */}
 
       {/* Quick Actions & Recent Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
