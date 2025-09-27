@@ -2,6 +2,9 @@ import { AppLayout } from '@/components/layout/app-layout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { ReservationModal } from '@/components/deals/reservation-modal'
+import { DealDetailsModal } from '@/components/deals/deal-details-modal'
+import { CommitmentModal } from '@/components/deals/commitment-modal'
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import {
@@ -31,6 +34,17 @@ interface InvestorDeal {
   open_at: string | null
   close_at: string | null
   created_at: string
+  description?: string | null
+  investment_thesis?: string | null
+  minimum_investment?: number | null
+  maximum_investment?: number | null
+  target_amount?: number | null
+  raised_amount?: number | null
+  company_name?: string | null
+  company_logo_url?: string | null
+  sector?: string | null
+  stage?: string | null
+  location?: string | null
   vehicles?: {
     id: string
     name: string
@@ -106,9 +120,11 @@ export default async function InvestorDealsPage() {
     )
   }
 
+  console.log('🔍 DEBUG: Starting deals page load for user:', supabaseUser.id)
+
   const investorIds = investorLinks.map(link => link.investor_id)
 
-  // Fetch deals where user is a member
+  // Simplified approach - get deals directly
   const { data: deals, error } = await supabase
     .from('deals')
     .select(`
@@ -129,9 +145,14 @@ export default async function InvestorDealsPage() {
         is_default
       )
     `)
-    .in('deal_memberships.user_id', [supabaseUser.id])
-    .or(`deal_memberships.investor_id.in.(${investorIds.join(',')})`)
+    .eq('deal_memberships.user_id', supabaseUser.id)
     .order('created_at', { ascending: false })
+
+  console.log('🔍 DEBUG: Simplified deals query result:', {
+    deals,
+    error,
+    dealCount: deals?.length || 0
+  })
 
   const dealsData: InvestorDeal[] = deals || []
 
@@ -247,10 +268,24 @@ export default async function InvestorDealsPage() {
         {/* Deals List */}
         <Card>
           <CardHeader>
-            <CardTitle>Your Investment Opportunities</CardTitle>
-            <CardDescription>
-              Deals you've been invited to participate in
-            </CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Your Investment Opportunities</CardTitle>
+                <CardDescription>
+                  Deals you've been invited to participate in
+                </CardDescription>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm">
+                  <TrendingUp className="mr-2 h-4 w-4" />
+                  Filter
+                </Button>
+                <Button variant="outline" size="sm">
+                  <FileText className="mr-2 h-4 w-4" />
+                  Search
+                </Button>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
             {dealsData.length === 0 ? (
@@ -267,40 +302,140 @@ export default async function InvestorDealsPage() {
                   const myMembership = deal.deal_memberships[0] // Since we filtered by user
                   const hasAccepted = myMembership?.accepted_at !== null
                   const defaultFeePlan = deal.fee_plans.find(fp => fp.is_default)
+                  
+                  // Calculate progress percentage
+                  const progressPercentage = deal.target_amount && deal.raised_amount 
+                    ? Math.min((deal.raised_amount / deal.target_amount) * 100, 100)
+                    : 0
+
+                  // Calculate days until close
+                  const daysUntilClose = deal.close_at 
+                    ? Math.ceil((new Date(deal.close_at).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
+                    : null
+
+                  // Determine if deal is effectively closed (past close date or status)
+                  const isEffectivelyClosed = deal.status === 'closed' || deal.status === 'cancelled' || 
+                    (deal.close_at && new Date(deal.close_at) < new Date())
 
                   return (
                     <div key={deal.id} className="border rounded-lg p-6 hover:bg-gray-50 transition-colors">
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
-                            <h3 className="text-xl font-semibold text-gray-900">{deal.name}</h3>
-                            <Badge className={statusColors[deal.status as keyof typeof statusColors]}>
-                              {statusDescriptions[deal.status as keyof typeof statusDescriptions]}
-                            </Badge>
-                            <Badge variant="outline">
-                              {dealTypeLabels[deal.deal_type as keyof typeof dealTypeLabels]}
-                            </Badge>
+                          {/* Header with company info */}
+                          <div className="flex items-start gap-4 mb-3">
+                            {deal.company_logo_url ? (
+                              <img 
+                                src={deal.company_logo_url} 
+                                alt={deal.company_name || deal.name}
+                                className="w-12 h-12 rounded-lg object-cover"
+                              />
+                            ) : (
+                              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                                <Building2 className="h-6 w-6 text-white" />
+                              </div>
+                            )}
+                            
+                            <div className="flex-1">
+                              <div className="flex items-center gap-3 mb-1">
+                                <h3 className="text-xl font-semibold text-gray-900">
+                                  {deal.company_name || deal.name}
+                                </h3>
+                                <Badge className={
+                                  isEffectivelyClosed 
+                                    ? 'bg-red-100 text-red-800' 
+                                    : statusColors[deal.status as keyof typeof statusColors]
+                                }>
+                                  {isEffectivelyClosed 
+                                    ? 'Closed' 
+                                    : statusDescriptions[deal.status as keyof typeof statusDescriptions]
+                                  }
+                                </Badge>
+                                <Badge variant="outline">
+                                  {dealTypeLabels[deal.deal_type as keyof typeof dealTypeLabels]}
+                                </Badge>
+                              </div>
+                              
+                              <div className="flex items-center gap-4 text-sm text-gray-500 mb-2">
+                                {deal.sector && (
+                                  <span className="flex items-center gap-1">
+                                    <TrendingUp className="h-4 w-4" />
+                                    {deal.sector}
+                                  </span>
+                                )}
+                                {deal.stage && (
+                                  <span>{deal.stage}</span>
+                                )}
+                                {deal.location && (
+                                  <span>{deal.location}</span>
+                                )}
+                              </div>
+                            </div>
                           </div>
-                          
-                          {deal.vehicles && (
-                            <p className="text-gray-600 mb-2">
-                              <Building2 className="inline h-4 w-4 mr-1" />
-                              {deal.vehicles.name} ({deal.vehicles.type})
+
+                          {/* Deal description */}
+                          {deal.description && (
+                            <p className="text-gray-700 mb-3 line-clamp-2">
+                              {deal.description}
                             </p>
                           )}
 
+                          {/* Investment details */}
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                            {deal.target_amount && (
+                              <div className="bg-gray-50 p-3 rounded-lg">
+                                <div className="flex items-center justify-between mb-1">
+                                  <span className="text-sm font-medium text-gray-700">Target Amount</span>
+                                  <span className="text-sm font-semibold text-gray-900">
+                                    {deal.currency} {(deal.target_amount / 1000000).toFixed(1)}M
+                                  </span>
+                                </div>
+                                {deal.raised_amount !== undefined && (
+                                  <div className="w-full bg-gray-200 rounded-full h-2">
+                                    <div 
+                                      className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                                      style={{ width: `${progressPercentage}%` }}
+                                    ></div>
+                                  </div>
+                                )}
+                                {deal.raised_amount !== undefined && (
+                                  <div className="text-xs text-gray-500 mt-1">
+                                    {deal.currency} {(deal.raised_amount / 1000000).toFixed(1)}M raised ({progressPercentage.toFixed(0)}%)
+                                  </div>
+                                )}
+                              </div>
+                            )}
+
+                            {deal.minimum_investment && (
+                              <div className="bg-gray-50 p-3 rounded-lg">
+                                <div className="text-sm font-medium text-gray-700 mb-1">Minimum Investment</div>
+                                <div className="text-lg font-semibold text-gray-900">
+                                  {deal.currency} {(deal.minimum_investment / 1000).toFixed(0)}K
+                                </div>
+                                {deal.maximum_investment && (
+                                  <div className="text-xs text-gray-500">
+                                    Max: {deal.currency} {(deal.maximum_investment / 1000000).toFixed(1)}M
+                                  </div>
+                                )}
+                              </div>
+                            )}
+
+                            {deal.offer_unit_price && (
+                              <div className="bg-gray-50 p-3 rounded-lg">
+                                <div className="text-sm font-medium text-gray-700 mb-1">Unit Price</div>
+                                <div className="text-lg font-semibold text-gray-900">
+                                  {deal.currency} {deal.offer_unit_price.toFixed(2)}
+                                </div>
+                                <div className="text-xs text-gray-500">per unit</div>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Timeline and urgency */}
                           <div className="flex items-center gap-6 text-sm text-gray-500 mb-3">
                             <div className="flex items-center gap-1">
                               <Users className="h-4 w-4" />
                               Role: {myMembership?.role.replace('_', ' ').toLowerCase()}
                             </div>
-                            
-                            {deal.offer_unit_price && (
-                              <div className="flex items-center gap-1">
-                                <CircleDollarSign className="h-4 w-4" />
-                                {deal.currency} {deal.offer_unit_price.toFixed(2)} per unit
-                              </div>
-                            )}
                             
                             <div className="flex items-center gap-1">
                               <Clock className="h-4 w-4" />
@@ -311,8 +446,21 @@ export default async function InvestorDealsPage() {
                                 <Timer className="h-4 w-4 text-amber-500 ml-1" />
                               )}
                             </div>
+
+                            {daysUntilClose !== null && (
+                              <div className={`flex items-center gap-1 ${
+                                isEffectivelyClosed ? 'text-red-600' :
+                                daysUntilClose <= 7 ? 'text-red-600' : 
+                                daysUntilClose <= 30 ? 'text-amber-600' : 'text-gray-500'
+                              }`}>
+                                <AlertTriangle className="h-4 w-4" />
+                                {isEffectivelyClosed ? 'Closed' : 
+                                 daysUntilClose > 0 ? `${daysUntilClose} days left` : 'Closed'}
+                              </div>
+                            )}
                           </div>
 
+                          {/* Fee plan info */}
                           {defaultFeePlan && (
                             <div className="bg-blue-50 p-3 rounded-lg mb-3">
                               <p className="text-sm font-medium text-blue-900">Default Fee Structure</p>
@@ -325,21 +473,50 @@ export default async function InvestorDealsPage() {
                         </div>
 
                         <div className="flex flex-col items-end gap-2">
-                          {deal.status === 'open' && hasAccepted ? (
+                          {deal.status === 'open' && hasAccepted && !isEffectivelyClosed ? (
                             <>
-                              <Button asChild>
-                                <Link href={`/versoholdings/deals/${deal.id}`}>
+                              <CommitmentModal 
+                                deal={deal} 
+                                investorId={investorIds[0]}
+                              >
+                                <Button>
                                   <Handshake className="mr-2 h-4 w-4" />
-                                  Participate
+                                  Submit Commitment
+                                </Button>
+                              </CommitmentModal>
+                              
+                              <ReservationModal 
+                                deal={deal} 
+                                investorId={investorIds[0]}
+                              >
+                                <Button variant="outline" size="sm">
+                                  <Package className="mr-2 h-4 w-4" />
+                                  Reserve Units
+                                </Button>
+                              </ReservationModal>
+                              
+                              <DealDetailsModal deal={deal} investorId={investorIds[0]}>
+                                <Button variant="outline" size="sm">
+                                  <FileText className="mr-2 h-4 w-4" />
+                                  View Details
+                                </Button>
+                              </DealDetailsModal>
+
+                              <Button variant="outline" size="sm" asChild>
+                                <Link href={`/versoholdings/deals/${deal.id}/documents`}>
+                                  <FileText className="mr-2 h-4 w-4" />
+                                  Documents
                                 </Link>
                               </Button>
+
                               <Button variant="outline" size="sm" asChild>
-                                <Link href={`/versoholdings/deals/${deal.id}/details`}>
-                                  View Details
+                                <Link href={`/versoholdings/deals/${deal.id}/reports`}>
+                                  <TrendingUp className="mr-2 h-4 w-4" />
+                                  Request Report
                                 </Link>
                               </Button>
                             </>
-                          ) : deal.status === 'open' && !hasAccepted ? (
+                          ) : deal.status === 'open' && !hasAccepted && !isEffectivelyClosed ? (
                             <>
                               <Button asChild>
                                 <Link href={`/versoholdings/deals/${deal.id}/accept`}>
@@ -347,19 +524,33 @@ export default async function InvestorDealsPage() {
                                   Accept Invitation
                                 </Link>
                               </Button>
-                              <Button variant="outline" size="sm" asChild>
-                                <Link href={`/versoholdings/deals/${deal.id}/details`}>
+                              <DealDetailsModal deal={deal} investorId={investorIds[0]}>
+                                <Button variant="outline" size="sm">
+                                  <FileText className="mr-2 h-4 w-4" />
                                   View Details
-                                </Link>
-                              </Button>
+                                </Button>
+                              </DealDetailsModal>
                             </>
+                          ) : isEffectivelyClosed ? (
+                            <div className="text-center py-4">
+                              <div className="text-red-600 font-medium mb-2">Deal Closed</div>
+                              <p className="text-sm text-gray-500">
+                                This deal is no longer accepting commitments
+                              </p>
+                              <DealDetailsModal deal={deal} investorId={investorIds[0]}>
+                                <Button variant="outline" size="sm" className="mt-2">
+                                  <FileText className="mr-2 h-4 w-4" />
+                                  View Details
+                                </Button>
+                              </DealDetailsModal>
+                            </div>
                           ) : (
-                            <Button variant="outline" asChild>
-                              <Link href={`/versoholdings/deals/${deal.id}/details`}>
+                            <DealDetailsModal deal={deal} investorId={investorIds[0]}>
+                              <Button variant="outline">
                                 <FileText className="mr-2 h-4 w-4" />
                                 View Details
-                              </Link>
-                            </Button>
+                              </Button>
+                            </DealDetailsModal>
                           )}
                         </div>
                       </div>
