@@ -1,223 +1,175 @@
 import { createClient } from '@/lib/supabase/server'
-import { auditLogger, AuditActions, AuditEntities } from '@/lib/audit'
-import { NextRequest, NextResponse } from 'next/server'
-import crypto from 'crypto'
+import { auditLogger, AuditActions } from '@/lib/audit'
+import { NextResponse } from 'next/server'
 
-// Get report requests for current user
-export async function GET(request: NextRequest) {
+export async function GET(request: Request) {
   try {
     const supabase = await createClient()
     
-    // Authenticate user
+    // Get the authenticated user
     const { data: { user }, error: authError } = await supabase.auth.getUser()
+    
     if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      )
     }
 
-    // Get user profile to determine access level
+    // Get user profile to check role
     const { data: profile } = await supabase
       .from('profiles')
       .select('role')
       .eq('id', user.id)
       .single()
 
-    // Get report requests (RLS policy handles investor vs staff access)
-    const { data: reportRequests, error } = await supabase
+    if (!profile || profile.role !== 'investor') {
+      return NextResponse.json(
+        { error: 'Investor access required' },
+        { status: 403 }
+      )
+    }
+
+    // Get investor entities linked to this user
+    const { data: investorLinks } = await supabase
+      .from('investor_users')
+      .select('investor_id')
+      .eq('user_id', user.id)
+
+    if (!investorLinks || investorLinks.length === 0) {
+      return NextResponse.json({ requests: [] })
+    }
+
+    const investorIds = investorLinks.map(link => link.investor_id)
+
+    // Get report requests for this investor
+    const { data: requests, error } = await supabase
       .from('report_requests')
       .select(`
         *,
-        investors:investor_id (
-          legal_name,
-          country
-        ),
-        vehicles:vehicle_id (
-          name,
-          type,
-          currency
-        ),
-        result_document:result_doc_id (
-          id,
-          file_key,
-          type,
-          created_at
-        ),
-        created_by_profile:created_by (
-          display_name,
-          email
-        )
+        vehicles (id, name, type),
+        documents (id, type, file_key)
       `)
+      .in('investor_id', investorIds)
       .order('created_at', { ascending: false })
 
     if (error) {
-      console.error('Error fetching report requests:', error)
-      return NextResponse.json({ error: 'Failed to fetch report requests' }, { status: 500 })
+      console.error('Report requests query error:', error)
+      return NextResponse.json(
+        { error: 'Failed to fetch report requests' },
+        { status: 500 }
+      )
     }
 
     return NextResponse.json({
-      report_requests: reportRequests || []
+      requests: requests || []
     })
 
   } catch (error) {
     console.error('Report requests API error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
   }
 }
 
-// Create new report request
-export async function POST(request: NextRequest) {
+export async function POST(request: Request) {
   try {
     const supabase = await createClient()
+    const body = await request.json()
     
-    // Authenticate user
+    // Get the authenticated user
     const { data: { user }, error: authError } = await supabase.auth.getUser()
+    
     if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      )
     }
 
-    const { 
-      report_type, 
-      vehicle_id, 
-      filters = {}, 
-      priority = 'normal',
-      description 
-    } = await request.json()
+    // Get user profile and investor links
+    const [{ data: profile }, { data: investorLinks }] = await Promise.all([
+      supabase.from('profiles').select('role').eq('id', user.id).single(),
+      supabase.from('investor_users').select('investor_id').eq('user_id', user.id)
+    ])
 
-    if (!report_type) {
-      return NextResponse.json({ error: 'Report type is required' }, { status: 400 })
+    if (!profile || profile.role !== 'investor') {
+      return NextResponse.json(
+        { error: 'Investor access required' },
+        { status: 403 }
+      )
     }
 
-    // Get user profile
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
+    if (!investorLinks || investorLinks.length === 0) {
+      return NextResponse.json(
+        { error: 'No investor entities found' },
+        { status: 403 }
+      )
+    }
 
-    // For investors, get their linked investor entities
-    let investorId = null
-    if (profile?.role === 'investor') {
-      const { data: investorLinks } = await supabase
-        .from('investor_users')
-        .select('investor_id')
-        .eq('user_id', user.id)
-        .limit(1)
-        .single()
+    const investorId = investorLinks[0].investor_id // Use first investor entity
 
-      investorId = investorLinks?.investor_id
-      
-      if (!investorId) {
-        return NextResponse.json({ 
-          error: 'No investor profile found for your account' 
-        }, { status: 400 })
-      }
+    // Validate request body
+    const { reportType, vehicleId, filters, priority = 'normal' } = body
+
+    if (!reportType) {
+      return NextResponse.json(
+        { error: 'Report type is required' },
+        { status: 400 }
+      )
     }
 
     // Create report request
-    const { data: reportRequest, error: requestError } = await supabase
+    const { data: reportRequest, error: createError } = await supabase
       .from('report_requests')
       .insert({
         investor_id: investorId,
-        vehicle_id: vehicle_id || null,
-        filters: {
-          ...filters,
-          report_type,
-          priority,
-          description,
-          requested_at: new Date().toISOString()
-        },
+        vehicle_id: vehicleId || null,
+        filters: filters || {},
         status: 'queued',
         created_by: user.id
       })
-      .select(`
-        *,
-        investors:investor_id (
-          legal_name,
-          country
-        ),
-        vehicles:vehicle_id (
-          name,
-          type
-        )
-      `)
+      .select()
       .single()
 
-    if (requestError) {
-      console.error('Error creating report request:', requestError)
-      return NextResponse.json({ error: 'Failed to create report request' }, { status: 500 })
+    if (createError) {
+      console.error('Failed to create report request:', createError)
+      return NextResponse.json(
+        { error: 'Failed to create report request' },
+        { status: 500 }
+      )
     }
 
-    // Trigger n8n workflow for report generation
-    try {
-      const workflowPayload = {
-        entity_type: 'report_request',
-        entity_id: reportRequest.id,
-        payload: {
-          report_type,
-          investor_id: investorId,
-          vehicle_id: vehicle_id || null,
-          filters,
-          priority,
-          description,
-          user_email: user.email,
-          user_id: user.id
-        }
-      }
-
-      const response = await fetch(`${request.nextUrl.origin}/api/workflows/reporting-agent/trigger`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': request.headers.get('Authorization') || ''
-        },
-        body: JSON.stringify(workflowPayload)
-      })
-
-      if (!response.ok) {
-        console.warn('Failed to trigger workflow, but report request created')
-        
-        // Update status to indicate manual processing needed
-        await supabase
-          .from('report_requests')
-          .update({ 
-            status: 'manual_processing_required',
-            filters: {
-              ...reportRequest.filters,
-              workflow_trigger_failed: true,
-              manual_processing_note: 'Automatic workflow trigger failed, requires manual processing'
-            }
-          })
-          .eq('id', reportRequest.id)
-      }
-
-    } catch (workflowError) {
-      console.warn('Workflow trigger error:', workflowError)
-      // Don't fail the request creation, just mark for manual processing
-    }
-
-    // Log report request creation
+    // Log audit
     await auditLogger.log({
       actor_user_id: user.id,
-      action: AuditActions.REPORT_REQUESTED,
-      entity: AuditEntities.REQUEST_TICKETS,
+      action: AuditActions.CREATE,
+      entity: 'report_request',
       entity_id: reportRequest.id,
       metadata: {
-        report_type,
-        investor_id: investorId,
-        vehicle_id,
-        priority,
-        has_filters: Object.keys(filters).length > 0
+        report_type: reportType,
+        vehicle_id: vehicleId,
+        filters: filters,
+        priority
       }
     })
 
+    // TODO: Trigger n8n workflow for report generation
+    // This would typically send a webhook to n8n with report parameters
+
     return NextResponse.json({
-      success: true,
-      report_request: reportRequest,
-      message: 'Report request submitted successfully. You will be notified when it is ready.'
+      id: reportRequest.id,
+      status: 'queued',
+      message: 'Report request submitted successfully'
     })
 
   } catch (error) {
-    console.error('Create report request error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    console.error('Report request creation error:', error)
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
   }
 }
-

@@ -5,6 +5,7 @@ export async function GET(request: Request) {
   try {
     const supabase = await createClient()
     const { searchParams } = new URL(request.url)
+    const includeDeals = searchParams.get('includeDeals') === 'true'
     
     // Get the authenticated user
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -54,9 +55,10 @@ export async function GET(request: Request) {
         )
       `)
 
-    // For investors, only show vehicles they have access to
+    // Get investor entities linked to this user (for all roles, needed for deals)
+    let investorIds: string[] = []
+    
     if (profile.role === 'investor') {
-      // Get investor entities linked to this user
       const { data: investorLinks } = await supabase
         .from('investor_users')
         .select('investor_id')
@@ -65,11 +67,12 @@ export async function GET(request: Request) {
       if (!investorLinks || investorLinks.length === 0) {
         return NextResponse.json({
           vehicles: [],
+          deals: [],
           total: 0
         })
       }
 
-      const investorIds = investorLinks.map(link => link.investor_id)
+      investorIds = investorLinks.map(link => link.investor_id)
       vehiclesQuery = vehiclesQuery.in('subscriptions.investor_id', investorIds)
     }
 
@@ -140,9 +143,82 @@ export async function GET(request: Request) {
       }
     }) || []
 
+    // Fetch deal holdings if requested
+    let dealHoldings = []
+    
+    if (includeDeals && profile.role === 'investor') {
+      try {
+        const { data: allocations } = await supabase
+          .from('allocations')
+          .select(`
+            id,
+            units,
+            unit_price,
+            status,
+            approved_at,
+            deals (
+              id,
+              name,
+              deal_type,
+              status,
+              currency,
+              offer_unit_price
+            ),
+            reservations (
+              id,
+              requested_units,
+              status,
+              expires_at
+            )
+          `)
+          .in('investor_id', investorIds)
+          .in('status', ['pending_review', 'approved', 'settled'])
+
+        if (allocations) {
+          dealHoldings = allocations.map((allocation: any) => {
+            const deal = allocation.deals
+            const currentValue = allocation.units * allocation.unit_price
+            const spreadMarkup = allocation.unit_price - (deal?.offer_unit_price || 0)
+            
+            return {
+              id: allocation.id,
+              dealId: deal?.id,
+              name: deal?.name || 'Unknown Deal',
+              type: 'deal',
+              dealType: deal?.deal_type || 'equity_secondary',
+              status: allocation.status,
+              currency: deal?.currency || 'USD',
+              allocation: {
+                units: allocation.units,
+                unitPrice: allocation.unit_price,
+                totalValue: currentValue,
+                status: allocation.status,
+                approvedAt: allocation.approved_at
+              },
+              spread: {
+                markupPerUnit: spreadMarkup,
+                totalMarkup: spreadMarkup * allocation.units,
+                markupPct: deal?.offer_unit_price > 0 ? (spreadMarkup / deal.offer_unit_price) * 100 : 0
+              },
+              reservation: allocation.reservations?.[0] ? {
+                id: allocation.reservations[0].id,
+                requestedUnits: allocation.reservations[0].requested_units,
+                status: allocation.reservations[0].status,
+                expiresAt: allocation.reservations[0].expires_at
+              } : null
+            }
+          })
+        }
+      } catch (error) {
+        console.warn('Could not fetch deal holdings:', error)
+        // Continue without deal data if deals feature not available
+      }
+    }
+
     return NextResponse.json({
       vehicles: enhancedVehicles,
-      total: enhancedVehicles.length
+      deals: dealHoldings,
+      total: enhancedVehicles.length + dealHoldings.length
     })
 
   } catch (error) {
