@@ -1,12 +1,14 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { BrandHeader } from './brand-header'
+import { useNotifications } from '@/hooks/use-notifications'
+import { createClient } from '@/lib/supabase/client'
 import {
   LayoutDashboard,
   Building2,
@@ -26,7 +28,14 @@ import {
   HandHeart,
   CreditCard,
   Calculator,
-  Package
+  Package,
+  Activity,
+  Briefcase,
+  UserCheck,
+  Search,
+  MoreHorizontal,
+  Sun,
+  Moon
 } from 'lucide-react'
 
 interface SidebarItem {
@@ -35,6 +44,16 @@ interface SidebarItem {
   icon: React.ComponentType<{ className?: string }>
   badge?: string | number
   description?: string
+  notificationKey?: keyof NotificationCounts
+}
+
+interface NotificationCounts {
+  tasks: number
+  messages: number
+  deals: number
+  requests: number
+  approvals: number
+  totalUnread: number
 }
 
 interface SidebarProps {
@@ -44,9 +63,11 @@ interface SidebarProps {
     email?: string
     role: string
     title?: string
+    id?: string
   }
 }
 
+// Original navigation items from the working sidebar
 const investorNavItems: SidebarItem[] = [
   {
     name: 'Dashboard',
@@ -57,14 +78,14 @@ const investorNavItems: SidebarItem[] = [
   {
     name: 'Active Deals',
     href: '/versoholdings/deals',
-    icon: TrendingUp,
-    badge: 2,
+    icon: Activity,
+    notificationKey: 'deals',
     description: 'Investment opportunities and participation'
   },
   {
     name: 'Holdings',
     href: '/versoholdings/holdings',
-    icon: Building2,
+    icon: Briefcase,
     description: 'Investment vehicles and positions'
   },
   {
@@ -77,14 +98,14 @@ const investorNavItems: SidebarItem[] = [
     name: 'Tasks',
     href: '/versoholdings/tasks',
     icon: CheckSquare,
-    badge: 3,
+    notificationKey: 'tasks',
     description: 'Onboarding and compliance tasks'
   },
   {
     name: 'Messages',
     href: '/versoholdings/messages',
     icon: MessageSquare,
-    badge: 2,
+    notificationKey: 'messages',
     description: 'Communication with VERSO team'
   },
   {
@@ -105,14 +126,14 @@ const staffNavItems: SidebarItem[] = [
   {
     name: 'Approvals',
     href: '/versotech/staff/approvals',
-    icon: CheckSquare,
-    badge: 5,
+    icon: UserCheck,
+    notificationKey: 'approvals',
     description: 'Review and approve commitments'
   },
   {
     name: 'Deals',
     href: '/versotech/staff/deals',
-    icon: Building2,
+    icon: Activity,
     description: 'Manage deal inventory and allocations'
   },
   {
@@ -131,7 +152,7 @@ const staffNavItems: SidebarItem[] = [
     name: 'Requests',
     href: '/versotech/staff/requests',
     icon: ClipboardList,
-    badge: 8,
+    notificationKey: 'requests',
     description: 'Handle investor requests'
   },
   {
@@ -180,28 +201,94 @@ const staffNavItems: SidebarItem[] = [
 
 export function Sidebar({ brand, userProfile }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false)
+  const [sidebarDarkMode, setSidebarDarkMode] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
   const pathname = usePathname()
-  
+  const router = useRouter()
+
+  // Fetch real notification counts
+  const { counts, loading: notificationsLoading } = useNotifications(userProfile.role, userProfile.id)
+
   const navItems = brand === 'versoholdings' ? investorNavItems : staffNavItems
 
+  // Initialize sidebar dark mode from localStorage (separate from global dark mode)
+  useEffect(() => {
+    const savedSidebarTheme = localStorage.getItem('sidebar-theme')
+    if (savedSidebarTheme === 'dark') {
+      setSidebarDarkMode(true)
+    } else {
+      setSidebarDarkMode(false)
+    }
+  }, [])
+
+  // Toggle sidebar dark mode (only affects sidebar, not entire page)
+  const toggleSidebarDarkMode = () => {
+    const newDarkMode = !sidebarDarkMode
+    setSidebarDarkMode(newDarkMode)
+    localStorage.setItem('sidebar-theme', newDarkMode ? 'dark' : 'light')
+  }
+
+  // Handle sign out with proper redirect
+  const handleSignOut = async () => {
+    try {
+      const supabase = createClient()
+      const { error } = await supabase.auth.signOut()
+
+      if (error) {
+        console.error('Sign out error:', error)
+        return
+      }
+
+      // Redirect to the appropriate login page based on brand
+      const loginPath = brand === 'versoholdings' ? '/versoholdings/login' : '/versotech/login'
+      router.push(loginPath)
+    } catch (error) {
+      console.error('Sign out error:', error)
+    }
+  }
+
+  // Filter nav items based on search
+  const filteredNavItems = navItems.filter(item =>
+    item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    item.description?.toLowerCase().includes(searchQuery.toLowerCase())
+  )
+
+  const sidebarClasses = cn(
+    "border-r flex flex-col transition-all duration-300 h-screen",
+    collapsed ? "w-16" : "w-64",
+    sidebarDarkMode
+      ? "bg-slate-800 border-slate-700"
+      : "bg-white border-gray-200"
+  )
+
   return (
-    <div className={cn(
-      "bg-white border-r border-gray-200 flex flex-col transition-all duration-300",
-      collapsed ? "w-16" : "w-64"
-    )}>
-      {/* Header */}
-      <div className="p-4 border-b border-gray-200">
+    <div className={sidebarClasses}>
+      {/* Header with Brand, Logo and Collapse Toggle */}
+      <div className={cn(
+        "p-4 border-b",
+        sidebarDarkMode ? "border-slate-700" : "border-gray-200"
+      )}>
         <div className="flex items-center justify-between">
           {!collapsed && (
-            <div className="flex-1">
-              <BrandHeader brand={brand} />
+            <div className="flex items-center">
+              <h2 className={cn(
+                "font-bold text-2xl tracking-tight",
+                sidebarDarkMode ? "text-white" : "text-black"
+              )}>
+                VERSO
+              </h2>
             </div>
           )}
           <Button
             variant="ghost"
             size="sm"
             onClick={() => setCollapsed(!collapsed)}
-            className="h-8 w-8 p-0"
+            className={cn(
+              "h-8 w-8 p-0",
+              sidebarDarkMode
+                ? "hover:bg-slate-700 text-gray-300"
+                : "hover:bg-gray-100 text-gray-600"
+            )}
           >
             {collapsed ? (
               <ChevronRight className="h-4 w-4" />
@@ -210,101 +297,253 @@ export function Sidebar({ brand, userProfile }: SidebarProps) {
             )}
           </Button>
         </div>
-      </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 p-2 space-y-1">
-        {navItems.map((item) => {
-          const isActive = pathname === item.href
-          const Icon = item.icon
-
-          return (
-            <Link key={item.name} href={item.href}>
-              <div className={cn(
-                "group flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ease-in-out",
-                "hover:bg-gray-100 hover:text-gray-900 hover:scale-[1.02] hover:shadow-sm",
-                isActive 
-                  ? "bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 border border-blue-200 shadow-sm" 
-                  : "text-gray-600"
-              )}>
-                <Icon className={cn(
-                  "flex-shrink-0 transition-transform duration-200 group-hover:scale-110",
-                  collapsed ? "h-5 w-5" : "h-4 w-4",
-                  isActive ? "text-blue-600" : ""
-                )} />
-                
-                {!collapsed && (
-                  <>
-                    <span className="flex-1">{item.name}</span>
-                    {item.badge && (
-                      <Badge variant={isActive ? "default" : "secondary"} className="text-xs">
-                        {item.badge}
-                      </Badge>
-                    )}
-                  </>
-                )}
-              </div>
-              
-              {/* Tooltip for collapsed state */}
-              {collapsed && (
-                <div className="absolute left-16 bg-gray-900 text-white text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
-                  {item.name}
-                  {item.badge && (
-                    <span className="ml-1 bg-blue-600 rounded px-1">
-                      {item.badge}
-                    </span>
-                  )}
-                </div>
-              )}
-            </Link>
-          )
-        })}
-      </nav>
-
-      {/* User Profile & Settings */}
-      <div className="border-t border-gray-200 p-2 space-y-1">
+        {/* Search Bar */}
         {!collapsed && (
-          <div className="px-3 py-2">
-            <div className="text-sm font-medium text-gray-900">
-              {userProfile.display_name || userProfile.email?.split('@')[0]}
-            </div>
-            <div className="text-xs text-gray-500 flex items-center gap-2">
-              <Badge variant="outline" className="text-xs">
-                {userProfile.title?.toUpperCase() || userProfile.role.split('_')[1]?.toUpperCase()}
-              </Badge>
+          <div className="mt-4">
+            <div className="relative">
+              <Search className={cn(
+                "absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4",
+                sidebarDarkMode ? "text-gray-500" : "text-gray-400"
+              )} />
+              <input
+                type="text"
+                placeholder="Search..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className={cn(
+                  "w-full pl-10 pr-3 py-2 border rounded-lg text-sm transition-all duration-200",
+                  "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent",
+                  sidebarDarkMode
+                    ? "bg-slate-700 border-slate-600 text-gray-100 placeholder-gray-400"
+                    : "bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-500"
+                )}
+              />
             </div>
           </div>
         )}
-        
+      </div>
+
+      {/* Menu Section */}
+      <div className="flex-1 overflow-y-auto">
+        {!collapsed && (
+          <div className="px-4 py-3">
+            <p className={cn(
+              "text-xs font-semibold uppercase tracking-wider",
+              sidebarDarkMode ? "text-gray-400" : "text-gray-500"
+            )}>
+              MENU
+            </p>
+          </div>
+        )}
+
+        {/* Navigation Items */}
+        <nav className="px-2 space-y-1">
+          {filteredNavItems.map((item) => {
+            const isActive = pathname === item.href
+            const Icon = item.icon
+
+            // Get dynamic badge count
+            const badgeCount = item.notificationKey && !notificationsLoading
+              ? counts[item.notificationKey]
+              : item.badge
+
+            return (
+              <Link key={item.name} href={item.href} className="group">
+                <div className={cn(
+                  "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 relative",
+                  sidebarDarkMode
+                    ? "hover:bg-slate-700"
+                    : "hover:bg-gray-100",
+                  isActive
+                    ? sidebarDarkMode
+                      ? "bg-blue-900/20 text-blue-400"
+                      : "bg-blue-50 text-blue-600"
+                    : sidebarDarkMode
+                      ? "text-gray-300"
+                      : "text-gray-700"
+                )}>
+                  <Icon className={cn(
+                    "flex-shrink-0 h-5 w-5 transition-colors duration-200",
+                    isActive
+                      ? sidebarDarkMode
+                        ? "text-blue-400"
+                        : "text-blue-600"
+                      : sidebarDarkMode
+                        ? "text-gray-400 group-hover:text-gray-300"
+                        : "text-gray-500 group-hover:text-gray-700"
+                  )} />
+
+                  {!collapsed && (
+                    <>
+                      <span className="flex-1">{item.name}</span>
+                      {badgeCount && badgeCount > 0 && (
+                        <div className={cn(
+                          "flex items-center justify-center min-w-[18px] h-[18px] rounded-full text-xs font-medium",
+                          badgeCount > 9 ? "px-1.5" : "",
+                          sidebarDarkMode
+                            ? "bg-blue-500 text-white"
+                            : "bg-blue-500 text-white"
+                        )}>
+                          {badgeCount > 99 ? '99+' : badgeCount}
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+
+                {/* Tooltip for collapsed state */}
+                {collapsed && (
+                  <div className={cn(
+                    "absolute left-16 text-sm rounded-lg px-3 py-2 opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none z-50 shadow-lg whitespace-nowrap",
+                    sidebarDarkMode
+                      ? "bg-gray-100 text-gray-900"
+                      : "bg-gray-900 text-white"
+                  )}>
+                    <div className="font-medium">{item.name}</div>
+                    {badgeCount && badgeCount > 0 && (
+                      <div className={cn(
+                        "text-xs mt-1",
+                        sidebarDarkMode ? "text-blue-400" : "text-blue-600"
+                      )}>
+                        {badgeCount} {badgeCount === 1 ? 'item' : 'items'}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </Link>
+            )
+          })}
+        </nav>
+      </div>
+
+      {/* Theme Toggle */}
+      <div className={cn(
+        "border-t p-4",
+        sidebarDarkMode ? "border-slate-700" : "border-gray-200"
+      )}>
+        {!collapsed && (
+          <div className={cn(
+            "flex items-center justify-center gap-1 rounded-lg p-1",
+            sidebarDarkMode ? "bg-slate-700" : "bg-gray-100"
+          )}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={toggleSidebarDarkMode}
+              className={cn(
+                "flex-1 h-8 text-xs font-medium transition-all duration-200",
+                !sidebarDarkMode
+                  ? "bg-white text-gray-900 shadow-sm"
+                  : sidebarDarkMode
+                    ? "text-gray-400 hover:text-white"
+                    : "text-gray-600 hover:text-gray-900"
+              )}
+            >
+              <Sun className="h-4 w-4 mr-1" />
+              Light
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={toggleSidebarDarkMode}
+              className={cn(
+                "flex-1 h-8 text-xs font-medium transition-all duration-200",
+                sidebarDarkMode
+                  ? "bg-slate-600 text-white shadow-sm"
+                  : "text-gray-600 hover:text-gray-900"
+              )}
+            >
+              <Moon className="h-4 w-4 mr-1" />
+              Dark
+            </Button>
+          </div>
+        )}
+
+        {collapsed && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={toggleSidebarDarkMode}
+            className={cn(
+              "w-full h-8 p-0",
+              sidebarDarkMode
+                ? "text-gray-400 hover:bg-slate-700"
+                : "text-gray-600 hover:bg-gray-100"
+            )}
+          >
+            {sidebarDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          </Button>
+        )}
+      </div>
+
+      {/* Settings and User Profile */}
+      <div className={cn(
+        "border-t p-4 space-y-3",
+        sidebarDarkMode ? "border-slate-700" : "border-gray-200"
+      )}>
+        {/* Settings Link */}
         <Link href={`/${brand}/settings`}>
           <div className={cn(
-            "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
-            "hover:bg-gray-100 text-gray-600"
+            "group flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200",
+            "border border-transparent",
+            sidebarDarkMode
+              ? "text-gray-300 hover:text-white hover:bg-slate-700 hover:border-slate-600"
+              : "text-gray-700 hover:text-gray-900 hover:bg-gray-100 hover:border-gray-200",
+            pathname.includes('/settings') && (sidebarDarkMode
+              ? "bg-blue-900/20 text-blue-400 border-blue-800/60"
+              : "bg-blue-50 text-blue-600 border-blue-200/60")
           )}>
             <Settings className={cn(
-              "flex-shrink-0",
-              collapsed ? "h-5 w-5" : "h-4 w-4"
+              "flex-shrink-0 transition-all duration-200",
+              collapsed ? "h-5 w-5" : "h-4 w-4",
+              "group-hover:scale-110"
             )} />
-            {!collapsed && <span>Settings</span>}
+            {!collapsed && <span className="font-semibold">Settings</span>}
           </div>
         </Link>
 
-        <form action="/auth/signout" method="post">
-          <Button
-            type="submit"
-            variant="ghost"
-            className={cn(
-              "w-full justify-start gap-3 px-3 py-2 text-sm font-medium text-gray-600",
-              collapsed && "px-2"
-            )}
-          >
-            <LogOut className={cn(
-              "flex-shrink-0",
-              collapsed ? "h-5 w-5" : "h-4 w-4"
-            )} />
-            {!collapsed && <span>Sign Out</span>}
-          </Button>
-        </form>
+        {/* User Profile */}
+        <div className="flex items-center gap-3">
+          <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center flex-shrink-0">
+            <span className="text-white font-bold text-sm">
+              {userProfile.display_name?.[0]?.toUpperCase() || userProfile.email?.split('@')[0]?.[0]?.toUpperCase() || 'U'}
+            </span>
+          </div>
+
+          {!collapsed && (
+            <div className="flex-1 min-w-0">
+              <div className={cn(
+                "text-sm font-medium truncate",
+                sidebarDarkMode ? "text-white" : "text-gray-900"
+              )}>
+                {userProfile.display_name || 'User'}
+              </div>
+              <div className={cn(
+                "text-xs truncate",
+                sidebarDarkMode ? "text-gray-400" : "text-gray-500"
+              )}>
+                {userProfile.email || 'user@example.com'}
+              </div>
+            </div>
+          )}
+
+          {!collapsed && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleSignOut}
+              className={cn(
+                "h-8 w-8 p-0",
+                sidebarDarkMode
+                  ? "text-gray-400 hover:text-red-400 hover:bg-slate-700"
+                  : "text-gray-500 hover:text-red-600 hover:bg-gray-100"
+              )}
+            >
+              <LogOut className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   )

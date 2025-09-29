@@ -240,3 +240,5 @@ Investor Users (role: investor)
 
 This structure supports a sophisticated investment management workflow where staff operate the platform while investors access deal-specific information through controlled membership relationships.
 
+
+
