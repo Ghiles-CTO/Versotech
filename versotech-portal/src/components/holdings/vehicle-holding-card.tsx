@@ -116,13 +116,13 @@ export function VehicleHoldingCard({ holding }: VehicleHoldingCardProps) {
   }
 
   return (
-    <Card className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-0 shadow-md">
-      <CardHeader className="pb-4">
+    <Card className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-2 border-0 shadow-md animate-in fade-in-50 slide-in-from-bottom-4 hover:shadow-blue-200/50">
+      <CardHeader className="pb-4 transition-colors duration-300 group-hover:bg-gradient-to-r group-hover:from-blue-50/30 group-hover:to-transparent">
         <div className="flex items-start justify-between">
           <div className="flex-1">
             <CardTitle className="flex items-center gap-2 text-lg">
-              <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
-                <Building className="h-4 w-4 text-blue-600" />
+              <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:shadow-md">
+                <Building className="h-4 w-4 text-blue-600 transition-transform duration-300 group-hover:scale-110" />
               </div>
               <span className="truncate">{holding.name}</span>
             </CardTitle>
@@ -251,17 +251,17 @@ export function VehicleHoldingCard({ holding }: VehicleHoldingCardProps) {
         <div className="flex gap-2 pt-2">
           <Button
             onClick={() => setShowPositionDetail(true)}
-            className="flex-1 group-hover:bg-blue-600 transition-colors"
+            className="flex-1 transition-all duration-300 hover:scale-105 hover:shadow-md"
             variant="outline"
           >
-            <Layers className="h-4 w-4 mr-2" />
+            <Layers className="h-4 w-4 mr-2 transition-transform duration-300 hover:rotate-12" />
             Position Details
           </Button>
 
           <Link href={`/versoholdings/vehicle/${holding.id}`} className="flex-1">
-            <Button className="w-full" variant="outline">
+            <Button className="w-full transition-all duration-300 hover:scale-105 hover:shadow-md" variant="outline">
               View Page
-              <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
+              <ArrowRight className="h-4 w-4 ml-2 transition-transform duration-300 group-hover:translate-x-1" />
             </Button>
           </Link>
 
@@ -269,7 +269,7 @@ export function VehicleHoldingCard({ holding }: VehicleHoldingCardProps) {
             holdingId={holding.id}
             holdingName={holding.name}
             holdingType="vehicle"
-            className="px-3 hover:bg-blue-100"
+            className="px-3 hover:bg-blue-100 transition-all duration-300 hover:scale-105"
           />
         </div>
       </CardContent>

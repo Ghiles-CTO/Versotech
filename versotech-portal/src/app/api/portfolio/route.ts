@@ -120,26 +120,26 @@ export async function GET(request: Request) {
     const investorIds = investorLinks.map(link => link.investor_id)
 
     // Calculate comprehensive KPIs using enhanced database function that includes deals
-    const { data: kpiData, error: kpiError } = await supabase
+    let { data: kpiData, error: kpiError } = await supabase
       .rpc('calculate_investor_kpis_with_deals', {
         investor_ids: investorIds
       })
 
     if (kpiError) {
       console.error('KPI calculation error:', kpiError)
-      
+
       // Try fallback to original function if enhanced version fails
       console.log('Attempting fallback to basic KPI calculation...')
       const { data: fallbackKpiData, error: fallbackError } = await supabase
         .rpc('calculate_investor_kpis', {
           investor_ids: investorIds
         })
-      
+
       if (fallbackError) {
         console.error('Fallback KPI calculation also failed:', fallbackError)
         throw new Error(`Failed to calculate KPIs: ${kpiError.message}`)
       }
-      
+
       // Use fallback data with extended structure (set deal-specific fields to 0)
       const enhancedFallbackData = fallbackKpiData?.map((row: any) => ({
         ...row,
@@ -147,7 +147,7 @@ export async function GET(request: Request) {
         total_deal_value: 0,
         pending_allocations: 0
       }))
-      
+
       kpiData = enhancedFallbackData
       console.log('Using fallback KPI data')
     }

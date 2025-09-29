@@ -216,14 +216,14 @@ export function KPIDetailsModal({
     return (
       <div
         key={item.id}
-        className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors"
+        className="flex items-center justify-between p-4 border rounded-lg hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 hover:shadow-md transition-all duration-300 hover:scale-[1.01] group"
       >
         <div className="flex items-center gap-3 flex-1">
           <div className={cn(
-            "w-10 h-10 rounded-lg flex items-center justify-center",
+            "w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-300 group-hover:scale-110",
             `bg-${config.color}-100`
           )}>
-            <Building2 className={cn("h-5 w-5", `text-${config.color}-600`)} />
+            <Building2 className={cn("h-5 w-5 transition-transform duration-300 group-hover:scale-110", `text-${config.color}-600`)} />
           </div>
 
           <div className="flex-1 min-w-0">
@@ -293,11 +293,6 @@ export function KPIDetailsModal({
               Commitment: {config?.formatValue(metadata.commitment) || metadata.commitment.toLocaleString()}
             </div>
           )}
-          {metadata.note && (
-            <div className="text-xs text-blue-600">
-              {metadata.note}
-            </div>
-          )}
         </div>
       </div>
     )
@@ -305,31 +300,21 @@ export function KPIDetailsModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl w-[90vw] h-[80vh] p-0 flex flex-col">
-        <DialogHeader className="flex-shrink-0 p-6 pb-4 border-b bg-gray-50">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className={cn(
-                "w-12 h-12 rounded-lg flex items-center justify-center",
-                `bg-${config?.color || 'blue'}-100`
-              )}>
-                <IconComponent className={cn("h-6 w-6", `text-${config?.color || 'blue'}-600`)} />
-              </div>
-              <div>
-                <DialogTitle className="text-xl font-semibold">{title}</DialogTitle>
-                <DialogDescription className="mt-1 text-gray-600">
-                  {description || config?.description}
-                </DialogDescription>
-              </div>
+      <DialogContent className="max-w-4xl w-[90vw] h-[80vh] p-0 flex flex-col overflow-hidden animate-in fade-in-0 zoom-in-95 duration-300">
+        <DialogHeader className="flex-shrink-0 p-6 pb-4 border-b bg-gradient-to-r from-blue-50 via-white to-purple-50">
+          <div className="flex items-center gap-3">
+            <div className={cn(
+              "w-12 h-12 rounded-lg flex items-center justify-center shadow-sm",
+              `bg-${config?.color || 'blue'}-100`
+            )}>
+              <IconComponent className={cn("h-6 w-6", `text-${config?.color || 'blue'}-600`)} />
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onClose}
-              className="rounded-full w-8 h-8 p-0"
-            >
-              <X className="h-4 w-4" />
-            </Button>
+            <div>
+              <DialogTitle className="text-xl font-semibold text-gray-900">{title}</DialogTitle>
+              <DialogDescription className="mt-1 text-gray-600">
+                {description || config?.description}
+              </DialogDescription>
+            </div>
           </div>
         </DialogHeader>
 
@@ -371,8 +356,8 @@ export function KPIDetailsModal({
           )}
 
           {data && !loading && (
-            <div className="h-full flex flex-col">
-              <div className="flex-shrink-0 p-6 pb-4 border-b bg-white">
+            <div className="h-full flex flex-col animate-in fade-in-50 duration-300">
+              <div className="flex-shrink-0 p-6 pb-4 border-b bg-gradient-to-r from-slate-50 to-blue-50">
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900">
@@ -413,20 +398,20 @@ export function KPIDetailsModal({
                     </div>
                   </div>
                 ) : (
-                  <div className="flex items-center justify-center h-full">
-                    <div className="text-center max-w-md">
-                      <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <Building2 className="w-8 h-8 text-gray-400" />
+                  <div className="flex items-center justify-center h-full animate-in fade-in-50 duration-300">
+                    <div className="text-center max-w-md px-6">
+                      <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
+                        <Building2 className="w-10 h-10 text-blue-600" />
                       </div>
-                      <div className="text-gray-900 font-medium mb-2">No data available</div>
-                      <div className="text-gray-500 text-sm">
-                        {kpiType === 'distributions_breakdown' 
-                          ? 'No distributions have been received yet. This is normal for early-stage investments.'
+                      <div className="text-gray-900 font-semibold text-lg mb-2">No data available</div>
+                      <div className="text-gray-600 text-sm leading-relaxed">
+                        {kpiType === 'distributions_breakdown'
+                          ? 'No distributions have been received yet. This is normal for early-stage investments. Distributions will appear as your investments mature.'
                           : kpiType === 'deal_breakdown'
-                          ? 'No deal allocations found. Deals will appear here once you participate in investment opportunities.'
+                          ? 'No deal allocations found. Deals will appear here once you participate in investment opportunities through our platform.'
                           : kpiType === 'contributions_breakdown'
-                          ? 'No contribution data found. This may indicate missing cashflow records.'
-                          : 'There are no items for this metric yet.'
+                          ? 'No contribution data found. This may indicate missing cashflow records. Contact your relationship manager if you believe this is an error.'
+                          : 'There are no items for this metric yet. Data will populate as transactions and valuations are recorded.'
                         }
                       </div>
                       {/* Show debug info for troubleshooting */}
