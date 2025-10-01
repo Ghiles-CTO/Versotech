@@ -15,7 +15,7 @@ export const theme = {
 // Brand configuration for dual-brand entry points
 export const brands = {
   versoholdings: {
-    name: 'VERSO Holdings',
+    name: 'Versoholdings',
     loginPath: '/versoholdings/login',
     dashboardPath: '/versoholdings/dashboard',
     primary: theme.colors.blue,

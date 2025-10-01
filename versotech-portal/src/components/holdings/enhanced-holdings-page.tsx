@@ -116,12 +116,6 @@ export function EnhancedHoldingsPage({ initialData }: EnhancedHoldingsPageProps)
   const [investorIds, setInvestorIds] = useState<string[]>([])
   const [activeTab, setActiveTab] = useState<'all' | 'vehicles' | 'deals'>('all')
 
-  // Debug logging
-  console.log('EnhancedHoldingsPage - initialData:', initialData ? 'HAS DATA' : 'NO DATA')
-  console.log('EnhancedHoldingsPage - isLoading:', isLoading)
-  console.log('EnhancedHoldingsPage - holdings count:', holdings.length)
-  console.log('EnhancedHoldingsPage - deal holdings count:', dealHoldings.length)
-
   // Filter and sort state
   const [filters, setFilters] = useState<FiltersState>({
     search: '',
@@ -160,18 +154,11 @@ export function EnhancedHoldingsPage({ initialData }: EnhancedHoldingsPageProps)
       }
 
       const data = await response.json()
-      
+
       // Validate data structure
       if (!data || typeof data !== 'object') {
         throw new Error('Invalid portfolio data received')
       }
-
-      console.log('Portfolio data fetched successfully:', {
-        hasKpis: !!data.kpis,
-        hasTrends: !!data.trends,
-        hasBreakdown: !!data.vehicleBreakdown,
-        positionCount: data.summary?.totalPositions || 0
-      })
 
       return data
     } catch (err) {
@@ -202,17 +189,11 @@ export function EnhancedHoldingsPage({ initialData }: EnhancedHoldingsPageProps)
       }
 
       const data = await response.json()
-      
+
       // Validate data structure
       if (!data || !Array.isArray(data.vehicles)) {
         throw new Error('Invalid holdings data received')
       }
-
-      console.log('Holdings data fetched successfully:', {
-        vehicleCount: data.vehicles.length,
-        dealCount: data.deals?.length || 0,
-        totalCount: data.total || 0
-      })
 
       setHoldings(data.vehicles)
       setDealHoldings(data.deals || [])
@@ -232,7 +213,6 @@ export function EnhancedHoldingsPage({ initialData }: EnhancedHoldingsPageProps)
     let isMounted = true
 
     const loadAllData = async () => {
-      console.log('Loading portfolio data...')
       setIsLoading(true)
       setError(null)
 
@@ -316,7 +296,6 @@ export function EnhancedHoldingsPage({ initialData }: EnhancedHoldingsPageProps)
       } finally {
         if (isMounted) {
           setIsLoading(false)
-          console.log('Portfolio data loading complete')
         }
       }
     }
@@ -334,8 +313,6 @@ export function EnhancedHoldingsPage({ initialData }: EnhancedHoldingsPageProps)
     setError(null)
 
     try {
-      console.log('Refreshing portfolio data...')
-      
       // Bypass cache on refresh to get latest data
       const [portfolioResult, holdingsResult] = await Promise.allSettled([
         fetchPortfolioData(true, true, false), // Don't use cache
@@ -355,8 +332,6 @@ export function EnhancedHoldingsPage({ initialData }: EnhancedHoldingsPageProps)
         console.error('Holdings refresh failed:', holdingsResult.reason)
         setError(prevError => prevError || 'Failed to refresh holdings data')
       }
-
-      console.log('Portfolio refresh complete')
     } catch (err) {
       console.error('Unexpected error during refresh:', err)
       setError('Failed to refresh data. Please try again.')
@@ -383,8 +358,6 @@ export function EnhancedHoldingsPage({ initialData }: EnhancedHoldingsPageProps)
 
   // Handle real-time updates
   const handleRealtimeUpdate = useCallback(async (update: any) => {
-    console.log('Received realtime update:', update)
-
     switch (update.type) {
       case 'position_update':
       case 'valuation_update':

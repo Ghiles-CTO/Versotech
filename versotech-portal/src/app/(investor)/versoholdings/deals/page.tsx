@@ -6,23 +6,20 @@ import { ReservationModal } from '@/components/deals/reservation-modal'
 import { DealDetailsModal } from '@/components/deals/deal-details-modal'
 import { CommitmentModal } from '@/components/deals/commitment-modal'
 import { createClient } from '@/lib/supabase/server'
+import { cn } from '@/lib/utils'
 import Link from 'next/link'
 import {
   TrendingUp,
-  DollarSign,
   Package,
   Clock,
   Building2,
   Handshake,
   FileText,
   CheckCircle2,
-  CircleDollarSign,
   Users,
   AlertTriangle,
   Timer
 } from 'lucide-react'
-import { redirect } from 'next/navigation'
-import { cookies } from 'next/headers'
 
 interface InvestorDeal {
   id: string
@@ -193,72 +190,94 @@ export default async function InvestorDealsPage() {
 
   return (
     <AppLayout brand="versoholdings">
-      <div className="p-6 space-y-6">
+      <div className="p-6 space-y-8">
         {/* Header */}
-        <div className="border-b border-gray-200 pb-6">
-          <h1 className="text-3xl font-bold text-gray-900">Investment Opportunities</h1>
-          <p className="text-gray-600 mt-1">
-            Explore and participate in exclusive VERSO investment deals
-          </p>
+        <div className="relative border-b border-gray-200 pb-8 mb-2">
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-50 via-purple-50 to-indigo-50 opacity-40 rounded-t-2xl" />
+          <div className="relative">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-xl flex items-center justify-center shadow-lg">
+                <Handshake className="h-5 w-5 text-white" />
+              </div>
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+                Investment Opportunities
+              </h1>
+            </div>
+            <p className="text-lg text-gray-600 ml-13">
+              Explore and participate in exclusive VERSO investment deals
+            </p>
+          </div>
         </div>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Card className="relative overflow-hidden group hover:shadow-lg transition-all duration-300 border-2 hover:border-blue-200">
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-indigo-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <CardHeader className="relative flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-gray-600">
                 Available Deals
               </CardTitle>
-              <Building2 className="h-4 w-4 text-muted-foreground" />
+              <div className="p-2 bg-blue-100 rounded-lg group-hover:bg-blue-200 transition-colors">
+                <Building2 className="h-4 w-4 text-blue-600" />
+              </div>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{summary.totalDeals}</div>
-              <p className="text-xs text-muted-foreground">
-                <span className="text-green-600">{summary.activeDeals}</span> currently open
+            <CardContent className="relative">
+              <div className="text-3xl font-bold text-gray-900">{summary.totalDeals}</div>
+              <p className="text-sm text-gray-600 mt-1">
+                <span className="font-semibold text-green-600">{summary.activeDeals}</span> currently open
               </p>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
+          <Card className="relative overflow-hidden group hover:shadow-lg transition-all duration-300 border-2 hover:border-amber-200">
+            <div className="absolute inset-0 bg-gradient-to-br from-amber-50 to-orange-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <CardHeader className="relative flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-gray-600">
                 Pending Commitments
               </CardTitle>
-              <Timer className="h-4 w-4 text-amber-500" />
+              <div className="p-2 bg-amber-100 rounded-lg group-hover:bg-amber-200 transition-colors">
+                <Timer className="h-4 w-4 text-amber-600" />
+              </div>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{summary.pendingCommitments}</div>
-              <p className="text-xs text-muted-foreground">
+            <CardContent className="relative">
+              <div className="text-3xl font-bold text-gray-900">{summary.pendingCommitments}</div>
+              <p className="text-sm text-gray-600 mt-1">
                 Under review
               </p>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
+          <Card className="relative overflow-hidden group hover:shadow-lg transition-all duration-300 border-2 hover:border-indigo-200">
+            <div className="absolute inset-0 bg-gradient-to-br from-indigo-50 to-purple-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <CardHeader className="relative flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-gray-600">
                 Active Reservations
               </CardTitle>
-              <Package className="h-4 w-4 text-blue-500" />
+              <div className="p-2 bg-indigo-100 rounded-lg group-hover:bg-indigo-200 transition-colors">
+                <Package className="h-4 w-4 text-indigo-600" />
+              </div>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{summary.activeReservations}</div>
-              <p className="text-xs text-muted-foreground">
+            <CardContent className="relative">
+              <div className="text-3xl font-bold text-gray-900">{summary.activeReservations}</div>
+              <p className="text-sm text-gray-600 mt-1">
                 Units reserved
               </p>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
+          <Card className="relative overflow-hidden group hover:shadow-lg transition-all duration-300 border-2 hover:border-green-200">
+            <div className="absolute inset-0 bg-gradient-to-br from-green-50 to-emerald-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <CardHeader className="relative flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-gray-600">
                 Deal Access
               </CardTitle>
-              <Users className="h-4 w-4 text-green-500" />
+              <div className="p-2 bg-green-100 rounded-lg group-hover:bg-green-200 transition-colors">
+                <Users className="h-4 w-4 text-green-600" />
+              </div>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{dealsData.length}</div>
-              <p className="text-xs text-muted-foreground">
+            <CardContent className="relative">
+              <div className="text-3xl font-bold text-gray-900">{dealsData.length}</div>
+              <p className="text-sm text-gray-600 mt-1">
                 Invited opportunities
               </p>
             </CardContent>
@@ -272,7 +291,7 @@ export default async function InvestorDealsPage() {
               <div>
                 <CardTitle>Your Investment Opportunities</CardTitle>
                 <CardDescription>
-                  Deals you've been invited to participate in
+                  Deals you&apos;ve been invited to participate in
                 </CardDescription>
               </div>
               <div className="flex items-center gap-2">
@@ -293,7 +312,7 @@ export default async function InvestorDealsPage() {
                 <Handshake className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">No deals available</h3>
                 <p className="text-gray-500 mb-4">
-                  You haven't been invited to any deals yet. VERSO will notify you when new opportunities become available.
+                  You haven&apos;t been invited to any deals yet. VERSO will notify you when new opportunities become available.
                 </p>
               </div>
             ) : (
@@ -318,39 +337,43 @@ export default async function InvestorDealsPage() {
                     (deal.close_at && new Date(deal.close_at) < new Date())
 
                   return (
-                    <div key={deal.id} className="border rounded-lg p-6 hover:bg-gray-50 transition-colors">
-                      <div className="flex items-start justify-between mb-4">
+                    <div key={deal.id} className="group relative border-2 border-gray-200 rounded-2xl p-6 hover:border-blue-300 hover:shadow-xl transition-all duration-300 bg-white overflow-hidden">
+                      <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-transparent to-purple-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                      <div className="relative flex items-start justify-between mb-4">
                         <div className="flex-1">
                           {/* Header with company info */}
                           <div className="flex items-start gap-4 mb-3">
                             {deal.company_logo_url ? (
-                              <img 
-                                src={deal.company_logo_url} 
+                              <img
+                                src={deal.company_logo_url}
                                 alt={deal.company_name || deal.name}
-                                className="w-12 h-12 rounded-lg object-cover"
+                                className="w-16 h-16 rounded-xl object-cover shadow-md ring-2 ring-gray-100 group-hover:ring-blue-200 transition-all duration-300"
                               />
                             ) : (
-                              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                                <Building2 className="h-6 w-6 text-white" />
+                              <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform duration-300">
+                                <Building2 className="h-7 w-7 text-white" />
                               </div>
                             )}
                             
                             <div className="flex-1">
-                              <div className="flex items-center gap-3 mb-1">
-                                <h3 className="text-xl font-semibold text-gray-900">
+                              <div className="flex items-center gap-3 mb-2">
+                                <h3 className="text-2xl font-bold text-gray-900 group-hover:text-blue-900 transition-colors">
                                   {deal.company_name || deal.name}
                                 </h3>
-                                <Badge className={
-                                  isEffectivelyClosed 
-                                    ? 'bg-red-100 text-red-800' 
+                                <Badge className={cn(
+                                  "px-3 py-1 font-semibold shadow-sm",
+                                  isEffectivelyClosed
+                                    ? 'bg-gradient-to-r from-red-100 to-red-200 text-red-800 border border-red-300'
+                                    : deal.status === 'open'
+                                    ? 'bg-gradient-to-r from-green-100 to-emerald-200 text-green-800 border border-green-300'
                                     : statusColors[deal.status as keyof typeof statusColors]
-                                }>
-                                  {isEffectivelyClosed 
-                                    ? 'Closed' 
+                                )}>
+                                  {isEffectivelyClosed
+                                    ? 'Closed'
                                     : statusDescriptions[deal.status as keyof typeof statusDescriptions]
                                   }
                                 </Badge>
-                                <Badge variant="outline">
+                                <Badge variant="outline" className="px-3 py-1 border-2 bg-white/80 backdrop-blur-sm hover:bg-blue-50 transition-colors">
                                   {dealTypeLabels[deal.deal_type as keyof typeof dealTypeLabels]}
                                 </Badge>
                               </div>
@@ -382,23 +405,23 @@ export default async function InvestorDealsPage() {
                           {/* Investment details */}
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                             {deal.target_amount && (
-                              <div className="bg-gray-50 p-3 rounded-lg">
-                                <div className="flex items-center justify-between mb-1">
-                                  <span className="text-sm font-medium text-gray-700">Target Amount</span>
-                                  <span className="text-sm font-semibold text-gray-900">
+                              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-4 rounded-xl border border-blue-100 shadow-sm hover:shadow-md transition-shadow">
+                                <div className="flex items-center justify-between mb-2">
+                                  <span className="text-sm font-semibold text-blue-900">Target Amount</span>
+                                  <span className="text-base font-bold text-blue-900">
                                     {deal.currency} {(deal.target_amount / 1000000).toFixed(1)}M
                                   </span>
                                 </div>
                                 {deal.raised_amount !== undefined && (
-                                  <div className="w-full bg-gray-200 rounded-full h-2">
-                                    <div 
-                                      className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                                  <div className="w-full bg-blue-200 rounded-full h-2.5 shadow-inner overflow-hidden">
+                                    <div
+                                      className="bg-gradient-to-r from-blue-500 to-blue-600 h-2.5 rounded-full transition-all duration-500 ease-out"
                                       style={{ width: `${progressPercentage}%` }}
                                     ></div>
                                   </div>
                                 )}
                                 {deal.raised_amount !== undefined && (
-                                  <div className="text-xs text-gray-500 mt-1">
+                                  <div className="text-xs font-medium text-blue-700 mt-2">
                                     {deal.currency} {(deal.raised_amount / 1000000).toFixed(1)}M raised ({progressPercentage.toFixed(0)}%)
                                   </div>
                                 )}
@@ -406,13 +429,13 @@ export default async function InvestorDealsPage() {
                             )}
 
                             {deal.minimum_investment && (
-                              <div className="bg-gray-50 p-3 rounded-lg">
-                                <div className="text-sm font-medium text-gray-700 mb-1">Minimum Investment</div>
-                                <div className="text-lg font-semibold text-gray-900">
+                              <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-4 rounded-xl border border-green-100 shadow-sm hover:shadow-md transition-shadow">
+                                <div className="text-sm font-semibold text-green-900 mb-2">Minimum Investment</div>
+                                <div className="text-xl font-bold text-green-900">
                                   {deal.currency} {(deal.minimum_investment / 1000).toFixed(0)}K
                                 </div>
                                 {deal.maximum_investment && (
-                                  <div className="text-xs text-gray-500">
+                                  <div className="text-xs font-medium text-green-700 mt-1">
                                     Max: {deal.currency} {(deal.maximum_investment / 1000000).toFixed(1)}M
                                   </div>
                                 )}
@@ -420,12 +443,12 @@ export default async function InvestorDealsPage() {
                             )}
 
                             {deal.offer_unit_price && (
-                              <div className="bg-gray-50 p-3 rounded-lg">
-                                <div className="text-sm font-medium text-gray-700 mb-1">Unit Price</div>
-                                <div className="text-lg font-semibold text-gray-900">
+                              <div className="bg-gradient-to-br from-purple-50 to-indigo-50 p-4 rounded-xl border border-purple-100 shadow-sm hover:shadow-md transition-shadow">
+                                <div className="text-sm font-semibold text-purple-900 mb-2">Unit Price</div>
+                                <div className="text-xl font-bold text-purple-900">
                                   {deal.currency} {deal.offer_unit_price.toFixed(2)}
                                 </div>
-                                <div className="text-xs text-gray-500">per unit</div>
+                                <div className="text-xs font-medium text-purple-700 mt-1">per unit</div>
                               </div>
                             )}
                           </div>
@@ -462,54 +485,54 @@ export default async function InvestorDealsPage() {
 
                           {/* Fee plan info */}
                           {defaultFeePlan && (
-                            <div className="bg-blue-50 p-3 rounded-lg mb-3">
-                              <p className="text-sm font-medium text-blue-900">Default Fee Structure</p>
-                              <p className="text-sm text-blue-700">{defaultFeePlan.name}</p>
+                            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-xl border border-blue-200 mb-3 shadow-sm">
+                              <p className="text-sm font-bold text-blue-900 mb-1">Default Fee Structure</p>
+                              <p className="text-base font-semibold text-blue-800">{defaultFeePlan.name}</p>
                               {defaultFeePlan.description && (
-                                <p className="text-xs text-blue-600 mt-1">{defaultFeePlan.description}</p>
+                                <p className="text-sm text-blue-600 mt-2 leading-relaxed">{defaultFeePlan.description}</p>
                               )}
                             </div>
                           )}
                         </div>
 
-                        <div className="flex flex-col items-end gap-2">
+                        <div className="flex flex-col items-end gap-2.5 min-w-[200px]">
                           {deal.status === 'open' && hasAccepted && !isEffectivelyClosed ? (
                             <>
-                              <CommitmentModal 
-                                deal={deal} 
+                              <CommitmentModal
+                                deal={deal}
                                 investorId={investorIds[0]}
                               >
-                                <Button>
+                                <Button className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-md hover:shadow-lg transition-all duration-300">
                                   <Handshake className="mr-2 h-4 w-4" />
                                   Submit Commitment
                                 </Button>
                               </CommitmentModal>
-                              
-                              <ReservationModal 
-                                deal={deal} 
+
+                              <ReservationModal
+                                deal={deal}
                                 investorId={investorIds[0]}
                               >
-                                <Button variant="outline" size="sm">
+                                <Button variant="outline" size="sm" className="w-full border-2 hover:bg-indigo-50 hover:border-indigo-300 transition-all duration-300">
                                   <Package className="mr-2 h-4 w-4" />
                                   Reserve Units
                                 </Button>
                               </ReservationModal>
-                              
+
                               <DealDetailsModal deal={deal} investorId={investorIds[0]}>
-                                <Button variant="outline" size="sm">
+                                <Button variant="outline" size="sm" className="w-full border-2 hover:bg-blue-50 hover:border-blue-300 transition-all duration-300">
                                   <FileText className="mr-2 h-4 w-4" />
                                   View Details
                                 </Button>
                               </DealDetailsModal>
 
-                              <Button variant="outline" size="sm" asChild>
+                              <Button variant="outline" size="sm" asChild className="w-full border-2 hover:bg-gray-50 transition-all duration-300">
                                 <Link href={`/versoholdings/deals/${deal.id}/documents`}>
                                   <FileText className="mr-2 h-4 w-4" />
                                   Documents
                                 </Link>
                               </Button>
 
-                              <Button variant="outline" size="sm" asChild>
+                              <Button variant="outline" size="sm" asChild className="w-full border-2 hover:bg-gray-50 transition-all duration-300">
                                 <Link href={`/versoholdings/deals/${deal.id}/reports`}>
                                   <TrendingUp className="mr-2 h-4 w-4" />
                                   Request Report
@@ -518,27 +541,30 @@ export default async function InvestorDealsPage() {
                             </>
                           ) : deal.status === 'open' && !hasAccepted && !isEffectivelyClosed ? (
                             <>
-                              <Button asChild>
+                              <Button asChild className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-md hover:shadow-lg transition-all duration-300">
                                 <Link href={`/versoholdings/deals/${deal.id}/accept`}>
                                   <CheckCircle2 className="mr-2 h-4 w-4" />
                                   Accept Invitation
                                 </Link>
                               </Button>
                               <DealDetailsModal deal={deal} investorId={investorIds[0]}>
-                                <Button variant="outline" size="sm">
+                                <Button variant="outline" size="sm" className="w-full border-2 hover:bg-blue-50 hover:border-blue-300 transition-all duration-300">
                                   <FileText className="mr-2 h-4 w-4" />
                                   View Details
                                 </Button>
                               </DealDetailsModal>
                             </>
                           ) : isEffectivelyClosed ? (
-                            <div className="text-center py-4">
-                              <div className="text-red-600 font-medium mb-2">Deal Closed</div>
-                              <p className="text-sm text-gray-500">
-                                This deal is no longer accepting commitments
+                            <div className="text-center py-4 bg-red-50 rounded-xl border border-red-200 px-4">
+                              <div className="text-red-700 font-bold mb-2 flex items-center justify-center gap-2">
+                                <AlertTriangle className="h-4 w-4" />
+                                Deal Closed
+                              </div>
+                              <p className="text-sm text-red-600 mb-3">
+                                No longer accepting commitments
                               </p>
                               <DealDetailsModal deal={deal} investorId={investorIds[0]}>
-                                <Button variant="outline" size="sm" className="mt-2">
+                                <Button variant="outline" size="sm" className="w-full border-2 border-red-300 hover:bg-red-50 transition-all duration-300">
                                   <FileText className="mr-2 h-4 w-4" />
                                   View Details
                                 </Button>
@@ -546,7 +572,7 @@ export default async function InvestorDealsPage() {
                             </div>
                           ) : (
                             <DealDetailsModal deal={deal} investorId={investorIds[0]}>
-                              <Button variant="outline">
+                              <Button variant="outline" className="w-full border-2 hover:bg-blue-50 hover:border-blue-300 transition-all duration-300">
                                 <FileText className="mr-2 h-4 w-4" />
                                 View Details
                               </Button>
@@ -584,27 +610,30 @@ export default async function InvestorDealsPage() {
 
         {/* Call to Action */}
         {dealsData.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="h-5 w-5" />
+          <Card className="relative overflow-hidden border-2 hover:border-blue-200 transition-colors shadow-lg">
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 opacity-50" />
+            <CardHeader className="relative">
+              <CardTitle className="flex items-center gap-3 text-2xl">
+                <div className="p-2 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg shadow-md">
+                  <FileText className="h-5 w-5 text-white" />
+                </div>
                 Ready to Invest?
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-base">
                 Get started with your first investment commitment
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <p className="text-gray-600 mb-4">
-                Review the available opportunities above and click "Participate" on any deal that interests you. 
+            <CardContent className="relative">
+              <p className="text-gray-700 mb-6 text-base leading-relaxed">
+                Review the available opportunities above and click &quot;Submit Commitment&quot; on any deal that interests you.
                 Our team will guide you through the commitment and allocation process.
               </p>
               <div className="flex gap-3">
-                <Button variant="outline">
+                <Button variant="outline" className="border-2 hover:bg-blue-50 hover:border-blue-300 transition-all duration-300">
                   <FileText className="mr-2 h-4 w-4" />
                   Download Deal Guide
                 </Button>
-                <Button variant="outline">
+                <Button variant="outline" className="border-2 hover:bg-indigo-50 hover:border-indigo-300 transition-all duration-300">
                   Contact VERSO Team
                 </Button>
               </div>

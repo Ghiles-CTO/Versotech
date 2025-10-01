@@ -6,6 +6,28 @@ export async function GET(request: Request) {
     const supabase = await createClient()
     const { searchParams } = new URL(request.url)
     const includeDeals = searchParams.get('includeDeals') === 'true'
+
+    type AllocationQueryResult = {
+      id: string
+      units: number
+      unit_price: number
+      status: string
+      approved_at: string | null
+      deals: {
+        id: string
+        name: string
+        deal_type: string
+        status: string
+        currency: string | null
+        offer_unit_price: number | null
+      } | null
+      reservations: Array<{
+        id: string
+        requested_units: number
+        status: string
+        expires_at: string
+      }> | null
+    }
     
     // Get the authenticated user
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -42,11 +64,12 @@ export async function GET(request: Request) {
           status,
           investor_id
         ),
-        positions (
+        positions!inner (
           units,
           cost_basis,
           last_nav,
-          as_of_date
+          as_of_date,
+          investor_id
         ),
         valuations (
           nav_total,
@@ -73,7 +96,9 @@ export async function GET(request: Request) {
       }
 
       investorIds = investorLinks.map(link => link.investor_id)
-      vehiclesQuery = vehiclesQuery.in('subscriptions.investor_id', investorIds)
+      vehiclesQuery = vehiclesQuery
+        .in('subscriptions.investor_id', investorIds)
+        .in('positions.investor_id', investorIds)
     }
 
     // Apply filters
@@ -93,7 +118,7 @@ export async function GET(request: Request) {
     }
 
     // Process and enhance vehicle data
-    const enhancedVehicles = vehicles?.map(vehicle => {
+    const enhancedVehicles = (vehicles || []).map(vehicle => {
       // Get the latest valuation
       const latestValuation = vehicle.valuations
         ?.sort((a: { as_of_date: string }, b: { as_of_date: string }) => new Date(b.as_of_date).getTime() - new Date(a.as_of_date).getTime())[0]
@@ -141,7 +166,13 @@ export async function GET(request: Request) {
           unrealizedGainPct: positionData.unrealizedGainPct
         } : null
       }
-    }) || []
+    }).filter(holding => {
+      if (profile.role === 'investor') {
+        const units = Number(holding.position?.units ?? 0)
+        return units > 0
+      }
+      return true
+    })
 
     // Fetch deal holdings if requested
     let dealHoldings = []
@@ -175,7 +206,9 @@ export async function GET(request: Request) {
           .in('status', ['pending_review', 'approved', 'settled'])
 
         if (allocations) {
-          dealHoldings = allocations.map((allocation: any) => {
+          const typedAllocations = allocations as AllocationQueryResult[]
+
+          dealHoldings = typedAllocations.map((allocation) => {
             const deal = allocation.deals
             const currentValue = allocation.units * allocation.unit_price
             const spreadMarkup = allocation.unit_price - (deal?.offer_unit_price || 0)

@@ -13,7 +13,6 @@ import {
 
 import { createClient } from '@/lib/supabase/server'
 import { measureTimeAsync } from '@/lib/performance'
-import { cn } from '@/lib/utils'
 
 async function getPortfolioData() {
   return measureTimeAsync('portfolio-data-fetch', async () => {
@@ -234,31 +233,41 @@ export default async function InvestorDashboard() {
         <div className="p-6 space-y-8">
 
         {/* VERSO Holdings Header */}
-        <div className="border-b border-gray-200 pb-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">VERSO Holdings</h1>
-              <p className="text-lg text-gray-600 mt-1">
-                Merchant Banking Group • Since 1958 • $800M+ AUM
-              </p>
-              <div className="flex items-center gap-4 mt-3">
-                <Badge variant="outline" className="text-xs">
-                  <MapPin className="h-3 w-3 mr-1" />
+        <div className="relative border-b border-gray-200 pb-8 mb-2">
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 opacity-50 rounded-t-2xl" />
+          <div className="relative flex items-center justify-between">
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-xl flex items-center justify-center shadow-lg">
+                  <Building2 className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+                    VERSO Holdings
+                  </h1>
+                  <p className="text-sm text-gray-500 mt-0.5">
+                    Merchant Banking Group • Since 1958 • $800M+ AUM
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 ml-1">
+                <Badge variant="outline" className="text-xs bg-white/80 backdrop-blur-sm border-blue-200 hover:border-blue-300 transition-colors">
+                  <MapPin className="h-3 w-3 mr-1 text-blue-600" />
                   Luxembourg HQ
                 </Badge>
-                <Badge variant="outline" className="text-xs">
-                  <Building2 className="h-3 w-3 mr-1" />
+                <Badge variant="outline" className="text-xs bg-white/80 backdrop-blur-sm border-indigo-200 hover:border-indigo-300 transition-colors">
+                  <Building2 className="h-3 w-3 mr-1 text-indigo-600" />
                   BVI Professional Fund
                 </Badge>
-                <Badge variant="outline" className="text-xs">
-                  <Target className="h-3 w-3 mr-1" />
+                <Badge variant="outline" className="text-xs bg-white/80 backdrop-blur-sm border-purple-200 hover:border-purple-300 transition-colors">
+                  <Target className="h-3 w-3 mr-1 text-purple-600" />
                   PE • VC • Real Estate
                 </Badge>
               </div>
             </div>
-            <div className="text-right">
-              <p className="text-sm text-gray-500">Portfolio as of</p>
-              <p className="text-lg font-semibold">{new Date().toLocaleDateString()}</p>
+            <div className="text-right bg-white/80 backdrop-blur-sm rounded-xl px-6 py-4 shadow-sm border border-gray-200">
+              <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Portfolio as of</p>
+              <p className="text-2xl font-bold text-gray-900 mt-1">{new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
             </div>
           </div>
         </div>
@@ -270,44 +279,65 @@ export default async function InvestorDashboard() {
           />
         ) : (
           /* Welcome Screen for New Users */
-          <div className="text-center py-12">
-            <Building2 className="h-16 w-16 text-blue-600 mx-auto mb-6" />
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">
+          <div className="text-center py-16 px-4">
+            <div className="relative inline-block mb-8">
+              <div className="absolute inset-0 bg-blue-400 blur-3xl opacity-20 animate-pulse" />
+              <div className="relative w-24 h-24 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-3xl flex items-center justify-center mx-auto shadow-2xl transform hover:scale-105 transition-transform duration-300">
+                <Building2 className="h-12 w-12 text-white" />
+              </div>
+            </div>
+
+            <h2 className="text-4xl font-bold bg-gradient-to-r from-gray-900 via-blue-900 to-indigo-900 bg-clip-text text-transparent mb-4">
               Welcome to VERSO Holdings
             </h2>
-            <p className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
+            <p className="text-xl text-gray-600 mb-12 max-w-2xl mx-auto leading-relaxed">
               Your private portal for accessing investment vehicles across our merchant banking platforms.
               Complete your onboarding to begin viewing your portfolio.
             </p>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto mb-8">
-              <Card className="text-center p-6">
-                <Building2 className="h-8 w-8 text-blue-600 mx-auto mb-3" />
-                <h3 className="font-semibold mb-2">VERSO FUND</h3>
-                <p className="text-sm text-gray-600">BVI Professional Mutual Fund</p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto mb-12">
+              <Card className="group relative overflow-hidden text-center p-8 border-2 hover:border-blue-300 transition-all duration-300 hover:shadow-xl transform hover:-translate-y-1">
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-indigo-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <div className="relative">
+                  <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                    <Building2 className="h-8 w-8 text-white" />
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">VERSO FUND</h3>
+                  <p className="text-sm text-gray-600">BVI Professional Mutual Fund</p>
+                </div>
               </Card>
 
-              <Card className="text-center p-6">
-                <Target className="h-8 w-8 text-green-600 mx-auto mb-3" />
-                <h3 className="font-semibold mb-2">REAL Empire</h3>
-                <p className="text-sm text-gray-600">Real Estate Securitization</p>
+              <Card className="group relative overflow-hidden text-center p-8 border-2 hover:border-green-300 transition-all duration-300 hover:shadow-xl transform hover:-translate-y-1">
+                <div className="absolute inset-0 bg-gradient-to-br from-green-50 to-emerald-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <div className="relative">
+                  <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-700 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                    <Target className="h-8 w-8 text-white" />
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">REAL Empire</h3>
+                  <p className="text-sm text-gray-600">Real Estate Securitization</p>
+                </div>
               </Card>
 
-              <Card className="text-center p-6">
-                <MapPin className="h-8 w-8 text-purple-600 mx-auto mb-3" />
-                <h3 className="font-semibold mb-2">Luxembourg Entities</h3>
-                <p className="text-sm text-gray-600">European Investment Platforms</p>
+              <Card className="group relative overflow-hidden text-center p-8 border-2 hover:border-purple-300 transition-all duration-300 hover:shadow-xl transform hover:-translate-y-1">
+                <div className="absolute inset-0 bg-gradient-to-br from-purple-50 to-indigo-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <div className="relative">
+                  <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-indigo-700 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                    <MapPin className="h-8 w-8 text-white" />
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">Luxembourg Entities</h3>
+                  <p className="text-sm text-gray-600">European Investment Platforms</p>
+                </div>
               </Card>
             </div>
 
-            <div className="space-y-4">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <Link href="/versoholdings/tasks">
-                <Button size="lg" className="mr-4">
+                <Button size="lg" className="min-w-[220px] bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg hover:shadow-xl transition-all duration-300">
                   Complete Onboarding
                 </Button>
               </Link>
               <Link href="/versoholdings/messages">
-                <Button variant="outline" size="lg">
+                <Button variant="outline" size="lg" className="min-w-[220px] border-2 hover:bg-gray-50 transition-all duration-300">
                   Contact VERSO Team
                 </Button>
               </Link>

@@ -1,17 +1,6 @@
 import { AppLayout } from '@/components/layout/app-layout'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
+import { EnhancedHoldingsPage } from '@/components/holdings/enhanced-holdings-page'
 import { createClient } from '@/lib/supabase/server'
-import Link from 'next/link'
-import {
-  ArrowRight,
-  TrendingUp,
-  TrendingDown,
-  DollarSign,
-  Calendar,
-  Building
-} from 'lucide-react'
 
 export default async function InvestorHoldings() {
   const supabase = await createClient()
@@ -23,263 +12,111 @@ export default async function InvestorHoldings() {
     throw new Error('Authentication required')
   }
 
-  const supabaseUser = {
-    id: user.id,
-    email: user.email
-  }
-
   // Get investor entities linked to this user
   const { data: investorLinks } = await supabase
     .from('investor_users')
     .select('investor_id')
-    .eq('user_id', supabaseUser.id)
+    .eq('user_id', user.id)
 
-  let vehicles: any[] = []
+  let initialData = null
 
   if (investorLinks && investorLinks.length > 0) {
     const investorIds = investorLinks.map(link => link.investor_id)
-    
-    // Get vehicles with related data
-    const { data: vehiclesData, error } = await supabase
-      .from('vehicles')
-      .select(`
-        *,
-        subscriptions!inner (
-          id,
-          commitment,
-          currency,
-          status,
-          investor_id
-        ),
-        positions (
-          units,
-          cost_basis,
-          last_nav,
-          as_of_date
-        ),
-        valuations (
-          nav_total,
-          nav_per_unit,
-          as_of_date
-        )
-      `)
-      .in('subscriptions.investor_id', investorIds)
 
-    if (!error && vehiclesData) {
-      // Process and enhance vehicle data
-      vehicles = vehiclesData.map(vehicle => {
-        // Get the latest valuation
-        const latestValuation = vehicle.valuations
-          ?.sort((a: { as_of_date: string }, b: { as_of_date: string }) => 
-            new Date(b.as_of_date).getTime() - new Date(a.as_of_date).getTime()
-          )[0]
+    try {
+      
+      // Optimize: Fetch all data in parallel instead of sequential
+      const [kpiResponse, trendsResponse, breakdownResponse] = await Promise.allSettled([
+        supabase.rpc('calculate_investor_kpis_with_deals', {
+          investor_ids: investorIds
+        }),
+        supabase.rpc('get_portfolio_trends', {
+          investor_ids: investorIds,
+          days_back: 30
+        }),
+        supabase.rpc('get_investor_vehicle_breakdown', {
+          investor_ids: investorIds
+        })
+      ])
 
-        // Calculate position data for investor
-        let positionData = null
-        if (vehicle.positions?.length > 0) {
-          const position = vehicle.positions[0]
-          const currentValue = position.units * (latestValuation?.nav_per_unit || position.last_nav || 0)
-          const unrealizedGain = currentValue - (position.cost_basis || 0)
-          const unrealizedGainPct = position.cost_basis > 0 ? (unrealizedGain / position.cost_basis) * 100 : 0
+      // Process KPI data with fallback
+      let kpiData = null
+      if (kpiResponse.status === 'fulfilled' && !kpiResponse.value.error) {
+        kpiData = kpiResponse.value.data
+      } else {
 
-          positionData = {
-            units: position.units,
-            costBasis: position.cost_basis,
-            currentValue: Math.round(currentValue),
-            unrealizedGain: Math.round(unrealizedGain),
-            unrealizedGainPct: Math.round(unrealizedGainPct * 100) / 100,
-            lastUpdated: position.as_of_date
-          }
+        const fallbackResponse = await supabase.rpc('calculate_investor_kpis', {
+          investor_ids: investorIds
+        })
+
+        if (fallbackResponse.error) {
+          throw fallbackResponse.error
         }
 
-        // Get subscription data
-        const subscription = vehicle.subscriptions?.[0]
+        // Extend fallback data with deal-specific fields
+        kpiData = fallbackResponse.data?.map((row: any) => ({
+          ...row,
+          total_deals: 0,
+          total_deal_value: 0,
+          pending_allocations: 0
+        }))
+      }
 
-        return {
-          id: vehicle.id,
-          name: vehicle.name,
-          type: vehicle.type,
-          domicile: vehicle.domicile,
-          currency: vehicle.currency,
-          created_at: vehicle.created_at,
-          position: positionData,
-          subscription: subscription ? {
-            commitment: subscription.commitment,
-            currency: subscription.currency,
-            status: subscription.status
-          } : null,
-          valuation: latestValuation ? {
-            navTotal: latestValuation.nav_total,
-            navPerUnit: latestValuation.nav_per_unit,
-            asOfDate: latestValuation.as_of_date
-          } : null,
-          performance: positionData ? {
-            unrealizedGainPct: positionData.unrealizedGainPct
-          } : null
+      if (kpiData?.[0]) {
+        const kpiResult = kpiData[0]
+
+        // Process trends data
+        const trendsData = trendsResponse.status === 'fulfilled' && !trendsResponse.value.error 
+          ? trendsResponse.value.data 
+          : null
+
+        // Process breakdown data
+        const breakdownData = breakdownResponse.status === 'fulfilled' && !breakdownResponse.value.error
+          ? breakdownResponse.value.data
+          : null
+
+        // Prepare initial data for client component
+        initialData = {
+          kpis: {
+            currentNAV: Math.round(parseFloat(kpiResult.current_nav) || 0),
+            totalContributed: Math.round(parseFloat(kpiResult.total_contributed) || 0),
+            totalDistributions: Math.round(parseFloat(kpiResult.total_distributions) || 0),
+            unfundedCommitment: Math.round(parseFloat(kpiResult.unfunded_commitment) || 0),
+            totalCommitment: Math.round(parseFloat(kpiResult.total_commitment) || 0),
+            totalCostBasis: Math.round(parseFloat(kpiResult.total_cost_basis) || 0),
+            unrealizedGain: Math.round(parseFloat(kpiResult.unrealized_gain) || 0),
+            unrealizedGainPct: Math.round((parseFloat(kpiResult.unrealized_gain_pct) || 0) * 100) / 100,
+            dpi: Math.round((parseFloat(kpiResult.dpi) || 0) * 10000) / 10000,
+            tvpi: Math.round((parseFloat(kpiResult.tvpi) || 0) * 10000) / 10000,
+            irr: Math.round((parseFloat(kpiResult.irr_estimate) || 0) * 100) / 100
+          },
+          trends: trendsData?.[0] ? {
+            navChange: Math.round(parseFloat(trendsData[0].nav_change) || 0),
+            navChangePct: Math.round((parseFloat(trendsData[0].nav_change_pct) || 0) * 100) / 100,
+            performanceChange: Math.round((parseFloat(trendsData[0].performance_change) || 0) * 100) / 100,
+            periodDays: parseInt(trendsData[0].period_days) || 30
+          } : undefined,
+          summary: {
+            totalPositions: parseInt(kpiResult.total_positions) || 0,
+            totalVehicles: parseInt(kpiResult.total_vehicles) || 0,
+            totalDeals: parseInt(kpiResult.total_deals) || 0,
+            totalDealValue: Math.round(parseFloat(kpiResult.total_deal_value) || 0),
+            pendingAllocations: parseInt(kpiResult.pending_allocations) || 0,
+            lastUpdated: new Date().toISOString()
+          },
+          asOfDate: new Date().toISOString(),
+          vehicleBreakdown: breakdownData || []
         }
-      })
+      }
+    } catch (error) {
+      console.error('Error fetching initial portfolio data:', error)
+      // Let the client component handle the data fetching
     }
   }
 
   return (
     <AppLayout brand="versoholdings">
-      <div className="p-6 space-y-6">
-        {/* Page Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Investment Vehicles</h1>
-            <p className="text-gray-600 mt-1">
-              Overview of all your investment vehicles and current positions
-            </p>
-          </div>
-          <div className="text-sm text-gray-500">
-            {vehicles.length} Active Investment{vehicles.length !== 1 ? 's' : ''}
-          </div>
-        </div>
-
-        {/* Vehicles Grid */}
-        {vehicles.length > 0 ? (
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-            {vehicles.map((vehicle) => (
-              <Card key={vehicle.id} className="hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <CardTitle className="flex items-center gap-2">
-                        <Building className="h-5 w-5 text-blue-600" />
-                        {vehicle.name}
-                      </CardTitle>
-                      <CardDescription className="flex items-center gap-2 mt-1">
-                        <Badge variant="outline" className="text-xs">
-                          {vehicle.type?.toUpperCase() || 'FUND'}
-                        </Badge>
-                        <span className="text-xs text-muted-foreground">
-                          {vehicle.domicile}
-                        </span>
-                      </CardDescription>
-                    </div>
-                    
-                    {vehicle.performance?.unrealizedGainPct && (
-                      <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
-                        vehicle.performance.unrealizedGainPct > 0 
-                          ? 'bg-green-100 text-green-700' 
-                          : 'bg-red-100 text-red-700'
-                      }`}>
-                        {vehicle.performance.unrealizedGainPct > 0 ? (
-                          <TrendingUp className="h-3 w-3" />
-                        ) : (
-                          <TrendingDown className="h-3 w-3" />
-                        )}
-                        {vehicle.performance.unrealizedGainPct > 0 ? '+' : ''}{vehicle.performance.unrealizedGainPct.toFixed(1)}%
-                      </div>
-                    )}
-                  </div>
-                </CardHeader>
-                
-                <CardContent className="space-y-4">
-                  {/* Key Metrics */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <div className="text-2xl font-bold text-blue-600">
-                        {vehicle.position?.currentValue 
-                          ? new Intl.NumberFormat('en-US', {
-                              style: 'currency',
-                              currency: vehicle.currency || 'USD',
-                              minimumFractionDigits: 0,
-                              maximumFractionDigits: 0
-                            }).format(vehicle.position.currentValue)
-                          : 'N/A'
-                        }
-                      </div>
-                      <div className="text-xs text-muted-foreground">Current Value</div>
-                    </div>
-                    
-                    <div>
-                      <div className="text-lg font-semibold">
-                        {vehicle.subscription?.commitment
-                          ? new Intl.NumberFormat('en-US', {
-                              style: 'currency',
-                              currency: vehicle.currency || 'USD',
-                              minimumFractionDigits: 0,
-                              maximumFractionDigits: 0
-                            }).format(vehicle.subscription.commitment)
-                          : 'N/A'
-                        }
-                      </div>
-                      <div className="text-xs text-muted-foreground">Commitment</div>
-                    </div>
-                  </div>
-
-                  {/* Position Details */}
-                  {vehicle.position && (
-                    <div className="bg-slate-50 rounded-lg p-3 space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Units Held</span>
-                        <span className="font-medium">
-                          {new Intl.NumberFormat('en-US').format(vehicle.position.units)}
-                        </span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Cost Basis</span>
-                        <span className="font-medium">
-                          {new Intl.NumberFormat('en-US', {
-                            style: 'currency',
-                            currency: vehicle.currency || 'USD',
-                            minimumFractionDigits: 0,
-                            maximumFractionDigits: 0
-                          }).format(vehicle.position.costBasis)}
-                        </span>
-                      </div>
-                      {vehicle.valuation && (
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">NAV per Unit</span>
-                          <span className="font-medium">
-                            ${vehicle.valuation.navPerUnit?.toFixed(3)}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Latest Valuation Date */}
-                  {vehicle.valuation?.asOfDate && (
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <Calendar className="h-3 w-3" />
-                      <span>
-                        As of {new Date(vehicle.valuation.asOfDate).toLocaleDateString()}
-                      </span>
-                    </div>
-                  )}
-
-                  {/* Actions */}
-                  <div className="pt-2">
-                    <Link href={`/versoholdings/vehicle/${vehicle.id}`}>
-                      <Button className="w-full" variant="outline">
-                        View Details
-                        <ArrowRight className="h-4 w-4 ml-2" />
-                      </Button>
-                    </Link>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        ) : (
-          <Card>
-            <CardContent className="text-center py-12">
-              <Building className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No Investment Vehicles Found</h3>
-              <p className="text-muted-foreground mb-6">
-                You don&apos;t have access to any investment vehicles yet.
-              </p>
-              <Button variant="outline">
-                <DollarSign className="h-4 w-4 mr-2" />
-                Contact Investment Team
-              </Button>
-            </CardContent>
-          </Card>
-        )}
-      </div>
+      <EnhancedHoldingsPage initialData={initialData} />
     </AppLayout>
   )
 }

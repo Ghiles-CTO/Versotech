@@ -1,214 +1,147 @@
 import { AppLayout } from '@/components/layout/app-layout'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Input } from '@/components/ui/input'
-import { 
-  Download,
-  Eye,
-  Search,
-  Filter,
-  Calendar,
-  Shield
-} from 'lucide-react'
+import { createClient } from '@/lib/supabase/server'
+import { CategorizedDocumentsClient } from '@/components/documents/categorized-documents-client'
+import { Document, DocumentScope } from '@/types/documents'
+import { redirect } from 'next/navigation'
 
-const mockDocuments = [
-  {
-    id: '1',
-    name: 'Q4 2024 Position Statement',
-    type: 'Statement',
-    vehicleName: 'VERSO FUND',
-    size: '245 KB',
-    createdAt: '2024-01-15',
-    status: 'Available'
-  },
-  {
-    id: '2',
-    name: 'Annual Performance Report 2024',
-    type: 'Report',
-    vehicleName: 'REAL Empire',
-    size: '1.2 MB',
-    createdAt: '2024-01-10',
-    status: 'Available'
-  },
-  {
-    id: '3',
-    name: 'Subscription Agreement',
-    type: 'Legal',
-    vehicleName: 'SPV Delta',
-    size: '890 KB',
-    createdAt: '2023-12-20',
-    status: 'Available'
-  },
-  {
-    id: '4',
-    name: 'NDA - VERSO Holdings',
-    type: 'Legal',
-    vehicleName: 'General',
-    size: '156 KB',
-    createdAt: '2023-11-15',
-    status: 'Available'
-  },
-  {
-    id: '5',
-    name: 'Tax Package K-1 2023',
-    type: 'Tax',
-    vehicleName: 'VERSO FUND',
-    size: '523 KB',
-    createdAt: '2024-03-01',
-    status: 'Available'
+export default async function DocumentsPage({
+  searchParams
+}: {
+  searchParams: Promise<{
+    type?: string
+    vehicle?: string
+    deal?: string
+    search?: string
+    limit?: string
+    offset?: string
+  }>
+}) {
+  const resolvedSearchParams = await searchParams
+  const supabase = await createClient()
+
+  // Get current user
+  const { data: { user }, error: userError } = await supabase.auth.getUser()
+
+  if (!user || userError) {
+    redirect('/versoholdings/login')
   }
-]
 
-function getDocumentIcon(type: string) {
-  switch (type.toLowerCase()) {
-    case 'statement':
-      return '📊'
-    case 'report':
-      return '📈'
-    case 'legal':
-      return '📄'
-    case 'tax':
-      return '🧾'
-    default:
-      return '📁'
+  // Get user's investors for context
+  const { data: investorLinks } = await supabase
+    .from('investor_users')
+    .select('investor_id')
+    .eq('user_id', user.id)
+
+  if (!investorLinks || investorLinks.length === 0) {
+    // User has no investor links, show empty state
+    return (
+      <AppLayout brand="versoholdings">
+        <CategorizedDocumentsClient
+          initialDocuments={[]}
+          vehicles={[]}
+        />
+      </AppLayout>
+    )
   }
-}
 
-export default function DocumentsPage() {
+  const investorIds = investorLinks.map(link => link.investor_id)
+
+  // Get user's vehicles for filter options
+  const { data: vehicleData } = await supabase
+    .from('subscriptions')
+    .select(`
+      vehicle_id,
+      vehicles!inner(id, name, type)
+    `)
+    .in('investor_id', investorIds)
+    .eq('status', 'active')
+
+  const vehicles = vehicleData
+    ?.map(v => v.vehicles)
+    .filter((v, i, arr) => arr.findIndex(x => x.id === v.id) === i) // unique
+    || []
+
+  // Fetch holdings documents only (exclude deals)
+  let documents: Document[] = []
+
+  type DocumentQueryResult = {
+    id: string
+    type: string
+    file_key: string
+    created_at: string
+    watermark: Record<string, unknown> | null
+    vehicle_id: string | null
+    deal_id: string | null
+    owner_investor_id: string | null
+    created_by_profile: { display_name: string; email: string } | null
+    investors: { id: string; legal_name: string } | null
+    vehicles: { id: string; name: string; type: string } | null
+    deals: { id: string; name: string; status: string | null } | null
+  }
+
+  // Query only holdings documents (vehicle-scoped, not deal-scoped)
+  const { data: documentsData, error: documentsError, count } = await supabase
+    .from('documents')
+    .select(`
+      id,
+      type,
+      file_key,
+      created_at,
+      watermark,
+      vehicle_id,
+      deal_id,
+      owner_investor_id,
+      created_by_profile:created_by(display_name, email),
+      investors:owner_investor_id(id, legal_name),
+      vehicles:vehicle_id(id, name, type),
+      deals:deal_id(id, name, status)
+    `, { count: 'exact' })
+    .not('vehicle_id', 'is', null) // Only holdings documents
+    .is('deal_id', null) // Exclude deal documents
+    .order('created_at', { ascending: false })
+
+  if (documentsError) {
+    console.error('Documents query error:', documentsError)
+  }
+
+  if (documentsData) {
+    const typedDocuments = documentsData as DocumentQueryResult[]
+
+    documents = typedDocuments.map((doc) => {
+      const fileName = doc.file_key ? doc.file_key.split('/').pop() : 'Unknown'
+
+      const scope: DocumentScope = {}
+      if (doc.investors) scope.investor = doc.investors
+      if (doc.vehicles) scope.vehicle = {
+        id: doc.vehicles.id,
+        name: doc.vehicles.name,
+        type: doc.vehicles.type
+      }
+      if (doc.deals) scope.deal = {
+        id: doc.deals.id,
+        name: doc.deals.name,
+        status: doc.deals.status || undefined
+      }
+
+      return {
+        id: doc.id,
+        type: doc.type,
+        file_name: fileName,
+        file_key: doc.file_key,
+        created_at: doc.created_at,
+        created_by: doc.created_by_profile,
+        scope,
+        watermark: doc.watermark as Document['watermark']
+      }
+    })
+  }
+
   return (
     <AppLayout brand="versoholdings">
-      <div className="p-6 space-y-6">
-        {/* Page Header */}
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Document Library</h1>
-          <p className="text-gray-600 mt-1">
-            Access your statements, reports, and legal documents
-          </p>
-        </div>
-
-        {/* Search and Filters */}
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex-1">
-                <div className="relative">
-                  <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                  <Input
-                    placeholder="Search documents..."
-                    className="pl-10"
-                  />
-                </div>
-              </div>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm">
-                  <Filter className="h-4 w-4 mr-2" />
-                  Filter
-                </Button>
-                <Button variant="outline" size="sm">
-                  <Calendar className="h-4 w-4 mr-2" />
-                  Date Range
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Document Categories */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card className="hover:shadow-md transition-shadow cursor-pointer">
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl mb-2">📊</div>
-              <div className="font-semibold">Statements</div>
-              <div className="text-sm text-gray-500">2 documents</div>
-            </CardContent>
-          </Card>
-          <Card className="hover:shadow-md transition-shadow cursor-pointer">
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl mb-2">📈</div>
-              <div className="font-semibold">Reports</div>
-              <div className="text-sm text-gray-500">1 document</div>
-            </CardContent>
-          </Card>
-          <Card className="hover:shadow-md transition-shadow cursor-pointer">
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl mb-2">📄</div>
-              <div className="font-semibold">Legal</div>
-              <div className="text-sm text-gray-500">2 documents</div>
-            </CardContent>
-          </Card>
-          <Card className="hover:shadow-md transition-shadow cursor-pointer">
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl mb-2">🧾</div>
-              <div className="font-semibold">Tax</div>
-              <div className="text-sm text-gray-500">1 document</div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Documents List */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Documents</CardTitle>
-            <CardDescription>
-              All documents are automatically watermarked and tracked for security
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {mockDocuments.map((doc) => (
-                <div key={doc.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center text-lg">
-                      {getDocumentIcon(doc.type)}
-                    </div>
-                    <div>
-                      <h3 className="font-semibold">{doc.name}</h3>
-                      <div className="flex items-center gap-2 text-sm text-gray-500 mt-1">
-                        <Badge variant="outline" className="text-xs">
-                          {doc.type}
-                        </Badge>
-                        <span>•</span>
-                        <span>{doc.vehicleName}</span>
-                        <span>•</span>
-                        <span>{doc.size}</span>
-                        <span>•</span>
-                        <span>{new Date(doc.createdAt).toLocaleDateString()}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button variant="ghost" size="sm">
-                      <Eye className="h-4 w-4 mr-2" />
-                      Preview
-                    </Button>
-                    <Button variant="outline" size="sm">
-                      <Download className="h-4 w-4 mr-2" />
-                      Download
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Security Notice */}
-        <Card className="border-blue-200 bg-blue-50">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <Shield className="h-5 w-5 text-blue-600" />
-              <div>
-                <div className="font-semibold text-blue-900">Document Security</div>
-                <div className="text-sm text-blue-700">
-                  All documents are watermarked with your name and download timestamp. 
-                  Access is logged for compliance and security purposes.
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <CategorizedDocumentsClient
+        initialDocuments={documents}
+        vehicles={vehicles}
+      />
     </AppLayout>
   )
 }

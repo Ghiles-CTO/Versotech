@@ -2,6 +2,7 @@ import { AppLayout } from '@/components/layout/app-layout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
@@ -12,8 +13,44 @@ import {
   TrendingDown,
   Calendar,
   FileText,
-  Download
+  Download,
+  DollarSign,
+  Layers,
+  MessageSquare,
+  BarChart3,
+  Clock,
+  Users,
+  Target,
+  Info
 } from 'lucide-react'
+
+interface Position {
+  units: number
+  costBasis: number
+  currentValue: number
+  unrealizedGain: number
+  unrealizedGainPct: number
+  lastUpdated?: string
+}
+
+interface Subscription {
+  commitment: number
+  currency: string
+  status: string
+  signedDate: string
+}
+
+interface CashflowData {
+  totalContributions: number
+  totalDistributions: number
+  unfundedCommitment: number
+  history: Array<{
+    type: string
+    amount: number
+    date: string
+    reference?: string
+  }>
+}
 
 export default async function VehicleDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const supabase = await createClient()
@@ -24,11 +61,6 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
 
   if (!user || userError) {
     throw new Error('Authentication required')
-  }
-
-  const supabaseUser = {
-    id: user.id,
-    email: user.email
   }
 
   // Get vehicle details
@@ -84,7 +116,7 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
   ])
 
   // Process position data
-  let positionData = null
+  let positionData: Position | null = null
   if (position) {
     const latestValuation = valuations?.[0]
     const currentValue = position.units * (latestValuation?.nav_per_unit || position.last_nav || 0)
@@ -102,7 +134,7 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
   }
 
   // Process subscription data
-  const subscriptionData = {
+  const subscriptionData: Subscription = {
     commitment: subscription.commitment,
     currency: subscription.currency,
     status: subscription.status,
@@ -110,7 +142,7 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
   }
 
   // Process cashflow data
-  let cashflowData = null
+  let cashflowData: CashflowData | null = null
   if (cashflows) {
     const contributions = cashflows
       .filter(cf => cf.type === 'call')
@@ -133,1156 +165,477 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
     }
   }
 
-  // Create vehicleData object similar to API response
-  const vehicleData = {
-    vehicle: {
-      id: vehicle.id,
-      name: vehicle.name,
-      type: vehicle.type,
-      domicile: vehicle.domicile,
-      currency: vehicle.currency,
-      created_at: vehicle.created_at
-    },
-    position: positionData,
-    subscription: subscriptionData,
-    cashflows: cashflowData,
-    valuations: valuations?.map(v => ({
-      navTotal: v.nav_total,
-      navPerUnit: v.nav_per_unit,
-      asOfDate: v.as_of_date
-    })) || [],
-    capitalCalls: capitalCalls?.map(cc => ({
-      id: cc.id,
-      name: cc.name,
-      callPct: cc.call_pct,
-      dueDate: cc.due_date,
-      status: cc.status
-    })) || [],
-    distributions: distributions?.map(d => ({
-      id: d.id,
-      name: d.name,
-      amount: d.amount,
-      date: d.date,
-      classification: d.classification
-    })) || [],
-    documents: documents?.map(doc => ({
-      id: doc.id,
-      type: doc.type,
-      createdAt: doc.created_at
-    })) || []
-  }
+  // Format currency helper
+  const formatCurrency = (amount: number) => new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: vehicle.currency || 'USD',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  }).format(amount)
 
-
-  // Data is already available from earlier queries
+  const formatUnits = (units: number) => new Intl.NumberFormat('en-US', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2
+  }).format(units)
 
   return (
     <AppLayout brand="versoholdings">
-      <div className="p-6 space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
+      <div className="p-6 space-y-8">
+        {/* Enhanced Header */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <Link href="/versoholdings/holdings">
-              <Button variant="ghost" size="sm">
-                <ArrowLeft className="h-4 w-4 mr-2" />
+              <Button variant="ghost" size="sm" className="gap-2">
+                <ArrowLeft className="h-4 w-4" />
                 Back to Holdings
               </Button>
             </Link>
             <div>
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <Building className="h-6 w-6 text-blue-600" />
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center shadow-sm">
+                  <Building className="h-8 w-8 text-blue-600" />
                 </div>
                 <div>
-                  <h1 className="text-2xl font-bold text-gray-900">{vehicle.name}</h1>
-                  <div className="flex items-center gap-2 mt-1">
-                    <Badge variant="outline" className="capitalize">
+                  <h1 className="text-3xl font-bold text-gray-900">{vehicle.name}</h1>
+                  <div className="flex items-center gap-3 mt-2">
+                    <Badge variant="outline" className="capitalize font-medium px-3 py-1">
                       {vehicle.type}
                     </Badge>
-                    <span className="text-gray-500">•</span>
-                    <span className="text-gray-600">{vehicle.domicile}</span>
-                    <span className="text-gray-500">•</span>
-                    <span className="text-gray-600">{vehicle.currency}</span>
+                    <span className="text-gray-400">•</span>
+                    <span className="text-gray-600 font-medium">{vehicle.domicile}</span>
+                    <span className="text-gray-400">•</span>
+                    <span className="text-gray-600 font-medium">{vehicle.currency}</span>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline">
-              <FileText className="h-4 w-4 mr-2" />
-              Request Report
+          
+          <div className="flex gap-3">
+            <Button variant="outline" className="gap-2">
+              <FileText className="h-4 w-4" />
+              Position Statement
             </Button>
-            <Button variant="outline">
-              <Download className="h-4 w-4 mr-2" />
-              Download Statement
+            <Button variant="outline" className="gap-2">
+              <Download className="h-4 w-4" />
+              Documents
+            </Button>
+            <Button variant="outline" className="gap-2">
+              <MessageSquare className="h-4 w-4" />
+              Message
             </Button>
           </div>
         </div>
 
-        {/* Key Metrics */}
-        {position && (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <Card>
+        {/* Key Performance Metrics */}
+        {positionData && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <Card className="border-0 shadow-md">
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium text-gray-600">Current Value</CardTitle>
+                <CardTitle className="text-sm font-medium text-gray-600 flex items-center gap-2">
+                  <DollarSign className="h-4 w-4" />
+                  Current Value
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">
-                  {new Intl.NumberFormat('en-US', {
-                    style: 'currency',
-                    currency: vehicle.currency || 'USD',
-                    minimumFractionDigits: 0,
-                    maximumFractionDigits: 0
-                  }).format(position.currentValue)}
+                <div className="text-3xl font-bold text-gray-900">
+                  {formatCurrency(positionData.currentValue)}
                 </div>
-                {position.unrealizedGainPct !== undefined && (
-                  <div className={`flex items-center gap-1 text-sm mt-1 ${
-                    position.unrealizedGainPct > 0 ? 'text-green-600' : 
-                    position.unrealizedGainPct < 0 ? 'text-red-600' : 'text-gray-500'
+                {positionData.unrealizedGainPct !== undefined && (
+                  <div className={`flex items-center gap-1 text-sm mt-2 ${
+                    positionData.unrealizedGainPct > 0 ? 'text-green-600' :
+                    positionData.unrealizedGainPct < 0 ? 'text-red-600' : 'text-gray-500'
                   }`}>
-                    {position.unrealizedGainPct > 0 ? (
-                      <TrendingUp className="h-3 w-3" />
-                    ) : position.unrealizedGainPct < 0 ? (
-                      <TrendingDown className="h-3 w-3" />
+                    {positionData.unrealizedGainPct > 0 ? (
+                      <TrendingUp className="h-4 w-4" />
+                    ) : positionData.unrealizedGainPct < 0 ? (
+                      <TrendingDown className="h-4 w-4" />
                     ) : null}
-                    {position.unrealizedGainPct > 0 ? '+' : ''}{position.unrealizedGainPct.toFixed(1)}%
+                    {positionData.unrealizedGainPct > 0 ? '+' : ''}{positionData.unrealizedGainPct.toFixed(1)}%
                   </div>
                 )}
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="border-0 shadow-md">
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium text-gray-600">Units Held</CardTitle>
+                <CardTitle className="text-sm font-medium text-gray-600 flex items-center gap-2">
+                  <Layers className="h-4 w-4" />
+                  Units Held
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">
-                  {new Intl.NumberFormat('en-US').format(position.units)}
+                <div className="text-3xl font-bold text-gray-900">
+                  {formatUnits(positionData.units)}
                 </div>
-                <div className="text-sm text-gray-500 mt-1">Total shares/units</div>
+                <div className="text-sm text-gray-500 mt-2">Total shares/units</div>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="border-0 shadow-md">
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium text-gray-600">Cost Basis</CardTitle>
+                <CardTitle className="text-sm font-medium text-gray-600 flex items-center gap-2">
+                  <Target className="h-4 w-4" />
+                  Cost Basis
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">
-                  {new Intl.NumberFormat('en-US', {
-                    style: 'currency',
-                    currency: vehicle.currency || 'USD',
-                    minimumFractionDigits: 0,
-                    maximumFractionDigits: 0
-                  }).format(position.costBasis)}
+                <div className="text-3xl font-bold text-gray-900">
+                  {formatCurrency(positionData.costBasis)}
                 </div>
-                <div className="text-sm text-gray-500 mt-1">Total invested</div>
+                <div className="text-sm text-gray-500 mt-2">Total invested</div>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="border-0 shadow-md">
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium text-gray-600">Unrealized Gain/Loss</CardTitle>
+                <CardTitle className="text-sm font-medium text-gray-600 flex items-center gap-2">
+                  <BarChart3 className="h-4 w-4" />
+                  Unrealized P&L
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className={`text-2xl font-bold ${
-                  position.unrealizedGain > 0 ? 'text-green-600' : 
-                  position.unrealizedGain < 0 ? 'text-red-600' : 'text-gray-900'
+                <div className={`text-3xl font-bold ${
+                  positionData.unrealizedGain > 0 ? 'text-green-600' :
+                  positionData.unrealizedGain < 0 ? 'text-red-600' : 'text-gray-900'
                 }`}>
-                  {position.unrealizedGain > 0 ? '+' : ''}
-                  {new Intl.NumberFormat('en-US', {
-                    style: 'currency',
-                    currency: vehicle.currency || 'USD',
-                    minimumFractionDigits: 0,
-                    maximumFractionDigits: 0
-                  }).format(position.unrealizedGain)}
+                  {positionData.unrealizedGain > 0 ? '+' : ''}
+                  {formatCurrency(positionData.unrealizedGain)}
                 </div>
-                <div className="text-sm text-gray-500 mt-1">Mark-to-market</div>
+                <div className="text-sm text-gray-500 mt-2">Mark-to-market</div>
               </CardContent>
             </Card>
           </div>
         )}
 
-        {/* Investment Summary and Cash Flows */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          
-          {/* Investment Summary */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Investment Summary</CardTitle>
-              <CardDescription>
-                Your commitment and funding status
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {subscription && (
-                <div className="space-y-3">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Total Commitment</span>
-                    <span className="font-semibold">
-                      {new Intl.NumberFormat('en-US', {
-                        style: 'currency',
-                        currency: subscription.currency || 'USD',
-                        minimumFractionDigits: 0,
-                        maximumFractionDigits: 0
-                      }).format(subscription.commitment)}
-                    </span>
-                  </div>
-                  {cashflows && (
-                    <>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Total Contributions</span>
-                        <span className="font-semibold">
-                          {new Intl.NumberFormat('en-US', {
-                            style: 'currency',
-                            currency: subscription.currency || 'USD',
-                            minimumFractionDigits: 0,
-                            maximumFractionDigits: 0
-                          }).format(cashflows.totalContributions)}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Total Distributions</span>
-                        <span className="font-semibold">
-                          {new Intl.NumberFormat('en-US', {
-                            style: 'currency',
-                            currency: subscription.currency || 'USD',
-                            minimumFractionDigits: 0,
-                            maximumFractionDigits: 0
-                          }).format(cashflows.totalDistributions)}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Unfunded Commitment</span>
-                        <span className="font-semibold">
-                          {new Intl.NumberFormat('en-US', {
-                            style: 'currency',
-                            currency: subscription.currency || 'USD',
-                            minimumFractionDigits: 0,
-                            maximumFractionDigits: 0
-                          }).format(cashflows.unfundedCommitment)}
-                        </span>
-                      </div>
-                    </>
-                  )}
-                </div>
-              )}
-              
-              <div className="pt-3 border-t">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Subscription Status</span>
-                  <Badge className="bg-green-100 text-green-800">
-                    {subscription?.status || 'Active'}
-                  </Badge>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        {/* Enhanced Tabs Layout */}
+        <Tabs defaultValue="overview" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-5 lg:w-fit">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="position">Position</TabsTrigger>
+            <TabsTrigger value="cashflows">Cash Flows</TabsTrigger>
+            <TabsTrigger value="performance">Performance</TabsTrigger>
+            <TabsTrigger value="documents">Documents</TabsTrigger>
+          </TabsList>
 
-          {/* Recent Cash Flows */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent Cash Flows</CardTitle>
-              <CardDescription>
-                Latest capital calls and distributions
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {cashflows && cashflows.history && cashflows.history.length > 0 ? (
-                <div className="space-y-3">
-                  {cashflows.history.slice(0, 5).map((flow: { type: string; date: string; amount: number }, index: number) => (
-                    <div key={index} className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-2 h-2 rounded-full ${
-                          flow.type === 'call' ? 'bg-red-500' : 'bg-green-500'
-                        }`} />
-                        <div>
-                          <div className="font-medium capitalize">{flow.type}</div>
-                          <div className="text-sm text-gray-500">
-                            {new Date(flow.date).toLocaleDateString()}
+          {/* Overview Tab */}
+          <TabsContent value="overview" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Investment Summary */}
+              <Card className="border-0 shadow-md">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Target className="h-5 w-5 text-blue-600" />
+                    Investment Summary
+                  </CardTitle>
+                  <CardDescription>
+                    Your commitment and funding status for this vehicle
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600">Total Commitment</span>
+                      <span className="font-semibold text-lg">
+                        {formatCurrency(subscriptionData.commitment)}
+                      </span>
+                    </div>
+                    {cashflowData && (
+                      <>
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-600">Total Contributions</span>
+                          <span className="font-semibold">
+                            {formatCurrency(cashflowData.totalContributions)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-600">Total Distributions</span>
+                          <span className="font-semibold">
+                            {formatCurrency(cashflowData.totalDistributions)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-600">Unfunded Commitment</span>
+                          <span className="font-semibold text-blue-600">
+                            {formatCurrency(cashflowData.unfundedCommitment)}
+                          </span>
+                        </div>
+                      </>
+                    )}
+                  </div>
+
+                  <div className="pt-4 border-t">
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600">Subscription Status</span>
+                      <Badge className={`${
+                        subscriptionData.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {subscriptionData.status}
+                      </Badge>
+                    </div>
+                    <div className="flex justify-between items-center mt-2">
+                      <span className="text-gray-600">Signed Date</span>
+                      <span className="text-sm text-gray-500">
+                        {new Date(subscriptionData.signedDate).toLocaleDateString()}
+                      </span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Recent Activity */}
+              <Card className="border-0 shadow-md">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Clock className="h-5 w-5 text-blue-600" />
+                    Recent Cash Flows
+                  </CardTitle>
+                  <CardDescription>
+                    Latest capital calls and distributions
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {cashflowData && cashflowData.history && cashflowData.history.length > 0 ? (
+                    <div className="space-y-4">
+                      {cashflowData.history.slice(0, 5).map((flow, index) => (
+                        <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                          <div className="flex items-center gap-3">
+                            <div className={`w-3 h-3 rounded-full ${
+                              flow.type === 'call' ? 'bg-red-500' : 'bg-green-500'
+                            }`} />
+                            <div>
+                              <div className="font-medium capitalize">{flow.type}</div>
+                              <div className="text-sm text-gray-500">
+                                {new Date(flow.date).toLocaleDateString()}
+                              </div>
+                            </div>
+                          </div>
+                          <div className={`font-semibold ${
+                            flow.type === 'call' ? 'text-red-600' : 'text-green-600'
+                          }`}>
+                            {flow.type === 'call' ? '-' : '+'}
+                            {formatCurrency(Math.abs(flow.amount))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-gray-500">
+                      <Calendar className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+                      <p>No cash flow history available</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          {/* Position Tab */}
+          <TabsContent value="position" className="space-y-6">
+            <Card className="border-0 shadow-md">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Layers className="h-5 w-5 text-blue-600" />
+                  Position Breakdown
+                </CardTitle>
+                <CardDescription>
+                  Detailed unit-level position information and cost basis
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {positionData ? (
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      <div className="text-center p-4 bg-blue-50 rounded-lg">
+                        <div className="text-2xl font-bold text-blue-600">{formatUnits(positionData.units)}</div>
+                        <div className="text-sm text-gray-600">Total Units</div>
+                      </div>
+                      <div className="text-center p-4 bg-green-50 rounded-lg">
+                        <div className="text-2xl font-bold text-green-600">
+                          ${valuations?.[0]?.nav_per_unit?.toFixed(3) || 'N/A'}
+                        </div>
+                        <div className="text-sm text-gray-600">NAV per Unit</div>
+                      </div>
+                      <div className="text-center p-4 bg-gray-50 rounded-lg">
+                        <div className="text-2xl font-bold text-gray-600">
+                          ${(positionData.costBasis / positionData.units).toFixed(3)}
+                        </div>
+                        <div className="text-sm text-gray-600">Cost per Unit</div>
+                      </div>
+                    </div>
+
+                    <div className="border-t pt-4">
+                      <h4 className="font-semibold mb-3">Valuation Methodology</h4>
+                      <div className="bg-blue-50 p-4 rounded-lg">
+                        <div className="flex items-start gap-2">
+                          <Info className="h-5 w-5 text-blue-600 mt-0.5" />
+                          <div className="text-sm text-blue-800">
+                            <p><strong>Valuation Source:</strong> Latest NAV reported by the fund administrator</p>
+                            <p className="mt-1"><strong>Frequency:</strong> Monthly/Quarterly basis</p>
+                            <p className="mt-1"><strong>Last Updated:</strong> {positionData.lastUpdated ? new Date(positionData.lastUpdated).toLocaleDateString() : 'N/A'}</p>
                           </div>
                         </div>
                       </div>
-                      <div className={`font-semibold ${
-                        flow.type === 'call' ? 'text-red-600' : 'text-green-600'
-                      }`}>
-                        {flow.type === 'call' ? '-' : '+'}
-                        {new Intl.NumberFormat('en-US', {
-                          style: 'currency',
-                          currency: vehicle.currency || 'USD',
-                          minimumFractionDigits: 0,
-                          maximumFractionDigits: 0
-                        }).format(Math.abs(flow.amount))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-6 text-gray-500">
-                  No cash flow history available
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Performance History */}
-        {valuations && valuations.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Performance History</CardTitle>
-              <CardDescription>
-                Historical NAV and valuation data
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {valuations.slice(0, 10).map((valuation: { asOfDate: string; navPerUnit?: number; navTotal?: number }, index: number) => (
-                  <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <Calendar className="h-4 w-4 text-gray-400" />
-                      <div>
-                        <div className="font-medium">
-                          {new Date(valuation.asOfDate).toLocaleDateString()}
-                        </div>
-                        <div className="text-sm text-gray-500">Valuation Date</div>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-semibold">
-                        ${valuation.navPerUnit?.toFixed(3)} per unit
-                      </div>
-                      {valuation.navTotal && (
-                        <div className="text-sm text-gray-500">
-                          Total NAV: {new Intl.NumberFormat('en-US', {
-                            style: 'currency',
-                            currency: vehicle.currency || 'USD',
-                            minimumFractionDigits: 0,
-                            maximumFractionDigits: 0
-                          }).format(valuation.navTotal)}
-                        </div>
-                      )}
                     </div>
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Documents */}
-        {documents && documents.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Related Documents</CardTitle>
-              <CardDescription>
-                Documents specific to this investment vehicle
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {documents.map((doc: { id: string; type: string; createdAt: string }) => (
-                  <div key={doc.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors">
-                    <div className="flex items-center gap-3">
-                      <FileText className="h-5 w-5 text-gray-400" />
-                      <div>
-                        <div className="font-medium">{doc.type}</div>
-                        <div className="text-sm text-gray-500">
-                          {new Date(doc.createdAt).toLocaleDateString()}
-                        </div>
-                      </div>
-                    </div>
-                    <Button variant="outline" size="sm">
-                      <Download className="h-4 w-4 mr-2" />
-                      Download
-                    </Button>
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    No position data available
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-      </div>
-    </AppLayout>
-  )
-}
-
-                Your commitment and funding status
-
-              </CardDescription>
-
-            </CardHeader>
-
-            <CardContent className="space-y-4">
-
-              {subscription && (
-
-                <div className="space-y-3">
-
-                  <div className="flex justify-between">
-
-                    <span className="text-gray-600">Total Commitment</span>
-
-                    <span className="font-semibold">
-
-                      {new Intl.NumberFormat('en-US', {
-
-                        style: 'currency',
-
-                        currency: subscription.currency || 'USD',
-
-                        minimumFractionDigits: 0,
-
-                        maximumFractionDigits: 0
-
-                      }).format(subscription.commitment)}
-
-                    </span>
-
-                  </div>
-
-                  {cashflows && (
-
-                    <>
-
-                      <div className="flex justify-between">
-
-                        <span className="text-gray-600">Total Contributions</span>
-
-                        <span className="font-semibold">
-
-                          {new Intl.NumberFormat('en-US', {
-
-                            style: 'currency',
-
-                            currency: subscription.currency || 'USD',
-
-                            minimumFractionDigits: 0,
-
-                            maximumFractionDigits: 0
-
-                          }).format(cashflows.totalContributions)}
-
-                        </span>
-
-                      </div>
-
-                      <div className="flex justify-between">
-
-                        <span className="text-gray-600">Total Distributions</span>
-
-                        <span className="font-semibold">
-
-                          {new Intl.NumberFormat('en-US', {
-
-                            style: 'currency',
-
-                            currency: subscription.currency || 'USD',
-
-                            minimumFractionDigits: 0,
-
-                            maximumFractionDigits: 0
-
-                          }).format(cashflows.totalDistributions)}
-
-                        </span>
-
-                      </div>
-
-                      <div className="flex justify-between">
-
-                        <span className="text-gray-600">Unfunded Commitment</span>
-
-                        <span className="font-semibold">
-
-                          {new Intl.NumberFormat('en-US', {
-
-                            style: 'currency',
-
-                            currency: subscription.currency || 'USD',
-
-                            minimumFractionDigits: 0,
-
-                            maximumFractionDigits: 0
-
-                          }).format(cashflows.unfundedCommitment)}
-
-                        </span>
-
-                      </div>
-
-                    </>
-
-                  )}
-
-                </div>
-
-              )}
-
-              
-
-              <div className="pt-3 border-t">
-
-                <div className="flex justify-between text-sm">
-
-                  <span className="text-gray-600">Subscription Status</span>
-
-                  <Badge className="bg-green-100 text-green-800">
-
-                    {subscription?.status || 'Active'}
-
-                  </Badge>
-
-                </div>
-
-              </div>
-
-            </CardContent>
-
-          </Card>
-
-
-
-          {/* Recent Cash Flows */}
-
-          <Card>
-
-            <CardHeader>
-
-              <CardTitle>Recent Cash Flows</CardTitle>
-
-              <CardDescription>
-
-                Latest capital calls and distributions
-
-              </CardDescription>
-
-            </CardHeader>
-
-            <CardContent>
-
-              {cashflows && cashflows.history && cashflows.history.length > 0 ? (
-
-                <div className="space-y-3">
-
-                  {cashflows.history.slice(0, 5).map((flow: { type: string; date: string; amount: number }, index: number) => (
-
-                    <div key={index} className="flex items-center justify-between">
-
-                      <div className="flex items-center gap-3">
-
-                        <div className={`w-2 h-2 rounded-full ${
-
-                          flow.type === 'call' ? 'bg-red-500' : 'bg-green-500'
-
-                        }`} />
-
-                        <div>
-
-                          <div className="font-medium capitalize">{flow.type}</div>
-
-                          <div className="text-sm text-gray-500">
-
-                            {new Date(flow.date).toLocaleDateString()}
-
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Cash Flows Tab */}
+          <TabsContent value="cashflows" className="space-y-6">
+            <Card className="border-0 shadow-md">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <DollarSign className="h-5 w-5 text-blue-600" />
+                  Complete Cash Flow History
+                </CardTitle>
+                <CardDescription>
+                  All capital calls and distributions for this investment
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {cashflowData && cashflowData.history && cashflowData.history.length > 0 ? (
+                  <div className="space-y-3">
+                    {cashflowData.history.map((flow, index) => (
+                      <div key={index} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
+                        <div className="flex items-center gap-4">
+                          <div className={`w-4 h-4 rounded-full ${
+                            flow.type === 'call' ? 'bg-red-500' : 'bg-green-500'
+                          }`} />
+                          <div>
+                            <div className="font-medium">
+                              {flow.type === 'call' ? 'Capital Call' : 'Distribution'}
+                            </div>
+                            <div className="text-sm text-gray-500">
+                              {new Date(flow.date).toLocaleDateString()}
+                            </div>
                           </div>
-
                         </div>
-
-                      </div>
-
-                      <div className={`font-semibold ${
-
-                        flow.type === 'call' ? 'text-red-600' : 'text-green-600'
-
-                      }`}>
-
-                        {flow.type === 'call' ? '-' : '+'}
-
-                        {new Intl.NumberFormat('en-US', {
-
-                          style: 'currency',
-
-                          currency: vehicle.currency || 'USD',
-
-                          minimumFractionDigits: 0,
-
-                          maximumFractionDigits: 0
-
-                        }).format(Math.abs(flow.amount))}
-
-                      </div>
-
-                    </div>
-
-                  ))}
-
-                </div>
-
-              ) : (
-
-                <div className="text-center py-6 text-gray-500">
-
-                  No cash flow history available
-
-                </div>
-
-              )}
-
-            </CardContent>
-
-          </Card>
-
-        </div>
-
-
-
-        {/* Performance History */}
-
-        {valuations && valuations.length > 0 && (
-
-          <Card>
-
-            <CardHeader>
-
-              <CardTitle>Performance History</CardTitle>
-
-              <CardDescription>
-
-                Historical NAV and valuation data
-
-              </CardDescription>
-
-            </CardHeader>
-
-            <CardContent>
-
-              <div className="space-y-3">
-
-                {valuations.slice(0, 10).map((valuation: { asOfDate: string; navPerUnit?: number; navTotal?: number }, index: number) => (
-
-                  <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
-
-                    <div className="flex items-center gap-3">
-
-                      <Calendar className="h-4 w-4 text-gray-400" />
-
-                      <div>
-
-                        <div className="font-medium">
-
-                          {new Date(valuation.asOfDate).toLocaleDateString()}
-
-                        </div>
-
-                        <div className="text-sm text-gray-500">Valuation Date</div>
-
-                      </div>
-
-                    </div>
-
-                    <div className="text-right">
-
-                      <div className="font-semibold">
-
-                        ${valuation.navPerUnit?.toFixed(3)} per unit
-
-                      </div>
-
-                      {valuation.navTotal && (
-
-                        <div className="text-sm text-gray-500">
-
-                          Total NAV: {new Intl.NumberFormat('en-US', {
-
-                            style: 'currency',
-
-                            currency: vehicle.currency || 'USD',
-
-                            minimumFractionDigits: 0,
-
-                            maximumFractionDigits: 0
-
-                          }).format(valuation.navTotal)}
-
-                        </div>
-
-                      )}
-
-                    </div>
-
-                  </div>
-
-                ))}
-
-              </div>
-
-            </CardContent>
-
-          </Card>
-
-        )}
-
-
-
-        {/* Documents */}
-
-        {documents && documents.length > 0 && (
-
-          <Card>
-
-            <CardHeader>
-
-              <CardTitle>Related Documents</CardTitle>
-
-              <CardDescription>
-
-                Documents specific to this investment vehicle
-
-              </CardDescription>
-
-            </CardHeader>
-
-            <CardContent>
-
-              <div className="space-y-3">
-
-                {documents.map((doc: { id: string; type: string; createdAt: string }) => (
-
-                  <div key={doc.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors">
-
-                    <div className="flex items-center gap-3">
-
-                      <FileText className="h-5 w-5 text-gray-400" />
-
-                      <div>
-
-                        <div className="font-medium">{doc.type}</div>
-
-                        <div className="text-sm text-gray-500">
-
-                          {new Date(doc.createdAt).toLocaleDateString()}
-
-                        </div>
-
-                      </div>
-
-                    </div>
-
-                    <Button variant="outline" size="sm">
-
-                      <Download className="h-4 w-4 mr-2" />
-
-                      Download
-
-                    </Button>
-
-                  </div>
-
-                ))}
-
-              </div>
-
-            </CardContent>
-
-          </Card>
-
-        )}
-
-      </div>
-
-    </AppLayout>
-
-  )
-
-}
-
-                Your commitment and funding status
-
-              </CardDescription>
-
-            </CardHeader>
-
-            <CardContent className="space-y-4">
-
-              {subscription && (
-
-                <div className="space-y-3">
-
-                  <div className="flex justify-between">
-
-                    <span className="text-gray-600">Total Commitment</span>
-
-                    <span className="font-semibold">
-
-                      {new Intl.NumberFormat('en-US', {
-
-                        style: 'currency',
-
-                        currency: subscription.currency || 'USD',
-
-                        minimumFractionDigits: 0,
-
-                        maximumFractionDigits: 0
-
-                      }).format(subscription.commitment)}
-
-                    </span>
-
-                  </div>
-
-                  {cashflows && (
-
-                    <>
-
-                      <div className="flex justify-between">
-
-                        <span className="text-gray-600">Total Contributions</span>
-
-                        <span className="font-semibold">
-
-                          {new Intl.NumberFormat('en-US', {
-
-                            style: 'currency',
-
-                            currency: subscription.currency || 'USD',
-
-                            minimumFractionDigits: 0,
-
-                            maximumFractionDigits: 0
-
-                          }).format(cashflows.totalContributions)}
-
-                        </span>
-
-                      </div>
-
-                      <div className="flex justify-between">
-
-                        <span className="text-gray-600">Total Distributions</span>
-
-                        <span className="font-semibold">
-
-                          {new Intl.NumberFormat('en-US', {
-
-                            style: 'currency',
-
-                            currency: subscription.currency || 'USD',
-
-                            minimumFractionDigits: 0,
-
-                            maximumFractionDigits: 0
-
-                          }).format(cashflows.totalDistributions)}
-
-                        </span>
-
-                      </div>
-
-                      <div className="flex justify-between">
-
-                        <span className="text-gray-600">Unfunded Commitment</span>
-
-                        <span className="font-semibold">
-
-                          {new Intl.NumberFormat('en-US', {
-
-                            style: 'currency',
-
-                            currency: subscription.currency || 'USD',
-
-                            minimumFractionDigits: 0,
-
-                            maximumFractionDigits: 0
-
-                          }).format(cashflows.unfundedCommitment)}
-
-                        </span>
-
-                      </div>
-
-                    </>
-
-                  )}
-
-                </div>
-
-              )}
-
-              
-
-              <div className="pt-3 border-t">
-
-                <div className="flex justify-between text-sm">
-
-                  <span className="text-gray-600">Subscription Status</span>
-
-                  <Badge className="bg-green-100 text-green-800">
-
-                    {subscription?.status || 'Active'}
-
-                  </Badge>
-
-                </div>
-
-              </div>
-
-            </CardContent>
-
-          </Card>
-
-
-
-          {/* Recent Cash Flows */}
-
-          <Card>
-
-            <CardHeader>
-
-              <CardTitle>Recent Cash Flows</CardTitle>
-
-              <CardDescription>
-
-                Latest capital calls and distributions
-
-              </CardDescription>
-
-            </CardHeader>
-
-            <CardContent>
-
-              {cashflows && cashflows.history && cashflows.history.length > 0 ? (
-
-                <div className="space-y-3">
-
-                  {cashflows.history.slice(0, 5).map((flow: { type: string; date: string; amount: number }, index: number) => (
-
-                    <div key={index} className="flex items-center justify-between">
-
-                      <div className="flex items-center gap-3">
-
-                        <div className={`w-2 h-2 rounded-full ${
-
-                          flow.type === 'call' ? 'bg-red-500' : 'bg-green-500'
-
-                        }`} />
-
-                        <div>
-
-                          <div className="font-medium capitalize">{flow.type}</div>
-
-                          <div className="text-sm text-gray-500">
-
-                            {new Date(flow.date).toLocaleDateString()}
-
+                        <div className="text-right">
+                          <div className={`font-semibold text-lg ${
+                            flow.type === 'call' ? 'text-red-600' : 'text-green-600'
+                          }`}>
+                            {flow.type === 'call' ? '-' : '+'}
+                            {formatCurrency(Math.abs(flow.amount))}
                           </div>
-
+                          {flow.reference && (
+                            <div className="text-xs text-gray-400">
+                              Ref: {flow.reference}
+                            </div>
+                          )}
                         </div>
-
                       </div>
-
-                      <div className={`font-semibold ${
-
-                        flow.type === 'call' ? 'text-red-600' : 'text-green-600'
-
-                      }`}>
-
-                        {flow.type === 'call' ? '-' : '+'}
-
-                        {new Intl.NumberFormat('en-US', {
-
-                          style: 'currency',
-
-                          currency: vehicle.currency || 'USD',
-
-                          minimumFractionDigits: 0,
-
-                          maximumFractionDigits: 0
-
-                        }).format(Math.abs(flow.amount))}
-
-                      </div>
-
-                    </div>
-
-                  ))}
-
-                </div>
-
-              ) : (
-
-                <div className="text-center py-6 text-gray-500">
-
-                  No cash flow history available
-
-                </div>
-
-              )}
-
-            </CardContent>
-
-          </Card>
-
-        </div>
-
-
-
-        {/* Performance History */}
-
-        {valuations && valuations.length > 0 && (
-
-          <Card>
-
-            <CardHeader>
-
-              <CardTitle>Performance History</CardTitle>
-
-              <CardDescription>
-
-                Historical NAV and valuation data
-
-              </CardDescription>
-
-            </CardHeader>
-
-            <CardContent>
-
-              <div className="space-y-3">
-
-                {valuations.slice(0, 10).map((valuation: { asOfDate: string; navPerUnit?: number; navTotal?: number }, index: number) => (
-
-                  <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
-
-                    <div className="flex items-center gap-3">
-
-                      <Calendar className="h-4 w-4 text-gray-400" />
-
-                      <div>
-
-                        <div className="font-medium">
-
-                          {new Date(valuation.asOfDate).toLocaleDateString()}
-
-                        </div>
-
-                        <div className="text-sm text-gray-500">Valuation Date</div>
-
-                      </div>
-
-                    </div>
-
-                    <div className="text-right">
-
-                      <div className="font-semibold">
-
-                        ${valuation.navPerUnit?.toFixed(3)} per unit
-
-                      </div>
-
-                      {valuation.navTotal && (
-
-                        <div className="text-sm text-gray-500">
-
-                          Total NAV: {new Intl.NumberFormat('en-US', {
-
-                            style: 'currency',
-
-                            currency: vehicle.currency || 'USD',
-
-                            minimumFractionDigits: 0,
-
-                            maximumFractionDigits: 0
-
-                          }).format(valuation.navTotal)}
-
-                        </div>
-
-                      )}
-
-                    </div>
-
+                    ))}
                   </div>
-
-                ))}
-
-              </div>
-
-            </CardContent>
-
-          </Card>
-
-        )}
-
-
-
-        {/* Documents */}
-
-        {documents && documents.length > 0 && (
-
-          <Card>
-
-            <CardHeader>
-
-              <CardTitle>Related Documents</CardTitle>
-
-              <CardDescription>
-
-                Documents specific to this investment vehicle
-
-              </CardDescription>
-
-            </CardHeader>
-
-            <CardContent>
-
-              <div className="space-y-3">
-
-                {documents.map((doc: { id: string; type: string; createdAt: string }) => (
-
-                  <div key={doc.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors">
-
-                    <div className="flex items-center gap-3">
-
-                      <FileText className="h-5 w-5 text-gray-400" />
-
-                      <div>
-
-                        <div className="font-medium">{doc.type}</div>
-
-                        <div className="text-sm text-gray-500">
-
-                          {new Date(doc.createdAt).toLocaleDateString()}
-
-                        </div>
-
-                      </div>
-
-                    </div>
-
-                    <Button variant="outline" size="sm">
-
-                      <Download className="h-4 w-4 mr-2" />
-
-                      Download
-
-                    </Button>
-
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <DollarSign className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+                    <p>No cash flow history available</p>
                   </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-                ))}
+          {/* Performance Tab */}
+          <TabsContent value="performance" className="space-y-6">
+            <Card className="border-0 shadow-md">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5 text-blue-600" />
+                  Performance History
+                </CardTitle>
+                <CardDescription>
+                  Historical NAV and valuation data
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {valuations && valuations.length > 0 ? (
+                  <div className="space-y-4">
+                    {valuations.slice(0, 10).map((valuation, index) => (
+                      <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
+                        <div className="flex items-center gap-3">
+                          <Calendar className="h-5 w-5 text-gray-400" />
+                          <div>
+                            <div className="font-medium">
+                              {new Date(valuation.as_of_date).toLocaleDateString()}
+                            </div>
+                            <div className="text-sm text-gray-500">Valuation Date</div>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-semibold text-lg">
+                            ${valuation.nav_per_unit?.toFixed(3)} per unit
+                          </div>
+                          {valuation.nav_total && (
+                            <div className="text-sm text-gray-500">
+                              Total NAV: {formatCurrency(valuation.nav_total)}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <BarChart3 className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+                    <p>No performance history available</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-              </div>
-
-            </CardContent>
-
-          </Card>
-
-        )}
-
+          {/* Documents Tab */}
+          <TabsContent value="documents" className="space-y-6">
+            <Card className="border-0 shadow-md">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5 text-blue-600" />
+                  Related Documents
+                </CardTitle>
+                <CardDescription>
+                  Documents specific to this investment vehicle
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {documents && documents.length > 0 ? (
+                  <div className="space-y-3">
+                    {documents.map((doc) => (
+                      <div key={doc.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                        <div className="flex items-center gap-3">
+                          <FileText className="h-5 w-5 text-gray-400" />
+                          <div>
+                            <div className="font-medium">{doc.type}</div>
+                            <div className="text-sm text-gray-500">
+                              {new Date(doc.created_at).toLocaleDateString()}
+                            </div>
+                          </div>
+                        </div>
+                        <Button variant="outline" size="sm" className="gap-2">
+                          <Download className="h-4 w-4" />
+                          Download
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <FileText className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+                    <p>No documents available</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
-
     </AppLayout>
-
   )
-
 }

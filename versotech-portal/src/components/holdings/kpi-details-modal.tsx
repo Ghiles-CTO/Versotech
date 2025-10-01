@@ -157,8 +157,6 @@ export function KPIDetailsModal({
     setError(null)
 
     try {
-      console.log(`Fetching KPI details for ${kpiType}`)
-      
       const response = await fetch(`/api/portfolio/kpi-details?type=${encodeURIComponent(kpiType)}`, {
         method: 'GET',
         headers: {
@@ -171,28 +169,11 @@ export function KPIDetailsModal({
       }
 
       const result: KPIDetailsResponse = await response.json()
-      
+
       if (result.error) {
         throw new Error(result.message || result.error)
       }
-      
-      console.log(`✅ KPI details loaded: ${result.items.length} items, total: ${result.total}`)
-      
-      // Additional validation in development
-      if (process.env.NODE_ENV === 'development') {
-        console.log('KPI Details Debug:', {
-          kpiType,
-          itemCount: result.items.length,
-          totalValue: result.total,
-          hasDebugInfo: !!result.debug,
-          sampleItems: result.items.slice(0, 2).map(item => ({
-            name: item.name,
-            value: item.value,
-            type: item.type
-          }))
-        })
-      }
-      
+
       setData(result)
     } catch (err) {
       console.error('Error fetching KPI details:', err)

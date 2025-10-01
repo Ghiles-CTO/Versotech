@@ -95,8 +95,6 @@ export function PositionDetailModal({
     setError(null)
 
     try {
-      console.log(`Fetching position details for ${holdingType} ${holdingId}`)
-
       // Fetch data in parallel
       const [lotsResponse, feesResponse, cashflowsResponse, documentsResponse] = await Promise.allSettled([
         // FIFO lots data (mock for now since actual lot tracking may not be implemented in DB)

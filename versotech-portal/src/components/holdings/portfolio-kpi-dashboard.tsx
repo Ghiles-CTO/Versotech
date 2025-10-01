@@ -139,30 +139,28 @@ export function PortfolioKPIDashboard({
       {/* Main KPI Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
         {/* Primary KPIs */}
-        <div className="xl:col-span-2">
-          <KPICard
-            title="Current NAV"
-            value={kpis.currentNAV}
-            icon={DollarSign}
-            trend={trends ? {
-              value: trends.navChangePct,
-              isPositive: trends.navChangePct >= 0
-            } : undefined}
-            interactive
-            hasDetails
-            onDrillDown={() => handleKPIClick('nav_breakdown', 'Current NAV Breakdown')}
-            additionalInfo={{
-              change: trends ? {
-                period: `${trends.periodDays} days`,
-                value: formatCurrency(trends.navChange)
-              } : undefined,
-              breakdown: [
-                { label: 'Cost Basis', value: formatCurrency(kpis.totalCostBasis) },
-                { label: 'Unrealized Gain', value: formatCurrency(kpis.unrealizedGain) }
-              ]
-            }}
-          />
-        </div>
+        <KPICard
+          title="Current NAV"
+          value={kpis.currentNAV}
+          icon={DollarSign}
+          trend={trends ? {
+            value: trends.navChangePct,
+            isPositive: trends.navChangePct >= 0
+          } : undefined}
+          interactive
+          hasDetails
+          onDrillDown={() => handleKPIClick('nav_breakdown', 'Current NAV Breakdown')}
+          additionalInfo={{
+            change: trends ? {
+              period: `${trends.periodDays} days`,
+              value: formatCurrency(trends.navChange)
+            } : undefined,
+            breakdown: [
+              { label: 'Cost Basis', value: formatCurrency(kpis.totalCostBasis) },
+              { label: 'Unrealized Gain', value: formatCurrency(kpis.unrealizedGain) }
+            ]
+          }}
+        />
 
         <KPICard
           title="Total Contributed"
