@@ -1,14 +1,17 @@
 import { createClient } from '@/lib/supabase/server'
 import { auditLogger, AuditActions } from '@/lib/audit'
 import { NextResponse } from 'next/server'
+import type { CreateReportRequest, CreateReportResponse } from '@/types/reports'
+import { REPORT_TYPES, DUPLICATE_DETECTION_WINDOW, DEFAULT_PAGE_SIZE } from '@/lib/reports/constants'
+import { validateReportRequest } from '@/lib/reports/validation'
 
 export async function GET(request: Request) {
   try {
     const supabase = await createClient()
-    
+
     // Get the authenticated user
     const { data: { user }, error: authError } = await supabase.auth.getUser()
-    
+
     if (authError || !user) {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -42,16 +45,18 @@ export async function GET(request: Request) {
 
     const investorIds = investorLinks.map(link => link.investor_id)
 
-    // Get report requests for this investor
+    // Get report requests for this investor with enhanced relations
     const { data: requests, error } = await supabase
       .from('report_requests')
       .select(`
         *,
         vehicles (id, name, type),
-        documents (id, type, file_key)
+        documents (id, type, file_key, created_at),
+        workflow_runs (id, status, created_at, updated_at)
       `)
       .in('investor_id', investorIds)
       .order('created_at', { ascending: false })
+      .limit(DEFAULT_PAGE_SIZE)
 
     if (error) {
       console.error('Report requests query error:', error)
@@ -62,7 +67,8 @@ export async function GET(request: Request) {
     }
 
     return NextResponse.json({
-      requests: requests || []
+      requests: requests || [],
+      totalCount: requests?.length || 0
     })
 
   } catch (error) {
@@ -77,11 +83,20 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const supabase = await createClient()
-    const body = await request.json()
-    
+    const body: CreateReportRequest = await request.json()
+
+    // Validate request data
+    const validation = validateReportRequest(body)
+    if (!validation.isValid) {
+      return NextResponse.json(
+        { error: validation.errors[0].message, errors: validation.errors },
+        { status: 400 }
+      )
+    }
+
     // Get the authenticated user
     const { data: { user }, error: authError } = await supabase.auth.getUser()
-    
+
     if (authError || !user) {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -109,16 +124,29 @@ export async function POST(request: Request) {
       )
     }
 
-    const investorId = investorLinks[0].investor_id // Use first investor entity
+    const investorId = investorLinks[0].investor_id
 
-    // Validate request body
-    const { reportType, vehicleId, filters, priority = 'normal' } = body
+    // Check for duplicate recent requests (within 5 minutes)
+    const duplicateWindow = new Date(Date.now() - DUPLICATE_DETECTION_WINDOW).toISOString()
+    const { data: duplicates } = await supabase
+      .from('report_requests')
+      .select('id, status, created_at')
+      .eq('investor_id', investorId)
+      .eq('report_type', body.reportType)
+      .eq('vehicle_id', body.vehicleId || null)
+      .gte('created_at', duplicateWindow)
+      .in('status', ['queued', 'processing'])
 
-    if (!reportType) {
-      return NextResponse.json(
-        { error: 'Report type is required' },
-        { status: 400 }
-      )
+    if (duplicates && duplicates.length > 0) {
+      console.log('Duplicate report request detected, reusing existing:', duplicates[0].id)
+      return NextResponse.json({
+        id: duplicates[0].id,
+        status: duplicates[0].status,
+        message: 'Similar report already in progress',
+        estimated_completion: new Date(
+          new Date(duplicates[0].created_at).getTime() + REPORT_TYPES[body.reportType].sla
+        ).toISOString()
+      } as CreateReportResponse)
     }
 
     // Create report request
@@ -126,8 +154,9 @@ export async function POST(request: Request) {
       .from('report_requests')
       .insert({
         investor_id: investorId,
-        vehicle_id: vehicleId || null,
-        filters: filters || {},
+        vehicle_id: body.vehicleId || null,
+        report_type: body.reportType,
+        filters: body.filters || {},
         status: 'queued',
         created_by: user.id
       })
@@ -142,28 +171,86 @@ export async function POST(request: Request) {
       )
     }
 
+    // Trigger n8n workflow
+    const workflowKey = REPORT_TYPES[body.reportType].workflowKey
+    const workflowPayload = {
+      entity_type: 'report_request',
+      entity_id: reportRequest.id,
+      payload: {
+        report_request_id: reportRequest.id,
+        investor_id: investorId,
+        vehicle_id: body.vehicleId || null,
+        report_type: body.reportType,
+        filters: body.filters || {}
+      }
+    }
+
+    try {
+      const triggerResponse = await fetch(
+        `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/workflows/${workflowKey}/trigger`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Cookie': request.headers.get('cookie') || '',
+          },
+          body: JSON.stringify(workflowPayload)
+        }
+      )
+
+      if (!triggerResponse.ok) {
+        console.error('Workflow trigger failed:', await triggerResponse.text())
+        // Continue anyway - webhook will be retried
+      } else {
+        const { workflow_run_id } = await triggerResponse.json()
+
+        // Link workflow run to report request
+        if (workflow_run_id) {
+          await supabase
+            .from('report_requests')
+            .update({ workflow_run_id, status: 'processing' })
+            .eq('id', reportRequest.id)
+        }
+      }
+    } catch (workflowError) {
+      console.error('Error triggering workflow:', workflowError)
+      // Continue - report is queued, can be triggered manually
+    }
+
     // Log audit
     await auditLogger.log({
       actor_user_id: user.id,
-      action: AuditActions.CREATE,
-      entity: 'report_request',
+      action: AuditActions.REPORT_REQUESTED,
+      entity: 'report_requests',
       entity_id: reportRequest.id,
       metadata: {
-        report_type: reportType,
-        vehicle_id: vehicleId,
-        filters: filters,
-        priority
+        report_type: body.reportType,
+        vehicle_id: body.vehicleId,
+        filters: body.filters
       }
     })
 
-    // TODO: Trigger n8n workflow for report generation
-    // This would typically send a webhook to n8n with report parameters
+    // Create activity feed entry
+    await supabase.from('activity_feed').insert({
+      investor_id: investorId,
+      activity_type: 'document',
+      title: 'Report Generation Started',
+      description: `Generating ${REPORT_TYPES[body.reportType].label}`,
+      importance: 'normal',
+      entity_type: 'report_request',
+      entity_id: reportRequest.id
+    })
+
+    const estimatedCompletion = new Date(
+      Date.now() + REPORT_TYPES[body.reportType].sla
+    ).toISOString()
 
     return NextResponse.json({
       id: reportRequest.id,
       status: 'queued',
-      message: 'Report request submitted successfully'
-    })
+      estimated_completion: estimatedCompletion,
+      message: 'Report generation started'
+    } as CreateReportResponse)
 
   } catch (error) {
     console.error('Report request creation error:', error)

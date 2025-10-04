@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     }
 
     const payload = JSON.parse(body)
-    const { workflow_run_id, status, result_ref, error_message, artifacts } = payload
+    const { workflow_run_id, status, result_ref, error_message, artifacts, report_request_id } = payload
 
     if (!workflow_run_id) {
       return NextResponse.json({ error: 'Missing workflow_run_id' }, { status: 400 })
@@ -61,22 +61,77 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to update workflow run' }, { status: 500 })
     }
 
+    let documentId: string | null = null
+
     // If workflow generated a document, create document record
     if (status === 'completed' && artifacts && artifacts.document) {
       const { file_key, type, owner_investor_id, vehicle_id } = artifacts.document
-      
-      await supabase.from('documents').insert({
-        file_key,
-        type,
-        owner_investor_id: owner_investor_id || null,
-        vehicle_id: vehicle_id || null,
-        created_by: payload.original_user_id, // From the original trigger
-        watermark: {
-          generated_by: 'n8n_workflow',
-          workflow_run_id,
-          generated_at: new Date().toISOString()
+
+      const { data: newDoc, error: docError } = await supabase
+        .from('documents')
+        .insert({
+          file_key,
+          type,
+          owner_investor_id: owner_investor_id || null,
+          vehicle_id: vehicle_id || null,
+          created_by: payload.original_user_id, // From the original trigger
+          watermark: {
+            generated_by: 'n8n_workflow',
+            workflow_run_id,
+            generated_at: new Date().toISOString()
+          }
+        })
+        .select('id')
+        .single()
+
+      if (!docError && newDoc) {
+        documentId = newDoc.id
+      }
+    }
+
+    // Update report_request if this was a report generation workflow
+    if (report_request_id) {
+      const reportUpdate: any = {
+        status: status === 'completed' ? 'ready' : 'failed',
+        completed_at: new Date().toISOString()
+      }
+
+      if (status === 'failed' && error_message) {
+        reportUpdate.error_message = error_message
+      }
+
+      if (documentId) {
+        reportUpdate.result_doc_id = documentId
+      }
+
+      const { error: reportError } = await supabase
+        .from('report_requests')
+        .update(reportUpdate)
+        .eq('id', report_request_id)
+
+      if (reportError) {
+        console.error('Error updating report request:', reportError)
+      }
+
+      // Create activity feed entry
+      if (status === 'completed' && documentId) {
+        const { data: reportReq } = await supabase
+          .from('report_requests')
+          .select('investor_id, report_type')
+          .eq('id', report_request_id)
+          .single()
+
+        if (reportReq) {
+          await supabase.from('activity_feed').insert({
+            investor_id: reportReq.investor_id,
+            activity_type: 'document',
+            title: 'Report Ready',
+            description: `Your report is ready to download`,
+            importance: 'medium',
+            link: `/versoholdings/reports`
+          })
         }
-      })
+      }
     }
 
     // Log audit event

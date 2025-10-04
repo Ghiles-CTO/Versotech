@@ -49,7 +49,7 @@ export default async function DealParticipationPage({ params }: DealParticipatio
         <div className="p-6">
           <div className="text-center py-12">
             <h2 className="text-xl font-semibold text-gray-900 mb-2">Deal not found</h2>
-            <p className="text-gray-600">The requested deal could not be found or you don't have access to it.</p>
+            <p className="text-gray-600">The requested deal could not be found or you don&apos;t have access to it.</p>
           </div>
         </div>
       </AppLayout>

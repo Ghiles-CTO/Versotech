@@ -40,7 +40,10 @@
       "mcp__supabase__list_extensions",
       "mcp__supabase__list_migrations",
       "Bash(npx supabase:*)",
-      "Bash(cp:*)"
+      "Bash(cp:*)",
+      "Bash(chmod:*)",
+      "Bash(cat:*)",
+      "Bash(npx next:*)"
     ],
     "deny": []
   },

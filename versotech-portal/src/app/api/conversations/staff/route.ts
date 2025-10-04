@@ -3,9 +3,8 @@ import { auditLogger, AuditActions, AuditEntities } from '@/lib/audit'
 import { NextRequest, NextResponse } from 'next/server'
 
 /**
- * Get or create a conversation between the current investor and a staff member
- * This ensures every investor has a direct line to communicate with staff
- * API Route: /api/conversations/staff
+ * Get or create a conversation between the current investor and a specific staff member
+ * API Route: /api/conversations/staff?staff_id=xxx
  */
 export async function GET(request: NextRequest) {
   try {
@@ -21,22 +20,29 @@ export async function GET(request: NextRequest) {
 
     console.log('[Staff Conversation API] User authenticated:', user.id)
 
-    // Get staff member ID - Looking for any staff member
-    // Query for staff roles (role is an enum type)
-    const { data: staffMembers, error: staffError } = await supabase
+    // Get staff member ID from query parameter
+    const { searchParams } = new URL(request.url)
+    const staffId = searchParams.get('staff_id')
+
+    if (!staffId) {
+      return NextResponse.json({ error: 'staff_id parameter is required' }, { status: 400 })
+    }
+
+    // Get the specific staff member
+    const { data: staffMember, error: staffError } = await supabase
       .from('profiles')
       .select('id, display_name, email, role')
+      .eq('id', staffId)
       .or('role.eq.staff_admin,role.eq.staff_ops,role.eq.staff_rm')
-      .limit(1)
+      .single()
 
-    if (staffError || !staffMembers || staffMembers.length === 0) {
-      console.error('[Staff Conversation API] No staff member found:', staffError)
+    if (staffError || !staffMember) {
+      console.error('[Staff Conversation API] Staff member not found:', staffError)
       return NextResponse.json({
-        error: 'No staff member available for messaging'
+        error: 'Staff member not found or not available for messaging'
       }, { status: 404 })
     }
 
-    const staffMember = staffMembers[0]
     console.log('[Staff Conversation API] Found staff member:', staffMember.display_name)
 
     // Check if conversation already exists between these two users
