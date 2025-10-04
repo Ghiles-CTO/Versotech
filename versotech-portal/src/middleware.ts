@@ -101,7 +101,7 @@ export async function middleware(request: NextRequest) {
             }
 
             if (pathname.startsWith('/versoholdings')) {
-              if (isInvestorDemo || !demoRole) {
+              if (isInvestorDemo || !demoSession.role) {
                 return NextResponse.next({ request })
               }
               return NextResponse.redirect(new URL('/versoholdings/login?error=auth_required', request.url))

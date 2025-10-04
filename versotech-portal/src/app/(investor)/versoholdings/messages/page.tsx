@@ -1,8 +1,7 @@
 import { AppLayout } from '@/components/layout/app-layout'
-import { ChatInterface } from '@/components/messaging/chat-interface'
+import { InvestorChat } from '@/components/messaging/investor-chat'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { MessageSquare, Users, Shield, Zap } from 'lucide-react'
+import { MessageSquare, Users, Shield, Zap, Lock } from 'lucide-react'
 import { requireAuth } from '@/lib/auth'
 
 export default async function MessagesPage() {
@@ -15,18 +14,24 @@ export default async function MessagesPage() {
         {/* Header */}
         <div className="border-b border-gray-200 pb-6">
           <div className="flex items-center justify-between">
-        <div>
-              <h1 className="text-3xl font-bold text-gray-900">Communications</h1>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
+                <MessageSquare className="h-8 w-8 text-blue-600" />
+                Messages
+              </h1>
               <p className="text-lg text-gray-600 mt-1">
-                Secure messaging with the VERSO Holdings team
-          </p>
-        </div>
+                Direct communication with your VERSO team
+              </p>
+            </div>
             <div className="text-right">
-              <p className="text-sm text-gray-500">Investor: {profile.displayName}</p>
-              <p className="text-xs text-gray-400">End-to-end encrypted messaging</p>
-                      </div>
-                    </div>
-                  </div>
+              <p className="text-sm text-gray-500 flex items-center justify-end gap-1">
+                <Lock className="h-3 w-3" />
+                Secure messaging
+              </p>
+              <p className="text-xs text-gray-400 mt-1">All messages are encrypted</p>
+            </div>
+          </div>
+        </div>
 
         {/* Communication Features Overview */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
@@ -73,8 +78,8 @@ export default async function MessagesPage() {
           </Card>
         </div>
 
-        {/* Chat Interface */}
-        <ChatInterface />
+        {/* WhatsApp-Style Chat Interface */}
+        <InvestorChat />
 
         {/* Communication Guidelines */}
         <Card>
