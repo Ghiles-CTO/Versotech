@@ -1,74 +1,149 @@
 import { AppLayout } from '@/components/layout/app-layout'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Filter, Download } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import {
-  Clock,
-  CheckCircle2,
-  XCircle,
-  AlertTriangle,
-  Users,
-  DollarSign,
-  Filter,
-  Download
-} from 'lucide-react'
+import { ApprovalsPageClient } from '@/components/approvals/approvals-page-client'
+import { Approval, ApprovalStats } from '@/types/approvals'
+import { createServiceClient } from '@/lib/supabase/server'
+import { cookies } from 'next/headers'
+import { parseDemoSession, DEMO_COOKIE_NAME } from '@/lib/demo-session'
 
-// Fetch approval data from API
-async function fetchApprovalData() {
+// Fetch approval data server-side directly from database
+async function fetchApprovalData(): Promise<{
+  approvals: Approval[]
+  stats: ApprovalStats
+  counts: { pending: number; approved: number; rejected: number }
+  hasData: boolean
+}> {
   try {
-    const response = await fetch('/api/approvals?status=pending', {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    })
+    // Use service client to bypass RLS for demo sessions
+    const supabase = createServiceClient()
 
-    if (!response.ok) {
-      throw new Error('Failed to fetch approval data')
+    // Check for demo session
+    const cookieStore = await cookies()
+    const demoCookie = cookieStore.get(DEMO_COOKIE_NAME)
+
+    if (!demoCookie) {
+      console.log('[Approvals] No demo session found')
+      return getEmptyData()
     }
 
-    return await response.json()
-  } catch (error) {
-    console.error('Error fetching approvals:', error)
+    const demoSession = parseDemoSession(demoCookie.value)
+    if (!demoSession) {
+      console.log('[Approvals] Invalid demo session')
+      return getEmptyData()
+    }
+
+    console.log('[Approvals] Fetching data for demo user:', demoSession.email, demoSession.role)
+
+    // Fetch approvals with comprehensive joins
+    const { data: approvals, error: approvalsError } = await supabase
+      .from('approvals')
+      .select(`
+        *,
+        requested_by_profile:requested_by (
+          id,
+          display_name,
+          email,
+          role
+        ),
+        assigned_to_profile:assigned_to (
+          id,
+          display_name,
+          email,
+          role
+        ),
+        approved_by_profile:approved_by (
+          id,
+          display_name,
+          email,
+          role
+        ),
+        related_deal:deals (
+          id,
+          name,
+          status,
+          deal_type,
+          currency
+        ),
+        related_investor:investors (
+          id,
+          legal_name,
+          kyc_status,
+          type
+        )
+      `)
+      .eq('status', 'pending')
+      .order('sla_breach_at', { ascending: true, nullsFirst: false })
+      .order('created_at', { ascending: false })
+
+    if (approvalsError) {
+      console.error('[Approvals] Error fetching approvals:', approvalsError)
+      return getEmptyData()
+    }
+
+    console.log(`[Approvals] Fetched ${approvals?.length || 0} pending approvals`)
+
+    // Get statistics using RPC function
+    const { data: statsData, error: statsError } = await supabase
+      .rpc('get_approval_stats', { p_staff_id: null })
+      .single()
+
+    if (statsError) {
+      console.warn('[Approvals] Error fetching stats:', statsError)
+    }
+
+    const stats: ApprovalStats = statsData || {
+      total_pending: approvals?.length || 0,
+      overdue_count: 0,
+      avg_processing_time_hours: 0,
+      approval_rate_24h: 0,
+      total_approved_30d: 0,
+      total_rejected_30d: 0,
+      total_awaiting_info: 0
+    }
+
+    console.log('[Approvals] Stats:', stats)
+
     return {
-      approvals: [],
-      counts: { pending: 0, approved: 0, rejected: 0 },
-      hasData: false
+      approvals: (approvals || []) as Approval[],
+      stats,
+      counts: {
+        pending: stats.total_pending,
+        approved: stats.total_approved_30d,
+        rejected: stats.total_rejected_30d
+      },
+      hasData: (approvals && approvals.length > 0) || false
     }
+  } catch (error) {
+    console.error('[Approvals] Error in fetchApprovalData:', error)
+    return getEmptyData()
   }
 }
 
-function getTimeUntilSLA(slaDate: string): { text: string; isOverdue: boolean; urgency: 'low' | 'medium' | 'high' } {
-  const now = new Date()
-  const sla = new Date(slaDate)
-  const diffMs = sla.getTime() - now.getTime()
-  const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
-
-  if (diffHours < 0) {
-    return { text: `${Math.abs(diffHours)}h overdue`, isOverdue: true, urgency: 'high' }
-  } else if (diffHours < 4) {
-    return { text: `${diffHours}h remaining`, isOverdue: false, urgency: 'high' }
-  } else if (diffHours < 12) {
-    return { text: `${diffHours}h remaining`, isOverdue: false, urgency: 'medium' }
-  } else {
-    return { text: `${diffHours}h remaining`, isOverdue: false, urgency: 'low' }
+function getEmptyData() {
+  return {
+    approvals: [],
+    stats: {
+      total_pending: 0,
+      overdue_count: 0,
+      avg_processing_time_hours: 0,
+      approval_rate_24h: 0,
+      total_approved_30d: 0,
+      total_rejected_30d: 0,
+      total_awaiting_info: 0
+    },
+    counts: { pending: 0, approved: 0, rejected: 0 },
+    hasData: false
   }
 }
 
 export default async function ApprovalsPage() {
-  // Fetch real approval data
-  const { approvals, counts, hasData } = await fetchApprovalData()
-
-  const stats = {
-    total_pending: counts.pending,
-    overdue_count: 0, // TODO: Calculate from approval data
-    avg_processing_time_hours: 18.5 // TODO: Calculate from historical data
-  }
+  // Fetch approval data server-side
+  const { approvals, stats, counts, hasData } = await fetchApprovalData()
 
   return (
     <AppLayout brand="versotech">
       <div className="p-6 space-y-8">
-
         {/* Header */}
         <div className="border-b border-gray-800 pb-6">
           <div className="flex items-center justify-between">
@@ -79,11 +154,11 @@ export default async function ApprovalsPage() {
               </p>
             </div>
             <div className="flex gap-3">
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" disabled className="text-foreground">
                 <Filter className="mr-2 h-4 w-4" />
                 Filter
               </Button>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" disabled className="text-foreground">
                 <Download className="mr-2 h-4 w-4" />
                 Export
               </Button>
@@ -91,231 +166,12 @@ export default async function ApprovalsPage() {
           </div>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Pending Approvals</CardTitle>
-              <Clock className="h-4 w-4 text-blue-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-blue-600">{stats.total_pending}</div>
-              <p className="text-xs text-muted-foreground mt-1">Requiring review</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">SLA Breaches</CardTitle>
-              <AlertTriangle className="h-4 w-4 text-red-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-red-600">{stats.overdue_count}</div>
-              <p className="text-xs text-muted-foreground mt-1">Past deadline</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Avg Processing Time</CardTitle>
-              <Users className="h-4 w-4 text-green-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-600">{stats.avg_processing_time_hours}h</div>
-              <p className="text-xs text-muted-foreground mt-1">Last 30 days</p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Approval Queue Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Pending Approvals</CardTitle>
-            <CardDescription>
-              Review investor commitments and take approval actions
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-
-            {/* Bulk Actions */}
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  className="rounded border-gray-300"
-                />
-                <span className="text-sm text-muted-foreground">Select all</span>
-              </div>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" disabled>
-                  <CheckCircle2 className="mr-2 h-4 w-4" />
-                  Bulk Approve
-                </Button>
-                <Button variant="outline" size="sm" disabled>
-                  <XCircle className="mr-2 h-4 w-4" />
-                  Bulk Reject
-                </Button>
-              </div>
-            </div>
-
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-12">
-                      <input type="checkbox" className="rounded border-gray-300" />
-                    </TableHead>
-                    <TableHead>Request Type / User</TableHead>
-                    <TableHead>Entity</TableHead>
-                    <TableHead>Priority</TableHead>
-                    <TableHead>SLA Status</TableHead>
-                    <TableHead>Assigned To</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {approvals && approvals.length > 0 ? approvals.map((approval) => {
-                    // Calculate SLA status if we have a deadline
-                    const slaStatus = approval.sla_breach_at
-                      ? getTimeUntilSLA(approval.sla_breach_at)
-                      : { text: 'No SLA', isOverdue: false, urgency: 'low' as const }
-
-                    return (
-                      <TableRow key={approval.id}>
-                        <TableCell>
-                          <input type="checkbox" className="rounded border-gray-300" />
-                        </TableCell>
-
-                        <TableCell>
-                          <div>
-                            <div className="font-medium text-foreground">{approval.entity_type.replace('_', ' ').toUpperCase()}</div>
-                            <div className="text-sm text-muted-foreground">
-                              {approval.requested_by_profile?.display_name || 'Unknown User'}
-                            </div>
-                            <div className="text-xs text-muted-foreground">
-                              {new Date(approval.created_at).toLocaleDateString()}
-                            </div>
-                          </div>
-                        </TableCell>
-
-                        <TableCell>
-                          <div>
-                            <div className="font-medium text-foreground">Entity ID</div>
-                            <div className="text-sm text-muted-foreground font-mono">
-                              {approval.entity_id.substring(0, 8)}...
-                            </div>
-                          </div>
-                        </TableCell>
-
-                        <TableCell>
-                          <Badge variant={approval.priority === 'high' ? 'destructive' : 'secondary'}>
-                            {approval.priority.toUpperCase()}
-                          </Badge>
-                        </TableCell>
-
-                        <TableCell>
-                          <Badge
-                            variant={
-                              slaStatus.isOverdue ? 'destructive' :
-                              slaStatus.urgency === 'high' ? 'destructive' :
-                              slaStatus.urgency === 'medium' ? 'default' : 'secondary'
-                            }
-                          >
-                            {slaStatus.text}
-                          </Badge>
-                        </TableCell>
-
-                        <TableCell>
-                          <span className="text-sm text-muted-foreground">
-                            {approval.assigned_to_profile?.display_name || 'Unassigned'}
-                          </span>
-                        </TableCell>
-
-                        <TableCell>
-                          <div className="flex gap-2">
-                            <Button variant="outline" size="sm">
-                              <CheckCircle2 className="h-4 w-4 text-green-600" />
-                            </Button>
-                            <Button variant="outline" size="sm">
-                              <XCircle className="h-4 w-4 text-red-600" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    )
-                  }) : (
-                    <TableRow>
-                      <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                        No pending approvals found
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-
-            {/* Pagination */}
-            <div className="flex items-center justify-between mt-4">
-              <p className="text-sm text-muted-foreground">
-                Showing 1-{approvals?.length || 0} of {stats.total_pending} approvals
-              </p>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" disabled>
-                  Previous
-                </Button>
-                <Button variant="outline" size="sm">
-                  Next
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Quick Actions</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Button className="w-full justify-start" variant="outline">
-                <CheckCircle2 className="mr-2 h-4 w-4 text-green-600" />
-                Approve All Under $10K
-              </Button>
-              <Button className="w-full justify-start" variant="outline">
-                <Clock className="mr-2 h-4 w-4 text-blue-600" />
-                Review Overdue Items
-              </Button>
-              <Button className="w-full justify-start" variant="outline">
-                <AlertTriangle className="mr-2 h-4 w-4 text-amber-600" />
-                Escalate High Priority
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">SLA Performance</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm">On-time approvals (24h)</span>
-                  <span className="font-medium text-green-600">87%</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm">Overdue items</span>
-                  <span className="font-medium text-red-600">{stats.overdue_count}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm">Average processing</span>
-                  <span className="font-medium">{stats.avg_processing_time_hours}h</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
+        {/* Client Component with Interactive Features */}
+        <ApprovalsPageClient
+          initialApprovals={approvals}
+          initialStats={stats}
+          initialCounts={counts}
+        />
       </div>
     </AppLayout>
   )

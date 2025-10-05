@@ -176,15 +176,15 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// GET endpoint to view approvals
+// GET endpoint to view approvals with stats
 export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient()
     const { searchParams } = new URL(request.url)
-    
+
     // Get the authenticated user
     const { data: { user }, error: authError } = await supabase.auth.getUser()
-    
+
     if (authError || !user) {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -195,7 +195,7 @@ export async function GET(request: NextRequest) {
     // Check if user is staff (only staff can view approvals)
     const { data: profile } = await supabase
       .from('profiles')
-      .select('role')
+      .select('id, role')
       .eq('id', user.id)
       .single()
 
@@ -211,23 +211,44 @@ export async function GET(request: NextRequest) {
     const entityType = searchParams.get('entity_type')
     const assignedTo = searchParams.get('assigned_to')
     const priority = searchParams.get('priority')
+    const relatedDealId = searchParams.get('related_deal_id')
+    const relatedInvestorId = searchParams.get('related_investor_id')
 
-    // Build query
+    // Build query with comprehensive joins
     let query = supabase
       .from('approvals')
       .select(`
         *,
         requested_by_profile:requested_by (
+          id,
           display_name,
-          email
+          email,
+          role
         ),
         assigned_to_profile:assigned_to (
+          id,
           display_name,
-          email
+          email,
+          role
         ),
-        decided_by_profile:decided_by (
+        approved_by_profile:approved_by (
+          id,
           display_name,
-          email
+          email,
+          role
+        ),
+        related_deal:deals (
+          id,
+          name,
+          status,
+          deal_type,
+          currency
+        ),
+        related_investor:investors (
+          id,
+          legal_name,
+          kyc_status,
+          type
         )
       `)
       .eq('status', status)
@@ -235,14 +256,24 @@ export async function GET(request: NextRequest) {
     if (entityType) {
       query = query.eq('entity_type', entityType)
     }
-    if (assignedTo) {
+    if (assignedTo === 'me') {
+      query = query.eq('assigned_to', profile.id)
+    } else if (assignedTo) {
       query = query.eq('assigned_to', assignedTo)
     }
     if (priority) {
       query = query.eq('priority', priority)
     }
+    if (relatedDealId) {
+      query = query.eq('related_deal_id', relatedDealId)
+    }
+    if (relatedInvestorId) {
+      query = query.eq('related_investor_id', relatedInvestorId)
+    }
 
+    // Order by SLA urgency (most urgent first), then by creation date
     const { data: approvals, error } = await query
+      .order('sla_breach_at', { ascending: true, nullsFirst: false })
       .order('created_at', { ascending: false })
 
     if (error) {
@@ -253,8 +284,39 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    // Get statistics using RPC function
+    const { data: statsData, error: statsError } = await supabase
+      .rpc('get_approval_stats', {
+        p_staff_id: assignedTo === 'me' ? profile.id : null
+      })
+      .single()
+
+    if (statsError) {
+      console.warn('Error fetching approval stats:', statsError)
+    }
+
+    // Calculate counts for different statuses
+    const { data: counts } = await supabase
+      .from('approvals')
+      .select('status', { count: 'exact', head: true })
+
     return NextResponse.json({
-      approvals: approvals || []
+      approvals: approvals || [],
+      stats: statsData || {
+        total_pending: 0,
+        overdue_count: 0,
+        avg_processing_time_hours: 0,
+        approval_rate_24h: 0,
+        total_approved_30d: 0,
+        total_rejected_30d: 0,
+        total_awaiting_info: 0
+      },
+      counts: {
+        pending: approvals?.filter(a => a.status === 'pending').length || 0,
+        approved: statsData?.total_approved_30d || 0,
+        rejected: statsData?.total_rejected_30d || 0
+      },
+      hasData: (approvals && approvals.length > 0) || false
     })
 
   } catch (error) {
