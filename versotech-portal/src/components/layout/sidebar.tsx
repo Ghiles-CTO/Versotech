@@ -213,19 +213,24 @@ export function Sidebar({ brand, userProfile }: SidebarProps) {
 
   // Initialize sidebar dark mode from localStorage (separate from global dark mode)
   useEffect(() => {
-    const savedSidebarTheme = localStorage.getItem('sidebar-theme')
-    if (savedSidebarTheme === 'dark') {
-      setSidebarDarkMode(true)
+    // For staff portal (versotech), default to dark mode
+    // For investor portal (versoholdings), default to light mode
+    const savedSidebarTheme = localStorage.getItem(`sidebar-theme-${brand}`)
+
+    if (brand === 'versotech') {
+      // Staff portal: dark by default
+      setSidebarDarkMode(savedSidebarTheme === 'light' ? false : true)
     } else {
-      setSidebarDarkMode(false)
+      // Investor portal: light by default
+      setSidebarDarkMode(savedSidebarTheme === 'dark' ? true : false)
     }
-  }, [])
+  }, [brand])
 
   // Toggle sidebar dark mode (only affects sidebar, not entire page)
   const toggleSidebarDarkMode = () => {
     const newDarkMode = !sidebarDarkMode
     setSidebarDarkMode(newDarkMode)
-    localStorage.setItem('sidebar-theme', newDarkMode ? 'dark' : 'light')
+    localStorage.setItem(`sidebar-theme-${brand}`, newDarkMode ? 'dark' : 'light')
   }
 
   // Handle sign out with proper redirect
@@ -257,7 +262,7 @@ export function Sidebar({ brand, userProfile }: SidebarProps) {
     "border-r flex flex-col transition-all duration-300 h-screen",
     collapsed ? "w-16" : "w-64",
     sidebarDarkMode
-      ? "bg-slate-800 border-slate-700"
+      ? "bg-background border"
       : "bg-white border-gray-200"
   )
 
@@ -266,14 +271,14 @@ export function Sidebar({ brand, userProfile }: SidebarProps) {
       {/* Header with Brand, Logo and Collapse Toggle */}
       <div className={cn(
         "p-4 border-b",
-        sidebarDarkMode ? "border-slate-700" : "border-gray-200"
+        sidebarDarkMode ? "border" : "border-gray-200"
       )}>
         <div className="flex items-center justify-between">
           {!collapsed && (
             <div className="flex items-center">
               <h2 className={cn(
                 "font-bold text-2xl tracking-tight",
-                sidebarDarkMode ? "text-white" : "text-black"
+                sidebarDarkMode ? "text-foreground" : "text-black"
               )}>
                 VERSO
               </h2>
@@ -286,7 +291,7 @@ export function Sidebar({ brand, userProfile }: SidebarProps) {
             className={cn(
               "h-8 w-8 p-0",
               sidebarDarkMode
-                ? "hover:bg-slate-700 text-gray-300"
+                ? "hover:bg-muted text-muted-foreground"
                 : "hover:bg-gray-100 text-gray-600"
             )}
           >
@@ -304,7 +309,7 @@ export function Sidebar({ brand, userProfile }: SidebarProps) {
             <div className="relative">
               <Search className={cn(
                 "absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4",
-                sidebarDarkMode ? "text-gray-500" : "text-gray-400"
+                sidebarDarkMode ? "text-muted-foreground" : "text-gray-400"
               )} />
               <input
                 type="text"
@@ -313,9 +318,9 @@ export function Sidebar({ brand, userProfile }: SidebarProps) {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className={cn(
                   "w-full pl-10 pr-3 py-2 border rounded-lg text-sm transition-all duration-200",
-                  "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent",
+                  "focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent",
                   sidebarDarkMode
-                    ? "bg-slate-700 border-slate-600 text-gray-100 placeholder-gray-400"
+                    ? "bg-muted border text-foreground placeholder-muted-foreground"
                     : "bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-500"
                 )}
               />
@@ -330,7 +335,7 @@ export function Sidebar({ brand, userProfile }: SidebarProps) {
           <div className="px-4 py-3">
             <p className={cn(
               "text-xs font-semibold uppercase tracking-wider",
-              sidebarDarkMode ? "text-gray-400" : "text-gray-500"
+              sidebarDarkMode ? "text-muted-foreground" : "text-gray-500"
             )}>
               MENU
             </p>
@@ -353,24 +358,24 @@ export function Sidebar({ brand, userProfile }: SidebarProps) {
                 <div className={cn(
                   "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 relative",
                   sidebarDarkMode
-                    ? "hover:bg-slate-700"
+                    ? "hover:bg-muted"
                     : "hover:bg-gray-100",
                   isActive
                     ? sidebarDarkMode
-                      ? "bg-blue-900/20 text-blue-400"
+                      ? "bg-muted text-primary"
                       : "bg-blue-50 text-blue-600"
                     : sidebarDarkMode
-                      ? "text-gray-300"
+                      ? "text-foreground"
                       : "text-gray-700"
                 )}>
                   <Icon className={cn(
                     "flex-shrink-0 h-5 w-5 transition-colors duration-200",
                     isActive
                       ? sidebarDarkMode
-                        ? "text-blue-400"
+                        ? "text-primary"
                         : "text-blue-600"
                       : sidebarDarkMode
-                        ? "text-gray-400 group-hover:text-gray-300"
+                        ? "text-muted-foreground group-hover:text-foreground"
                         : "text-gray-500 group-hover:text-gray-700"
                   )} />
 
@@ -420,12 +425,12 @@ export function Sidebar({ brand, userProfile }: SidebarProps) {
       {/* Theme Toggle */}
       <div className={cn(
         "border-t p-4",
-        sidebarDarkMode ? "border-slate-700" : "border-gray-200"
+        sidebarDarkMode ? "border" : "border-gray-200"
       )}>
         {!collapsed && (
           <div className={cn(
             "flex items-center justify-center gap-1 rounded-lg p-1",
-            sidebarDarkMode ? "bg-slate-700" : "bg-gray-100"
+            sidebarDarkMode ? "bg-muted" : "bg-gray-100"
           )}>
             <Button
               variant="ghost"
@@ -436,7 +441,7 @@ export function Sidebar({ brand, userProfile }: SidebarProps) {
                 !sidebarDarkMode
                   ? "bg-white text-gray-900 shadow-sm"
                   : sidebarDarkMode
-                    ? "text-gray-400 hover:text-white"
+                    ? "text-muted-foreground hover:text-foreground"
                     : "text-gray-600 hover:text-gray-900"
               )}
             >
@@ -450,7 +455,7 @@ export function Sidebar({ brand, userProfile }: SidebarProps) {
               className={cn(
                 "flex-1 h-8 text-xs font-medium transition-all duration-200",
                 sidebarDarkMode
-                  ? "bg-slate-600 text-white shadow-sm"
+                  ? "bg-secondary text-foreground shadow-sm"
                   : "text-gray-600 hover:text-gray-900"
               )}
             >
@@ -468,7 +473,7 @@ export function Sidebar({ brand, userProfile }: SidebarProps) {
             className={cn(
               "w-full h-8 p-0",
               sidebarDarkMode
-                ? "text-gray-400 hover:bg-slate-700"
+                ? "text-muted-foreground hover:bg-muted"
                 : "text-gray-600 hover:bg-gray-100"
             )}
           >
@@ -480,7 +485,7 @@ export function Sidebar({ brand, userProfile }: SidebarProps) {
       {/* Settings and User Profile */}
       <div className={cn(
         "border-t p-4 space-y-3",
-        sidebarDarkMode ? "border-slate-700" : "border-gray-200"
+        sidebarDarkMode ? "border" : "border-gray-200"
       )}>
         {/* Settings Link */}
         <Link href={`/${brand}/settings`}>
@@ -488,10 +493,10 @@ export function Sidebar({ brand, userProfile }: SidebarProps) {
             "group flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200",
             "border border-transparent",
             sidebarDarkMode
-              ? "text-gray-300 hover:text-white hover:bg-slate-700 hover:border-slate-600"
+              ? "text-foreground hover:bg-muted hover:border"
               : "text-gray-700 hover:text-gray-900 hover:bg-gray-100 hover:border-gray-200",
             pathname.includes('/settings') && (sidebarDarkMode
-              ? "bg-blue-900/20 text-blue-400 border-blue-800/60"
+              ? "bg-muted text-primary border"
               : "bg-blue-50 text-blue-600 border-blue-200/60")
           )}>
             <Settings className={cn(
@@ -515,13 +520,13 @@ export function Sidebar({ brand, userProfile }: SidebarProps) {
             <div className="flex-1 min-w-0">
               <div className={cn(
                 "text-sm font-medium truncate",
-                sidebarDarkMode ? "text-white" : "text-gray-900"
+                sidebarDarkMode ? "text-foreground" : "text-gray-900"
               )}>
                 {userProfile.display_name || 'User'}
               </div>
               <div className={cn(
                 "text-xs truncate",
-                sidebarDarkMode ? "text-gray-400" : "text-gray-500"
+                sidebarDarkMode ? "text-muted-foreground" : "text-gray-500"
               )}>
                 {userProfile.email || 'user@example.com'}
               </div>
@@ -536,7 +541,7 @@ export function Sidebar({ brand, userProfile }: SidebarProps) {
               className={cn(
                 "h-8 w-8 p-0",
                 sidebarDarkMode
-                  ? "text-gray-400 hover:text-red-400 hover:bg-slate-700"
+                  ? "text-muted-foreground hover:text-red-400 hover:bg-muted"
                   : "text-gray-500 hover:text-red-600 hover:bg-gray-100"
               )}
             >

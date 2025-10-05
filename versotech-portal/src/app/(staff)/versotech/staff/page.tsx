@@ -31,11 +31,11 @@ export default async function StaffDashboard() {
       <div className="p-6 space-y-6">
 
         {/* VERSO Operations Header */}
-        <div className="border-b border-gray-200 pb-6">
+        <div className="border-b pb-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">VERSO Operations</h1>
-              <p className="text-lg text-gray-600 mt-1">
+              <h1 className="text-3xl font-bold">VERSO Operations</h1>
+              <p className="text-lg text-muted-foreground mt-1">
                 Merchant Banking Operations • Multi-Vehicle Management • BVI/GDPR Compliant
               </p>
               <div className="flex items-center gap-4 mt-3">
@@ -54,7 +54,7 @@ export default async function StaffDashboard() {
               </div>
             </div>
             <div className="text-right">
-              <p className="text-sm text-gray-500">Operations Dashboard</p>
+              <p className="text-sm text-muted-foreground">Operations Dashboard</p>
               <p className="text-lg font-semibold">{new Date().toLocaleDateString()}</p>
             </div>
           </div>
@@ -183,45 +183,45 @@ export default async function StaffDashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg border-l-4 border-blue-500">
+                <div className="flex items-center justify-between p-4 bg-blue-950/30 rounded-lg border-l-4 border-blue-500">
                   <div className="flex items-center gap-3">
-                    <PlayCircle className="h-5 w-5 text-blue-600" />
+                    <PlayCircle className="h-5 w-5 text-blue-400" />
                     <div>
-                      <p className="font-medium text-blue-900">KYC Processing</p>
-                      <p className="text-sm text-blue-700">Professional investor verification</p>
+                      <p className="font-medium">KYC Processing</p>
+                      <p className="text-sm text-muted-foreground">Professional investor verification</p>
                     </div>
                   </div>
                   <Badge variant="secondary">8 pending</Badge>
                 </div>
 
-                <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg border-l-4 border-green-500">
+                <div className="flex items-center justify-between p-4 bg-green-950/30 rounded-lg border-l-4 border-green-500">
                   <div className="flex items-center gap-3">
-                    <FileText className="h-5 w-5 text-green-600" />
+                    <FileText className="h-5 w-5 text-green-400" />
                     <div>
-                      <p className="font-medium text-green-900">NDA Execution</p>
-                      <p className="text-sm text-green-700">DocuSign/Dropbox Sign processing</p>
+                      <p className="font-medium">NDA Execution</p>
+                      <p className="text-sm text-muted-foreground">DocuSign/Dropbox Sign processing</p>
                     </div>
                   </div>
                   <Badge variant="secondary">5 in progress</Badge>
                 </div>
 
-                <div className="flex items-center justify-between p-4 bg-amber-50 rounded-lg border-l-4 border-amber-500">
+                <div className="flex items-center justify-between p-4 bg-amber-950/30 rounded-lg border-l-4 border-amber-500">
                   <div className="flex items-center gap-3">
-                    <Building2 className="h-5 w-5 text-amber-600" />
+                    <Building2 className="h-5 w-5 text-amber-400" />
                     <div>
-                      <p className="font-medium text-amber-900">Subscription Processing</p>
-                      <p className="text-sm text-amber-700">VERSO FUND & REAL Empire subscriptions</p>
+                      <p className="font-medium">Subscription Processing</p>
+                      <p className="text-sm text-muted-foreground">VERSO FUND & REAL Empire subscriptions</p>
                     </div>
                   </div>
                   <Badge variant="secondary">12 review</Badge>
                 </div>
 
-                <div className="flex items-center justify-between p-4 bg-purple-50 rounded-lg border-l-4 border-purple-500">
+                <div className="flex items-center justify-between p-4 bg-purple-950/30 rounded-lg border-l-4 border-purple-500">
                   <div className="flex items-center gap-3">
-                    <Clock className="h-5 w-5 text-purple-600" />
+                    <Clock className="h-5 w-5 text-purple-400" />
                     <div>
-                      <p className="font-medium text-purple-900">Capital Calls</p>
-                      <p className="text-sm text-purple-700">Upcoming capital call notifications</p>
+                      <p className="font-medium">Capital Calls</p>
+                      <p className="text-sm text-muted-foreground">Upcoming capital call notifications</p>
                     </div>
                   </div>
                   <Badge variant="secondary">Feb 15</Badge>
@@ -241,9 +241,9 @@ export default async function StaffDashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="flex items-center space-x-3 p-3 bg-slate-50 rounded-lg">
+              <div className="flex items-center space-x-3 p-3 bg-muted/50 rounded-lg border">
                 <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                <BarChart3 className="h-5 w-5 text-blue-600" />
+                <BarChart3 className="h-5 w-5 text-blue-400" />
                 <div className="flex-1">
                   <p className="text-sm font-medium">Position Statement Generated</p>
                   <p className="text-xs text-muted-foreground">VERSO FUND - Luxembourg Entity LP #47 - Completed</p>
@@ -251,9 +251,9 @@ export default async function StaffDashboard() {
                 <span className="text-xs text-muted-foreground">12 min ago</span>
               </div>
 
-              <div className="flex items-center space-x-3 p-3 bg-slate-50 rounded-lg">
+              <div className="flex items-center space-x-3 p-3 bg-muted/50 rounded-lg border">
                 <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                <FileText className="h-5 w-5 text-green-600" />
+                <FileText className="h-5 w-5 text-green-400" />
                 <div className="flex-1">
                   <p className="text-sm font-medium">NDA Agent Processing</p>
                   <p className="text-xs text-muted-foreground">Professional Investor Qualification - High Net Worth Individual</p>
@@ -261,9 +261,9 @@ export default async function StaffDashboard() {
                 <span className="text-xs text-muted-foreground">1 hour ago</span>
               </div>
 
-              <div className="flex items-center space-x-3 p-3 bg-slate-50 rounded-lg">
+              <div className="flex items-center space-x-3 p-3 bg-muted/50 rounded-lg border">
                 <div className="w-2 h-2 rounded-full bg-amber-500"></div>
-                <AlertTriangle className="h-5 w-5 text-amber-600" />
+                <AlertTriangle className="h-5 w-5 text-amber-400" />
                 <div className="flex-1">
                   <p className="text-sm font-medium">KYC Review Required</p>
                   <p className="text-xs text-muted-foreground">Enhanced Due Diligence - Institutional Investor</p>
@@ -271,9 +271,9 @@ export default async function StaffDashboard() {
                 <span className="text-xs text-muted-foreground">2 hours ago</span>
               </div>
 
-              <div className="flex items-center space-x-3 p-3 bg-slate-50 rounded-lg">
+              <div className="flex items-center space-x-3 p-3 bg-muted/50 rounded-lg border">
                 <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                <Database className="h-5 w-5 text-purple-600" />
+                <Database className="h-5 w-5 text-purple-400" />
                 <div className="flex-1">
                   <p className="text-sm font-medium">Shared Drive Sync</p>
                   <p className="text-xs text-muted-foreground">REAL Empire Compartment III - Document Update Notification Sent</p>
