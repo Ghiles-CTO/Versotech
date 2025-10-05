@@ -141,8 +141,8 @@ export default function AdminPage() {
       <div className="p-6 space-y-6">
         {/* Page Header */}
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">System Administration</h1>
-          <p className="text-gray-600 mt-1">
+          <h1 className="text-2xl font-bold text-foreground">System Administration</h1>
+          <p className="text-muted-foreground mt-1">
             Manage system settings, integrations, and platform configuration
           </p>
         </div>
@@ -151,53 +151,53 @@ export default function AdminPage() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-gray-600 flex items-center gap-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                 <Activity className="h-4 w-4" />
                 System Uptime
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-green-600">{systemMetrics.uptime}</div>
-              <div className="text-sm text-gray-500 mt-1">Last 30 days</div>
+              <div className="text-sm text-muted-foreground mt-1">Last 30 days</div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-gray-600 flex items-center gap-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                 <Monitor className="h-4 w-4" />
                 Response Time
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-blue-600">{systemMetrics.responseTime}</div>
-              <div className="text-sm text-gray-500 mt-1">Average API response</div>
+              <div className="text-sm text-muted-foreground mt-1">Average API response</div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-gray-600 flex items-center gap-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                 <Users className="h-4 w-4" />
                 Active Users
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{systemMetrics.activeUsers}</div>
-              <div className="text-sm text-gray-500 mt-1">Currently online</div>
+              <div className="text-sm text-muted-foreground mt-1">Currently online</div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-gray-600 flex items-center gap-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                 <HardDrive className="h-4 w-4" />
                 Storage Usage
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{systemMetrics.storagePercent}%</div>
-              <div className="text-sm text-gray-500 mt-1">{systemMetrics.usedStorage} of {systemMetrics.totalStorage}</div>
+              <div className="text-sm text-muted-foreground mt-1">{systemMetrics.usedStorage} of {systemMetrics.totalStorage}</div>
             </CardContent>
           </Card>
         </div>
@@ -218,7 +218,7 @@ export default function AdminPage() {
                     <Users className="h-4 w-4" />
                     User Management
                   </div>
-                  <div className="text-sm text-gray-500">Add, edit, or deactivate users</div>
+                  <div className="text-sm text-muted-foreground">Add, edit, or deactivate users</div>
                 </div>
               </Button>
               <Button variant="outline" className="justify-start h-auto p-4">
@@ -227,7 +227,7 @@ export default function AdminPage() {
                     <Database className="h-4 w-4" />
                     Backup System
                   </div>
-                  <div className="text-sm text-gray-500">Create system backup</div>
+                  <div className="text-sm text-muted-foreground">Create system backup</div>
                 </div>
               </Button>
               <Button variant="outline" className="justify-start h-auto p-4">
@@ -236,7 +236,7 @@ export default function AdminPage() {
                     <Shield className="h-4 w-4" />
                     Security Audit
                   </div>
-                  <div className="text-sm text-gray-500">Run security assessment</div>
+                  <div className="text-sm text-muted-foreground">Run security assessment</div>
                 </div>
               </Button>
               <Button variant="outline" className="justify-start h-auto p-4">
@@ -245,7 +245,7 @@ export default function AdminPage() {
                     <Bell className="h-4 w-4" />
                     Send Announcement
                   </div>
-                  <div className="text-sm text-gray-500">Notify all users</div>
+                  <div className="text-sm text-muted-foreground">Notify all users</div>
                 </div>
               </Button>
             </div>
@@ -271,7 +271,7 @@ export default function AdminPage() {
                     }`} />
                     <div>
                       <h3 className="font-semibold">{integration.name}</h3>
-                      <div className="text-sm text-gray-600">
+                      <div className="text-sm text-muted-foreground">
                         Version {integration.version} • Last sync: {new Date(integration.lastSync).toLocaleString()}
                       </div>
                     </div>
@@ -314,10 +314,10 @@ export default function AdminPage() {
                         {flag.environment}
                       </Badge>
                     </div>
-                    <p className="text-sm text-gray-600 mt-1">{flag.description}</p>
+                    <p className="text-sm text-muted-foreground mt-1">{flag.description}</p>
                   </div>
                   <div className="flex items-center gap-3">
-                    <Badge className={flag.enabled ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}>
+                    <Badge className={flag.enabled ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-foreground'}>
                       {flag.enabled ? 'Enabled' : 'Disabled'}
                     </Badge>
                     <Button variant="outline" size="sm">
@@ -354,10 +354,10 @@ export default function AdminPage() {
                     </div>
                     <div>
                       <h3 className="font-semibold">{vehicle.name}</h3>
-                      <div className="text-sm text-gray-600">
+                      <div className="text-sm text-muted-foreground">
                         {vehicle.type} • {vehicle.domicile} • {vehicle.currency}
                       </div>
-                      <div className="text-sm text-gray-500 mt-1">
+                      <div className="text-sm text-muted-foreground mt-1">
                         {vehicle.investors} investors • Created {new Date(vehicle.created).toLocaleDateString()}
                       </div>
                     </div>
@@ -372,7 +372,7 @@ export default function AdminPage() {
                           maximumFractionDigits: 0
                         }).format(vehicle.totalNAV)}
                       </div>
-                      <div className="text-sm text-gray-500">Total NAV</div>
+                      <div className="text-sm text-muted-foreground">Total NAV</div>
                     </div>
                     <Badge className="bg-green-100 text-green-800">
                       {vehicle.status}
@@ -405,7 +405,7 @@ export default function AdminPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <div className="font-medium">Multi-Factor Authentication</div>
-                  <div className="text-sm text-gray-600">Required for all staff accounts</div>
+                  <div className="text-sm text-muted-foreground">Required for all staff accounts</div>
                 </div>
                 <Badge className="bg-green-100 text-green-800">Enabled</Badge>
               </div>
@@ -413,15 +413,15 @@ export default function AdminPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <div className="font-medium">Session Timeout</div>
-                  <div className="text-sm text-gray-600">Auto-logout after inactivity</div>
+                  <div className="text-sm text-muted-foreground">Auto-logout after inactivity</div>
                 </div>
-                <div className="text-sm text-gray-600">8 hours</div>
+                <div className="text-sm text-muted-foreground">8 hours</div>
               </div>
               
               <div className="flex items-center justify-between">
                 <div>
                   <div className="font-medium">Password Policy</div>
-                  <div className="text-sm text-gray-600">Minimum security requirements</div>
+                  <div className="text-sm text-muted-foreground">Minimum security requirements</div>
                 </div>
                 <Button variant="outline" size="sm">Configure</Button>
               </div>
@@ -429,9 +429,9 @@ export default function AdminPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <div className="font-medium">API Rate Limiting</div>
-                  <div className="text-sm text-gray-600">Requests per hour limit</div>
+                  <div className="text-sm text-muted-foreground">Requests per hour limit</div>
                 </div>
-                <div className="text-sm text-gray-600">1000/hour</div>
+                <div className="text-sm text-muted-foreground">1000/hour</div>
               </div>
             </CardContent>
           </Card>
@@ -447,7 +447,7 @@ export default function AdminPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <div className="font-medium">System Alerts</div>
-                  <div className="text-sm text-gray-600">Critical system notifications</div>
+                  <div className="text-sm text-muted-foreground">Critical system notifications</div>
                 </div>
                 <Badge className="bg-green-100 text-green-800">Enabled</Badge>
               </div>
@@ -455,7 +455,7 @@ export default function AdminPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <div className="font-medium">Security Notifications</div>
-                  <div className="text-sm text-gray-600">Failed login attempts and breaches</div>
+                  <div className="text-sm text-muted-foreground">Failed login attempts and breaches</div>
                 </div>
                 <Badge className="bg-green-100 text-green-800">Enabled</Badge>
               </div>
@@ -463,7 +463,7 @@ export default function AdminPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <div className="font-medium">Performance Monitoring</div>
-                  <div className="text-sm text-gray-600">System performance degradation alerts</div>
+                  <div className="text-sm text-muted-foreground">System performance degradation alerts</div>
                 </div>
                 <Badge className="bg-green-100 text-green-800">Enabled</Badge>
               </div>
@@ -471,7 +471,7 @@ export default function AdminPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <div className="font-medium">Email Notifications</div>
-                  <div className="text-sm text-gray-600">Admin email alerts</div>
+                  <div className="text-sm text-muted-foreground">Admin email alerts</div>
                 </div>
                 <Button variant="outline" size="sm">Configure</Button>
               </div>

@@ -133,8 +133,8 @@ export default async function FeesPage() {
         {/* Page Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Fee Management</h1>
-            <p className="text-gray-600 mt-1">
+            <h1 className="text-2xl font-bold text-foreground">Fee Management</h1>
+            <p className="text-muted-foreground mt-1">
               Configure fee plans, manage investor-specific terms, and track fee events
             </p>
           </div>
@@ -246,14 +246,14 @@ export default async function FeesPage() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-gray-600 flex items-center gap-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                 <Settings className="h-4 w-4" />
                 Active Fee Plans
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{feePlans.length}</div>
-              <div className="text-sm text-gray-500 mt-1">
+              <div className="text-sm text-muted-foreground mt-1">
                 {feePlans.filter(p => p.is_default).length} default
               </div>
             </CardContent>
@@ -261,27 +261,27 @@ export default async function FeesPage() {
 
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-gray-600 flex items-center gap-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                 <Users className="h-4 w-4" />
                 Investor Terms
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{investorTerms.length}</div>
-              <div className="text-sm text-gray-500 mt-1">Active configurations</div>
+              <div className="text-sm text-muted-foreground mt-1">Active configurations</div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-gray-600 flex items-center gap-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                 <Activity className="h-4 w-4" />
                 Fee Events
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{feeEvents.length}</div>
-              <div className="text-sm text-gray-500 mt-1">
+              <div className="text-sm text-muted-foreground mt-1">
                 {feeEvents.filter(e => e.status === 'accrued').length} pending
               </div>
             </CardContent>
@@ -289,7 +289,7 @@ export default async function FeesPage() {
 
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-gray-600 flex items-center gap-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                 <DollarSign className="h-4 w-4" />
                 Total Accrued
               </CardTitle>
@@ -298,7 +298,7 @@ export default async function FeesPage() {
               <div className="text-2xl font-bold">
                 ${feeEvents.reduce((sum, e) => sum + e.computed_amount, 0).toLocaleString()}
               </div>
-              <div className="text-sm text-gray-500 mt-1">This period</div>
+              <div className="text-sm text-muted-foreground mt-1">This period</div>
             </CardContent>
           </Card>
         </div>
@@ -322,13 +322,13 @@ export default async function FeesPage() {
               <CardContent>
                 <div className="space-y-4">
                   {feePlans.map((plan) => (
-                    <div key={plan.id} className="border rounded-lg p-4">
+                    <div key={plan.id} className="border border-gray-800 rounded-lg p-4 bg-gray-900/30">
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-3">
                           <div>
-                            <h3 className="font-semibold">{plan.name}</h3>
-                            <div className="text-sm text-gray-600">{plan.description}</div>
-                            <div className="text-xs text-gray-500 mt-1">
+                            <h3 className="font-semibold text-foreground">{plan.name}</h3>
+                            <div className="text-sm text-muted-foreground">{plan.description}</div>
+                            <div className="text-xs text-muted-foreground mt-1">
                               {plan.deal_name} • Created {new Date(plan.created_at).toLocaleDateString()}
                             </div>
                           </div>
@@ -347,20 +347,20 @@ export default async function FeesPage() {
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         {plan.components.map((component, idx) => (
-                          <div key={idx} className="bg-gray-50 rounded p-3">
+                          <div key={idx} className="bg-black/40 border border-gray-800 rounded p-3">
                             <div className="flex items-center gap-2 mb-2">
-                              {component.kind === 'subscription' && <Target className="h-4 w-4 text-blue-600" />}
-                              {component.kind === 'management' && <Calendar className="h-4 w-4 text-green-600" />}
-                              {component.kind === 'performance' && <TrendingUp className="h-4 w-4 text-purple-600" />}
-                              {component.kind === 'spread_markup' && <BarChart3 className="h-4 w-4 text-orange-600" />}
-                              <span className="font-medium capitalize">{component.kind.replace('_', ' ')}</span>
+                              {component.kind === 'subscription' && <Target className="h-4 w-4 text-blue-400" />}
+                              {component.kind === 'management' && <Calendar className="h-4 w-4 text-green-400" />}
+                              {component.kind === 'performance' && <TrendingUp className="h-4 w-4 text-purple-400" />}
+                              {component.kind === 'spread_markup' && <BarChart3 className="h-4 w-4 text-orange-400" />}
+                              <span className="font-medium capitalize text-foreground">{component.kind.replace('_', ' ')}</span>
                             </div>
                             <div className="text-sm">
-                              <div>{component.rate_bps} bps</div>
-                              <div className="text-gray-600">{component.calc_method.replace('_', ' ')}</div>
-                              <div className="text-gray-500">{component.frequency.replace('_', ' ')}</div>
+                              <div className="text-foreground">{component.rate_bps} bps</div>
+                              <div className="text-muted-foreground">{component.calc_method.replace('_', ' ')}</div>
+                              <div className="text-muted-foreground">{component.frequency.replace('_', ' ')}</div>
                               {component.hurdle_rate_bps && (
-                                <div className="text-gray-500">Hurdle: {component.hurdle_rate_bps} bps</div>
+                                <div className="text-muted-foreground">Hurdle: {component.hurdle_rate_bps} bps</div>
                               )}
                             </div>
                           </div>
@@ -384,12 +384,12 @@ export default async function FeesPage() {
               <CardContent>
                 <div className="space-y-4">
                   {investorTerms.map((terms) => (
-                    <div key={terms.id} className="border rounded-lg p-4">
+                    <div key={terms.id} className="border border-gray-800 rounded-lg p-4 bg-gray-900/30">
                       <div className="flex items-center justify-between">
                         <div>
-                          <h3 className="font-semibold">{terms.investor_name}</h3>
-                          <div className="text-sm text-gray-600">{terms.deal_name}</div>
-                          <div className="text-sm text-gray-500 mt-1">
+                          <h3 className="font-semibold text-foreground">{terms.investor_name}</h3>
+                          <div className="text-sm text-muted-foreground">{terms.deal_name}</div>
+                          <div className="text-sm text-muted-foreground mt-1">
                             Plan: {terms.selected_plan} • {new Date(terms.created_at).toLocaleDateString()}
                           </div>
                           {terms.overrides && (
@@ -403,7 +403,7 @@ export default async function FeesPage() {
                           )}
                         </div>
                         <div className="flex items-center gap-3">
-                          <Badge className={terms.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}>
+                          <Badge className={terms.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-foreground'}>
                             {terms.status}
                           </Badge>
                           <Button variant="outline" size="sm">
@@ -429,7 +429,7 @@ export default async function FeesPage() {
               <CardContent>
                 <div className="space-y-4">
                   {feeEvents.map((event) => (
-                    <div key={event.id} className="border rounded-lg p-4">
+                    <div key={event.id} className="border border-gray-800 rounded-lg p-4 bg-gray-900/30">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
                           <div className={`w-3 h-3 rounded-full ${
@@ -437,22 +437,22 @@ export default async function FeesPage() {
                             event.status === 'accrued' ? 'bg-yellow-500' : 'bg-gray-400'
                           }`} />
                           <div>
-                            <h3 className="font-medium">{event.investor_name}</h3>
-                            <div className="text-sm text-gray-600">{event.deal_name}</div>
-                            <div className="text-sm text-gray-500">
+                            <h3 className="font-medium text-foreground">{event.investor_name}</h3>
+                            <div className="text-sm text-muted-foreground">{event.deal_name}</div>
+                            <div className="text-sm text-muted-foreground">
                               {event.fee_type.charAt(0).toUpperCase() + event.fee_type.slice(1)} fee • {event.event_date}
                             </div>
                           </div>
                         </div>
                         <div className="text-right">
-                          <div className="font-semibold">${event.computed_amount.toLocaleString()}</div>
-                          <div className="text-sm text-gray-600">
+                          <div className="font-semibold text-foreground">${event.computed_amount.toLocaleString()}</div>
+                          <div className="text-sm text-muted-foreground">
                             on ${event.base_amount.toLocaleString()}
                           </div>
                           <Badge className={
                             event.status === 'invoiced' ? 'bg-green-100 text-green-800' :
                             event.status === 'accrued' ? 'bg-yellow-100 text-yellow-800' :
-                            'bg-gray-100 text-gray-800'
+                            'bg-gray-100 text-foreground'
                           }>
                             {event.status}
                           </Badge>
@@ -526,7 +526,7 @@ export default async function FeesPage() {
                         <span>Total Fees</span>
                         <span>$28,000</span>
                       </div>
-                      <div className="flex justify-between text-sm text-gray-600">
+                      <div className="flex justify-between text-sm text-muted-foreground">
                         <span>Effective Fee Rate</span>
                         <span>14.0%</span>
                       </div>

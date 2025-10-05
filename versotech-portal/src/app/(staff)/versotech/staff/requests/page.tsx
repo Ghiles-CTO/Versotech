@@ -112,9 +112,9 @@ function getStatusIcon(status: string) {
     case 'ready':
       return <CheckCircle className="h-4 w-4 text-green-600" />
     case 'closed':
-      return <CheckCircle className="h-4 w-4 text-gray-400" />
+      return <CheckCircle className="h-4 w-4 text-muted-foreground" />
     default:
-      return <Clock className="h-4 w-4 text-gray-400" />
+      return <Clock className="h-4 w-4 text-muted-foreground" />
   }
 }
 
@@ -129,9 +129,9 @@ function getStatusColor(status: string) {
     case 'ready':
       return 'bg-green-100 text-green-800'
     case 'closed':
-      return 'bg-gray-100 text-gray-800'
+      return 'bg-gray-100 text-foreground'
     default:
-      return 'bg-gray-100 text-gray-800'
+      return 'bg-gray-100 text-foreground'
   }
 }
 
@@ -144,7 +144,7 @@ function getPriorityColor(priority: string) {
     case 'low':
       return 'bg-green-100 text-green-800'
     default:
-      return 'bg-gray-100 text-gray-800'
+      return 'bg-gray-100 text-foreground'
   }
 }
 
@@ -165,8 +165,8 @@ export default function RequestsPage() {
       <div className="p-6 space-y-6">
         {/* Page Header */}
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Request Management</h1>
-          <p className="text-gray-600 mt-1">
+          <h1 className="text-2xl font-bold text-foreground">Request Management</h1>
+          <p className="text-muted-foreground mt-1">
             Handle investor requests and track processing status
           </p>
         </div>
@@ -175,51 +175,51 @@ export default function RequestsPage() {
         <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-gray-600">Total Requests</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">Total Requests</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.total}</div>
-              <div className="text-sm text-gray-500 mt-1">All time</div>
+              <div className="text-sm text-muted-foreground mt-1">All time</div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-gray-600">Open</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">Open</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-yellow-600">{stats.open}</div>
-              <div className="text-sm text-gray-500 mt-1">Need assignment</div>
+              <div className="text-sm text-muted-foreground mt-1">Need assignment</div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-gray-600">In Progress</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">In Progress</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-blue-600">{stats.inProgress}</div>
-              <div className="text-sm text-gray-500 mt-1">Being worked on</div>
+              <div className="text-sm text-muted-foreground mt-1">Being worked on</div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-gray-600">Ready</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">Ready</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-green-600">{stats.ready}</div>
-              <div className="text-sm text-gray-500 mt-1">Awaiting delivery</div>
+              <div className="text-sm text-muted-foreground mt-1">Awaiting delivery</div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-gray-600">Overdue</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">Overdue</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-red-600">{stats.overdue}</div>
-              <div className="text-sm text-gray-500 mt-1">Past due date</div>
+              <div className="text-sm text-muted-foreground mt-1">Past due date</div>
             </CardContent>
           </Card>
         </div>
@@ -230,7 +230,7 @@ export default function RequestsPage() {
             <div className="flex flex-col sm:flex-row gap-4">
               <div className="flex-1">
                 <div className="relative">
-                  <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
                     placeholder="Search requests by ID, title, or investor..."
                     className="pl-10"
@@ -253,7 +253,7 @@ export default function RequestsPage() {
         {/* Requests List */}
         <div className="space-y-4">
           {mockRequests.map((request) => (
-            <Card key={request.id} className="hover:shadow-lg transition-shadow">
+            <Card key={request.id} className="hover:shadow-lg transition-shadow border-gray-800">
               <CardContent className="p-6">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
@@ -262,7 +262,7 @@ export default function RequestsPage() {
                       {getStatusIcon(request.status)}
                       <div>
                         <div className="flex items-center gap-2">
-                          <h3 className="font-semibold">{request.title}</h3>
+                          <h3 className="font-semibold text-foreground">{request.title}</h3>
                           <Badge variant="outline" className="text-xs">
                             {request.id}
                           </Badge>
@@ -282,28 +282,28 @@ export default function RequestsPage() {
                     </div>
 
                     {/* Description */}
-                    <p className="text-gray-700 mb-4">{request.description}</p>
+                    <p className="text-muted-foreground mb-4">{request.description}</p>
 
                     {/* Details Grid */}
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
                       <div>
-                        <div className="font-medium text-gray-900">Investor</div>
-                        <div className="text-gray-600">{request.investorName}</div>
+                        <div className="font-medium text-foreground">Investor</div>
+                        <div className="text-muted-foreground">{request.investorName}</div>
                       </div>
                       <div>
-                        <div className="font-medium text-gray-900">Submitted</div>
-                        <div className="text-gray-600">{new Date(request.submittedAt).toLocaleDateString()}</div>
+                        <div className="font-medium text-foreground">Submitted</div>
+                        <div className="text-muted-foreground">{new Date(request.submittedAt).toLocaleDateString()}</div>
                       </div>
                       <div>
-                        <div className="font-medium text-gray-900">Assigned To</div>
-                        <div className="text-gray-600">{request.assignedTo || 'Unassigned'}</div>
+                        <div className="font-medium text-foreground">Assigned To</div>
+                        <div className="text-muted-foreground">{request.assignedTo || 'Unassigned'}</div>
                       </div>
                       <div>
-                        <div className="font-medium text-gray-900">Due Date</div>
+                        <div className="font-medium text-foreground">Due Date</div>
                         <div className={`${
-                          request.dueDate && new Date(request.dueDate) < new Date() 
-                            ? 'text-red-600 font-medium' 
-                            : 'text-gray-600'
+                          request.dueDate && new Date(request.dueDate) < new Date()
+                            ? 'text-red-400 font-medium'
+                            : 'text-muted-foreground'
                         }`}>
                           {request.dueDate ? new Date(request.dueDate).toLocaleDateString() : 'No deadline'}
                         </div>
@@ -313,7 +313,7 @@ export default function RequestsPage() {
                     {/* Related Vehicles */}
                     {request.relatedVehicles && request.relatedVehicles.length > 0 && (
                       <div className="mt-4">
-                        <div className="text-sm font-medium text-gray-900 mb-1">Related Vehicles</div>
+                        <div className="text-sm font-medium text-foreground mb-1">Related Vehicles</div>
                         <div className="flex gap-1">
                           {request.relatedVehicles.map((vehicle, index) => (
                             <Badge key={index} variant="outline" className="text-xs">
@@ -326,8 +326,8 @@ export default function RequestsPage() {
 
                     {/* Status-specific Information */}
                     {request.linkedWorkflowRun && (
-                      <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-                        <div className="flex items-center gap-2 text-blue-700">
+                      <div className="mt-4 p-3 bg-blue-950/20 border border-blue-800 rounded-lg">
+                        <div className="flex items-center gap-2 text-blue-300">
                           <Play className="h-4 w-4" />
                           <span className="text-sm font-medium">Workflow in progress: {request.linkedWorkflowRun}</span>
                         </div>
@@ -335,9 +335,9 @@ export default function RequestsPage() {
                     )}
 
                     {request.resultDocumentId && (
-                      <div className="mt-4 p-3 bg-green-50 rounded-lg">
+                      <div className="mt-4 p-3 bg-green-950/20 border border-green-800 rounded-lg">
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2 text-green-700">
+                          <div className="flex items-center gap-2 text-green-300">
                             <FileText className="h-4 w-4" />
                             <span className="text-sm font-medium">Result document ready for delivery</span>
                           </div>
@@ -396,25 +396,25 @@ export default function RequestsPage() {
               <Button variant="outline" className="justify-start h-auto p-4">
                 <div className="text-left">
                   <div className="font-semibold">Bulk Assign</div>
-                  <div className="text-sm text-gray-500">Assign multiple requests</div>
+                  <div className="text-sm text-muted-foreground">Assign multiple requests</div>
                 </div>
               </Button>
               <Button variant="outline" className="justify-start h-auto p-4">
                 <div className="text-left">
                   <div className="font-semibold">Generate Report</div>
-                  <div className="text-sm text-gray-500">Request status summary</div>
+                  <div className="text-sm text-muted-foreground">Request status summary</div>
                 </div>
               </Button>
               <Button variant="outline" className="justify-start h-auto p-4">
                 <div className="text-left">
                   <div className="font-semibold">Set Reminders</div>
-                  <div className="text-sm text-gray-500">Due date notifications</div>
+                  <div className="text-sm text-muted-foreground">Due date notifications</div>
                 </div>
               </Button>
               <Button variant="outline" className="justify-start h-auto p-4">
                 <div className="text-left">
                   <div className="font-semibold">Export Data</div>
-                  <div className="text-sm text-gray-500">Download request list</div>
+                  <div className="text-sm text-muted-foreground">Download request list</div>
                 </div>
               </Button>
             </div>

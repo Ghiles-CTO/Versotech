@@ -23,17 +23,17 @@ export default async function ProcessesPage() {
       <div className="p-6 space-y-6">
         
         {/* Header */}
-        <div className="border-b border-gray-200 pb-6">
+        <div className="border-b border-gray-800 pb-6">
           <div className="flex items-center justify-between">
         <div>
-              <h1 className="text-3xl font-bold text-gray-900">Process Center</h1>
-              <p className="text-lg text-gray-600 mt-1">
+              <h1 className="text-3xl font-bold text-foreground">Process Center</h1>
+              <p className="text-lg text-muted-foreground mt-1">
                 n8n workflow automation for VERSO Holdings operations
           </p>
         </div>
             <div className="text-right">
-              <p className="text-sm text-gray-500">Staff: {profile.display_name}</p>
-              <p className="text-xs text-gray-400">{profile.role} • {profile.title}</p>
+              <p className="text-sm text-muted-foreground">Staff: {profile.display_name}</p>
+              <p className="text-xs text-muted-foreground">{profile.role} • {profile.title}</p>
               </div>
               </div>
         </div>

@@ -167,8 +167,8 @@ export default async function DocumentAutomationPage() {
         {/* Page Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Document Automation</h1>
-            <p className="text-gray-600 mt-1">
+            <h1 className="text-2xl font-bold text-foreground">Document Automation</h1>
+            <p className="text-muted-foreground mt-1">
               Manage document templates, packages, and automation workflows
             </p>
           </div>
@@ -228,14 +228,14 @@ export default async function DocumentAutomationPage() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-gray-600 flex items-center gap-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                 <FileText className="h-4 w-4" />
                 Templates
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{docTemplates.length}</div>
-              <div className="text-sm text-gray-500 mt-1">
+              <div className="text-sm text-muted-foreground mt-1">
                 {docTemplates.reduce((sum, t) => sum + t.usage_count, 0)} total uses
               </div>
             </CardContent>
@@ -243,7 +243,7 @@ export default async function DocumentAutomationPage() {
 
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-gray-600 flex items-center gap-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                 <Package className="h-4 w-4" />
                 Active Packages
               </CardTitle>
@@ -252,7 +252,7 @@ export default async function DocumentAutomationPage() {
               <div className="text-2xl font-bold">
                 {docPackages.filter(p => p.status === 'sent' || p.status === 'draft').length}
               </div>
-              <div className="text-sm text-gray-500 mt-1">
+              <div className="text-sm text-muted-foreground mt-1">
                 {docPackages.filter(p => p.status === 'signed').length} completed
               </div>
             </CardContent>
@@ -260,7 +260,7 @@ export default async function DocumentAutomationPage() {
 
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-gray-600 flex items-center gap-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                 <Workflow className="h-4 w-4" />
                 Automation Rules
               </CardTitle>
@@ -269,7 +269,7 @@ export default async function DocumentAutomationPage() {
               <div className="text-2xl font-bold">
                 {automationRules.filter(r => r.active).length}
               </div>
-              <div className="text-sm text-gray-500 mt-1">
+              <div className="text-sm text-muted-foreground mt-1">
                 {automationRules.length} total rules
               </div>
             </CardContent>
@@ -277,7 +277,7 @@ export default async function DocumentAutomationPage() {
 
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-gray-600 flex items-center gap-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                 <CheckCircle className="h-4 w-4" />
                 Success Rate
               </CardTitle>
@@ -286,7 +286,7 @@ export default async function DocumentAutomationPage() {
               <div className="text-2xl font-bold text-green-600">
                 {Math.round(automationRules.reduce((sum, r) => sum + r.success_rate, 0) / automationRules.length)}%
               </div>
-              <div className="text-sm text-gray-500 mt-1">Average automation</div>
+              <div className="text-sm text-muted-foreground mt-1">Average automation</div>
             </CardContent>
           </Card>
         </div>
@@ -319,12 +319,12 @@ export default async function DocumentAutomationPage() {
                           }`}>
                             {pkg.status === 'signed' ? <CheckCircle className="h-6 w-6 text-green-600" /> :
                              pkg.status === 'sent' ? <Send className="h-6 w-6 text-blue-600" /> :
-                             <FileText className="h-6 w-6 text-gray-600" />}
+                             <FileText className="h-6 w-6 text-muted-foreground" />}
                           </div>
                           <div>
                             <h3 className="font-semibold">{pkg.investor_name}</h3>
-                            <div className="text-sm text-gray-600">{pkg.deal_name}</div>
-                            <div className="text-sm text-gray-500">
+                            <div className="text-sm text-muted-foreground">{pkg.deal_name}</div>
+                            <div className="text-sm text-muted-foreground">
                               {pkg.kind.replace('_', ' ').charAt(0).toUpperCase() + pkg.kind.replace('_', ' ').slice(1)} •
                               Created {new Date(pkg.created_at).toLocaleDateString()}
                             </div>
@@ -333,12 +333,12 @@ export default async function DocumentAutomationPage() {
                         <div className="flex items-center gap-4">
                           <div className="text-right">
                             <Progress value={pkg.progress} className="w-24 mb-1" />
-                            <div className="text-sm text-gray-500">{pkg.progress}% complete</div>
+                            <div className="text-sm text-muted-foreground">{pkg.progress}% complete</div>
                           </div>
                           <Badge className={
                             pkg.status === 'signed' ? 'bg-green-100 text-green-800' :
                             pkg.status === 'sent' ? 'bg-blue-100 text-blue-800' :
-                            pkg.status === 'draft' ? 'bg-gray-100 text-gray-800' :
+                            pkg.status === 'draft' ? 'bg-gray-100 text-foreground' :
                             'bg-red-100 text-red-800'
                           }>
                             {pkg.status}
@@ -388,8 +388,8 @@ export default async function DocumentAutomationPage() {
                           </div>
                           <div>
                             <h3 className="font-semibold">{template.name}</h3>
-                            <div className="text-sm text-gray-600">Key: {template.key}</div>
-                            <div className="text-sm text-gray-500">
+                            <div className="text-sm text-muted-foreground">Key: {template.key}</div>
+                            <div className="text-sm text-muted-foreground">
                               {template.provider.replace('_', ' ')} • Used {template.usage_count} times
                             </div>
                           </div>
@@ -448,11 +448,11 @@ export default async function DocumentAutomationPage() {
                           <div className={`w-3 h-3 rounded-full ${rule.active ? 'bg-green-500' : 'bg-gray-400'}`} />
                           <div>
                             <h3 className="font-semibold">{rule.name}</h3>
-                            <div className="text-sm text-gray-600">{rule.description}</div>
-                            <div className="text-sm text-gray-500">
+                            <div className="text-sm text-muted-foreground">{rule.description}</div>
+                            <div className="text-sm text-muted-foreground">
                               Trigger: {rule.trigger.replace('_', ' ')} • Template: {rule.template_key.replace('_', ' ')}
                             </div>
-                            <div className="text-xs text-gray-400">
+                            <div className="text-xs text-muted-foreground">
                               Last run: {new Date(rule.last_run).toLocaleDateString()}
                             </div>
                           </div>
@@ -460,9 +460,9 @@ export default async function DocumentAutomationPage() {
                         <div className="flex items-center gap-4">
                           <div className="text-center">
                             <div className="font-semibold text-green-600">{rule.success_rate}%</div>
-                            <div className="text-xs text-gray-500">Success rate</div>
+                            <div className="text-xs text-muted-foreground">Success rate</div>
                           </div>
-                          <Badge className={rule.active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}>
+                          <Badge className={rule.active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-foreground'}>
                             {rule.active ? 'Active' : 'Inactive'}
                           </Badge>
                           <div className="flex gap-2">
@@ -496,8 +496,8 @@ export default async function DocumentAutomationPage() {
                     <CheckCircle className="h-5 w-5 text-green-600" />
                     <div>
                       <div className="font-medium">Subscription package completed</div>
-                      <div className="text-sm text-gray-600">Goldman Sachs Private Wealth - Tech Growth Opportunity</div>
-                      <div className="text-xs text-gray-500">2 hours ago</div>
+                      <div className="text-sm text-muted-foreground">Goldman Sachs Private Wealth - Tech Growth Opportunity</div>
+                      <div className="text-xs text-muted-foreground">2 hours ago</div>
                     </div>
                   </div>
 
@@ -505,8 +505,8 @@ export default async function DocumentAutomationPage() {
                     <Send className="h-5 w-5 text-blue-600" />
                     <div>
                       <div className="font-medium">NDA sent for signature</div>
-                      <div className="text-sm text-gray-600">Meridian Capital Partners - Real Estate Secondary</div>
-                      <div className="text-xs text-gray-500">6 hours ago</div>
+                      <div className="text-sm text-muted-foreground">Meridian Capital Partners - Real Estate Secondary</div>
+                      <div className="text-xs text-muted-foreground">6 hours ago</div>
                     </div>
                   </div>
 
@@ -514,8 +514,8 @@ export default async function DocumentAutomationPage() {
                     <Clock className="h-5 w-5 text-yellow-600" />
                     <div>
                       <div className="font-medium">Term sheet generation pending</div>
-                      <div className="text-sm text-gray-600">Family Office Network - Credit Trade Finance</div>
-                      <div className="text-xs text-gray-500">1 day ago</div>
+                      <div className="text-sm text-muted-foreground">Family Office Network - Credit Trade Finance</div>
+                      <div className="text-xs text-muted-foreground">1 day ago</div>
                     </div>
                   </div>
                 </div>

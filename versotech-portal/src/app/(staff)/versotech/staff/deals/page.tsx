@@ -49,7 +49,7 @@ const dealTypeLabels = {
 }
 
 const statusColors = {
-  draft: 'bg-gray-100 text-gray-800',
+  draft: 'bg-gray-100 text-foreground',
   open: 'bg-green-100 text-green-800',
   allocation_pending: 'bg-yellow-100 text-yellow-800',
   closed: 'bg-blue-100 text-blue-800',
@@ -112,8 +112,8 @@ export default async function DealsPage() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Deal Management</h1>
-            <p className="text-gray-600 mt-1">
+            <h1 className="text-3xl font-bold text-foreground">Deal Management</h1>
+            <p className="text-muted-foreground mt-1">
               Manage deal-scoped opportunities, inventory, and investor access
             </p>
           </div>
@@ -199,9 +199,9 @@ export default async function DealsPage() {
           <CardContent>
             {dealsData.length === 0 ? (
               <div className="text-center py-12">
-                <Building2 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No deals yet</h3>
-                <p className="text-gray-500 mb-4">Get started by creating your first deal opportunity</p>
+                <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-foreground mb-2">No deals yet</h3>
+                <p className="text-muted-foreground mb-4">Get started by creating your first deal opportunity</p>
                 <Button asChild>
                   <Link href="/versotech/staff/deals/new">
                     <Plus className="mr-2 h-4 w-4" />
@@ -212,13 +212,13 @@ export default async function DealsPage() {
             ) : (
               <div className="space-y-4">
                 {dealsData.map((deal) => (
-                  <div key={deal.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                  <div key={deal.id} className="border border-gray-800 rounded-lg p-4 hover:bg-gray-900/50 transition-colors">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
-                          <Link 
+                          <Link
                             href={`/versotech/staff/deals/${deal.id}`}
-                            className="text-lg font-semibold text-blue-600 hover:text-blue-800"
+                            className="text-lg font-semibold text-blue-400 hover:text-blue-300"
                           >
                             {deal.name}
                           </Link>
@@ -229,30 +229,30 @@ export default async function DealsPage() {
                             {dealTypeLabels[deal.deal_type as keyof typeof dealTypeLabels]}
                           </Badge>
                         </div>
-                        
+
                         {deal.vehicles && (
-                          <p className="text-sm text-gray-600 mb-2">
+                          <p className="text-sm text-muted-foreground mb-2">
                             <Building2 className="inline h-4 w-4 mr-1" />
                             {deal.vehicles.name} ({deal.vehicles.type})
                           </p>
                         )}
 
-                        <div className="flex items-center gap-6 text-sm text-gray-500">
+                        <div className="flex items-center gap-6 text-sm text-muted-foreground">
                           <div className="flex items-center gap-1">
                             <Users className="h-4 w-4" />
-                            {deal.deal_memberships.length} participants
+                            <span className="text-muted-foreground">{deal.deal_memberships.length} participants</span>
                           </div>
-                          
+
                           {deal.offer_unit_price && (
                             <div className="flex items-center gap-1">
                               <CircleDollarSign className="h-4 w-4" />
-                              {deal.currency} {deal.offer_unit_price.toFixed(2)}/unit
+                              <span className="text-muted-foreground">{deal.currency} {deal.offer_unit_price.toFixed(2)}/unit</span>
                             </div>
                           )}
-                          
+
                           <div className="flex items-center gap-1">
                             <Clock className="h-4 w-4" />
-                            {new Date(deal.created_at).toLocaleDateString()}
+                            <span className="text-muted-foreground">{new Date(deal.created_at).toLocaleDateString()}</span>
                           </div>
                         </div>
                       </div>
@@ -304,7 +304,7 @@ export default async function DealsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-gray-600 mb-3">
+              <p className="text-sm text-muted-foreground mb-3">
                 Track available units across all active deals
               </p>
               <Button variant="outline" className="w-full">
@@ -324,7 +324,7 @@ export default async function DealsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-gray-600 mb-3">
+              <p className="text-sm text-muted-foreground mb-3">
                 Process investor commitments and reservations
               </p>
               <Button variant="outline" className="w-full" asChild>
@@ -339,6 +339,9 @@ export default async function DealsPage() {
     </AppLayout>
   )
 }
+
+
+
 
 
 

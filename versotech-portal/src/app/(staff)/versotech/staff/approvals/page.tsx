@@ -70,11 +70,11 @@ export default async function ApprovalsPage() {
       <div className="p-6 space-y-8">
 
         {/* Header */}
-        <div className="border-b border-gray-200 pb-6">
+        <div className="border-b border-gray-800 pb-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Approval Queue</h1>
-              <p className="text-lg text-gray-600 mt-1">
+              <h1 className="text-3xl font-bold text-foreground">Approval Queue</h1>
+              <p className="text-lg text-muted-foreground mt-1">
                 Review and approve investor commitments and allocations
               </p>
             </div>
@@ -100,7 +100,7 @@ export default async function ApprovalsPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-blue-600">{stats.total_pending}</div>
-              <p className="text-xs text-gray-500 mt-1">Requiring review</p>
+              <p className="text-xs text-muted-foreground mt-1">Requiring review</p>
             </CardContent>
           </Card>
 
@@ -111,7 +111,7 @@ export default async function ApprovalsPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-red-600">{stats.overdue_count}</div>
-              <p className="text-xs text-gray-500 mt-1">Past deadline</p>
+              <p className="text-xs text-muted-foreground mt-1">Past deadline</p>
             </CardContent>
           </Card>
 
@@ -122,7 +122,7 @@ export default async function ApprovalsPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-green-600">{stats.avg_processing_time_hours}h</div>
-              <p className="text-xs text-gray-500 mt-1">Last 30 days</p>
+              <p className="text-xs text-muted-foreground mt-1">Last 30 days</p>
             </CardContent>
           </Card>
         </div>
@@ -144,7 +144,7 @@ export default async function ApprovalsPage() {
                   type="checkbox"
                   className="rounded border-gray-300"
                 />
-                <span className="text-sm text-gray-600">Select all</span>
+                <span className="text-sm text-muted-foreground">Select all</span>
               </div>
               <div className="flex gap-2">
                 <Button variant="outline" size="sm" disabled>
@@ -188,11 +188,11 @@ export default async function ApprovalsPage() {
 
                         <TableCell>
                           <div>
-                            <div className="font-medium">{approval.entity_type.replace('_', ' ').toUpperCase()}</div>
-                            <div className="text-sm text-gray-500">
+                            <div className="font-medium text-foreground">{approval.entity_type.replace('_', ' ').toUpperCase()}</div>
+                            <div className="text-sm text-muted-foreground">
                               {approval.requested_by_profile?.display_name || 'Unknown User'}
                             </div>
-                            <div className="text-xs text-gray-400">
+                            <div className="text-xs text-muted-foreground">
                               {new Date(approval.created_at).toLocaleDateString()}
                             </div>
                           </div>
@@ -200,8 +200,8 @@ export default async function ApprovalsPage() {
 
                         <TableCell>
                           <div>
-                            <div className="font-medium">Entity ID</div>
-                            <div className="text-sm text-gray-500 font-mono">
+                            <div className="font-medium text-foreground">Entity ID</div>
+                            <div className="text-sm text-muted-foreground font-mono">
                               {approval.entity_id.substring(0, 8)}...
                             </div>
                           </div>
@@ -226,7 +226,7 @@ export default async function ApprovalsPage() {
                         </TableCell>
 
                         <TableCell>
-                          <span className="text-sm text-gray-600">
+                          <span className="text-sm text-muted-foreground">
                             {approval.assigned_to_profile?.display_name || 'Unassigned'}
                           </span>
                         </TableCell>
@@ -245,7 +245,7 @@ export default async function ApprovalsPage() {
                     )
                   }) : (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center py-8 text-gray-500">
+                      <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                         No pending approvals found
                       </TableCell>
                     </TableRow>
@@ -256,7 +256,7 @@ export default async function ApprovalsPage() {
 
             {/* Pagination */}
             <div className="flex items-center justify-between mt-4">
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-muted-foreground">
                 Showing 1-{approvals?.length || 0} of {stats.total_pending} approvals
               </p>
               <div className="flex gap-2">

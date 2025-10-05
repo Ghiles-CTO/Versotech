@@ -128,7 +128,7 @@ function getStatusIcon(status: string) {
     case 'processing':
       return <Clock className="h-4 w-4 text-blue-600" />
     default:
-      return <Clock className="h-4 w-4 text-gray-400" />
+      return <Clock className="h-4 w-4 text-muted-foreground" />
   }
 }
 
@@ -147,7 +147,7 @@ function getStatusColor(status: string) {
     case 'processing':
       return 'bg-blue-100 text-blue-800'
     default:
-      return 'bg-gray-100 text-gray-800'
+      return 'bg-gray-100 text-foreground'
   }
 }
 
@@ -165,8 +165,8 @@ export default function StaffDocumentsPage() {
         {/* Page Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Document Management</h1>
-            <p className="text-gray-600 mt-1">
+            <h1 className="text-2xl font-bold text-foreground">Document Management</h1>
+            <p className="text-muted-foreground mt-1">
               Manage investor documents, reports, and automated generation
             </p>
           </div>
@@ -186,41 +186,41 @@ export default function StaffDocumentsPage() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-gray-600">Total Documents</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">Total Documents</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.total}</div>
-              <div className="text-sm text-gray-500 mt-1">In system</div>
+              <div className="text-sm text-muted-foreground mt-1">In system</div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-gray-600">Pending Action</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">Pending Action</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-yellow-600">{stats.pending}</div>
-              <div className="text-sm text-gray-500 mt-1">Need attention</div>
+              <div className="text-sm text-muted-foreground mt-1">Need attention</div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-gray-600">Ready for Delivery</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">Ready for Delivery</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-green-600">{stats.ready}</div>
-              <div className="text-sm text-gray-500 mt-1">Awaiting send</div>
+              <div className="text-sm text-muted-foreground mt-1">Awaiting send</div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-gray-600">Delivered</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">Delivered</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-blue-600">{stats.delivered}</div>
-              <div className="text-sm text-gray-500 mt-1">Completed</div>
+              <div className="text-sm text-muted-foreground mt-1">Completed</div>
             </CardContent>
           </Card>
         </div>
@@ -232,7 +232,7 @@ export default function StaffDocumentsPage() {
               <div className="flex flex-col sm:flex-row gap-4">
                 <div className="flex-1">
                   <div className="relative">
-                    <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                    <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                     <Input
                       placeholder="Search documents by name, type, or investor..."
                       className="pl-10"
@@ -293,35 +293,35 @@ export default function StaffDocumentsPage() {
                         </Badge>
                       </div>
 
-                      <p className="text-gray-700 mb-3">{document.description}</p>
+                      <p className="text-foreground mb-3">{document.description}</p>
 
                       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
                         <div>
-                          <div className="font-medium text-gray-900">Category</div>
-                          <div className="text-gray-600">{document.category}</div>
+                          <div className="font-medium text-foreground">Category</div>
+                          <div className="text-muted-foreground">{document.category}</div>
                         </div>
                         <div>
-                          <div className="font-medium text-gray-900">Type</div>
-                          <div className="text-gray-600">{document.type}</div>
+                          <div className="font-medium text-foreground">Type</div>
+                          <div className="text-muted-foreground">{document.type}</div>
                         </div>
                         <div>
-                          <div className="font-medium text-gray-900">Size</div>
-                          <div className="text-gray-600">{document.size}</div>
+                          <div className="font-medium text-foreground">Size</div>
+                          <div className="text-muted-foreground">{document.size}</div>
                         </div>
                         <div>
-                          <div className="font-medium text-gray-900">Created</div>
-                          <div className="text-gray-600">{new Date(document.createdAt).toLocaleDateString()}</div>
+                          <div className="font-medium text-foreground">Created</div>
+                          <div className="text-muted-foreground">{new Date(document.createdAt).toLocaleDateString()}</div>
                         </div>
                       </div>
 
                       <div className="mt-3 flex items-center gap-4 text-sm">
                         <div>
-                          <span className="font-medium text-gray-900">Created by:</span>
-                          <span className="text-gray-600 ml-1">{document.createdBy}</span>
+                          <span className="font-medium text-foreground">Created by:</span>
+                          <span className="text-muted-foreground ml-1">{document.createdBy}</span>
                         </div>
                         <div>
-                          <span className="font-medium text-gray-900">Investors:</span>
-                          <span className="text-gray-600 ml-1">{document.investors.join(', ')}</span>
+                          <span className="font-medium text-foreground">Investors:</span>
+                          <span className="text-muted-foreground ml-1">{document.investors.join(', ')}</span>
                         </div>
                       </div>
 
@@ -378,7 +378,7 @@ export default function StaffDocumentsPage() {
                     <FileText className="h-4 w-4" />
                     Generate Position Statement
                   </div>
-                  <div className="text-sm text-gray-500">Create investor position report</div>
+                  <div className="text-sm text-muted-foreground">Create investor position report</div>
                 </div>
               </Button>
               <Button variant="outline" className="justify-start h-auto p-4">
@@ -387,7 +387,7 @@ export default function StaffDocumentsPage() {
                     <Users className="h-4 w-4" />
                     Bulk Document Send
                   </div>
-                  <div className="text-sm text-gray-500">Send documents to multiple investors</div>
+                  <div className="text-sm text-muted-foreground">Send documents to multiple investors</div>
                 </div>
               </Button>
               <Button variant="outline" className="justify-start h-auto p-4">
@@ -396,7 +396,7 @@ export default function StaffDocumentsPage() {
                     <Calendar className="h-4 w-4" />
                     Schedule Reports
                   </div>
-                  <div className="text-sm text-gray-500">Automate periodic reporting</div>
+                  <div className="text-sm text-muted-foreground">Automate periodic reporting</div>
                 </div>
               </Button>
               <Button variant="outline" className="justify-start h-auto p-4">
@@ -405,7 +405,7 @@ export default function StaffDocumentsPage() {
                     <Download className="h-4 w-4" />
                     Archive Management
                   </div>
-                  <div className="text-sm text-gray-500">Manage document retention</div>
+                  <div className="text-sm text-muted-foreground">Manage document retention</div>
                 </div>
               </Button>
             </div>

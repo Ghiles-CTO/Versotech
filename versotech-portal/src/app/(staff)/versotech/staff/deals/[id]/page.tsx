@@ -74,12 +74,12 @@ export default function DealDetailPage() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'draft': return 'bg-gray-100 text-gray-800'
+      case 'draft': return 'bg-gray-100 text-foreground'
       case 'open': return 'bg-green-100 text-green-800'
       case 'allocation_pending': return 'bg-yellow-100 text-yellow-800'
       case 'closed': return 'bg-blue-100 text-blue-800'
       case 'cancelled': return 'bg-red-100 text-red-800'
-      default: return 'bg-gray-100 text-gray-800'
+      default: return 'bg-gray-100 text-foreground'
     }
   }
 
@@ -91,7 +91,7 @@ export default function DealDetailPage() {
       case 'banker': return 'bg-yellow-100 text-yellow-800'
       case 'introducer': return 'bg-orange-100 text-orange-800'
       case 'verso_staff': return 'bg-indigo-100 text-indigo-800'
-      default: return 'bg-gray-100 text-gray-800'
+      default: return 'bg-gray-100 text-foreground'
     }
   }
 
@@ -110,8 +110,8 @@ export default function DealDetailPage() {
     return (
       <div className="container mx-auto px-4 py-8">
         <Card className="p-8 text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Deal Not Found</h1>
-          <p className="text-gray-600">The requested deal could not be found.</p>
+          <h1 className="text-2xl font-bold text-foreground mb-4">Deal Not Found</h1>
+          <p className="text-muted-foreground">The requested deal could not be found.</p>
         </Card>
       </div>
     )
@@ -123,8 +123,8 @@ export default function DealDetailPage() {
       <div className="mb-8">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">{deal.name}</h1>
-            <p className="text-gray-600 mt-2">
+            <h1 className="text-3xl font-bold text-foreground">{deal.name}</h1>
+            <p className="text-muted-foreground mt-2">
               {deal.vehicles?.name} • {deal.deal_type.replace('_', ' ')} • {deal.currency}
             </p>
           </div>
@@ -132,7 +132,7 @@ export default function DealDetailPage() {
             <Badge className={getStatusColor(deal.status)} size="lg">
               {deal.status.replace('_', ' ')}
             </Badge>
-            <div className="text-sm text-gray-600 mt-2">
+            <div className="text-sm text-muted-foreground mt-2">
               Offer Price: {deal.currency} {deal.offer_unit_price}
             </div>
           </div>
@@ -140,19 +140,19 @@ export default function DealDetailPage() {
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
           <Card className="p-4">
-            <div className="text-sm text-gray-600">Opens</div>
+            <div className="text-sm text-muted-foreground">Opens</div>
             <div className="font-semibold">
               {deal.open_at ? new Date(deal.open_at).toLocaleDateString() : 'Not set'}
             </div>
           </Card>
           <Card className="p-4">
-            <div className="text-sm text-gray-600">Closes</div>
+            <div className="text-sm text-muted-foreground">Closes</div>
             <div className="font-semibold">
               {deal.close_at ? new Date(deal.close_at).toLocaleDateString() : 'Not set'}
             </div>
           </Card>
           <Card className="p-4">
-            <div className="text-sm text-gray-600">Members</div>
+            <div className="text-sm text-muted-foreground">Members</div>
             <div className="font-semibold">
               {deal.deal_memberships?.length || 0} participants
             </div>
@@ -202,7 +202,7 @@ export default function DealDetailPage() {
                         {member.profiles?.display_name || member.profiles?.email}
                       </span>
                     </div>
-                    <div className="text-sm text-gray-600 mt-1">
+                    <div className="text-sm text-muted-foreground mt-1">
                       {member.investors?.legal_name && `Investor: ${member.investors.legal_name} • `}
                       Invited: {new Date(member.invited_at).toLocaleDateString()}
                       {member.accepted_at && ` • Accepted: ${new Date(member.accepted_at).toLocaleDateString()}`}
@@ -212,7 +212,7 @@ export default function DealDetailPage() {
               ))}
               
               {(!deal.deal_memberships || deal.deal_memberships.length === 0) && (
-                <div className="text-center py-8 text-gray-500">
+                <div className="text-center py-8 text-muted-foreground">
                   No members added to this deal yet
                 </div>
               )}
@@ -229,7 +229,7 @@ export default function DealDetailPage() {
             <h3 className="text-lg font-semibold mb-4">Document Packages</h3>
             
             <div className="space-y-4">
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-8 text-muted-foreground">
                 Document package management coming soon
               </div>
               

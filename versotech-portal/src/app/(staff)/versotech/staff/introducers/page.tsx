@@ -112,8 +112,8 @@ export default async function IntroducersPage() {
         {/* Page Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Introducer Management</h1>
-            <p className="text-gray-600 mt-1">
+            <h1 className="text-2xl font-bold text-foreground">Introducer Management</h1>
+            <p className="text-muted-foreground mt-1">
               Manage introducer relationships, commissions, and performance tracking
             </p>
           </div>
@@ -162,7 +162,7 @@ export default async function IntroducersPage() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-gray-600 flex items-center gap-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                 <HandHeart className="h-4 w-4" />
                 Active Introducers
               </CardTitle>
@@ -171,7 +171,7 @@ export default async function IntroducersPage() {
               <div className="text-2xl font-bold">
                 {introducers.filter(i => i.status === 'active').length}
               </div>
-              <div className="text-sm text-gray-500 mt-1">
+              <div className="text-sm text-muted-foreground mt-1">
                 {introducers.length} total
               </div>
             </CardContent>
@@ -179,7 +179,7 @@ export default async function IntroducersPage() {
 
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-gray-600 flex items-center gap-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                 <Users className="h-4 w-4" />
                 Total Introductions
               </CardTitle>
@@ -188,7 +188,7 @@ export default async function IntroducersPage() {
               <div className="text-2xl font-bold">
                 {introducers.reduce((sum, i) => sum + i.total_introductions, 0)}
               </div>
-              <div className="text-sm text-gray-500 mt-1">
+              <div className="text-sm text-muted-foreground mt-1">
                 {introducers.reduce((sum, i) => sum + i.successful_allocations, 0)} allocated
               </div>
             </CardContent>
@@ -196,7 +196,7 @@ export default async function IntroducersPage() {
 
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-gray-600 flex items-center gap-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                 <DollarSign className="h-4 w-4" />
                 Commissions Paid
               </CardTitle>
@@ -205,13 +205,13 @@ export default async function IntroducersPage() {
               <div className="text-2xl font-bold">
                 ${introducers.reduce((sum, i) => sum + i.total_commission_earned, 0).toLocaleString()}
               </div>
-              <div className="text-sm text-gray-500 mt-1">This year</div>
+              <div className="text-sm text-muted-foreground mt-1">This year</div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-gray-600 flex items-center gap-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                 <Clock className="h-4 w-4" />
                 Pending Commissions
               </CardTitle>
@@ -220,7 +220,7 @@ export default async function IntroducersPage() {
               <div className="text-2xl font-bold text-orange-600">
                 ${introducers.reduce((sum, i) => sum + i.pending_commission, 0).toLocaleString()}
               </div>
-              <div className="text-sm text-gray-500 mt-1">Awaiting payment</div>
+              <div className="text-sm text-muted-foreground mt-1">Awaiting payment</div>
             </CardContent>
           </Card>
         </div>
@@ -274,18 +274,18 @@ export default async function IntroducersPage() {
           <CardContent>
             <div className="space-y-4">
               {introducers.map((introducer) => (
-                <div key={introducer.id} className="border rounded-lg p-4">
+                <div key={introducer.id} className="border border-gray-800 rounded-lg p-4 bg-gray-900/30">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                        <HandHeart className="h-6 w-6 text-purple-600" />
+                      <div className="w-12 h-12 bg-purple-950/30 border border-purple-800 rounded-lg flex items-center justify-center">
+                        <HandHeart className="h-6 w-6 text-purple-400" />
                       </div>
                       <div>
-                        <h3 className="font-semibold">{introducer.legal_name}</h3>
-                        <div className="text-sm text-gray-600">
+                        <h3 className="font-semibold text-foreground">{introducer.legal_name}</h3>
+                        <div className="text-sm text-muted-foreground">
                           {introducer.user.display_name} • {introducer.user.email}
                         </div>
-                        <div className="text-sm text-gray-500 mt-1">
+                        <div className="text-sm text-muted-foreground mt-1">
                           Default: {introducer.default_commission_bps} bps commission
                         </div>
                       </div>
@@ -293,21 +293,21 @@ export default async function IntroducersPage() {
                     <div className="flex items-center gap-6">
                       <div className="text-center">
                         <div className="font-semibold">{introducer.total_introductions}</div>
-                        <div className="text-sm text-gray-500">Introductions</div>
+                        <div className="text-sm text-muted-foreground">Introductions</div>
                       </div>
                       <div className="text-center">
                         <div className="font-semibold">{introducer.successful_allocations}</div>
-                        <div className="text-sm text-gray-500">Allocated</div>
+                        <div className="text-sm text-muted-foreground">Allocated</div>
                       </div>
                       <div className="text-center">
                         <div className="font-semibold">${introducer.total_commission_earned.toLocaleString()}</div>
-                        <div className="text-sm text-gray-500">Earned</div>
+                        <div className="text-sm text-muted-foreground">Earned</div>
                       </div>
                       <div className="text-center">
                         <div className="font-semibold text-orange-600">${introducer.pending_commission.toLocaleString()}</div>
-                        <div className="text-sm text-gray-500">Pending</div>
+                        <div className="text-sm text-muted-foreground">Pending</div>
                       </div>
-                      <Badge className={introducer.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}>
+                      <Badge className={introducer.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-foreground'}>
                         {introducer.status}
                       </Badge>
                       <Button variant="outline" size="sm">
@@ -332,18 +332,18 @@ export default async function IntroducersPage() {
           <CardContent>
             <div className="space-y-4">
               {recentIntroductions.map((intro) => (
-                <div key={intro.id} className="flex items-center justify-between p-4 border rounded-lg">
+                <div key={intro.id} className="flex items-center justify-between p-4 border border-gray-800 rounded-lg bg-gray-900/30">
                   <div className="flex items-center gap-4">
                     <div className={`w-3 h-3 rounded-full ${
                       intro.status === 'allocated' ? 'bg-green-500' :
                       intro.status === 'joined' ? 'bg-blue-500' : 'bg-yellow-500'
                     }`} />
                     <div>
-                      <h4 className="font-medium">{intro.prospect_email}</h4>
-                      <div className="text-sm text-gray-600">
+                      <h4 className="font-medium text-foreground">{intro.prospect_email}</h4>
+                      <div className="text-sm text-muted-foreground">
                         by {intro.introducer_name} • {intro.deal_name}
                       </div>
-                      <div className="text-sm text-gray-500">
+                      <div className="text-sm text-muted-foreground">
                         {new Date(intro.introduced_at).toLocaleDateString()}
                       </div>
                     </div>
@@ -353,9 +353,9 @@ export default async function IntroducersPage() {
                       {intro.commission_amount ? (
                         <div className="font-medium">${intro.commission_amount.toLocaleString()}</div>
                       ) : (
-                        <div className="text-sm text-gray-500">TBD</div>
+                        <div className="text-sm text-muted-foreground">TBD</div>
                       )}
-                      <div className="text-xs text-gray-400">Commission</div>
+                      <div className="text-xs text-muted-foreground">Commission</div>
                     </div>
                     <Badge variant="outline" className={
                       intro.status === 'allocated' ? 'border-green-200 text-green-800' :
