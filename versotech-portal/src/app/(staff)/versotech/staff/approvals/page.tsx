@@ -146,24 +146,10 @@ export default async function ApprovalsPage() {
       <div className="p-6 space-y-8">
         {/* Header */}
         <div className="border-b border-gray-800 pb-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-foreground">Approval Queue</h1>
-              <p className="text-lg text-muted-foreground mt-1">
-                Review and approve investor commitments and allocations
-              </p>
-            </div>
-            <div className="flex gap-3">
-              <Button variant="outline" size="sm" disabled className="text-foreground">
-                <Filter className="mr-2 h-4 w-4" />
-                Filter
-              </Button>
-              <Button variant="outline" size="sm" disabled className="text-foreground">
-                <Download className="mr-2 h-4 w-4" />
-                Export
-              </Button>
-            </div>
-          </div>
+          <h1 className="text-3xl font-bold text-foreground">Approval Queue</h1>
+          <p className="text-lg text-muted-foreground mt-1">
+            Review and approve investor commitments and allocations
+          </p>
         </div>
 
         {/* Client Component with Interactive Features */}
