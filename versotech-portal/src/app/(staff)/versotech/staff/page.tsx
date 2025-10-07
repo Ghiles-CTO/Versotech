@@ -28,10 +28,10 @@ import {
 export default async function StaffDashboard() {
   return (
     <AppLayout brand="versotech">
-      <div className="p-6 space-y-6">
+      <div className="p-6 space-y-6 text-foreground">
 
         {/* VERSO Operations Header */}
-        <div className="border-b pb-6">
+        <div className="border-b border-border/60 pb-6">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold">VERSO Operations</h1>
@@ -39,15 +39,15 @@ export default async function StaffDashboard() {
                 Merchant Banking Operations • Multi-Vehicle Management • BVI/GDPR Compliant
               </p>
               <div className="flex items-center gap-4 mt-3">
-                <Badge variant="outline" className="text-xs">
+              <Badge variant="outline" className="text-xs border-white/20 text-foreground">
                   <Shield className="h-3 w-3 mr-1" />
                   BVI FSC Regulated
                 </Badge>
-                <Badge variant="outline" className="text-xs">
+              <Badge variant="outline" className="text-xs border-white/20 text-foreground">
                   <Globe className="h-3 w-3 mr-1" />
                   GDPR Compliant
                 </Badge>
-                <Badge variant="outline" className="text-xs">
+              <Badge variant="outline" className="text-xs border-white/20 text-foreground">
                   <Activity className="h-3 w-3 mr-1" />
                   n8n Workflows Active
                 </Badge>
@@ -62,7 +62,7 @@ export default async function StaffDashboard() {
 
         {/* Operational KPIs */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <Card>
+          <Card className="bg-white/5 border border-white/10">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 Active LPs
@@ -70,50 +70,50 @@ export default async function StaffDashboard() {
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">127</div>
+              <div className="text-2xl font-bold text-foreground">127</div>
               <p className="text-xs text-muted-foreground">
-                <span className="text-green-600">+4</span> this month
+                <span className="text-emerald-200">+4</span> this month
               </p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="bg-white/5 border border-white/10">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 Pending KYC/AML
               </CardTitle>
-              <AlertTriangle className="h-4 w-4 text-amber-500" />
+              <AlertTriangle className="h-4 w-4 text-amber-300" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">8</div>
+              <div className="text-2xl font-bold text-foreground">8</div>
               <p className="text-xs text-muted-foreground">
-                <span className="text-amber-600">3</span> high priority
+                <span className="text-amber-200">3</span> high priority
               </p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="bg-white/5 border border-white/10">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 Workflow Runs
               </CardTitle>
-              <Workflow className="h-4 w-4 text-blue-500" />
+              <Workflow className="h-4 w-4 text-sky-300" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">342</div>
+              <div className="text-2xl font-bold text-foreground">342</div>
               <p className="text-xs text-muted-foreground">This month</p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="bg-white/5 border border-white/10">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 Compliance Rate
               </CardTitle>
-              <CheckCircle className="h-4 w-4 text-green-500" />
+              <CheckCircle className="h-4 w-4 text-emerald-300" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">99.7%</div>
+              <div className="text-2xl font-bold text-foreground">99.7%</div>
               <p className="text-xs text-muted-foreground">BVI/GDPR standard</p>
             </CardContent>
           </Card>
@@ -123,10 +123,10 @@ export default async function StaffDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
           {/* n8n Process Center */}
-          <Card className="lg:col-span-1">
+          <Card className="lg:col-span-1 border border-white/10 bg-white/5">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Zap className="h-5 w-5 text-blue-600" />
+              <CardTitle className="flex items-center gap-2 text-foreground">
+                <Zap className="h-5 w-5 text-sky-300" />
                 Process Center
               </CardTitle>
               <CardDescription>
@@ -135,38 +135,38 @@ export default async function StaffDashboard() {
             </CardHeader>
             <CardContent className="space-y-3">
               <Link href="/versotech/staff/processes">
-                <Button className="w-full justify-start" variant="outline">
-                  <BarChart3 className="mr-2 h-4 w-4" />
+                <Button className="w-full justify-start border-white/10 text-foreground hover:bg-white/10" variant="outline">
+                  <BarChart3 className="mr-2 h-4 w-4 text-sky-200" />
                   Positions Statement
                 </Button>
               </Link>
               <Link href="/versotech/staff/processes">
-                <Button className="w-full justify-start" variant="outline">
-                  <FileText className="mr-2 h-4 w-4" />
+                <Button className="w-full justify-start border-white/10 text-foreground hover:bg-white/10" variant="outline">
+                  <FileText className="mr-2 h-4 w-4 text-emerald-200" />
                   NDA Agent
                 </Button>
               </Link>
               <Link href="/versotech/staff/processes">
-                <Button className="w-full justify-start" variant="outline">
-                  <Database className="mr-2 h-4 w-4" />
+                <Button className="w-full justify-start border-white/10 text-foreground hover:bg-white/10" variant="outline">
+                  <Database className="mr-2 h-4 w-4 text-purple-200" />
                   Shared-Drive Notification
                 </Button>
               </Link>
               <Link href="/versotech/staff/processes">
-                <Button className="w-full justify-start" variant="outline">
-                  <MessageSquare className="mr-2 h-4 w-4" />
+                <Button className="w-full justify-start border-white/10 text-foreground hover:bg-white/10" variant="outline">
+                  <MessageSquare className="mr-2 h-4 w-4 text-sky-200" />
                   Inbox Manager
                 </Button>
               </Link>
               <Link href="/versotech/staff/processes">
-                <Button className="w-full justify-start" variant="outline">
-                  <Target className="mr-2 h-4 w-4" />
+                <Button className="w-full justify-start border-white/10 text-foreground hover:bg-white/10" variant="outline">
+                  <Target className="mr-2 h-4 w-4 text-rose-200" />
                   LinkedIn Leads Scraper
                 </Button>
               </Link>
               <Link href="/versotech/staff/processes">
-                <Button className="w-full justify-start" variant="outline">
-                  <TrendingUp className="mr-2 h-4 w-4" />
+                <Button className="w-full justify-start border-white/10 text-foreground hover:bg-white/10" variant="outline">
+                  <TrendingUp className="mr-2 h-4 w-4 text-amber-200" />
                   Reporting Agent
                 </Button>
               </Link>
@@ -174,57 +174,57 @@ export default async function StaffDashboard() {
           </Card>
 
           {/* Operations Pipeline */}
-          <Card className="lg:col-span-2">
+          <Card className="lg:col-span-2 border border-white/10 bg-white/5">
             <CardHeader>
-              <CardTitle>Operations Pipeline</CardTitle>
+              <CardTitle className="text-foreground">Operations Pipeline</CardTitle>
               <CardDescription>
                 Current onboarding funnel and operational status
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 bg-blue-950/30 rounded-lg border-l-4 border-blue-500">
+                <div className="flex items-center justify-between p-4 rounded-lg border border-sky-400/30 bg-sky-500/10">
                   <div className="flex items-center gap-3">
-                    <PlayCircle className="h-5 w-5 text-blue-400" />
+                    <PlayCircle className="h-5 w-5 text-sky-200" />
                     <div>
-                      <p className="font-medium">KYC Processing</p>
+                      <p className="font-medium text-foreground">KYC Processing</p>
                       <p className="text-sm text-muted-foreground">Professional investor verification</p>
                     </div>
                   </div>
-                  <Badge variant="secondary">8 pending</Badge>
+                  <Badge variant="secondary" className="bg-white/10 text-foreground">8 pending</Badge>
                 </div>
 
-                <div className="flex items-center justify-between p-4 bg-green-950/30 rounded-lg border-l-4 border-green-500">
+                <div className="flex items-center justify-between p-4 rounded-lg border border-emerald-400/30 bg-emerald-500/10">
                   <div className="flex items-center gap-3">
-                    <FileText className="h-5 w-5 text-green-400" />
+                    <FileText className="h-5 w-5 text-emerald-200" />
                     <div>
-                      <p className="font-medium">NDA Execution</p>
+                      <p className="font-medium text-foreground">NDA Execution</p>
                       <p className="text-sm text-muted-foreground">DocuSign/Dropbox Sign processing</p>
                     </div>
                   </div>
-                  <Badge variant="secondary">5 in progress</Badge>
+                  <Badge variant="secondary" className="bg-white/10 text-foreground">5 in progress</Badge>
                 </div>
 
-                <div className="flex items-center justify-between p-4 bg-amber-950/30 rounded-lg border-l-4 border-amber-500">
+                <div className="flex items-center justify-between p-4 rounded-lg border border-amber-400/30 bg-amber-500/10">
                   <div className="flex items-center gap-3">
-                    <Building2 className="h-5 w-5 text-amber-400" />
+                    <Building2 className="h-5 w-5 text-amber-200" />
                     <div>
-                      <p className="font-medium">Subscription Processing</p>
+                      <p className="font-medium text-foreground">Subscription Processing</p>
                       <p className="text-sm text-muted-foreground">VERSO FUND & REAL Empire subscriptions</p>
                     </div>
                   </div>
-                  <Badge variant="secondary">12 review</Badge>
+                  <Badge variant="secondary" className="bg-white/10 text-foreground">12 review</Badge>
                 </div>
 
-                <div className="flex items-center justify-between p-4 bg-purple-950/30 rounded-lg border-l-4 border-purple-500">
+                <div className="flex items-center justify-between p-4 rounded-lg border border-purple-400/30 bg-purple-500/10">
                   <div className="flex items-center gap-3">
-                    <Clock className="h-5 w-5 text-purple-400" />
+                    <Clock className="h-5 w-5 text-purple-200" />
                     <div>
-                      <p className="font-medium">Capital Calls</p>
+                      <p className="font-medium text-foreground">Capital Calls</p>
                       <p className="text-sm text-muted-foreground">Upcoming capital call notifications</p>
                     </div>
                   </div>
-                  <Badge variant="secondary">Feb 15</Badge>
+                  <Badge variant="secondary" className="bg-white/10 text-foreground">Feb 15</Badge>
                 </div>
               </div>
             </CardContent>
@@ -232,50 +232,50 @@ export default async function StaffDashboard() {
         </div>
 
         {/* Recent Operations & Activity */}
-        <Card>
+        <Card className="border border-white/10 bg-white/5">
           <CardHeader>
-            <CardTitle>Recent Operations</CardTitle>
+            <CardTitle className="text-foreground">Recent Operations</CardTitle>
             <CardDescription>
               Latest workflow executions and system events
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="flex items-center space-x-3 p-3 bg-muted/50 rounded-lg border">
-                <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                <BarChart3 className="h-5 w-5 text-blue-400" />
+              <div className="flex items-center space-x-3 p-3 rounded-lg border border-emerald-400/30 bg-emerald-500/10">
+                <div className="w-2 h-2 rounded-full bg-emerald-300"></div>
+                <BarChart3 className="h-5 w-5 text-sky-200" />
                 <div className="flex-1">
-                  <p className="text-sm font-medium">Position Statement Generated</p>
+                  <p className="text-sm font-medium text-foreground">Position Statement Generated</p>
                   <p className="text-xs text-muted-foreground">VERSO FUND - Luxembourg Entity LP #47 - Completed</p>
                 </div>
                 <span className="text-xs text-muted-foreground">12 min ago</span>
               </div>
 
-              <div className="flex items-center space-x-3 p-3 bg-muted/50 rounded-lg border">
-                <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                <FileText className="h-5 w-5 text-green-400" />
+              <div className="flex items-center space-x-3 p-3 rounded-lg border border-sky-400/30 bg-sky-500/10">
+                <div className="w-2 h-2 rounded-full bg-sky-300"></div>
+                <FileText className="h-5 w-5 text-emerald-200" />
                 <div className="flex-1">
-                  <p className="text-sm font-medium">NDA Agent Processing</p>
+                  <p className="text-sm font-medium text-foreground">NDA Agent Processing</p>
                   <p className="text-xs text-muted-foreground">Professional Investor Qualification - High Net Worth Individual</p>
                 </div>
                 <span className="text-xs text-muted-foreground">1 hour ago</span>
               </div>
 
-              <div className="flex items-center space-x-3 p-3 bg-muted/50 rounded-lg border">
-                <div className="w-2 h-2 rounded-full bg-amber-500"></div>
-                <AlertTriangle className="h-5 w-5 text-amber-400" />
+              <div className="flex items-center space-x-3 p-3 rounded-lg border border-amber-400/30 bg-amber-500/10">
+                <div className="w-2 h-2 rounded-full bg-amber-300"></div>
+                <AlertTriangle className="h-5 w-5 text-amber-200" />
                 <div className="flex-1">
-                  <p className="text-sm font-medium">KYC Review Required</p>
+                  <p className="text-sm font-medium text-foreground">KYC Review Required</p>
                   <p className="text-xs text-muted-foreground">Enhanced Due Diligence - Institutional Investor</p>
                 </div>
                 <span className="text-xs text-muted-foreground">2 hours ago</span>
               </div>
 
-              <div className="flex items-center space-x-3 p-3 bg-muted/50 rounded-lg border">
-                <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                <Database className="h-5 w-5 text-purple-400" />
+              <div className="flex items-center space-x-3 p-3 rounded-lg border border-purple-400/30 bg-purple-500/10">
+                <div className="w-2 h-2 rounded-full bg-purple-300"></div>
+                <Database className="h-5 w-5 text-purple-200" />
                 <div className="flex-1">
-                  <p className="text-sm font-medium">Shared Drive Sync</p>
+                  <p className="text-sm font-medium text-foreground">Shared Drive Sync</p>
                   <p className="text-xs text-muted-foreground">REAL Empire Compartment III - Document Update Notification Sent</p>
                 </div>
                 <span className="text-xs text-muted-foreground">4 hours ago</span>
@@ -287,10 +287,10 @@ export default async function StaffDashboard() {
         {/* Management Actions */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <Link href="/versotech/staff/deals">
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer border border-white/10 bg-white/5">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Building2 className="h-5 w-5" />
+                <CardTitle className="flex items-center gap-2 text-foreground">
+                  <Building2 className="h-5 w-5 text-sky-200" />
                   Deal Management
                 </CardTitle>
                 <CardDescription>
@@ -298,17 +298,17 @@ export default async function StaffDashboard() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold mb-2">8</div>
+                <div className="text-2xl font-bold mb-2 text-foreground">8</div>
                 <p className="text-sm text-muted-foreground">Active deals</p>
               </CardContent>
             </Card>
           </Link>
 
           <Link href="/versotech/staff/requests">
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer border border-white/10 bg-white/5">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <ClipboardList className="h-5 w-5" />
+                <CardTitle className="flex items-center gap-2 text-foreground">
+                  <ClipboardList className="h-5 w-5 text-amber-200" />
                   Request Management
                 </CardTitle>
                 <CardDescription>
@@ -316,17 +316,17 @@ export default async function StaffDashboard() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold mb-2">23</div>
+                <div className="text-2xl font-bold mb-2 text-foreground">23</div>
                 <p className="text-sm text-muted-foreground">Active requests</p>
               </CardContent>
             </Card>
           </Link>
 
           <Link href="/versotech/staff/audit">
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer border border-white/10 bg-white/5">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Shield className="h-5 w-5" />
+                <CardTitle className="flex items-center gap-2 text-foreground">
+                  <Shield className="h-5 w-5 text-emerald-200" />
                   Compliance & Audit
                 </CardTitle>
                 <CardDescription>
@@ -334,17 +334,17 @@ export default async function StaffDashboard() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold mb-2">100%</div>
+                <div className="text-2xl font-bold mb-2 text-foreground">100%</div>
                 <p className="text-sm text-muted-foreground">Regulatory compliance</p>
               </CardContent>
             </Card>
           </Link>
 
           <Link href="/versotech/staff/investors">
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer border border-white/10 bg-white/5">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="h-5 w-5" />
+                <CardTitle className="flex items-center gap-2 text-foreground">
+                  <Users className="h-5 w-5 text-purple-200" />
                   LP Management
                 </CardTitle>
                 <CardDescription>
@@ -352,7 +352,7 @@ export default async function StaffDashboard() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold mb-2">127</div>
+                <div className="text-2xl font-bold mb-2 text-foreground">127</div>
                 <p className="text-sm text-muted-foreground">Active LPs</p>
               </CardContent>
             </Card>

@@ -3,6 +3,7 @@
     "@supabase/supabase-js": "^2.57.4"
   },
   "devDependencies": {
-    "shadcn": "^3.3.1"
+    "shadcn": "^3.3.1",
+    "supabase": "^2.48.3"
   }
 }

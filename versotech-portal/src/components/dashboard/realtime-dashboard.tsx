@@ -47,15 +47,42 @@ interface DashboardData {
 interface RealtimeDashboardProps {
   initialData: DashboardData
   investorIds: string[]
+  userId: string
 }
 
-export function RealtimeDashboard({ initialData, investorIds }: RealtimeDashboardProps) {
+interface ActivityEvent {
+  id: string
+  entity_type?: string | null
+  entity_id?: string | null
+  activity_type?: string | null
+}
+
+interface DealActivityPayload {
+  new: ActivityEvent
+  eventType: string
+}
+
+const DEAL_LINKED_ENTITIES = new Set(['documents', 'messages', 'request_tickets'])
+
+function isDealScopedEvent(payload: DealActivityPayload) {
+  const entityType = payload?.new?.entity_type
+  if (!entityType) return false
+  return DEAL_LINKED_ENTITIES.has(entityType)
+}
+
+export function RealtimeDashboard({ initialData, investorIds, userId }: RealtimeDashboardProps) {
   const [data, setData] = useState<DashboardData>(initialData)
   const [isConnected, setIsConnected] = useState(false)
   const [selectedKPI, setSelectedKPI] = useState<KPIDetail | null>(null)
   const [showKPIModal, setShowKPIModal] = useState(false)
   const [selectedDealId, setSelectedDealId] = useState<string | null>(null)
   const [originalData, setOriginalData] = useState<DashboardData>(initialData)
+  const [dealDetails, setDealDetails] = useState<Record<string, { vehicle_id: string | null }>>({})
+
+  useEffect(() => {
+    setOriginalData(initialData)
+    setData(initialData)
+  }, [initialData])
 
   useEffect(() => {
     if (investorIds.length === 0) return
@@ -63,31 +90,27 @@ export function RealtimeDashboard({ initialData, investorIds }: RealtimeDashboar
     const supabase = createClient()
 
     // Set up realtime subscription for activity feed
-    const activityFilter = selectedDealId
-      ? `investor_id=in.(${investorIds.join(',')}) AND deal_id=eq.${selectedDealId}`
-      : `investor_id=in.(${investorIds.join(',')})`
-
     const activityChannel = supabase
-      .channel('activity_updates')
+      .channel(`activity_updates_${userId}`)
       .on('postgres_changes', {
-        event: '*',
+        event: 'INSERT',
         schema: 'public',
-        table: 'activity_feed',
-        filter: activityFilter
+        table: 'activity_feed'
       }, (payload) => {
-        console.log('Activity feed update:', payload)
+        const typedPayload = payload as unknown as DealActivityPayload
 
-        if (payload.eventType === 'INSERT') {
-          // Only update if the new activity matches our current context
-          const newActivity = payload.new
-          const matchesContext = selectedDealId ? newActivity.deal_id === selectedDealId : true
+        if (selectedDealId && !isDealScopedEvent(typedPayload)) {
+          return
+        }
 
-          if (matchesContext) {
-            setData(prev => ({
-              ...prev,
-              recentActivity: [newActivity, ...prev.recentActivity.slice(0, 9)]
-            }))
-          }
+        const newActivity = payload.new
+        const matchesContext = selectedDealId ? newActivity.deal_id === selectedDealId : true
+
+        if (matchesContext) {
+          setData(prev => ({
+            ...prev,
+            recentActivity: [newActivity, ...prev.recentActivity.slice(0, 9)]
+          }))
         }
       })
       .subscribe((status) => {
@@ -283,49 +306,50 @@ export function RealtimeDashboard({ initialData, investorIds }: RealtimeDashboar
   // Fetch deal-scoped data
   const fetchDealScopedData = async (dealId: string | null) => {
     if (!dealId) {
-      // Reset to portfolio view
       setData(originalData)
+      setSelectedDealId(null)
       return
     }
-
-    console.log('Fetching deal-scoped data for deal:', dealId)
 
     try {
       const supabase = createClient()
 
-      // Get deal-specific positions and KPIs
-      // First, get the deal details and associated vehicle
-      const { data: dealData, error: dealError } = await supabase
-        .from('deals')
-        .select(`
-          id,
-          name,
-          vehicle_id,
-          vehicles!inner(id, name)
-        `)
-        .eq('id', dealId)
-        .single()
+      let vehicleId = dealDetails[dealId]?.vehicle_id
 
-      if (dealError || !dealData) {
-        console.error('Error fetching deal data:', dealError)
-        // No deal found - reset to portfolio view instead of showing fake data
-        setData(originalData)
-        return
+      if (!vehicleId) {
+        const { data: dealRecord, error: dealError } = await supabase
+          .from('deals')
+          .select('id, vehicle_id')
+          .eq('id', dealId)
+          .single()
+
+        if (dealError || !dealRecord?.vehicle_id) {
+          setData(originalData)
+          return
+        }
+
+        vehicleId = dealRecord.vehicle_id
+        setDealDetails(prev => ({ ...prev, [dealId]: { vehicle_id: vehicleId } }))
       }
 
-      // Get positions for this specific vehicle
+      const { data: vehicleRecords } = await supabase
+        .from('vehicles')
+        .select('id, name, type, domicile, currency')
+        .eq('id', vehicleId)
+        .limit(1)
+
       const { data: positions } = await supabase
         .from('positions')
         .select('*')
         .in('investor_id', investorIds)
-        .eq('vehicle_id', dealData.vehicle_id)
+        .eq('vehicle_id', vehicleId)
 
       // Get performance snapshots for this vehicle
       const { data: latestPerformance } = await supabase
         .from('performance_snapshots')
         .select('dpi, tvpi, irr_net, nav_value, contributed, distributed')
         .in('investor_id', investorIds)
-        .eq('vehicle_id', dealData.vehicle_id)
+        .eq('vehicle_id', vehicleId)
         .order('snapshot_date', { ascending: false })
         .limit(1)
 
@@ -334,7 +358,7 @@ export function RealtimeDashboard({ initialData, investorIds }: RealtimeDashboar
         .from('cashflows')
         .select('type, amount')
         .in('investor_id', investorIds)
-        .eq('vehicle_id', dealData.vehicle_id)
+        .eq('vehicle_id', vehicleId)
 
       // Get deal-specific activity
       const { data: dealActivity } = await supabase
@@ -379,12 +403,13 @@ export function RealtimeDashboard({ initialData, investorIds }: RealtimeDashboar
           tvpi,
           irr
         },
-        vehicles: [dealData.vehicles], // Show only the specific vehicle
+        vehicles: vehicleRecords || [],
         recentActivity: dealActivity || []
       })
 
     } catch (error) {
       console.error('Error fetching deal-scoped data:', error)
+      setData(originalData)
     }
   }
 

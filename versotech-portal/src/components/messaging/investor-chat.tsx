@@ -53,8 +53,8 @@ interface StaffMember {
   display_name: string
   email: string
   role: string
-  hasConversation?: boolean
-  lastMessageAt?: string
+  conversationId?: string | null
+  lastMessageAt?: string | null
   unreadCount?: number
 }
 
@@ -196,8 +196,19 @@ export function InvestorChat() {
       const data = await response.json()
 
       if (response.ok) {
-        setConversation(data.conversation)
-        setMessages(data.conversation.messages || [])
+        const normalizedConversation = {
+          ...data.conversation,
+          messages: (data.conversation.messages || [])
+            .filter((m: Message) => !m.deleted_at)
+            .sort((a: Message, b: Message) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+        }
+
+        setConversation(normalizedConversation)
+        setMessages(normalizedConversation.messages)
+
+        if (normalizedConversation.id) {
+          await markConversationAsRead(normalizedConversation.id, staffId)
+        }
       } else {
         toast.error(data.error || 'Failed to load conversation')
       }
@@ -215,11 +226,12 @@ export function InvestorChat() {
       const data = await response.json()
 
       if (response.ok) {
-        // API returns messages in DESC order (newest first), so reverse to get oldest first (bottom)
-        const filteredMessages = (data.messages || [])
+        const orderedMessages = (data.messages || [])
           .filter((m: Message) => !m.deleted_at)
-          .reverse() // Now oldest messages are first, newest are last (at bottom)
-        setMessages(filteredMessages)
+          .sort((a: Message, b: Message) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+
+        setMessages(orderedMessages)
+        await markConversationAsRead(conversationId, selectedStaff?.id)
       }
     } catch (error) {
       console.error('Error loading messages:', error)
@@ -364,6 +376,29 @@ export function InvestorChat() {
     }
   }
 
+  const markConversationAsRead = async (conversationId: string, staffId?: string | null) => {
+    try {
+      await fetch(`/api/conversations/${conversationId}/read`, {
+        method: 'POST'
+      })
+      if (staffId) {
+        setStaffMembers(prev => prev.map(member => (
+          member.id === staffId
+            ? { ...member, unreadCount: 0, conversationId }
+            : member
+        )))
+      } else {
+        setStaffMembers(prev => prev.map(member => (
+          member.conversationId === conversationId
+            ? { ...member, unreadCount: 0 }
+            : member
+        )))
+      }
+    } catch (error) {
+      console.error('Error marking conversation as read:', error)
+    }
+  }
+
   const cancelEdit = () => {
     setEditingMessageId(null)
     setEditingText('')
@@ -465,7 +500,7 @@ export function InvestorChat() {
                           {getRoleLabel(staff.role)}
                         </Badge>
                       </div>
-                      {staff.hasConversation && staff.lastMessageAt && (
+                      {staff.conversationId && staff.lastMessageAt && (
                         <p className="text-xs text-gray-500 mt-1">
                           Last message: {new Date(staff.lastMessageAt).toLocaleDateString()}
                         </p>

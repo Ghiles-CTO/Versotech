@@ -2,6 +2,39 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { auditLogger, AuditActions, AuditEntities } from '@/lib/audit'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
+import { cookies } from 'next/headers'
+import { parseDemoSession, DEMO_COOKIE_NAME } from '@/lib/demo-session'
+
+// Helper to get user from either real auth or demo mode
+async function getAuthenticatedUser(supabase: any) {
+  // Try real auth first
+  const { data: { user }, error: authError } = await supabase.auth.getUser()
+  
+  if (user) {
+    return { user, error: null }
+  }
+  
+  // Check for demo mode
+  const cookieStore = await cookies()
+  const demoCookie = cookieStore.get(DEMO_COOKIE_NAME)
+  
+  if (demoCookie) {
+    const demoSession = parseDemoSession(demoCookie.value)
+    if (demoSession) {
+      // Return a mock user object for demo mode
+      return {
+        user: {
+          id: demoSession.userId,
+          email: demoSession.email,
+          user_metadata: { role: demoSession.role }
+        },
+        error: null
+      }
+    }
+  }
+  
+  return { user: null, error: authError || new Error('No authentication found') }
+}
 
 // Validation schema for creating approvals
 const createApprovalSchema = z.object({
@@ -180,10 +213,11 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient()
+    const serviceSupabase = createServiceClient()
     const { searchParams } = new URL(request.url)
 
-    // Get the authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    // Get the authenticated user (supports both real auth and demo mode)
+    const { user, error: authError } = await getAuthenticatedUser(supabase)
 
     if (authError || !user) {
       return NextResponse.json(
@@ -193,11 +227,25 @@ export async function GET(request: NextRequest) {
     }
 
     // Check if user is staff (only staff can view approvals)
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('id, role')
-      .eq('id', user.id)
-      .single()
+    let profile = null
+    
+    // For demo mode, create a mock profile from user metadata
+    if (user.user_metadata?.role) {
+      profile = {
+        id: user.id,
+        role: user.user_metadata.role,
+        display_name: user.email?.split('@')[0] || 'Demo User',
+        email: user.email
+      }
+    } else {
+      // For real auth, fetch from database
+      const { data: dbProfile } = await supabase
+        .from('profiles')
+        .select('id, role, display_name, email')
+        .eq('id', user.id)
+        .single()
+      profile = dbProfile
+    }
 
     if (!profile || !['staff_admin', 'staff_ops', 'staff_rm'].includes(profile.role)) {
       return NextResponse.json(
@@ -209,13 +257,18 @@ export async function GET(request: NextRequest) {
     // Parse query parameters
     const status = searchParams.get('status') || 'pending'
     const entityType = searchParams.get('entity_type')
+    const entityTypes = searchParams.get('entity_types')?.split(',').filter(Boolean) || []
     const assignedTo = searchParams.get('assigned_to')
     const priority = searchParams.get('priority')
+    const priorities = searchParams.get('priorities')?.split(',').filter(Boolean) || []
     const relatedDealId = searchParams.get('related_deal_id')
     const relatedInvestorId = searchParams.get('related_investor_id')
+    const overdueOnly = searchParams.get('overdue_only') === 'true'
+    const limit = parseInt(searchParams.get('limit') || '50', 10)
+    const offset = parseInt(searchParams.get('offset') || '0', 10)
 
-    // Build query with comprehensive joins
-    let query = supabase
+    // Build query with comprehensive joins (use service client to bypass RLS for demo mode)
+    let query = serviceSupabase
       .from('approvals')
       .select(`
         *,
@@ -253,8 +306,12 @@ export async function GET(request: NextRequest) {
       `)
       .eq('status', status)
 
+    // Apply filters
     if (entityType) {
       query = query.eq('entity_type', entityType)
+    }
+    if (entityTypes.length > 0) {
+      query = query.in('entity_type', entityTypes)
     }
     if (assignedTo === 'me') {
       query = query.eq('assigned_to', profile.id)
@@ -264,17 +321,46 @@ export async function GET(request: NextRequest) {
     if (priority) {
       query = query.eq('priority', priority)
     }
+    if (priorities.length > 0) {
+      query = query.in('priority', priorities)
+    }
     if (relatedDealId) {
       query = query.eq('related_deal_id', relatedDealId)
     }
     if (relatedInvestorId) {
       query = query.eq('related_investor_id', relatedInvestorId)
     }
+    if (overdueOnly) {
+      query = query.lt('sla_breach_at', new Date().toISOString())
+    }
 
-    // Order by SLA urgency (most urgent first), then by creation date
+    // Get total count with same filters (before pagination, use service client)
+    let countQuery = serviceSupabase
+      .from('approvals')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', status)
+    
+    // Apply same filters to count query
+    if (entityType) countQuery = countQuery.eq('entity_type', entityType)
+    if (entityTypes.length > 0) countQuery = countQuery.in('entity_type', entityTypes)
+    if (assignedTo === 'me') {
+      countQuery = countQuery.eq('assigned_to', profile.id)
+    } else if (assignedTo) {
+      countQuery = countQuery.eq('assigned_to', assignedTo)
+    }
+    if (priority) countQuery = countQuery.eq('priority', priority)
+    if (priorities.length > 0) countQuery = countQuery.in('priority', priorities)
+    if (relatedDealId) countQuery = countQuery.eq('related_deal_id', relatedDealId)
+    if (relatedInvestorId) countQuery = countQuery.eq('related_investor_id', relatedInvestorId)
+    if (overdueOnly) countQuery = countQuery.lt('sla_breach_at', new Date().toISOString())
+
+    const { count: totalCount } = await countQuery
+
+    // Apply pagination and ordering
     const { data: approvals, error } = await query
       .order('sla_breach_at', { ascending: true, nullsFirst: false })
       .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1)
 
     if (error) {
       console.error('Error fetching approvals:', error)
@@ -284,8 +370,8 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Get statistics using RPC function
-    const { data: statsData, error: statsError } = await supabase
+    // Get statistics using RPC function (use service client to bypass RLS)
+    const { data: statsData, error: statsError } = await serviceSupabase
       .rpc('get_approval_stats', {
         p_staff_id: assignedTo === 'me' ? profile.id : null
       })
@@ -295,8 +381,8 @@ export async function GET(request: NextRequest) {
       console.warn('Error fetching approval stats:', statsError)
     }
 
-    // Calculate counts for different statuses
-    const { data: counts } = await supabase
+    // Calculate counts for different statuses (use service client)
+    const { data: counts } = await serviceSupabase
       .from('approvals')
       .select('status', { count: 'exact', head: true })
 
@@ -315,6 +401,12 @@ export async function GET(request: NextRequest) {
         pending: approvals?.filter(a => a.status === 'pending').length || 0,
         approved: statsData?.total_approved_30d || 0,
         rejected: statsData?.total_rejected_30d || 0
+      },
+      total: totalCount || 0,
+      pagination: {
+        limit,
+        offset,
+        has_more: (totalCount || 0) > offset + limit
       },
       hasData: (approvals && approvals.length > 0) || false
     })

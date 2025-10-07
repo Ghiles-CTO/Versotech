@@ -16,7 +16,7 @@ export default async function DocumentsPage({
     offset?: string
   }>
 }) {
-  const resolvedSearchParams = await searchParams
+  await searchParams
   const supabase = await createClient()
 
   // Get current user
@@ -61,7 +61,7 @@ export default async function DocumentsPage({
     .filter((v, i, arr) => arr.findIndex(x => x.id === v.id) === i) // unique
     || []
 
-  // Fetch holdings documents only (exclude deals)
+  // Fetch holdings documents and investor files (exclude deals)
   let documents: Document[] = []
 
   type DocumentQueryResult = {
@@ -79,10 +79,7 @@ export default async function DocumentsPage({
     deals: { id: string; name: string; status: string | null } | null
   }
 
-  // Query only holdings documents (vehicle-scoped, not deal-scoped)
-  const { data: documentsData, error: documentsError, count } = await supabase
-    .from('documents')
-    .select(`
+  const baseSelect = `
       id,
       type,
       file_key,
@@ -95,19 +92,12 @@ export default async function DocumentsPage({
       investors:owner_investor_id(id, legal_name),
       vehicles:vehicle_id(id, name, type),
       deals:deal_id(id, name, status)
-    `, { count: 'exact' })
-    .not('vehicle_id', 'is', null) // Only holdings documents
-    .is('deal_id', null) // Exclude deal documents
-    .order('created_at', { ascending: false })
+    `
 
-  if (documentsError) {
-    console.error('Documents query error:', documentsError)
-  }
+  const documentsMap = new Map<string, Document>()
 
-  if (documentsData) {
-    const typedDocuments = documentsData as DocumentQueryResult[]
-
-    documents = typedDocuments.map((doc) => {
+  const collectDocuments = (entries: DocumentQueryResult[] | null | undefined) => {
+    return (entries || []).forEach((doc) => {
       const fileName = doc.file_key ? doc.file_key.split('/').pop() : 'Unknown'
 
       const scope: DocumentScope = {}
@@ -123,7 +113,7 @@ export default async function DocumentsPage({
         status: doc.deals.status || undefined
       }
 
-      return {
+      documentsMap.set(doc.id, {
         id: doc.id,
         type: doc.type,
         file_name: fileName,
@@ -131,10 +121,58 @@ export default async function DocumentsPage({
         created_at: doc.created_at,
         created_by: doc.created_by_profile,
         scope,
+        metadata: doc.metadata ? (doc.metadata as Document['metadata']) : undefined,
         watermark: doc.watermark as Document['watermark']
-      }
+      })
     })
   }
+
+  // First, fetch documents linked directly to investor IDs (fallback)
+  if (investorIds.length > 0) {
+    console.log('[DocumentsPage] Fetching owner documents for investors:', investorIds)
+    const { data: ownerDocuments, error: ownerDocsError } = await supabase
+      .from('documents')
+      .select(baseSelect)
+      .in('owner_investor_id', investorIds)
+      .is('deal_id', null)
+      .order('created_at', { ascending: false })
+
+    if (ownerDocsError) {
+      console.error('Owner documents query error:', ownerDocsError)
+    } else {
+      console.log('[DocumentsPage] Owner documents count:', ownerDocuments?.length ?? 0)
+    }
+
+    collectDocuments(ownerDocuments as DocumentQueryResult[])
+  } else {
+    console.log('[DocumentsPage] No investor IDs available; skipping owner document query')
+  }
+
+  // Then overlay vehicle-linked documents, ensuring no duplicates
+  const vehicleIds = vehicles.map(vehicle => vehicle.id).filter(Boolean)
+  console.log('[DocumentsPage] Derived vehicle IDs:', vehicleIds)
+
+  if (vehicleIds.length > 0) {
+    const { data: vehicleDocuments, error: vehicleDocsError } = await supabase
+      .from('documents')
+      .select(baseSelect)
+      .in('vehicle_id', vehicleIds)
+      .is('deal_id', null)
+      .order('created_at', { ascending: false })
+
+    if (vehicleDocsError) {
+      console.error('Vehicle documents query error:', vehicleDocsError)
+    } else {
+      console.log('[DocumentsPage] Vehicle documents count:', vehicleDocuments?.length ?? 0)
+    }
+
+    collectDocuments(vehicleDocuments as DocumentQueryResult[])
+  } else {
+    console.log('[DocumentsPage] No vehicle IDs found for investor subscriptions; skipping vehicle document query')
+  }
+
+  documents = Array.from(documentsMap.values())
+  console.log('[DocumentsPage] Total documents collected:', documents.length)
 
   return (
     <AppLayout brand="versoholdings">

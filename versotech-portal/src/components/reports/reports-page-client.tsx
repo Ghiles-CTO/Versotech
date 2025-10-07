@@ -1,8 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { QuickReportCard } from './quick-report-card'
 import { CustomRequestModal } from './custom-request-modal'
+import { QuickReportDialog } from './quick-report-dialog'
 import { RecentReportsList } from './recent-reports-list'
 import { ActiveRequestsList } from './active-requests-list'
 import { Button } from '@/components/ui/button'
@@ -24,16 +25,42 @@ interface ReportsPageClientProps {
   initialRequests: RequestTicketWithRelations[]
 }
 
+interface VehicleOption {
+  id: string
+  name: string
+  type: string
+}
+
 export function ReportsPageClient({ initialReports, initialRequests }: ReportsPageClientProps) {
   const [reports, setReports] = useState<ReportRequestWithRelations[]>(initialReports)
   const [requests, setRequests] = useState<RequestTicketWithRelations[]>(initialRequests)
   const [requestModalOpen, setRequestModalOpen] = useState(false)
+  const [vehicleOptions, setVehicleOptions] = useState<VehicleOption[]>([])
+  const [reportDialog, setReportDialog] = useState<{ open: boolean; reportType: ReportType | null }>({ open: false, reportType: null })
+  const [reportFormState, setReportFormState] = useState<Record<string, any>>({})
+  const [isSubmittingQuickReport, setIsSubmittingQuickReport] = useState(false)
   const supabase = createClient()
 
   // Subscribe to real-time updates
   useEffect(() => {
-    subscribeToUpdates()
+    const unsubscribe = subscribeToUpdates()
+    fetchVehicleOptions()
+    return () => {
+      unsubscribe?.()
+    }
   }, [])
+
+  async function fetchVehicleOptions() {
+    try {
+      const response = await fetch('/api/vehicles?related=true&includeDeals=false')
+      if (!response.ok) return
+      const data = await response.json()
+      const vehicles = Array.isArray(data.vehicles) ? data.vehicles : []
+      setVehicleOptions(vehicles)
+    } catch (error) {
+      console.error('Error fetching vehicles for reports:', error)
+    }
+  }
 
   async function fetchReportsAndRequests() {
     try {
@@ -116,12 +143,44 @@ export function ReportsPageClient({ initialReports, initialRequests }: ReportsPa
     }
   }
 
-  async function handleGenerateReport(reportType: ReportType) {
+  const handleGenerateReportClick = (reportType: ReportType) => {
+    setReportFormState({})
+    setReportDialog({ open: true, reportType })
+  }
+
+  const reportFormConfig = useMemo(() => {
+    if (!reportDialog.reportType) return { fields: [] as string[], config: null }
+    const config = REPORT_TYPES[reportDialog.reportType]
+    return {
+      fields: config?.formFields || [],
+      config,
+      supportedScopes: config?.supportedScopes || ['all']
+    }
+  }, [reportDialog.reportType])
+
+  async function submitQuickReport() {
+    const reportType = reportDialog.reportType
+    if (!reportType) return
+
+    setIsSubmittingQuickReport(true)
     try {
+      const payload: Record<string, any> = { reportType }
+
+      if (reportFormState.scope) payload.scope = reportFormState.scope
+      if (reportFormState.vehicleId) payload.vehicleId = reportFormState.vehicleId
+      if (reportFormState.fromDate) payload.fromDate = reportFormState.fromDate
+      if (reportFormState.toDate) payload.toDate = reportFormState.toDate
+      if (reportFormState.year) payload.year = Number(reportFormState.year)
+      if (reportFormState.currency) payload.currency = reportFormState.currency
+      if (reportFormState.includeExcel !== undefined) payload.includeExcel = !!reportFormState.includeExcel
+      if (reportFormState.includePdf !== undefined) payload.includePdf = !!reportFormState.includePdf
+      if (reportFormState.includeBenchmark !== undefined) payload.includeBenchmark = !!reportFormState.includeBenchmark
+      if (reportFormState.notes) payload.notes = reportFormState.notes
+
       const response = await fetch('/api/report-requests', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reportType })
+        body: JSON.stringify(payload)
       })
 
       if (!response.ok) {
@@ -130,13 +189,16 @@ export function ReportsPageClient({ initialReports, initialRequests }: ReportsPa
       }
 
       const result = await response.json()
+      toast.success(result.message || 'Report queued successfully. You will receive a notification when it is ready.')
 
-      toast.success(result.message || 'Your report is being generated...')
-
+      setReportDialog({ open: false, reportType: null })
+      setReportFormState({})
       fetchReportsAndRequests()
     } catch (error) {
       console.error('Error generating report:', error)
       toast.error(error instanceof Error ? error.message : 'Failed to generate report')
+    } finally {
+      setIsSubmittingQuickReport(false)
     }
   }
 
@@ -216,7 +278,7 @@ export function ReportsPageClient({ initialReports, initialRequests }: ReportsPa
                 description={config.description}
                 estimatedTime={config.estimatedTime}
                 icon={config.icon}
-                onGenerate={handleGenerateReport}
+                onGenerate={handleGenerateReportClick}
               />
             ))}
         </div>
@@ -265,6 +327,19 @@ export function ReportsPageClient({ initialReports, initialRequests }: ReportsPa
         open={requestModalOpen}
         onOpenChange={setRequestModalOpen}
         onSubmit={handleSubmitRequest}
+        vehicles={vehicleOptions}
+      />
+
+      <QuickReportDialog
+        open={reportDialog.open}
+        reportType={reportDialog.reportType}
+        onOpenChange={(open) => setReportDialog((prev) => ({ ...prev, open }))}
+        config={reportFormConfig}
+        vehicles={vehicleOptions}
+        formState={reportFormState}
+        onFormStateChange={setReportFormState}
+        onSubmit={submitQuickReport}
+        submitting={isSubmittingQuickReport}
       />
     </div>
   )

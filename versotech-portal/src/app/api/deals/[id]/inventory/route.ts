@@ -1,5 +1,21 @@
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { auditLogger, AuditActions, AuditEntities } from '@/lib/audit'
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
+import { getAuthenticatedUser, isStaffUser } from '@/lib/api-auth'
+
+// Schema for adding share lot
+const createShareLotSchema = z.object({
+  source_id: z.string().uuid().optional(),
+  source_type: z.enum(['company', 'fund', 'colleague', 'other']),
+  counterparty_name: z.string().optional(),
+  units_total: z.number().positive(),
+  unit_cost: z.number().positive(),
+  currency: z.string().default('USD'),
+  acquired_at: z.string().optional(),
+  lockup_until: z.string().optional(),
+  notes: z.string().optional()
+})
 
 export async function GET(
   request: NextRequest,
@@ -7,100 +23,155 @@ export async function GET(
 ) {
   try {
     const supabase = await createClient()
-    const { id: dealId } = await params
-    
-    // Get the authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    
+    const { user, error: authError } = await getAuthenticatedUser(supabase)
+
     if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Verify user has access to this deal
-    const { data: dealAccess } = await supabase
-      .from('deal_memberships')
-      .select('deal_id')
-      .eq('deal_id', dealId)
-      .eq('user_id', user.id)
-      .single()
+    const { id: dealId } = await params
 
-    if (!dealAccess) {
-      return NextResponse.json(
-        { error: 'Access denied to this deal' },
-        { status: 403 }
-      )
-    }
-
-    // Get share lots for this deal
-    const { data: shareLots, error: lotsError } = await supabase
+    // Fetch share lots with source info
+    const { data: shareLots, error } = await supabase
       .from('share_lots')
-      .select('*')
+      .select(`
+        *,
+        share_sources (
+          id,
+          kind,
+          counterparty_name,
+          notes
+        )
+      `)
       .eq('deal_id', dealId)
-      .order('acquired_at', 'asc')
+      .order('acquired_at', { ascending: true, nullsFirst: false })
 
-    if (lotsError) {
-      console.error('Share lots fetch error:', lotsError)
+    if (error) {
+      console.error('Fetch share lots error:', error)
       return NextResponse.json(
         { error: 'Failed to fetch inventory' },
         { status: 500 }
       )
     }
 
-    // Get reservations for this deal
-    const { data: reservations, error: reservationsError } = await supabase
-      .from('reservations')
-      .select('*')
-      .eq('deal_id', dealId)
+    return NextResponse.json({ inventory: shareLots || [] })
 
-    if (reservationsError) {
-      console.error('Reservations fetch error:', reservationsError)
-      return NextResponse.json(
-        { error: 'Failed to fetch reservations' },
-        { status: 500 }
-      )
+  } catch (error) {
+    console.error('API /deals/[id]/inventory GET error:', error)
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
+
+export async function POST(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const supabase = createServiceClient()
+    const regularSupabase = await createClient()
+    
+    const { user, error: authError } = await getAuthenticatedUser(regularSupabase)
+
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get allocations for this deal
-    const { data: allocations, error: allocationsError } = await supabase
-      .from('allocations')
-      .select('*')
-      .eq('deal_id', dealId)
-
-    if (allocationsError) {
-      console.error('Allocations fetch error:', allocationsError)
-      return NextResponse.json(
-        { error: 'Failed to fetch allocations' },
-        { status: 500 }
-      )
+    // Check if user is staff (works with both real auth and demo mode)
+    const isStaff = await isStaffUser(supabase, user)
+    if (!isStaff) {
+      return NextResponse.json({ error: 'Staff access required' }, { status: 403 })
     }
 
-    // Calculate inventory summary
-    const totalUnits = shareLots?.reduce((sum, lot) => sum + lot.units_total, 0) || 0
-    const availableUnits = shareLots?.reduce((sum, lot) => sum + lot.units_remaining, 0) || 0
-    const reservedUnits = reservations?.reduce((sum, res) => sum + res.requested_units, 0) || 0
-    const allocatedUnits = allocations?.reduce((sum, alloc) => sum + alloc.units, 0) || 0
+    const { id: dealId } = await params
+    const body = await request.json()
+    const validatedData = createShareLotSchema.parse(body)
 
-    return NextResponse.json({
-      success: true,
-      data: {
+    // Create or get share source if needed
+    let sourceId = validatedData.source_id
+
+    if (!sourceId) {
+      // Create new share source
+      const { data: newSource, error: sourceError } = await supabase
+        .from('share_sources')
+        .insert({
+          kind: validatedData.source_type,
+          counterparty_name: validatedData.counterparty_name,
+          notes: validatedData.notes
+        })
+        .select()
+        .single()
+
+      if (sourceError) {
+        console.error('Create source error:', sourceError)
+        return NextResponse.json(
+          { error: 'Failed to create share source' },
+          { status: 500 }
+        )
+      }
+
+      sourceId = newSource.id
+    }
+
+    // Create share lot
+    const { data: shareLot, error } = await supabase
+      .from('share_lots')
+      .insert({
         deal_id: dealId,
-        share_lots: shareLots || [],
-        reservations: reservations || [],
-        allocations: allocations || [],
-        summary: {
-          total_units: totalUnits,
-          available_units: availableUnits,
-          reserved_units: reservedUnits,
-          allocated_units: allocatedUnits
-        }
+        source_id: sourceId,
+        units_total: validatedData.units_total,
+        unit_cost: validatedData.unit_cost,
+        currency: validatedData.currency,
+        acquired_at: validatedData.acquired_at,
+        lockup_until: validatedData.lockup_until,
+        units_remaining: validatedData.units_total, // Initially all units available
+        status: 'available'
+      })
+      .select(`
+        *,
+        share_sources (
+          id,
+          kind,
+          counterparty_name,
+          notes
+        )
+      `)
+      .single()
+
+    if (error) {
+      console.error('Create share lot error:', error)
+      return NextResponse.json(
+        { error: 'Failed to create share lot' },
+        { status: 500 }
+      )
+    }
+
+    // Audit log
+    await auditLogger.log({
+      actor_user_id: user.id,
+      action: AuditActions.CREATE,
+      entity: 'share_lots',
+      entity_id: shareLot.id,
+      metadata: {
+        deal_id: dealId,
+        units_total: validatedData.units_total,
+        unit_cost: validatedData.unit_cost
       }
     })
 
+    return NextResponse.json({ shareLot }, { status: 201 })
+
   } catch (error) {
-    console.error('Deal inventory API error:', error)
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: 'Invalid request data', details: error.errors },
+        { status: 400 }
+      )
+    }
+
+    console.error('API /deals/[id]/inventory POST error:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

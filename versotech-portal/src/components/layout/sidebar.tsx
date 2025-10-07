@@ -86,7 +86,7 @@ const investorNavItems: SidebarItem[] = [
     name: 'Holdings',
     href: '/versoholdings/holdings',
     icon: Briefcase,
-    description: 'Investment vehicles and positions'
+    description: 'Investment entities and positions'
   },
   {
     name: 'Documents',
@@ -135,6 +135,12 @@ const staffNavItems: SidebarItem[] = [
     href: '/versotech/staff/deals',
     icon: Activity,
     description: 'Manage deal inventory and allocations'
+  },
+  {
+    name: 'Entities',
+    href: '/versotech/staff/entities',
+    icon: Building2,
+    description: 'Manage vehicles and legal entities'
   },
   {
     name: 'Investors',
@@ -218,16 +224,19 @@ export function Sidebar({ brand, userProfile }: SidebarProps) {
     const savedSidebarTheme = localStorage.getItem(`sidebar-theme-${brand}`)
 
     if (brand === 'versotech') {
-      // Staff portal: dark by default
-      setSidebarDarkMode(savedSidebarTheme === 'light' ? false : true)
+      // Staff portal: lock to dark mode
+      setSidebarDarkMode(true)
+      localStorage.setItem(`sidebar-theme-${brand}`, 'dark')
     } else {
-      // Investor portal: light by default
-      setSidebarDarkMode(savedSidebarTheme === 'dark' ? true : false)
+      // Investor portal: restore preference or default light
+      setSidebarDarkMode(savedSidebarTheme === 'dark')
     }
   }, [brand])
 
   // Toggle sidebar dark mode (only affects sidebar, not entire page)
   const toggleSidebarDarkMode = () => {
+    if (brand === 'versotech') return
+
     const newDarkMode = !sidebarDarkMode
     setSidebarDarkMode(newDarkMode)
     localStorage.setItem(`sidebar-theme-${brand}`, newDarkMode ? 'dark' : 'light')
@@ -423,6 +432,7 @@ export function Sidebar({ brand, userProfile }: SidebarProps) {
       </div>
 
       {/* Theme Toggle */}
+      {brand !== 'versotech' && (
       <div className={cn(
         "border-t p-4",
         sidebarDarkMode ? "border" : "border-gray-200"
@@ -435,6 +445,7 @@ export function Sidebar({ brand, userProfile }: SidebarProps) {
             <Button
               variant="ghost"
               size="sm"
+              disabled={brand === 'versotech'}
               onClick={toggleSidebarDarkMode}
               className={cn(
                 "flex-1 h-8 text-xs font-medium transition-all duration-200",
@@ -442,7 +453,8 @@ export function Sidebar({ brand, userProfile }: SidebarProps) {
                   ? "bg-white text-gray-900 shadow-sm"
                   : sidebarDarkMode
                     ? "text-muted-foreground hover:text-foreground"
-                    : "text-gray-600 hover:text-gray-900"
+                    : "text-gray-600 hover:text-gray-900",
+                brand === 'versotech' && "opacity-60 cursor-not-allowed"
               )}
             >
               <Sun className="h-4 w-4 mr-1" />
@@ -451,12 +463,14 @@ export function Sidebar({ brand, userProfile }: SidebarProps) {
             <Button
               variant="ghost"
               size="sm"
+              disabled={brand === 'versotech'}
               onClick={toggleSidebarDarkMode}
               className={cn(
                 "flex-1 h-8 text-xs font-medium transition-all duration-200",
                 sidebarDarkMode
                   ? "bg-secondary text-foreground shadow-sm"
-                  : "text-gray-600 hover:text-gray-900"
+                  : "text-gray-600 hover:text-gray-900",
+                brand === 'versotech' && "opacity-60 cursor-not-allowed"
               )}
             >
               <Moon className="h-4 w-4 mr-1" />
@@ -469,18 +483,21 @@ export function Sidebar({ brand, userProfile }: SidebarProps) {
           <Button
             variant="ghost"
             size="sm"
+            disabled={brand === 'versotech'}
             onClick={toggleSidebarDarkMode}
             className={cn(
               "w-full h-8 p-0",
               sidebarDarkMode
                 ? "text-muted-foreground hover:bg-muted"
-                : "text-gray-600 hover:bg-gray-100"
+                : "text-gray-600 hover:bg-gray-100",
+              brand === 'versotech' && "opacity-60 cursor-not-allowed"
             )}
           >
             {sidebarDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
           </Button>
         )}
       </div>
+      )}
 
       {/* Settings and User Profile */}
       <div className={cn(

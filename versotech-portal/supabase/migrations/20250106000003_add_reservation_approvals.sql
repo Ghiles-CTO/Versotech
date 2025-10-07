@@ -80,3 +80,4 @@ COMMENT ON FUNCTION create_reservation_approval IS
 
 COMMENT ON TRIGGER on_reservation_create_approval ON reservations IS
   'CRITICAL: Creates approval record for staff review when reservation is created with pending status';
+

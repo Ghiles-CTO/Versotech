@@ -77,3 +77,4 @@ export function exportApprovalsToCSV(approvals: Approval[], filename: string = '
   link.click()
   document.body.removeChild(link)
 }
+

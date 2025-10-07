@@ -76,6 +76,7 @@ export function ApprovalActionDialog({
         headers: {
           'Content-Type': 'application/json'
         },
+        credentials: 'include',
         body: JSON.stringify({
           action,
           notes: notes.trim() || undefined,

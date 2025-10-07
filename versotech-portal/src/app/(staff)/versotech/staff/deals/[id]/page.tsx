@@ -1,245 +1,193 @@
-'use client'
+import { AppLayout } from '@/components/layout/app-layout'
+import { createServiceClient } from '@/lib/supabase/server'
+import { cookies } from 'next/headers'
+import { parseDemoSession, DEMO_COOKIE_NAME } from '@/lib/demo-session'
+import { redirect } from 'next/navigation'
+import { DealDetailClient } from '@/components/deals/deal-detail-client'
 
-import { useState, useEffect } from 'react'
-import { useParams } from 'next/navigation'
-import { Card } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import DealInventoryPanel from '@/components/deals/deal-inventory-panel'
-import FeeManagementPanel from '@/components/deals/fee-management-panel'
-import { toast } from 'sonner'
+export default async function DealDetailPage({
+  params
+}: {
+  params: Promise<{ id: string }>
+}) {
+  // Use service client to bypass RLS for demo sessions
+  const supabase = createServiceClient()
+  const { id: dealId } = await params
 
-interface Deal {
-  id: string
-  name: string
-  deal_type: string
-  status: string
-  currency: string
-  offer_unit_price: number
-  open_at: string
-  close_at: string
-  created_at: string
-  vehicles?: {
-    name: string
-    type: string
-  }
-  deal_memberships: DealMembership[]
-}
-
-interface DealMembership {
-  user_id: string
-  role: string
-  invited_at: string
-  accepted_at: string
-  profiles?: {
-    display_name: string
-    email: string
-  }
-  investors?: {
-    legal_name: string
-  }
-}
-
-export default function DealDetailPage() {
-  const params = useParams()
-  const dealId = params.id as string
+  // Check for demo session
+  const cookieStore = await cookies()
+  const demoCookie = cookieStore.get(DEMO_COOKIE_NAME)
   
-  const [deal, setDeal] = useState<Deal | null>(null)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    loadDealData()
-  }, [dealId])
-
-  const loadDealData = async () => {
-    try {
-      setLoading(true)
-      
-      const response = await fetch(`/api/deals/${dealId}`)
-      if (response.ok) {
-        const data = await response.json()
-        setDeal(data.deal)
-      } else {
-        toast.error('Failed to load deal data')
-      }
-
-    } catch (error) {
-      console.error('Error loading deal:', error)
-      toast.error('Failed to load deal data')
-    } finally {
-      setLoading(false)
-    }
+  if (!demoCookie) {
+    redirect('/versotech/staff/deals')
   }
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'draft': return 'bg-gray-100 text-foreground'
-      case 'open': return 'bg-green-100 text-green-800'
-      case 'allocation_pending': return 'bg-yellow-100 text-yellow-800'
-      case 'closed': return 'bg-blue-100 text-blue-800'
-      case 'cancelled': return 'bg-red-100 text-red-800'
-      default: return 'bg-gray-100 text-foreground'
-    }
+  const demoSession = parseDemoSession(demoCookie.value)
+  if (!demoSession) {
+    redirect('/versotech/staff/deals')
   }
 
-  const getRoleColor = (role: string) => {
-    switch (role) {
-      case 'investor': return 'bg-blue-100 text-blue-800'
-      case 'co_investor': return 'bg-purple-100 text-purple-800'
-      case 'lawyer': return 'bg-green-100 text-green-800'
-      case 'banker': return 'bg-yellow-100 text-yellow-800'
-      case 'introducer': return 'bg-orange-100 text-orange-800'
-      case 'verso_staff': return 'bg-indigo-100 text-indigo-800'
-      default: return 'bg-gray-100 text-foreground'
-    }
+  console.log('[Deal Detail] Fetching data for demo user:', demoSession.email, demoSession.role)
+
+  // Fetch deal with all related data
+  const { data: deal, error } = await supabase
+    .from('deals')
+    .select(`
+      *,
+      vehicles (
+        id,
+        name,
+        type,
+        currency
+      ),
+      deal_memberships (
+        user_id,
+        investor_id,
+        role,
+        invited_at,
+        accepted_at,
+        profiles:user_id (
+          id,
+          display_name,
+          email
+        ),
+        investors:investor_id (
+          id,
+          legal_name,
+          type
+        ),
+        invited_by_profile:invited_by (
+          display_name,
+          email
+        )
+      ),
+      fee_plans (
+        id,
+        name,
+        description,
+        is_default,
+        fee_components (
+          id,
+          kind,
+          calc_method,
+          rate_bps,
+          flat_amount,
+          frequency,
+          hurdle_rate_bps,
+          high_watermark,
+          notes
+        )
+      ),
+      share_lots (
+        id,
+        source_id,
+        units_total,
+        unit_cost,
+        units_remaining,
+        currency,
+        acquired_at,
+        lockup_until,
+        status,
+        share_sources:source_id (
+          id,
+          kind,
+          counterparty_name,
+          notes
+        )
+      )
+    `)
+    .eq('id', dealId)
+    .single()
+
+  if (error || !deal) {
+    redirect('/versotech/staff/deals')
   }
 
-  if (loading) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="space-y-6">
-          <div className="h-32 bg-gray-100 rounded-lg animate-pulse" />
-          <div className="h-96 bg-gray-100 rounded-lg animate-pulse" />
-        </div>
-      </div>
-    )
-  }
+  // Fetch inventory summary
+  const { data: inventorySummary } = await supabase
+    .rpc('fn_deal_inventory_summary', { p_deal_id: dealId })
 
-  if (!deal) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <Card className="p-8 text-center">
-          <h1 className="text-2xl font-bold text-foreground mb-4">Deal Not Found</h1>
-          <p className="text-muted-foreground">The requested deal could not be found.</p>
-        </Card>
-      </div>
-    )
-  }
+  // Fetch commitments
+  const { data: commitments } = await supabase
+    .from('deal_commitments')
+    .select(`
+      *,
+      investors (
+        id,
+        legal_name
+      ),
+      fee_plans (
+        name
+      ),
+      created_by_profile:created_by (
+        display_name,
+        email
+      )
+    `)
+    .eq('deal_id', dealId)
+    .order('created_at', { ascending: false })
+
+  // Fetch reservations
+  const { data: reservations } = await supabase
+    .from('reservations')
+    .select(`
+      *,
+      investors (
+        id,
+        legal_name
+      )
+    `)
+    .eq('deal_id', dealId)
+    .order('created_at', { ascending: false })
+
+  // Fetch allocations
+  const { data: allocations } = await supabase
+    .from('allocations')
+    .select(`
+      *,
+      investors (
+        id,
+        legal_name
+      ),
+      approved_by_profile:approved_by (
+        display_name
+      )
+    `)
+    .eq('deal_id', dealId)
+    .order('created_at', { ascending: false })
+
+  // Fetch deal-scoped documents
+  const { data: documents } = await supabase
+    .from('documents')
+    .select(`
+      id,
+      type,
+      file_key,
+      created_at,
+      created_by,
+      created_by_profile:created_by (
+        display_name
+      )
+    `)
+    .eq('deal_id', dealId)
+    .order('created_at', { ascending: false })
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      {/* Deal Header */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">{deal.name}</h1>
-            <p className="text-muted-foreground mt-2">
-              {deal.vehicles?.name} • {deal.deal_type.replace('_', ' ')} • {deal.currency}
-            </p>
-          </div>
-          <div className="text-right">
-            <Badge className={getStatusColor(deal.status)} size="lg">
-              {deal.status.replace('_', ' ')}
-            </Badge>
-            <div className="text-sm text-muted-foreground mt-2">
-              Offer Price: {deal.currency} {deal.offer_unit_price}
-            </div>
-          </div>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-          <Card className="p-4">
-            <div className="text-sm text-muted-foreground">Opens</div>
-            <div className="font-semibold">
-              {deal.open_at ? new Date(deal.open_at).toLocaleDateString() : 'Not set'}
-            </div>
-          </Card>
-          <Card className="p-4">
-            <div className="text-sm text-muted-foreground">Closes</div>
-            <div className="font-semibold">
-              {deal.close_at ? new Date(deal.close_at).toLocaleDateString() : 'Not set'}
-            </div>
-          </Card>
-          <Card className="p-4">
-            <div className="text-sm text-muted-foreground">Members</div>
-            <div className="font-semibold">
-              {deal.deal_memberships?.length || 0} participants
-            </div>
-          </Card>
-        </div>
-      </div>
-
-      {/* Deal Management Tabs */}
-      <Tabs defaultValue="inventory" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="inventory">Inventory</TabsTrigger>
-          <TabsTrigger value="fees">Fees & Billing</TabsTrigger>
-          <TabsTrigger value="members">Members</TabsTrigger>
-          <TabsTrigger value="documents">Documents</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="inventory">
-          <DealInventoryPanel
-            dealId={dealId}
-            dealName={deal.name}
-            dealStatus={deal.status}
-            offerPrice={deal.offer_unit_price}
-            currency={deal.currency}
-          />
-        </TabsContent>
-
-        <TabsContent value="fees">
-          <FeeManagementPanel
-            dealId={dealId}
-            dealName={deal.name}
-          />
-        </TabsContent>
-
-        <TabsContent value="members">
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-4">Deal Members</h3>
-            
-            <div className="space-y-3">
-              {deal.deal_memberships?.map((member, index) => (
-                <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <Badge className={getRoleColor(member.role)}>
-                        {member.role.replace('_', ' ')}
-                      </Badge>
-                      <span className="font-medium">
-                        {member.profiles?.display_name || member.profiles?.email}
-                      </span>
-                    </div>
-                    <div className="text-sm text-muted-foreground mt-1">
-                      {member.investors?.legal_name && `Investor: ${member.investors.legal_name} • `}
-                      Invited: {new Date(member.invited_at).toLocaleDateString()}
-                      {member.accepted_at && ` • Accepted: ${new Date(member.accepted_at).toLocaleDateString()}`}
-                    </div>
-                  </div>
-                </div>
-              ))}
-              
-              {(!deal.deal_memberships || deal.deal_memberships.length === 0) && (
-                <div className="text-center py-8 text-muted-foreground">
-                  No members added to this deal yet
-                </div>
-              )}
-            </div>
-            
-            <Button className="mt-4" variant="outline">
-              Invite Member
-            </Button>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="documents">
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-4">Document Packages</h3>
-            
-            <div className="space-y-4">
-              <div className="text-center py-8 text-muted-foreground">
-                Document package management coming soon
-              </div>
-              
-              <Button variant="outline">
-                Create Document Package
-              </Button>
-            </div>
-          </Card>
-        </TabsContent>
-      </Tabs>
-    </div>
+    <AppLayout brand="versotech">
+      <DealDetailClient
+        deal={deal}
+        inventorySummary={inventorySummary?.[0] || {
+          total_units: 0,
+          available_units: 0,
+          reserved_units: 0,
+          allocated_units: 0
+        }}
+        commitments={commitments || []}
+        reservations={reservations || []}
+        allocations={allocations || []}
+        documents={documents || []}
+        userProfile={{ role: demoSession.role }}
+      />
+    </AppLayout>
   )
 }

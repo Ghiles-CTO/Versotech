@@ -1,24 +1,29 @@
 'use client'
 
-import { useState, useMemo } from 'react'
-import { useRouter } from 'next/navigation'
+import { useMemo, useState } from 'react'
 import { Document, Vehicle } from '@/types/documents'
 import { DocumentCard } from './document-card'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { 
-  FileText, 
-  Shield, 
-  Building2,
-  Folder,
-  ChevronRight,
-  Home,
-  FileCheck,
-  ClipboardList,
-  Lock,
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger
+} from '@/components/ui/accordion'
+import {
+  ArrowLeft,
   BarChart3,
-  ArrowLeft
+  Building2,
+  ChevronRight,
+  ClipboardList,
+  FileCheck,
+  FileText,
+  Folder,
+  Home,
+  Lock,
+  Shield
 } from 'lucide-react'
 
 interface CategorizedDocumentsClientProps {
@@ -33,6 +38,7 @@ const DOCUMENT_CATEGORIES = {
     name: 'Agreements',
     icon: FileCheck,
     color: 'blue',
+    description: 'Signed commitments, limited partnership agreements, side letters, amendment documents',
     types: ['Subscription', 'Agreement', 'subscription', 'agreement']
   },
   kyc: {
@@ -40,6 +46,7 @@ const DOCUMENT_CATEGORIES = {
     name: 'KYC Documents',
     icon: ClipboardList,
     color: 'green',
+    description: 'Identity verification, proof of address, source of funds, beneficial ownership paperwork',
     types: ['KYC', 'kyc']
   },
   statements: {
@@ -47,6 +54,7 @@ const DOCUMENT_CATEGORIES = {
     name: 'Position Statements',
     icon: BarChart3,
     color: 'purple',
+    description: 'Quarterly statements, capital call notices, distribution notices, transaction confirmations',
     types: ['Statement', 'statement', 'capital_call']
   },
   ndas: {
@@ -54,6 +62,7 @@ const DOCUMENT_CATEGORIES = {
     name: 'NDAs',
     icon: Lock,
     color: 'red',
+    description: 'Non-disclosure agreements and confidentiality undertakings covering sensitive information',
     types: ['NDA', 'nda']
   },
   reports: {
@@ -61,8 +70,66 @@ const DOCUMENT_CATEGORIES = {
     name: 'Reports',
     icon: FileText,
     color: 'indigo',
+    description: 'Performance reports, tax packs, investor letters and notices',
     types: ['Report', 'report', 'Tax', 'tax', 'memo']
   }
+}
+
+type HoldingGroup = {
+  key: string
+  title: string
+  subtitle: string
+  documents: Document[]
+  vehicle?: Document['scope']['vehicle']
+  isUnassigned: boolean
+}
+
+type CategoryData = {
+  documents: Document[]
+  holdings: HoldingGroup[]
+}
+
+type CategorizedDocuments = Record<string, CategoryData>
+
+function groupDocumentsByHolding(documents: Document[]): HoldingGroup[] {
+  const holdingMap = new Map<string, HoldingGroup>()
+
+  documents.forEach((doc) => {
+    const vehicle = doc.scope.vehicle
+    const key = vehicle?.id ?? 'none'
+
+    if (!holdingMap.has(key)) {
+      holdingMap.set(key, {
+        key,
+        title: vehicle?.name ?? 'Holding: None',
+        subtitle: '',
+        vehicle,
+        documents: [],
+        isUnassigned: !vehicle
+      })
+    }
+
+    holdingMap.get(key)!.documents.push(doc)
+  })
+
+  holdingMap.forEach((group) => {
+    const descriptorParts: string[] = []
+
+    if (group.vehicle?.type) {
+      descriptorParts.push(group.vehicle.type)
+    } else if (group.isUnassigned) {
+      descriptorParts.push('Unassigned')
+    }
+
+    descriptorParts.push(`${group.documents.length} document${group.documents.length === 1 ? '' : 's'}`)
+    group.subtitle = descriptorParts.join(' • ')
+  })
+
+  return Array.from(holdingMap.values()).sort((a, b) => {
+    if (a.isUnassigned && !b.isUnassigned) return 1
+    if (!a.isUnassigned && b.isUnassigned) return -1
+    return a.title.localeCompare(b.title)
+  })
 }
 
 function getCategoryForDocumentType(type: string) {
@@ -101,32 +168,37 @@ export function CategorizedDocumentsClient({
   vehicles
 }: CategorizedDocumentsClientProps) {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
-  const router = useRouter()
 
-  // Filter to only holdings documents (exclude deals)
-  const holdingsDocuments = useMemo(() => {
-    return initialDocuments.filter(doc => doc.scope.vehicle && !doc.scope.deal)
+  // Filter to investor-facing documents (exclude deal-specific files)
+  const displayableDocuments = useMemo(() => {
+    return initialDocuments.filter(doc => !doc.scope.deal)
   }, [initialDocuments])
 
-  // Group documents by category
   const categorizedDocuments = useMemo(() => {
-    const grouped: Record<string, Document[]> = {
-      agreements: [],
-      kyc: [],
-      statements: [],
-      ndas: [],
-      reports: []
-    }
+    const base: CategorizedDocuments = {}
 
-    holdingsDocuments.forEach(doc => {
-      const category = getCategoryForDocumentType(doc.type)
-      if (category && grouped[category]) {
-        grouped[category].push(doc)
-      }
+    Object.keys(DOCUMENT_CATEGORIES).forEach(categoryId => {
+      base[categoryId] = { documents: [], holdings: [] }
     })
 
-    return grouped
-  }, [holdingsDocuments])
+    displayableDocuments.forEach(doc => {
+      const categoryId = getCategoryForDocumentType(doc.type) ?? 'reports'
+
+      if (!base[categoryId]) {
+        base[categoryId] = { documents: [], holdings: [] }
+      }
+
+      base[categoryId].documents.push(doc)
+    })
+
+    Object.values(base).forEach(categoryData => {
+      categoryData.holdings = groupDocumentsByHolding(categoryData.documents)
+    })
+
+    return base
+  }, [displayableDocuments])
+
+  const totalDocuments = useMemo(() => displayableDocuments.length, [displayableDocuments])
 
   // Category view
   if (!selectedCategory) {
@@ -151,7 +223,7 @@ export function CategorizedDocumentsClient({
             </div>
             <div className="text-right bg-white/80 backdrop-blur-sm rounded-xl px-6 py-4 shadow-sm border border-gray-200">
               <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Total Documents</p>
-              <p className="text-3xl font-bold text-gray-900 mt-1">{holdingsDocuments.length}</p>
+              <p className="text-3xl font-bold text-gray-900 mt-1">{totalDocuments}</p>
             </div>
           </div>
         </div>
@@ -163,29 +235,39 @@ export function CategorizedDocumentsClient({
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {Object.entries(DOCUMENT_CATEGORIES).map(([categoryId, category]) => {
               const Icon = category.icon
-              const documentCount = categorizedDocuments[categoryId]?.length || 0
-              
+              const categoryData = categorizedDocuments[categoryId]
+              const documentCount = categoryData?.documents.length || 0
+              const holdingCount = categoryData?.holdings.length || 0
+
               return (
                 <Card
                   key={categoryId}
                   className="border-2 border-gray-200 hover:border-gray-300 hover:shadow-xl transition-all duration-300 cursor-pointer group"
                   onClick={() => setSelectedCategory(categoryId)}
                 >
-                  <CardContent className="p-6">
-                    <div className="flex items-start justify-between mb-4">
+                  <CardContent className="p-6 space-y-4">
+                    <div className="flex items-start justify-between">
                       <div className={`w-16 h-16 rounded-xl flex items-center justify-center ${getCategoryColor(category.color)} border-2 transition-transform group-hover:scale-105`}>
                         <Icon className={`h-8 w-8 ${getCategoryIconColor(category.color)}`} />
                       </div>
                       <ChevronRight className="h-6 w-6 text-gray-400 group-hover:text-gray-600 transition-colors" />
                     </div>
-                    
-                    <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-blue-700 transition-colors">
-                      {category.name}
-                    </h3>
-                    
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline" className="text-sm font-semibold border-2">
+
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-900 mb-1 group-hover:text-blue-700 transition-colors">
+                        {category.name}
+                      </h3>
+                      <p className="text-sm text-gray-600 leading-relaxed">
+                        {category.description}
+                      </p>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Badge variant="outline" className="text-xs font-semibold border-2">
                         {documentCount} document{documentCount !== 1 ? 's' : ''}
+                      </Badge>
+                      <Badge variant="outline" className="text-xs font-semibold border-2 border-blue-200 bg-blue-50 text-blue-700">
+                        {holdingCount} holding{holdingCount !== 1 ? 's' : ''}
                       </Badge>
                     </div>
                   </CardContent>
@@ -200,18 +282,20 @@ export function CategorizedDocumentsClient({
           <Card className="border-2 border-gray-200 bg-gradient-to-r from-gray-50 to-blue-50">
             <CardContent className="p-6">
               <h3 className="text-lg font-bold text-gray-900 mb-4">Your Holdings</h3>
-              <div className="flex flex-wrap gap-3">
-                {vehicles.map(vehicle => (
-                  <Badge 
-                    key={vehicle.id}
-                    variant="outline" 
-                    className="text-sm px-4 py-2 bg-white border-2 border-blue-200"
-                  >
-                    <Building2 className="h-4 w-4 mr-2 inline" />
-                    {vehicle.name}
-                  </Badge>
-                ))}
-              </div>
+      <div className="flex flex-wrap gap-3">
+        {vehicles.map(vehicle => (
+          <Badge 
+            key={vehicle.id}
+            variant="outline" 
+            className="text-sm px-4 py-2 bg-white border-2 border-blue-200"
+          >
+            <Building2 className="h-4 w-4 mr-2 inline" />
+            <span className="font-semibold">{vehicle.name}</span>
+            <span className="mx-2 text-gray-400">•</span>
+            <span className="uppercase tracking-wide text-xs text-gray-600">{vehicle.type}</span>
+          </Badge>
+        ))}
+      </div>
             </CardContent>
           </Card>
         )}
@@ -240,7 +324,7 @@ export function CategorizedDocumentsClient({
 
   // Document list view for selected category
   const category = DOCUMENT_CATEGORIES[selectedCategory as keyof typeof DOCUMENT_CATEGORIES]
-  const documents = categorizedDocuments[selectedCategory] || []
+  const categoryData = categorizedDocuments[selectedCategory] || { documents: [], holdings: [] }
   const Icon = category.icon
 
   return (
@@ -288,14 +372,14 @@ export function CategorizedDocumentsClient({
             </div>
 
             <Badge variant="outline" className="text-lg px-4 py-2 bg-white/80 backdrop-blur-sm border-2">
-              {documents.length} document{documents.length !== 1 ? 's' : ''}
+              {categoryData.documents.length} document{categoryData.documents.length !== 1 ? 's' : ''}
             </Badge>
           </div>
         </div>
       </div>
 
       {/* Documents List */}
-      {documents.length === 0 ? (
+      {categoryData.documents.length === 0 ? (
         <Card className="border-2">
           <CardContent className="p-12 text-center">
             <div className="max-w-md mx-auto">
@@ -317,9 +401,33 @@ export function CategorizedDocumentsClient({
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-4">
-          {documents.map((document) => (
-            <DocumentCard key={document.id} document={document} />
+        <div className="space-y-6">
+          {categoryData.holdings.map((group) => (
+            <Card key={group.key} className="border border-gray-200 shadow-sm">
+              <CardContent className="p-6 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+                      <Building2 className="h-5 w-5 text-blue-600" />
+                      {group.title}
+                    </h2>
+                    <p className="text-sm text-gray-600 mt-1">
+                      {group.subtitle}
+                    </p>
+                  </div>
+
+                  <Badge variant="outline" className="text-xs font-semibold border-2 border-blue-100 bg-blue-50 text-blue-700">
+                    {group.documents.length} document{group.documents.length !== 1 ? 's' : ''}
+                  </Badge>
+                </div>
+
+                <div className="space-y-4">
+                  {group.documents.map((document) => (
+                    <DocumentCard key={document.id} document={document} />
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
           ))}
         </div>
       )}

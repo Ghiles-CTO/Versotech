@@ -53,11 +53,38 @@ export function validateReportRequest(data: CreateReportRequest): ValidationResu
     })
   }
 
+  // Validate scope
+  if (data.scope && !['all', 'vehicle', 'custom'].includes(data.scope)) {
+    errors.push({
+      field: 'scope',
+      message: 'Invalid report scope'
+    })
+  }
+
   // Validate filters if provided
   if (data.filters && typeof data.filters !== 'object') {
     errors.push({
       field: 'filters',
       message: 'Filters must be an object'
+    })
+  }
+
+  // Validate date range
+  if (data.fromDate && data.toDate) {
+    const from = new Date(data.fromDate)
+    const to = new Date(data.toDate)
+    if (Number.isNaN(from.getTime()) || Number.isNaN(to.getTime()) || from > to) {
+      errors.push({
+        field: 'fromDate',
+        message: 'Invalid date range'
+      })
+    }
+  }
+
+  if (data.year && (data.year < 2000 || data.year > new Date().getFullYear())) {
+    errors.push({
+      field: 'year',
+      message: 'Invalid year'
     })
   }
 
@@ -138,7 +165,10 @@ export function validateRequestUpdate(data: UpdateRequestTicket): ValidationResu
   const errors: ValidationError[] = []
 
   // Validate status if provided
-  if (data.status && !['open', 'assigned', 'in_progress', 'ready', 'closed'].includes(data.status)) {
+  if (
+    data.status &&
+    !['open', 'assigned', 'in_progress', 'awaiting_info', 'ready', 'closed', 'cancelled'].includes(data.status)
+  ) {
     errors.push({
       field: 'status',
       message: 'Invalid status'
@@ -265,7 +295,13 @@ export function sanitizeCustomRequestData(data: CreateCustomRequest): CreateCust
     subject: sanitizeSubject(data.subject),
     details: data.details ? sanitizeDetails(data.details) : undefined,
     priority: data.priority || 'normal',
+    vehicleId: data.vehicleId,
     dealId: data.dealId,
+    dueDate: data.dueDate,
+    preferredFormat: data.preferredFormat || 'pdf',
+    dataFocus: data.dataFocus || [],
+    includeBenchmark: !!data.includeBenchmark,
+    followUpCall: !!data.followUpCall,
   }
 }
 

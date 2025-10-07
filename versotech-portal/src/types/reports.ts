@@ -26,19 +26,24 @@ export type RequestStatus =
   | 'open'                   // Newly created, unassigned
   | 'assigned'               // Assigned to staff member
   | 'in_progress'            // Staff actively working
+  | 'awaiting_info'          // Waiting on investor clarification
   | 'ready'                  // Completed, deliverable attached
   | 'closed'                 // Finalized with completion note
+  | 'cancelled'
 
 export type RequestPriority =
-  | 'low'                    // 7 day SLA
-  | 'normal'                 // 3 day SLA
-  | 'high'                   // 1 day SLA
+  | 'low'                    // Deprioritized requests
+  | 'normal'                 // Standard SLA (3 days)
+  | 'high'                   // Expedited (2 days)
 
 export type RequestCategory =
   | 'analysis'               // Custom analysis request
   | 'tax_doc'                // Tax documentation
   | 'cashflow'               // Cashflow schedule
   | 'valuation'              // Valuation report
+  | 'data_export'
+  | 'presentation'
+  | 'communication'
   | 'other'                  // Uncategorized
 
 // ============================================
@@ -87,6 +92,14 @@ export interface RequestTicket {
 export interface CreateReportRequest {
   reportType: ReportType
   vehicleId?: string
+  scope?: 'all' | 'vehicle' | 'custom'
+  fromDate?: string
+  toDate?: string
+  year?: number
+  currency?: string
+  includeExcel?: boolean
+  includePdf?: boolean
+  notes?: string
   filters?: Record<string, unknown>
 }
 
@@ -103,7 +116,13 @@ export interface CreateCustomRequest {
   subject: string
   details?: string
   priority?: RequestPriority
-  dealId?: string
+  vehicleId?: string | null
+  dealId?: string | null
+  dueDate?: string
+  preferredFormat?: 'pdf' | 'excel' | 'both'
+  dataFocus?: string[]
+  includeBenchmark?: boolean
+  followUpCall?: boolean
 }
 
 export interface CreateCustomRequestResponse {
@@ -173,6 +192,8 @@ export interface ReportTypeConfig {
   estimatedTime: string
   workflowKey: string
   sla: number // milliseconds
+  supportedScopes: Array<'all' | 'vehicle' | 'custom'>
+  formFields: string[]
 }
 
 export interface CategoryConfig {
@@ -215,7 +236,7 @@ export function isValidRequestCategory(value: unknown): value is RequestCategory
 }
 
 export function isValidRequestPriority(value: unknown): value is RequestPriority {
-  return ['low', 'normal', 'high'].includes(value as string)
+  return ['low', 'medium', 'high', 'urgent'].includes(value as string)
 }
 
 // ============================================

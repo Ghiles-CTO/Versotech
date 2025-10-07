@@ -2,6 +2,31 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { auditLogger, AuditActions } from '@/lib/audit'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
+import { cookies } from 'next/headers'
+import { parseDemoSession, DEMO_COOKIE_NAME } from '@/lib/demo-session'
+
+// Helper to get user from either real auth or demo mode
+async function getAuthenticatedUser(supabase: any) {
+  const { data: { user }, error: authError } = await supabase.auth.getUser()
+  if (user) return { user, error: null }
+  
+  const cookieStore = await cookies()
+  const demoCookie = cookieStore.get(DEMO_COOKIE_NAME)
+  if (demoCookie) {
+    const demoSession = parseDemoSession(demoCookie.value)
+    if (demoSession) {
+      return {
+        user: {
+          id: demoSession.userId,
+          email: demoSession.email,
+          user_metadata: { role: demoSession.role }
+        },
+        error: null
+      }
+    }
+  }
+  return { user: null, error: authError || new Error('No authentication found') }
+}
 
 // Validation schema for approval action
 const approvalActionSchema = z.object({
@@ -230,8 +255,8 @@ export async function POST(
     // Await params
     const { id: approvalId } = await params
 
-    // Get authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    // Get authenticated user (supports both real auth and demo mode)
+    const { user, error: authError } = await getAuthenticatedUser(supabase)
 
     if (authError || !user) {
       return NextResponse.json(
@@ -241,13 +266,35 @@ export async function POST(
     }
 
     // Get staff profile
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('id, role, display_name, title')
-      .eq('id', user.id)
-      .single()
+    let profile = null
+    
+    // For demo mode, create a mock profile from user metadata
+    if (user.user_metadata?.role) {
+      profile = {
+        id: user.id,
+        role: user.user_metadata.role,
+        display_name: user.email?.split('@')[0] || 'Demo User',
+        title: null,
+        email: user.email
+      }
+    } else {
+      // For real auth, fetch from database
+      const { data: dbProfile, error: profileError } = await supabase
+        .from('profiles')
+        .select('id, role, display_name, title, email')
+        .eq('id', user.id)
+        .single()
+      
+      if (profileError) {
+        return NextResponse.json(
+          { error: 'Profile not found' },
+          { status: 404 }
+        )
+      }
+      profile = dbProfile
+    }
 
-    if (profileError || !profile || !['staff_admin', 'staff_ops', 'staff_rm'].includes(profile.role)) {
+    if (!profile || !['staff_admin', 'staff_ops', 'staff_rm'].includes(profile.role)) {
       return NextResponse.json(
         { error: 'Staff access required' },
         { status: 403 }
@@ -267,8 +314,8 @@ export async function POST(
 
     const { action, notes, rejection_reason } = validation.data
 
-    // Fetch approval with related data
-    const { data: approval, error: approvalError } = await supabase
+    // Fetch approval with related data (use service client to bypass RLS for demo mode)
+    const { data: approval, error: approvalError } = await serviceSupabase
       .from('approvals')
       .select(`
         *,
@@ -281,6 +328,7 @@ export async function POST(
       .single()
 
     if (approvalError || !approval) {
+      console.error('[Approval Action] Approval not found:', approvalId, approvalError)
       return NextResponse.json(
         { error: 'Approval not found' },
         { status: 404 }

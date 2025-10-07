@@ -34,7 +34,7 @@ export async function GET(
         )
       `)
       .eq('conversation_id', conversationId)
-      .order('created_at', { ascending: false })
+      .order('created_at', { ascending: true })
       .range(offset, offset + limit - 1)
 
     if (error) {

@@ -1,13 +1,16 @@
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+import { z } from 'zod'
+import { getAuthenticatedUser, isStaffUser } from '@/lib/api-auth'
+import { auditLogger, AuditActions, AuditEntities } from '@/lib/audit'
 
 export async function GET(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
     const supabase = await createClient()
-    const { id: vehicleId } = await params
+    const { id: vehicleId } = params
     
     // Get the authenticated user
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -233,6 +236,98 @@ export async function GET(
 
   } catch (error) {
     console.error('Vehicle detail API error:', error)
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
+
+const updateVehicleSchema = z.object({
+  name: z.string().min(1, 'Vehicle name is required').optional(),
+  type: z.enum(['fund', 'spv', 'securitization', 'note', 'other']).optional(),
+  domicile: z.string().min(1, 'Domicile is required').optional(),
+  currency: z.string().length(3, 'Currency must be 3 letters').optional(),
+  formation_date: z.string().optional().nullable(),
+  legal_jurisdiction: z.string().optional().nullable(),
+  registration_number: z.string().optional().nullable(),
+  notes: z.string().optional().nullable()
+})
+
+export async function PATCH(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const supabase = createServiceClient()
+    const regularSupabase = await createClient()
+    const { id: vehicleId } = params
+
+    const { user, error: authError } = await getAuthenticatedUser(regularSupabase)
+
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const isStaff = await isStaffUser(supabase, user)
+    if (!isStaff) {
+      return NextResponse.json({ error: 'Staff access required' }, { status: 403 })
+    }
+
+    const body = await request.json()
+    const validatedData = updateVehicleSchema.parse(body)
+
+    if (Object.keys(validatedData).length === 0) {
+      return NextResponse.json({ error: 'No changes provided' }, { status: 400 })
+    }
+
+    const payload = {
+      ...validatedData,
+      currency: validatedData.currency
+        ? validatedData.currency.toUpperCase()
+        : undefined,
+      legal_jurisdiction: validatedData.legal_jurisdiction?.trim(),
+      registration_number: validatedData.registration_number?.trim(),
+      notes: validatedData.notes?.trim()
+    }
+
+    const { data: vehicle, error } = await supabase
+      .from('vehicles')
+      .update(payload)
+      .eq('id', vehicleId)
+      .select('id, name, type, domicile, currency, formation_date, legal_jurisdiction, registration_number, notes, created_at')
+      .single()
+
+    if (error || !vehicle) {
+      console.error('Vehicle update error:', error)
+      return NextResponse.json(
+        { error: 'Failed to update vehicle', details: error?.message },
+        { status: 500 }
+      )
+    }
+
+    await auditLogger.log({
+      actor_user_id: user.id,
+      action: AuditActions.UPDATE,
+      entity: AuditEntities.VEHICLES,
+      entity_id: vehicle.id,
+      metadata: {
+        endpoint: `/api/vehicles/${vehicleId}`,
+        ...validatedData
+      }
+    })
+
+    return NextResponse.json({ vehicle })
+
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: 'Invalid input', details: error.issues },
+        { status: 400 }
+      )
+    }
+
+    console.error('Vehicle update API error:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

@@ -62,12 +62,30 @@ export function PerformanceTrends({ investorIds, selectedDealId, className }: Pe
         fromDate.setMonth(fromDate.getMonth() - months)
 
         // Fetch real performance snapshots from database
-        const { data: snapshots, error } = await supabase
+        const snapshotQuery = supabase
           .from('performance_snapshots')
           .select('*')
           .in('investor_id', investorIds)
           .gte('snapshot_date', fromDate.toISOString().split('T')[0])
           .order('snapshot_date', { ascending: true })
+
+        if (selectedDealId) {
+          const { data: dealRecord, error: dealLookupError } = await supabase
+            .from('deals')
+            .select('vehicle_id')
+            .eq('id', selectedDealId)
+            .single()
+
+          if (dealLookupError || !dealRecord?.vehicle_id) {
+            setData([])
+            setLoading(false)
+            return
+          }
+
+          snapshotQuery.eq('vehicle_id', dealRecord.vehicle_id)
+        }
+
+        const { data: snapshots, error } = await snapshotQuery
 
         if (error) {
           console.error('Error fetching performance data:', error)

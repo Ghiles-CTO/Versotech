@@ -1,7 +1,14 @@
 // Constants and configuration for Reports & Requests feature
 // Business rules: SLAs, report types, categories, workflow mappings
 
-import type { ReportType, RequestCategory, RequestPriority, ReportTypeConfig, CategoryConfig } from '@/types/reports'
+import type {
+  ReportType,
+  RequestCategory,
+  RequestPriority,
+  ReportTypeConfig,
+  CategoryConfig,
+  RequestStatus,
+} from '@/types/reports'
 
 // ============================================
 // Report Type Configurations
@@ -15,6 +22,8 @@ export const REPORT_TYPES: Record<ReportType, ReportTypeConfig> = {
     estimatedTime: '2-3 minutes',
     workflowKey: 'positions_statement',
     sla: 5 * 60 * 1000, // 5 minutes in milliseconds
+    supportedScopes: ['all', 'vehicle', 'custom'],
+    formFields: ['scope', 'vehicle', 'asOfRange', 'currency', 'delivery']
   },
   investment_summary: {
     label: 'Quarterly Report',
@@ -23,6 +32,8 @@ export const REPORT_TYPES: Record<ReportType, ReportTypeConfig> = {
     estimatedTime: '3-5 minutes',
     workflowKey: 'quarterly_report',
     sla: 10 * 60 * 1000, // 10 minutes
+    supportedScopes: ['all', 'vehicle', 'custom'],
+    formFields: ['scope', 'vehicle', 'period', 'includeBenchmark', 'delivery']
   },
   capital_activity: {
     label: 'Monthly Report',
@@ -31,6 +42,8 @@ export const REPORT_TYPES: Record<ReportType, ReportTypeConfig> = {
     estimatedTime: '2-4 minutes',
     workflowKey: 'monthly_report',
     sla: 10 * 60 * 1000, // 10 minutes
+    supportedScopes: ['all', 'vehicle'],
+    formFields: ['scope', 'vehicle', 'fromTo', 'includeExcel', 'delivery']
   },
   tax_pack: {
     label: 'Yearly Report (Ghiles)',
@@ -39,6 +52,8 @@ export const REPORT_TYPES: Record<ReportType, ReportTypeConfig> = {
     estimatedTime: '5-10 minutes',
     workflowKey: 'yearly_report_ghiles',
     sla: 15 * 60 * 1000, // 15 minutes
+    supportedScopes: ['all', 'vehicle'],
+    formFields: ['scope', 'vehicle', 'taxYear', 'delivery']
   },
   custom: {
     label: 'Custom Request',
@@ -47,6 +62,8 @@ export const REPORT_TYPES: Record<ReportType, ReportTypeConfig> = {
     estimatedTime: 'Varies by request',
     workflowKey: 'custom_request',
     sla: 24 * 60 * 60 * 1000, // 24 hours
+    supportedScopes: ['custom'],
+    formFields: ['details']
   },
 }
 
@@ -61,18 +78,30 @@ export const REQUEST_CATEGORIES: Record<RequestCategory, CategoryConfig> = {
   },
   tax_doc: {
     label: 'Tax Documentation',
-    description: 'Tax-related documents, forms, or summaries',
+    description: 'K-1s, tax summaries, and compliance documentation',
+  },
+  data_export: {
+    label: 'Data Export',
+    description: 'Capital activity, holdings, and transaction exports',
+  },
+  presentation: {
+    label: 'Presentation',
+    description: 'Investor decks, IC materials, and bespoke briefings',
+  },
+  communication: {
+    label: 'Communication',
+    description: 'Investor updates, newsletter requests, and follow-ups',
   },
   cashflow: {
-    label: 'Cashflow Schedule',
-    description: 'Projected or historical cashflow analysis',
+    label: 'Cashflow',
+    description: 'Contribution schedules, distribution forecasts, and history',
   },
   valuation: {
-    label: 'Valuation Report',
-    description: 'Portfolio or asset valuation reports',
+    label: 'Valuation',
+    description: 'Asset and portfolio valuation support',
   },
   other: {
-    label: 'Other Request',
+    label: 'Other',
     description: 'General requests not covered by other categories',
   },
 }
@@ -82,15 +111,15 @@ export const REQUEST_CATEGORIES: Record<RequestCategory, CategoryConfig> = {
 // ============================================
 
 export const SLA_BY_PRIORITY: Record<RequestPriority, number> = {
-  high: 24 * 60 * 60 * 1000,      // 1 day
+  high: 2 * 24 * 60 * 60 * 1000,   // 2 days
   normal: 3 * 24 * 60 * 60 * 1000, // 3 days
-  low: 7 * 24 * 60 * 60 * 1000,    // 7 days
+  low: 5 * 24 * 60 * 60 * 1000,    // 5 days
 }
 
 export const SLA_LABELS: Record<RequestPriority, string> = {
-  high: '1 day',
+  high: '2 days',
   normal: '3 days',
-  low: '7 days',
+  low: '5 days',
 }
 
 // ============================================
@@ -124,54 +153,81 @@ export const REPORT_STATUS_CONFIG = {
   },
 }
 
-export const REQUEST_STATUS_CONFIG = {
+export const REQUEST_STATUS_CONFIG: Record<
+  RequestStatus,
+  {
+    label: string
+    color: string
+    icon: string
+    description: string
+  }
+> = {
   open: {
     label: 'Open',
     color: 'gray',
     icon: 'CircleDot',
-    description: 'Awaiting assignment',
+    description: 'Awaiting triage & assignment',
   },
   assigned: {
     label: 'Assigned',
-    color: 'yellow',
+    color: 'blue',
     icon: 'UserCheck',
-    description: 'Assigned to staff',
+    description: 'Assigned to staff member',
   },
   in_progress: {
     label: 'In Progress',
     color: 'blue',
-    icon: 'Loader',
-    description: 'Staff working on it',
+    icon: 'Play',
+    description: 'Fulfillment in progress',
+  },
+  awaiting_info: {
+    label: 'Awaiting Info',
+    color: 'amber',
+    icon: 'MessageCircle',
+    description: 'Paused while awaiting investor clarification',
   },
   ready: {
     label: 'Ready',
     color: 'green',
     icon: 'CheckCircle',
-    description: 'Completed, ready for review',
+    description: 'Deliverables ready for review',
   },
   closed: {
     label: 'Closed',
     color: 'gray',
     icon: 'Check',
-    description: 'Request closed',
+    description: 'Delivered and closed',
+  },
+  cancelled: {
+    label: 'Cancelled',
+    color: 'gray',
+    icon: 'X',
+    description: 'Cancelled or withdrawn',
   },
 }
 
-export const PRIORITY_CONFIG = {
-  low: {
-    label: 'Low',
-    color: 'gray',
-    badge: 'secondary',
+export const PRIORITY_CONFIG: Record<
+  RequestPriority,
+  {
+    label: string
+    color: string
+    badge: 'default' | 'secondary' | 'destructive' | 'outline'
+  }
+> = {
+  high: {
+    label: 'High',
+    color: 'orange',
+    badge: 'default',
   },
   normal: {
     label: 'Normal',
     color: 'blue',
-    badge: 'default',
+    badge: 'secondary',
   },
-  high: {
-    label: 'High',
-    color: 'red',
-    badge: 'destructive',
+  low: {
+    label: 'Low',
+    color: 'gray',
+    badge: 'outline',
   },
 }
 
@@ -261,7 +317,7 @@ export function getCategoryLabel(category: RequestCategory): string {
  * Get SLA in hours for priority
  */
 export function getSLAHours(priority: RequestPriority): number {
-  return SLA_BY_PRIORITY[priority] / (60 * 60 * 1000)
+  return Math.round(SLA_BY_PRIORITY[priority] / (60 * 60 * 1000))
 }
 
 /**
@@ -293,3 +349,18 @@ export function formatTimeRemaining(dueDate: string | Date): string {
   }
   return `${hours}h remaining`
 }
+
+export const CUSTOM_REQUEST_FORMATS = [
+  { value: 'pdf', label: 'PDF Summary' },
+  { value: 'excel', label: 'Excel Workbook' },
+  { value: 'both', label: 'Both PDF & Excel' }
+] as const
+
+export const CUSTOM_REQUEST_DATA_FOCUS = [
+  { value: 'performance', label: 'Performance & Returns' },
+  { value: 'cashflows', label: 'Cashflows & Capital Activity' },
+  { value: 'valuations', label: 'Valuations & NAV' },
+  { value: 'holdings', label: 'Detailed Holdings' },
+  { value: 'exits', label: 'Exits & Liquidity Events' },
+  { value: 'other', label: 'Other / Miscellaneous' }
+] as const

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -24,14 +24,21 @@ import {
   Calendar,
   Users
 } from 'lucide-react'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { workflowInputSchema, workflowInputFieldSchema } from '@/lib/workflows'
+import { z } from 'zod'
 
 interface ProcessTriggerProps {
   workflowKey: string
   title: string
   description: string
   iconName?: string
-  schema?: Record<string, any>
+  schema?: Record<string, z.infer<typeof workflowInputFieldSchema>>
   className?: string
+  requiredRole?: string
+  requiredTitles?: string[]
+  category?: string
 }
 
 interface WorkflowRun {
@@ -41,13 +48,16 @@ interface WorkflowRun {
   updated_at: string
 }
 
-export function ProcessTrigger({ 
-  workflowKey, 
-  title, 
-  description, 
+export function ProcessTrigger({
+  workflowKey,
+  title,
+  description,
   iconName = 'PlayCircle',
   schema = {},
-  className 
+  className,
+  requiredRole,
+  requiredTitles,
+  category
 }: ProcessTriggerProps) {
   
   const getIcon = () => {
@@ -68,9 +78,91 @@ export function ProcessTrigger({
   const Icon = getIcon()
   const [isTriggering, setIsTriggering] = useState(false)
   const [formData, setFormData] = useState<Record<string, any>>({})
+  const [errors, setErrors] = useState<Record<string, string>>({})
   const [recentRuns, setRecentRuns] = useState<WorkflowRun[]>([])
 
+  const normalizedSchema = useMemo(() => {
+    try {
+      return workflowInputSchema.parse(schema)
+    } catch (error) {
+      console.error('Invalid workflow schema', error)
+      return schema
+    }
+  }, [schema])
+
+  useEffect(() => {
+    const defaults: Record<string, any> = {}
+    Object.entries(normalizedSchema).forEach(([key, config]) => {
+      if (config?.defaultValue !== undefined) {
+        defaults[key] = config.defaultValue
+      } else if (config?.type === 'checkbox') {
+        defaults[key] = false
+      }
+    })
+
+    if (Object.keys(defaults).length > 0) {
+      setFormData((prev) => ({ ...defaults, ...prev }))
+    }
+  }, [normalizedSchema])
+
+  useEffect(() => {
+    const fetchRecentRuns = async () => {
+      try {
+        const response = await fetch(`/api/workflows/${workflowKey}/recent`)
+        if (!response.ok) return
+        const data = await response.json()
+        if (Array.isArray(data.recentRuns)) {
+          setRecentRuns(data.recentRuns)
+        }
+      } catch (error) {
+        console.error('Failed to load recent runs', error)
+      }
+    }
+
+    fetchRecentRuns()
+  }, [workflowKey])
+
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {}
+
+    Object.entries(normalizedSchema).forEach(([key, config]) => {
+      if (!config) return
+
+      const value = formData[key]
+
+      if (config.required && (value === undefined || value === '' || value === null)) {
+        newErrors[key] = `${config.label || key} is required`
+        return
+      }
+
+      if (value === undefined || value === null || value === '') {
+        return
+      }
+
+      if (config.type === 'email') {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+        if (!emailRegex.test(String(value))) {
+          newErrors[key] = `${config.label || key} must be a valid email`
+        }
+      }
+
+      if (config.type === 'number') {
+        if (Number.isNaN(Number(value))) {
+          newErrors[key] = `${config.label || key} must be a number`
+        }
+      }
+    })
+
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
+
   const handleTrigger = async () => {
+    if (!validateForm()) {
+      toast.error('Please fix validation errors before triggering')
+      return
+    }
+
     setIsTriggering(true)
     
     try {
@@ -81,6 +173,7 @@ export function ProcessTrigger({
         },
         body: JSON.stringify({
           entity_type: 'process',
+          workflow_category: category,
           payload: formData
         }),
       })
@@ -149,6 +242,84 @@ export function ProcessTrigger({
     }
   }
 
+  const renderField = (key: string, config: z.infer<typeof workflowInputFieldSchema>) => {
+    const fieldError = errors[key]
+    const helperText = config.helperText
+
+    switch (config.type) {
+      case 'checkbox':
+        return (
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id={key}
+              checked={Boolean(formData[key])}
+              onCheckedChange={(checked) => {
+                setFormData((prev) => ({
+                  ...prev,
+                  [key]: checked === true
+                }))
+                setErrors((prev) => ({ ...prev, [key]: '' }))
+              }}
+            />
+            <Label htmlFor={key} className="text-sm font-medium leading-none">
+              {config.label || key}
+            </Label>
+          </div>
+        )
+      case 'select':
+        return (
+          <div className="space-y-2">
+            <Label htmlFor={key}>{config.label || key}</Label>
+            <Select
+              value={formData[key] ?? ''}
+              onValueChange={(value) => {
+                setFormData((prev) => ({ ...prev, [key]: value }))
+                setErrors((prev) => ({ ...prev, [key]: '' }))
+              }}
+            >
+              <SelectTrigger id={key}>
+                <SelectValue placeholder={config.placeholder || 'Select option'} />
+              </SelectTrigger>
+              <SelectContent>
+                {config.options?.map((option) => (
+                  <SelectItem key={option.toString()} value={option.toString()}>
+                    {option.toString()}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {helperText && !fieldError && (
+              <p className="text-xs text-muted-foreground">{helperText}</p>
+            )}
+            {fieldError && <p className="text-xs text-destructive">{fieldError}</p>}
+          </div>
+        )
+      default:
+        return (
+          <div className="space-y-2">
+            <Label htmlFor={key}>{config.label || key}</Label>
+            <Input
+              id={key}
+              type={config.type || 'text'}
+              placeholder={config.placeholder}
+              value={formData[key] ?? ''}
+              onChange={(e) => {
+                setFormData((prev) => ({
+                  ...prev,
+                  [key]: e.target.value
+                }))
+                setErrors((prev) => ({ ...prev, [key]: '' }))
+              }}
+            />
+            {helperText && !fieldError && (
+              <p className="text-xs text-muted-foreground">{helperText}</p>
+            )}
+            {fieldError && <p className="text-xs text-destructive">{fieldError}</p>}
+          </div>
+        )
+    }
+  }
+
   return (
     <Card className={className}>
       <CardHeader>
@@ -156,25 +327,27 @@ export function ProcessTrigger({
           <Icon className="h-5 w-5" />
           {title}
         </CardTitle>
-        <CardDescription>{description}</CardDescription>
+        <CardDescription className="space-y-1">
+          <span>{description}</span>
+          <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+            {requiredRole && (
+              <Badge variant="outline" className="border-dashed">
+                Role • {requiredRole}
+              </Badge>
+            )}
+            {requiredTitles && requiredTitles.length > 0 && (
+              <Badge variant="outline" className="border-dashed">
+                Titles • {requiredTitles.join(', ')}
+              </Badge>
+            )}
+          </div>
+        </CardDescription>
       </CardHeader>
       
       <CardContent className="space-y-4">
         {/* Dynamic form fields based on schema */}
-        {Object.entries(schema).map(([key, config]: [string, any]) => (
-          <div key={key} className="space-y-2">
-            <Label htmlFor={key}>{config.label || key}</Label>
-            <Input
-              id={key}
-              type={config.type || 'text'}
-              placeholder={config.placeholder}
-              value={formData[key] || ''}
-              onChange={(e) => setFormData(prev => ({ 
-                ...prev, 
-                [key]: e.target.value 
-              }))}
-            />
-          </div>
+        {Object.entries(normalizedSchema).map(([key, config]) => (
+          <div key={key}>{renderField(key, config)}</div>
         ))}
 
         <Button 

@@ -1,12 +1,13 @@
-import { createClient } from '@/lib/supabase/server'
+import { createSmartClient } from '@/lib/supabase/smart-client'
+import { getAuthenticatedUser } from '@/lib/api-auth'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createClient()
+    const supabase = await createSmartClient()
 
-    // Authenticate user
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    // Authenticate user (works with both demo and real auth)
+    const { user, error: authError } = await getAuthenticatedUser(supabase)
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -15,6 +16,7 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams
     const type = searchParams.get('type')
     const vehicle_id = searchParams.get('vehicle_id')
+    const entity_id = searchParams.get('entity_id')
     const deal_id = searchParams.get('deal_id')
     const from_date = searchParams.get('from_date')
     const to_date = searchParams.get('to_date')
@@ -32,17 +34,20 @@ export async function GET(request: NextRequest) {
         created_at,
         watermark,
         vehicle_id,
+        entity_id,
         deal_id,
         owner_investor_id,
         created_by_profile:created_by(display_name, email),
         investors:owner_investor_id(id, legal_name),
         vehicles:vehicle_id(id, name, type),
+        entity:entity_id(id, name, type),
         deals:deal_id(id, name, status)
       `, { count: 'exact' })
 
     // Apply filters
     if (type) query = query.eq('type', type)
     if (vehicle_id) query = query.eq('vehicle_id', vehicle_id)
+    if (entity_id) query = query.eq('entity_id', entity_id)
     if (deal_id) query = query.eq('deal_id', deal_id)
     if (from_date) query = query.gte('created_at', from_date)
     if (to_date) query = query.lte('created_at', to_date)
@@ -69,6 +74,7 @@ export async function GET(request: NextRequest) {
       const scope: any = {}
       if (doc.investors) scope.investor = doc.investors
       if (doc.vehicles) scope.vehicle = doc.vehicles
+      if (doc.entity) scope.entity = doc.entity
       if (doc.deals) scope.deal = doc.deals
 
       return {
@@ -100,6 +106,7 @@ export async function GET(request: NextRequest) {
       filters_applied: {
         type: type || undefined,
         vehicle_id: vehicle_id || undefined,
+          entity_id: entity_id || undefined,
         deal_id: deal_id || undefined,
         date_range: from_date || to_date ? {
           from: from_date || undefined,

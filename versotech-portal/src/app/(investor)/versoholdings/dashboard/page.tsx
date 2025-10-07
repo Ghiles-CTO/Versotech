@@ -41,23 +41,15 @@ async function getPortfolioData() {
 
       const supabaseUser = { id: user.id, email: user.email }
 
-      console.log('🔍 DEBUG: Looking for user:', supabaseUser.id, supabaseUser.email)
-      console.log('🔍 DEBUG: User ID type:', typeof supabaseUser.id)
-
       // Get investor entities linked to this user
       const { data: investorLinks, error: investorError } = await supabase
         .from('investor_users')
         .select('investor_id')
         .eq('user_id', supabaseUser.id)
 
-      console.log('🔍 DEBUG: investor_users query result:', { investorLinks, investorError })
-
-      // Try a test query to see if we can read investor_users at all
-      const { data: allLinks, error: allError } = await supabase
-        .from('investor_users')
-        .select('*')
-
-      console.log('🔍 DEBUG: All investor_users:', { allLinks, allError })
+      if (investorError) {
+        console.error('Error fetching investor links:', investorError)
+      }
 
       if (!investorLinks || investorLinks.length === 0) {
         return {
@@ -183,8 +175,8 @@ async function getPortfolioData() {
           irr
         },
         hasData: finalContributed > 0 || finalNAV > 0,
-        vehicles: vehicleData || [],
-        recentActivity: recentActivity || []
+          vehicles: vehicleData || [],
+          recentActivity: recentActivity || []
       }
     } catch (error) {
       console.error('Error fetching portfolio data:', error)
@@ -276,6 +268,7 @@ export default async function InvestorDashboard() {
           <RealtimeDashboard
             initialData={{ kpis, vehicles, recentActivity }}
             investorIds={investorIds}
+            userId={user?.id ?? ''}
           />
         ) : (
           /* Welcome Screen for New Users */

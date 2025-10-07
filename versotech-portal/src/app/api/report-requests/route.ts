@@ -150,13 +150,26 @@ export async function POST(request: Request) {
     }
 
     // Create report request
+    const filterPayload = {
+      ...body.filters,
+      scope: body.scope || 'all',
+      from_date: body.fromDate || null,
+      to_date: body.toDate || null,
+      year: body.year || null,
+      currency: body.currency || null,
+      include_excel: body.includeExcel ?? false,
+      include_pdf: body.includePdf ?? true,
+      include_benchmark: body.includeBenchmark ?? false,
+      notes: body.notes || null
+    }
+
     const { data: reportRequest, error: createError } = await supabase
       .from('report_requests')
       .insert({
         investor_id: investorId,
         vehicle_id: body.vehicleId || null,
         report_type: body.reportType,
-        filters: body.filters || {},
+        filters: filterPayload,
         status: 'queued',
         created_by: user.id
       })
@@ -181,7 +194,7 @@ export async function POST(request: Request) {
         investor_id: investorId,
         vehicle_id: body.vehicleId || null,
         report_type: body.reportType,
-        filters: body.filters || {}
+          filters: filterPayload
       }
     }
 
@@ -226,7 +239,7 @@ export async function POST(request: Request) {
       metadata: {
         report_type: body.reportType,
         vehicle_id: body.vehicleId,
-        filters: body.filters
+        filters: filterPayload
       }
     })
 

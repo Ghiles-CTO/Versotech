@@ -125,16 +125,30 @@ export async function GET(request: NextRequest) {
       }
 
       // Transform data
-      const conversation = {
-        ...fullConv,
-        participants: fullConv.conversation_participants?.map((p: any) => p.profiles) || [],
-        messages: fullConv.messages?.filter((m: any) => !m.deleted_at) || []
-      }
+    const filteredMessages = (fullConv.messages || [])
+      .filter((m: any) => !m.deleted_at)
+      .sort((a: any, b: any) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
 
-      return NextResponse.json({
-        conversation,
-        isNew: false
-      })
+    const lastMessage = filteredMessages[filteredMessages.length - 1]
+
+    const conversation = {
+      ...fullConv,
+      participants: fullConv.conversation_participants?.map((p: any) => p.profiles) || [],
+      messages: filteredMessages
+    }
+
+    if (lastMessage) {
+      await supabase
+        .from('conversation_participants')
+        .update({ last_read_at: new Date().toISOString() })
+        .eq('conversation_id', fullConv.id)
+        .eq('user_id', user.id)
+    }
+
+    return NextResponse.json({
+      conversation,
+      isNew: false
+    })
     }
 
     // Create new conversation with staff member
@@ -234,10 +248,14 @@ export async function GET(request: NextRequest) {
       .eq('id', newConversation.id)
       .single()
 
+    const filteredMessages = (fullConv?.messages || [])
+      .filter((m: any) => !m.deleted_at)
+      .sort((a: any, b: any) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+
     const conversation = {
       ...fullConv,
       participants: fullConv?.conversation_participants?.map((p: any) => p.profiles) || [],
-      messages: fullConv?.messages || []
+      messages: filteredMessages
     }
 
     return NextResponse.json({

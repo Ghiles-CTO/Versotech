@@ -130,7 +130,7 @@ export default async function ReconciliationPage() {
 
   return (
     <AppLayout brand="versotech">
-      <div className="p-6 space-y-6">
+      <div className="p-6 space-y-6 text-foreground">
         {/* Page Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -188,7 +188,7 @@ export default async function ReconciliationPage() {
 
         {/* Reconciliation Summary */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <Card>
+          <Card className="bg-white/5 border border-white/10">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                 <Activity className="h-4 w-4" />
@@ -196,7 +196,7 @@ export default async function ReconciliationPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">
+              <div className="text-2xl font-bold text-emerald-200">
                 {reconciliationSummary.matchRate}%
               </div>
               <div className="text-sm text-muted-foreground mt-1">
@@ -214,7 +214,7 @@ export default async function ReconciliationPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">
+              <div className="text-2xl font-bold text-emerald-200">
                 ${reconciliationSummary.reconciledAmount.toLocaleString()}
               </div>
               <div className="text-sm text-muted-foreground mt-1">Successfully matched</div>
@@ -229,7 +229,7 @@ export default async function ReconciliationPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-orange-600">
+              <div className="text-2xl font-bold text-amber-200">
                 ${reconciliationSummary.pendingAmount.toLocaleString()}
               </div>
               <div className="text-sm text-muted-foreground mt-1">Awaiting reconciliation</div>
@@ -244,7 +244,7 @@ export default async function ReconciliationPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-red-600">
+              <div className="text-2xl font-bold text-rose-200">
                 {reconciliationSummary.unmatchedTransactions}
               </div>
               <div className="text-sm text-muted-foreground mt-1">Need attention</div>
@@ -267,12 +267,12 @@ export default async function ReconciliationPage() {
                 const invoice = outstandingInvoices.find(i => i.id === match.invoice_id)
 
                 return (
-                  <div key={match.transaction_id} className="border border-gray-800 rounded-lg p-4 bg-gray-900/30">
+                  <div key={match.transaction_id} className="border border-white/10 rounded-lg p-4 bg-white/5">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-4">
                         <div className={`w-3 h-3 rounded-full ${
-                          match.confidence >= 80 ? 'bg-green-500' :
-                          match.confidence >= 60 ? 'bg-yellow-500' : 'bg-red-500'
+                          match.confidence >= 80 ? 'bg-emerald-400' :
+                          match.confidence >= 60 ? 'bg-amber-400' : 'bg-rose-400'
                         }`} />
                         <div className="flex items-center gap-8">
                           <div>
@@ -295,19 +295,19 @@ export default async function ReconciliationPage() {
                       <div className="flex items-center gap-4">
                         <div className="text-center">
                           <Badge className={
-                            match.confidence >= 80 ? 'bg-green-100 text-green-800' :
-                            match.confidence >= 60 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'
+                            match.confidence >= 80 ? 'bg-emerald-500/15 text-emerald-200 border border-emerald-400/30' :
+                            match.confidence >= 60 ? 'bg-amber-500/15 text-amber-200 border border-amber-400/30' : 'bg-rose-500/20 text-rose-200 border border-rose-400/30'
                           }>
                             {match.confidence}% match
                           </Badge>
                           <div className="text-xs text-muted-foreground mt-1">{match.reason}</div>
                         </div>
                         <div className="flex gap-2">
-                          <Button variant="outline" size="sm">
+                          <Button variant="outline" size="sm" className="border-white/20 text-foreground hover:bg-white/10">
                             <Link className="h-4 w-4 mr-1" />
                             Accept
                           </Button>
-                          <Button variant="outline" size="sm">
+                          <Button variant="outline" size="sm" className="border-white/20 text-foreground hover:bg-white/10">
                             Reject
                           </Button>
                         </div>
@@ -332,12 +332,12 @@ export default async function ReconciliationPage() {
             <CardContent>
               <div className="space-y-4">
                 {bankTransactions.map((transaction) => (
-                  <div key={transaction.id} className="border border-gray-800 rounded-lg p-4 bg-gray-900/30">
+                  <div key={transaction.id} className="border border-white/10 rounded-lg p-4 bg-white/5">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className={`w-3 h-3 rounded-full ${
-                          transaction.status === 'matched' ? 'bg-green-500' :
-                          transaction.status === 'partially_matched' ? 'bg-yellow-500' : 'bg-gray-400'
+                          transaction.status === 'matched' ? 'bg-emerald-400' :
+                          transaction.status === 'partially_matched' ? 'bg-amber-400' : 'bg-sky-400'
                         }`} />
                         <div>
                           <div className="font-medium text-foreground">
@@ -350,9 +350,9 @@ export default async function ReconciliationPage() {
                       </div>
                       <div className="flex items-center gap-2">
                         <Badge variant="outline" className={
-                          transaction.status === 'matched' ? 'border-green-200 text-green-800' :
-                          transaction.status === 'partially_matched' ? 'border-yellow-200 text-yellow-800' :
-                          'border-gray-200 text-foreground'
+                          transaction.status === 'matched' ? 'border-emerald-400/40 text-emerald-200' :
+                          transaction.status === 'partially_matched' ? 'border-amber-400/40 text-amber-200' :
+                          'border-slate-400/40 text-slate-200'
                         }>
                           {transaction.status.replace('_', ' ')}
                         </Badge>
@@ -380,7 +380,7 @@ export default async function ReconciliationPage() {
             <CardContent>
               <div className="space-y-4">
                 {outstandingInvoices.map((invoice) => (
-                  <div key={invoice.id} className="border border-gray-800 rounded-lg p-4 bg-gray-900/30">
+                  <div key={invoice.id} className="border border-white/10 rounded-lg p-4 bg-white/5">
                     <div className="flex items-center justify-between">
                       <div>
                         <div className="font-medium text-foreground">{invoice.id}</div>
@@ -391,9 +391,9 @@ export default async function ReconciliationPage() {
                       <div className="text-right">
                         <div className="font-medium text-foreground">${invoice.total.toLocaleString()}</div>
                         <Badge className={
-                          invoice.days_outstanding > 30 ? 'bg-red-100 text-red-800' :
-                          invoice.days_outstanding > 0 ? 'bg-yellow-100 text-yellow-800' :
-                          'bg-green-100 text-green-800'
+                          invoice.days_outstanding > 30 ? 'bg-rose-500/20 text-rose-200 border border-rose-400/30' :
+                          invoice.days_outstanding > 0 ? 'bg-amber-500/15 text-amber-200 border border-amber-400/30' :
+                          'bg-emerald-500/15 text-emerald-200 border border-emerald-400/30'
                         }>
                           {invoice.days_outstanding === 0 ? 'Due today' :
                            `${invoice.days_outstanding} days overdue`}

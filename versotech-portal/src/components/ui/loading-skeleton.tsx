@@ -20,7 +20,7 @@ export function Skeleton({ className }: SkeletonProps) {
 
 export function KPICardSkeleton() {
   return (
-    <div className="p-6 border rounded-lg bg-white shadow-sm">
+    <div className="p-6 border rounded-lg bg-card shadow-sm">
       <div className="flex items-center justify-between mb-4">
         <Skeleton className="h-4 w-24" />
         <Skeleton className="h-4 w-4 rounded" />
@@ -67,13 +67,13 @@ export function DashboardSkeleton() {
       {/* Content Cards */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
-          <div className="p-6 border rounded-lg bg-white">
+          <div className="p-6 border rounded-lg bg-card">
             <Skeleton className="h-6 w-32 mb-4" />
             <TableSkeleton rows={3} />
           </div>
         </div>
         <div>
-          <div className="p-6 border rounded-lg bg-white">
+          <div className="p-6 border rounded-lg bg-card">
             <Skeleton className="h-6 w-24 mb-4" />
             <div className="space-y-3">
               {Array.from({ length: 4 }).map((_, i) => (

@@ -50,6 +50,7 @@ export interface Document {
   }
   scope: DocumentScope
   watermark?: DocumentWatermark
+  metadata?: Record<string, unknown>
 }
 
 export interface DocumentFilters {

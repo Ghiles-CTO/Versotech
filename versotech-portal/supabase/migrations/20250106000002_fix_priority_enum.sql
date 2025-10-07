@@ -40,3 +40,4 @@ END $$;
 -- Comments for documentation
 COMMENT ON CONSTRAINT approvals_priority_check ON approvals IS
   'Ensures priority values match TypeScript types and SLA calculation logic: low(72h), medium(24h), high(4h), critical(2h)';
+

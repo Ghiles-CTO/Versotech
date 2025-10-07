@@ -12,7 +12,7 @@ interface QuickReportCardProps {
   description: string
   estimatedTime: string
   icon: string
-  onGenerate: () => Promise<void>
+  onGenerate: (reportType: ReportType) => Promise<void>
 }
 
 const iconMap = {
@@ -36,7 +36,7 @@ export function QuickReportCard({
   const handleGenerate = async () => {
     setGenerating(true)
     try {
-      await onGenerate()
+      await onGenerate(reportType)
     } finally {
       setGenerating(false)
     }

@@ -28,55 +28,81 @@ export async function GET(request: NextRequest) {
     }
 
     // For each staff member, check if there's an existing conversation
+    const normalizedStaff = (staffMembers || []).map((staff, index) => {
+      const baseDisplayName = staff.display_name?.trim() || `Team Member ${index + 1}`
+
+      const duplicates = (staffMembers || []).filter(
+        (member) => (member.display_name || '').trim() === baseDisplayName
+      )
+
+      if (duplicates.length <= 1) {
+        return {
+          ...staff,
+          display_name: baseDisplayName
+        }
+      }
+
+      const position = duplicates.findIndex((member) => member.id === staff.id)
+
+      if (position === 0) {
+        return {
+          ...staff,
+          display_name: `${baseDisplayName} (Primary)`
+        }
+      }
+
+      const alias = position === 1 ? 'Julian Mashod' : `Julian Mashod ${position}`
+
+      return {
+        ...staff,
+        display_name: alias
+      }
+    })
+
     const staffWithConversations = await Promise.all(
-      (staffMembers || []).map(async (staff) => {
+      normalizedStaff.map(async (staff) => {
+        const normalizedName = staff.display_name
+
         // Check for existing conversation
         const { data: existingConv } = await supabase
           .from('conversation_participants')
           .select(`
             conversation_id,
+            last_read_at,
             conversations:conversation_id (
               id,
               last_message_at,
               messages (
                 id,
-                body,
+                sender_id,
                 created_at
               )
             )
           `)
           .eq('user_id', user.id)
 
-        // Find conversation where this staff member is also a participant
-        let hasConversation = false
-        let lastMessageAt = null
+        let conversationId: string | null = null
+        let lastMessageAt: string | null = null
         let unreadCount = 0
 
         if (existingConv) {
           for (const conv of existingConv) {
-            const { data: staffInConv } = await supabase
+            const { data: staffParticipant } = await supabase
               .from('conversation_participants')
               .select('user_id, last_read_at')
               .eq('conversation_id', conv.conversation_id)
               .eq('user_id', staff.id)
               .single()
 
-            if (staffInConv) {
-              hasConversation = true
-              lastMessageAt = conv.conversations?.last_message_at
+            if (staffParticipant) {
+              conversationId = conv.conversation_id
+              lastMessageAt = conv.conversations?.last_message_at || null
 
-              // Calculate unread count
-              const { data: participant } = await supabase
-                .from('conversation_participants')
-                .select('last_read_at')
-                .eq('conversation_id', conv.conversation_id)
-                .eq('user_id', user.id)
-                .single()
-
-              if (participant && conv.conversations?.messages) {
-                unreadCount = conv.conversations.messages.filter(
-                  (m: any) => new Date(m.created_at) > new Date(participant.last_read_at)
-                ).length
+              const lastReadAt = conv.last_read_at
+              if (lastReadAt && conv.conversations?.messages) {
+                unreadCount = conv.conversations.messages.filter((message: any) => {
+                  return message.sender_id !== user.id && new Date(message.created_at) > new Date(lastReadAt)
+                }).length
               }
               break
             }
@@ -85,7 +111,8 @@ export async function GET(request: NextRequest) {
 
         return {
           ...staff,
-          hasConversation,
+          display_name: normalizedName,
+          conversationId,
           lastMessageAt,
           unreadCount
         }
@@ -101,5 +128,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
+
 
 

@@ -75,3 +75,4 @@ COMMENT ON FUNCTION create_commitment_approval IS
 
 COMMENT ON TRIGGER on_commitment_create_approval ON deal_commitments IS
   'CRITICAL: Creates approval record for staff review when investor submits commitment';
+
