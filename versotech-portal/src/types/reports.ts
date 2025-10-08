@@ -35,6 +35,7 @@ export type RequestPriority =
   | 'low'                    // Deprioritized requests
   | 'normal'                 // Standard SLA (3 days)
   | 'high'                   // Expedited (2 days)
+  | 'urgent'                 // Critical (1 day)
 
 export type RequestCategory =
   | 'analysis'               // Custom analysis request
@@ -134,6 +135,7 @@ export interface CreateCustomRequestResponse {
 export interface UpdateRequestTicket {
   status?: RequestStatus
   assigned_to?: string
+  priority?: RequestPriority
   completion_note?: string
   result_doc_id?: string
 }
@@ -236,7 +238,7 @@ export function isValidRequestCategory(value: unknown): value is RequestCategory
 }
 
 export function isValidRequestPriority(value: unknown): value is RequestPriority {
-  return ['low', 'medium', 'high', 'urgent'].includes(value as string)
+  return ['low', 'normal', 'high', 'urgent'].includes(value as string)
 }
 
 // ============================================

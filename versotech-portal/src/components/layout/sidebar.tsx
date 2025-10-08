@@ -124,6 +124,13 @@ const staffNavItems: SidebarItem[] = [
     description: 'Operations overview and metrics'
   },
   {
+    name: 'Messages',
+    href: '/versotech/staff/messages',
+    icon: MessageSquare,
+    notificationKey: 'messages',
+    description: 'Investor threads and internal collaboration'
+  },
+  {
     name: 'Approvals',
     href: '/versotech/staff/approvals',
     icon: UserCheck,

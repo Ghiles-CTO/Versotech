@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -41,7 +41,7 @@ interface Message {
 interface Conversation {
   id: string
   subject: string
-  type: 'dm' | 'group' | 'deal_room'
+  type: 'dm' | 'group' | 'deal_room' | 'broadcast'
   deal_id?: string
   created_at: string
   last_message_at: string
@@ -55,8 +55,22 @@ interface Conversation {
   latest_message?: Message
 }
 
-export function ChatInterfaceEnhanced({ className }: { className?: string }) {
-  const [conversations, setConversations] = useState<Conversation[]>([])
+interface ChatInterfaceEnhancedProps {
+  className?: string
+  initialConversations?: Conversation[]
+  visibilityFilter?: 'all' | 'investor' | 'internal' | 'deal'
+  onVisibilityChange?: (visibility: 'all' | 'investor' | 'internal' | 'deal') => void
+  currentUserId?: string
+}
+
+export function ChatInterfaceEnhanced({
+  className,
+  initialConversations = [],
+  visibilityFilter = 'all',
+  onVisibilityChange,
+  currentUserId: propsCurrentUserId
+}: ChatInterfaceEnhancedProps) {
+  const [conversations, setConversations] = useState<Conversation[]>(initialConversations)
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null)
   const [messages, setMessages] = useState<Message[]>([])
   const [newMessage, setNewMessage] = useState('')
@@ -65,26 +79,36 @@ export function ChatInterfaceEnhanced({ className }: { className?: string }) {
   const [searchQuery, setSearchQuery] = useState('')
   const [filterType, setFilterType] = useState<'all' | 'dm' | 'group' | 'deal_room' | 'unread'>('all')
   const [typingUsers, setTypingUsers] = useState<Set<string>>(new Set())
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+  const [currentUserId, setCurrentUserId] = useState<string | null>(propsCurrentUserId || null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const typingTimeoutRef = useRef<NodeJS.Timeout>()
-  const supabase = createClient()
+  const supabase = useMemo(() => createClient(), [])
 
   // Get current user
   useEffect(() => {
+    if (propsCurrentUserId) {
+      setCurrentUserId(propsCurrentUserId)
+      return
+    }
+
     const getCurrentUser = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
         setCurrentUserId(user.id)
       }
     }
+
     getCurrentUser()
-  }, [])
+  }, [propsCurrentUserId, supabase])
 
   // Load conversations on mount
   useEffect(() => {
     loadConversations()
   }, [])
+
+  useEffect(() => {
+    setConversations(initialConversations)
+  }, [initialConversations])
 
   // Subscribe to realtime message updates
   useEffect(() => {
@@ -297,10 +321,11 @@ export function ChatInterfaceEnhanced({ className }: { className?: string }) {
     return 'bg-gray-100 text-gray-800 border-gray-200'
   }
 
-  const getConversationTypeIcon = (type: string) => {
-    if (type === 'deal_room') return <Users className="h-4 w-4" />
-    if (type === 'group') return <Users className="h-4 w-4" />
-    return <MessageSquare className="h-4 w-4" />
+const getConversationTypeIcon = (type: string) => {
+  if (type === 'deal_room') return <Users className="h-4 w-4" />
+  if (type === 'group') return <Users className="h-4 w-4" />
+  if (type === 'broadcast') return <MessageSquare className="h-4 w-4" />
+  return <MessageSquare className="h-4 w-4" />
   }
 
   const filteredConversations = conversations.filter(conv => {

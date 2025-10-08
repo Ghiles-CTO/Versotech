@@ -128,7 +128,7 @@ export function validateCustomRequest(data: CreateCustomRequest): ValidationResu
   }
 
   // Validate priority
-  if (data.priority && !['low', 'normal', 'high'].includes(data.priority)) {
+  if (data.priority && !['low', 'normal', 'high', 'urgent'].includes(data.priority)) {
     errors.push({
       field: 'priority',
       message: 'Invalid priority level'
@@ -172,6 +172,14 @@ export function validateRequestUpdate(data: UpdateRequestTicket): ValidationResu
     errors.push({
       field: 'status',
       message: 'Invalid status'
+    })
+  }
+
+  // Validate priority if provided
+  if (data.priority && !['low', 'normal', 'high', 'urgent'].includes(data.priority)) {
+    errors.push({
+      field: 'priority',
+      message: 'Invalid priority level'
     })
   }
 
@@ -283,7 +291,7 @@ export function isValidRequestCategory(value: any): value is RequestCategory {
  * Check if value is a valid request priority
  */
 export function isValidRequestPriority(value: any): value is RequestPriority {
-  return typeof value === 'string' && ['low', 'normal', 'high'].includes(value)
+  return typeof value === 'string' && ['low', 'normal', 'high', 'urgent'].includes(value)
 }
 
 /**

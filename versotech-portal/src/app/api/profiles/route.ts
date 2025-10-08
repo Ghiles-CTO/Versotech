@@ -24,9 +24,14 @@ export async function GET(request: Request) {
       .select('id, display_name, email, role, title')
       .order('display_name')
 
-    // Apply role filter if provided
+    // Apply role filter if provided (handles comma-separated values)
     if (roleFilter) {
-      query = query.eq('role', roleFilter)
+      const roles = roleFilter.split(',').map(r => r.trim())
+      if (roles.length === 1) {
+        query = query.eq('role', roles[0])
+      } else {
+        query = query.in('role', roles)
+      }
     }
 
     const { data: profiles, error } = await query

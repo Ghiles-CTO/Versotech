@@ -68,12 +68,12 @@ export async function POST(
       return NextResponse.json({ error: 'Invalid staff member' }, { status: 400 })
     }
 
+    // Update only existing columns; set status to 'assigned'
     const { data: updateResult, error: updateError } = await client
       .from('request_tickets')
       .update({
         assigned_to: assigneeProfile.id,
-        assigned_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+        status: 'assigned',
       })
       .eq('id', id)
       .select(

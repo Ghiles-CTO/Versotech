@@ -83,8 +83,17 @@ export async function GET(request: Request) {
     if (filters.priority && filters.priority !== 'all') {
       query = query.eq('priority', filters.priority)
     }
+    
+    // Handle 'assigned_to = me' filter - skip for demo users with non-UUID IDs
     if (filters.assigned_to === 'me') {
-      query = query.eq('assigned_to', user.id)
+      // Check if user.id is a valid UUID
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+      if (uuidRegex.test(user.id)) {
+        query = query.eq('assigned_to', user.id)
+      } else {
+        // For demo users, return empty results for 'my tasks'
+        query = query.eq('id', '00000000-0000-0000-0000-000000000000')
+      }
     } else if (filters.assigned_to && filters.assigned_to !== 'all') {
       query = query.eq('assigned_to', filters.assigned_to)
     }

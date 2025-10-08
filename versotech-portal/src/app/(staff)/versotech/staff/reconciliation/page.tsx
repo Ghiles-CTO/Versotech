@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Progress } from '@/components/ui/progress'
 import {
@@ -25,113 +25,59 @@ import {
   TrendingUp,
   Activity
 } from 'lucide-react'
-import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-
-// Mock data - in production this would come from the database
-const reconciliationSummary = {
-  totalTransactions: 247,
-  matchedTransactions: 189,
-  unmatchedTransactions: 58,
-  matchRate: 76.5,
-  pendingAmount: 145670.50,
-  reconciledAmount: 2847392.25
-}
-
-const bankTransactions = [
-  {
-    id: '1',
-    account_ref: 'VERSO-CHF-001',
-    amount: 50000.00,
-    currency: 'USD',
-    value_date: '2024-03-10',
-    memo: 'WIRE TRANSFER FROM GOLDMAN SACHS PRIVATE WEALTH',
-    counterparty: 'Goldman Sachs',
-    status: 'matched',
-    matched_invoice: 'INV-2024-001',
-    matched_amount: 50000.00,
-    import_batch_id: 'BATCH-001'
-  },
-  {
-    id: '2',
-    account_ref: 'VERSO-CHF-001',
-    amount: 25000.00,
-    currency: 'USD',
-    value_date: '2024-03-09',
-    memo: 'SUBSCRIPTION FEE - TECH GROWTH OPPORTUNITY',
-    counterparty: 'MERIDIAN CAPITAL',
-    status: 'unmatched',
-    matched_invoice: null,
-    matched_amount: null,
-    import_batch_id: 'BATCH-001'
-  },
-  {
-    id: '3',
-    account_ref: 'VERSO-EUR-001',
-    amount: 75000.00,
-    currency: 'EUR',
-    value_date: '2024-03-08',
-    memo: 'MANAGEMENT FEE Q1 2024',
-    counterparty: 'FAMILY OFFICE NETWORK',
-    status: 'partially_matched',
-    matched_invoice: 'INV-2024-002',
-    matched_amount: 50000.00,
-    import_batch_id: 'BATCH-002'
-  }
-]
-
-const outstandingInvoices = [
-  {
-    id: 'INV-2024-003',
-    investor_name: 'Tech Ventures LLC',
-    deal_name: 'Real Estate Secondary',
-    total: 35000.00,
-    currency: 'USD',
-    due_date: '2024-03-15',
-    status: 'sent',
-    days_outstanding: 5
-  },
-  {
-    id: 'INV-2024-004',
-    investor_name: 'Elite Family Office',
-    deal_name: 'Credit Trade Finance',
-    total: 25000.00,
-    currency: 'USD',
-    due_date: '2024-03-20',
-    status: 'sent',
-    days_outstanding: 0
-  }
-]
-
-const suggestedMatches = [
-  {
-    transaction_id: '2',
-    invoice_id: 'INV-2024-003',
-    confidence: 85,
-    reason: 'Amount and counterparty match',
-    amount_difference: 0
-  },
-  {
-    transaction_id: '3',
-    invoice_id: 'INV-2024-004',
-    confidence: 65,
-    reason: 'Partial amount match, similar counterparty',
-    amount_difference: 25000
-  }
-]
+import { requireStaffAuth } from '@/lib/auth'
+import { createClient } from '@/lib/supabase/server'
 
 export default async function ReconciliationPage() {
-  const supabase = await createClient()
-  const { data: { user }, error } = await supabase.auth.getUser()
-
-  if (error || !user) {
+  const profile = await requireStaffAuth()
+  if (!profile) {
     redirect('/versotech/login')
+  }
+
+  const supabase = await createClient()
+
+  const { data: summaryData } = await supabase.rpc('get_reconciliation_summary')
+  const summary = summaryData?.[0] ?? {
+    total_transactions: 0,
+    matched_transactions: 0,
+    unmatched_transactions: 0,
+    match_rate: 0,
+    reconciled_amount: 0,
+    pending_amount: 0
+  }
+
+  const { data: bankTransactions = [] } = await supabase
+    .from('bank_transactions')
+    .select('id, account_ref, amount, currency, value_date, memo, counterparty, status, matched_invoice_ids')
+    .order('value_date', { ascending: false })
+    .limit(50)
+
+  const { data: invoices = [] } = await supabase
+    .from('invoices')
+    .select('id, investors:investors!invoices_investor_id_fkey(legal_name), deals:deals!invoices_deal_id_fkey(name), total, currency, due_date, status')
+    .in('status', ['sent', 'overdue', 'partially_paid'])
+    .order('due_date', { ascending: true })
+    .limit(25)
+
+  const { data: suggestedMatches = [] } = await supabase
+    .from('suggested_matches')
+    .select('id, bank_transaction_id, invoice_id, confidence, match_reason, amount_difference')
+    .order('confidence', { ascending: false })
+    .limit(20)
+
+  const summaryDisplay = {
+    matchRate: Number(summary.match_rate ?? 0),
+    matchedTransactions: Number(summary.matched_transactions ?? 0),
+    totalTransactions: Number(summary.total_transactions ?? 0),
+    reconciledAmount: Number(summary.reconciled_amount ?? 0),
+    pendingAmount: Number(summary.pending_amount ?? 0),
+    unmatchedTransactions: Number(summary.unmatched_transactions ?? 0)
   }
 
   return (
     <AppLayout brand="versotech">
       <div className="p-6 space-y-6 text-foreground">
-        {/* Page Header */}
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-foreground">Bank Reconciliation</h1>
@@ -142,7 +88,7 @@ export default async function ReconciliationPage() {
           <div className="flex gap-2">
             <Dialog>
               <DialogTrigger asChild>
-                <Button variant="outline">
+                <Button variant="outline" disabled>
                   <Upload className="h-4 w-4 mr-2" />
                   Import Bank Data
                 </Button>
@@ -154,39 +100,29 @@ export default async function ReconciliationPage() {
                 <div className="space-y-4">
                   <div>
                     <Label htmlFor="account">Bank Account</Label>
-                    <Select>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select account" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="verso-chf-001">VERSO CHF Account</SelectItem>
-                        <SelectItem value="verso-eur-001">VERSO EUR Account</SelectItem>
-                        <SelectItem value="verso-usd-001">VERSO USD Account</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <Input id="account" placeholder="Account selection coming soon" disabled />
                   </div>
                   <div>
                     <Label htmlFor="file">CSV File</Label>
-                    <Input id="file" type="file" accept=".csv" />
+                    <Input id="file" type="file" accept=".csv" disabled />
                   </div>
                   <div className="text-sm text-muted-foreground">
-                    <p>Supported formats: CSV with columns: Date, Amount, Currency, Reference, Counterparty</p>
+                    Upload workflow will be enabled in a future iteration.
                   </div>
                   <div className="flex justify-end gap-2">
-                    <Button variant="outline">Cancel</Button>
-                    <Button>Import</Button>
+                    <Button variant="outline">Close</Button>
+                    <Button disabled>Import</Button>
                   </div>
                 </div>
               </DialogContent>
             </Dialog>
-            <Button>
+            <Button disabled>
               <RefreshCw className="h-4 w-4 mr-2" />
               Run Auto-Match
             </Button>
           </div>
         </div>
 
-        {/* Reconciliation Summary */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <Card className="bg-white/5 border border-white/10">
             <CardHeader className="pb-3">
@@ -197,12 +133,12 @@ export default async function ReconciliationPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-emerald-200">
-                {reconciliationSummary.matchRate}%
+                {summaryDisplay.matchRate}%
               </div>
               <div className="text-sm text-muted-foreground mt-1">
-                {reconciliationSummary.matchedTransactions} of {reconciliationSummary.totalTransactions}
+                {summaryDisplay.matchedTransactions} of {summaryDisplay.totalTransactions}
               </div>
-              <Progress value={reconciliationSummary.matchRate} className="mt-2" />
+              <Progress value={summaryDisplay.matchRate} className="mt-2" />
             </CardContent>
           </Card>
 
@@ -215,7 +151,7 @@ export default async function ReconciliationPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-emerald-200">
-                ${reconciliationSummary.reconciledAmount.toLocaleString()}
+                ${summaryDisplay.reconciledAmount.toLocaleString()}
               </div>
               <div className="text-sm text-muted-foreground mt-1">Successfully matched</div>
             </CardContent>
@@ -230,7 +166,7 @@ export default async function ReconciliationPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-amber-200">
-                ${reconciliationSummary.pendingAmount.toLocaleString()}
+                ${summaryDisplay.pendingAmount.toLocaleString()}
               </div>
               <div className="text-sm text-muted-foreground mt-1">Awaiting reconciliation</div>
             </CardContent>
@@ -245,29 +181,30 @@ export default async function ReconciliationPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-rose-200">
-                {reconciliationSummary.unmatchedTransactions}
+                {summaryDisplay.unmatchedTransactions}
               </div>
               <div className="text-sm text-muted-foreground mt-1">Need attention</div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Suggested Matches */}
         <Card>
           <CardHeader>
             <CardTitle>Suggested Matches</CardTitle>
             <CardDescription>
-              AI-powered suggestions for matching bank transactions with invoices
+              Suggestions for matching bank transactions with invoices
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
+              {suggestedMatches.length === 0 && (
+                <div className="text-sm text-muted-foreground">No suggested matches available.</div>
+              )}
               {suggestedMatches.map((match) => {
-                const transaction = bankTransactions.find(t => t.id === match.transaction_id)
-                const invoice = outstandingInvoices.find(i => i.id === match.invoice_id)
-
+                const transaction = bankTransactions.find(t => t.id === match.bank_transaction_id)
+                const invoice = invoices.find(i => i.id === match.invoice_id)
                 return (
-                  <div key={match.transaction_id} className="border border-white/10 rounded-lg p-4 bg-white/5">
+                  <div key={match.id} className="border border-white/10 rounded-lg p-4 bg-white/5">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-4">
                         <div className={`w-3 h-3 rounded-full ${
@@ -278,17 +215,17 @@ export default async function ReconciliationPage() {
                           <div>
                             <div className="font-medium text-foreground">Bank Transaction</div>
                             <div className="text-sm text-muted-foreground">
-                              ${transaction?.amount.toLocaleString()} • {transaction?.counterparty}
+                              ${transaction?.amount.toLocaleString() ?? '0'} • {transaction?.counterparty ?? 'Unknown'}
                             </div>
-                            <div className="text-xs text-muted-foreground">{transaction?.value_date}</div>
+                            <div className="text-xs text-muted-foreground">{transaction?.value_date ?? '—'}</div>
                           </div>
                           <ArrowRight className="h-4 w-4 text-muted-foreground" />
                           <div>
                             <div className="font-medium text-foreground">Invoice</div>
                             <div className="text-sm text-muted-foreground">
-                              ${invoice?.total.toLocaleString()} • {invoice?.investor_name}
+                              ${invoice?.total.toLocaleString() ?? '0'} • {invoice?.investors?.legal_name ?? 'Unknown investor'}
                             </div>
-                            <div className="text-xs text-muted-foreground">{invoice?.deal_name}</div>
+                            <div className="text-xs text-muted-foreground">{invoice?.deals?.name ?? 'No deal'}</div>
                           </div>
                         </div>
                       </div>
@@ -300,14 +237,14 @@ export default async function ReconciliationPage() {
                           }>
                             {match.confidence}% match
                           </Badge>
-                          <div className="text-xs text-muted-foreground mt-1">{match.reason}</div>
+                          <div className="text-xs text-muted-foreground mt-1">{match.match_reason}</div>
                         </div>
                         <div className="flex gap-2">
-                          <Button variant="outline" size="sm" className="border-white/20 text-foreground hover:bg-white/10">
+                          <Button variant="outline" size="sm" disabled>
                             <Link className="h-4 w-4 mr-1" />
                             Accept
                           </Button>
-                          <Button variant="outline" size="sm" className="border-white/20 text-foreground hover:bg-white/10">
+                          <Button variant="outline" size="sm" disabled>
                             Reject
                           </Button>
                         </div>
@@ -321,7 +258,6 @@ export default async function ReconciliationPage() {
         </Card>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Bank Transactions */}
           <Card>
             <CardHeader>
               <CardTitle>Bank Transactions</CardTitle>
@@ -331,6 +267,9 @@ export default async function ReconciliationPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
+                {bankTransactions.length === 0 && (
+                  <div className="text-sm text-muted-foreground">No bank transactions found.</div>
+                )}
                 {bankTransactions.map((transaction) => (
                   <div key={transaction.id} className="border border-white/10 rounded-lg p-4 bg-white/5">
                     <div className="flex items-center justify-between">
@@ -343,7 +282,7 @@ export default async function ReconciliationPage() {
                           <div className="font-medium text-foreground">
                             ${transaction.amount.toLocaleString()} {transaction.currency}
                           </div>
-                          <div className="text-sm text-muted-foreground">{transaction.counterparty}</div>
+                          <div className="text-sm text-muted-foreground">{transaction.counterparty ?? 'Unknown counterparty'}</div>
                           <div className="text-xs text-muted-foreground">{transaction.memo}</div>
                           <div className="text-xs text-muted-foreground">{transaction.value_date}</div>
                         </div>
@@ -356,11 +295,10 @@ export default async function ReconciliationPage() {
                         }>
                           {transaction.status.replace('_', ' ')}
                         </Badge>
-                        {transaction.status === 'unmatched' && (
-                          <Button variant="outline" size="sm">
-                            <Link className="h-4 w-4" />
-                          </Button>
-                        )}
+                        <Button variant="outline" size="sm" disabled>
+                          <Link className="h-4 w-4 mr-1" />
+                          Match
+                        </Button>
                       </div>
                     </div>
                   </div>
@@ -369,34 +307,36 @@ export default async function ReconciliationPage() {
             </CardContent>
           </Card>
 
-          {/* Outstanding Invoices */}
           <Card>
             <CardHeader>
               <CardTitle>Outstanding Invoices</CardTitle>
               <CardDescription>
-                Invoices awaiting payment reconciliation
+                Invoices awaiting payment or match
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {outstandingInvoices.map((invoice) => (
+                {invoices.length === 0 && (
+                  <div className="text-sm text-muted-foreground">No outstanding invoices.</div>
+                )}
+                {invoices.map((invoice) => (
                   <div key={invoice.id} className="border border-white/10 rounded-lg p-4 bg-white/5">
                     <div className="flex items-center justify-between">
                       <div>
-                        <div className="font-medium text-foreground">{invoice.id}</div>
-                        <div className="text-sm text-muted-foreground">{invoice.investor_name}</div>
-                        <div className="text-xs text-muted-foreground">{invoice.deal_name}</div>
-                        <div className="text-xs text-muted-foreground">Due: {invoice.due_date}</div>
+                        <div className="font-medium text-foreground">
+                          {invoice.id}
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          {invoice.investors?.legal_name ?? 'Unknown investor'} • {invoice.deals?.name ?? 'No deal'}
+                        </div>
+                        <div className="text-xs text-muted-foreground">Due {invoice.due_date}</div>
                       </div>
                       <div className="text-right">
-                        <div className="font-medium text-foreground">${invoice.total.toLocaleString()}</div>
-                        <Badge className={
-                          invoice.days_outstanding > 30 ? 'bg-rose-500/20 text-rose-200 border border-rose-400/30' :
-                          invoice.days_outstanding > 0 ? 'bg-amber-500/15 text-amber-200 border border-amber-400/30' :
-                          'bg-emerald-500/15 text-emerald-200 border border-emerald-400/30'
-                        }>
-                          {invoice.days_outstanding === 0 ? 'Due today' :
-                           `${invoice.days_outstanding} days overdue`}
+                        <div className="font-semibold text-foreground">
+                          ${invoice.total.toLocaleString()} {invoice.currency}
+                        </div>
+                        <Badge variant="outline" className="border-white/20 text-foreground">
+                          {invoice.status.replace('_', ' ')}
                         </Badge>
                       </div>
                     </div>
@@ -406,58 +346,6 @@ export default async function ReconciliationPage() {
             </CardContent>
           </Card>
         </div>
-
-        {/* Manual Matching */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Manual Matching</CardTitle>
-            <CardDescription>
-              Manually link bank transactions with invoices
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <Label htmlFor="transaction">Select Transaction</Label>
-                <Select>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Choose transaction" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {bankTransactions
-                      .filter(t => t.status === 'unmatched')
-                      .map(t => (
-                        <SelectItem key={t.id} value={t.id}>
-                          ${t.amount.toLocaleString()} - {t.counterparty}
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="invoice">Select Invoice</Label>
-                <Select>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Choose invoice" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {outstandingInvoices.map(i => (
-                      <SelectItem key={i.id} value={i.id}>
-                        {i.id} - ${i.total.toLocaleString()}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex items-end">
-                <Button>
-                  <Link className="h-4 w-4 mr-2" />
-                  Create Match
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </AppLayout>
   )

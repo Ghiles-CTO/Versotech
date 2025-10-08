@@ -25,6 +25,7 @@
 | /versotech/staff/investors | src/app/(staff)/versotech/staff/investors/page.tsx | Investor directory for staff. |
 | /versotech/staff/documents | src/app/(staff)/versotech/staff/documents/page.tsx | Staff document workspace. |
 | /versotech/staff/documents/automation | src/app/(staff)/versotech/staff/documents/automation/page.tsx | Doc package automation + e-sign tracking. |
+| /versotech/staff/messages | src/app/(staff)/versotech/staff/messages/page.tsx | Staff messaging inbox with investor DM integration. |
 | /versotech/staff/fees | src/app/(staff)/versotech/staff/fees/page.tsx | Fee events and invoicing UI. |
 | /versotech/staff/reconciliation | src/app/(staff)/versotech/staff/reconciliation/page.tsx | Bank transaction reconciliation flows. |
 | /versotech/staff/approvals | src/app/(staff)/versotech/staff/approvals/page.tsx | Approvals queue UI. |

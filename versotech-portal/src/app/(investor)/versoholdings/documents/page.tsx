@@ -1,7 +1,9 @@
 import { AppLayout } from '@/components/layout/app-layout'
 import { createClient } from '@/lib/supabase/server'
 import { CategorizedDocumentsClient } from '@/components/documents/categorized-documents-client'
+import { InvestorFoldersClient } from '@/components/documents/investor-folders-client'
 import { Document, DocumentScope } from '@/types/documents'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { redirect } from 'next/navigation'
 
 export default async function DocumentsPage({
@@ -81,6 +83,7 @@ export default async function DocumentsPage({
 
   const baseSelect = `
       id,
+      name,
       type,
       file_key,
       created_at,
@@ -88,10 +91,13 @@ export default async function DocumentsPage({
       vehicle_id,
       deal_id,
       owner_investor_id,
+      folder_id,
+      is_published,
       created_by_profile:created_by(display_name, email),
       investors:owner_investor_id(id, legal_name),
       vehicles:vehicle_id(id, name, type),
-      deals:deal_id(id, name, status)
+      deals:deal_id(id, name, status),
+      folder:document_folders(id, name, path, folder_type)
     `
 
   const documentsMap = new Map<string, Document>()
@@ -135,6 +141,7 @@ export default async function DocumentsPage({
       .select(baseSelect)
       .in('owner_investor_id', investorIds)
       .is('deal_id', null)
+      .eq('is_published', true)
       .order('created_at', { ascending: false })
 
     if (ownerDocsError) {
@@ -158,6 +165,7 @@ export default async function DocumentsPage({
       .select(baseSelect)
       .in('vehicle_id', vehicleIds)
       .is('deal_id', null)
+      .eq('is_published', true)
       .order('created_at', { ascending: false })
 
     if (vehicleDocsError) {
@@ -174,12 +182,38 @@ export default async function DocumentsPage({
   documents = Array.from(documentsMap.values())
   console.log('[DocumentsPage] Total documents collected:', documents.length)
 
+  // Fetch accessible folders
+  const { data: foldersData } = await supabase
+    .from('document_folders')
+    .select('*')
+    .order('path', { ascending: true })
+
+  const folders = foldersData || []
+
   return (
     <AppLayout brand="versoholdings">
-      <CategorizedDocumentsClient
-        initialDocuments={documents}
-        vehicles={vehicles}
-      />
+      <div className="p-6">
+        <Tabs defaultValue="folders" className="w-full">
+          <TabsList className="mb-6">
+            <TabsTrigger value="folders">By Folders</TabsTrigger>
+            <TabsTrigger value="categories">By Categories</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="folders">
+            <InvestorFoldersClient
+              folders={folders}
+              documents={documents}
+            />
+          </TabsContent>
+          
+          <TabsContent value="categories">
+            <CategorizedDocumentsClient
+              initialDocuments={documents}
+              vehicles={vehicles}
+            />
+          </TabsContent>
+        </Tabs>
+      </div>
     </AppLayout>
   )
 }

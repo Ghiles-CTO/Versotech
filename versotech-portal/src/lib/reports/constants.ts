@@ -111,12 +111,14 @@ export const REQUEST_CATEGORIES: Record<RequestCategory, CategoryConfig> = {
 // ============================================
 
 export const SLA_BY_PRIORITY: Record<RequestPriority, number> = {
+  urgent: 1 * 24 * 60 * 60 * 1000, // 1 day
   high: 2 * 24 * 60 * 60 * 1000,   // 2 days
   normal: 3 * 24 * 60 * 60 * 1000, // 3 days
   low: 5 * 24 * 60 * 60 * 1000,    // 5 days
 }
 
 export const SLA_LABELS: Record<RequestPriority, string> = {
+  urgent: '1 day',
   high: '2 days',
   normal: '3 days',
   low: '5 days',
@@ -214,6 +216,11 @@ export const PRIORITY_CONFIG: Record<
     badge: 'default' | 'secondary' | 'destructive' | 'outline'
   }
 > = {
+  urgent: {
+    label: 'Urgent',
+    color: 'red',
+    badge: 'destructive',
+  },
   high: {
     label: 'High',
     color: 'orange',

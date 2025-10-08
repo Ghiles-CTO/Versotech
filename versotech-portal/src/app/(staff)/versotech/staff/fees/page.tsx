@@ -4,127 +4,91 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Switch } from '@/components/ui/switch'
 import {
   Plus,
   Edit,
   Copy,
-  Trash2,
   DollarSign,
-  Percent,
   TrendingUp,
   Calculator,
   Settings,
   Users,
   Calendar,
   Target,
-  PieChart,
   BarChart3,
   Activity,
   Clock
 } from 'lucide-react'
-import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-
-// Mock data - in production this would come from the database
-const feePlans = [
-  {
-    id: '1',
-    name: 'Standard Investor Plan',
-    description: 'Default fee structure for individual investors',
-    deal_name: 'Tech Growth Opportunity',
-    is_default: true,
-    created_at: '2024-01-15',
-    components: [
-      { kind: 'subscription', calc_method: 'percent_of_investment', rate_bps: 200, frequency: 'one_time' },
-      { kind: 'management', calc_method: 'percent_per_annum', rate_bps: 200, frequency: 'annual' },
-      { kind: 'performance', calc_method: 'percent_of_profit', rate_bps: 2000, frequency: 'on_exit', hurdle_rate_bps: 800 }
-    ]
-  },
-  {
-    id: '2',
-    name: 'Institutional Premium',
-    description: 'Reduced fees for large institutional commitments',
-    deal_name: 'Real Estate Secondary',
-    is_default: false,
-    created_at: '2024-02-20',
-    components: [
-      { kind: 'subscription', calc_method: 'percent_of_investment', rate_bps: 150, frequency: 'one_time' },
-      { kind: 'management', calc_method: 'percent_per_annum', rate_bps: 150, frequency: 'annual' },
-      { kind: 'performance', calc_method: 'percent_of_profit', rate_bps: 1500, frequency: 'on_exit', hurdle_rate_bps: 600 }
-    ]
-  },
-  {
-    id: '3',
-    name: 'Credit Trade Finance',
-    description: 'Special fee structure for credit opportunities',
-    deal_name: 'Credit Trade Finance',
-    is_default: true,
-    created_at: '2024-03-01',
-    components: [
-      { kind: 'subscription', calc_method: 'percent_of_investment', rate_bps: 100, frequency: 'one_time' },
-      { kind: 'spread_markup', calc_method: 'per_unit_spread', rate_bps: 300, frequency: 'one_time' },
-      { kind: 'management', calc_method: 'percent_per_annum', rate_bps: 100, frequency: 'quarterly' }
-    ]
-  }
-]
-
-const investorTerms = [
-  {
-    id: '1',
-    investor_name: 'Goldman Sachs Private Wealth',
-    deal_name: 'Tech Growth Opportunity',
-    selected_plan: 'Institutional Premium',
-    overrides: {
-      performance_rate: 1200,
-      management_rate: 100
-    },
-    status: 'active',
-    created_at: '2024-03-05'
-  },
-  {
-    id: '2',
-    investor_name: 'Family Office Network',
-    deal_name: 'Real Estate Secondary',
-    selected_plan: 'Standard Investor Plan',
-    overrides: null,
-    status: 'active',
-    created_at: '2024-03-08'
-  }
-]
-
-const feeEvents = [
-  {
-    id: '1',
-    investor_name: 'Goldman Sachs Private Wealth',
-    deal_name: 'Tech Growth Opportunity',
-    fee_type: 'subscription',
-    event_date: '2024-03-10',
-    base_amount: 100000.00,
-    computed_amount: 1500.00,
-    status: 'invoiced'
-  },
-  {
-    id: '2',
-    investor_name: 'Family Office Network',
-    deal_name: 'Real Estate Secondary',
-    fee_type: 'management',
-    event_date: '2024-03-01',
-    base_amount: 250000.00,
-    computed_amount: 1250.00,
-    status: 'accrued'
-  }
-]
+import { requireStaffAuth } from '@/lib/auth'
+import { createClient } from '@/lib/supabase/server'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 export default async function FeesPage() {
-  const supabase = await createClient()
-  const { data: { user }, error } = await supabase.auth.getUser()
-
-  if (error || !user) {
+  const profile = await requireStaffAuth()
+  if (!profile) {
     redirect('/versotech/login')
+  }
+
+  const supabase = await createClient()
+
+  const { data: feePlans = [], error: feePlansError } = await supabase
+    .from('fee_plans')
+    .select(`
+      id,
+      name,
+      description,
+      deals:deals!fee_plans_deal_id_fkey ( name ),
+      is_default,
+      created_at,
+      fee_components (
+        id,
+        kind,
+        calc_method,
+        rate_bps,
+        frequency,
+        hurdle_rate_bps
+      )
+    `)
+    .order('created_at', { ascending: false })
+
+  const { data: investorTerms = [], error: investorTermsError } = await supabase
+    .from('investor_terms')
+    .select(`
+      id,
+      status,
+      created_at,
+      justification,
+      investors:investors!investor_terms_investor_id_fkey ( legal_name ),
+      deals:deals!investor_terms_deal_id_fkey ( name ),
+      fee_plans:fee_plans!investor_terms_selected_fee_plan_id_fkey ( name ),
+      overrides
+    `)
+    .order('created_at', { ascending: false })
+
+  const { data: feeEvents = [], error: feeEventsError } = await supabase
+    .from('fee_events')
+    .select(`
+      id,
+      investor_id,
+      deals:deals!fee_events_deal_id_fkey ( name ),
+      investors:investors!fee_events_investor_id_fkey ( legal_name ),
+      fee_type,
+      event_date,
+      base_amount,
+      computed_amount,
+      status
+    `)
+    .order('event_date', { ascending: false })
+    .limit(50)
+
+  if (feePlansError || investorTermsError || feeEventsError) {
+    console.error('Failed to load fee data', {
+      feePlansError,
+      investorTermsError,
+      feeEventsError
+    })
   }
 
   return (
@@ -138,108 +102,10 @@ export default async function FeesPage() {
               Configure fee plans, manage investor-specific terms, and track fee events
             </p>
           </div>
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                Create Fee Plan
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl">
-              <DialogHeader>
-                <DialogTitle>Create New Fee Plan</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="plan_name">Plan Name</Label>
-                    <Input id="plan_name" placeholder="e.g. Premium Institutional" />
-                  </div>
-                  <div>
-                    <Label htmlFor="deal">Associated Deal</Label>
-                    <Select>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select deal" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="tech-growth">Tech Growth Opportunity</SelectItem>
-                        <SelectItem value="real-estate">Real Estate Secondary</SelectItem>
-                        <SelectItem value="credit">Credit Trade Finance</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <div>
-                  <Label htmlFor="description">Description</Label>
-                  <Input id="description" placeholder="Brief description of this fee plan" />
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Switch id="default_plan" />
-                  <Label htmlFor="default_plan">Set as default plan for this deal</Label>
-                </div>
-                <div className="border-t pt-4">
-                  <h4 className="font-medium mb-3">Fee Components</h4>
-                  <div className="space-y-3">
-                    <div className="grid grid-cols-4 gap-3">
-                      <div>
-                        <Label>Type</Label>
-                        <Select>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="subscription">Subscription</SelectItem>
-                            <SelectItem value="management">Management</SelectItem>
-                            <SelectItem value="performance">Performance</SelectItem>
-                            <SelectItem value="spread_markup">Spread</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div>
-                        <Label>Rate (bps)</Label>
-                        <Input type="number" placeholder="200" />
-                      </div>
-                      <div>
-                        <Label>Method</Label>
-                        <Select>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="percent_of_investment">% of Investment</SelectItem>
-                            <SelectItem value="percent_per_annum">% per Annum</SelectItem>
-                            <SelectItem value="percent_of_profit">% of Profit</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div>
-                        <Label>Frequency</Label>
-                        <Select>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="one_time">One Time</SelectItem>
-                            <SelectItem value="annual">Annual</SelectItem>
-                            <SelectItem value="quarterly">Quarterly</SelectItem>
-                            <SelectItem value="on_exit">On Exit</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                    <Button variant="outline" size="sm">
-                      <Plus className="h-4 w-4 mr-1" />
-                      Add Component
-                    </Button>
-                  </div>
-                </div>
-                <div className="flex justify-end gap-2">
-                  <Button variant="outline">Cancel</Button>
-                  <Button>Create Plan</Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
+          <Button disabled>
+            <Plus className="h-4 w-4 mr-2" />
+            Create Fee Plan
+          </Button>
         </div>
 
         {/* Summary Cards */}
@@ -321,7 +187,7 @@ export default async function FeesPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {feePlans.map((plan) => (
+                {feePlans.map((plan) => (
                     <div key={plan.id} className="border border-gray-800 rounded-lg p-4 bg-gray-900/30">
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-3">
@@ -329,7 +195,7 @@ export default async function FeesPage() {
                             <h3 className="font-semibold text-foreground">{plan.name}</h3>
                             <div className="text-sm text-muted-foreground">{plan.description}</div>
                             <div className="text-xs text-muted-foreground mt-1">
-                              {plan.deal_name} • Created {new Date(plan.created_at).toLocaleDateString()}
+                              {plan.deals?.name ?? 'Unassigned'} • Created {new Date(plan.created_at).toLocaleDateString()}
                             </div>
                           </div>
                           {plan.is_default && (
@@ -346,8 +212,8 @@ export default async function FeesPage() {
                         </div>
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        {plan.components.map((component, idx) => (
-                          <div key={idx} className="bg-black/40 border border-gray-800 rounded p-3">
+                        {plan.fee_components?.map((component, idx) => (
+                          <div key={component.id ?? idx} className="bg-black/40 border border-gray-800 rounded p-3">
                             <div className="flex items-center gap-2 mb-2">
                               {component.kind === 'subscription' && <Target className="h-4 w-4 text-blue-400" />}
                               {component.kind === 'management' && <Calendar className="h-4 w-4 text-green-400" />}
@@ -383,16 +249,16 @@ export default async function FeesPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {investorTerms.map((terms) => (
+                {investorTerms.map((terms) => (
                     <div key={terms.id} className="border border-gray-800 rounded-lg p-4 bg-gray-900/30">
                       <div className="flex items-center justify-between">
                         <div>
-                          <h3 className="font-semibold text-foreground">{terms.investor_name}</h3>
-                          <div className="text-sm text-muted-foreground">{terms.deal_name}</div>
+                          <h3 className="font-semibold text-foreground">{terms.investors?.legal_name ?? 'Unknown investor'}</h3>
+                          <div className="text-sm text-muted-foreground">{terms.deals?.name ?? 'Unassigned deal'}</div>
                           <div className="text-sm text-muted-foreground mt-1">
-                            Plan: {terms.selected_plan} • {new Date(terms.created_at).toLocaleDateString()}
+                            Plan: {terms.fee_plans?.name ?? 'Custom'} • {new Date(terms.created_at).toLocaleDateString()}
                           </div>
-                          {terms.overrides && (
+                          {terms.overrides && Object.keys(terms.overrides).length > 0 && (
                             <div className="flex gap-4 mt-2">
                               {Object.entries(terms.overrides).map(([key, value]) => (
                                 <Badge key={key} variant="outline" className="text-xs">
@@ -428,7 +294,7 @@ export default async function FeesPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {feeEvents.map((event) => (
+                {feeEvents.map((event) => (
                     <div key={event.id} className="border border-gray-800 rounded-lg p-4 bg-gray-900/30">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
@@ -437,10 +303,10 @@ export default async function FeesPage() {
                             event.status === 'accrued' ? 'bg-yellow-500' : 'bg-gray-400'
                           }`} />
                           <div>
-                            <h3 className="font-medium text-foreground">{event.investor_name}</h3>
-                            <div className="text-sm text-muted-foreground">{event.deal_name}</div>
+                            <h3 className="font-medium text-foreground">{event.investors?.legal_name ?? 'Unknown investor'}</h3>
+                            <div className="text-sm text-muted-foreground">{event.deals?.name ?? 'Unassigned deal'}</div>
                             <div className="text-sm text-muted-foreground">
-                              {event.fee_type.charAt(0).toUpperCase() + event.fee_type.slice(1)} fee • {event.event_date}
+                              {event.fee_type ? event.fee_type.charAt(0).toUpperCase() + event.fee_type.slice(1) : 'Fee'} fee • {event.event_date}
                             </div>
                           </div>
                         </div>

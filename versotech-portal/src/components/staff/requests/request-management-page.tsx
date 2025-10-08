@@ -22,7 +22,11 @@ import {
   User,
   Workflow,
   XCircle,
+  UserPlus,
 } from 'lucide-react'
+import { RequestPrioritySelector } from './request-priority-selector'
+import { RequestStatusSelector } from './request-status-selector'
+import { RequestAssignmentDialog } from './request-assignment-dialog'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -60,6 +64,7 @@ type RequestFilters = {
   priority: string | 'all'
   assignedTo: 'all' | 'me'
   overdueOnly: boolean
+  groupByCategory?: boolean
 }
 
 type RequestStats = {
@@ -85,6 +90,7 @@ const defaultFilters: RequestFilters = {
   priority: 'all',
   assignedTo: 'all',
   overdueOnly: false,
+  groupByCategory: true,
 }
 
 const statusOptions = [
@@ -92,14 +98,13 @@ const statusOptions = [
   { value: 'open', label: 'Open' },
   { value: 'assigned', label: 'Assigned' },
   { value: 'in_progress', label: 'In Progress' },
-  { value: 'awaiting_info', label: 'Awaiting Info' },
   { value: 'ready', label: 'Ready' },
   { value: 'closed', label: 'Closed' },
-  { value: 'cancelled', label: 'Cancelled' },
 ]
 
 const priorityOptions = [
   { value: 'all', label: 'All priorities' },
+  { value: 'urgent', label: 'Urgent' },
   { value: 'high', label: 'High' },
   { value: 'normal', label: 'Normal' },
   { value: 'low', label: 'Low' },
@@ -118,9 +123,10 @@ const categoryOptions = [
 ]
 
 const prioritySortOrder: Record<string, number> = {
-  high: 0,
-  normal: 1,
-  low: 2,
+  urgent: 0,
+  high: 1,
+  normal: 2,
+  low: 3,
 }
 
 const realtimeChannelName = 'staff_request_tickets_updates'
@@ -130,6 +136,7 @@ export function RequestManagementPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const [filters, setFilters] = useState<RequestFilters>(() => {
     if (!searchParams) return defaultFilters
     return {
@@ -139,6 +146,7 @@ export function RequestManagementPage() {
       priority: (searchParams.get('priority') as RequestFilters['priority']) || 'all',
       assignedTo: (searchParams.get('assigned_to') as RequestFilters['assignedTo']) || 'all',
       overdueOnly: searchParams.get('overdue') === 'true',
+      groupByCategory: searchParams.get('group_by_category') === 'true',
     }
   })
   const [requests, setRequests] = useState<RequestTicketWithRelations[]>([])
@@ -151,8 +159,20 @@ export function RequestManagementPage() {
 
   useEffect(() => {
     void loadRequests()
+    void loadCurrentUser()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters])
+
+  async function loadCurrentUser() {
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        setCurrentUserId(user.id)
+      }
+    } catch (error) {
+      console.error('Failed to load current user:', error)
+    }
+  }
 
   useEffect(() => {
     const channel = supabase
@@ -170,6 +190,16 @@ export function RequestManagementPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // Listen for manual refresh triggers after actions
+  useEffect(() => {
+    const handler = () => {
+      void loadRequests(false)
+    }
+    window.addEventListener('staffRequests:refresh', handler)
+    return () => window.removeEventListener('staffRequests:refresh', handler)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   useEffect(() => {
     if (!searchParams) return
     const params = new URLSearchParams()
@@ -179,6 +209,7 @@ export function RequestManagementPage() {
     if (filters.priority !== 'all') params.set('priority', filters.priority)
     if (filters.assignedTo !== 'all') params.set('assigned_to', filters.assignedTo)
     if (filters.overdueOnly) params.set('overdue', 'true')
+    if (filters.groupByCategory) params.set('group_by_category', 'true')
 
     const query = params.toString()
     router.replace(query ? `?${query}` : '?', { scroll: false })
@@ -199,6 +230,7 @@ export function RequestManagementPage() {
       if (filters.priority !== 'all') params.set('priority', filters.priority)
       if (filters.assignedTo !== 'all') params.set('assigned_to', filters.assignedTo)
       if (filters.overdueOnly) params.set('overdue_only', 'true')
+      if (filters.groupByCategory) params.set('group_by_category', 'true')
 
       const response = await fetch(`/api/staff/requests${params.size ? `?${params.toString()}` : ''}`, {
         credentials: 'include',
@@ -313,10 +345,13 @@ export function RequestManagementPage() {
           </CardHeader>
           <CardContent className="text-sm text-amber-50/90 space-y-2">
             <p>
-              Sign in with a staff account, or set the <code>demo_auth_user</code> cookie to a staff role, for example:
+              Sign in with a staff account: <strong>admin@versotech.com</strong> / <strong>admin123</strong>
+            </p>
+            <p className="text-xs">
+              Or set the <code>demo_auth_user</code> cookie (must use valid UUID for assigned_to filters):
             </p>
             <pre className="rounded bg-amber-900/40 border border-amber-400/30 p-2 text-xs text-amber-50 overflow-x-auto">
-              {`{"id":"demo-staff","email":"demo@versotech.com","role":"staff_admin","displayName":"Demo Staff"}`}
+              {`{"id":"2a833fc7-b307-4485-a4c1-4e5c5a010e74","email":"admin@versotech.com","role":"staff_admin","displayName":"Admin Demo"}`}
             </pre>
           </CardContent>
         </Card>
@@ -347,6 +382,8 @@ export function RequestManagementPage() {
         onSelectRequest={openRequest}
         disabled={Boolean(authError)}
         authError={authError}
+        groupByCategory={!!filters.groupByCategory}
+        currentUserId={currentUserId}
       />
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -356,7 +393,11 @@ export function RequestManagementPage() {
           </DialogHeader>
           <ScrollArea className="h-[70vh] pr-4">
             {selectedRequest ? (
-              <RequestDetails request={selectedRequest} />
+              <RequestDetails 
+                request={selectedRequest} 
+                onUpdate={() => loadRequests()}
+                currentUserId={currentUserId}
+              />
             ) : (
               <div className="text-muted-foreground">Select a request to view details</div>
             )}
@@ -368,6 +409,8 @@ export function RequestManagementPage() {
 }
 
 function PageHeader({ onRefresh, isRefreshing }: { onRefresh: () => void; isRefreshing: boolean }) {
+  const router = useRouter()
+  
   return (
     <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
       <div>
@@ -381,11 +424,10 @@ function PageHeader({ onRefresh, isRefreshing }: { onRefresh: () => void; isRefr
           {isRefreshing ? <Loader2 className="h-4 w-4 animate-spin" /> : <RotateCcw className="h-4 w-4" />}
           Refresh
         </Button>
-        <Button variant="outline" className="gap-2">
-          <Workflow className="h-4 w-4" />
-          Trigger Workflow
-        </Button>
-        <Button className="gap-2">
+        <Button 
+          className="gap-2"
+          onClick={() => router.push('/versotech/staff/requests/analytics')}
+        >
           <TrendingUp className="h-4 w-4" />
           Analytics
         </Button>
@@ -466,6 +508,14 @@ function FiltersBar({
   onReset: () => void
   isLoading: boolean
 }) {
+  const hasActiveFilters = 
+    filters.status !== 'all' || 
+    filters.category !== 'all' || 
+    filters.priority !== 'all' || 
+    filters.assignedTo !== 'all' || 
+    filters.overdueOnly ||
+    filters.search.length > 0
+
   return (
     <Card className="border border-white/10 bg-white/5">
       <CardContent className="p-4 space-y-4">
@@ -484,12 +534,67 @@ function FiltersBar({
               variant="outline"
               className="gap-2"
               onClick={onReset}
-              disabled={isLoading}
+              disabled={isLoading || !hasActiveFilters}
             >
               <SlidersHorizontal className="h-4 w-4" />
               Reset
             </Button>
+            <Button
+              variant={filters.groupByCategory ? 'default' : 'outline'}
+              className="gap-2"
+              onClick={() => onChange({ groupByCategory: !filters.groupByCategory })}
+            >
+              <ClipboardList className="h-4 w-4" />
+              {filters.groupByCategory ? 'Grouped' : 'Group'}
+            </Button>
           </div>
+        </div>
+
+        {/* Quick Filter Chips */}
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant={filters.assignedTo === 'me' ? 'default' : 'outline'}
+            size="sm"
+            className="gap-2"
+            onClick={() => onChange({ assignedTo: filters.assignedTo === 'me' ? 'all' : 'me' })}
+          >
+            <User className="h-3 w-3" /> My Tasks
+          </Button>
+          <Button
+            variant={filters.status === 'open' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => onChange({ status: filters.status === 'open' ? 'all' : 'open' })}
+          >
+            Unassigned
+          </Button>
+          <Button
+            variant={filters.overdueOnly ? 'default' : 'outline'}
+            size="sm"
+            className="gap-2"
+            onClick={() => onChange({ overdueOnly: !filters.overdueOnly })}
+          >
+            <AlertTriangle className="h-3 w-3" /> Overdue
+          </Button>
+          <Button
+            variant={filters.priority === 'urgent' || filters.priority === 'high' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => {
+              if (filters.priority === 'urgent' || filters.priority === 'high') {
+                onChange({ priority: 'all' })
+              } else {
+                onChange({ priority: 'urgent' })
+              }
+            }}
+          >
+            High Priority
+          </Button>
+          <Button
+            variant={filters.status === 'in_progress' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => onChange({ status: filters.status === 'in_progress' ? 'all' : 'in_progress' })}
+          >
+            In Progress
+          </Button>
         </div>
 
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-5">
@@ -600,6 +705,8 @@ function RequestQueue({
   onSelectRequest,
   disabled = false,
   authError,
+  groupByCategory = false,
+  currentUserId,
 }: {
   requests: RequestTicketWithRelations[]
   isLoading: boolean
@@ -608,6 +715,8 @@ function RequestQueue({
   onSelectRequest: (request: RequestTicketWithRelations) => void
   disabled?: boolean
   authError?: string | null
+  groupByCategory?: boolean
+  currentUserId?: string | null
 }) {
   if (isLoading) {
     return (
@@ -671,19 +780,69 @@ function RequestQueue({
     )
   }
 
+  if (groupByCategory) {
+    const byCategory = new Map<string, RequestTicketWithRelations[]>()
+    for (const req of requests) {
+      const key = (req as any).category || 'other'
+      const arr = byCategory.get(key) || []
+      arr.push(req)
+      byCategory.set(key, arr)
+    }
+    return (
+      <div className={cn('space-y-6', disabled && 'opacity-50 pointer-events-none select-none')}>
+        {Array.from(byCategory.entries()).map(([cat, items]) => (
+          <div key={cat} className="space-y-3">
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="border-white/20">
+                {REQUEST_CATEGORIES[cat as keyof typeof REQUEST_CATEGORIES]?.label || cat}
+              </Badge>
+              <span className="text-xs text-muted-foreground">{items.length} items</span>
+            </div>
+            <div className="space-y-3">
+              {items.map((req) => (
+                <RequestCard 
+                  key={req.id} 
+                  request={req} 
+                  onSelect={() => onSelectRequest(req)}
+                  onUpdate={onRefresh}
+                  currentUserId={currentUserId}
+                />
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    )
+  }
+
   return (
     <div className={cn('space-y-4', disabled && 'opacity-50 pointer-events-none select-none')}>
       {requests.map((request) => (
-        <RequestCard key={request.id} request={request} onSelect={() => onSelectRequest(request)} />
+        <RequestCard 
+          key={request.id} 
+          request={request} 
+          onSelect={() => onSelectRequest(request)}
+          onUpdate={onRefresh}
+          currentUserId={currentUserId}
+        />
       ))}
     </div>
   )
 }
 
-function RequestCard({ request, onSelect }: { request: RequestTicketWithRelations; onSelect: () => void }) {
+function RequestCard({ 
+  request, 
+  onSelect, 
+  onUpdate,
+  currentUserId 
+}: { 
+  request: RequestTicketWithRelations
+  onSelect: () => void
+  onUpdate?: () => void
+  currentUserId?: string | null
+}) {
   const statusConfig = REQUEST_STATUS_CONFIG[request.status as keyof typeof REQUEST_STATUS_CONFIG]
-  const priorityConfig = PRIORITY_CONFIG[request.priority as keyof typeof PRIORITY_CONFIG]
-  const overdue = false
+  const overdue = request.due_date && isOverdue(request.due_date)
 
   return (
     <Card
@@ -694,27 +853,23 @@ function RequestCard({ request, onSelect }: { request: RequestTicketWithRelation
     >
       <CardContent className="p-6">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <div className="space-y-3">
+          <div className="space-y-3 flex-1">
             <div className="flex flex-wrap items-center gap-2 text-sm">
               <Badge variant="outline" className="border-white/20 text-xs uppercase tracking-wide">
                 {request.id.split('-')[0]}
               </Badge>
               <div className="flex items-center gap-2">
-                <Badge className="gap-1">
-                  {statusConfig?.icon === 'Loader' ? (
-                    <Loader2 className="h-3 w-3 animate-spin" />
-                  ) : statusConfig?.icon === 'CheckCircle' ? (
-                    <CheckCircle className="h-3 w-3" />
-                  ) : statusConfig?.icon === 'Loader' ? (
-                    <Loader2 className="h-3 w-3 animate-spin" />
-                  ) : (
-                    <Clock className="h-3 w-3" />
-                  )}
-                  {statusConfig?.label || request.status}
-                </Badge>
-                {priorityConfig && (
-                  <Badge variant={priorityConfig.badge as any}>{priorityConfig.label}</Badge>
-                )}
+                <RequestStatusSelector
+                  requestId={request.id}
+                  currentStatus={request.status as any}
+                  onUpdate={onUpdate}
+                />
+                <RequestPrioritySelector
+                  requestId={request.id}
+                  currentPriority={request.priority as any}
+                  onUpdate={onUpdate}
+                  variant="inline"
+                />
                 <Badge variant="outline" className="border-white/20">
                   {REQUEST_CATEGORIES[request.category]?.label || request.category}
                 </Badge>
@@ -769,7 +924,7 @@ function RequestCard({ request, onSelect }: { request: RequestTicketWithRelation
               {request.due_date && (
                 <div className="flex items-center gap-1">
                   <Calendar className="h-3 w-3" />
-                  {formatTimeRemaining((request as any).due_date)}
+                  {formatTimeRemaining(request.due_date)}
                 </div>
               )}
               {request.linked_workflow_run && (
@@ -777,25 +932,31 @@ function RequestCard({ request, onSelect }: { request: RequestTicketWithRelation
                   <Play className="h-3 w-3" /> Workflow {shortenId(request.linked_workflow_run)}
                 </div>
               )}
-              {request.result_doc_id && (
-                <div className="flex items-center gap-1">
-                  <FileText className="h-3 w-3" /> Deliverable ready
-                </div>
-              )}
             </div>
           </div>
 
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2 lg:min-w-[160px]">
             <Button variant="outline" size="sm" className="gap-2" onClick={onSelect}>
               <EyeIcon />
-              View details
+              View Details
             </Button>
+            
+            <RequestAssignmentDialog
+              requestId={request.id}
+              currentAssignee={request.assigned_to_profile}
+              currentUserId={currentUserId || undefined}
+              onUpdate={onUpdate}
+              trigger={
+                <Button variant="ghost" size="sm" className="gap-2 w-full justify-start">
+                  <UserPlus className="h-4 w-4" />
+                  {request.assigned_to ? 'Reassign' : 'Assign'}
+                </Button>
+              }
+            />
+            
             <Button variant="ghost" size="sm" className="gap-2" onClick={onSelect}>
               <MessageCircle className="h-4 w-4" />
-              Open conversation
-            </Button>
-            <Button variant="ghost" size="sm" className="gap-2">
-              <ArrowUpRight className="h-4 w-4" /> Escalate
+              Conversation
             </Button>
           </div>
         </div>
@@ -804,21 +965,65 @@ function RequestCard({ request, onSelect }: { request: RequestTicketWithRelation
   )
 }
 
-function RequestDetails({ request }: { request: RequestTicketWithRelations }) {
-  const overdue = false
+function RequestDetails({ request, onUpdate, currentUserId }: { 
+  request: RequestTicketWithRelations
+  onUpdate?: () => void
+  currentUserId?: string | null
+}) {
+  const [isCreatingConversation, setIsCreatingConversation] = useState(false)
+  const overdue = request.due_date && request.status !== 'closed' && request.status !== 'ready' && isOverdue(request.due_date)
   const statusConfig = REQUEST_STATUS_CONFIG[request.status as keyof typeof REQUEST_STATUS_CONFIG]
+
+  const handleCreateConversation = async () => {
+    setIsCreatingConversation(true)
+    try {
+      const res = await fetch('/api/conversations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          subject: `Request ${request.id}: ${request.subject}`,
+          participant_ids: [request.created_by],
+          type: 'dm',
+          initial_message: `Context: request ${request.id} (${request.category || 'general'}) - ${request.subject}`,
+        }),
+      })
+      if (res.ok) {
+        const result = await res.json()
+        const convId = result?.conversation?.id
+        if (convId) {
+          toast.success('Conversation created')
+          window.location.href = `/versotech/staff/messages/${convId}`
+        }
+      } else {
+        throw new Error('Failed to create conversation')
+      }
+    } catch (error) {
+      console.error('Failed to create conversation:', error)
+      toast.error('Failed to create conversation')
+    } finally {
+      setIsCreatingConversation(false)
+    }
+  }
 
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Badge variant="outline" className="border-white/20 text-xs">
             {request.id}
           </Badge>
-          <Badge>{statusConfig?.label || request.status}</Badge>
-          <Badge variant="outline" className="border-white/20">
-            Priority: {request.priority?.toUpperCase()}
-          </Badge>
+          <RequestStatusSelector
+            requestId={request.id}
+            currentStatus={request.status as any}
+            onUpdate={onUpdate}
+          />
+          <RequestPrioritySelector
+            requestId={request.id}
+            currentPriority={request.priority as any}
+            onUpdate={onUpdate}
+            variant="inline"
+          />
           <Badge variant="outline" className="border-white/20">
             {REQUEST_CATEGORIES[request.category]?.label || request.category}
           </Badge>
@@ -898,7 +1103,34 @@ function RequestDetails({ request }: { request: RequestTicketWithRelations }) {
       <Separator className="border-white/10" />
 
       <div className="space-y-4">
-        <QuickActionButtons request={request} />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+          <RequestAssignmentDialog
+            requestId={request.id}
+            currentAssignee={request.assigned_to_profile}
+            currentUserId={currentUserId || undefined}
+            onUpdate={onUpdate}
+            trigger={
+              <Button variant="secondary" className="justify-start gap-2 w-full">
+                <UserPlus className="h-4 w-4" />
+                {request.assigned_to ? 'Reassign Request' : 'Assign Request'}
+              </Button>
+            }
+          />
+          
+          <Button
+            variant="outline"
+            className="justify-start gap-2"
+            onClick={handleCreateConversation}
+            disabled={isCreatingConversation}
+          >
+            {isCreatingConversation ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <MessageCircle className="h-4 w-4" />
+            )}
+            Create Conversation
+          </Button>
+        </div>
       </div>
     </div>
   )

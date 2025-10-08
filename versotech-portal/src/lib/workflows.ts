@@ -2,12 +2,14 @@ import { z } from 'zod'
 
 export const workflowInputFieldSchema = z.object({
   label: z.string().optional(),
-  type: z.enum(['text', 'email', 'number', 'date', 'datetime', 'select', 'checkbox']),
+  type: z.enum(['text', 'email', 'number', 'date', 'datetime', 'select', 'checkbox', 'investor_select', 'vehicle_select', 'conversation_select']),
   placeholder: z.string().optional(),
   required: z.boolean().optional(),
   options: z.array(z.union([z.string(), z.number()])).optional(),
   helperText: z.string().optional(),
-  defaultValue: z.union([z.string(), z.boolean(), z.number()]).optional()
+  defaultValue: z.union([z.string(), z.boolean(), z.number()]).optional(),
+  dependsOn: z.string().optional(), // Field name that this field depends on
+  showWhen: z.union([z.string(), z.number(), z.boolean()]).optional() // Value that triggers this field to show
 })
 
 export const workflowInputSchema = z.record(z.string(), workflowInputFieldSchema)
@@ -18,8 +20,10 @@ export interface WorkflowDefinition {
   key: string
   title: string
   description: string
+  detailedDescription?: string // Full description for drawer
   icon: string
   category: 'documents' | 'compliance' | 'communications' | 'data_processing' | 'multi_step'
+  triggerType: 'manual' | 'scheduled' | 'both'
   requiredRole?: 'staff_admin' | 'staff_ops' | 'staff_rm'
   requiredTitles?: string[]
   inputSchema: WorkflowInputSchema
@@ -30,25 +34,30 @@ export const processWorkflows: WorkflowDefinition[] = [
     key: 'generate-position-statement',
     title: 'Position Statement',
     description: 'Generate investor position statements with current NAV, distributions, and performance metrics',
+    detailedDescription: 'Automatically generate comprehensive position statements for investors showing their current NAV, capital contributions, distributions received, and performance metrics across all vehicles or a specific fund. The statement will be generated as a PDF, watermarked, and ready for distribution.',
     icon: 'BarChart3',
     category: 'documents',
+    triggerType: 'manual',
     requiredRole: 'staff_ops',
     inputSchema: {
       investor_id: {
-        label: 'Investor ID',
-        type: 'text',
-        placeholder: 'Enter investor UUID',
-        required: true
+        label: 'Investor',
+        type: 'investor_select',
+        placeholder: 'Select investor',
+        required: true,
+        helperText: 'Choose the investor to generate the position statement for'
       },
       vehicle_id: {
-        label: 'Vehicle ID (Optional)',
-        type: 'text',
-        placeholder: 'Specific vehicle or leave blank'
+        label: 'Vehicle (Optional)',
+        type: 'vehicle_select',
+        placeholder: 'All vehicles or select specific vehicle',
+        helperText: 'Leave empty for all vehicles or select a specific fund'
       },
       as_of_date: {
         label: 'As of Date',
         type: 'date',
-        required: true
+        required: true,
+        helperText: 'The date for which to generate the position statement'
       }
     }
   },
@@ -56,71 +65,100 @@ export const processWorkflows: WorkflowDefinition[] = [
     key: 'process-nda',
     title: 'NDA Agent',
     description: 'Automated NDA generation, DocuSign processing, and professional investor qualification',
+    detailedDescription: 'Streamline the NDA process with automated generation, DocuSign integration for e-signatures, and professional investor qualification checks. The workflow handles document creation, sending, tracking, and storage of signed NDAs.',
     icon: 'FileText',
     category: 'compliance',
+    triggerType: 'manual',
     requiredRole: 'staff_rm',
     inputSchema: {
       investor_email: {
         label: 'Investor Email',
         type: 'email',
         placeholder: 'investor@example.com',
-        required: true
+        required: true,
+        helperText: 'Email address where the NDA will be sent'
       },
       investment_type: {
         label: 'Investment Type',
         type: 'text',
         placeholder: 'VERSO FUND, REAL Empire, etc.',
-        required: true
+        required: true,
+        helperText: 'Specify the investment vehicle or opportunity'
       },
       nda_template: {
         label: 'NDA Template',
         type: 'select',
         options: ['standard', 'institutional', 'high-net-worth'],
-        required: true
+        required: true,
+        helperText: 'Choose the appropriate NDA template'
       }
     }
   },
   {
     key: 'shared-drive-notification',
     title: 'Shared-Drive Notification',
-    description: 'Sync shared drive uploads and notify stakeholders of updates',
+    description: 'Automatically notify investors when documents in shared drives are updated',
+    detailedDescription: 'Monitor shared drive folders for document changes and automatically notify relevant investors when new documents are uploaded or existing ones are updated. This ensures investors stay informed about important updates without manual intervention.',
     icon: 'Database',
     category: 'communications',
+    triggerType: 'scheduled',
     requiredRole: 'staff_ops',
     inputSchema: {
       document_category: {
         label: 'Document Category',
         type: 'select',
-        options: ['legal', 'financial', 'marketing'],
-        required: true
+        options: ['legal', 'financial', 'marketing', 'compliance', 'reports'],
+        required: true,
+        helperText: 'Type of documents to monitor'
       },
       notification_group: {
         label: 'Notification Group',
         type: 'select',
-        options: ['investors', 'staff', 'compliance'],
-        required: true
+        options: ['investors', 'staff', 'compliance', 'all'],
+        required: true,
+        helperText: 'Who should be notified of changes'
       }
     }
   },
   {
     key: 'inbox-manager',
     title: 'Inbox Manager',
-    description: 'Process investor communications and route requests to appropriate teams',
+    description: 'Intelligently process and route investor communications to appropriate teams',
+    detailedDescription: 'Automate inbox management by processing incoming emails or VERSOTECH messages, categorizing them based on content, and routing to the appropriate team members. Supports both email filtering and internal messaging workflows.',
     icon: 'MessageSquare',
     category: 'communications',
+    triggerType: 'both',
     requiredRole: 'staff_ops',
     inputSchema: {
-      email_source: {
-        label: 'Email Source',
-        type: 'text',
-        placeholder: 'info@versoholdings.com',
-        required: true
-      },
-      priority_level: {
-        label: 'Priority Level',
+      inbox_type: {
+        label: 'Inbox Type',
         type: 'select',
-        options: ['low', 'medium', 'high', 'urgent'],
-        required: true
+        options: ['email', 'versotech_messaging'],
+        required: true,
+        helperText: 'Choose the type of inbox to process'
+      },
+      command: {
+        label: 'Command/Action',
+        type: 'text',
+        placeholder: 'e.g., "route to compliance", "create task"',
+        required: true,
+        helperText: 'Specify the action to perform on matched messages'
+      },
+      email_subject: {
+        label: 'Email Subject Filter',
+        type: 'text',
+        placeholder: 'Subject keywords to match',
+        dependsOn: 'inbox_type',
+        showWhen: 'email',
+        helperText: 'Filter emails by subject line'
+      },
+      conversation_id: {
+        label: 'Conversation',
+        type: 'conversation_select',
+        placeholder: 'Select conversation',
+        dependsOn: 'inbox_type',
+        showWhen: 'versotech_messaging',
+        helperText: 'Choose the conversation to apply the command to'
       }
     }
   },
@@ -128,47 +166,71 @@ export const processWorkflows: WorkflowDefinition[] = [
     key: 'linkedin-leads-scraper',
     title: 'LinkedIn Leads Scraper',
     description: 'Identify and qualify potential high-net-worth investors and institutional clients',
+    detailedDescription: 'Scrape LinkedIn profiles based on search criteria to identify potential investors. The workflow extracts contact information, professional background, and qualifies leads based on specified parameters for targeted outreach campaigns.',
     icon: 'Target',
     category: 'data_processing',
+    triggerType: 'manual',
     requiredRole: 'staff_rm',
     inputSchema: {
-      search_criteria: {
-        label: 'Search Criteria',
+      search_url: {
+        label: 'LinkedIn Search URL',
         type: 'text',
-        placeholder: 'private equity London managing director',
-        required: true
+        placeholder: 'https://www.linkedin.com/search/results/people/?...',
+        required: true,
+        helperText: 'Paste the full LinkedIn search URL with filters applied'
       },
-      lead_qualification: {
-        label: 'Lead Qualification',
+      purpose: {
+        label: 'Campaign Purpose',
         type: 'select',
-        options: ['high-net-worth', 'institutional', 'qualified'],
-        required: true
+        options: ['linkedin_outreach', 'cold_email_campaign'],
+        required: true,
+        helperText: 'Select the intended use for the scraped leads'
       }
     }
   },
   {
     key: 'reporting-agent',
     title: 'Reporting Agent',
-    description: 'Generate quarterly investor reports, compliance filings, and board presentations',
+    description: 'Generate comprehensive investor reports, compliance filings, and performance analytics',
+    detailedDescription: 'Automate the generation of investor reports including quarterly statements, annual reports, and compliance filings. Reports can be generated on-demand or scheduled for regular distribution, with support for both public and corporate reporting formats.',
     icon: 'TrendingUp',
     category: 'documents',
+    triggerType: 'both',
     requiredRole: 'staff_rm',
     inputSchema: {
-      report_type: {
-        label: 'Report Type',
+      report_category: {
+        label: 'Report Category',
         type: 'select',
-        options: ['quarterly', 'annual', 'compliance', 'ad-hoc'],
-        required: true
+        options: ['public', 'corporate', 'both'],
+        required: true,
+        helperText: 'Type of report to generate'
       },
-      recipients: {
-        label: 'Recipients',
+      investor_id: {
+        label: 'Investor',
+        type: 'investor_select',
+        placeholder: 'Select investor',
+        required: true,
+        helperText: 'Choose the investor to generate the report for'
+      },
+      vehicle_id: {
+        label: 'Vehicle',
+        type: 'vehicle_select',
+        placeholder: 'Select vehicle',
+        required: true,
+        helperText: 'Choose the fund or vehicle for the report'
+      },
+      frequency: {
+        label: 'Report Frequency',
         type: 'select',
-        options: ['investors', 'regulators', 'board'],
-        required: true
+        options: ['one-time', 'monthly', 'quarterly', 'annual'],
+        required: true,
+        helperText: 'How often the report should be generated'
       },
       include_charts: {
         label: 'Include Charts',
-        type: 'checkbox'
+        type: 'checkbox',
+        defaultValue: true,
+        helperText: 'Add visual charts and graphs to the report'
       }
     }
   },
@@ -176,24 +238,37 @@ export const processWorkflows: WorkflowDefinition[] = [
     key: 'kyc-aml-processing',
     title: 'KYC/AML Processing',
     description: 'Enhanced due diligence for professional investor qualification and BVI FSC compliance',
+    detailedDescription: 'Perform comprehensive KYC (Know Your Customer) and AML (Anti-Money Laundering) checks with automated sanctions screening, beneficial ownership analysis, and professional investor verification. Ensures full BVI FSC regulatory compliance.',
     icon: 'Shield',
     category: 'compliance',
+    triggerType: 'manual',
     requiredRole: 'staff_admin',
     inputSchema: {
+      investor_id: {
+        label: 'Investor',
+        type: 'investor_select',
+        placeholder: 'Select investor',
+        required: true,
+        helperText: 'Choose the investor to perform KYC/AML checks on'
+      },
       investor_type: {
         label: 'Investor Type',
         type: 'select',
         options: ['individual', 'institution', 'corporate'],
-        required: true
+        required: true,
+        helperText: 'Classification of the investor'
       },
       jurisdiction: {
         label: 'Jurisdiction',
         type: 'text',
-        required: true
+        placeholder: 'e.g., United Kingdom, Cayman Islands',
+        required: true,
+        helperText: 'Legal jurisdiction of the investor'
       },
       enhanced_dd: {
         label: 'Enhanced Due Diligence',
-        type: 'checkbox'
+        type: 'checkbox',
+        helperText: 'Perform additional enhanced due diligence checks'
       }
     }
   },
@@ -201,31 +276,38 @@ export const processWorkflows: WorkflowDefinition[] = [
     key: 'capital-call-processing',
     title: 'Capital Call Processing',
     description: 'Generate capital call notices, wire instructions, and investor notifications',
+    detailedDescription: 'Automate the capital call process by generating notices, calculating wire instructions per investor, and sending notifications. The workflow handles document generation, email distribution, and tracking of investor responses.',
     icon: 'Calendar',
-    category: 'documents',
+    category: 'communications',
+    triggerType: 'manual',
     requiredRole: 'staff_admin',
+    requiredTitles: ['bizops'],
     inputSchema: {
       vehicle_id: {
-        label: 'Vehicle ID',
-        type: 'text',
-        placeholder: 'VERSO FUND I',
-        required: true
+        label: 'Vehicle',
+        type: 'vehicle_select',
+        placeholder: 'Select vehicle',
+        required: true,
+        helperText: 'Choose the fund or vehicle for the capital call'
       },
       call_percentage: {
         label: 'Call Percentage',
         type: 'number',
         placeholder: '30.00',
-        required: true
+        required: true,
+        helperText: 'Percentage of committed capital to call (e.g., 30 for 30%)'
       },
       due_date: {
         label: 'Due Date',
         type: 'date',
-        required: true
+        required: true,
+        helperText: 'Date by which capital must be received'
       },
       wire_deadline: {
         label: 'Wire Deadline',
         type: 'datetime',
-        required: true
+        required: true,
+        helperText: 'Specific date and time for wire transfer deadline'
       }
     }
   },
@@ -233,26 +315,39 @@ export const processWorkflows: WorkflowDefinition[] = [
     key: 'investor-onboarding',
     title: 'Investor Onboarding',
     description: 'Complete investor onboarding flow: KYC → NDA → Subscription → First Funding',
+    detailedDescription: 'Execute the full investor onboarding sequence from initial KYC verification through NDA execution, subscription agreement signing, and first capital commitment. This multi-step workflow coordinates all required documentation and compliance checks.',
     icon: 'Users',
     category: 'multi_step',
+    triggerType: 'manual',
     requiredRole: 'staff_ops',
     inputSchema: {
       investor_email: {
         label: 'Investor Email',
         type: 'email',
-        required: true
+        placeholder: 'investor@example.com',
+        required: true,
+        helperText: 'Primary email address for the new investor'
       },
       investment_amount: {
         label: 'Initial Investment',
         type: 'number',
         placeholder: '1000000',
-        required: true
+        required: true,
+        helperText: 'Target investment amount in USD'
       },
       target_vehicle: {
         label: 'Target Vehicle',
-        type: 'text',
-        placeholder: 'VERSO FUND',
-        required: true
+        type: 'vehicle_select',
+        placeholder: 'Select vehicle',
+        required: true,
+        helperText: 'Fund or vehicle the investor will participate in'
+      },
+      investor_type: {
+        label: 'Investor Type',
+        type: 'select',
+        options: ['individual', 'institution', 'corporate'],
+        required: true,
+        helperText: 'Classification for KYC processing'
       }
     }
   }
@@ -262,4 +357,49 @@ export const workflowDefinitionMap = new Map(
   processWorkflows.map((workflow) => [workflow.key, workflow])
 )
 
+// Group workflows by category for the Process Center UI
+export function getWorkflowsByCategory() {
+  const categories = {
+    documents: processWorkflows.filter(w => w.category === 'documents'),
+    compliance: processWorkflows.filter(w => w.category === 'compliance'),
+    communications: processWorkflows.filter(w => w.category === 'communications'),
+    data_processing: processWorkflows.filter(w => w.category === 'data_processing'),
+    multi_step: processWorkflows.filter(w => w.category === 'multi_step')
+  }
+  return categories
+}
+
+// Category metadata for display
+export const categoryMetadata = {
+  documents: {
+    title: 'Document Generation',
+    description: 'Position statements, reports, and compliance filings',
+    icon: 'FileText',
+    gradient: 'from-blue-500/20 to-cyan-500/20'
+  },
+  compliance: {
+    title: 'Compliance & Verification',
+    description: 'KYC, AML screening, and regulatory checks',
+    icon: 'Shield',
+    gradient: 'from-green-500/20 to-emerald-500/20'
+  },
+  communications: {
+    title: 'Communications',
+    description: 'Inbox management, notifications, and investor outreach',
+    icon: 'MessageSquare',
+    gradient: 'from-purple-500/20 to-pink-500/20'
+  },
+  data_processing: {
+    title: 'Data Processing',
+    description: 'Lead generation, data enrichment, and analytics',
+    icon: 'Target',
+    gradient: 'from-orange-500/20 to-red-500/20'
+  },
+  multi_step: {
+    title: 'Multi-Step Workflows',
+    description: 'Complex orchestrated processes and onboarding',
+    icon: 'Users',
+    gradient: 'from-indigo-500/20 to-violet-500/20'
+  }
+} as const
 

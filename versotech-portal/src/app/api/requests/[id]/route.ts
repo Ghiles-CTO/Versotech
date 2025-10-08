@@ -1,8 +1,10 @@
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { auditLogger } from '@/lib/audit'
 import { NextRequest, NextResponse } from 'next/server'
 import type { UpdateRequestTicket } from '@/types/reports'
 import { validateRequestUpdate } from '@/lib/reports/validation'
+import { cookies } from 'next/headers'
+import { parseDemoSession, DEMO_COOKIE_NAME } from '@/lib/demo-session'
 
 /**
  * GET /api/requests/[id]
@@ -92,7 +94,6 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const supabase = await createClient()
     const { id } = await params
     const body: UpdateRequestTicket = await request.json()
 
@@ -105,28 +106,43 @@ export async function PATCH(
       )
     }
 
-    // Get the authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    // Check for demo session or real auth
+    const cookieStore = await cookies()
+    const demoCookie = cookieStore.get(DEMO_COOKIE_NAME)
+    let userId: string
+    let isStaff = false
+    let supabase: any
 
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
+    if (demoCookie) {
+      const demoSession = parseDemoSession(demoCookie.value)
+      if (demoSession && demoSession.role.startsWith('staff_')) {
+        userId = demoSession.id
+        isStaff = true
+        supabase = createServiceClient() // Use service client to bypass RLS
+      } else {
+        return NextResponse.json({ error: 'Staff access required' }, { status: 403 })
+      }
+    } else {
+      supabase = await createClient()
+      const { data: { user }, error: authError } = await supabase.auth.getUser()
 
-    // Verify staff role
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
+      if (authError || !user) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      }
 
-    if (!profile || !profile.role.startsWith('staff_')) {
-      return NextResponse.json(
-        { error: 'Staff access required' },
-        { status: 403 }
-      )
+      userId = user.id
+
+      // Verify staff role
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single()
+
+      if (!profile || !profile.role.startsWith('staff_')) {
+        return NextResponse.json({ error: 'Staff access required' }, { status: 403 })
+      }
+      isStaff = true
     }
 
     // Fetch original ticket for audit trail
@@ -147,13 +163,11 @@ export async function PATCH(
     const updates: any = {}
     if (body.status) updates.status = body.status
     if (body.assigned_to !== undefined) updates.assigned_to = body.assigned_to
+    if (body.priority) updates.priority = body.priority
     if (body.completion_note) updates.completion_note = body.completion_note
     if (body.result_doc_id) updates.result_doc_id = body.result_doc_id
 
-    // Auto-set closed_at when closing
-    if (body.status === 'closed' && originalTicket.status !== 'closed') {
-      updates.closed_at = new Date().toISOString()
-    }
+    // closed_at column not present in current schema; skip timestamping
 
     // Update the ticket
     const { data: updatedTicket, error: updateError } = await supabase
@@ -198,7 +212,7 @@ export async function PATCH(
 
     // Log audit
     await auditLogger.log({
-      actor_user_id: user.id,
+      actor_user_id: userId,
       action: 'request_updated',
       entity: 'request_tickets',
       entity_id: id,

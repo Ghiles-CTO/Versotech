@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
       .eq('id', user.id)
       .single()
 
-    if (!profile || !profile.role.startsWith('staff_')) {
+    if (!profile || !['staff_admin', 'staff_ops', 'staff_rm'].includes(profile.role)) {
       return NextResponse.json({ error: 'Staff access required for document upload' }, { status: 403 })
     }
 
@@ -28,8 +28,12 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData()
     const file = formData.get('file') as File
     const documentType = formData.get('type') as string
+    const documentName = formData.get('name') as string
+    const description = formData.get('description') as string
     const ownerInvestorId = formData.get('owner_investor_id') as string
     const vehicleId = formData.get('vehicle_id') as string
+    const folderId = formData.get('folder_id') as string
+    const tags = formData.get('tags') as string
     const isConfidential = formData.get('confidential') === 'true'
 
     if (!file) {
@@ -39,6 +43,9 @@ export async function POST(request: NextRequest) {
     if (!documentType) {
       return NextResponse.json({ error: 'Document type is required' }, { status: 400 })
     }
+    
+    // Parse tags
+    const tagArray = tags ? tags.split(',').map(t => t.trim()).filter(Boolean) : []
 
     // Validate file type and size
     const allowedTypes = [
@@ -107,17 +114,27 @@ export async function POST(request: NextRequest) {
     const { data: document, error: docError } = await supabase
       .from('documents')
       .insert({
+        name: documentName || file.name.replace(/\.[^/.]+$/, ''), // Remove extension
+        description: description || null,
         file_key: fileKey,
         type: documentType,
+        folder_id: folderId || null,
+        tags: tagArray.length > 0 ? tagArray : null,
         owner_investor_id: ownerInvestorId || null,
         vehicle_id: vehicleId || null,
+        file_size_bytes: file.size,
+        mime_type: file.type,
+        current_version: 1,
+        status: 'draft',
+        is_published: false,
         created_by: user.id,
         watermark: watermarkData
       })
       .select(`
         *,
-        investors:owner_investor_id (legal_name),
-        vehicles:vehicle_id (name, type)
+        investors:investors!documents_owner_investor_id_fkey(legal_name),
+        vehicles:vehicles!documents_vehicle_id_fkey(name, type),
+        folder:document_folders(id, name, path)
       `)
       .single()
 
@@ -130,6 +147,18 @@ export async function POST(request: NextRequest) {
       console.error('Document record creation error:', docError)
       return NextResponse.json({ error: 'Failed to create document record' }, { status: 500 })
     }
+
+    // Create initial version record
+    await supabase
+      .from('document_versions')
+      .insert({
+        document_id: document.id,
+        version_number: 1,
+        file_key: fileKey,
+        file_size_bytes: file.size,
+        mime_type: file.type,
+        created_by: user.id
+      })
 
     // Log document upload for audit trail
     await auditLogger.log({

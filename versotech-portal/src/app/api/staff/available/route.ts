@@ -119,6 +119,12 @@ export async function GET(request: NextRequest) {
       })
     )
 
+    const rolePriority: Record<string, number> = {
+      staff_admin: 0,
+      staff_ops: 1,
+      staff_rm: 2
+    }
+
     return NextResponse.json({
       staff: staffWithConversations
     })
