@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge'
 import { ReservationModal } from '@/components/deals/reservation-modal'
 import { DealDetailsModal } from '@/components/deals/deal-details-modal'
 import { CommitmentModal } from '@/components/deals/commitment-modal'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
 import {
@@ -83,10 +83,10 @@ const statusDescriptions = {
 }
 
 export default async function InvestorDealsPage() {
-  const supabase = await createClient()
+  const clientSupabase = await createClient()
 
   // Get current user - AppLayout already handles auth checks
-  const { data: { user }, error: userError } = await supabase.auth.getUser()
+  const { data: { user }, error: userError } = await clientSupabase.auth.getUser()
 
   if (!user || userError) {
     throw new Error('Authentication required')
@@ -96,6 +96,9 @@ export default async function InvestorDealsPage() {
     id: user.id,
     email: user.email
   }
+
+  // Use service client for data fetching (bypasses RLS for server-side operations)
+  const supabase = createServiceClient()
 
   // Get investor IDs linked to this user
   const { data: investorLinks } = await supabase
