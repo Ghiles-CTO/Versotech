@@ -28,6 +28,9 @@ export default async function DealDetailPage({
   }
 
   console.log('[Deal Detail] Fetching data for demo user:', demoSession.email, demoSession.role)
+  
+  // Store user role for later use
+  const userRole = demoSession.role
 
   // Fetch deal with all related data
   const { data: deal, error } = await supabase
@@ -186,7 +189,7 @@ export default async function DealDetailPage({
         reservations={reservations || []}
         allocations={allocations || []}
         documents={documents || []}
-        userProfile={{ role: demoSession.role }}
+        userProfile={{ role: userRole }}
       />
     </AppLayout>
   )
