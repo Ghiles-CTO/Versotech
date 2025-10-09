@@ -68,9 +68,15 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
     .from('vehicles')
     .select('*')
     .eq('id', vehicleId)
-    .single()
+    .maybeSingle()
 
-  if (vehicleError || !vehicle) {
+  if (vehicleError) {
+    console.error('[VehicleDetailPage] Vehicle query error:', vehicleError)
+    redirect('/versoholdings/holdings')
+  }
+
+  if (!vehicle) {
+    console.warn('[VehicleDetailPage] Vehicle not found:', vehicleId)
     redirect('/versoholdings/holdings')
   }
 
@@ -87,14 +93,20 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
   const investorIds = investorLinks.map(link => link.investor_id)
 
   // Check if investor has access to this vehicle
-  const { data: subscription } = await supabase
+  const { data: subscription, error: subscriptionError } = await supabase
     .from('subscriptions')
     .select('*')
     .eq('vehicle_id', vehicleId)
     .in('investor_id', investorIds)
-    .single()
+    .maybeSingle()
+
+  if (subscriptionError) {
+    console.error('[VehicleDetailPage] Subscription query error:', subscriptionError)
+    redirect('/versoholdings/holdings')
+  }
 
   if (!subscription) {
+    console.warn('[VehicleDetailPage] No subscription found for vehicle:', vehicleId, 'investorIds:', investorIds)
     redirect('/versoholdings/holdings')
   }
 
@@ -111,7 +123,7 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
     supabase.from('capital_calls').select('*').eq('vehicle_id', vehicleId).order('due_date', { ascending: false }),
     supabase.from('distributions').select('*').eq('vehicle_id', vehicleId).order('date', { ascending: false }),
     supabase.from('documents').select('id, type, created_at, created_by').eq('vehicle_id', vehicleId).or(`owner_investor_id.in.(${investorIds.join(',')}),owner_investor_id.is.null`).order('created_at', { ascending: false }),
-    supabase.from('positions').select('*').eq('vehicle_id', vehicleId).in('investor_id', investorIds).single(),
+    supabase.from('positions').select('*').eq('vehicle_id', vehicleId).in('investor_id', investorIds).maybeSingle(),
     supabase.from('cashflows').select('*').eq('vehicle_id', vehicleId).in('investor_id', investorIds).order('date', { ascending: false })
   ])
 

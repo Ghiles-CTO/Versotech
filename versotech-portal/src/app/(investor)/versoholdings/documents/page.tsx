@@ -127,7 +127,6 @@ export default async function DocumentsPage({
         created_at: doc.created_at,
         created_by: doc.created_by_profile,
         scope,
-        metadata: doc.metadata ? (doc.metadata as Document['metadata']) : undefined,
         watermark: doc.watermark as Document['watermark']
       })
     })

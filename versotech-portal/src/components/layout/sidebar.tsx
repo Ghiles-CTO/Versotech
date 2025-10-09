@@ -34,8 +34,6 @@ import {
   UserCheck,
   Search,
   MoreHorizontal,
-  Sun,
-  Moon
 } from 'lucide-react'
 
 interface SidebarItem {
@@ -214,7 +212,6 @@ const staffNavItems: SidebarItem[] = [
 
 export function Sidebar({ brand, userProfile }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false)
-  const [sidebarDarkMode, setSidebarDarkMode] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const pathname = usePathname()
   const router = useRouter()
@@ -224,30 +221,8 @@ export function Sidebar({ brand, userProfile }: SidebarProps) {
 
   const navItems = brand === 'versoholdings' ? investorNavItems : staffNavItems
 
-  // Initialize sidebar dark mode from localStorage (separate from global dark mode)
-  useEffect(() => {
-    // For staff portal (versotech), default to dark mode
-    // For investor portal (versoholdings), default to light mode
-    const savedSidebarTheme = localStorage.getItem(`sidebar-theme-${brand}`)
-
-    if (brand === 'versotech') {
-      // Staff portal: lock to dark mode
-      setSidebarDarkMode(true)
-      localStorage.setItem(`sidebar-theme-${brand}`, 'dark')
-    } else {
-      // Investor portal: restore preference or default light
-      setSidebarDarkMode(savedSidebarTheme === 'dark')
-    }
-  }, [brand])
-
-  // Toggle sidebar dark mode (only affects sidebar, not entire page)
-  const toggleSidebarDarkMode = () => {
-    if (brand === 'versotech') return
-
-    const newDarkMode = !sidebarDarkMode
-    setSidebarDarkMode(newDarkMode)
-    localStorage.setItem(`sidebar-theme-${brand}`, newDarkMode ? 'dark' : 'light')
-  }
+  // Set theme based on brand: staff portal uses dark mode, investor portal uses light mode
+  const sidebarDarkMode = brand === 'versotech'
 
   // Handle sign out with proper redirect
   const handleSignOut = async () => {
@@ -437,74 +412,6 @@ export function Sidebar({ brand, userProfile }: SidebarProps) {
           })}
         </nav>
       </div>
-
-      {/* Theme Toggle */}
-      {brand !== 'versotech' && (
-      <div className={cn(
-        "border-t p-4",
-        sidebarDarkMode ? "border" : "border-gray-200"
-      )}>
-        {!collapsed && (
-          <div className={cn(
-            "flex items-center justify-center gap-1 rounded-lg p-1",
-            sidebarDarkMode ? "bg-muted" : "bg-gray-100"
-          )}>
-            <Button
-              variant="ghost"
-              size="sm"
-              disabled={brand === 'versotech'}
-              onClick={toggleSidebarDarkMode}
-              className={cn(
-                "flex-1 h-8 text-xs font-medium transition-all duration-200",
-                !sidebarDarkMode
-                  ? "bg-white text-gray-900 shadow-sm"
-                  : sidebarDarkMode
-                    ? "text-muted-foreground hover:text-foreground"
-                    : "text-gray-600 hover:text-gray-900",
-                brand === 'versotech' && "opacity-60 cursor-not-allowed"
-              )}
-            >
-              <Sun className="h-4 w-4 mr-1" />
-              Light
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              disabled={brand === 'versotech'}
-              onClick={toggleSidebarDarkMode}
-              className={cn(
-                "flex-1 h-8 text-xs font-medium transition-all duration-200",
-                sidebarDarkMode
-                  ? "bg-secondary text-foreground shadow-sm"
-                  : "text-gray-600 hover:text-gray-900",
-                brand === 'versotech' && "opacity-60 cursor-not-allowed"
-              )}
-            >
-              <Moon className="h-4 w-4 mr-1" />
-              Dark
-            </Button>
-          </div>
-        )}
-
-        {collapsed && (
-          <Button
-            variant="ghost"
-            size="sm"
-            disabled={brand === 'versotech'}
-            onClick={toggleSidebarDarkMode}
-            className={cn(
-              "w-full h-8 p-0",
-              sidebarDarkMode
-                ? "text-muted-foreground hover:bg-muted"
-                : "text-gray-600 hover:bg-gray-100",
-              brand === 'versotech' && "opacity-60 cursor-not-allowed"
-            )}
-          >
-            {sidebarDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-          </Button>
-        )}
-      </div>
-      )}
 
       {/* Settings and User Profile */}
       <div className={cn(
