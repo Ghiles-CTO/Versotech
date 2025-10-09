@@ -28,6 +28,7 @@ export default async function DealDetailPage({
   }
 
   console.log('[Deal Detail] Fetching data for demo user:', demoSession.email, demoSession.role)
+  console.log('[Deal Detail] Deal ID:', dealId)
   
   // Store user role for later use
   const userRole = demoSession.role
@@ -77,7 +78,7 @@ export default async function DealDetailPage({
           flat_amount,
           frequency,
           hurdle_rate_bps,
-          high_watermark,
+          has_high_water_mark,
           notes
         )
       ),
@@ -102,9 +103,17 @@ export default async function DealDetailPage({
     .eq('id', dealId)
     .single()
 
-  if (error || !deal) {
+  if (error) {
+    console.error('[Deal Detail] Error fetching deal:', error)
     redirect('/versotech/staff/deals')
   }
+
+  if (!deal) {
+    console.error('[Deal Detail] Deal not found with ID:', dealId)
+    redirect('/versotech/staff/deals')
+  }
+
+  console.log('[Deal Detail] Deal loaded successfully:', deal.name)
 
   // Fetch inventory summary
   const { data: inventorySummary } = await supabase

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -17,6 +17,7 @@ import {
   Edit
 } from 'lucide-react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { DealOverviewTab } from './deal-overview-tab'
 import { DealInventoryTab } from './deal-inventory-tab'
 import { DealMembersTab } from './deal-members-tab'
@@ -65,6 +66,37 @@ export function DealDetailClient({
   userProfile
 }: DealDetailClientProps) {
   const [activeTab, setActiveTab] = useState('overview')
+  const router = useRouter()
+
+  useEffect(() => {
+    // Log component mount for debugging
+    console.log('[DealDetailClient] Component mounted', {
+      dealId: deal?.id,
+      dealName: deal?.name,
+      dealStatus: deal?.status,
+      hasInventory: !!inventorySummary,
+      commitmentsCount: commitments?.length || 0,
+      userRole: userProfile?.role
+    })
+  }, [deal, inventorySummary, commitments, userProfile])
+
+  // Safety check - if no deal, show error state (server should handle redirect)
+  if (!deal || !deal.id) {
+    return (
+      <div className="p-6">
+        <Card className="border border-destructive/50 bg-destructive/10">
+          <CardContent className="p-6 text-center text-foreground">
+            <p>Unable to load deal details</p>
+            <Link href="/versotech/staff/deals">
+              <Button variant="outline" className="mt-4">
+                Back to Deals
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
 
   return (
     <div className="p-6 space-y-6">
@@ -72,12 +104,15 @@ export function DealDetailClient({
       <div className="flex items-start justify-between">
         <div className="space-y-1">
           <div className="flex items-center gap-3 mb-2">
-            <Link href="/versotech/staff/deals">
-              <Button variant="ghost" size="sm" className="gap-2 text-foreground hover:text-sky-200 hover:bg-white/10">
-                <ArrowLeft className="h-4 w-4" />
-                Back to Deals
-              </Button>
-            </Link>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="gap-2 text-foreground hover:text-sky-200 hover:bg-white/10"
+              onClick={() => router.push('/versotech/staff/deals')}
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back to Deals
+            </Button>
           </div>
           
           <div className="flex items-center gap-3">
@@ -221,11 +256,19 @@ export function DealDetailClient({
         </TabsContent>
 
         <TabsContent value="inventory" className="space-y-4">
-          <DealInventoryTab
-            dealId={deal.id}
-            shareLots={deal.share_lots || []}
-            inventorySummary={inventorySummary}
-          />
+          {deal.share_lots && inventorySummary ? (
+            <DealInventoryTab
+              dealId={deal.id}
+              shareLots={deal.share_lots}
+              inventorySummary={inventorySummary}
+            />
+          ) : (
+            <Card className="border border-white/10 bg-white/5">
+              <CardContent className="p-6 text-center text-muted-foreground">
+                No inventory data available
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         <TabsContent value="members" className="space-y-4">
@@ -243,19 +286,27 @@ export function DealDetailClient({
         </TabsContent>
 
         <TabsContent value="commitments" className="space-y-4">
-          <DealCommitmentsTab
-            dealId={deal.id}
-            commitments={commitments}
-            reservations={reservations}
-            allocations={allocations}
-            dealStatus={deal.status}
-          />
+          {commitments && reservations && allocations ? (
+            <DealCommitmentsTab
+              dealId={deal.id}
+              commitments={commitments}
+              reservations={reservations}
+              allocations={allocations}
+              dealStatus={deal.status}
+            />
+          ) : (
+            <Card className="border border-white/10 bg-white/5">
+              <CardContent className="p-6 text-center text-muted-foreground">
+                Loading commitment data...
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         <TabsContent value="documents" className="space-y-4">
           <DealDocumentsTab
             dealId={deal.id}
-            documents={documents}
+            documents={documents || []}
           />
         </TabsContent>
 
