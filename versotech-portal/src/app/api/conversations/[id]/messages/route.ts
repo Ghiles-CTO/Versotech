@@ -1,5 +1,6 @@
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { auditLogger, AuditActions, AuditEntities } from '@/lib/audit'
+import { getAuthenticatedUser } from '@/lib/api-auth'
 import { NextRequest, NextResponse } from 'next/server'
 
 // Get messages for a conversation
@@ -10,8 +11,8 @@ export async function GET(
   try {
     const supabase = await createClient()
 
-    // Authenticate user
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    // Authenticate user (supports demo mode)
+    const { user, error: authError } = await getAuthenticatedUser(supabase)
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -61,8 +62,8 @@ export async function POST(
   try {
     const supabase = await createClient()
 
-    // Authenticate user
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    // Authenticate user (supports demo mode)
+    const { user, error: authError } = await getAuthenticatedUser(supabase)
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -74,14 +75,16 @@ export async function POST(
       return NextResponse.json({ error: 'Message body or file is required' }, { status: 400 })
     }
 
-    // Verify user has access to this conversation (via RLS)
-    const { data: conversation } = await supabase
-      .from('conversations')
-      .select('id')
-      .eq('id', conversationId)
+    // Verify user has access to this conversation (check participation directly)
+    const serviceClient = createServiceClient()
+    const { data: participantCheck } = await serviceClient
+      .from('conversation_participants')
+      .select('user_id')
+      .eq('conversation_id', conversationId)
+      .eq('user_id', user.id)
       .single()
 
-    if (!conversation) {
+    if (!participantCheck) {
       return NextResponse.json({ error: 'Conversation not found or access denied' }, { status: 404 })
     }
 

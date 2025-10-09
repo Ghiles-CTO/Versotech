@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
+import { getAuthenticatedUser } from '@/lib/api-auth'
 
 /**
  * Get list of available staff members that investors can message
@@ -9,17 +10,17 @@ export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient()
 
-    // Authenticate user
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    // Authenticate user (supports Supabase auth and demo mode)
+    const { user, error: authError } = await getAuthenticatedUser(supabase)
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get all staff members (admin, ops, rm)
+    // Get all staff members (admin, ops, rm) - investors and staff can both see this list
     const { data: staffMembers, error: staffError } = await supabase
       .from('profiles')
       .select('id, display_name, email, role')
-      .or('role.eq.staff_admin,role.eq.staff_ops,role.eq.staff_rm')
+      .in('role', ['staff_admin', 'staff_ops', 'staff_rm'])
       .order('display_name')
 
     if (staffError) {
@@ -29,33 +30,30 @@ export async function GET(request: NextRequest) {
 
     // For each staff member, check if there's an existing conversation
     const normalizedStaff = (staffMembers || []).map((staff, index) => {
-      const baseDisplayName = staff.display_name?.trim() || `Team Member ${index + 1}`
+      const baseDisplayName = staff.display_name?.trim()
+
+      if (baseDisplayName) {
+        return { ...staff, display_name: baseDisplayName }
+      }
+
+      const labelPrefix = staff.role === 'staff_admin' ? 'Admin' : 'Team Member'
 
       const duplicates = (staffMembers || []).filter(
-        (member) => (member.display_name || '').trim() === baseDisplayName
+        (member) => !member.display_name && member.role === staff.role
       )
 
       if (duplicates.length <= 1) {
         return {
           ...staff,
-          display_name: baseDisplayName
+          display_name: `${labelPrefix} ${index + 1}`
         }
       }
 
       const position = duplicates.findIndex((member) => member.id === staff.id)
 
-      if (position === 0) {
-        return {
-          ...staff,
-          display_name: `${baseDisplayName} (Primary)`
-        }
-      }
-
-      const alias = position === 1 ? 'Julian Mashod' : `Julian Mashod ${position}`
-
       return {
         ...staff,
-        display_name: alias
+        display_name: `${labelPrefix} ${position + 1}`
       }
     })
 

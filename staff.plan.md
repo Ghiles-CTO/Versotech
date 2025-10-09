@@ -1,0 +1,6 @@
+- [x] Review current staff portal code patterns and Supabase schema via MCP inspector before new work.
+- [x] Implement Fees Management MVP schema, APIs, and UI per PRD scope.
+- [x] Implement Bank Reconciliation MVP schema, functions, APIs, and UI.
+- [x] Implement Audit & Compliance MVP logging, APIs, and dashboard.
+- [x] Integrate auth, add tests, and validate end-to-end flows.
+- [x] Document MVP behavior, deployment steps, and backlog items.

@@ -336,13 +336,13 @@ export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient()
     
-    // Authenticate user
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    // Authenticate user (supports demo mode)
+    const { user, error: authError } = await getAuthenticatedUser(supabase)
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { subject, participant_ids, type = 'dm', initial_message } = await request.json()
+    const { subject, participant_ids, type = 'dm', initial_message, visibility } = await request.json()
 
     if (!participant_ids || participant_ids.length === 0) {
       return NextResponse.json({ error: 'At least one participant is required' }, { status: 400 })
@@ -351,13 +351,25 @@ export async function POST(request: NextRequest) {
     // Ensure current user is included in participants
     const allParticipants = [...new Set([user.id, ...participant_ids])]
 
-    // Create conversation
+    // Create conversation - set visibility based on type if not provided
+    let finalVisibility = visibility
+    if (!finalVisibility) {
+      if (type === 'group') {
+        finalVisibility = 'internal' // default for groups, will be overridden if investors included
+      } else if (type === 'dm' || type === 'broadcast') {
+        finalVisibility = 'investor' // DMs and broadcasts involve investors
+      } else {
+        finalVisibility = 'internal'
+      }
+    }
+
     const { data: conversation, error: convError } = await supabase
       .from('conversations')
       .insert({
         subject,
         created_by: user.id,
         type,
+        visibility: finalVisibility,
         name: type === 'group' ? subject : null
       })
       .select()
@@ -425,4 +437,3 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
-

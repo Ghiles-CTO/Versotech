@@ -212,9 +212,9 @@ export function InvestorChat() {
       } else {
         toast.error(data.error || 'Failed to load conversation')
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error loading conversation:', error)
-      toast.error('Error loading conversation')
+      toast.error(error.message || 'Error loading conversation')
     } finally {
       setIsLoading(false)
     }

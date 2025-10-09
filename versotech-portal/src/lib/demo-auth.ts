@@ -21,7 +21,7 @@ export interface DemoUser {
 export const DEMO_USERS: Record<string, DemoUser> = {
   // INVESTOR PORTAL USERS
   'investor.demo@versoholdings.com': {
-    id: 'demo-investor-1',
+    id: '20000000-0000-0000-0000-000000000001',
     email: 'investor.demo@versoholdings.com',
     password: 'investor123',
     role: 'investor',
@@ -34,7 +34,7 @@ export const DEMO_USERS: Record<string, DemoUser> = {
     }
   },
   'family.office@versoholdings.com': {
-    id: 'demo-investor-2',
+    id: '20000000-0000-0000-0000-000000000002',
     email: 'family.office@versoholdings.com',
     password: 'family123',
     role: 'investor',
@@ -47,7 +47,7 @@ export const DEMO_USERS: Record<string, DemoUser> = {
     }
   },
   'pension.fund@versoholdings.com': {
-    id: 'demo-investor-3',
+    id: '20000000-0000-0000-0000-000000000003',
     email: 'pension.fund@versoholdings.com',
     password: 'pension123',
     role: 'investor',
@@ -62,7 +62,7 @@ export const DEMO_USERS: Record<string, DemoUser> = {
 
   // STAFF PORTAL USERS
   'admin@versotech.com': {
-    id: 'demo-staff-1',
+    id: '10000000-0000-0000-0000-000000000001',
     email: 'admin@versotech.com',
     password: 'admin123',
     role: 'staff_admin',
@@ -71,7 +71,7 @@ export const DEMO_USERS: Record<string, DemoUser> = {
     department: 'Executive'
   },
   'operations@versotech.com': {
-    id: 'demo-staff-2',
+    id: '10000000-0000-0000-0000-000000000002',
     email: 'operations@versotech.com',
     password: 'ops123',
     role: 'staff_ops',
@@ -80,7 +80,7 @@ export const DEMO_USERS: Record<string, DemoUser> = {
     department: 'Operations'
   },
   'relations@versotech.com': {
-    id: 'demo-staff-3',
+    id: '10000000-0000-0000-0000-000000000003',
     email: 'relations@versotech.com',
     password: 'rm123',
     role: 'staff_rm',
@@ -89,7 +89,7 @@ export const DEMO_USERS: Record<string, DemoUser> = {
     department: 'Client Relations'
   },
   'compliance@versotech.com': {
-    id: 'demo-staff-4',
+    id: '10000000-0000-0000-0000-000000000004',
     email: 'compliance@versotech.com',
     password: 'compliance123',
     role: 'staff_admin',

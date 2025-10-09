@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { auditLogger, AuditActions, AuditEntities } from '@/lib/audit'
+import { getAuthenticatedUser } from '@/lib/api-auth'
 import { NextRequest, NextResponse } from 'next/server'
 
 /**
@@ -12,7 +13,7 @@ export async function GET(request: NextRequest) {
     const supabase = await createClient()
 
     // Authenticate user
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    const { user, error: authError } = await getAuthenticatedUser(supabase)
     if (authError || !user) {
       console.error('[Staff Conversation API] Auth error:', authError)
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -157,6 +158,7 @@ export async function GET(request: NextRequest) {
       .insert({
         subject: `Chat with ${staffMember.display_name || 'VERSO Team'}`,
         type: 'dm',
+        visibility: 'investor',
         created_by: user.id,
         last_message_at: new Date().toISOString()
       })
