@@ -3,6 +3,8 @@ import { createServiceClient } from '@/lib/supabase/server'
 import { requireStaffAuth } from '@/lib/auth'
 import { CreateDealForm } from '@/components/deals/create-deal-form'
 
+export const dynamic = 'force-dynamic'
+
 export default async function CreateDealPage() {
   await requireStaffAuth()
   

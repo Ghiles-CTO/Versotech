@@ -1,3 +1,4 @@
+import { requireStaffAuth } from '@/lib/auth'
 import { AppLayout } from '@/components/layout/app-layout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -9,7 +10,6 @@ import {
   Clock,
   MessageSquare,
   TrendingUp,
-  Settings,
   Shield,
   Database,
   Workflow,
@@ -24,339 +24,321 @@ import {
   Target,
   Globe
 } from 'lucide-react'
+import { getStaffDashboardData } from '@/lib/staff/dashboard-data'
+
+export const dynamic = 'force-dynamic'
+
+const cardBaseClasses =
+  'bg-[#060608] border border-white/10 shadow-lg shadow-black/20 transition-colors hover:border-white/20'
+
+const sectionBorderClasses = 'border border-white/10 bg-[#060608]'
 
 export default async function StaffDashboard() {
+  await requireStaffAuth()
+
+  const data = await getStaffDashboardData()
+
+  const statusMessages: string[] = []
+  if (data.errors && data.errors.length > 0) {
+    statusMessages.push('Some dashboard metrics are unavailable right now.')
+  }
+
+  const formattedDate = new Intl.DateTimeFormat('en-GB', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric'
+  }).format(new Date(data.generatedAt))
+
+  const kpiCards = [
+    {
+      label: 'Active LPs',
+      value: data.kpis.activeLps,
+      helper: data.management.activeInvestors > data.kpis.activeLps ? 'Includes investors in review' : null,
+      icon: Users,
+      accent: 'text-slate-200'
+    },
+    {
+      label: 'Pending KYC/AML',
+      value: data.kpis.pendingKyc,
+      helper:
+        data.kpis.highPriorityKyc > 0
+          ? `${data.kpis.highPriorityKyc} high priority`
+          : 'All standard priority',
+      icon: AlertTriangle,
+      accent: 'text-amber-300'
+    },
+    {
+      label: 'Workflow Runs (MTD)',
+      value: data.kpis.workflowRunsThisMonth,
+      helper: 'Includes all n8n executions',
+      icon: Workflow,
+      accent: 'text-sky-300'
+    },
+    {
+      label: 'Compliance Rate',
+      value: `${data.kpis.complianceRate.toFixed(1)}%`,
+      helper: 'Approved investors / total',
+      icon: CheckCircle,
+      accent: 'text-emerald-300'
+    }
+  ]
+
+  const pipelineSections = [
+    {
+      title: 'KYC Processing',
+      description: 'Professional investor verification',
+      count: `${data.pipeline.kycPending} pending`,
+      icon: PlayCircle,
+      accent: 'text-sky-200',
+      wrapper: 'border-sky-500/40 bg-sky-500/20'
+    },
+    {
+      title: 'NDA Execution',
+      description: 'DocuSign/Dropbox Sign processing',
+      count: `${data.pipeline.ndaInProgress} in progress`,
+      icon: FileText,
+      accent: 'text-emerald-200',
+      wrapper: 'border-emerald-500/40 bg-emerald-500/20'
+    },
+    {
+      title: 'Subscription Processing',
+      description: 'Subscription agreements under review',
+      count: `${data.pipeline.subscriptionReview} review`,
+      icon: Building2,
+      accent: 'text-amber-200',
+      wrapper: 'border-amber-500/40 bg-amber-500/20'
+    },
+    {
+      title: 'Capital Calls',
+      description: data.pipeline.nextCapitalCall
+        ? `${data.pipeline.nextCapitalCall.name}`
+        : 'No upcoming calls scheduled',
+      count: data.pipeline.nextCapitalCall
+        ? new Intl.DateTimeFormat('en-GB', {
+            day: '2-digit',
+            month: 'short'
+          }).format(new Date(data.pipeline.nextCapitalCall.dueDate))
+        : 'All clear',
+      icon: Clock,
+      accent: 'text-purple-200',
+      wrapper: 'border-purple-500/40 bg-purple-500/20'
+    }
+  ]
+
+  const managementCards = [
+    {
+      title: 'Deal Management',
+      description: 'Manage opportunities & allocations',
+      href: '/versotech/staff/deals',
+      value: data.management.activeDeals,
+      icon: Building2,
+      accent: 'text-sky-200'
+    },
+    {
+      title: 'Request Management',
+      description: 'Handle LP requests and SLAs',
+      href: '/versotech/staff/requests',
+      value: data.management.activeRequests,
+      icon: ClipboardList,
+      accent: 'text-amber-200'
+    },
+    {
+      title: 'Compliance & Audit',
+      description: 'Monitor regulatory posture',
+      href: '/versotech/staff/audit',
+      value: `${data.management.complianceRate.toFixed(1)}%`,
+      icon: Shield,
+      accent: 'text-emerald-200'
+    },
+    {
+      title: 'LP Management',
+      description: 'Investor onboarding & relationships',
+      href: '/versotech/staff/investors',
+      value: data.management.activeInvestors,
+      icon: Users,
+      accent: 'text-purple-200'
+    }
+  ]
+
   return (
     <AppLayout brand="versotech">
-      <div className="p-6 space-y-6 text-foreground">
+      <div className="bg-[#020204] text-slate-100 min-h-screen">
+        <div className="p-6 space-y-6">
+          <div className="flex flex-col gap-4">
+            {statusMessages.length > 0 && (
+              <div className="rounded-md border border-amber-500/40 bg-amber-500/10 p-4 text-sm text-amber-100">
+                {statusMessages.join(' ')}
+              </div>
+            )}
 
-        {/* VERSO Operations Header */}
-        <div className="border-b border-border/60 pb-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold">VERSO Operations</h1>
-              <p className="text-lg text-muted-foreground mt-1">
-                Merchant Banking Operations • Multi-Vehicle Management • BVI/GDPR Compliant
-              </p>
-              <div className="flex items-center gap-4 mt-3">
-              <Badge variant="outline" className="text-xs border-white/20 text-foreground">
-                  <Shield className="h-3 w-3 mr-1" />
-                  BVI FSC Regulated
-                </Badge>
-              <Badge variant="outline" className="text-xs border-white/20 text-foreground">
-                  <Globe className="h-3 w-3 mr-1" />
-                  GDPR Compliant
-                </Badge>
-              <Badge variant="outline" className="text-xs border-white/20 text-foreground">
-                  <Activity className="h-3 w-3 mr-1" />
-                  n8n Workflows Active
-                </Badge>
+            <div className="border-b border-white/10 pb-6">
+              <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <Badge variant="outline" className="border-white/20 bg-black/40 text-xs text-slate-200">
+                      <Shield className="mr-1 h-3 w-3" />
+                      BVI FSC Regulated
+                    </Badge>
+                    <Badge variant="outline" className="border-white/20 bg-black/40 text-xs text-slate-200">
+                      <Globe className="mr-1 h-3 w-3" />
+                      GDPR Compliant
+                    </Badge>
+                    <Badge variant="outline" className="border-white/20 bg-black/40 text-xs text-slate-200">
+                      <Activity className="mr-1 h-3 w-3" />
+                      n8n Workflows Active
+                    </Badge>
+                  </div>
+                  <div>
+                    <h1 className="text-3xl font-semibold tracking-tight text-white">VERSO Operations</h1>
+                    <p className="mt-2 max-w-2xl text-sm text-slate-300">
+                      Merchant Banking Operations • Multi-Vehicle Management • BVI/GDPR Compliant
+                    </p>
+                  </div>
+                </div>
+                <div className="text-sm text-right text-slate-400">
+                  <p>Operations Dashboard</p>
+                  <p className="text-lg font-semibold text-white">{formattedDate}</p>
+                </div>
               </div>
             </div>
-            <div className="text-right">
-              <p className="text-sm text-muted-foreground">Operations Dashboard</p>
-              <p className="text-lg font-semibold">{new Date().toLocaleDateString()}</p>
-            </div>
           </div>
-        </div>
 
-        {/* Operational KPIs */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <Card className="bg-white/5 border border-white/10">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Active LPs
-              </CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-foreground">127</div>
-              <p className="text-xs text-muted-foreground">
-                <span className="text-emerald-200">+4</span> this month
-              </p>
-            </CardContent>
-          </Card>
+          <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+            {kpiCards.map(({ label, value, helper, icon: Icon, accent }) => (
+              <Card key={label} className={`${cardBaseClasses}`}>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium text-slate-300">{label}</CardTitle>
+                  <Icon className={`h-5 w-5 ${accent}`} />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-semibold text-white">{value}</div>
+                  {helper && <p className="mt-1 text-xs text-slate-400">{helper}</p>}
+                </CardContent>
+              </Card>
+            ))}
+          </section>
 
-          <Card className="bg-white/5 border border-white/10">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Pending KYC/AML
-              </CardTitle>
-              <AlertTriangle className="h-4 w-4 text-amber-300" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-foreground">8</div>
-              <p className="text-xs text-muted-foreground">
-                <span className="text-amber-200">3</span> high priority
-              </p>
-            </CardContent>
-          </Card>
+          <section className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+            <Card className={`${sectionBorderClasses} lg:col-span-1`}>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-white">
+                  <Zap className="h-5 w-5 text-sky-300" />
+                  Process Center
+                </CardTitle>
+                <CardDescription className="text-slate-400">
+                  Trigger n8n automation workflows ({data.processCenter.activeWorkflows} active)
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {[
+                  { label: 'Positions Statement', icon: BarChart3 },
+                  { label: 'NDA Agent', icon: FileText },
+                  { label: 'Shared-Drive Notification', icon: Database },
+                  { label: 'Inbox Manager', icon: MessageSquare },
+                  { label: 'LinkedIn Leads Scraper', icon: Target },
+                  { label: 'Reporting Agent', icon: TrendingUp }
+                ].map(({ label, icon: Icon }) => (
+                  <Link key={label} href="/versotech/staff/processes" className="block">
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start border-white/10 bg-black/40 text-slate-200 hover:bg-black/60 hover:text-white"
+                    >
+                      <Icon className="mr-2 h-4 w-4" />
+                      {label}
+                    </Button>
+                  </Link>
+                ))}
+              </CardContent>
+            </Card>
 
-          <Card className="bg-white/5 border border-white/10">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Workflow Runs
-              </CardTitle>
-              <Workflow className="h-4 w-4 text-sky-300" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-foreground">342</div>
-              <p className="text-xs text-muted-foreground">This month</p>
-            </CardContent>
-          </Card>
+            <Card className={`${sectionBorderClasses} lg:col-span-2`}>
+              <CardHeader>
+                <CardTitle className="text-white">Operations Pipeline</CardTitle>
+                <CardDescription className="text-slate-400">
+                  Real-time view of onboarding, compliance, and capital call activity
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {pipelineSections.map(({ title, description, count, icon: Icon, accent, wrapper }) => (
+                    <div
+                      key={title}
+                      className={`flex items-center justify-between rounded-lg border px-4 py-4 backdrop-blur-sm ${wrapper}`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <Icon className={`h-5 w-5 ${accent}`} />
+                        <div>
+                          <p className="font-medium text-white">{title}</p>
+                          <p className="text-xs text-slate-200/80">{description}</p>
+                        </div>
+                      </div>
+                      <Badge variant="secondary" className="bg-black/60 text-slate-100">
+                        {count}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </section>
 
-          <Card className="bg-white/5 border border-white/10">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Compliance Rate
-              </CardTitle>
-              <CheckCircle className="h-4 w-4 text-emerald-300" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-foreground">99.7%</div>
-              <p className="text-xs text-muted-foreground">BVI/GDPR standard</p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Process Center & Workflows */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-          {/* n8n Process Center */}
-          <Card className="lg:col-span-1 border border-white/10 bg-white/5">
+          <Card className={`${sectionBorderClasses}`}>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-foreground">
-                <Zap className="h-5 w-5 text-sky-300" />
-                Process Center
-              </CardTitle>
-              <CardDescription>
-                n8n automation workflows for VERSO operations
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Link href="/versotech/staff/processes">
-                <Button className="w-full justify-start border-white/10 text-foreground hover:bg-white/10" variant="outline">
-                  <BarChart3 className="mr-2 h-4 w-4 text-sky-200" />
-                  Positions Statement
-                </Button>
-              </Link>
-              <Link href="/versotech/staff/processes">
-                <Button className="w-full justify-start border-white/10 text-foreground hover:bg-white/10" variant="outline">
-                  <FileText className="mr-2 h-4 w-4 text-emerald-200" />
-                  NDA Agent
-                </Button>
-              </Link>
-              <Link href="/versotech/staff/processes">
-                <Button className="w-full justify-start border-white/10 text-foreground hover:bg-white/10" variant="outline">
-                  <Database className="mr-2 h-4 w-4 text-purple-200" />
-                  Shared-Drive Notification
-                </Button>
-              </Link>
-              <Link href="/versotech/staff/processes">
-                <Button className="w-full justify-start border-white/10 text-foreground hover:bg-white/10" variant="outline">
-                  <MessageSquare className="mr-2 h-4 w-4 text-sky-200" />
-                  Inbox Manager
-                </Button>
-              </Link>
-              <Link href="/versotech/staff/processes">
-                <Button className="w-full justify-start border-white/10 text-foreground hover:bg-white/10" variant="outline">
-                  <Target className="mr-2 h-4 w-4 text-rose-200" />
-                  LinkedIn Leads Scraper
-                </Button>
-              </Link>
-              <Link href="/versotech/staff/processes">
-                <Button className="w-full justify-start border-white/10 text-foreground hover:bg-white/10" variant="outline">
-                  <TrendingUp className="mr-2 h-4 w-4 text-amber-200" />
-                  Reporting Agent
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-
-          {/* Operations Pipeline */}
-          <Card className="lg:col-span-2 border border-white/10 bg-white/5">
-            <CardHeader>
-              <CardTitle className="text-foreground">Operations Pipeline</CardTitle>
-              <CardDescription>
-                Current onboarding funnel and operational status
+              <CardTitle className="text-white">Recent Operations</CardTitle>
+              <CardDescription className="text-slate-400">
+                Latest workflow executions and system events
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 rounded-lg border border-sky-400/30 bg-sky-500/10">
-                  <div className="flex items-center gap-3">
-                    <PlayCircle className="h-5 w-5 text-sky-200" />
-                    <div>
-                      <p className="font-medium text-foreground">KYC Processing</p>
-                      <p className="text-sm text-muted-foreground">Professional investor verification</p>
-                    </div>
+                {data.recentActivity.length === 0 ? (
+                  <div className="rounded-md border border-dashed border-white/20 bg-black/30 p-6 text-center text-sm text-slate-400">
+                    No recent operations recorded.
                   </div>
-                  <Badge variant="secondary" className="bg-white/10 text-foreground">8 pending</Badge>
-                </div>
-
-                <div className="flex items-center justify-between p-4 rounded-lg border border-emerald-400/30 bg-emerald-500/10">
-                  <div className="flex items-center gap-3">
-                    <FileText className="h-5 w-5 text-emerald-200" />
-                    <div>
-                      <p className="font-medium text-foreground">NDA Execution</p>
-                      <p className="text-sm text-muted-foreground">DocuSign/Dropbox Sign processing</p>
+                ) : (
+                  data.recentActivity.map((activity) => (
+                    <div
+                      key={activity.id}
+                      className="flex items-center gap-3 rounded-lg border border-white/10 bg-black/30 px-4 py-3"
+                    >
+                      <div className="h-2 w-2 rounded-full bg-emerald-300" />
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-white">{activity.title}</p>
+                        {activity.description && (
+                          <p className="text-xs text-slate-400">{activity.description}</p>
+                        )}
+                      </div>
+                      <span className="text-xs text-slate-500">
+                        {new Intl.DateTimeFormat('en-GB', {
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        }).format(new Date(activity.createdAt))}
+                      </span>
                     </div>
-                  </div>
-                  <Badge variant="secondary" className="bg-white/10 text-foreground">5 in progress</Badge>
-                </div>
-
-                <div className="flex items-center justify-between p-4 rounded-lg border border-amber-400/30 bg-amber-500/10">
-                  <div className="flex items-center gap-3">
-                    <Building2 className="h-5 w-5 text-amber-200" />
-                    <div>
-                      <p className="font-medium text-foreground">Subscription Processing</p>
-                      <p className="text-sm text-muted-foreground">VERSO FUND & REAL Empire subscriptions</p>
-                    </div>
-                  </div>
-                  <Badge variant="secondary" className="bg-white/10 text-foreground">12 review</Badge>
-                </div>
-
-                <div className="flex items-center justify-between p-4 rounded-lg border border-purple-400/30 bg-purple-500/10">
-                  <div className="flex items-center gap-3">
-                    <Clock className="h-5 w-5 text-purple-200" />
-                    <div>
-                      <p className="font-medium text-foreground">Capital Calls</p>
-                      <p className="text-sm text-muted-foreground">Upcoming capital call notifications</p>
-                    </div>
-                  </div>
-                  <Badge variant="secondary" className="bg-white/10 text-foreground">Feb 15</Badge>
-                </div>
+                  ))
+                )}
               </div>
             </CardContent>
           </Card>
-        </div>
 
-        {/* Recent Operations & Activity */}
-        <Card className="border border-white/10 bg-white/5">
-          <CardHeader>
-            <CardTitle className="text-foreground">Recent Operations</CardTitle>
-            <CardDescription>
-              Latest workflow executions and system events
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center space-x-3 p-3 rounded-lg border border-emerald-400/30 bg-emerald-500/10">
-                <div className="w-2 h-2 rounded-full bg-emerald-300"></div>
-                <BarChart3 className="h-5 w-5 text-sky-200" />
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-foreground">Position Statement Generated</p>
-                  <p className="text-xs text-muted-foreground">VERSO FUND - Luxembourg Entity LP #47 - Completed</p>
-                </div>
-                <span className="text-xs text-muted-foreground">12 min ago</span>
-              </div>
-
-              <div className="flex items-center space-x-3 p-3 rounded-lg border border-sky-400/30 bg-sky-500/10">
-                <div className="w-2 h-2 rounded-full bg-sky-300"></div>
-                <FileText className="h-5 w-5 text-emerald-200" />
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-foreground">NDA Agent Processing</p>
-                  <p className="text-xs text-muted-foreground">Professional Investor Qualification - High Net Worth Individual</p>
-                </div>
-                <span className="text-xs text-muted-foreground">1 hour ago</span>
-              </div>
-
-              <div className="flex items-center space-x-3 p-3 rounded-lg border border-amber-400/30 bg-amber-500/10">
-                <div className="w-2 h-2 rounded-full bg-amber-300"></div>
-                <AlertTriangle className="h-5 w-5 text-amber-200" />
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-foreground">KYC Review Required</p>
-                  <p className="text-xs text-muted-foreground">Enhanced Due Diligence - Institutional Investor</p>
-                </div>
-                <span className="text-xs text-muted-foreground">2 hours ago</span>
-              </div>
-
-              <div className="flex items-center space-x-3 p-3 rounded-lg border border-purple-400/30 bg-purple-500/10">
-                <div className="w-2 h-2 rounded-full bg-purple-300"></div>
-                <Database className="h-5 w-5 text-purple-200" />
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-foreground">Shared Drive Sync</p>
-                  <p className="text-xs text-muted-foreground">REAL Empire Compartment III - Document Update Notification Sent</p>
-                </div>
-                <span className="text-xs text-muted-foreground">4 hours ago</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Management Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <Link href="/versotech/staff/deals">
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer border border-white/10 bg-white/5">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-foreground">
-                  <Building2 className="h-5 w-5 text-sky-200" />
-                  Deal Management
-                </CardTitle>
-                <CardDescription>
-                  Manage opportunities with inventory and collaboration
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold mb-2 text-foreground">8</div>
-                <p className="text-sm text-muted-foreground">Active deals</p>
-              </CardContent>
-            </Card>
-          </Link>
-
-          <Link href="/versotech/staff/requests">
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer border border-white/10 bg-white/5">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-foreground">
-                  <ClipboardList className="h-5 w-5 text-amber-200" />
-                  Request Management
-                </CardTitle>
-                <CardDescription>
-                  Handle LP requests and track fulfillment status
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold mb-2 text-foreground">23</div>
-                <p className="text-sm text-muted-foreground">Active requests</p>
-              </CardContent>
-            </Card>
-          </Link>
-
-          <Link href="/versotech/staff/audit">
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer border border-white/10 bg-white/5">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-foreground">
-                  <Shield className="h-5 w-5 text-emerald-200" />
-                  Compliance & Audit
-                </CardTitle>
-                <CardDescription>
-                  BVI/FSC compliance monitoring and audit trails
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold mb-2 text-foreground">100%</div>
-                <p className="text-sm text-muted-foreground">Regulatory compliance</p>
-              </CardContent>
-            </Card>
-          </Link>
-
-          <Link href="/versotech/staff/investors">
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer border border-white/10 bg-white/5">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-foreground">
-                  <Users className="h-5 w-5 text-purple-200" />
-                  LP Management
-                </CardTitle>
-                <CardDescription>
-                  Investor onboarding and relationship management
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold mb-2 text-foreground">127</div>
-                <p className="text-sm text-muted-foreground">Active LPs</p>
-              </CardContent>
-            </Card>
-          </Link>
+          <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+            {managementCards.map(({ title, description, href, value, icon: Icon, accent }) => (
+              <Link key={title} href={href} className="block">
+                <Card className={`${cardBaseClasses} h-full`}>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-base text-white">
+                      <Icon className={`h-5 w-5 ${accent}`} />
+                      {title}
+                    </CardTitle>
+                    <CardDescription className="text-slate-400">{description}</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-semibold text-white">{value}</div>
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
+          </section>
         </div>
       </div>
     </AppLayout>

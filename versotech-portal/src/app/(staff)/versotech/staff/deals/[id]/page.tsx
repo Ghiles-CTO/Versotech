@@ -4,6 +4,8 @@ import { requireStaffAuth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { DealDetailClient } from '@/components/deals/deal-detail-client'
 
+export const dynamic = 'force-dynamic'
+
 export default async function DealDetailPage({
   params
 }: {

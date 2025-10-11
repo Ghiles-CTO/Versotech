@@ -5,6 +5,8 @@ import { ApprovalsPageClient } from '@/components/approvals/approvals-page-clien
 import { Approval, ApprovalStats } from '@/types/approvals'
 import { createServiceClient } from '@/lib/supabase/server'
 
+export const dynamic = 'force-dynamic'
+
 // Fetch approval data server-side directly from database
 async function fetchApprovalData(): Promise<{
   approvals: Approval[]

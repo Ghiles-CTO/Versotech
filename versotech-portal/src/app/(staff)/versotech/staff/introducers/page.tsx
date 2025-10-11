@@ -8,6 +8,8 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { AddIntroducerDialogWrapper } from '@/components/staff/introducers/add-introducer-dialog-wrapper'
 
+export const dynamic = 'force-dynamic'
+
 export const revalidate = 0
 
 type IntroducerRecord = {

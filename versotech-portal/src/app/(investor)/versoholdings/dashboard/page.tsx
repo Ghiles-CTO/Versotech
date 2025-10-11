@@ -13,6 +13,8 @@ import {
 import { createClient } from '@/lib/supabase/server'
 import { measureTimeAsync } from '@/lib/performance'
 
+export const dynamic = 'force-dynamic'
+
 async function getPortfolioData() {
   return measureTimeAsync('portfolio-data-fetch', async () => {
     try {

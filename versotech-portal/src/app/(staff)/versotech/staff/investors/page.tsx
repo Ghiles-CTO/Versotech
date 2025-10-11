@@ -11,6 +11,8 @@ import { AddInvestorModal } from '@/components/investors/add-investor-modal'
 import { InvestorFilters } from '@/components/investors/investor-filters'
 import { ExportInvestorsButton } from '@/components/investors/export-investors-button'
 import {
+
+export const dynamic = 'force-dynamic'
   Users,
   Search,
   Eye,

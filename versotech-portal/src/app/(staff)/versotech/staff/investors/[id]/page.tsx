@@ -10,6 +10,8 @@ import { notFound } from 'next/navigation'
 import { InvestorDetailActions } from '@/components/investors/investor-detail-actions'
 import { PortalUsersSection } from '@/components/investors/portal-users-section'
 
+export const dynamic = 'force-dynamic'
+
 type InvestorDetail = {
   id: string
   legal_name: string

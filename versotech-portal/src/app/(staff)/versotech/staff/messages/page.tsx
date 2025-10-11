@@ -4,6 +4,8 @@ import { requireAuth } from '@/lib/auth'
 import { createServiceClient } from '@/lib/supabase/server'
 import { normalizeConversation } from '@/lib/messaging'
 
+export const dynamic = 'force-dynamic'
+
 export default async function StaffMessages() {
   const profile = await requireAuth(['staff_admin', 'staff_ops', 'staff_rm'])
   const supabase = createServiceClient()

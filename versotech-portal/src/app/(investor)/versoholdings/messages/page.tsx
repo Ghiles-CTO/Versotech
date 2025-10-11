@@ -4,6 +4,8 @@ import { requireAuth } from '@/lib/auth'
 import { createServiceClient } from '@/lib/supabase/server'
 import { normalizeConversation } from '@/lib/messaging'
 
+export const dynamic = 'force-dynamic'
+
 export default async function MessagesPage() {
   const profile = await requireAuth(['investor'])
   const supabase = createServiceClient()

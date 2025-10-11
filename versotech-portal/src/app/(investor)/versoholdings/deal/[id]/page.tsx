@@ -5,6 +5,8 @@ import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { RealTimeInventory } from '@/components/deals/real-time-inventory'
 import {
+
+export const dynamic = 'force-dynamic'
   Building2,
   Clock,
   Users,

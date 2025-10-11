@@ -3,6 +3,8 @@ import { createClient } from '@/lib/supabase/server'
 import { TasksPageClient } from './tasks-page-client'
 import { redirect } from 'next/navigation'
 
+export const dynamic = 'force-dynamic'
+
 export interface TaskInstructions {
   steps: string[]
   requirements: string[]

@@ -6,6 +6,8 @@ import { Document, DocumentScope } from '@/types/documents'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { redirect } from 'next/navigation'
 
+export const dynamic = 'force-dynamic'
+
 export default async function DocumentsPage({
   searchParams
 }: {

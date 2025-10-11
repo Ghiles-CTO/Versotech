@@ -3,6 +3,8 @@ import { requireStaffAuth } from '@/lib/auth'
 import { AppLayout } from '@/components/layout/app-layout'
 import { StaffDocumentsClient } from '@/components/documents/staff-documents-client'
 
+export const dynamic = 'force-dynamic'
+
 export default async function StaffDocumentsPage() {
   // Auth check using the same method as other staff pages
   const user = await requireStaffAuth()

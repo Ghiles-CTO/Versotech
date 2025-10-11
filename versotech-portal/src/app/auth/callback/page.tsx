@@ -1,11 +1,11 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
 import { Loader2, CheckCircle, XCircle } from 'lucide-react'
 
-export default function AuthCallbackPage() {
+function AuthCallbackContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading')
@@ -166,6 +166,22 @@ export default function AuthCallbackPage() {
         )}
       </div>
     </div>
+  )
+}
+
+export default function AuthCallbackPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-slate-50 flex items-center justify-center p-4">
+        <div className="bg-white p-8 rounded-lg shadow-lg max-w-md w-full text-center">
+          <Loader2 className="w-16 h-16 mx-auto mb-4 text-blue-600 animate-spin" />
+          <h1 className="text-xl font-bold text-gray-900 mb-2">Loading...</h1>
+          <p className="text-gray-600">Please wait while we verify your email.</p>
+        </div>
+      </div>
+    }>
+      <AuthCallbackContent />
+    </Suspense>
   )
 }
 
