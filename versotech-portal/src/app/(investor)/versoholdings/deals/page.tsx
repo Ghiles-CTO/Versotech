@@ -9,8 +9,6 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
 import {
-
-export const dynamic = 'force-dynamic'
   TrendingUp,
   Package,
   Clock,
@@ -22,6 +20,8 @@ export const dynamic = 'force-dynamic'
   AlertTriangle,
   Timer
 } from 'lucide-react'
+
+export const dynamic = 'force-dynamic'
 
 interface InvestorDeal {
   id: string

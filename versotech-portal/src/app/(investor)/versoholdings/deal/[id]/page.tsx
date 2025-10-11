@@ -5,8 +5,6 @@ import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { RealTimeInventory } from '@/components/deals/real-time-inventory'
 import {
-
-export const dynamic = 'force-dynamic'
   Building2,
   Clock,
   Users,
@@ -16,6 +14,8 @@ export const dynamic = 'force-dynamic'
   CheckCircle2,
   Timer
 } from 'lucide-react'
+
+export const dynamic = 'force-dynamic'
 
 interface DealParticipationPageProps {
   params: { id: string }

@@ -7,8 +7,6 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import {
-
-export const dynamic = 'force-dynamic'
   ArrowLeft,
   Building,
   TrendingUp,
@@ -25,6 +23,8 @@ export const dynamic = 'force-dynamic'
   Target,
   Info
 } from 'lucide-react'
+
+export const dynamic = 'force-dynamic'
 
 interface Position {
   units: number
