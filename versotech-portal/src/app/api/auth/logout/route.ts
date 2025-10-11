@@ -13,8 +13,6 @@ export async function POST(request: NextRequest) {
       console.error('[auth] Supabase signOut error during /api/auth/logout:', signOutError)
     }
 
-    cookieStore.delete('demo_auth_user')
-
     const allCookies = cookieStore.getAll()
     allCookies.forEach((cookie) => {
       if (cookie.name.startsWith('sb-')) {

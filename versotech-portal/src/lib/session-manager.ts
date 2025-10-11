@@ -1,6 +1,12 @@
 ﻿'use client'
 
-const SESSION_MARKER_KEY = 'verso-session-id'
+/**
+ * Simplified Session Manager
+ * 
+ * Provides basic session management utilities without forcing re-authentication.
+ * Supabase handles session persistence and expiration automatically.
+ */
+
 const AUTH_KEY_HINTS = ['supabase', 'sb-', 'auth']
 
 const removeAuthKeys = (storage: Storage) => {
@@ -29,6 +35,10 @@ class SessionManager {
     return SessionManager.instance
   }
 
+  /**
+   * Initialize session manager
+   * Sets up storage event listeners to handle cross-tab logout
+   */
   init(): void {
     if (this.isInitialized || typeof window === 'undefined') {
       return
@@ -36,91 +46,74 @@ class SessionManager {
 
     this.isInitialized = true
 
-    if (!sessionStorage.getItem(SESSION_MARKER_KEY)) {
-      console.info('[auth-session] Detected new browser session – resetting cached credentials')
-      this.forceSignOut()
-      sessionStorage.setItem(SESSION_MARKER_KEY, Date.now().toString())
-    }
-
+    // Listen for storage changes in other tabs (cross-tab logout)
     window.addEventListener('storage', this.handleStorageChange)
-    window.addEventListener('beforeunload', this.handleBrowserClose)
 
-    console.info('[auth-session] Session manager initialised')
+    console.info('[auth-session] Session manager initialized')
   }
 
+  /**
+   * Force sign out by clearing all auth-related storage
+   * Used during logout to ensure clean state
+   */
   forceSignOut(): void {
     if (typeof window === 'undefined') {
       return
     }
 
-    console.info('[auth-session] Forcing complete sign out')
+    console.info('[auth-session] Clearing local auth state')
 
     removeAuthKeys(window.localStorage)
     removeAuthKeys(window.sessionStorage)
 
+    // Call logout API to clear server-side session
     void fetch('/api/auth/logout', {
       method: 'POST',
       credentials: 'include',
     }).catch((error) => {
-      console.error('[auth-session] Failed to revoke server session during forceSignOut', error)
+      console.error('[auth-session] Failed to revoke server session', error)
     })
-
-    console.info('[auth-session] Local auth caches cleared')
   }
 
+  /**
+   * Handle storage changes from other tabs
+   * If auth keys are removed in another tab, redirect to login
+   */
   private handleStorageChange = (event: StorageEvent): void => {
-    if (event.key && AUTH_KEY_HINTS.some((hint) => event.key.includes(hint)) && event.newValue === null) {
+    if (event.key && AUTH_KEY_HINTS.some((hint) => event.key?.includes(hint)) && event.newValue === null) {
+      console.info('[auth-session] Auth state cleared in another tab, redirecting to login')
       window.location.href = '/versoholdings/login?error=signed_out'
     }
   }
 
-  private handleBrowserClose = (): void => {
-    console.info('[auth-session] Browser session ending')
-  }
-
-  shouldForceAuth(): boolean {
-    if (typeof window === 'undefined') {
-      return false
-    }
-
-    if (!sessionStorage.getItem(SESSION_MARKER_KEY)) {
-      return true
-    }
-
-    const hasAuthTokens = [...Object.keys(localStorage), ...Object.keys(sessionStorage)].some((key) =>
-      AUTH_KEY_HINTS.some((hint) => key.includes(hint))
-    )
-
-    if (hasAuthTokens && !sessionStorage.getItem(SESSION_MARKER_KEY)) {
-      return true
-    }
-
-    return false
-  }
-
+  /**
+   * Mark session as authenticated
+   * This is called after successful login to update session state
+   */
   markAuthenticated(): void {
     if (typeof window === 'undefined') {
       return
     }
 
-    sessionStorage.setItem(SESSION_MARKER_KEY, Date.now().toString())
     console.info('[auth-session] Session marked as authenticated')
   }
 
+  /**
+   * Get debug information about current session state
+   * Useful for troubleshooting auth issues
+   */
   getDebugInfo(): Record<string, unknown> {
     if (typeof window === 'undefined') {
       return { error: 'Not in browser' }
     }
 
     return {
-      sessionKey: !!sessionStorage.getItem(SESSION_MARKER_KEY),
       localStorageKeys: Object.keys(localStorage).filter((key) =>
         AUTH_KEY_HINTS.some((hint) => key.includes(hint))
       ),
       sessionStorageKeys: Object.keys(sessionStorage).filter((key) =>
         AUTH_KEY_HINTS.some((hint) => key.includes(hint))
       ),
-      shouldForceAuth: this.shouldForceAuth(),
     }
   }
 }

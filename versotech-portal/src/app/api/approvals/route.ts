@@ -1,40 +1,8 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { auditLogger, AuditActions, AuditEntities } from '@/lib/audit'
+import { getAuthenticatedUser } from '@/lib/api-auth'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { cookies } from 'next/headers'
-import { parseDemoSession, DEMO_COOKIE_NAME } from '@/lib/demo-session'
-
-// Helper to get user from either real auth or demo mode
-async function getAuthenticatedUser(supabase: any) {
-  // Try real auth first
-  const { data: { user }, error: authError } = await supabase.auth.getUser()
-  
-  if (user) {
-    return { user, error: null }
-  }
-  
-  // Check for demo mode
-  const cookieStore = await cookies()
-  const demoCookie = cookieStore.get(DEMO_COOKIE_NAME)
-  
-  if (demoCookie) {
-    const demoSession = parseDemoSession(demoCookie.value)
-    if (demoSession) {
-      // Return a mock user object for demo mode
-      return {
-        user: {
-          id: demoSession.userId,
-          email: demoSession.email,
-          user_metadata: { role: demoSession.role }
-        },
-        error: null
-      }
-    }
-  }
-  
-  return { user: null, error: authError || new Error('No authentication found') }
-}
 
 // Validation schema for creating approvals
 const createApprovalSchema = z.object({
@@ -216,7 +184,7 @@ export async function GET(request: NextRequest) {
     const serviceSupabase = createServiceClient()
     const { searchParams } = new URL(request.url)
 
-    // Get the authenticated user (supports both real auth and demo mode)
+    // Get the authenticated user
     const { user, error: authError } = await getAuthenticatedUser(supabase)
 
     if (authError || !user) {
@@ -227,25 +195,11 @@ export async function GET(request: NextRequest) {
     }
 
     // Check if user is staff (only staff can view approvals)
-    let profile = null
-    
-    // For demo mode, create a mock profile from user metadata
-    if (user.user_metadata?.role) {
-      profile = {
-        id: user.id,
-        role: user.user_metadata.role,
-        display_name: user.email?.split('@')[0] || 'Demo User',
-        email: user.email
-      }
-    } else {
-      // For real auth, fetch from database
-      const { data: dbProfile } = await supabase
-        .from('profiles')
-        .select('id, role, display_name, email')
-        .eq('id', user.id)
-        .single()
-      profile = dbProfile
-    }
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('id, role, display_name, email')
+      .eq('id', user.id)
+      .single()
 
     if (!profile || !['staff_admin', 'staff_ops', 'staff_rm'].includes(profile.role)) {
       return NextResponse.json(

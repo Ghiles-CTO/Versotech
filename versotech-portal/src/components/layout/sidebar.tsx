@@ -57,7 +57,7 @@ interface NotificationCounts {
 interface SidebarProps {
   brand: 'versoholdings' | 'versotech'
   userProfile: {
-    display_name?: string
+    displayName?: string
     email?: string
     role: string
     title?: string
@@ -443,7 +443,7 @@ export function Sidebar({ brand, userProfile }: SidebarProps) {
         <div className="flex items-center gap-3">
           <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center flex-shrink-0">
             <span className="text-white font-bold text-sm">
-              {userProfile.display_name?.[0]?.toUpperCase() || userProfile.email?.split('@')[0]?.[0]?.toUpperCase() || 'U'}
+              {userProfile.displayName?.[0]?.toUpperCase() || userProfile.email?.split('@')[0]?.[0]?.toUpperCase() || 'U'}
             </span>
           </div>
 
@@ -453,7 +453,7 @@ export function Sidebar({ brand, userProfile }: SidebarProps) {
                 "text-sm font-medium truncate",
                 sidebarDarkMode ? "text-foreground" : "text-gray-900"
               )}>
-                {userProfile.display_name || 'User'}
+                {userProfile.displayName || 'User'}
               </div>
               <div className={cn(
                 "text-xs truncate",

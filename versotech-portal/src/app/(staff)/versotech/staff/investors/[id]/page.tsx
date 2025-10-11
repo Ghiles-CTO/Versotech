@@ -2,10 +2,8 @@ import { AppLayout } from '@/components/layout/app-layout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { createClient } from '@/lib/supabase/server'
 import { requireStaffAuth } from '@/lib/auth'
-import { cookies } from 'next/headers'
-import { DEMO_COOKIE_NAME, parseDemoSession } from '@/lib/demo-session'
 import Link from 'next/link'
 import { ArrowLeft, Mail, Phone, Globe, Building2, Calendar, User, DollarSign } from 'lucide-react'
 import { notFound } from 'next/navigation'
@@ -65,22 +63,8 @@ export default async function InvestorDetailPage({
 }) {
   const { id } = await params
   
-  const cookieStore = await cookies()
-  const demoCookie = cookieStore.get(DEMO_COOKIE_NAME)
-  let mode: 'live' | 'demo' = 'live'
-
-  if (demoCookie) {
-    const demoSession = parseDemoSession(demoCookie.value)
-    if (demoSession) {
-      mode = 'demo'
-    }
-  }
-
-  if (mode === 'live') {
-    await requireStaffAuth()
-  }
-
-  const supabase = mode === 'demo' ? createServiceClient() : await createClient()
+  await requireStaffAuth()
+  const supabase = await createClient()
 
   // Fetch investor details
   const { data: investor, error } = await supabase

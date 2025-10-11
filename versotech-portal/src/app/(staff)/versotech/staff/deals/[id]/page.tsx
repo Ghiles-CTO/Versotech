@@ -1,7 +1,6 @@
 import { AppLayout } from '@/components/layout/app-layout'
-import { createServiceClient } from '@/lib/supabase/server'
-import { cookies } from 'next/headers'
-import { parseDemoSession, DEMO_COOKIE_NAME } from '@/lib/demo-session'
+import { createServiceClient, createClient } from '@/lib/supabase/server'
+import { requireStaffAuth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { DealDetailClient } from '@/components/deals/deal-detail-client'
 
@@ -10,28 +9,31 @@ export default async function DealDetailPage({
 }: {
   params: Promise<{ id: string }>
 }) {
-  // Use service client to bypass RLS for demo sessions
-  const supabase = createServiceClient()
   const { id: dealId } = await params
-
-  // Check for demo session
-  const cookieStore = await cookies()
-  const demoCookie = cookieStore.get(DEMO_COOKIE_NAME)
   
-  if (!demoCookie) {
-    redirect('/versotech/staff/deals')
-  }
-
-  const demoSession = parseDemoSession(demoCookie.value)
-  if (!demoSession) {
-    redirect('/versotech/staff/deals')
-  }
-
-  console.log('[Deal Detail] Fetching data for demo user:', demoSession.email, demoSession.role)
-  console.log('[Deal Detail] Deal ID:', dealId)
+  // Verify staff authentication and get user
+  const authSupabase = await createClient()
+  const { data: { user } } = await authSupabase.auth.getUser()
   
-  // Store user role for later use
-  const userRole = demoSession.role
+  if (!user) {
+    redirect('/versotech/login')
+  }
+  
+  // Get user profile for role
+  const { data: userProfile } = await authSupabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+  
+  if (!userProfile || !['staff_admin', 'staff_ops', 'staff_rm'].includes(userProfile.role)) {
+    redirect('/versotech/staff')
+  }
+  
+  const userRole = userProfile.role
+  
+  // Use service client to bypass RLS for staff users
+  const supabase = createServiceClient()
 
   // Fetch deal with all related data
   const { data: deal, error } = await supabase

@@ -45,6 +45,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Create the user
+    console.log('[signup] Creating user with metadata:', {
+      email,
+      displayName,
+      role,
+      portal: portalContext
+    })
+    
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -64,56 +71,26 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
 
-    // If user was created successfully
+    // User created successfully - email verification required
     if (data.user) {
-      // For development, provide immediate signup without email verification
-      if (process.env.NODE_ENV === 'development') {
-        console.log('[auth] Development mode: Auto-confirming user', email)
-        
-        // In development, manually confirm the email
-        const { error: confirmError } = await supabase.auth.admin.updateUserById(
-          data.user.id,
-          { email_confirm: true }
-        )
-        
-        if (confirmError) {
-          console.warn('[auth] Email confirmation failed:', confirmError)
+      console.log('[auth] User signed up successfully, email verification required:', email)
+      
+      return NextResponse.json({
+        success: true,
+        message: 'Account created! Please check your email to verify your account before signing in.',
+        requiresVerification: true,
+        user: {
+          id: data.user.id,
+          email: data.user.email
         }
-        
-        // Create profile immediately in development
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .upsert({
-            id: data.user.id,
-            email: email,
-            display_name: displayName,
-            role: role,
-            created_at: new Date().toISOString()
-          }, { onConflict: 'id' })
-
-        if (profileError) {
-          console.warn('[auth] Profile creation failed:', profileError)
-        }
-
-        return NextResponse.json({
-          success: true,
-          message: 'Account created successfully! You can now sign in.',
-          user: {
-            id: data.user.id,
-            email: data.user.email,
-            role: role,
-            displayName: displayName
-          }
-        })
-      }
+      })
     }
 
-    // In production, send verification email
+    // Fallback response
     return NextResponse.json({
       success: true,
       message: 'Account created! Please check your email to verify your account.',
-      requiresVerification: true,
-      redirectUrl: portalContext === 'staff' ? '/versotech/login' : '/versoholdings/login'
+      requiresVerification: true
     })
 
   } catch (error) {

@@ -1,6 +1,5 @@
 import { AppLayout } from '@/components/layout/app-layout'
 import { RealtimeDashboard } from '@/components/dashboard/realtime-dashboard'
-import { SessionGuard } from '@/components/auth/session-guard'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -220,8 +219,7 @@ export default async function InvestorDashboard() {
   const investorIds = user ? await getInvestorIds(user.id) : []
 
   return (
-    <SessionGuard>
-      <AppLayout brand="versoholdings">
+    <AppLayout brand="versoholdings">
         <div className="p-6 space-y-8">
 
         {/* VERSO Holdings Header */}
@@ -339,6 +337,5 @@ export default async function InvestorDashboard() {
         )}
         </div>
       </AppLayout>
-    </SessionGuard>
   )
 }

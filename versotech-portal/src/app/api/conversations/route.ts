@@ -2,64 +2,84 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { getAuthenticatedUser } from '@/lib/api-auth'
 import { auditLogger, AuditActions, AuditEntities } from '@/lib/audit'
 import { NextRequest, NextResponse } from 'next/server'
+import type {
+  ConversationFilters,
+  ConversationSummary,
+  ConversationType,
+  ConversationVisibility,
+  ConversationParticipant,
+} from '@/types/messaging'
+import { normalizeMessage, normalizeConversation } from '@/lib/messaging'
 
-type ConversationParticipant = {
-  id: string
-  display_name: string | null
-  email: string | null
-  role: string | null
-  participant_role: 'owner' | 'member' | 'viewer' | null
-  last_read_at: string | null
+type NormalizedConversation = ConversationSummary
+
+const CONVERSATION_TYPES = new Set<ConversationType>(['dm', 'group', 'deal_room', 'broadcast'])
+const CONVERSATION_VISIBILITIES = new Set<ConversationVisibility>(['investor', 'internal', 'deal'])
+
+function parseFilters(url: URL): {
+  filters: ConversationFilters
+  unreadOnly: boolean
+  includeMessages: boolean
+  limit: number
+  offset: number
+} {
+  const visibilityParam = (url.searchParams.get('visibility') || 'all').toLowerCase()
+  const typeParam = (url.searchParams.get('type') || 'all').toLowerCase()
+  const searchTermRaw = url.searchParams.get('search') || ''
+  const unreadOnly = url.searchParams.get('unread') === 'true'
+  const includeMessages = url.searchParams.get('includeMessages') !== 'false'
+  const limit = Math.min(Math.max(parseInt(url.searchParams.get('limit') || '50', 10) || 50, 1), 100)
+  const offset = Math.max(parseInt(url.searchParams.get('offset') || '0', 10) || 0, 0)
+  const dealId = url.searchParams.get('dealId') || undefined
+
+  const visibility: ConversationFilters['visibility'] = ['all', 'investor', 'internal', 'deal'].includes(visibilityParam)
+    ? (visibilityParam as ConversationFilters['visibility'])
+    : 'all'
+
+  const type: ConversationFilters['type'] = ['all', 'dm', 'group', 'deal_room', 'broadcast'].includes(typeParam)
+    ? (typeParam as ConversationFilters['type'])
+    : 'all'
+
+  return {
+    filters: {
+      visibility,
+      type,
+      search: searchTermRaw.trim().toLowerCase() || undefined,
+      dealId,
+      unreadOnly,
+    },
+    unreadOnly,
+    includeMessages,
+    limit,
+    offset,
+  }
 }
-
-type ConversationMessageSummary = {
-  id: string
-  body: string | null
-  message_type: string | null
-  created_at: string
-  sender: {
-    id: string | null
-    display_name: string | null
-    email: string | null
-    role: string | null
-  } | null
-} | null
-
-type NormalizedConversation = {
-  id: string
-  subject: string | null
-  type: string
-  visibility: string | null
-  owner_team: string | null
-  deal_id: string | null
-  created_by: string | null
-  created_at: string
-  last_message_at: string | null
-  participants: ConversationParticipant[]
-  latest_message: ConversationMessageSummary
-  unread_count: number
-  is_participant: boolean
-  message_count: number | null
-}
-
-const CONVERSATION_TYPES = new Set(['dm', 'group', 'deal_room', 'broadcast'])
-const CONVERSATION_VISIBILITIES = new Set(['investor', 'internal', 'deal'])
 
 function buildSelectColumns(includeMessages: boolean) {
   const base = `
     id,
     subject,
+    preview,
     type,
     visibility,
     owner_team,
     deal_id,
     created_by,
     created_at,
+    updated_at,
     last_message_at,
+    last_message_id,
+    archived_at,
+    metadata,
     conversation_participants (
+      conversation_id,
       user_id,
       participant_role,
+      joined_at,
       last_read_at,
+      last_notified_at,
+      is_muted,
+      is_pinned,
       profiles:user_id (
         id,
         display_name,
@@ -76,9 +96,16 @@ function buildSelectColumns(includeMessages: boolean) {
   return `${base},
     messages (
       id,
+      conversation_id,
+      sender_id,
       body,
       message_type,
+      file_key,
+      reply_to_message_id,
+      metadata,
       created_at,
+      edited_at,
+      deleted_at,
       sender:sender_id (
         id,
         display_name,
@@ -89,67 +116,8 @@ function buildSelectColumns(includeMessages: boolean) {
   `
 }
 
-function normalizeConversation(
-  raw: any,
-  includeMessages: boolean,
-  currentUserId: string
-): NormalizedConversation {
-  const participantsRaw: any[] = raw?.conversation_participants || []
-
-  const participants: ConversationParticipant[] = participantsRaw.map((participant) => {
-    const profile = participant?.profiles || {}
-    return {
-      id: profile.id || participant.user_id,
-      display_name: profile.display_name || profile.email || null,
-      email: profile.email || null,
-      role: profile.role || null,
-      participant_role: participant?.participant_role ?? null,
-      last_read_at: participant?.last_read_at ?? null,
-    }
-  })
-
-  const isParticipant = participants.some((participant) => participant.id === currentUserId)
-
-  let latest_message: ConversationMessageSummary = null
-  let message_count: number | null = null
-
-  if (includeMessages) {
-    const latest = raw?.messages?.[0]
-    if (latest) {
-      latest_message = {
-        id: latest.id,
-        body: latest.body ?? null,
-        message_type: latest.message_type ?? null,
-        created_at: latest.created_at,
-        sender: latest.sender
-          ? {
-              id: latest.sender.id ?? null,
-              display_name: latest.sender.display_name ?? null,
-              email: latest.sender.email ?? null,
-              role: latest.sender.role ?? null,
-            }
-          : null,
-      }
-    }
-    message_count = Array.isArray(raw?.messages) ? raw.messages.length : null
-  }
-
-  return {
-    id: raw.id,
-    subject: raw.subject ?? null,
-    type: raw.type ?? 'dm',
-    visibility: raw.visibility ?? 'internal',
-    owner_team: raw.owner_team ?? null,
-    deal_id: raw.deal_id ?? null,
-    created_by: raw.created_by ?? null,
-    created_at: raw.created_at,
-    last_message_at: raw.last_message_at ?? null,
-    participants,
-    latest_message,
-    unread_count: 0,
-    is_participant: isParticipant,
-    message_count,
-  }
+function normalizeConversationInternal(raw: any): NormalizedConversation {
+  return normalizeConversation(raw)
 }
 
 async function applyUnreadCounts(
@@ -160,26 +128,37 @@ async function applyUnreadCounts(
   if (!conversations.length) return
 
   const conversationIds = conversations.map((conversation) => conversation.id)
+  const chunkSize = 100
+  const chunks = []
 
-  const { data: unreadRows, error } = await supabaseClient.rpc('get_conversation_unread_counts', {
-    p_user_id: userId,
-    p_conversation_ids: conversationIds,
-  })
-
-  if (error) {
-    console.error('Error fetching unread counts:', error)
-    return
+  for (let i = 0; i < conversationIds.length; i += chunkSize) {
+    chunks.push(conversationIds.slice(i, i + chunkSize))
   }
 
   const unreadMap = new Map<string, number>()
-  for (const row of unreadRows || []) {
-    if (row?.conversation_id) {
-      unreadMap.set(row.conversation_id, Number(row.unread_count) || 0)
-    }
-  }
+
+  await Promise.all(
+    chunks.map(async (chunk) => {
+      const { data: rows, error } = await supabaseClient.rpc('get_conversation_unread_counts', {
+        p_user_id: userId,
+        p_conversation_ids: chunk,
+      })
+
+      if (error) {
+        console.error('Error fetching unread counts:', error)
+        return
+      }
+
+      for (const row of rows || []) {
+        if (row?.conversation_id) {
+          unreadMap.set(row.conversation_id, Number(row.unread_count) || 0)
+        }
+      }
+    })
+  )
 
   for (const conversation of conversations) {
-    conversation.unread_count = unreadMap.get(conversation.id) ?? 0
+    conversation.unreadCount = unreadMap.get(conversation.id) ?? 0
   }
 }
 
@@ -195,23 +174,8 @@ export async function GET(request: NextRequest) {
     }
 
     const url = new URL(request.url)
-    const visibilityParam = (url.searchParams.get('visibility') || 'all').toLowerCase()
-    const typeParam = (url.searchParams.get('type') || 'all').toLowerCase()
-    const searchTermRaw = url.searchParams.get('search') || ''
-    const unreadOnly = url.searchParams.get('unread') === 'true'
-    const includeMessages = url.searchParams.get('includeMessages') !== 'false'
-
-    const limit = Math.min(Math.max(parseInt(url.searchParams.get('limit') || '50', 10) || 50, 1), 100)
-    const offset = Math.max(parseInt(url.searchParams.get('offset') || '0', 10) || 0, 0)
+    const { filters, includeMessages, limit, offset } = parseFilters(url)
     const fetchLimit = Math.min(Math.max(limit * 4, 100), 500)
-
-    const visibilityFilter = ['all', 'investor', 'internal', 'deal'].includes(visibilityParam)
-      ? (visibilityParam as 'all' | 'investor' | 'internal' | 'deal')
-      : 'all'
-    const typeFilter = ['all', 'dm', 'group', 'deal_room', 'broadcast'].includes(typeParam)
-      ? (typeParam as 'all' | 'dm' | 'group' | 'deal_room' | 'broadcast')
-      : 'all'
-    const searchTerm = searchTermRaw.trim().toLowerCase()
 
     const userRole = user.user_metadata?.role || user.role
     const isStaff = ['staff_admin', 'staff_ops', 'staff_rm'].includes(userRole)
@@ -248,58 +212,54 @@ export async function GET(request: NextRequest) {
       }
 
       // Visibility checks
-      if (visibilityFilter !== 'all' && conv.visibility !== visibilityFilter) {
+      if (filters.visibility !== 'all' && conv.visibility !== filters.visibility) {
         return false
       }
 
-      if (isStaff) {
-        if (conv.visibility === 'investor' && !isParticipant) {
-          // Staff can only see investor conversations when directly participating
-          return false
-        }
-        if (visibilityFilter === 'all' && conv.visibility === 'investor' && !isParticipant) {
-          return false
-        }
-      }
+      // Staff can see all conversations (RLS already enforces this)
+      // Non-staff investors can only see conversations where they're participants (already checked above)
 
       // Type filter
-      if (typeFilter !== 'all' && conv.type !== typeFilter) {
+      if (filters.type !== 'all' && conv.type !== filters.type) {
+        return false
+      }
+
+      if (filters.dealId && conv.deal_id !== filters.dealId) {
         return false
       }
 
       return true
     })
 
-    const normalized = baseList.map((conv: any) =>
-      normalizeConversation(conv, includeMessages, user.id)
-    )
+  const normalized = baseList.map((conv: any) => normalizeConversationInternal(conv))
 
-    await applyUnreadCounts(supabase, user.id, normalized)
+    await applyUnreadCounts(client, user.id, normalized)
 
     let filtered = normalized
 
-    if (unreadOnly) {
-      filtered = filtered.filter(conv => conv.unread_count > 0)
+    if (filters.unreadOnly) {
+      filtered = filtered.filter((conv: NormalizedConversation) => conv.unreadCount > 0)
     }
 
-    if (searchTerm) {
-      filtered = filtered.filter(conv => {
+    if (filters.search) {
+      filtered = filtered.filter((conv: NormalizedConversation) => {
         const haystack: string[] = []
         if (conv.subject) haystack.push(conv.subject)
-        if (conv.owner_team) haystack.push(conv.owner_team)
-        conv.participants.forEach(participant => {
-          if (participant.display_name) haystack.push(participant.display_name)
+        if (conv.preview) haystack.push(conv.preview)
+        if (conv.ownerTeam) haystack.push(conv.ownerTeam)
+        conv.participants.forEach((participant: ConversationParticipant) => {
+          if (participant.displayName) haystack.push(participant.displayName)
           if (participant.email) haystack.push(participant.email)
         })
-        if (conv.latest_message?.body) haystack.push(conv.latest_message.body)
+        if (conv.latestMessage?.body) haystack.push(conv.latestMessage.body)
 
-        return haystack.some(entry => entry.toLowerCase().includes(searchTerm))
+        return haystack.some(entry => entry.toLowerCase().includes(filters.search!))
       })
     }
 
-    filtered.sort((a, b) => {
-      const aTime = a.last_message_at ? new Date(a.last_message_at).getTime() : new Date(a.created_at).getTime()
-      const bTime = b.last_message_at ? new Date(b.last_message_at).getTime() : new Date(b.created_at).getTime()
+    filtered.sort((a: NormalizedConversation, b: NormalizedConversation) => {
+      const aTime = a.lastMessageAt ? new Date(a.lastMessageAt).getTime() : new Date(a.createdAt).getTime()
+      const bTime = b.lastMessageAt ? new Date(b.lastMessageAt).getTime() : new Date(b.createdAt).getTime()
       return bTime - aTime
     })
 
@@ -318,10 +278,10 @@ export async function GET(request: NextRequest) {
         has_more: offset + conversations.length < total,
       },
       filters: {
-        visibility: visibilityFilter,
-        type: typeFilter,
-        unread_only: unreadOnly,
-        search: searchTerm || null,
+        visibility: filters.visibility,
+        type: filters.type,
+        unread_only: filters.unreadOnly || false,
+        search: filters.search || null,
       },
     })
 
@@ -335,12 +295,14 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient()
-    
-    // Authenticate user (supports demo mode)
     const { user, error: authError } = await getAuthenticatedUser(supabase)
+    
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+    
+    const userId = user.id
+    const userRole = user.user_metadata?.role || null
 
     const { subject, participant_ids, type = 'dm', initial_message, visibility } = await request.json()
 
@@ -349,7 +311,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Ensure current user is included in participants
-    const allParticipants = [...new Set([user.id, ...participant_ids])]
+    const allParticipants = [...new Set([userId, ...participant_ids])]
 
     // Create conversation - set visibility based on type if not provided
     let finalVisibility = visibility
@@ -367,10 +329,9 @@ export async function POST(request: NextRequest) {
       .from('conversations')
       .insert({
         subject,
-        created_by: user.id,
+        created_by: userId,
         type,
-        visibility: finalVisibility,
-        name: type === 'group' ? subject : null
+        visibility: finalVisibility
       })
       .select()
       .single()
@@ -380,13 +341,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to create conversation' }, { status: 500 })
     }
 
-    // Add participants
+    // Add participants using service client to bypass RLS
     const participantInserts = allParticipants.map(participantId => ({
       conversation_id: conversation.id,
       user_id: participantId
     }))
 
-    const { error: partError } = await supabase
+    const serviceClient = createServiceClient()
+    const { error: partError } = await serviceClient
       .from('conversation_participants')
       .insert(participantInserts)
 
@@ -401,7 +363,7 @@ export async function POST(request: NextRequest) {
         .from('messages')
         .insert({
           conversation_id: conversation.id,
-          sender_id: user.id,
+          sender_id: userId,
           body: initial_message
         })
 
@@ -412,7 +374,7 @@ export async function POST(request: NextRequest) {
 
     // Log conversation creation
     await auditLogger.log({
-      actor_user_id: user.id,
+      actor_user_id: userId,
       action: AuditActions.CREATE,
       entity: AuditEntities.CONVERSATIONS,
       entity_id: conversation.id,
@@ -427,7 +389,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       conversation: {
-        ...conversation,
+        id: conversation.id,
+        subject: conversation.subject,
+        type: conversation.type,
+        visibility: conversation.visibility,
         participant_count: allParticipants.length
       }
     })

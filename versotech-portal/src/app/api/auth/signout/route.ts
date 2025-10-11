@@ -1,6 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
-import { DEMO_COOKIE_NAME } from '@/lib/demo-session'
 
 export async function POST(request: NextRequest) {
   try {
@@ -15,12 +14,10 @@ export async function POST(request: NextRequest) {
     // Clear all auth-related cookies
     response.cookies.delete('sb-access-token')
     response.cookies.delete('sb-refresh-token')
-    response.cookies.delete(DEMO_COOKIE_NAME)
     
     // Set them to empty with immediate expiry to ensure they're cleared
     response.cookies.set('sb-access-token', '', { maxAge: 0, path: '/' })
     response.cookies.set('sb-refresh-token', '', { maxAge: 0, path: '/' })
-    response.cookies.set(DEMO_COOKIE_NAME, '', { maxAge: 0, path: '/' })
     
     return response
   } catch (error) {

@@ -3,8 +3,6 @@ import { auditLogger } from '@/lib/audit'
 import { NextRequest, NextResponse } from 'next/server'
 import type { UpdateRequestTicket } from '@/types/reports'
 import { validateRequestUpdate } from '@/lib/reports/validation'
-import { cookies } from 'next/headers'
-import { parseDemoSession, DEMO_COOKIE_NAME } from '@/lib/demo-session'
 
 /**
  * GET /api/requests/[id]
@@ -106,44 +104,28 @@ export async function PATCH(
       )
     }
 
-    // Check for demo session or real auth
-    const cookieStore = await cookies()
-    const demoCookie = cookieStore.get(DEMO_COOKIE_NAME)
-    let userId: string
-    let isStaff = false
-    let supabase: any
+    const authSupabase = await createClient()
+    const { data: { user }, error: authError } = await authSupabase.auth.getUser()
 
-    if (demoCookie) {
-      const demoSession = parseDemoSession(demoCookie.value)
-      if (demoSession && demoSession.role.startsWith('staff_')) {
-        userId = demoSession.id
-        isStaff = true
-        supabase = createServiceClient() // Use service client to bypass RLS
-      } else {
-        return NextResponse.json({ error: 'Staff access required' }, { status: 403 })
-      }
-    } else {
-      supabase = await createClient()
-      const { data: { user }, error: authError } = await supabase.auth.getUser()
-
-      if (authError || !user) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-      }
-
-      userId = user.id
-
-      // Verify staff role
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .single()
-
-      if (!profile || !profile.role.startsWith('staff_')) {
-        return NextResponse.json({ error: 'Staff access required' }, { status: 403 })
-      }
-      isStaff = true
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+
+    const userId = user.id
+
+    // Verify staff role
+    const { data: profile } = await authSupabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    if (!profile || !profile.role.startsWith('staff_')) {
+      return NextResponse.json({ error: 'Staff access required' }, { status: 403 })
+    }
+
+    // Use service client for data operations
+    const supabase = createServiceClient()
 
     // Fetch original ticket for audit trail
     const { data: originalTicket } = await supabase

@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
-import { parseDemoSession, DEMO_COOKIE_NAME } from '@/lib/demo-session'
 import { createSmartClient } from '@/lib/supabase/smart-client'
 
 type RequestFilters = {
@@ -18,35 +17,21 @@ async function getAuthenticatedStaff(supabase: any) {
     error,
   } = await supabase.auth.getUser()
 
-  if (user) {
-    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
-    if (!profile?.role?.startsWith('staff_')) {
-      return { user: null, error: new Error('Staff access required'), role: null }
-    }
-    return { user, error, role: profile.role } as const
+  if (!user || error) {
+    return { user: null, error: error || new Error('Not authenticated'), role: null }
   }
 
-  const cookieStore = await cookies()
-  const demoCookie = cookieStore.get(DEMO_COOKIE_NAME)
-  if (demoCookie) {
-    const demoSession = parseDemoSession(demoCookie.value)
-    if (demoSession && demoSession.role.startsWith('staff_')) {
-      return {
-        user: { id: demoSession.id, email: demoSession.email },
-        error: null,
-        role: demoSession.role,
-        isDemo: true,
-      } as const
-    }
+  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+  if (!profile?.role?.startsWith('staff_')) {
+    return { user: null, error: new Error('Staff access required'), role: null }
   }
-
-  return { user: null, error: error || new Error('Unauthorized'), role: null } as const
+  return { user, error: null, role: profile.role } as const
 }
 
 export async function GET(request: Request) {
   try {
     const supabase = await createSmartClient()
-    const { user, error, role, isDemo } = await getAuthenticatedStaff(supabase)
+    const { user, error, role } = await getAuthenticatedStaff(supabase)
 
     if (error || !user || !role) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -146,7 +131,7 @@ export async function GET(request: Request) {
     return NextResponse.json({
       requests: requests || [],
       stats,
-      hasData: Boolean(requests && requests.length > 0) || Boolean(isDemo),
+      hasData: Boolean(requests && requests.length > 0),
     })
   } catch (err) {
     console.error('[StaffRequests] Unexpected error:', err)

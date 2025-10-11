@@ -1,31 +1,7 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { getAuthenticatedUser } from '@/lib/api-auth'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { cookies } from 'next/headers'
-import { parseDemoSession, DEMO_COOKIE_NAME } from '@/lib/demo-session'
-
-// Helper to get user from either real auth or demo mode
-async function getAuthenticatedUser(supabase: any) {
-  const { data: { user }, error: authError } = await supabase.auth.getUser()
-  if (user) return { user, error: null }
-  
-  const cookieStore = await cookies()
-  const demoCookie = cookieStore.get(DEMO_COOKIE_NAME)
-  if (demoCookie) {
-    const demoSession = parseDemoSession(demoCookie.value)
-    if (demoSession) {
-      return {
-        user: {
-          id: demoSession.userId,
-          email: demoSession.email,
-          user_metadata: { role: demoSession.role }
-        },
-        error: null
-      }
-    }
-  }
-  return { user: null, error: authError || new Error('No authentication found') }
-}
 
 // Validation schema for bulk action requests
 const bulkActionSchema = z.object({

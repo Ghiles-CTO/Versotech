@@ -1,24 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
-import { cookies } from 'next/headers'
-import { DEMO_COOKIE_NAME, parseDemoSession } from '@/lib/demo-session'
 
 async function resolveClientAndUser() {
-  const cookieStore = await cookies()
-  const demoCookie = cookieStore.get(DEMO_COOKIE_NAME)
-
-  if (demoCookie) {
-    const session = parseDemoSession(demoCookie.value)
-    if (session && session.role?.startsWith('staff_')) {
-      const client = createServiceClient()
-      return { client, user: { id: session.id, role: session.role } }
-    }
-  }
-
   const client = await createClient()
   const {
     data: { user },
   } = await client.auth.getUser()
+  
   if (!user) {
     return { client, user: null }
   }

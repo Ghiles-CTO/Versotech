@@ -4,8 +4,6 @@ import { Button } from '@/components/ui/button'
 import { ApprovalsPageClient } from '@/components/approvals/approvals-page-client'
 import { Approval, ApprovalStats } from '@/types/approvals'
 import { createServiceClient } from '@/lib/supabase/server'
-import { cookies } from 'next/headers'
-import { parseDemoSession, DEMO_COOKIE_NAME } from '@/lib/demo-session'
 
 // Fetch approval data server-side directly from database
 async function fetchApprovalData(): Promise<{
@@ -15,25 +13,8 @@ async function fetchApprovalData(): Promise<{
   hasData: boolean
 }> {
   try {
-    // Use service client to bypass RLS for demo sessions
+    // Use service client to bypass RLS for staff users
     const supabase = createServiceClient()
-
-    // Check for demo session
-    const cookieStore = await cookies()
-    const demoCookie = cookieStore.get(DEMO_COOKIE_NAME)
-
-    if (!demoCookie) {
-      console.log('[Approvals] No demo session found')
-      return getEmptyData()
-    }
-
-    const demoSession = parseDemoSession(demoCookie.value)
-    if (!demoSession) {
-      console.log('[Approvals] Invalid demo session')
-      return getEmptyData()
-    }
-
-    console.log('[Approvals] Fetching data for demo user:', demoSession.email, demoSession.role)
 
     // Fetch approvals with comprehensive joins
     const { data: approvals, error: approvalsError } = await supabase

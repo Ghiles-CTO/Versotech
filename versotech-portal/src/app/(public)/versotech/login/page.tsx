@@ -6,9 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Badge } from '@/components/ui/badge'
-import { DEMO_CREDENTIALS } from '@/lib/demo-auth'
-import { signUp, signIn, AuthError } from '@/lib/auth-client'
+import { Separator } from '@/components/ui/separator'
+import { signUp, signIn, signInWithGoogle, AuthError } from '@/lib/auth-client'
 import { 
   Loader2, 
   Eye, 
@@ -16,7 +15,6 @@ import {
   Shield, 
   Lock, 
   Settings,
-  ArrowRight,
   Building2,
   User
 } from 'lucide-react'
@@ -240,44 +238,11 @@ export default function StaffLogin() {
           </div>
         </div>
 
-        {/* Demo Staff Accounts */}
-        <div className="space-y-6">
+        {/* Operations Features */}
+        <div className="space-y-6 lg:pl-8">
           <div className="text-center space-y-2">
-            <h2 className="text-2xl font-bold text-gray-900">Demo Staff Accounts</h2>
-            <p className="text-gray-600">Click any account below to auto-fill and access operations</p>
-          </div>
-
-          <div className="space-y-4">
-            {DEMO_CREDENTIALS.staff.map((cred, index) => {
-              const icons = ['👑', '📊', '⚙️', '🔒']
-              const colors = ['amber', 'blue', 'slate', 'green']
-              return (
-                <Card 
-                  key={index} 
-                  className="cursor-pointer hover:shadow-lg transition-all duration-200 border-2 hover:border-slate-300 bg-gradient-to-r from-white to-slate-50/50"
-                  onClick={() => quickLogin(cred.email, cred.password)}
-                >
-                  <CardContent className="p-5">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="text-2xl">{icons[index]}</div>
-                        <div>
-                          <div className="font-semibold text-gray-900">{cred.name}</div>
-                          <div className="font-mono text-sm text-slate-600">{cred.email}</div>
-                          <div className="text-xs text-gray-500">Password: {cred.password}</div>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge variant="secondary" className="bg-slate-100 text-slate-800">
-                          Staff
-                        </Badge>
-                        <ArrowRight className="h-4 w-4 text-gray-400" />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              )
-            })}
+            <h2 className="text-2xl font-bold text-gray-900">Operations Platform</h2>
+            <p className="text-gray-600">Powerful workflow automation and investor management tools</p>
           </div>
 
           <Card className="bg-gradient-to-r from-slate-50 to-gray-50 border-slate-200">

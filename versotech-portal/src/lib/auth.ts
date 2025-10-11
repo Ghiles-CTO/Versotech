@@ -15,6 +15,9 @@ export interface AuthUser {
   created_at: string
 }
 
+// Alias for backward compatibility
+export type Profile = AuthUser
+
 export interface AuthSession {
   user: AuthUser
   session: Session
@@ -64,28 +67,6 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
     const { data: { user }, error: userError } = await supabase.auth.getUser()
 
     if (userError || !user) {
-      // Check for demo session using cookies
-      const { cookies } = await import('next/headers')
-      const cookieStore = await cookies()
-      const demoCookie = cookieStore.get('demo_auth_user')
-      
-      if (demoCookie) {
-        try {
-          const demoData = JSON.parse(demoCookie.value)
-          console.log('[auth] Demo session detected:', demoData.email, demoData.role)
-          
-          return {
-            id: demoData.id,
-            email: demoData.email,
-            displayName: demoData.displayName,
-            role: demoData.role as UserRole,
-            created_at: new Date().toISOString()
-          }
-        } catch (error) {
-          console.error('[auth] Failed to parse demo cookie:', error)
-        }
-      }
-      
       return null
     }
 
@@ -97,36 +78,8 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
       .single()
 
     if (profileError || !profile) {
-      // If no profile exists, create one from auth user data
-      const displayName = user.user_metadata?.display_name ||
-                         user.user_metadata?.full_name ||
-                         user.email?.split('@')[0] ||
-                         'User'
-
-      const role = user.user_metadata?.role || 'investor'
-
-      const { error: createError } = await supabase
-        .from('profiles')
-        .insert({
-          id: user.id,
-          email: user.email!,
-          display_name: displayName,
-          role: role,
-          created_at: new Date().toISOString()
-        })
-
-      if (createError) {
-        console.error('Error creating profile:', createError)
-        return null
-      }
-
-      return {
-        id: user.id,
-        email: user.email!,
-        displayName: displayName,
-        role: role as UserRole,
-        created_at: new Date().toISOString()
-      }
+      console.error('[auth] Profile not found for user:', user.id, profileError)
+      return null
     }
 
     return {

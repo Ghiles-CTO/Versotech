@@ -1,7 +1,6 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { getAuthenticatedUser, isStaffUser } from '@/lib/api-auth'
 import { NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
-import { parseDemoSession, DEMO_COOKIE_NAME } from '@/lib/demo-session'
 
 /**
  * GET /api/profiles
@@ -10,9 +9,21 @@ import { parseDemoSession, DEMO_COOKIE_NAME } from '@/lib/demo-session'
  */
 export async function GET(request: Request) {
   try {
-    const cookieStore = await cookies()
-    const demoCookie = cookieStore.get(DEMO_COOKIE_NAME)
-    const supabase = demoCookie ? createServiceClient() : await createClient()
+    // Verify staff authentication
+    const authSupabase = await createClient()
+    const { user, error: authError } = await getAuthenticatedUser(authSupabase)
+    
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    
+    const isStaff = await isStaffUser(authSupabase, user)
+    if (!isStaff) {
+      return NextResponse.json({ error: 'Staff access required' }, { status: 403 })
+    }
+    
+    // Use service client for data fetching (bypasses RLS)
+    const supabase = createServiceClient()
 
     // Parse query params
     const { searchParams } = new URL(request.url)

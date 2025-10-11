@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { validateDemoCredentials } from '@/lib/demo-auth'
-import { createDemoSession, DEMO_COOKIE_NAME } from '@/lib/demo-session'
 
 type StaffRole = 'staff_admin' | 'staff_ops' | 'staff_rm'
 
@@ -94,66 +92,8 @@ export async function POST(request: NextRequest) {
     })
 
     if (error) {
-      const message = error.message?.toLowerCase() ?? ''
-
-      if (message.includes('invalid login credentials')) {
-        const demoUser = validateDemoCredentials(email, password)
-
-        if (demoUser) {
-          const demoRole = demoUser.role
-          const isStaffDemo = isStaffRole(demoRole)
-
-          if (portalContext === 'staff' && !isStaffDemo) {
-            return NextResponse.json({ error: 'Staff access required. Please use your staff credentials.' }, { status: 403 })
-          }
-          
-          if (portalContext === 'investor' && isStaffDemo) {
-            return NextResponse.json({ error: 'Investor access required. Staff accounts cannot access the investor portal.' }, { status: 403 })
-          }
-
-          await supabase.auth.signOut()
-
-          const redirectPath = isStaffDemo ? '/versotech/staff' : '/versoholdings/dashboard'
-          const response = NextResponse.json({
-            success: true,
-            redirect: redirectPath,
-            user: {
-              id: demoUser.id,
-              email: demoUser.email,
-              role: demoUser.role,
-              displayName: demoUser.display_name,
-              demo: true
-            }
-          })
-
-          response.cookies.delete('sb-access-token')
-          response.cookies.delete('sb-refresh-token')
-
-          const cookieValue = createDemoSession({
-            id: demoUser.id,
-            email: demoUser.email,
-            role: demoUser.role,
-            displayName: demoUser.display_name
-          })
-          
-          response.cookies.set(DEMO_COOKIE_NAME, cookieValue, {
-            httpOnly: true,
-            sameSite: 'lax',
-            secure: false, // Always false for development
-            path: '/',
-            maxAge: 60 * 60 * 8
-          })
-          
-          console.log('[auth] Demo user authenticated:', demoUser.email, 'role:', demoUser.role)
-
-          return response
-        }
-
-        return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 })
-      }
-
       console.error('Supabase sign-in error:', error)
-      return NextResponse.json({ error: error.message || 'Authentication failed' }, { status: 401 })
+      return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 })
     }
 
     if (!data.user) {

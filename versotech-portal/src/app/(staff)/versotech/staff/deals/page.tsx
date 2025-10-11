@@ -3,8 +3,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { createServiceClient } from '@/lib/supabase/server'
-import { cookies } from 'next/headers'
-import { parseDemoSession, DEMO_COOKIE_NAME } from '@/lib/demo-session'
 import Link from 'next/link'
 import {
   Plus,
@@ -59,33 +57,8 @@ const statusColors = {
 }
 
 export default async function DealsPage() {
-  // Use service client to bypass RLS for demo sessions
+  // Use service client to bypass RLS for staff users
   const supabase = createServiceClient()
-  
-  // Check for demo session
-  const cookieStore = await cookies()
-  const demoCookie = cookieStore.get(DEMO_COOKIE_NAME)
-  
-  if (!demoCookie) {
-    console.log('[Deals] No demo session found')
-    return (
-      <AppLayout brand="versotech">
-        <DealsListClient deals={[]} summary={{ total: 0, open: 0, draft: 0, closed: 0, totalValue: 0 }} />
-      </AppLayout>
-    )
-  }
-
-  const demoSession = parseDemoSession(demoCookie.value)
-  if (!demoSession) {
-    console.log('[Deals] Invalid demo session')
-    return (
-      <AppLayout brand="versotech">
-        <DealsListClient deals={[]} summary={{ total: 0, open: 0, draft: 0, closed: 0, totalValue: 0 }} />
-      </AppLayout>
-    )
-  }
-
-  console.log('[Deals] Fetching data for demo user:', demoSession.email, demoSession.role)
 
   // Fetch deals data
   const { data: deals, error } = await supabase

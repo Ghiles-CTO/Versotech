@@ -25,11 +25,12 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Forbidden - Staff access only' }, { status: 403 })
     }
 
-    // Get all investor users
-    const { data: investorUsers, error: investorError } = await supabase
+    // Get all investor users with their entities
+    const { data: investorUsers, error: investorError} = await supabase
       .from('investor_users')
       .select(`
         user_id,
+        investor_id,
         profiles:user_id (
           id,
           display_name,
@@ -37,18 +38,33 @@ export async function GET(request: NextRequest) {
           role
         )
       `)
-      .order('profiles(display_name)')
 
     if (investorError) {
       console.error('Error fetching investors:', investorError)
       return NextResponse.json({ error: 'Failed to fetch investors' }, { status: 500 })
     }
 
-    // Normalize the data
+    // Now get entity info separately to avoid join issues
+    const investorIds = (investorUsers || []).map((u: any) => u.investor_id).filter(Boolean)
+    
+    let entitiesMap = new Map()
+    if (investorIds.length > 0) {
+      const { data: entities } = await supabase
+        .from('investor_entities')
+        .select('id, entity_name, entity_type')
+        .in('id', investorIds)
+      
+      entities?.forEach(entity => {
+        entitiesMap.set(entity.id, entity)
+      })
+    }
+
+    // Normalize the data with entity information
     const investors = (investorUsers || [])
       .filter((item: any) => item.profiles) // Filter out any without profile data
-      .map((item: any, index: number) => {
+      .map((item: any) => {
         const profile = item.profiles
+        const entity = entitiesMap.get(item.investor_id)
         const baseDisplayName = profile.display_name?.trim()
 
         // Provide fallback display names if needed
@@ -62,7 +78,10 @@ export async function GET(request: NextRequest) {
           id: profile.id,
           display_name: displayName,
           email: profile.email || null,
-          role: profile.role || 'investor'
+          role: profile.role || 'investor',
+          investor_id: item.investor_id,
+          entity_name: entity?.entity_name || null,
+          entity_type: entity?.entity_type || null,
         }
       })
 

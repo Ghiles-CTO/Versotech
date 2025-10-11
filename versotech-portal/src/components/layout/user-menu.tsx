@@ -62,7 +62,7 @@ export function UserMenu({ profile }: UserMenuProps) {
             <RoleIcon className="h-4 w-4 text-gray-600" />
           </div>
           <div className="text-left">
-            <div className="font-medium text-sm">{profile.display_name}</div>
+            <div className="font-medium text-sm">{profile.displayName}</div>
             <div className="text-xs text-muted-foreground">{getRoleDisplay(profile.role)}</div>
           </div>
         </Button>
@@ -71,7 +71,7 @@ export function UserMenu({ profile }: UserMenuProps) {
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuLabel>My Account</DropdownMenuLabel>
         <div className="px-2 py-1.5">
-          <div className="text-sm font-medium">{profile.display_name}</div>
+          <div className="text-sm font-medium">{profile.displayName}</div>
           <div className="text-xs text-muted-foreground">{profile.email}</div>
           {profile.title && (
             <div className="text-xs text-muted-foreground">{profile.title}</div>

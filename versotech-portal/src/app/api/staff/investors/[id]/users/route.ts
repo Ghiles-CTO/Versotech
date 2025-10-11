@@ -1,32 +1,7 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { getAuthenticatedUser, isStaffUser } from '@/lib/api-auth'
 import { NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
-import { parseDemoSession, DEMO_COOKIE_NAME } from '@/lib/demo-session'
 import { revalidatePath } from 'next/cache'
-
-// Helper to get user from either real auth or demo mode
-async function getAuthenticatedUser(supabase: any) {
-  const { data: { user }, error: authError } = await supabase.auth.getUser()
-  if (user) return { user, error: null, isDemo: false }
-  
-  const cookieStore = await cookies()
-  const demoCookie = cookieStore.get(DEMO_COOKIE_NAME)
-  if (demoCookie) {
-    const demoSession = parseDemoSession(demoCookie.value)
-    if (demoSession) {
-      return {
-        user: {
-          id: demoSession.id,
-          email: demoSession.email,
-          role: demoSession.role
-        },
-        error: null,
-        isDemo: true
-      }
-    }
-  }
-  return { user: null, error: authError || new Error('No authentication found'), isDemo: false }
-}
 
 /**
  * POST /api/staff/investors/[id]/users
@@ -38,33 +13,21 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
-    const cookieStore = await cookies()
-    const demoCookie = cookieStore.get(DEMO_COOKIE_NAME)
-    const supabase = demoCookie ? createServiceClient() : await createClient()
-
-    // Check authentication
-    const { user, error: authError, isDemo } = await getAuthenticatedUser(supabase)
+    const authSupabase = await createClient()
+    const { user, error: authError } = await getAuthenticatedUser(authSupabase)
 
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     // Verify staff role
-    let role: string
-    if (isDemo) {
-      role = user.role
-    } else {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .single()
-      role = profile?.role as string
-    }
-
-    if (!role || !role.startsWith('staff_')) {
+    const isStaff = await isStaffUser(authSupabase, user)
+    if (!isStaff) {
       return NextResponse.json({ error: 'Staff access required' }, { status: 403 })
     }
+
+    // Use service client for data operations
+    const supabase = createServiceClient()
 
     const body = await request.json()
     const { email, user_id } = body

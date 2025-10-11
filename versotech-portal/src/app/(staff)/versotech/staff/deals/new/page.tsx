@@ -1,28 +1,13 @@
 import { AppLayout } from '@/components/layout/app-layout'
 import { createServiceClient } from '@/lib/supabase/server'
-import { cookies } from 'next/headers'
-import { parseDemoSession, DEMO_COOKIE_NAME } from '@/lib/demo-session'
-import { redirect } from 'next/navigation'
+import { requireStaffAuth } from '@/lib/auth'
 import { CreateDealForm } from '@/components/deals/create-deal-form'
 
 export default async function CreateDealPage() {
-  // Use service client to bypass RLS for demo sessions
-  const supabase = createServiceClient()
-
-  // Check for demo session
-  const cookieStore = await cookies()
-  const demoCookie = cookieStore.get(DEMO_COOKIE_NAME)
+  await requireStaffAuth()
   
-  if (!demoCookie) {
-    redirect('/versotech/staff/deals')
-  }
-
-  const demoSession = parseDemoSession(demoCookie.value)
-  if (!demoSession) {
-    redirect('/versotech/staff/deals')
-  }
-
-  console.log('[Create Deal] Demo user:', demoSession.email, demoSession.role)
+  // Use service client to bypass RLS for staff users
+  const supabase = createServiceClient()
 
   // Fetch entities for dropdown
   const { data: entities } = await supabase

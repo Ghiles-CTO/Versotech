@@ -6,7 +6,6 @@ import { Input } from '@/components/ui/input'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { requireStaffAuth } from '@/lib/auth'
 import { cookies } from 'next/headers'
-import { DEMO_COOKIE_NAME, parseDemoSession } from '@/lib/demo-session'
 import Link from 'next/link'
 import { AddInvestorModal } from '@/components/investors/add-investor-modal'
 import { InvestorFilters } from '@/components/investors/investor-filters'
@@ -197,22 +196,8 @@ export default async function InvestorsPage({
 }: {
   searchParams: Promise<{ q?: string; status?: string; type?: string; rm?: string; page?: string; limit?: string }>
 }) {
-  const cookieStore = await cookies()
-  const demoCookie = cookieStore.get(DEMO_COOKIE_NAME)
-  let mode: 'live' | 'demo' = 'live'
-
-  if (demoCookie) {
-    const demoSession = parseDemoSession(demoCookie.value)
-    if (demoSession) {
-      mode = 'demo'
-    }
-  }
-
-  if (mode === 'live') {
-    await requireStaffAuth()
-  }
-
-  const supabase = mode === 'demo' ? createServiceClient() : await createClient()
+  await requireStaffAuth()
+  const supabase = await createClient()
 
   // Await searchParams (Next.js 15 requirement)
   const params = await searchParams
@@ -283,7 +268,7 @@ export default async function InvestorsPage({
 
   if (error) {
     console.error('[Investors] Error fetching investors:', error)
-    return renderPage(FALLBACK_INVESTORS, { source: mode === 'demo' ? 'demo-error' : 'error' })
+    return renderPage(FALLBACK_INVESTORS, { source: 'error' })
   }
 
   const investors = (data || []).map(inv => ({
@@ -297,7 +282,7 @@ export default async function InvestorsPage({
 
   if (investors.length === 0) {
     console.warn('[Investors] No investors returned. Using fallback dataset.')
-    return renderPage(FALLBACK_INVESTORS, { source: mode === 'demo' ? 'demo-empty' : 'empty' })
+    return renderPage(FALLBACK_INVESTORS, { source: 'empty' })
   }
 
   const investorIds = investors.map((inv) => inv.id)
@@ -342,7 +327,7 @@ export default async function InvestorsPage({
   const totalPages = Math.ceil((count || 0) / limit)
   
   return renderPage(enrichedInvestors, {
-    source: mode,
+    source: 'live',
     pagination: {
       currentPage: page,
       totalPages,

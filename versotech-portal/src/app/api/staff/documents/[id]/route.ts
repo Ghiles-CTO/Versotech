@@ -1,8 +1,6 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { auditLogger, AuditActions, AuditEntities } from '@/lib/audit'
 import { NextRequest, NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
-import { DEMO_COOKIE_NAME, parseDemoSession } from '@/lib/demo-session'
 import { z } from 'zod'
 
 // Validation schemas
@@ -23,39 +21,26 @@ export async function PATCH(
   try {
     const { id } = await params
     
-    // Check for demo session
-    const cookieStore = await cookies()
-    const demoCookie = cookieStore.get(DEMO_COOKIE_NAME)
-    let serviceSupabase: any
-    let userId: string
-
-    if (demoCookie) {
-      const demoSession = parseDemoSession(demoCookie.value)
-      if (!demoSession || !['staff_admin', 'staff_ops', 'staff_rm'].includes(demoSession.role as any)) {
-        return NextResponse.json({ error: 'Staff access required' }, { status: 403 })
-      }
-      userId = demoSession.id
-      serviceSupabase = createServiceClient()
-    } else {
-      const supabase = await createClient()
-      const { data: { user }, error: authError } = await supabase.auth.getUser()
-      if (authError || !user) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-      }
-
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .single()
-
-      if (!profile || !['staff_admin', 'staff_ops', 'staff_rm'].includes(profile.role)) {
-        return NextResponse.json({ error: 'Staff access required' }, { status: 403 })
-      }
-      
-      userId = user.id
-      serviceSupabase = createServiceClient()
+    const authSupabase = await createClient()
+    const { data: { user }, error: authError } = await authSupabase.auth.getUser()
+    
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+
+    const userId = user.id
+
+    const { data: profile } = await authSupabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    if (!profile || !['staff_admin', 'staff_ops', 'staff_rm'].includes(profile.role)) {
+      return NextResponse.json({ error: 'Staff access required' }, { status: 403 })
+    }
+    
+    const serviceSupabase = createServiceClient()
 
     // Parse and validate request body
     const body = await request.json()
@@ -143,39 +128,26 @@ export async function DELETE(
   try {
     const { id } = await params
     
-    // Check for demo session
-    const cookieStore = await cookies()
-    const demoCookie = cookieStore.get(DEMO_COOKIE_NAME)
-    let serviceSupabase: any
-    let userId: string
-
-    if (demoCookie) {
-      const demoSession = parseDemoSession(demoCookie.value)
-      if (!demoSession || !['staff_admin', 'staff_ops', 'staff_rm'].includes(demoSession.role as any)) {
-        return NextResponse.json({ error: 'Staff access required' }, { status: 403 })
-      }
-      userId = demoSession.id
-      serviceSupabase = createServiceClient()
-    } else {
-      const supabase = await createClient()
-      const { data: { user }, error: authError } = await supabase.auth.getUser()
-      if (authError || !user) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-      }
-
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .single()
-
-      if (!profile || !['staff_admin', 'staff_ops', 'staff_rm'].includes(profile.role)) {
-        return NextResponse.json({ error: 'Staff access required' }, { status: 403 })
-      }
-      
-      userId = user.id
-      serviceSupabase = createServiceClient()
+    const authSupabase = await createClient()
+    const { data: { user }, error: authError } = await authSupabase.auth.getUser()
+    
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+
+    const userId = user.id
+
+    const { data: profile } = await authSupabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    if (!profile || !['staff_admin', 'staff_ops', 'staff_rm'].includes(profile.role)) {
+      return NextResponse.json({ error: 'Staff access required' }, { status: 403 })
+    }
+    
+    const serviceSupabase = createServiceClient()
 
     // Get document details
     const { data: document, error: fetchError } = await serviceSupabase

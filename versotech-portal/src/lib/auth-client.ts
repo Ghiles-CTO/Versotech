@@ -138,10 +138,14 @@ export const signInWithGoogle = async (portalType: 'staff' | 'investor' = 'inves
   const supabase = createClient()
 
   try {
+    // Get the application URL with fallback for development
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 
+                   (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000')
+    
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback?portal=${portalType}`
+        redirectTo: `${appUrl}/auth/callback?portal=${portalType}`
       }
     })
 
@@ -203,38 +207,8 @@ export const getCurrentUser = async (): Promise<AuthUser | null> => {
       .single()
 
     if (profileError || !profile) {
-      // If no profile exists, create one from auth user data
-      const displayName = user.user_metadata?.display_name ||
-                         user.user_metadata?.full_name ||
-                         user.email?.split('@')[0] ||
-                         'User'
-
-      const role = user.user_metadata?.role || 'investor'
-
-      const { data: newProfile, error: createError } = await supabase
-        .from('profiles')
-        .insert({
-          id: user.id,
-          email: user.email!,
-          display_name: displayName,
-          role: role,
-          created_at: new Date().toISOString()
-        })
-        .select()
-        .single()
-
-      if (createError) {
-        console.error('Error creating profile:', createError)
-        return null
-      }
-
-      return {
-        id: user.id,
-        email: user.email!,
-        displayName: displayName,
-        role: role as AuthUser['role'],
-        created_at: new Date().toISOString()
-      }
+      console.error('Error getting profile:', profileError)
+      return null
     }
 
     return {

@@ -4,9 +4,8 @@ import { AddIntroducerProvider } from '@/components/staff/introducers/add-introd
 import { AddIntroducerDialog } from '@/components/staff/introducers/add-introducer-dialog'
 import { getAuthenticatedUser } from '@/lib/api-auth'
 import { requireStaffAuth } from '@/lib/auth'
-import { DEMO_COOKIE_NAME, parseDemoSession } from '@/lib/demo-session'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
-import { cookies } from 'next/headers'
+import { redirect } from 'next/navigation'
 import { AddIntroducerDialogWrapper } from '@/components/staff/introducers/add-introducer-dialog-wrapper'
 
 export const revalidate = 0
@@ -47,37 +46,28 @@ type RecentIntroductionRecord = {
 }
 
 export default async function IntroducersPage() {
-  const cookieStore = await cookies()
-  const demoCookie = cookieStore.get(DEMO_COOKIE_NAME)
-
-  let mode: 'live' | 'demo' = 'live'
-
-  if (demoCookie) {
-    const demoSession = parseDemoSession(demoCookie.value)
-    if (demoSession) {
-      mode = 'demo'
-    }
+  await requireStaffAuth()
+  const supabase = await createClient()
+  
+  const { user } = await getAuthenticatedUser(supabase)
+  if (!user) {
+    redirect('/versotech/login')
   }
-
-  let supabase = mode === 'demo' ? createServiceClient() : await createClient()
-
-  if (mode === 'live') {
-    const { user } = await getAuthenticatedUser(supabase)
-    if (!user) {
-      await requireStaffAuth()
-      return null
-    }
-
-    const role = user.user_metadata?.role || user.role
-    if (!role || !role.startsWith('staff_')) {
-      await requireStaffAuth()
-      return null
-    }
-
-    supabase = createServiceClient()
+  
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+  
+  if (!profile || !profile.role.startsWith('staff_')) {
+    redirect('/versotech/staff')
   }
+  
+  // Use service client for data fetching (bypasses RLS)
+  const serviceSupabase = createServiceClient()
 
-  const { data: introducersData, error: introducersError } = await supabase
+  const { data: introducersData, error: introducersError } = await serviceSupabase
     .from('introducers')
     .select(
       `
@@ -171,7 +161,7 @@ export default async function IntroducersPage() {
     }
   })
 
-  const { data: recentData, error: recentError } = await supabase
+  const { data: recentData, error: recentError } = await serviceSupabase
     .from('introductions')
     .select(
       `
@@ -237,7 +227,7 @@ export default async function IntroducersPage() {
           summary={summary}
           introducers={introducers}
           recentIntroductions={recentIntroductions}
-          isDemo={mode === 'demo'}
+          isDemo={false}
         />
         <AddIntroducerDialog />
       </AddIntroducerProvider>

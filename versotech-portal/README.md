@@ -106,14 +106,49 @@ The platform uses a comprehensive 48-table PostgreSQL schema with 29 ENUMs:
    ```
 
 3. **Environment Setup**
-   Copy `.env.example` to `.env.local` and configure:
+   Copy `env.example` to `.env.local` and configure:
    ```env
-   NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
-   SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+   # Supabase Configuration
+   NEXT_PUBLIC_SUPABASE_URL=https://your-project-id.supabase.co
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
+   SUPABASE_SERVICE_ROLE_KEY=your-service-role-key-here
+
+   # Application URL (required for OAuth callbacks)
+   NEXT_PUBLIC_APP_URL=http://localhost:3000
+   NEXT_PUBLIC_SITE_URL=http://localhost:3000
+   
+   # For production:
+   # NEXT_PUBLIC_APP_URL=https://your-production-domain.com
+   # NEXT_PUBLIC_SITE_URL=https://your-production-domain.com
    ```
 
-4. **Database Setup**
+4. **Authentication Setup**
+   
+   The platform supports two authentication methods:
+   
+   **Email/Password Authentication:**
+   - Users sign up with email and password
+   - Email verification required before first login
+   - Passwords are securely hashed by Supabase Auth
+   
+   **Google OAuth (Recommended):**
+   - One-click sign in with Google accounts
+   - See [Google OAuth Setup Guide](docs/GOOGLE_OAUTH_SETUP.md) for detailed configuration
+   - Requires configuring Google Cloud Console and Supabase
+   
+   **Quick OAuth Setup:**
+   1. Enable Google provider in Supabase Dashboard → Authentication → Providers
+   2. Add your Google Client ID and Secret from Google Cloud Console
+   3. Configure Site URL and Redirect URLs in Supabase
+   4. Set `NEXT_PUBLIC_APP_URL` in your `.env.local`
+   
+   **Role-Based Access:**
+   - **Investors**: Access to `/versoholdings/*` routes only
+   - **Staff** (`@versotech.com` emails): Access to `/versotech/*` routes
+   - Automatic role assignment based on email domain
+   - Profile creation during first login (signup or OAuth)
+
+5. **Database Setup**
    ```bash
    # Run the migrations in order
    psql -h your-host -d your-db -f database/migrations/001_create_deals_schema.sql
@@ -124,24 +159,62 @@ The platform uses a comprehensive 48-table PostgreSQL schema with 29 ENUMs:
    psql -h your-host -d your-db -f database/migrations/006_sample_data.sql
    ```
 
-5. **Start Development Server**
+6. **Start Development Server**
    ```bash
    npm run dev
    ```
 
-6. **Access the Application**
-   - **VERSO Holdings** (Investor Portal): `http://localhost:3000/versoholdings`
-   - **VersoTech** (Staff Portal): `http://localhost:3000/versotech`
+7. **Access the Application**
+   - **VERSO Holdings** (Investor Portal): `http://localhost:3000/versoholdings/login`
+   - **VersoTech** (Staff Portal): `http://localhost:3000/versotech/login`
 
-## Demo Credentials
+## Testing Authentication
 
-### Investor Portal
-- **Email**: investor@demo.com
-- **Portal**: VERSO Holdings (`/versoholdings`)
+### Testing Email/Password Sign Up
 
-### Staff Portal
-- **Email**: admin@demo.com
-- **Portal**: VersoTech (`/versotech`)
+1. Navigate to the investor or staff portal login page
+2. Click "Don't have an account? Create one now"
+3. Fill in your details:
+   - Full Name
+   - Email address
+   - Password (minimum 6 characters)
+4. Click "Create Account"
+5. Check your email for verification link
+6. Click the verification link
+7. Return to login page and sign in with your credentials
+
+### Testing Google OAuth
+
+1. Navigate to the login page
+2. Click "Continue with Google"
+3. Select your Google account
+4. Grant permissions when prompted
+5. You'll be automatically redirected to the appropriate portal based on your email domain
+
+**Email Domain Routing:**
+- `@versotech.com` or `@verso.com` → Staff Portal (`staff_ops` role)
+- Other domains → Investor Portal (`investor` role)
+
+### Testing Role-Based Access
+
+**As an Investor:**
+1. Sign in to investor portal
+2. Access should be granted to `/versoholdings/*` routes
+3. Attempting to access `/versotech/*` should redirect to investor dashboard
+
+**As a Staff Member:**
+1. Sign in with a `@versotech.com` email
+2. Access should be granted to `/versotech/*` routes
+3. Attempting to access `/versoholdings/*` should redirect to staff dashboard
+
+### Troubleshooting
+
+If you encounter authentication issues:
+1. Check browser console for error messages
+2. Verify environment variables are set correctly
+3. Ensure Supabase project is properly configured
+4. Review [Google OAuth Setup Guide](docs/GOOGLE_OAUTH_SETUP.md) for OAuth issues
+5. Check that email verification is configured in Supabase Auth settings
 
 ## Recent Updates
 
