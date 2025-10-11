@@ -11,8 +11,6 @@ import { AddInvestorModal } from '@/components/investors/add-investor-modal'
 import { InvestorFilters } from '@/components/investors/investor-filters'
 import { ExportInvestorsButton } from '@/components/investors/export-investors-button'
 import {
-
-export const dynamic = 'force-dynamic'
   Users,
   Search,
   Eye,
@@ -21,6 +19,8 @@ export const dynamic = 'force-dynamic'
   Clock,
   Mail
 } from 'lucide-react'
+
+export const dynamic = 'force-dynamic'
 
 type InvestorUserRow = {
   user_id: string

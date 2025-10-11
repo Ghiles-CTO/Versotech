@@ -8,8 +8,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Progress } from '@/components/ui/progress'
 import {
-
-export const dynamic = 'force-dynamic'
   Upload,
   Download,
   CheckCircle,
@@ -30,6 +28,8 @@ export const dynamic = 'force-dynamic'
 import { redirect } from 'next/navigation'
 import { requireStaffAuth } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
+
+export const dynamic = 'force-dynamic'
 
 export default async function ReconciliationPage() {
   const profile = await requireStaffAuth()

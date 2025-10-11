@@ -6,8 +6,6 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
-
-export const dynamic = 'force-dynamic'
   Plus,
   Edit,
   Copy,
@@ -26,6 +24,8 @@ import { redirect } from 'next/navigation'
 import { requireStaffAuth } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+
+export const dynamic = 'force-dynamic'
 
 export default async function FeesPage() {
   const profile = await requireStaffAuth()

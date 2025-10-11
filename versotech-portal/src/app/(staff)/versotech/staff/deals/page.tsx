@@ -5,8 +5,6 @@ import { Badge } from '@/components/ui/badge'
 import { createServiceClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import {
-
-export const dynamic = 'force-dynamic'
   Plus,
   TrendingUp,
   DollarSign,
@@ -21,6 +19,8 @@ export const dynamic = 'force-dynamic'
   CircleDollarSign
 } from 'lucide-react'
 import { DealsListClient } from '@/components/deals/deals-list-client'
+
+export const dynamic = 'force-dynamic'
 
 interface Deal {
   id: string
