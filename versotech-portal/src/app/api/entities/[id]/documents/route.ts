@@ -6,9 +6,10 @@ import { auditLogger, AuditActions, AuditEntities } from '@/lib/audit'
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const client = await createClient()
     const { user, error: authError } = await getAuthenticatedUser(client)
 
@@ -20,7 +21,7 @@ export async function GET(
     const { data, error } = await client
       .from('documents')
       .select('id, name, type, created_at, created_by, entity_id, deal_id, vehicle_id')
-      .eq('entity_id', params.id)
+      .eq('entity_id', id)
       .order('created_at', { ascending: false })
 
     if (error) {
@@ -44,9 +45,10 @@ const uploadSchema = z.object({
 
 export async function POST(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const serviceSupabase = createServiceClient()
     const clientSupabase = await createClient()
 
@@ -77,7 +79,7 @@ export async function POST(
     const { data: updatedDoc, error: updateError } = await serviceSupabase
       .from('documents')
       .update({
-        entity_id: params.id,
+        entity_id: id,
         name: validated.name || existingDoc.name,
         type: validated.type || existingDoc.type,
         description: validated.description || null
@@ -95,9 +97,9 @@ export async function POST(
       actor_user_id: user.id,
       action: AuditActions.UPDATE,
       entity: AuditEntities.VEHICLES,
-      entity_id: params.id,
+      entity_id: id,
       metadata: {
-        endpoint: `/api/entities/${params.id}/documents`,
+        endpoint: `/api/entities/${id}/documents`,
         document_id: updatedDoc.id
       }
     })

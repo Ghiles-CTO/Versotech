@@ -209,11 +209,8 @@ export async function POST(request: NextRequest) {
                 .update({ status: 'approved' })
                 .eq('id', approval.entity_metadata?.entity_id || approval.id)
             } else if (approval.entity_type === 'reservation') {
-              // Update reservation status
-              await serviceSupabase
-                .from('reservations')
-                .update({ status: 'approved' })
-                .eq('id', approval.entity_metadata?.entity_id || approval.id)
+              // Reservations deprecated - skip processing
+              console.log('Skipping deprecated reservation approval:', approval.id)
             } else if (approval.entity_type === 'allocation') {
               // Update allocation status
               await serviceSupabase

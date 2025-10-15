@@ -60,7 +60,6 @@ BEGIN
   RETURN NEW;
 END;
 $$;
-
 -- Create trigger
 DROP TRIGGER IF EXISTS on_commitment_create_approval ON deal_commitments;
 CREATE TRIGGER on_commitment_create_approval
@@ -68,11 +67,8 @@ CREATE TRIGGER on_commitment_create_approval
   FOR EACH ROW
   WHEN (NEW.status = 'submitted')
   EXECUTE FUNCTION create_commitment_approval();
-
 -- Comment for documentation
 COMMENT ON FUNCTION create_commitment_approval IS
   'Automatically creates approval record when investor submits commitment. Priority is calculated based on commitment amount: >$1M=critical, >$100K=high, >$50K=medium, else low.';
-
 COMMENT ON TRIGGER on_commitment_create_approval ON deal_commitments IS
   'CRITICAL: Creates approval record for staff review when investor submits commitment';
-

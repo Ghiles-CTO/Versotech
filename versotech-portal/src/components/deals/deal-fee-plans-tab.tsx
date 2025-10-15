@@ -38,7 +38,7 @@ export function DealFeePlansTab({ dealId, feePlans }: DealFeePlansTabProps) {
           </div>
         </CardHeader>
         <CardContent>
-          {feePlans.length === 0 ? (
+          {!feePlans || feePlans.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               No fee plans created yet. Click "Create Fee Plan" to begin.
             </div>

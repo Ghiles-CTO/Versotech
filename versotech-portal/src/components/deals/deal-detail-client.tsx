@@ -6,6 +6,17 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle
+} from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
   Building2,
   Users,
   Package,
@@ -14,7 +25,8 @@ import {
   Activity,
   HandCoins,
   ArrowLeft,
-  Edit
+  Edit,
+  Loader2
 } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -25,6 +37,9 @@ import { DealFeePlansTab } from './deal-fee-plans-tab'
 import { DealCommitmentsTab } from './deal-commitments-tab'
 import { DealDocumentsTab } from './deal-documents-tab'
 import { DealActivityTab } from './deal-activity-tab'
+import { DealTermSheetTab } from './deal-term-sheet-tab'
+import { DealInterestTab } from './deal-interest-tab'
+import { DealDataRoomAccessTab } from './deal-data-room-access-tab'
 
 const statusColors = {
   draft: 'bg-white/10 text-foreground border border-white/20',
@@ -50,9 +65,14 @@ interface DealDetailClientProps {
     allocated_units: number
   }
   commitments: any[]
-  reservations: any[]
   allocations: any[]
   documents: any[]
+  termSheets: any[]
+  interests: any[]
+  dataRoomAccess: any[]
+  dataRoomDocuments: any[]
+  subscriptions: any[]
+  activitySummary: Record<string, number>
   userProfile: { role: string }
 }
 
@@ -60,12 +80,35 @@ export function DealDetailClient({
   deal,
   inventorySummary,
   commitments,
-  reservations,
   allocations,
   documents,
+  termSheets,
+  interests,
+  dataRoomAccess,
+  dataRoomDocuments,
+  subscriptions,
+  activitySummary,
   userProfile
 }: DealDetailClientProps) {
   const [activeTab, setActiveTab] = useState('overview')
+  const [editDialogOpen, setEditDialogOpen] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+  const [editFormData, setEditFormData] = useState({
+    name: deal?.name || '',
+    description: deal?.description || '',
+    investment_thesis: deal?.investment_thesis || '',
+    status: deal?.status || 'draft',
+    deal_type: deal?.deal_type || 'equity_secondary',
+    company_name: deal?.company_name || '',
+    company_website: deal?.company_website || '',
+    sector: deal?.sector || '',
+    stage: deal?.stage || '',
+    location: deal?.location || '',
+    open_at: deal?.open_at ? deal.open_at.slice(0, 16) : '',
+    close_at: deal?.close_at ? deal.close_at.slice(0, 16) : '',
+    offer_unit_price: deal?.offer_unit_price || '',
+    currency: deal?.currency || 'USD'
+  })
   const router = useRouter()
 
   useEffect(() => {
@@ -76,9 +119,45 @@ export function DealDetailClient({
       dealStatus: deal?.status,
       hasInventory: !!inventorySummary,
       commitmentsCount: commitments?.length || 0,
+      termSheetCount: termSheets?.length || 0,
+      interestCount: interests?.length || 0,
       userRole: userProfile?.role
     })
-  }, [deal, inventorySummary, commitments, userProfile])
+  }, [deal, inventorySummary, commitments, termSheets, interests, userProfile])
+
+  const handleSaveDeal = async () => {
+    setIsSaving(true)
+    try {
+      const response = await fetch(`/api/deals/${deal.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...editFormData,
+          offer_unit_price: editFormData.offer_unit_price ? parseFloat(editFormData.offer_unit_price as string) : null
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to update deal')
+      }
+
+      setEditDialogOpen(false)
+      router.refresh()
+    } catch (error) {
+      console.error('Error updating deal:', error)
+      alert('Failed to update deal. Please try again.')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const publishedTermSheet = termSheets?.find((sheet: any) => sheet.status === 'published')
+  const pendingInterests = interests?.filter((interest: any) => interest.status === 'pending_review') ?? []
+  const approvedInterests = interests?.filter((interest: any) => interest.status === 'approved') ?? []
+  const activeAccess = dataRoomAccess?.filter((record: any) => !record.revoked_at) ?? []
+  const pendingSubscriptions = subscriptions?.filter((submission: any) => submission.status === 'pending_review') ?? []
+  const ndaCompletedCount = activitySummary?.nda_completed ?? 0
+  const subscriptionCompletedCount = activitySummary?.subscription_completed ?? 0
 
   // Safety check - if no deal, show error state (server should handle redirect)
   if (!deal || !deal.id) {
@@ -135,13 +214,10 @@ export function DealDetailClient({
         </div>
 
         <div className="flex items-center gap-2">
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             className="gap-2 border-white/20 text-foreground hover:bg-white/10"
-            onClick={() => {
-              // TODO: Open edit modal or navigate to edit page
-              alert('Edit functionality will be implemented. For now, you can create a new deal with updated information.')
-            }}
+            onClick={() => setEditDialogOpen(true)}
           >
             <Edit className="h-4 w-4" />
             Edit Deal
@@ -154,48 +230,31 @@ export function DealDetailClient({
         <Card className="border border-white/10 bg-white/5">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Members
-            </CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-foreground">
-              {deal.deal_memberships?.length || 0}
-            </div>
-            <p className="text-xs text-muted-foreground">Invited participants</p>
-          </CardContent>
-        </Card>
-
-        <Card className="border border-white/10 bg-white/5">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Total Units
-            </CardTitle>
-            <Package className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-foreground">
-              {inventorySummary.total_units.toLocaleString()}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {inventorySummary.available_units.toLocaleString()} available
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="border border-white/10 bg-white/5">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Commitments
+              Interest Signals
             </CardTitle>
             <HandCoins className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-foreground">
-              {commitments.length}
+              {interests?.length ?? 0}
+            </div>
+            <p className="text-xs text-muted-foreground">{pendingInterests.length} awaiting review</p>
+          </CardContent>
+        </Card>
+
+        <Card className="border border-white/10 bg-white/5">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Active NDAs
+            </CardTitle>
+            <FileText className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-foreground">
+              {activeAccess.length}
             </div>
             <p className="text-xs text-muted-foreground">
-              {commitments.filter(c => c.status === 'submitted').length} pending
+              {approvedInterests.length} interests approved
             </p>
           </CardContent>
         </Card>
@@ -203,117 +262,326 @@ export function DealDetailClient({
         <Card className="border border-white/10 bg-white/5">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Target Amount
+              Published Term Sheet
             </CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
+            <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-foreground">
-              {deal.currency} {deal.target_amount?.toLocaleString() || '—'}
+              {publishedTermSheet ? `V${publishedTermSheet.version}` : '—'}
             </div>
             <p className="text-xs text-muted-foreground">
-              {deal.raised_amount?.toLocaleString() || 0} raised
+              {publishedTermSheet
+                ? `Published ${publishedTermSheet.published_at ? new Date(publishedTermSheet.published_at).toLocaleDateString() : ''}`
+                : 'No published version'}
             </p>
+          </CardContent>
+        </Card>
+
+        <Card className="border border-white/10 bg-white/5">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Subscriptions
+            </CardTitle>
+            <Package className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-foreground">
+              {subscriptions?.length ?? 0}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {pendingSubscriptions.length} awaiting approval
+            </p>
+          </CardContent>
+        </Card>
+        <Card className="border border-white/10 bg-white/5">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Conversions (90d)
+            </CardTitle>
+            <Badge variant="outline">Analytics</Badge>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col gap-1 text-xs text-muted-foreground">
+              <div className="flex items-center justify-between">
+                <span>NDA completed</span>
+                <span className="font-semibold text-foreground">{ndaCompletedCount}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span>Subscriptions funded</span>
+                <span className="font-semibold text-foreground">{subscriptionCompletedCount}</span>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Tabbed Content */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="bg-white/5 border border-white/10">
-          <TabsTrigger value="overview" className="gap-2">
-            <Building2 className="h-4 w-4" />
-            Overview
-          </TabsTrigger>
-          <TabsTrigger value="inventory" className="gap-2">
-            <Package className="h-4 w-4" />
-            Inventory
-          </TabsTrigger>
-          <TabsTrigger value="members" className="gap-2">
-            <Users className="h-4 w-4" />
-            Members
-          </TabsTrigger>
-          <TabsTrigger value="fee-plans" className="gap-2">
-            <DollarSign className="h-4 w-4" />
-            Fee Plans
-          </TabsTrigger>
-          <TabsTrigger value="commitments" className="gap-2">
-            <HandCoins className="h-4 w-4" />
-            Commitments
-          </TabsTrigger>
-          <TabsTrigger value="documents" className="gap-2">
-            <FileText className="h-4 w-4" />
-            Documents
-          </TabsTrigger>
-          <TabsTrigger value="activity" className="gap-2">
-            <Activity className="h-4 w-4" />
-            Activity
-          </TabsTrigger>
+      <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="flex flex-wrap gap-2">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="term-sheet">Term Sheets</TabsTrigger>
+          <TabsTrigger value="interests">Interests</TabsTrigger>
+          <TabsTrigger value="data-room">Data Room</TabsTrigger>
+          <TabsTrigger value="inventory">Inventory</TabsTrigger>
+          <TabsTrigger value="members">Members</TabsTrigger>
+          <TabsTrigger value="fees">Fee Plans</TabsTrigger>
+          <TabsTrigger value="commitments">Commitments</TabsTrigger>
+          <TabsTrigger value="documents">Documents</TabsTrigger>
+          <TabsTrigger value="activity">Activity</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="overview" className="space-y-4">
+        <TabsContent value="overview">
           <DealOverviewTab deal={deal} />
         </TabsContent>
 
-        <TabsContent value="inventory" className="space-y-4">
-          {deal.share_lots && inventorySummary ? (
-            <DealInventoryTab
-              dealId={deal.id}
-              shareLots={deal.share_lots}
-              inventorySummary={inventorySummary}
-            />
-          ) : (
-            <Card className="border border-white/10 bg-white/5">
-              <CardContent className="p-6 text-center text-muted-foreground">
-                No inventory data available
-              </CardContent>
-            </Card>
-          )}
+        <TabsContent value="term-sheet">
+          <DealTermSheetTab dealId={deal.id} termSheets={termSheets} />
         </TabsContent>
 
-        <TabsContent value="members" className="space-y-4">
-          <DealMembersTab
+        <TabsContent value="interests">
+          <DealInterestTab
             dealId={deal.id}
-            members={deal.deal_memberships || []}
+            interests={interests}
+            subscriptions={subscriptions}
           />
         </TabsContent>
 
-        <TabsContent value="fee-plans" className="space-y-4">
-          <DealFeePlansTab
+        <TabsContent value="data-room">
+          <DealDataRoomAccessTab
             dealId={deal.id}
-            feePlans={deal.fee_plans || []}
+            dealName={deal.name}
+            memberships={deal.deal_memberships || []}
+            accessRecords={dataRoomAccess}
+            documents={dataRoomDocuments}
           />
         </TabsContent>
 
-        <TabsContent value="commitments" className="space-y-4">
-          {commitments && reservations && allocations ? (
-            <DealCommitmentsTab
-              dealId={deal.id}
-              commitments={commitments}
-              reservations={reservations}
-              allocations={allocations}
-              dealStatus={deal.status}
-            />
-          ) : (
-            <Card className="border border-white/10 bg-white/5">
-              <CardContent className="p-6 text-center text-muted-foreground">
-                Loading commitment data...
-              </CardContent>
-            </Card>
-          )}
+        <TabsContent value="inventory">
+          <DealInventoryTab deal={deal} inventorySummary={inventorySummary} />
         </TabsContent>
 
-        <TabsContent value="documents" className="space-y-4">
-          <DealDocumentsTab
-            dealId={deal.id}
-            documents={documents || []}
-          />
+        <TabsContent value="members">
+          <DealMembersTab deal={deal} />
         </TabsContent>
 
-        <TabsContent value="activity" className="space-y-4">
+        <TabsContent value="fees">
+          <DealFeePlansTab deal={deal} />
+        </TabsContent>
+
+        <TabsContent value="commitments">
+          <DealCommitmentsTab dealId={deal.id} commitments={commitments} allocations={allocations} dealStatus={deal.status} />
+        </TabsContent>
+
+        <TabsContent value="documents">
+          <DealDocumentsTab dealId={deal.id} documents={documents} />
+        </TabsContent>
+
+        <TabsContent value="activity">
           <DealActivityTab dealId={deal.id} />
         </TabsContent>
       </Tabs>
+
+      {/* Edit Deal Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Deal</DialogTitle>
+            <DialogDescription>
+              Update deal information. Changes will be reflected immediately.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-6 py-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="edit-name">Deal Name *</Label>
+                <Input
+                  id="edit-name"
+                  value={editFormData.name}
+                  onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                  placeholder="e.g., Revolut Secondary 2025"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-status">Status</Label>
+                <Select
+                  value={editFormData.status}
+                  onValueChange={(value) => setEditFormData({ ...editFormData, status: value })}
+                >
+                  <SelectTrigger id="edit-status">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="draft">Draft</SelectItem>
+                    <SelectItem value="open">Open</SelectItem>
+                    <SelectItem value="allocation_pending">Allocation Pending</SelectItem>
+                    <SelectItem value="closed">Closed</SelectItem>
+                    <SelectItem value="cancelled">Cancelled</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-deal-type">Deal Type</Label>
+                <Select
+                  value={editFormData.deal_type}
+                  onValueChange={(value) => setEditFormData({ ...editFormData, deal_type: value })}
+                >
+                  <SelectTrigger id="edit-deal-type">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="equity_secondary">Secondary</SelectItem>
+                    <SelectItem value="equity_primary">Primary</SelectItem>
+                    <SelectItem value="credit_trade_finance">Credit/Trade Finance</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-company-name">Company Name</Label>
+                <Input
+                  id="edit-company-name"
+                  value={editFormData.company_name}
+                  onChange={(e) => setEditFormData({ ...editFormData, company_name: e.target.value })}
+                  placeholder="e.g., Revolut Ltd"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-company-website">Company Website</Label>
+                <Input
+                  id="edit-company-website"
+                  type="url"
+                  value={editFormData.company_website}
+                  onChange={(e) => setEditFormData({ ...editFormData, company_website: e.target.value })}
+                  placeholder="https://..."
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-sector">Sector</Label>
+                <Input
+                  id="edit-sector"
+                  value={editFormData.sector}
+                  onChange={(e) => setEditFormData({ ...editFormData, sector: e.target.value })}
+                  placeholder="e.g., Fintech"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-stage">Stage</Label>
+                <Input
+                  id="edit-stage"
+                  value={editFormData.stage}
+                  onChange={(e) => setEditFormData({ ...editFormData, stage: e.target.value })}
+                  placeholder="e.g., Series E"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-location">Location</Label>
+                <Input
+                  id="edit-location"
+                  value={editFormData.location}
+                  onChange={(e) => setEditFormData({ ...editFormData, location: e.target.value })}
+                  placeholder="e.g., London, UK"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-currency">Currency</Label>
+                <Select
+                  value={editFormData.currency}
+                  onValueChange={(value) => setEditFormData({ ...editFormData, currency: value })}
+                >
+                  <SelectTrigger id="edit-currency">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="USD">USD</SelectItem>
+                    <SelectItem value="EUR">EUR</SelectItem>
+                    <SelectItem value="GBP">GBP</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-open-at">Open Date</Label>
+                <Input
+                  id="edit-open-at"
+                  type="datetime-local"
+                  value={editFormData.open_at}
+                  onChange={(e) => setEditFormData({ ...editFormData, open_at: e.target.value })}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-close-at">Close Date</Label>
+                <Input
+                  id="edit-close-at"
+                  type="datetime-local"
+                  value={editFormData.close_at}
+                  onChange={(e) => setEditFormData({ ...editFormData, close_at: e.target.value })}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-offer-unit-price">Offer Unit Price</Label>
+                <Input
+                  id="edit-offer-unit-price"
+                  type="number"
+                  step="0.01"
+                  value={editFormData.offer_unit_price}
+                  onChange={(e) => setEditFormData({ ...editFormData, offer_unit_price: e.target.value })}
+                  placeholder="e.g., 85.00"
+                />
+              </div>
+
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="edit-description">Description</Label>
+                <Textarea
+                  id="edit-description"
+                  rows={3}
+                  value={editFormData.description}
+                  onChange={(e) => setEditFormData({ ...editFormData, description: e.target.value })}
+                  placeholder="Brief description of the deal..."
+                />
+              </div>
+
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="edit-investment-thesis">Investment Thesis</Label>
+                <Textarea
+                  id="edit-investment-thesis"
+                  rows={3}
+                  value={editFormData.investment_thesis}
+                  onChange={(e) => setEditFormData({ ...editFormData, investment_thesis: e.target.value })}
+                  placeholder="Why this is a good investment opportunity..."
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-4">
+              <Button
+                variant="outline"
+                onClick={() => setEditDialogOpen(false)}
+                disabled={isSaving}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSaveDeal}
+                disabled={isSaving || !editFormData.name}
+              >
+                {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Save Changes
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

@@ -38,18 +38,6 @@ interface ShareLot {
   }
 }
 
-interface Reservation {
-  id: string
-  requested_units: number
-  proposed_unit_price: number
-  expires_at: string
-  status: string
-  created_at: string
-  investors?: {
-    legal_name: string
-  }
-}
-
 export default function DealInventoryPanel({ 
   dealId, 
   dealName, 
@@ -59,15 +47,7 @@ export default function DealInventoryPanel({
 }: DealInventoryPanelProps) {
   const [inventory, setInventory] = useState<InventorySummary | null>(null)
   const [shareLots, setShareLots] = useState<ShareLot[]>([])
-  const [reservations, setReservations] = useState<Reservation[]>([])
   const [loading, setLoading] = useState(true)
-  const [creating, setCreating] = useState(false)
-  
-  // Reservation form state
-  const [investorId, setInvestorId] = useState('')
-  const [requestedUnits, setRequestedUnits] = useState('')
-  const [proposedPrice, setProposedPrice] = useState(offerPrice.toString())
-  const [holdMinutes, setHoldMinutes] = useState('30')
 
   useEffect(() => {
     loadInventoryData()
@@ -85,82 +65,11 @@ export default function DealInventoryPanel({
         setShareLots(inventoryData.share_lots || [])
       }
 
-      // Load reservations
-      const reservationsResponse = await fetch(`/api/deals/${dealId}/reservations`)
-      if (reservationsResponse.ok) {
-        const reservationsData = await reservationsResponse.json()
-        setReservations(reservationsData.reservations || [])
-      }
-
     } catch (error) {
       console.error('Error loading inventory data:', error)
       toast.error('Failed to load inventory data')
     } finally {
       setLoading(false)
-    }
-  }
-
-  const createReservation = async () => {
-    if (!investorId || !requestedUnits || !proposedPrice) {
-      toast.error('Please fill in all required fields')
-      return
-    }
-
-    try {
-      setCreating(true)
-      
-      const response = await fetch(`/api/deals/${dealId}/reservations`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          investor_id: investorId,
-          requested_units: parseFloat(requestedUnits),
-          proposed_unit_price: parseFloat(proposedPrice),
-          hold_minutes: parseInt(holdMinutes)
-        })
-      })
-
-      const result = await response.json()
-
-      if (response.ok) {
-        toast.success(result.message)
-        setInvestorId('')
-        setRequestedUnits('')
-        setProposedPrice(offerPrice.toString())
-        setHoldMinutes('30')
-        loadInventoryData() // Refresh data
-      } else {
-        toast.error(result.error || 'Failed to create reservation')
-      }
-
-    } catch (error) {
-      console.error('Error creating reservation:', error)
-      toast.error('Failed to create reservation')
-    } finally {
-      setCreating(false)
-    }
-  }
-
-  const finalizeReservation = async (reservationId: string) => {
-    try {
-      const response = await fetch(`/api/reservations/${reservationId}/finalize`, {
-        method: 'POST'
-      })
-
-      const result = await response.json()
-
-      if (response.ok) {
-        toast.success(result.message)
-        loadInventoryData() // Refresh data
-      } else {
-        toast.error(result.error || 'Failed to finalize reservation')
-      }
-
-    } catch (error) {
-      console.error('Error finalizing reservation:', error)
-      toast.error('Failed to finalize reservation')
     }
   }
 
@@ -216,7 +125,7 @@ export default function DealInventoryPanel({
                 <div className="text-2xl font-bold text-yellow-600">
                   {inventory.reserved_units.toLocaleString()}
                 </div>
-                <div className="text-sm text-gray-600">Reserved</div>
+                <div className="text-sm text-gray-600">Reserved (Legacy)</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-purple-600">
@@ -236,67 +145,6 @@ export default function DealInventoryPanel({
           </div>
         )}
       </Card>
-
-      {/* Create Reservation Form */}
-      {dealStatus === 'open' && (
-        <Card className="p-6">
-          <h3 className="text-lg font-semibold mb-4">Create Reservation</h3>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="investor_id">Investor ID</Label>
-              <Input
-                id="investor_id"
-                value={investorId}
-                onChange={(e) => setInvestorId(e.target.value)}
-                placeholder="Enter investor UUID"
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="requested_units">Requested Units</Label>
-              <Input
-                id="requested_units"
-                type="number"
-                value={requestedUnits}
-                onChange={(e) => setRequestedUnits(e.target.value)}
-                placeholder="0"
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="proposed_price">Proposed Price ({currency})</Label>
-              <Input
-                id="proposed_price"
-                type="number"
-                step="0.01"
-                value={proposedPrice}
-                onChange={(e) => setProposedPrice(e.target.value)}
-                placeholder="0.00"
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="hold_minutes">Hold Duration (minutes)</Label>
-              <Input
-                id="hold_minutes"
-                type="number"
-                value={holdMinutes}
-                onChange={(e) => setHoldMinutes(e.target.value)}
-                placeholder="30"
-              />
-            </div>
-          </div>
-          
-          <Button 
-            onClick={createReservation} 
-            disabled={creating}
-            className="mt-4"
-          >
-            {creating ? 'Creating...' : 'Create Reservation'}
-          </Button>
-        </Card>
-      )}
 
       {/* Share Lots */}
       <Card className="p-6">
@@ -334,46 +182,7 @@ export default function DealInventoryPanel({
         </div>
       </Card>
 
-      {/* Active Reservations */}
-      <Card className="p-6">
-        <h3 className="text-lg font-semibold mb-4">Active Reservations</h3>
-        
-        <div className="space-y-3">
-          {reservations.filter(r => r.status === 'pending').map((reservation) => (
-            <div key={reservation.id} className="flex items-center justify-between p-3 border rounded-lg">
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <Badge className={getStatusColor(reservation.status)}>
-                    {reservation.status}
-                  </Badge>
-                  <span className="font-medium">
-                    {reservation.requested_units.toLocaleString()} units @ {currency} {reservation.proposed_unit_price}
-                  </span>
-                </div>
-                <div className="text-sm text-gray-600 mt-1">
-                  Investor: {reservation.investors?.legal_name} • 
-                  Expires: {new Date(reservation.expires_at).toLocaleString()}
-                </div>
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  onClick={() => finalizeReservation(reservation.id)}
-                  className="bg-green-600 hover:bg-green-700"
-                >
-                  Finalize
-                </Button>
-              </div>
-            </div>
-          ))}
-          
-          {reservations.filter(r => r.status === 'pending').length === 0 && (
-            <div className="text-center py-8 text-gray-500">
-              No active reservations
-            </div>
-          )}
-        </div>
-      </Card>
+      {/* Note: Reservations deprecated - see Interest Pipeline and Subscriptions tabs */}
     </div>
   )
 }

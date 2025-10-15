@@ -10,7 +10,7 @@ const createApprovalSchema = z.object({
   entity_id: z.string().uuid('Invalid entity ID'),
   action: z.enum(['approve', 'reject', 'revise']),
   notes: z.string().optional(),
-  priority: z.enum(['low', 'normal', 'high']).default('normal'),
+  priority: z.enum(['low', 'medium', 'high', 'critical']).default('medium'),
   assigned_to: z.string().uuid('Invalid assignee ID').optional()
 })
 
@@ -76,6 +76,26 @@ export async function POST(request: NextRequest) {
           .single()
         entityExists = !!commitment
         entityName = commitment?.investors?.legal_name || 'Unknown'
+        break
+
+      case 'deal_interest':
+        const { data: interest } = await supabase
+          .from('investor_deal_interest')
+          .select('id, investors(legal_name)')
+          .eq('id', entity_id)
+          .single()
+        entityExists = !!interest
+        entityName = interest?.investors?.legal_name || 'Unknown'
+        break
+
+      case 'deal_subscription':
+        const { data: subscription } = await supabase
+          .from('deal_subscription_submissions')
+          .select('id, investors(legal_name)')
+          .eq('id', entity_id)
+          .single()
+        entityExists = !!subscription
+        entityName = subscription?.investors?.legal_name || 'Unknown'
         break
         
       case 'allocation':

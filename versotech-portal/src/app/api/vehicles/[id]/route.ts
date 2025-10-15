@@ -6,11 +6,11 @@ import { auditLogger, AuditActions, AuditEntities } from '@/lib/audit'
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const supabase = await createClient()
-    const { id: vehicleId } = params
+    const { id: vehicleId } = await params
     
     // Get the authenticated user
     const { data: { user }, error: authError } = await supabase.auth.getUser()

@@ -13,7 +13,6 @@ import { FinalizeAllocationModal } from './finalize-allocation-modal'
 interface DealCommitmentsTabProps {
   dealId: string
   commitments: any[]
-  reservations: any[]
   allocations: any[]
   dealStatus: string
 }
@@ -21,7 +20,6 @@ interface DealCommitmentsTabProps {
 export function DealCommitmentsTab({
   dealId,
   commitments,
-  reservations,
   allocations,
   dealStatus
 }: DealCommitmentsTabProps) {
@@ -117,52 +115,6 @@ export function DealCommitmentsTab({
           )}
         </CardContent>
       </Card>
-
-      {/* Active Reservations */}
-      {reservations.length > 0 && (
-        <Card className="border border-white/10 bg-white/5">
-          <CardHeader>
-            <CardTitle className="text-foreground flex items-center gap-2">
-              <Clock className="h-5 w-5" />
-              Active Reservations
-            </CardTitle>
-            <CardDescription>Time-limited inventory holds</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {reservations.filter(r => r.status === 'pending').map((reservation) => (
-                <div
-                  key={reservation.id}
-                  className="border border-amber-400/30 rounded-lg p-4 bg-amber-500/10"
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium text-foreground">
-                          {reservation.investors?.legal_name}
-                        </span>
-                        <Badge className="bg-amber-500/20 text-amber-200">
-                          Expires: {new Date(reservation.expires_at).toLocaleString()}
-                        </Badge>
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        {reservation.requested_units.toLocaleString()} units @ $
-                        {reservation.proposed_unit_price.toFixed(2)}
-                      </div>
-                    </div>
-                    <FinalizeAllocationModal
-                      dealId={dealId}
-                      reservationId={reservation.id}
-                      investorName={reservation.investors?.legal_name}
-                      units={reservation.requested_units}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       {/* Finalized Allocations */}
       {allocations.length > 0 && (

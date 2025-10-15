@@ -82,7 +82,7 @@ export function DealInventoryTab({ dealId, shareLots, inventorySummary }: DealIn
           </div>
         </CardHeader>
         <CardContent>
-          {shareLots.length === 0 ? (
+          {!shareLots || shareLots.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               No share lots added yet. Click "Add Share Lot" to begin.
             </div>

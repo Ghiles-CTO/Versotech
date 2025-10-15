@@ -34,6 +34,7 @@ import {
   UserCheck,
   Search,
   MoreHorizontal,
+  Bell
 } from 'lucide-react'
 
 interface SidebarItem {
@@ -81,16 +82,22 @@ const investorNavItems: SidebarItem[] = [
     description: 'Investment opportunities and participation'
   },
   {
-    name: 'Holdings',
+    name: 'Portfolio',
     href: '/versoholdings/holdings',
     icon: Briefcase,
     description: 'Investment entities and positions'
   },
   {
-    name: 'Documents',
-    href: '/versoholdings/documents',
+    name: 'Data Rooms',
+    href: '/versoholdings/data-rooms',
     icon: FileText,
-    description: 'Reports, statements, and contracts'
+    description: 'Due diligence documents and access controls'
+  },
+  {
+    name: 'Reports',
+    href: '/versoholdings/reports',
+    icon: TrendingUp,
+    description: 'Performance reporting and statements'
   },
   {
     name: 'Tasks',
@@ -107,10 +114,11 @@ const investorNavItems: SidebarItem[] = [
     description: 'Communication with VERSO team'
   },
   {
-    name: 'Reports',
-    href: '/versoholdings/reports',
-    icon: TrendingUp,
-    description: 'Request custom reports'
+    name: 'Notifications',
+    href: '/versoholdings/notifications',
+    icon: Bell,
+    notificationKey: 'notifications',
+    description: 'Important alerts and approvals'
   }
 ]
 

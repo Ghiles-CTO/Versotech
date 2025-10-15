@@ -84,13 +84,7 @@ export function DealContextSelector({
 
       commitmentDeals?.forEach(c => dealIds.add(c.deal_id))
 
-      // Get deals from reservations
-      const { data: reservationDeals } = await supabase
-        .from('reservations')
-        .select('deal_id')
-        .in('investor_id', investorIds)
-
-      reservationDeals?.forEach(r => dealIds.add(r.deal_id))
+      // Reservations deprecated - removed from workflow
 
       // Get deals from allocations
       const { data: allocationDeals } = await supabase

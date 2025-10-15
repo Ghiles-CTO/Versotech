@@ -65,7 +65,6 @@ BEGIN
   RETURN NEW;
 END;
 $$;
-
 -- Create trigger
 DROP TRIGGER IF EXISTS on_reservation_create_approval ON reservations;
 CREATE TRIGGER on_reservation_create_approval
@@ -73,11 +72,8 @@ CREATE TRIGGER on_reservation_create_approval
   FOR EACH ROW
   WHEN (NEW.status = 'pending')
   EXECUTE FUNCTION create_reservation_approval();
-
 -- Comment for documentation
 COMMENT ON FUNCTION create_reservation_approval IS
   'Automatically creates approval record when reservation is created. Priority is calculated based on reservation value: >$1M=critical, >$500K=high, >$100K=medium, else low.';
-
 COMMENT ON TRIGGER on_reservation_create_approval ON reservations IS
   'CRITICAL: Creates approval record for staff review when reservation is created with pending status';
-

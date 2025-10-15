@@ -15,9 +15,10 @@ const directorSchema = z.object({
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const supabase = createServiceClient()
     const { data: { user } } = await supabase.auth.getUser()
 
@@ -33,7 +34,7 @@ export async function GET(
     const { data, error } = await supabase
       .from('entity_directors')
       .select('id, full_name, role, email, effective_from, effective_to, notes, created_at')
-      .eq('vehicle_id', params.id)
+      .eq('vehicle_id', id)
       .order('effective_from', { ascending: false })
 
     if (error) {
@@ -50,9 +51,10 @@ export async function GET(
 
 export async function POST(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const serviceSupabase = createServiceClient()
     const clientSupabase = await createClient()
 
@@ -71,7 +73,7 @@ export async function POST(
     const validated = directorSchema.parse(body)
 
     const payload = {
-      vehicle_id: params.id,
+      vehicle_id: id,
       full_name: validated.full_name,
       role: validated.role || null,
       email: validated.email || null,
@@ -95,9 +97,9 @@ export async function POST(
       actor_user_id: user.id,
       action: AuditActions.CREATE,
       entity: AuditEntities.VEHICLES,
-      entity_id: params.id,
+      entity_id: id,
       metadata: {
-        endpoint: `/api/entities/${params.id}/directors`,
+        endpoint: `/api/entities/${id}/directors`,
         director_id: data.id,
         full_name: data.full_name
       }
@@ -117,9 +119,10 @@ const directorUpdateSchema = directorSchema.partial()
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const serviceSupabase = createServiceClient()
     const clientSupabase = await createClient()
 
@@ -158,7 +161,7 @@ export async function PATCH(
     const { data, error } = await serviceSupabase
       .from('entity_directors')
       .update(updatePayload)
-      .eq('vehicle_id', params.id)
+      .eq('vehicle_id', id)
       .eq('id', directorId)
       .select()
       .single()
@@ -172,9 +175,9 @@ export async function PATCH(
       actor_user_id: user.id,
       action: AuditActions.UPDATE,
       entity: AuditEntities.VEHICLES,
-      entity_id: params.id,
+      entity_id: id,
       metadata: {
-        endpoint: `/api/entities/${params.id}/directors`,
+        endpoint: `/api/entities/${id}/directors`,
         director_id: data.id
       }
     })
@@ -192,9 +195,10 @@ export async function PATCH(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const url = new URL(request.url)
     const directorId = url.searchParams.get('directorId')
 
@@ -219,7 +223,7 @@ export async function DELETE(
     const { error } = await serviceSupabase
       .from('entity_directors')
       .delete()
-      .eq('vehicle_id', params.id)
+      .eq('vehicle_id', id)
       .eq('id', directorId)
 
     if (error) {
@@ -231,9 +235,9 @@ export async function DELETE(
       actor_user_id: user.id,
       action: AuditActions.DELETE,
       entity: AuditEntities.VEHICLES,
-      entity_id: params.id,
+      entity_id: id,
       metadata: {
-        endpoint: `/api/entities/${params.id}/directors`,
+        endpoint: `/api/entities/${id}/directors`,
         director_id: directorId
       }
     })

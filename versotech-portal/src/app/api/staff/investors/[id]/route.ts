@@ -10,9 +10,10 @@ import { revalidatePath } from 'next/cache'
  */
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const authSupabase = await createClient()
     const { user, error: authError } = await getAuthenticatedUser(authSupabase)
 
@@ -55,7 +56,7 @@ export async function GET(
           )
         )
       `)
-      .eq('id', params.id)
+      .eq('id', id)
       .single()
 
     if (error) {
@@ -80,9 +81,10 @@ export async function GET(
  */
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const authSupabase = await createClient()
     const { user, error: authError } = await getAuthenticatedUser(authSupabase)
 
@@ -134,7 +136,7 @@ export async function PATCH(
         .from('investors')
         .select('id')
         .eq('email', email)
-        .neq('id', params.id)
+        .neq('id', id)
         .single()
 
       if (existing) {
@@ -173,7 +175,7 @@ export async function PATCH(
     const { data: investor, error: updateError } = await supabase
       .from('investors')
       .update(updateData)
-      .eq('id', params.id)
+      .eq('id', id)
       .select(`
         *,
         primary_rm_profile:profiles!investors_primary_rm_fkey (
@@ -196,7 +198,7 @@ export async function PATCH(
 
     // Revalidate both list and detail pages
     revalidatePath('/versotech/staff/investors')
-    revalidatePath(`/versotech/staff/investors/${params.id}`)
+    revalidatePath(`/versotech/staff/investors/${id}`)
 
     return NextResponse.json({
       investor,
@@ -215,9 +217,10 @@ export async function PATCH(
  */
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const authSupabase = await createClient()
     const { user, error: authError } = await getAuthenticatedUser(authSupabase)
 
@@ -244,7 +247,7 @@ export async function DELETE(
     const { data: subscriptions } = await supabase
       .from('subscriptions')
       .select('id')
-      .eq('investor_id', params.id)
+      .eq('investor_id', id)
       .eq('status', 'active')
 
     if (subscriptions && subscriptions.length > 0) {
@@ -261,7 +264,7 @@ export async function DELETE(
         status: 'archived',
         archived_at: new Date().toISOString()
       })
-      .eq('id', params.id)
+      .eq('id', id)
 
     if (updateError) {
       console.error('Archive investor error:', updateError)

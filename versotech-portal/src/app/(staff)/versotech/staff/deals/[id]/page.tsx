@@ -143,18 +143,7 @@ export default async function DealDetailPage({
     .eq('deal_id', dealId)
     .order('created_at', { ascending: false })
 
-  // Fetch reservations
-  const { data: reservations } = await supabase
-    .from('reservations')
-    .select(`
-      *,
-      investors (
-        id,
-        legal_name
-      )
-    `)
-    .eq('deal_id', dealId)
-    .order('created_at', { ascending: false })
+  // Reservations deprecated - removed from deal workflow
 
   // Fetch allocations
   const { data: allocations } = await supabase
@@ -188,6 +177,73 @@ export default async function DealDetailPage({
     .eq('deal_id', dealId)
     .order('created_at', { ascending: false })
 
+  // Fetch term sheet versions
+  const { data: termSheets } = await supabase
+    .from('deal_fee_structures')
+    .select('*')
+    .eq('deal_id', dealId)
+    .order('created_at', { ascending: false })
+
+  // Fetch investor interest submissions
+  const { data: interests } = await supabase
+    .from('investor_deal_interest')
+    .select(`
+      *,
+      investors (
+        id,
+        legal_name
+      )
+    `)
+    .eq('deal_id', dealId)
+    .order('submitted_at', { ascending: false })
+
+  // Fetch data room access records
+  const { data: dataRoomAccess } = await supabase
+    .from('deal_data_room_access')
+    .select(`
+      *,
+      investors (
+        id,
+        legal_name
+      )
+    `)
+    .eq('deal_id', dealId)
+    .order('granted_at', { ascending: false })
+
+  // Fetch data room documents
+  const { data: dataRoomDocuments } = await supabase
+    .from('deal_data_room_documents')
+    .select('*')
+    .eq('deal_id', dealId)
+    .order('folder', { ascending: true })
+    .order('created_at', { ascending: true })
+
+  // Fetch subscription submissions
+  const { data: subscriptions } = await supabase
+    .from('deal_subscription_submissions')
+    .select(`
+      *,
+      investors (
+        id,
+        legal_name
+      )
+    `)
+    .eq('deal_id', dealId)
+    .order('submitted_at', { ascending: false })
+
+  const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString()
+
+  const { data: activityEvents } = await supabase
+    .from('deal_activity_events')
+    .select('event_type, occurred_at')
+    .eq('deal_id', dealId)
+    .gte('occurred_at', ninetyDaysAgo)
+
+  const activitySummary = (activityEvents ?? []).reduce<Record<string, number>>((acc, event) => {
+    acc[event.event_type] = (acc[event.event_type] ?? 0) + 1
+    return acc
+  }, {})
+
   return (
     <AppLayout brand="versotech">
       <DealDetailClient
@@ -199,9 +255,14 @@ export default async function DealDetailPage({
           allocated_units: 0
         }}
         commitments={commitments || []}
-        reservations={reservations || []}
         allocations={allocations || []}
         documents={documents || []}
+        termSheets={termSheets || []}
+        interests={interests || []}
+        dataRoomAccess={dataRoomAccess || []}
+        dataRoomDocuments={dataRoomDocuments || []}
+        subscriptions={subscriptions || []}
+        activitySummary={activitySummary}
         userProfile={{ role: userRole }}
       />
     </AppLayout>

@@ -10,9 +10,10 @@ import { revalidatePath } from 'next/cache'
  */
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string; userId: string } }
+  { params }: { params: Promise<{ id: string; userId: string }> }
 ) {
   try {
+    const { id, userId } = await params
     const authSupabase = await createClient()
     const { user, error: authError } = await getAuthenticatedUser(authSupabase)
 
@@ -33,8 +34,8 @@ export async function DELETE(
     const { error: deleteError } = await supabase
       .from('investor_users')
       .delete()
-      .eq('investor_id', params.id)
-      .eq('user_id', params.userId)
+      .eq('investor_id', id)
+      .eq('user_id', userId)
 
     if (deleteError) {
       console.error('Remove user from investor error:', deleteError)
@@ -42,7 +43,7 @@ export async function DELETE(
     }
 
     // Revalidate the detail page
-    revalidatePath(`/versotech/staff/investors/${params.id}`)
+    revalidatePath(`/versotech/staff/investors/${id}`)
 
     return NextResponse.json({ message: 'User removed successfully' })
   } catch (error) {

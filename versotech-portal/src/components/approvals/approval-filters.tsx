@@ -29,6 +29,8 @@ export function ApprovalFilters({ onFilterChange, currentFilters }: ApprovalFilt
 
   const entityTypes: { value: ApprovalEntityType; label: string }[] = [
     { value: 'deal_commitment', label: 'Deal Commitments' },
+    { value: 'deal_interest', label: 'Deal Interests' },
+    { value: 'deal_subscription', label: 'Subscriptions' },
     { value: 'reservation', label: 'Reservations' },
     { value: 'allocation', label: 'Allocations' },
     { value: 'kyc_change', label: 'KYC Changes' },

@@ -134,7 +134,7 @@ export const AuditEntities = {
   CAPITAL_CALLS: 'capital_calls',
   DISTRIBUTIONS: 'distributions',
   DEALS: 'deals',
-  RESERVATIONS: 'reservations',
+  // RESERVATIONS: 'reservations', // Deprecated - removed from workflow
   ALLOCATIONS: 'allocations',
   FEE_EVENTS: 'fee_events',
   INVOICES: 'invoices',

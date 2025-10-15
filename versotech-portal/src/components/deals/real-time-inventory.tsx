@@ -8,7 +8,7 @@ import { TrendingUp, AlertCircle, RefreshCw } from 'lucide-react'
 
 interface InventorySummary {
   units_available: number
-  active_reservations: number
+  allocated_units: number
   utilization_percent: string
   total_units: number
   last_updated?: string
@@ -73,7 +73,7 @@ export function RealTimeInventory({ dealId, initialData, className }: RealTimeIn
           </button>
         </CardTitle>
         <CardDescription>
-          Real-time share availability with reservation activity
+          Real-time share availability and allocation tracking
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -86,9 +86,9 @@ export function RealTimeInventory({ dealId, initialData, className }: RealTimeIn
           </div>
           <div className="text-center">
             <p className="text-2xl font-bold text-amber-600">
-              {inventory.active_reservations}
+              {inventory.allocated_units}
             </p>
-            <p className="text-sm text-gray-500">Active Reservations</p>
+            <p className="text-sm text-gray-500">Allocated Units</p>
           </div>
           <div className="text-center">
             <p className="text-2xl font-bold text-green-600">

@@ -119,23 +119,16 @@ export async function DELETE(
 
     const { id: dealId, lotId } = await params
 
-    // Check if lot has any reservations or allocations
-    const { data: reservationItems } = await supabase
-      .from('reservation_lot_items')
-      .select('reservation_id')
-      .eq('lot_id', lotId)
-      .limit(1)
-
+    // Check if lot has any allocations (reservations deprecated)
     const { data: allocationItems } = await supabase
       .from('allocation_lot_items')
       .select('allocation_id')
       .eq('lot_id', lotId)
       .limit(1)
 
-    if ((reservationItems && reservationItems.length > 0) || 
-        (allocationItems && allocationItems.length > 0)) {
+    if (allocationItems && allocationItems.length > 0) {
       return NextResponse.json(
-        { error: 'Cannot delete share lot with active reservations or allocations' },
+        { error: 'Cannot delete share lot with active allocations' },
         { status: 400 }
       )
     }

@@ -293,18 +293,26 @@ export async function GET(request: NextRequest) {
 
 // Create new conversation
 export async function POST(request: NextRequest) {
+  console.log('[POST /api/conversations] ========== START ==========')
   try {
+    console.log('[POST /api/conversations] Request received')
     const supabase = await createClient()
+    console.log('[POST /api/conversations] Supabase client created')
     const { user, error: authError } = await getAuthenticatedUser(supabase)
+    console.log('[POST /api/conversations] getAuthenticatedUser result:', { user: user?.id, error: authError?.message })
     
     if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      console.error('[POST /api/conversations] Auth error:', authError)
+      return NextResponse.json({ error: 'Unauthorized', details: authError?.message }, { status: 401 })
     }
     
+    console.log('[POST /api/conversations] Authenticated user:', user.id)
     const userId = user.id
     const userRole = user.user_metadata?.role || null
 
-    const { subject, participant_ids, type = 'dm', initial_message, visibility } = await request.json()
+    const body = await request.json()
+    console.log('[POST /api/conversations] Request body:', body)
+    const { subject, participant_ids, type = 'dm', initial_message, visibility } = body
 
     if (!participant_ids || participant_ids.length === 0) {
       return NextResponse.json({ error: 'At least one participant is required' }, { status: 400 })
@@ -325,7 +333,16 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const { data: conversation, error: convError } = await supabase
+    console.log('[POST /api/conversations] Creating conversation with:', {
+      subject,
+      created_by: userId,
+      type,
+      visibility: finalVisibility
+    })
+
+    // Use service client to bypass RLS for conversation creation
+    const serviceClient = createServiceClient()
+    const { data: conversation, error: convError } = await serviceClient
       .from('conversations')
       .insert({
         subject,
@@ -337,24 +354,53 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (convError) {
-      console.error('Error creating conversation:', convError)
-      return NextResponse.json({ error: 'Failed to create conversation' }, { status: 500 })
+      console.error('[POST /api/conversations] Error creating conversation:', {
+        error: convError,
+        message: convError.message,
+        details: convError.details,
+        hint: convError.hint,
+        code: convError.code
+      })
+      return NextResponse.json({ 
+        error: 'Failed to create conversation',
+        details: convError.message || String(convError),
+        hint: convError.hint || 'Check RLS policies on conversations table',
+        code: convError.code
+      }, { status: 500 })
     }
 
-    // Add participants using service client to bypass RLS
+    console.log('[POST /api/conversations] Conversation created successfully:', conversation.id)
+
+    // Add participants using service client (already instantiated above)
     const participantInserts = allParticipants.map(participantId => ({
       conversation_id: conversation.id,
       user_id: participantId
     }))
 
-    const serviceClient = createServiceClient()
-    const { error: partError } = await serviceClient
+    console.log('[POST /api/conversations] Adding participants:', { 
+      count: allParticipants.length,
+      participantIds: allParticipants,
+      inserts: participantInserts
+    })
+
+    const { data: participantsAdded, error: partError } = await serviceClient
       .from('conversation_participants')
       .insert(participantInserts)
+      .select()
+
+    console.log('[POST /api/conversations] Participants result:', {
+      success: !partError,
+      added: participantsAdded?.length,
+      error: partError
+    })
 
     if (partError) {
-      console.error('Error adding participants:', partError)
-      return NextResponse.json({ error: 'Failed to add participants' }, { status: 500 })
+      console.error('[POST /api/conversations] Error adding participants:', partError)
+      return NextResponse.json({ 
+        error: 'Failed to add participants',
+        details: partError.message || partError,
+        hint: 'Check RLS policies on conversation_participants table'
+      }, { status: 500 })
     }
 
     // Send initial message if provided
@@ -369,6 +415,8 @@ export async function POST(request: NextRequest) {
 
       if (msgError) {
         console.error('Error sending initial message:', msgError)
+        // Don't fail the whole request, just log the error
+        // The conversation is already created successfully
       }
     }
 
@@ -398,7 +446,22 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Create conversation error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    console.error('[POST /api/conversations] ========== CAUGHT ERROR ==========')
+    console.error('[POST /api/conversations] Error type:', typeof error)
+    console.error('[POST /api/conversations] Error:', error)
+    if (error instanceof Error) {
+      console.error('[POST /api/conversations] Error message:', error.message)
+      console.error('[POST /api/conversations] Error stack:', error.stack)
+    }
+    
+    const errorResponse = { 
+      error: 'Internal server error',
+      details: error instanceof Error ? error.message : String(error),
+      errorType: typeof error,
+      timestamp: new Date().toISOString()
+    }
+    
+    console.error('[POST /api/conversations] Returning error response:', errorResponse)
+    return NextResponse.json(errorResponse, { status: 500 })
   }
 }

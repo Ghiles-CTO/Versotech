@@ -6,7 +6,16 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Checkbox } from '@/components/ui/checkbox'
-import { CheckCircle2, XCircle, Clock, AlertTriangle, RefreshCw, Download } from 'lucide-react'
+import {
+  CheckCircle2,
+  XCircle,
+  Clock,
+  AlertTriangle,
+  RefreshCw,
+  Download,
+  HandCoins,
+  Package
+} from 'lucide-react'
 import { Approval, ApprovalStats, SLAStatus } from '@/types/approvals'
 import { ApprovalActionDialog } from './approval-action-dialog'
 import { ApprovalFilters, FilterState } from './approval-filters'
@@ -286,6 +295,28 @@ export function ApprovalsPageClient({
     setPagination(prev => ({ ...prev, page: 1 }))
   }
 
+  const handleReviewInterests = async () => {
+    const newFilters = {
+      entity_types: ['deal_interest'] as any[],
+      priorities: [],
+      assigned_to_me: false,
+      overdue_only: false
+    }
+    setFilters(newFilters)
+    setPagination(prev => ({ ...prev, page: 1 }))
+  }
+
+  const handleReviewSubscriptions = async () => {
+    const newFilters = {
+      entity_types: ['deal_subscription'] as any[],
+      priorities: [],
+      assigned_to_me: false,
+      overdue_only: false
+    }
+    setFilters(newFilters)
+    setPagination(prev => ({ ...prev, page: 1 }))
+  }
+
   // Quick action: Clear all filters
   const handleClearFilters = async () => {
     const newFilters = { 
@@ -347,7 +378,7 @@ export function ApprovalsPageClient({
               <div>
                 <CardTitle>Pending Approvals</CardTitle>
                 <CardDescription>
-                  Review investor commitments and take approval actions
+                Review deal approvals across commitments, interests, and data-room workflows
                 </CardDescription>
               </div>
               <div className="flex gap-2">
@@ -441,11 +472,30 @@ export function ApprovalsPageClient({
                                   {approval.entity_id.substring(0, 8)}...
                                 </div>
                               )}
-                              {approval.entity_metadata?.requested_amount && (
-                                <div className="text-xs text-muted-foreground mt-1">
-                                  ${parseFloat(approval.entity_metadata.requested_amount).toLocaleString()}
-                                </div>
-                              )}
+                              {(() => {
+                                const indicativeAmount = approval.entity_metadata?.indicative_amount
+                                const requestedAmount = approval.entity_metadata?.requested_amount || approval.entity_metadata?.amount
+                                const indicativeCurrency = approval.entity_metadata?.indicative_currency || ''
+
+                                let formattedAmount: string | null = null
+                                if (indicativeAmount) {
+                                  const numeric = parseFloat(indicativeAmount)
+                                  if (!Number.isNaN(numeric)) {
+                                    formattedAmount = `${indicativeCurrency} ${numeric.toLocaleString()}`.trim()
+                                  }
+                                } else if (requestedAmount) {
+                                  const numeric = parseFloat(requestedAmount)
+                                  if (!Number.isNaN(numeric)) {
+                                    formattedAmount = `$${numeric.toLocaleString()}`
+                                  }
+                                }
+
+                                return formattedAmount ? (
+                                  <div className="text-xs text-muted-foreground mt-1">
+                                    {formattedAmount}
+                                  </div>
+                                ) : null
+                              })()}
                             </div>
                           </TableCell>
 
@@ -581,6 +631,22 @@ export function ApprovalsPageClient({
               >
                 <AlertTriangle className="mr-2 h-4 w-4 text-amber-600" />
                 Review High Priority
+              </Button>
+              <Button
+                className="w-full justify-start"
+                variant="outline"
+                onClick={handleReviewInterests}
+              >
+                <HandCoins className="mr-2 h-4 w-4 text-purple-600" />
+                Deal Interest Approvals
+              </Button>
+              <Button
+                className="w-full justify-start"
+                variant="outline"
+                onClick={handleReviewSubscriptions}
+              >
+                <Package className="mr-2 h-4 w-4 text-sky-600" />
+                Subscription Approvals
               </Button>
               <Button 
                 className="w-full justify-start" 

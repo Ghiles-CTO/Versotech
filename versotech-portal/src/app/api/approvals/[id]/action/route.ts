@@ -70,6 +70,67 @@ function checkApprovalAuthority(
   }
 }
 
+async function getPrimaryInvestorUserId(
+  supabase: any,
+  investorId: string
+) {
+  const { data, error } = await supabase
+    .from('investor_users')
+    .select('user_id')
+    .eq('investor_id', investorId)
+    .order('created_at', { ascending: true })
+    .limit(1)
+
+  if (error) {
+    console.error('Failed to resolve investor user', error)
+    return null
+  }
+
+  return data?.[0]?.user_id ?? null
+}
+
+async function ensureInvestorTask(
+  supabase: any,
+  investorId: string | null,
+  task: {
+    owner_user_id: string | null
+    kind: string
+    category: string
+    title: string
+    description: string
+    priority?: 'low' | 'medium' | 'high'
+    related_entity_type?: string
+    related_entity_id?: string
+    deal_id?: string | null
+    due_in_days?: number
+    instructions?: Record<string, any>
+  }
+) {
+  if (!investorId || !task.owner_user_id) return
+
+  const dueAt = task.due_in_days
+    ? new Date(Date.now() + task.due_in_days * 24 * 60 * 60 * 1000).toISOString()
+    : null
+
+  try {
+    await supabase.from('tasks').insert({
+      owner_user_id: task.owner_user_id,
+      owner_investor_id: investorId,
+      kind: task.kind,
+      category: task.category,
+      title: task.title,
+      description: task.description,
+      priority: task.priority ?? 'high',
+      related_entity_type: task.related_entity_type ?? null,
+      related_entity_id: task.related_entity_id ?? null,
+      due_at: dueAt,
+      instructions: task.instructions ?? null
+    })
+  } catch (error) {
+    console.error('Failed to create investor task', error)
+  }
+}
+
 // Execute downstream actions when approval is approved
 async function executeApprovalActions(
   supabase: any,
@@ -153,6 +214,171 @@ async function executeApprovalActions(
         console.log('Withdrawal approved:', entityId)
         break
 
+      case 'deal_interest': {
+        const { error: interestError } = await supabase
+          .from('investor_deal_interest')
+          .update({
+            status: 'approved',
+            approved_at: new Date().toISOString()
+          })
+          .eq('id', entityId)
+
+        if (interestError) {
+          console.error('Error approving deal interest:', interestError)
+          return { success: false, error: 'Failed to approve deal interest' }
+        }
+
+        const ownerUserId = await getPrimaryInvestorUserId(supabase, approval.related_investor_id)
+        await ensureInvestorTask(supabase, approval.related_investor_id, {
+          owner_user_id: ownerUserId,
+          kind: 'deal_nda_signature',
+          category: 'investment_setup',
+          title: `Sign NDA for ${approval.related_deal?.name ?? 'deal'}`,
+          description: 'Please execute the NDA so we can open the data room for this opportunity.',
+          related_entity_type: 'deal_interest',
+          related_entity_id: approval.entity_id,
+          deal_id: approval.related_deal_id,
+          due_in_days: 3,
+          instructions: {
+            type: 'nda_sign',
+            deal_id: approval.related_deal_id,
+            interest_id: approval.entity_id
+          }
+        })
+
+        try {
+          await supabase.from('automation_webhook_events').insert({
+            event_type: 'nda_generate_request',
+            related_deal_id: approval.related_deal_id,
+            related_investor_id: approval.related_investor_id,
+            payload: {
+              approval_id: approval.id,
+              deal_id: approval.related_deal_id,
+              investor_id: approval.related_investor_id,
+              indicative_amount: metadata.indicative_amount ?? null,
+              indicative_currency: metadata.indicative_currency ?? null,
+              notes: metadata.notes ?? null
+            }
+          })
+        } catch (eventError) {
+          console.error('Failed to enqueue NDA generation event:', eventError)
+        }
+
+        if (process.env.AUTOMATION_NDA_GENERATE_URL) {
+          try {
+            await fetch(process.env.AUTOMATION_NDA_GENERATE_URL, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                approval_id: approval.id,
+                deal_id: approval.related_deal_id,
+                investor_id: approval.related_investor_id,
+                indicative_amount: metadata.indicative_amount ?? null,
+                indicative_currency: metadata.indicative_currency ?? null
+              })
+            })
+          } catch (automationError) {
+            console.error('Failed to trigger NDA automation webhook:', automationError)
+          }
+        }
+
+        await logDealEvent(supabase, {
+          deal_id: approval.related_deal_id,
+          investor_id: approval.related_investor_id,
+          event_type: 'deal_interest_approved',
+          payload: {
+            approval_id: approval.id,
+            interest_id: approval.entity_id,
+            indicative_amount: metadata.indicative_amount ?? null,
+            indicative_currency: metadata.indicative_currency ?? null
+          }
+        })
+
+        // TODO: invoke automation (nda_generate) once integration endpoint is available
+        break
+      }
+
+      case 'deal_subscription': {
+        const { error: subscriptionError } = await supabase
+          .from('deal_subscription_submissions')
+          .update({
+            status: 'approved',
+            decided_at: new Date().toISOString(),
+            decided_by: actorId
+          })
+          .eq('id', entityId)
+
+        if (subscriptionError) {
+          console.error('Error approving subscription submission:', subscriptionError)
+          return { success: false, error: 'Failed to approve subscription submission' }
+        }
+
+        const ownerUserId = await getPrimaryInvestorUserId(supabase, approval.related_investor_id)
+        await ensureInvestorTask(supabase, approval.related_investor_id, {
+          owner_user_id: ownerUserId,
+          kind: 'investment_allocation_confirmation',
+          category: 'investment_setup',
+          title: `Confirm allocation for ${approval.related_deal?.name ?? 'deal'}`,
+          description: 'Review the subscription pack and confirm the final allocation details.',
+          related_entity_type: 'deal_subscription',
+          related_entity_id: approval.entity_id,
+          deal_id: approval.related_deal_id,
+          due_in_days: 5,
+          instructions: {
+            type: 'subscription_review',
+            deal_id: approval.related_deal_id,
+            submission_id: approval.entity_id
+          }
+        })
+
+        try {
+          await supabase.from('automation_webhook_events').insert({
+            event_type: 'subscription_pack_generate_request',
+            related_deal_id: approval.related_deal_id,
+            related_investor_id: approval.related_investor_id,
+            payload: {
+              approval_id: approval.id,
+              deal_id: approval.related_deal_id,
+              investor_id: approval.related_investor_id,
+              submission_id: entityId,
+              payload: metadata.payload ?? null
+            }
+          })
+        } catch (eventError) {
+          console.error('Failed to enqueue subscription pack event:', eventError)
+        }
+
+        if (process.env.AUTOMATION_SUBSCRIPTION_PACK_URL) {
+          try {
+            await fetch(process.env.AUTOMATION_SUBSCRIPTION_PACK_URL, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                approval_id: approval.id,
+                deal_id: approval.related_deal_id,
+                investor_id: approval.related_investor_id,
+                submission_id: entityId
+              })
+            })
+          } catch (automationError) {
+            console.error('Failed to trigger subscription automation webhook:', automationError)
+          }
+        }
+
+        await logDealEvent(supabase, {
+          deal_id: approval.related_deal_id,
+          investor_id: approval.related_investor_id,
+          event_type: 'deal_subscription_approved',
+          payload: {
+            approval_id: approval.id,
+            submission_id: approval.entity_id,
+            amount: metadata.payload?.amount ?? null,
+            currency: metadata.payload?.currency ?? null
+          }
+        })
+        break
+      }
+
       default:
         console.log(`No downstream action defined for entity type: ${entityType}`)
     }
@@ -210,6 +436,16 @@ async function executeRejectionActions(
       await supabase
         .from('reservations')
         .update({ status: 'cancelled' })
+        .eq('id', entityId)
+    } else if (entityType === 'deal_interest') {
+      await supabase
+        .from('investor_deal_interest')
+        .update({ status: 'rejected' })
+        .eq('id', entityId)
+    } else if (entityType === 'deal_subscription') {
+      await supabase
+        .from('deal_subscription_submissions')
+        .update({ status: 'rejected', decided_at: new Date().toISOString(), decided_by: null })
         .eq('id', entityId)
     }
 

@@ -10,9 +10,10 @@ import { revalidatePath } from 'next/cache'
  */
 export async function POST(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const authSupabase = await createClient()
     const { user, error: authError } = await getAuthenticatedUser(authSupabase)
 
@@ -36,7 +37,7 @@ export async function POST(
     const { data: investor, error: investorError } = await supabase
       .from('investors')
       .select('id, legal_name')
-      .eq('id', params.id)
+      .eq('id', id)
       .single()
 
     if (investorError || !investor) {
@@ -52,7 +53,7 @@ export async function POST(
       const { data: existingLink } = await supabase
         .from('investor_users')
         .select('investor_id, user_id')
-        .eq('investor_id', params.id)
+        .eq('investor_id', id)
         .eq('user_id', user_id)
         .single()
 
@@ -77,7 +78,7 @@ export async function POST(
         const { data: existingLink } = await supabase
           .from('investor_users')
           .select('investor_id, user_id')
-          .eq('investor_id', params.id)
+          .eq('investor_id', id)
           .eq('user_id', existingUser.id)
           .single()
 
@@ -140,7 +141,7 @@ export async function POST(
     const { error: linkError } = await supabase
       .from('investor_users')
       .insert({
-        investor_id: params.id,
+        investor_id: id,
         user_id: targetUserId
       })
 
@@ -150,7 +151,7 @@ export async function POST(
     }
 
     // Revalidate the detail page
-    revalidatePath(`/versotech/staff/investors/${params.id}`)
+    revalidatePath(`/versotech/staff/investors/${id}`)
 
     return NextResponse.json(
       {

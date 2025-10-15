@@ -9,6 +9,7 @@ interface NotificationCounts {
   deals: number
   requests: number
   approvals: number
+  notifications: number
   totalUnread: number
 }
 
@@ -19,6 +20,7 @@ export function useNotifications(userRole: string, userId?: string) {
     deals: 0,
     requests: 0,
     approvals: 0,
+    notifications: 0,
     totalUnread: 0
   })
   const [loading, setLoading] = useState(true)
@@ -33,13 +35,13 @@ export function useNotifications(userRole: string, userId?: string) {
         // Fetch notification counts based on user role
         if (userRole === 'investor') {
           // Investor-specific counts
-          const [tasksRes, messagesRes, dealsRes] = await Promise.allSettled([
+          const [tasksRes, messagesRes, dealsRes, notificationsRes] = await Promise.allSettled([
             // Open tasks for investor
             supabase
               .from('tasks')
               .select('id', { count: 'exact' })
               .eq('owner_user_id', userId)
-              .eq('status', 'open'),
+              .in('status', ['pending', 'in_progress']),
 
             // Unread messages in conversations they participate in
             supabase
@@ -52,12 +54,20 @@ export function useNotifications(userRole: string, userId?: string) {
             supabase
               .from('deals')
               .select('id', { count: 'exact' })
-              .eq('status', 'open')
+              .eq('status', 'open'),
+
+            // Unread notifications
+            supabase
+              .from('investor_notifications')
+              .select('id', { count: 'exact' })
+              .eq('user_id', userId)
+              .is('read_at', null)
           ])
 
           const taskCount = tasksRes.status === 'fulfilled' ? (tasksRes.value.count || 0) : 0
           const messageCount = messagesRes.status === 'fulfilled' ? (messagesRes.value.count || 0) : 0
           const dealCount = dealsRes.status === 'fulfilled' ? (dealsRes.value.count || 0) : 0
+          const notificationCount = notificationsRes.status === 'fulfilled' ? (notificationsRes.value.count || 0) : 0
 
           setCounts({
             tasks: taskCount,
@@ -65,18 +75,19 @@ export function useNotifications(userRole: string, userId?: string) {
             deals: dealCount,
             requests: 0,
             approvals: 0,
-            totalUnread: taskCount + messageCount
+            notifications: notificationCount,
+            totalUnread: taskCount + messageCount + notificationCount
           })
 
         } else if (userRole.startsWith('staff_')) {
           // Staff-specific counts
-          const [tasksRes, messagesRes, requestsRes, approvalsRes] = await Promise.allSettled([
+          const [tasksRes, messagesRes, requestsRes, approvalsRes, notificationsRes] = await Promise.allSettled([
             // Open tasks assigned to staff
             supabase
               .from('tasks')
               .select('id', { count: 'exact' })
               .eq('owner_user_id', userId)
-              .eq('status', 'open'),
+              .in('status', ['pending', 'in_progress']),
 
             // Recent messages in staff conversations
             supabase
@@ -95,13 +106,21 @@ export function useNotifications(userRole: string, userId?: string) {
             supabase
               .from('approvals')
               .select('id', { count: 'exact' })
-              .eq('status', 'pending')
+              .eq('status', 'pending'),
+
+            // Unread notifications (staff)
+            supabase
+              .from('investor_notifications')
+              .select('id', { count: 'exact' })
+              .eq('user_id', userId)
+              .is('read_at', null)
           ])
 
           const taskCount = tasksRes.status === 'fulfilled' ? (tasksRes.value.count || 0) : 0
           const messageCount = messagesRes.status === 'fulfilled' ? (messagesRes.value.count || 0) : 0
           const requestCount = requestsRes.status === 'fulfilled' ? (requestsRes.value.count || 0) : 0
           const approvalCount = approvalsRes.status === 'fulfilled' ? (approvalsRes.value.count || 0) : 0
+           const notificationCount = notificationsRes.status === 'fulfilled' ? (notificationsRes.value.count || 0) : 0
 
           setCounts({
             tasks: taskCount,
@@ -109,7 +128,8 @@ export function useNotifications(userRole: string, userId?: string) {
             deals: 0,
             requests: requestCount,
             approvals: approvalCount,
-            totalUnread: taskCount + messageCount + requestCount + approvalCount
+            notifications: notificationCount,
+            totalUnread: taskCount + messageCount + requestCount + approvalCount + notificationCount
           })
         }
 
@@ -165,6 +185,14 @@ export function useNotifications(userRole: string, userId?: string) {
       )
       .subscribe()
 
+    const investorNotificationsChannel = supabase
+      .channel('investor_notifications_changes')
+      .on('postgres_changes',
+        { event: '*', schema: 'public', table: 'investor_notifications', filter: `user_id=eq.${userId}` },
+        () => fetchCounts()
+      )
+      .subscribe()
+
     // Cleanup subscriptions
     return () => {
       supabase.removeChannel(tasksChannel)
@@ -172,6 +200,7 @@ export function useNotifications(userRole: string, userId?: string) {
       supabase.removeChannel(requestsChannel)
       supabase.removeChannel(approvalsChannel)
       supabase.removeChannel(dealsChannel)
+      supabase.removeChannel(investorNotificationsChannel)
     }
 
   }, [userId, userRole])

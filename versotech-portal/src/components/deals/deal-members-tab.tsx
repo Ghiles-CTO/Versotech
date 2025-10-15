@@ -43,7 +43,7 @@ export function DealMembersTab({ dealId, members }: DealMembersTabProps) {
           </div>
         </CardHeader>
         <CardContent>
-          {members.length === 0 ? (
+          {!members || members.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               No members added yet. Click "Add Member" to invite participants.
             </div>

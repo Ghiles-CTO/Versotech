@@ -12,15 +12,12 @@
 UPDATE approvals
 SET priority = 'medium'
 WHERE priority = 'normal';
-
 -- Step 2: Add proper CHECK constraint
 ALTER TABLE approvals DROP CONSTRAINT IF EXISTS approvals_priority_check;
 ALTER TABLE approvals ADD CONSTRAINT approvals_priority_check
   CHECK (priority IN ('low', 'medium', 'high', 'critical'));
-
 -- Step 3: Change default from 'normal' to 'medium'
 ALTER TABLE approvals ALTER COLUMN priority SET DEFAULT 'medium';
-
 -- Step 4: Verify no bad data remains
 DO $$
 DECLARE
@@ -36,8 +33,6 @@ BEGIN
 
   RAISE NOTICE 'Priority enum migration completed successfully. All approvals now use low/medium/high/critical.';
 END $$;
-
 -- Comments for documentation
 COMMENT ON CONSTRAINT approvals_priority_check ON approvals IS
   'Ensures priority values match TypeScript types and SLA calculation logic: low(72h), medium(24h), high(4h), critical(2h)';
-

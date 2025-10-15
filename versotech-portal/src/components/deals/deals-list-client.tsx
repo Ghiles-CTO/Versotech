@@ -397,7 +397,7 @@ export function DealsListClient({ deals, summary }: DealsListClientProps) {
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground mb-3">
-              Process investor commitments and reservations
+              Process investor commitments and subscriptions
             </p>
             <Button
               variant="outline"

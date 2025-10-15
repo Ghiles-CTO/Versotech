@@ -11,7 +11,6 @@
 ALTER TABLE approvals DROP CONSTRAINT IF EXISTS approvals_status_check;
 ALTER TABLE approvals ADD CONSTRAINT approvals_status_check
   CHECK (status IN ('pending', 'approved', 'rejected', 'awaiting_info', 'escalated', 'cancelled'));
-
 -- Add new columns for enhanced functionality
 ALTER TABLE approvals
   ADD COLUMN IF NOT EXISTS entity_metadata jsonb,
@@ -37,7 +36,6 @@ ALTER TABLE approvals
   -- Lifecycle timestamps
   ADD COLUMN IF NOT EXISTS updated_at timestamptz DEFAULT now(),
   ADD COLUMN IF NOT EXISTS resolved_at timestamptz;
-
 -- Rename decided_by to approved_by for clarity (if it exists)
 DO $$
 BEGIN
@@ -52,7 +50,6 @@ BEGIN
     ALTER TABLE approvals ADD COLUMN IF NOT EXISTS approved_at timestamptz;
   END IF;
 END $$;
-
 -- =============================================================================
 -- 2. Create approval_history table for audit trail
 -- =============================================================================
@@ -70,13 +67,10 @@ CREATE TABLE IF NOT EXISTS approval_history (
   metadata jsonb,
   created_at timestamptz DEFAULT now()
 );
-
 CREATE INDEX IF NOT EXISTS idx_approval_history_approval
   ON approval_history(approval_id, created_at DESC);
-
 CREATE INDEX IF NOT EXISTS idx_approval_history_actor
   ON approval_history(actor_id, created_at DESC);
-
 -- =============================================================================
 -- 3. Add indexes for performance
 -- =============================================================================
@@ -84,24 +78,18 @@ CREATE INDEX IF NOT EXISTS idx_approval_history_actor
 CREATE INDEX IF NOT EXISTS idx_approvals_status_sla
   ON approvals(status, sla_breach_at)
   WHERE status = 'pending';
-
 CREATE INDEX IF NOT EXISTS idx_approvals_assigned
   ON approvals(assigned_to, status, created_at DESC);
-
 CREATE INDEX IF NOT EXISTS idx_approvals_entity
   ON approvals(entity_type, entity_id);
-
 CREATE INDEX IF NOT EXISTS idx_approvals_requester
   ON approvals(requested_by, created_at DESC);
-
 CREATE INDEX IF NOT EXISTS idx_approvals_related_deal
   ON approvals(related_deal_id)
   WHERE related_deal_id IS NOT NULL;
-
 CREATE INDEX IF NOT EXISTS idx_approvals_related_investor
   ON approvals(related_investor_id)
   WHERE related_investor_id IS NOT NULL;
-
 -- =============================================================================
 -- 4. Create trigger function for auto-calculating SLA deadline
 -- =============================================================================
@@ -130,12 +118,11 @@ BEGIN
   RETURN NEW;
 END;
 $$;
-
+DROP TRIGGER IF EXISTS approvals_set_sla ON approvals;
 CREATE TRIGGER approvals_set_sla
   BEFORE INSERT ON approvals
   FOR EACH ROW
   EXECUTE FUNCTION set_approval_sla_deadline();
-
 -- =============================================================================
 -- 5. Create trigger function for auto-assignment
 -- =============================================================================
@@ -201,12 +188,11 @@ BEGIN
   RETURN NEW;
 END;
 $$;
-
+DROP TRIGGER IF EXISTS approvals_auto_assign ON approvals;
 CREATE TRIGGER approvals_auto_assign
   BEFORE INSERT ON approvals
   FOR EACH ROW
   EXECUTE FUNCTION auto_assign_approval();
-
 -- =============================================================================
 -- 6. Create trigger function for logging approval changes
 -- =============================================================================
@@ -296,12 +282,11 @@ BEGIN
   RETURN NEW;
 END;
 $$;
-
+DROP TRIGGER IF EXISTS approvals_log_changes ON approvals;
 CREATE TRIGGER approvals_log_changes
   AFTER INSERT OR UPDATE ON approvals
   FOR EACH ROW
   EXECUTE FUNCTION log_approval_change();
-
 -- =============================================================================
 -- 7. Create RPC function for approval statistics
 -- =============================================================================
@@ -348,7 +333,6 @@ BEGIN
   FROM approval_data;
 END;
 $$;
-
 -- =============================================================================
 -- 8. Create RPC function for auto-approval criteria check
 -- =============================================================================
@@ -425,7 +409,6 @@ BEGIN
   RETURN true;
 END;
 $$;
-
 -- =============================================================================
 -- 9. Comments for documentation
 -- =============================================================================
