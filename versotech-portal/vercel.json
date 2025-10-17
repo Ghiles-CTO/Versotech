@@ -2,16 +2,6 @@
   "buildCommand": "npm run build",
   "installCommand": "npm install",
   "framework": "nextjs",
-  "regions": ["iad1"],
-  "crons": [
-    {
-      "path": "/api/cron/data-room-expiry",
-      "schedule": "0 2 * * *"
-    },
-    {
-      "path": "/api/cron/data-room-expiry-warnings",
-      "schedule": "0 3 * * *"
-    }
-  ]
+  "regions": ["iad1"]
 }
 

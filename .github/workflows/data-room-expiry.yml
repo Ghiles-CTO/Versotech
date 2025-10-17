@@ -1,0 +1,17 @@
+name: Data Room Expiry Check
+
+on:
+  schedule:
+    # Runs at 2:00 AM UTC daily (same as original cron schedule)
+    - cron: '0 2 * * *'
+  workflow_dispatch: # Allows manual triggering
+
+jobs:
+  run-cron:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call data-room-expiry endpoint
+        run: |
+          curl -X GET \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            ${{ secrets.VERCEL_URL }}/api/cron/data-room-expiry
