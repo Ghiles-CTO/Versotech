@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -14,8 +14,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { ArrowLeft, ArrowRight, Loader2 } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Loader2, Upload } from 'lucide-react'
 import Link from 'next/link'
+import Image from 'next/image'
 
 interface CreateDealFormProps {
   entities: Array<{
@@ -56,6 +57,11 @@ export function CreateDealForm({ entities }: CreateDealFormProps) {
     investment_thesis: ''
   })
 
+  // Logo upload state
+  const [logoUploading, setLogoUploading] = useState(false)
+  const [logoError, setLogoError] = useState<string | null>(null)
+  const [companyLogoUrl, setCompanyLogoUrl] = useState<string>('')
+
   const updateField = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }))
   }
@@ -81,7 +87,8 @@ export function CreateDealForm({ entities }: CreateDealFormProps) {
         open_at: formData.open_at || null,
         close_at: formData.close_at || null,
         description: formData.description.trim() || null,
-        investment_thesis: formData.investment_thesis.trim() || null
+        investment_thesis: formData.investment_thesis.trim() || null,
+        company_logo_url: companyLogoUrl || undefined
       }
       
       console.log('[CreateDealForm] Submitting payload:', payload)
@@ -271,6 +278,72 @@ export function CreateDealForm({ entities }: CreateDealFormProps) {
                     onChange={(e) => updateField('location', e.target.value)}
                   />
                 </div>
+              </div>
+
+              {/* Company Logo Upload */}
+              <div className="space-y-2">
+                <Label className="text-foreground">Company Logo *</Label>
+                <div className="flex items-center gap-4">
+                  {companyLogoUrl ? (
+                    <Image
+                      src={companyLogoUrl}
+                      alt="Company logo preview"
+                      width={56}
+                      height={56}
+                      className="rounded-lg object-contain bg-white border border-gray-200 p-2"
+                    />
+                  ) : (
+                    <div className="h-14 w-14 rounded-lg bg-white/10 border border-white/20 flex items-center justify-center text-muted-foreground">
+                      56×56
+                    </div>
+                  )}
+                  <div className="flex items-center gap-2">
+                    <label className="inline-flex items-center gap-2 px-3 py-2 border rounded-md cursor-pointer text-sm">
+                      <Upload className="h-4 w-4" />
+                      <span>Upload Logo</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0]
+                          if (!file) return
+                          setLogoError(null)
+                          setLogoUploading(true)
+                          try {
+                            const formData = new FormData()
+                            formData.append('file', file)
+                            formData.append('deal_id', 'new')
+                            const res = await fetch('/api/deals/logo-upload', {
+                              method: 'POST',
+                              body: formData
+                            })
+                            const payload = await res.json().catch(() => ({}))
+                            if (!res.ok || !payload?.url) {
+                              throw new Error(payload?.error || 'Failed to upload logo')
+                            }
+                            setCompanyLogoUrl(payload.url)
+                          } catch (err) {
+                            setLogoError(err instanceof Error ? err.message : 'Failed to upload logo')
+                          } finally {
+                            setLogoUploading(false)
+                            // reset input
+                            e.target.value = ''
+                          }
+                        }}
+                      />
+                    </label>
+                    {logoUploading && (
+                      <span className="text-xs text-muted-foreground">Uploading…</span>
+                    )}
+                  </div>
+                </div>
+                {logoError && (
+                  <p className="text-xs text-rose-500">{logoError}</p>
+                )}
+                {!companyLogoUrl && (
+                  <p className="text-xs text-amber-600">Logo required before submitting the deal.</p>
+                )}
               </div>
             </div>
           )}

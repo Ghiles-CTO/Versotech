@@ -136,7 +136,7 @@ export function StructuredDocumentsClient({
     if (filters.deal_id) params.set('deal', filters.deal_id)
     if (filters.search) params.set('search', filters.search)
 
-    router.push(`/versoholdings/documents?${params.toString()}`)
+    router.push(`/versoholdings/reports?view=documents&${params.toString()}`)
   }
 
   // Load more documents (pagination)
@@ -222,7 +222,7 @@ export function StructuredDocumentsClient({
               {hasActiveFilters && (
                 <Button
                   variant="outline"
-                  onClick={() => router.push('/versoholdings/documents')}
+                  onClick={() => router.push('/versoholdings/reports?view=documents')}
                   className="border-2"
                 >
                   Clear all filters

@@ -123,44 +123,6 @@ export default async function DealDetailPage({
   const { data: inventorySummary } = await supabase
     .rpc('fn_deal_inventory_summary', { p_deal_id: dealId })
 
-  // Fetch commitments
-  const { data: commitments } = await supabase
-    .from('deal_commitments')
-    .select(`
-      *,
-      investors (
-        id,
-        legal_name
-      ),
-      fee_plans (
-        name
-      ),
-      created_by_profile:created_by (
-        display_name,
-        email
-      )
-    `)
-    .eq('deal_id', dealId)
-    .order('created_at', { ascending: false })
-
-  // Reservations deprecated - removed from deal workflow
-
-  // Fetch allocations
-  const { data: allocations } = await supabase
-    .from('allocations')
-    .select(`
-      *,
-      investors (
-        id,
-        legal_name
-      ),
-      approved_by_profile:approved_by (
-        display_name
-      )
-    `)
-    .eq('deal_id', dealId)
-    .order('created_at', { ascending: false })
-
   // Fetch deal-scoped documents
   const { data: documents } = await supabase
     .from('documents')
@@ -254,8 +216,6 @@ export default async function DealDetailPage({
           reserved_units: 0,
           allocated_units: 0
         }}
-        commitments={commitments || []}
-        allocations={allocations || []}
         documents={documents || []}
         termSheets={termSheets || []}
         interests={interests || []}

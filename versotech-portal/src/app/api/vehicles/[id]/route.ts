@@ -36,7 +36,7 @@ export async function GET(
       )
     }
 
-    // Get vehicle details
+    // Get vehicle details with all fields
     const { data: vehicle, error: vehicleError } = await supabase
       .from('vehicles')
       .select('*')
@@ -49,6 +49,56 @@ export async function GET(
         { status: 404 }
       )
     }
+
+    // Fetch entity-specific data in parallel (for staff portal)
+    const [
+      { data: directors },
+      { data: stakeholders },
+      { data: folders },
+      { data: flags },
+      { data: deals },
+      { data: entityEvents }
+    ] = await Promise.all([
+      supabase
+        .from('entity_directors')
+        .select('*')
+        .eq('vehicle_id', vehicleId)
+        .order('created_at', { ascending: false }),
+      supabase
+        .from('entity_stakeholders')
+        .select('*')
+        .eq('vehicle_id', vehicleId)
+        .order('created_at', { ascending: false }),
+      supabase
+        .from('entity_folders')
+        .select('*')
+        .eq('vehicle_id', vehicleId)
+        .order('folder_type', { ascending: true }),
+      supabase
+        .from('entity_flags')
+        .select('*')
+        .eq('vehicle_id', vehicleId)
+        .eq('is_resolved', false)
+        .order('severity', { ascending: true }),
+      supabase
+        .from('deals')
+        .select('id, name, status, deal_type, currency, created_at')
+        .eq('vehicle_id', vehicleId)
+        .order('created_at', { ascending: false }),
+      supabase
+        .from('entity_events')
+        .select(`
+          id,
+          event_type,
+          description,
+          payload,
+          created_at,
+          changed_by_profile:profiles!entity_events_changed_by_fkey(id, display_name, email)
+        `)
+        .eq('vehicle_id', vehicleId)
+        .order('created_at', { ascending: false})
+        .limit(50)
+    ])
 
     // For investors, check if they have access to this vehicle
     let hasAccess = false
@@ -197,14 +247,13 @@ export async function GET(
     }
 
     return NextResponse.json({
-      vehicle: {
-        id: vehicle.id,
-        name: vehicle.name,
-        type: vehicle.type,
-        domicile: vehicle.domicile,
-        currency: vehicle.currency,
-        created_at: vehicle.created_at
-      },
+      entity: vehicle, // Return all vehicle fields including CSV data
+      directors: directors || [],
+      stakeholders: stakeholders || [],
+      folders: folders || [],
+      flags: flags || [],
+      deals: deals || [],
+      entity_events: entityEvents || [],
       position: positionData,
       subscription: subscriptionData,
       cashflows: cashflowData,
@@ -245,23 +294,30 @@ export async function GET(
 
 const updateVehicleSchema = z.object({
   name: z.string().min(1, 'Vehicle name is required').optional(),
-  type: z.enum(['fund', 'spv', 'securitization', 'note', 'other']).optional(),
-  domicile: z.string().min(1, 'Domicile is required').optional(),
+  entity_code: z.string().optional().nullable(),
+  platform: z.string().optional().nullable(),
+  investment_name: z.string().optional().nullable(),
+  former_entity: z.string().optional().nullable(),
+  status: z.enum(['LIVE', 'CLOSED', 'TBD']).optional().nullable(),
+  type: z.enum(['fund', 'spv', 'securitization', 'note', 'venture_capital', 'private_equity', 'real_estate', 'other']).optional(),
+  domicile: z.string().optional().nullable(),
   currency: z.string().length(3, 'Currency must be 3 letters').optional(),
   formation_date: z.string().optional().nullable(),
   legal_jurisdiction: z.string().optional().nullable(),
   registration_number: z.string().optional().nullable(),
+  reporting_type: z.enum(['Not Required', 'Company Only', 'Online only', 'Company + Online']).optional().nullable(),
+  requires_reporting: z.boolean().optional().nullable(),
   notes: z.string().optional().nullable()
 })
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const supabase = createServiceClient()
     const regularSupabase = await createClient()
-    const { id: vehicleId } = params
+    const { id: vehicleId } = await params
 
     const { user, error: authError } = await getAuthenticatedUser(regularSupabase)
 
@@ -295,7 +351,7 @@ export async function PATCH(
       .from('vehicles')
       .update(payload)
       .eq('id', vehicleId)
-      .select('id, name, type, domicile, currency, formation_date, legal_jurisdiction, registration_number, notes, created_at')
+      .select('*')
       .single()
 
     if (error || !vehicle) {
@@ -315,6 +371,14 @@ export async function PATCH(
         endpoint: `/api/vehicles/${vehicleId}`,
         ...validatedData
       }
+    })
+
+    // Create entity event
+    await supabase.from('entity_events').insert({
+      vehicle_id: vehicleId,
+      event_type: 'entity_updated',
+      description: `Entity updated: ${Object.keys(validatedData).join(', ')}`,
+      changed_by: user.id
     })
 
     return NextResponse.json({ vehicle })

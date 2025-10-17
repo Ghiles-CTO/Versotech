@@ -34,7 +34,6 @@ import { DealOverviewTab } from './deal-overview-tab'
 import { DealInventoryTab } from './deal-inventory-tab'
 import { DealMembersTab } from './deal-members-tab'
 import { DealFeePlansTab } from './deal-fee-plans-tab'
-import { DealCommitmentsTab } from './deal-commitments-tab'
 import { DealDocumentsTab } from './deal-documents-tab'
 import { DealActivityTab } from './deal-activity-tab'
 import { DealTermSheetTab } from './deal-term-sheet-tab'
@@ -64,8 +63,6 @@ interface DealDetailClientProps {
     reserved_units: number
     allocated_units: number
   }
-  commitments: any[]
-  allocations: any[]
   documents: any[]
   termSheets: any[]
   interests: any[]
@@ -79,8 +76,6 @@ interface DealDetailClientProps {
 export function DealDetailClient({
   deal,
   inventorySummary,
-  commitments,
-  allocations,
   documents,
   termSheets,
   interests,
@@ -118,12 +113,11 @@ export function DealDetailClient({
       dealName: deal?.name,
       dealStatus: deal?.status,
       hasInventory: !!inventorySummary,
-      commitmentsCount: commitments?.length || 0,
       termSheetCount: termSheets?.length || 0,
       interestCount: interests?.length || 0,
       userRole: userProfile?.role
     })
-  }, [deal, inventorySummary, commitments, termSheets, interests, userProfile])
+  }, [deal, inventorySummary, termSheets, interests, userProfile])
 
   const handleSaveDeal = async () => {
     setIsSaving(true)
@@ -325,7 +319,6 @@ export function DealDetailClient({
           <TabsTrigger value="inventory">Inventory</TabsTrigger>
           <TabsTrigger value="members">Members</TabsTrigger>
           <TabsTrigger value="fees">Fee Plans</TabsTrigger>
-          <TabsTrigger value="commitments">Commitments</TabsTrigger>
           <TabsTrigger value="documents">Documents</TabsTrigger>
           <TabsTrigger value="activity">Activity</TabsTrigger>
         </TabsList>
@@ -366,10 +359,6 @@ export function DealDetailClient({
 
         <TabsContent value="fees">
           <DealFeePlansTab deal={deal} />
-        </TabsContent>
-
-        <TabsContent value="commitments">
-          <DealCommitmentsTab dealId={deal.id} commitments={commitments} allocations={allocations} dealStatus={deal.status} />
         </TabsContent>
 
         <TabsContent value="documents">

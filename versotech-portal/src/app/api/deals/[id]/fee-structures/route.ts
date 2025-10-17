@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { z } from 'zod'
 import { auditLogger, AuditActions, AuditEntities } from '@/lib/audit'
+import { marked } from 'marked'
 
 const termSheetFieldsSchema = z.object({
   term_sheet_date: z.string().optional().nullable(),
@@ -54,6 +55,11 @@ function parseDate(value: string | null | undefined) {
   if (!value) return null
   const parsed = new Date(value)
   return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString()
+}
+
+function renderMarkdown(value: string | null | undefined) {
+  if (!value) return null
+  return marked.parse(value)
 }
 
 export async function GET(
@@ -135,6 +141,7 @@ export async function POST(
 
   const {
     effective_at,
+    term_sheet_html: _ignoredHtml,
     ...fields
   } = payload.data
 
@@ -147,26 +154,29 @@ export async function POST(
 
   const nextVersion = (existing?.[0]?.version ?? 0) + 1
 
+  const normalizedFields = Object.fromEntries(
+    Object.entries(fields).map(([key, value]) => {
+      if (['allocation_up_to', 'minimum_ticket', 'maximum_ticket'].includes(key)) {
+        return [key, typeof value === 'number' ? value : null]
+      }
+      if (['subscription_fee_percent', 'management_fee_percent', 'carried_interest_percent'].includes(key)) {
+        return [key, typeof value === 'number' ? value : null]
+      }
+      if (['term_sheet_date', 'interest_confirmation_deadline', 'validity_date'].includes(key)) {
+        return [key, parseDate(value as string | null | undefined)]
+      }
+      return [key, toNullable(value)]
+    })
+  )
+
   const insertPayload = {
     deal_id: dealId,
     status: 'draft' as const,
     version: nextVersion,
     created_by: user.id,
     effective_at: parseDate(effective_at),
-    ...Object.fromEntries(
-      Object.entries(fields).map(([key, value]) => {
-        if (['allocation_up_to', 'minimum_ticket', 'maximum_ticket'].includes(key)) {
-          return [key, typeof value === 'number' ? value : null]
-        }
-        if (['subscription_fee_percent', 'management_fee_percent', 'carried_interest_percent'].includes(key)) {
-          return [key, typeof value === 'number' ? value : null]
-        }
-        if (['term_sheet_date', 'interest_confirmation_deadline', 'validity_date'].includes(key)) {
-          return [key, parseDate(value as string | null | undefined)]
-        }
-        return [key, toNullable(value)]
-      })
-    )
+    ...normalizedFields,
+    term_sheet_html: renderMarkdown(fields.opportunity_summary)
   }
 
   const { data, error } = await serviceSupabase
@@ -254,7 +264,7 @@ export async function PATCH(
   }
 
   Object.entries(updates).forEach(([key, value]) => {
-    if (['status', 'version', 'effective_at'].includes(key)) {
+    if (['status', 'version', 'effective_at', 'term_sheet_html'].includes(key)) {
       return
     }
     if (['term_sheet_date', 'interest_confirmation_deadline', 'validity_date'].includes(key)) {
@@ -271,6 +281,10 @@ export async function PATCH(
     }
     updatePayload[key] = toNullable(value)
   })
+
+  if (Object.prototype.hasOwnProperty.call(updates, 'opportunity_summary')) {
+    updatePayload.term_sheet_html = renderMarkdown(updates.opportunity_summary)
+  }
 
   const { data, error } = await serviceSupabase
     .from('deal_fee_structures')

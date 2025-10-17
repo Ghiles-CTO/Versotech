@@ -28,12 +28,19 @@ import { AlertCircle, Building2, Eye, FileText, Pencil, Plus, Search } from 'luc
 interface Entity {
   id: string
   name: string
+  entity_code: string | null
+  platform: string | null
+  investment_name: string | null
+  former_entity: string | null
+  status: string | null
   type: string
   domicile: string | null
   currency: string
   formation_date?: string | null
   legal_jurisdiction?: string | null
   registration_number?: string | null
+  reporting_type?: string | null
+  requires_reporting?: boolean
   notes?: string | null
   created_at: string
 }
@@ -96,6 +103,9 @@ export function EntitiesPageClient({ entities }: EntitiesPageClientProps) {
       next = next.filter(
         (entity) =>
           entity.name.toLowerCase().includes(query) ||
+          entity.entity_code?.toLowerCase().includes(query) ||
+          entity.investment_name?.toLowerCase().includes(query) ||
+          entity.platform?.toLowerCase().includes(query) ||
           entity.domicile?.toLowerCase().includes(query)
       )
     }
@@ -276,7 +286,7 @@ export function EntitiesPageClient({ entities }: EntitiesPageClientProps) {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search by name or domicile"
+                placeholder="Search by code, name, investment, or platform"
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
                 className="pl-10"
@@ -319,21 +329,21 @@ export function EntitiesPageClient({ entities }: EntitiesPageClientProps) {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[280px]">Name</TableHead>
+                  <TableHead className="w-[100px]">Code</TableHead>
+                  <TableHead className="w-[240px]">Name</TableHead>
+                  <TableHead>Investment</TableHead>
+                  <TableHead>Platform</TableHead>
                   <TableHead>Type</TableHead>
-                  <TableHead>Domicile</TableHead>
-                  <TableHead>Jurisdiction</TableHead>
-                  <TableHead>Formation</TableHead>
+                  <TableHead>Status</TableHead>
                   <TableHead>Currency</TableHead>
-                  <TableHead>Registration #</TableHead>
-                  <TableHead>Created</TableHead>
+                  <TableHead>Reporting</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredEntities.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="py-12 text-center text-muted-foreground">
+                    <TableCell colSpan={9} className="py-12 text-center text-muted-foreground">
                       <div className="flex flex-col items-center gap-2">
                         <AlertCircle className="h-6 w-6" />
                         <p>No entities found. Try adjusting your filters or create a new vehicle.</p>
@@ -348,38 +358,64 @@ export function EntitiesPageClient({ entities }: EntitiesPageClientProps) {
                       onClick={() => router.push(`/versotech/staff/entities/${entity.id}`)}
                     >
                       <TableCell>
+                        {entity.entity_code ? (
+                          <Badge variant="outline" className="font-mono text-xs border-emerald-400/40 text-emerald-100">
+                            {entity.entity_code}
+                          </Badge>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">—</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
                         <div className="flex items-center gap-2">
                           <Building2 className="h-4 w-4 text-muted-foreground" />
                           <div>
                             <div className="font-medium text-foreground">{entity.name}</div>
-                            {entity.domicile && (
+                            {entity.former_entity && (
                               <div className="text-xs text-muted-foreground">
-                                {entity.domicile}
+                                Formerly: {entity.former_entity}
                               </div>
                             )}
                           </div>
                         </div>
                       </TableCell>
                       <TableCell>
+                        <span className="text-foreground font-medium">
+                          {entity.investment_name || '—'}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        {entity.platform ? (
+                          <Badge className="bg-white/10 border border-white/10 text-foreground">
+                            {entity.platform}
+                          </Badge>
+                        ) : '—'}
+                      </TableCell>
+                      <TableCell>
                         <Badge className="bg-white/10 border border-white/10 text-foreground">
                           {entityTypeLabels[entity.type] || entity.type}
                         </Badge>
                       </TableCell>
-                      <TableCell>{entity.domicile || '—'}</TableCell>
-                      <TableCell>{entity.legal_jurisdiction || '—'}</TableCell>
                       <TableCell>
-                        {entity.formation_date
-                          ? new Date(entity.formation_date).toLocaleDateString()
-                          : '—'}
+                        {entity.status ? (
+                          <Badge
+                            className={
+                              entity.status === 'LIVE'
+                                ? 'bg-emerald-500/20 border-emerald-400/40 text-emerald-100'
+                                : entity.status === 'CLOSED'
+                                ? 'bg-red-500/20 border-red-400/40 text-red-100'
+                                : 'bg-amber-500/20 border-amber-400/40 text-amber-100'
+                            }
+                          >
+                            {entity.status}
+                          </Badge>
+                        ) : '—'}
                       </TableCell>
                       <TableCell>{entity.currency}</TableCell>
-                      <TableCell>{entity.registration_number || '—'}</TableCell>
                       <TableCell>
-                        {new Date(entity.created_at).toLocaleDateString(undefined, {
-                          year: 'numeric',
-                          month: 'short',
-                          day: 'numeric'
-                        })}
+                        <span className="text-xs text-muted-foreground">
+                          {entity.reporting_type || '—'}
+                        </span>
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">

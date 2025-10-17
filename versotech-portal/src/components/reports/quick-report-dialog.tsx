@@ -24,7 +24,7 @@ interface QuickReportDialogProps {
   onOpenChange: (open: boolean) => void
   config: {
     fields: string[]
-    supportedScopes: Array<'all' | 'vehicle' | 'custom'>
+    supportedScopes?: Array<'all' | 'vehicle' | 'custom'>
   }
   vehicles: VehicleOption[]
   formState: Record<string, any>
@@ -47,7 +47,7 @@ export function QuickReportDialog({
   const reportConfig = reportType ? REPORT_TYPES[reportType] : null
 
   const scopeOptions = useMemo(() => {
-    if (!config.supportedScopes) return []
+    if (!config?.supportedScopes) return []
     return config.supportedScopes.map((scope) => {
       switch (scope) {
         case 'vehicle':
@@ -58,7 +58,7 @@ export function QuickReportDialog({
           return { value: 'all', label: 'All Holdings' }
       }
     })
-  }, [config.supportedScopes])
+  }, [config?.supportedScopes])
 
   const setField = (name: string, value: any) => {
     onFormStateChange({
@@ -83,7 +83,7 @@ export function QuickReportDialog({
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto space-y-5 py-4">
-          {config.fields.includes('scope') && scopeOptions.length > 0 && (
+          {config?.fields?.includes('scope') && scopeOptions.length > 0 && (
             <div className="space-y-2">
               <Label>Report Scope</Label>
               <Select
@@ -107,7 +107,7 @@ export function QuickReportDialog({
             </div>
           )}
 
-          {config.fields.includes('vehicle') && (formState.scope === 'vehicle' || !config.fields.includes('scope')) && (
+          {config?.fields?.includes('vehicle') && (formState.scope === 'vehicle' || !config?.fields?.includes('scope')) && (
             <div className="space-y-2">
               <Label htmlFor="report-vehicle">Select Holding</Label>
               <Select
@@ -131,7 +131,7 @@ export function QuickReportDialog({
             </div>
           )}
 
-          {config.fields.includes('asOfRange') && (
+          {config?.fields?.includes('asOfRange') && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>From Date</Label>
@@ -152,7 +152,7 @@ export function QuickReportDialog({
             </div>
           )}
 
-          {config.fields.includes('fromTo') && (
+          {config?.fields?.includes('fromTo') && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>From</Label>
@@ -173,7 +173,7 @@ export function QuickReportDialog({
             </div>
           )}
 
-          {config.fields.includes('period') && (
+          {config?.fields?.includes('period') && (
             <div className="space-y-2">
               <Label>Reporting Period</Label>
               <Select
@@ -193,7 +193,7 @@ export function QuickReportDialog({
             </div>
           )}
 
-          {config.fields.includes('taxYear') && (
+          {config?.fields?.includes('taxYear') && (
             <div className="space-y-2">
               <Label htmlFor="tax-year">Tax Year</Label>
               <Input
@@ -207,7 +207,7 @@ export function QuickReportDialog({
             </div>
           )}
 
-          {config.fields.includes('currency') && (
+          {config?.fields?.includes('currency') && (
             <div className="space-y-2">
               <Label htmlFor="currency">Reporting Currency</Label>
               <Input
@@ -220,7 +220,7 @@ export function QuickReportDialog({
             </div>
           )}
 
-          {config.fields.includes('includeBenchmark') && (
+          {config?.fields?.includes('includeBenchmark') && (
             <label className="flex items-start gap-2 rounded-md border p-3 text-sm bg-muted/30">
               <Checkbox
                 checked={!!formState.includeBenchmark}
@@ -233,7 +233,7 @@ export function QuickReportDialog({
             </label>
           )}
 
-          {config.fields.includes('includeExcel') && (
+          {config?.fields?.includes('includeExcel') && (
             <label className="flex items-start gap-2 rounded-md border p-3 text-sm bg-muted/30">
               <Checkbox
                 checked={!!formState.includeExcel}
@@ -246,7 +246,7 @@ export function QuickReportDialog({
             </label>
           )}
 
-          {config.fields.includes('delivery') && (
+          {config?.fields?.includes('delivery') && (
             <div className="space-y-2">
               <Label>Delivery Preferences</Label>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
@@ -268,7 +268,7 @@ export function QuickReportDialog({
             </div>
           )}
 
-          {config.fields.includes('notes') && (
+          {config?.fields?.includes('notes') && (
             <div className="space-y-2">
               <Label htmlFor="notes">Special Instructions</Label>
               <Textarea

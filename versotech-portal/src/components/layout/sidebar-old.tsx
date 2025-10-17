@@ -90,7 +90,7 @@ const investorNavItems: SidebarItem[] = [
   },
   {
     name: 'Documents',
-    href: '/versoholdings/documents',
+    href: '/versoholdings/reports?view=documents',
     icon: FileText,
     description: 'Reports, statements, and contracts'
   },

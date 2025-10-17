@@ -231,13 +231,11 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    // Standard staff/admin fetch - just return all vehicles
+    // Standard staff/admin fetch - return all vehicles with all fields
     const { data: vehicles, error } = await supabase
       .from('vehicles')
-      .select(
-        'id, name, type, domicile, currency, formation_date, legal_jurisdiction, registration_number, notes, created_at'
-      )
-      .order('created_at', { ascending: false })
+      .select('*')
+      .order('entity_code', { ascending: true, nullsFirst: false })
 
     if (error) {
       console.error('Fetch vehicles error:', error)

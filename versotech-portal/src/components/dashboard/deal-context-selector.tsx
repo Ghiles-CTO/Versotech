@@ -76,13 +76,21 @@ export function DealContextSelector({
 
       membershipDeals?.forEach(m => dealIds.add(m.deal_id))
 
-      // Get deals from deal_commitments
-      const { data: commitmentDeals } = await supabase
-        .from('deal_commitments')
+      // Include deals from submitted interests
+      const { data: interestDeals } = await supabase
+        .from('investor_deal_interest')
         .select('deal_id')
         .in('investor_id', investorIds)
 
-      commitmentDeals?.forEach(c => dealIds.add(c.deal_id))
+      interestDeals?.forEach(c => dealIds.add(c.deal_id))
+
+      // Include deals with subscription submissions
+      const { data: subscriptionDeals } = await supabase
+        .from('deal_subscription_submissions')
+        .select('deal_id')
+        .in('investor_id', investorIds)
+
+      subscriptionDeals?.forEach(c => dealIds.add(c.deal_id))
 
       // Reservations deprecated - removed from workflow
 

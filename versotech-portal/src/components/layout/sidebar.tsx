@@ -3,12 +3,13 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { cn } from '@/lib/utils'
+import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { BrandHeader } from './brand-header'
 import { useNotifications } from '@/hooks/use-notifications'
 import { createClient } from '@/lib/supabase/client'
+import { cn } from '@/lib/utils'
 import {
   LayoutDashboard,
   Building2,
@@ -34,7 +35,8 @@ import {
   UserCheck,
   Search,
   MoreHorizontal,
-  Bell
+  Bell,
+  Calendar
 } from 'lucide-react'
 
 interface SidebarItem {
@@ -92,6 +94,12 @@ const investorNavItems: SidebarItem[] = [
     href: '/versoholdings/data-rooms',
     icon: FileText,
     description: 'Due diligence documents and access controls'
+  },
+  {
+    name: 'Calendar',
+    href: '/versoholdings/calendar',
+    icon: Calendar,
+    description: 'Deadlines and schedule'
   },
   {
     name: 'Reports',
@@ -166,6 +174,12 @@ const staffNavItems: SidebarItem[] = [
     href: '/versotech/staff/processes',
     icon: Workflow,
     description: 'Workflow automation center'
+  },
+  {
+    name: 'Calendar',
+    href: '/versotech/staff/calendar',
+    icon: Calendar,
+    description: 'Deadlines and team schedule'
   },
   {
     name: 'Requests',
@@ -274,13 +288,35 @@ export function Sidebar({ brand, userProfile }: SidebarProps) {
       )}>
         <div className="flex items-center justify-between">
           {!collapsed && (
-            <div className="flex items-center">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white border border-slate-200 shadow-sm overflow-hidden">
+                <Image
+                  src="/verso-logo.jpg"
+                  alt="VERSO Logo"
+                  width={32}
+                  height={32}
+                  className="object-contain w-full h-full"
+                  priority
+                />
+              </div>
               <h2 className={cn(
                 "font-bold text-2xl tracking-tight",
                 sidebarDarkMode ? "text-foreground" : "text-black"
               )}>
                 VERSO
               </h2>
+            </div>
+          )}
+          {collapsed && (
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white border border-slate-200 shadow-sm overflow-hidden mx-auto">
+              <Image
+                src="/verso-logo.jpg"
+                alt="VERSO Logo"
+                width={24}
+                height={24}
+                className="object-contain w-full h-full"
+                priority
+              />
             </div>
           )}
           <Button

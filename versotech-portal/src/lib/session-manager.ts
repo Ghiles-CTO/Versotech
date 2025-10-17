@@ -44,12 +44,17 @@ class SessionManager {
       return
     }
 
-    this.isInitialized = true
+    try {
+      this.isInitialized = true
 
-    // Listen for storage changes in other tabs (cross-tab logout)
-    window.addEventListener('storage', this.handleStorageChange)
+      // Listen for storage changes in other tabs (cross-tab logout)
+      window.addEventListener('storage', this.handleStorageChange)
 
-    console.info('[auth-session] Session manager initialized')
+      console.info('[auth-session] Session manager initialized')
+    } catch (error) {
+      console.error('[auth-session] Failed to initialize session manager:', error)
+      this.isInitialized = false
+    }
   }
 
   /**

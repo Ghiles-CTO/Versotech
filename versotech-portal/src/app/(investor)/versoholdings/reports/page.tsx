@@ -1,13 +1,21 @@
+import { redirect } from 'next/navigation'
+
 import { AppLayout } from '@/components/layout/app-layout'
 import { ReportsPageClient } from '@/components/reports/reports-page-client'
-import { createClient } from '@/lib/supabase/server'
 import { getProfile } from '@/lib/auth'
-import { redirect } from 'next/navigation'
+import { loadInvestorDocuments } from '@/lib/documents/investor-documents'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 
 export const dynamic = 'force-dynamic'
 
-export default async function ReportsPage() {
-  // Auth check
+export default async function ReportsPage({
+  searchParams
+}: {
+  searchParams: Promise<{ view?: string }>
+}) {
+  const params = await searchParams
+  const initialView = params?.view === 'documents' ? 'documents' : 'reports'
+
   const profile = await getProfile()
 
   if (!profile) {
@@ -15,10 +23,17 @@ export default async function ReportsPage() {
   }
 
   const supabase = await createClient()
+  const serviceSupabase = createServiceClient()
 
-  // Fetch initial data server-side
-  const [reportsResult, requestsResult] = await Promise.all([
-    supabase
+  const { data: investorLinks } = await serviceSupabase
+    .from('investor_users')
+    .select('investor_id')
+    .eq('user_id', profile.id)
+
+  const investorIds = investorLinks?.map(link => link.investor_id) ?? []
+
+  const [reportsResult, requestsResult, documentsData] = await Promise.all([
+    serviceSupabase
       .from('report_requests')
       .select(`
         *,
@@ -29,7 +44,7 @@ export default async function ReportsPage() {
       .order('created_at', { ascending: false })
       .limit(20),
 
-    supabase
+    serviceSupabase
       .from('request_tickets')
       .select(`
         *,
@@ -40,7 +55,9 @@ export default async function ReportsPage() {
       `)
       .eq('investor_id', profile.id)
       .order('created_at', { ascending: false })
-      .limit(20)
+      .limit(20),
+
+    loadInvestorDocuments(serviceSupabase, investorIds)
   ])
 
   const reports = reportsResult.data || []
@@ -51,6 +68,10 @@ export default async function ReportsPage() {
       <ReportsPageClient
         initialReports={reports}
         initialRequests={requests}
+        initialDocuments={documentsData.documents}
+        folders={documentsData.folders}
+        vehicles={documentsData.vehicles}
+        initialView={initialView}
       />
     </AppLayout>
   )

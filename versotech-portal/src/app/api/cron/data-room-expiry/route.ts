@@ -125,6 +125,28 @@ export async function GET(request: NextRequest) {
           })
         }
 
+        const { data: remainingAccess } = await supabase
+          .from('deal_data_room_access')
+          .select('id')
+          .eq('deal_id', access.deal_id)
+          .is('revoked_at', null)
+          .limit(1)
+
+        if (!remainingAccess || remainingAccess.length === 0) {
+          try {
+            await supabase
+              .from('deal_data_room_documents')
+              .update({
+                visible_to_investors: false,
+                updated_at: now
+              })
+              .eq('deal_id', access.deal_id)
+              .eq('visible_to_investors', true)
+          } catch (visibilityError) {
+            console.error('Failed to reset document visibility after access expiry', visibilityError)
+          }
+        }
+
         revokedCount++
       } catch (error) {
         errorCount++

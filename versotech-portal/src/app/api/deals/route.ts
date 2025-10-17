@@ -10,6 +10,7 @@ const createDealSchema = z.object({
   vehicle_id: z.string().uuid().optional().nullable(),
   deal_type: z.enum(['equity_secondary', 'equity_primary', 'credit_trade_finance', 'other']).default('equity_secondary'),
   currency: z.string().default('USD'),
+  company_logo_url: z.string().url('Company logo is required'),
   offer_unit_price: z.number().optional().nullable(),
   terms_schema: z.any().optional(),
   open_at: z.string().optional().nullable(),

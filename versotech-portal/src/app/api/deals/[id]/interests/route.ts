@@ -1,5 +1,6 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { auditLogger, AuditActions, AuditEntities } from '@/lib/audit'
+import { trackDealEvent } from '@/lib/analytics'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 
@@ -145,6 +146,21 @@ export async function POST(
     )
   }
 
+  const { data: dealRecord } = await serviceSupabase
+    .from('deals')
+    .select('id, name, status')
+    .eq('id', dealId)
+    .maybeSingle()
+
+  const { data: ownerUsers } = await serviceSupabase
+    .from('investor_users')
+    .select('user_id')
+    .eq('investor_id', resolvedInvestorId)
+    .order('created_at', { ascending: true })
+    .limit(1)
+
+  const ownerUserId = ownerUsers?.[0]?.user_id ?? null
+
   // For post-close deals, only record in signals table (no approval workflow)
   if (is_post_close) {
     const { error: signalError } = await serviceSupabase
@@ -152,7 +168,7 @@ export async function POST(
       .insert({
         deal_id: dealId,
         investor_id: resolvedInvestorId,
-        signal_type: 'similar_deal_notification_request',
+        signal_type: 'closed_deal_interest',
         created_by: user.id,
         metadata: {
           indicative_amount,
@@ -164,6 +180,36 @@ export async function POST(
     if (signalError) {
       console.error('Failed to create interest signal:', signalError)
       return NextResponse.json({ error: 'Failed to submit interest' }, { status: 500 })
+    }
+
+    await trackDealEvent({
+      supabase: serviceSupabase,
+      dealId,
+      investorId: resolvedInvestorId,
+      eventType: 'closed_deal_interest',
+      payload: {
+        indicative_amount,
+        indicative_currency,
+        notes
+      }
+    })
+
+    if (ownerUserId) {
+      try {
+        await serviceSupabase.from('investor_notifications').insert({
+          user_id: ownerUserId,
+          investor_id: resolvedInvestorId,
+          title: 'Request received',
+          message: `We will notify you when similar opportunities to ${dealRecord?.name ?? 'this deal'} become available.`,
+          link: '/versoholdings/deals',
+          metadata: {
+            type: 'closed_deal_interest',
+            deal_id: dealId
+          }
+        })
+      } catch (notificationError) {
+        console.error('Failed to create closed-deal notification', notificationError)
+      }
     }
 
     await auditLogger.log({
@@ -212,6 +258,38 @@ export async function POST(
   if (insertError || !interest) {
     console.error('Failed to create interest:', insertError)
     return NextResponse.json({ error: 'Failed to submit interest' }, { status: 500 })
+  }
+
+  await trackDealEvent({
+    supabase: serviceSupabase,
+    dealId,
+    investorId: resolvedInvestorId,
+    eventType: 'im_interested',
+    payload: {
+      interest_id: interest.id,
+      indicative_amount,
+      indicative_currency,
+      notes
+    }
+  })
+
+  if (ownerUserId) {
+    try {
+      await serviceSupabase.from('investor_notifications').insert({
+        user_id: ownerUserId,
+        investor_id: resolvedInvestorId,
+        title: 'Interest received',
+        message: `Thanks for sharing your interest in ${dealRecord?.name ?? 'this deal'}. The VERSO team will review and respond shortly.`,
+        link: '/versoholdings/deals',
+        metadata: {
+          type: 'deal_interest_submitted',
+          deal_id: dealId,
+          interest_id: interest.id
+        }
+      })
+    } catch (notificationError) {
+      console.error('Failed to create interest submission notification', notificationError)
+    }
   }
 
   await auditLogger.log({

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { auditLogger, AuditActions, AuditEntities } from '@/lib/audit'
+import { trackDealEvent } from '@/lib/analytics'
 
 const submissionSchema = z.object({
   investor_id: z.string().uuid().optional(),
@@ -172,6 +173,18 @@ export async function POST(
     console.error('Failed to create subscription submission:', insertError)
     return NextResponse.json({ error: 'Failed to submit subscription' }, { status: 500 })
   }
+
+  await trackDealEvent({
+    supabase: serviceSupabase,
+    dealId,
+    investorId: resolvedInvestorId,
+    eventType: 'data_room_submit',
+    payload: {
+      submission_id: submission.id,
+      amount: payload?.amount ?? payload?.subscription_amount ?? null,
+      currency: payload?.currency ?? null
+    }
+  })
 
   await auditLogger.log({
     actor_user_id: user.id,

@@ -83,12 +83,19 @@ interface EntityDetailClientProps {
   entity: {
     id: string
     name: string
+    entity_code: string | null
+    platform: string | null
+    investment_name: string | null
+    former_entity: string | null
+    status: string | null
     type: string
     domicile: string | null
     currency: string
     formation_date: string | null
     legal_jurisdiction: string | null
     registration_number: string | null
+    reporting_type: string | null
+    requires_reporting: boolean | null
     notes: string | null
     created_at: string
     updated_at: string | null
@@ -248,15 +255,39 @@ export function EntityDetailClient({ entity: initialEntity, directors: initialDi
             </Button>
           </Link>
           <div className="flex items-center gap-3">
+            {entity.entity_code && (
+              <Badge variant="outline" className="font-mono text-lg px-3 py-1 border-emerald-400/40 text-emerald-100">
+                {entity.entity_code}
+              </Badge>
+            )}
             <h1 className="text-3xl font-bold text-foreground">{entity.name}</h1>
             <Badge className="bg-white/10 border border-white/15 text-foreground">
               {entityTypeLabels[entity.type] || entity.type}
             </Badge>
+            {entity.status && (
+              <Badge
+                className={
+                  entity.status === 'LIVE'
+                    ? 'bg-emerald-500/20 border-emerald-400/40 text-emerald-100'
+                    : entity.status === 'CLOSED'
+                    ? 'bg-red-500/20 border-red-400/40 text-red-100'
+                    : 'bg-amber-500/20 border-amber-400/40 text-amber-100'
+                }
+              >
+                {entity.status}
+              </Badge>
+            )}
             <Badge variant="outline" className="border-emerald-400/40 text-emerald-100">
               {entity.currency}
             </Badge>
           </div>
           <div className="text-muted-foreground space-y-1">
+            {entity.investment_name && (
+              <p className="font-medium text-foreground">Investment: {entity.investment_name}</p>
+            )}
+            {entity.platform && (
+              <p>Platform: {entity.platform}</p>
+            )}
             <p>{entity.domicile || 'Domicile unknown'}</p>
             <p className="text-sm">
               Created {new Date(entity.created_at).toLocaleString()}
@@ -328,10 +359,34 @@ export function EntityDetailClient({ entity: initialEntity, directors: initialDi
               <CardDescription>Key metadata and notes for this legal vehicle.</CardDescription>
             </CardHeader>
             <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+              {entity.entity_code && (
+                <div>
+                  <p className="text-muted-foreground">Entity Code</p>
+                  <p className="text-foreground font-medium font-mono">{entity.entity_code}</p>
+                </div>
+              )}
               <div>
                 <p className="text-muted-foreground">Legal Name</p>
                 <p className="text-foreground font-medium">{entity.name}</p>
               </div>
+              {entity.investment_name && (
+                <div>
+                  <p className="text-muted-foreground">Investment Name</p>
+                  <p className="text-foreground font-medium">{entity.investment_name}</p>
+                </div>
+              )}
+              {entity.platform && (
+                <div>
+                  <p className="text-muted-foreground">Platform</p>
+                  <p className="text-foreground font-medium">{entity.platform}</p>
+                </div>
+              )}
+              {entity.former_entity && (
+                <div>
+                  <p className="text-muted-foreground">Former Entity</p>
+                  <p className="text-foreground font-medium">{entity.former_entity}</p>
+                </div>
+              )}
               <div>
                 <p className="text-muted-foreground">Domicile</p>
                 <p className="text-foreground font-medium">{entity.domicile || '—'}</p>
@@ -344,6 +399,18 @@ export function EntityDetailClient({ entity: initialEntity, directors: initialDi
                 <p className="text-muted-foreground">Registration Number</p>
                 <p className="text-foreground font-medium">{entity.registration_number || '—'}</p>
               </div>
+              {entity.reporting_type && (
+                <div>
+                  <p className="text-muted-foreground">Reporting Type</p>
+                  <p className="text-foreground font-medium">{entity.reporting_type}</p>
+                </div>
+              )}
+              {entity.requires_reporting !== null && (
+                <div>
+                  <p className="text-muted-foreground">Requires Reporting</p>
+                  <p className="text-foreground font-medium">{entity.requires_reporting ? 'Yes' : 'No'}</p>
+                </div>
+              )}
               <div className="md:col-span-2">
                 <p className="text-muted-foreground">Notes</p>
                 <p className="text-foreground whitespace-pre-wrap leading-relaxed">

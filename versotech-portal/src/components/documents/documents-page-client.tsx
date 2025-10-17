@@ -90,7 +90,7 @@ export function DocumentsPageClient({
     if (filters.deal_id) params.set('deal', filters.deal_id)
     if (filters.search) params.set('search', filters.search)
 
-    router.push(`/versoholdings/documents?${params.toString()}`)
+    router.push(`/versoholdings/reports?view=documents&${params.toString()}`)
   }
 
   // Load more documents (pagination)
@@ -168,7 +168,7 @@ export function DocumentsPageClient({
               {(appliedFilters.type || appliedFilters.vehicle_id || appliedFilters.deal_id || appliedFilters.search) && (
                 <Button
                   variant="outline"
-                  onClick={() => router.push('/versoholdings/documents')}
+                  onClick={() => router.push('/versoholdings/reports?view=documents')}
                   className="border-2"
                 >
                   Clear all filters

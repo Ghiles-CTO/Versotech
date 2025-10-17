@@ -1,6 +1,8 @@
 {
   "dependencies": {
-    "@supabase/supabase-js": "^2.57.4"
+    "@faker-js/faker": "^10.1.0",
+    "@supabase/supabase-js": "^2.57.4",
+    "marked": "^11.1.1"
   },
   "devDependencies": {
     "shadcn": "^3.3.1",

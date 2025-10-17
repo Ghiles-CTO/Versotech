@@ -1,5 +1,5 @@
 import { AppLayout } from '@/components/layout/app-layout'
-import { EnhancedHoldingsPage } from '@/components/holdings/enhanced-holdings-page'
+import { CleanHoldingsPage } from '@/components/holdings/clean-holdings-page'
 import { createClient } from '@/lib/supabase/server'
 
 export const dynamic = 'force-dynamic'
@@ -36,9 +36,25 @@ export default async function InvestorHoldings() {
           investor_ids: investorIds,
           days_back: 30
         }),
-        supabase.rpc('get_investor_vehicle_breakdown', {
-          investor_ids: investorIds
-        })
+        // Manually query vehicle breakdown since RPC function has ambiguity error
+        supabase
+          .from('vehicles')
+          .select(`
+            id,
+            name,
+            type,
+            positions!inner(
+              units,
+              cost_basis,
+              last_nav
+            ),
+            valuations(
+              nav_per_unit,
+              as_of_date
+            )
+          `)
+          .in('positions.investor_id', investorIds)
+          .gt('positions.units', 0)
       ])
 
       // Process KPI data with fallback
@@ -73,9 +89,30 @@ export default async function InvestorHoldings() {
           : null
 
         // Process breakdown data
-        const breakdownData = breakdownResponse.status === 'fulfilled' && !breakdownResponse.value.error
-          ? breakdownResponse.value.data
-          : null
+        let breakdownData = []
+        if (breakdownResponse.status === 'fulfilled' && !breakdownResponse.value.error && breakdownResponse.value.data) {
+          // Transform the vehicle data into the expected format
+          breakdownData = breakdownResponse.value.data.map((vehicle: any) => {
+            const position = vehicle.positions?.[0] || {}
+            const latestValuation = vehicle.valuations?.sort((a: any, b: any) => 
+              new Date(b.as_of_date).getTime() - new Date(a.as_of_date).getTime()
+            )[0]
+            
+            const navPerUnit = latestValuation?.nav_per_unit || position.last_nav || 0
+            const units = parseFloat(position.units || 0)
+            const currentValue = units * parseFloat(navPerUnit)
+            
+            return {
+              vehicle_id: vehicle.id,
+              vehicle_name: vehicle.name,
+              vehicle_type: vehicle.type,
+              current_value: currentValue.toFixed(2),
+              units: units,
+              cost_basis: parseFloat(position.cost_basis || 0),
+              nav_per_unit: navPerUnit
+            }
+          })
+        }
 
         // Prepare initial data for client component
         initialData = {
@@ -118,7 +155,7 @@ export default async function InvestorHoldings() {
 
   return (
     <AppLayout brand="versoholdings">
-      <EnhancedHoldingsPage initialData={initialData} />
+      <CleanHoldingsPage initialData={initialData} />
     </AppLayout>
   )
 }

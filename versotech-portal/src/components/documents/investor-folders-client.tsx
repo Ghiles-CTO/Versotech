@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { ChevronRight, Folder, FolderOpen, FileText, Download, Eye } from 'lucide-react'
+import { Folder, FolderOpen, FileText, Download } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -20,7 +20,8 @@ interface Folder {
 
 interface Document {
   id: string
-  name: string
+  name?: string
+  file_name?: string
   type: string
   file_key: string
   created_at: string
@@ -86,7 +87,6 @@ export function InvestorFoldersClient({ folders, documents }: InvestorFoldersCli
     const isExpanded = expandedFolders.has(folder.id)
     const children = getChildFolders(folder.id)
     const docs = getDocumentsInFolder(folder.id)
-    const hasChildren = children.length > 0
 
     return (
       <div key={folder.id} className="mb-2">
@@ -126,7 +126,7 @@ export function InvestorFoldersClient({ folders, documents }: InvestorFoldersCli
                     <div className="flex items-center gap-2 flex-1 min-w-0">
                       <FileText className="h-4 w-4 text-gray-400 flex-shrink-0" />
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{doc.name}</p>
+                        <p className="text-sm font-medium truncate">{doc.name ?? doc.file_name ?? 'Document'}</p>
                         <p className="text-xs text-gray-500">
                           {doc.type} • {formatFileSize(doc.file_size_bytes || 0)}
                         </p>
@@ -178,7 +178,7 @@ export function InvestorFoldersClient({ folders, documents }: InvestorFoldersCli
                   <div className="flex items-center gap-2 flex-1">
                     <FileText className="h-4 w-4 text-gray-400" />
                     <div>
-                      <p className="font-medium">{doc.name}</p>
+                      <p className="font-medium">{doc.name ?? doc.file_name ?? 'Document'}</p>
                       <p className="text-xs text-gray-500">
                         {doc.type} • {formatFileSize(doc.file_size_bytes || 0)}
                       </p>

@@ -105,6 +105,33 @@ export async function POST(request: NextRequest) {
     console.error('Failed to upsert data room access:', accessInsert.error)
   }
 
+  let ownerUserId: string | null = null
+  try {
+    const { data: investorUsers } = await serviceSupabase
+      .from('investor_users')
+      .select('user_id')
+      .eq('investor_id', investor_id)
+      .order('created_at', { ascending: true })
+      .limit(1)
+
+    ownerUserId = investorUsers?.[0]?.user_id ?? null
+  } catch (lookupError) {
+    console.error('Failed to resolve investor user for NDA completion', lookupError)
+  }
+
+  try {
+    await serviceSupabase
+      .from('deal_data_room_documents')
+      .update({
+        visible_to_investors: true,
+        updated_at: new Date().toISOString()
+      })
+      .eq('deal_id', deal_id)
+      .eq('visible_to_investors', false)
+  } catch (docError) {
+    console.error('Failed to reset document visibility for deal', docError)
+  }
+
   try {
     const taskUpdate = serviceSupabase
       .from('tasks')
@@ -132,15 +159,6 @@ export async function POST(request: NextRequest) {
       .limit(1)
 
     if (!existingAllocationTasks?.length) {
-      const { data: investorUsers } = await serviceSupabase
-        .from('investor_users')
-        .select('user_id')
-        .eq('investor_id', investor_id)
-        .order('created_at', { ascending: true })
-        .limit(1)
-
-      const ownerUserId = investorUsers?.[0]?.user_id ?? null
-
       if (ownerUserId) {
         await serviceSupabase.from('tasks').insert({
           owner_user_id: ownerUserId,
@@ -163,6 +181,33 @@ export async function POST(request: NextRequest) {
     }
   } catch (taskError) {
     console.error('Failed to update/create tasks for NDA completion', taskError)
+  }
+
+  if (ownerUserId) {
+    try {
+      const { data: dealRecord } = await serviceSupabase
+        .from('deals')
+        .select('name')
+        .eq('id', deal_id)
+        .maybeSingle()
+
+      const dealName = dealRecord?.name ?? 'the deal'
+
+      await serviceSupabase.from('investor_notifications').insert({
+        user_id: ownerUserId,
+        investor_id,
+        title: 'Data room unlocked',
+        message: `Your NDA for ${dealName} is complete. The data room is now available for review.`,
+        link: '/versoholdings/data-rooms',
+        metadata: {
+          type: 'nda_complete',
+          deal_id,
+          access_id: accessInsert.data?.id ?? null
+        }
+      })
+    } catch (notificationError) {
+      console.error('Failed to create NDA completion notification', notificationError)
+    }
   }
 
   try {

@@ -1,7 +1,7 @@
 import { AppLayout } from '@/components/layout/app-layout'
 import { createSmartClient } from '@/lib/supabase/smart-client'
 import { redirect } from 'next/navigation'
-import { EntityDetailClient } from '@/components/entities/entity-detail-client'
+import { EntityDetailEnhanced } from '@/components/entities/entity-detail-enhanced'
 import { getCurrentUser } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
@@ -18,22 +18,10 @@ export default async function EntityDetailPage({ params }: { params: Promise<{ i
   const { id } = await params
   const supabase = await createSmartClient()
 
+  // Fetch entity with all fields including CSV data
   const { data: entity, error: entityError } = await supabase
     .from('vehicles')
-    .select(
-      `
-      id,
-      name,
-      type,
-      domicile,
-      currency,
-      formation_date,
-      legal_jurisdiction,
-      registration_number,
-      notes,
-      created_at
-    `
-    )
+    .select('*')
     .eq('id', id)
     .single()
 
@@ -45,42 +33,68 @@ export default async function EntityDetailPage({ params }: { params: Promise<{ i
     redirect('/versotech/staff/entities')
   }
 
-  const { data: directors } = await supabase
-    .from('entity_directors')
-    .select('id, full_name, role, email, effective_from, effective_to, notes, created_at')
-    .eq('vehicle_id', id)
-    .order('effective_from', { ascending: false })
-
-  const { data: deals } = await supabase
-    .from('deals')
-    .select('id, name, status, deal_type, currency, created_at')
-    .eq('vehicle_id', id)
-    .order('created_at', { ascending: false })
-
-  const { data: events } = await supabase
-    .from('entity_events')
-    .select(
-      `
-      id,
-      event_type,
-      description,
-      payload,
-      created_at,
-      changed_by_profile:changed_by (
+  // Fetch all related data in parallel
+  const [
+    { data: directors },
+    { data: stakeholders },
+    { data: folders },
+    { data: flags },
+    { data: deals },
+    { data: events }
+  ] = await Promise.all([
+    supabase
+      .from('entity_directors')
+      .select('*')
+      .eq('vehicle_id', id)
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('entity_stakeholders')
+      .select('*')
+      .eq('vehicle_id', id)
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('entity_folders')
+      .select('*')
+      .eq('vehicle_id', id)
+      .order('folder_type', { ascending: true }),
+    supabase
+      .from('entity_flags')
+      .select('*')
+      .eq('vehicle_id', id)
+      .eq('is_resolved', false)
+      .order('severity', { ascending: true }),
+    supabase
+      .from('deals')
+      .select('id, name, status, deal_type, currency, created_at')
+      .eq('vehicle_id', id)
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('entity_events')
+      .select(`
         id,
-        display_name,
-        email
-      )
-    `
-    )
-    .eq('vehicle_id', id)
-    .order('created_at', { ascending: false })
+        event_type,
+        description,
+        payload,
+        created_at,
+        changed_by_profile:profiles!entity_events_changed_by_fkey(
+          id,
+          display_name,
+          email
+        )
+      `)
+      .eq('vehicle_id', id)
+      .order('created_at', { ascending: false })
+      .limit(50)
+  ])
 
   return (
     <AppLayout brand="versotech">
-      <EntityDetailClient
+      <EntityDetailEnhanced
         entity={{ ...entity, updated_at: null }}
         directors={directors || []}
+        stakeholders={stakeholders || []}
+        folders={folders || []}
+        flags={flags || []}
         deals={deals || []}
         events={(events as any) || []}
       />

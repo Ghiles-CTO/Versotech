@@ -1,6 +1,7 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { getAuthenticatedUser } from '@/lib/api-auth'
 import { auditLogger, AuditActions } from '@/lib/audit'
+import { trackDealEvent } from '@/lib/analytics'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 
@@ -246,6 +247,26 @@ async function executeApprovalActions(
           }
         })
 
+        if (ownerUserId) {
+          try {
+            await supabase.from('investor_notifications').insert({
+              user_id: ownerUserId,
+              investor_id: approval.related_investor_id,
+              title: 'Interest approved',
+              message: `Your interest in ${approval.related_deal?.name ?? 'this deal'} has been approved. Review and sign the NDA to unlock the data room.`,
+              link: '/versoholdings/tasks',
+              metadata: {
+                type: 'deal_interest_approved',
+                deal_id: approval.related_deal_id,
+                approval_id: approval.id,
+                interest_id: approval.entity_id
+              }
+            })
+          } catch (notificationError) {
+            console.error('Failed to create investor notification for interest approval', notificationError)
+          }
+        }
+
         try {
           await supabase.from('automation_webhook_events').insert({
             event_type: 'nda_generate_request',
@@ -282,10 +303,11 @@ async function executeApprovalActions(
           }
         }
 
-        await logDealEvent(supabase, {
-          deal_id: approval.related_deal_id,
-          investor_id: approval.related_investor_id,
-          event_type: 'deal_interest_approved',
+        await trackDealEvent({
+          supabase,
+          dealId: approval.related_deal_id,
+          investorId: approval.related_investor_id,
+          eventType: 'deal_interest_approved',
           payload: {
             approval_id: approval.id,
             interest_id: approval.entity_id,
@@ -365,10 +387,11 @@ async function executeApprovalActions(
           }
         }
 
-        await logDealEvent(supabase, {
-          deal_id: approval.related_deal_id,
-          investor_id: approval.related_investor_id,
-          event_type: 'deal_subscription_approved',
+        await trackDealEvent({
+          supabase,
+          dealId: approval.related_deal_id,
+          investorId: approval.related_investor_id,
+          eventType: 'deal_subscription_approved',
           payload: {
             approval_id: approval.id,
             submission_id: approval.entity_id,

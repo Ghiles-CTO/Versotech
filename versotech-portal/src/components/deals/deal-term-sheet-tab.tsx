@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   Card,
   CardContent,
@@ -22,7 +22,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { format } from 'date-fns'
-import { Loader2, Plus, Copy, Rocket, Archive, Pencil } from 'lucide-react'
+import { Loader2, Plus, Copy, Rocket, Archive, Pencil, Upload } from 'lucide-react'
 
 type TermSheet = Record<string, any>
 
@@ -149,6 +149,9 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
   const [formValues, setFormValues] = useState<FormState>(emptyForm)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [attachmentError, setAttachmentError] = useState<string | null>(null)
+  const [uploadingAttachmentId, setUploadingAttachmentId] = useState<string | null>(null)
+  const fileInputsRef = useRef<Record<string, HTMLInputElement | null>>({})
 
   useEffect(() => {
     setItems(termSheets ?? [])
@@ -160,6 +163,53 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
   )
 
   const published = ordered.find(item => item.status === 'published')
+
+  const handleAttachmentUpload = async (structureId: string, file: File) => {
+    setAttachmentError(null)
+    setUploadingAttachmentId(structureId)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+
+      const response = await fetch(
+        `/api/deals/${dealId}/fee-structures/${structureId}/attachment`,
+        {
+          method: 'POST',
+          body: formData
+        }
+      )
+
+      const payload = await response.json().catch(() => ({}))
+      if (!response.ok) {
+        throw new Error(payload?.error || 'Failed to upload attachment')
+      }
+
+      const nextItems = items.map(item =>
+        item.id === structureId
+          ? { ...item, term_sheet_attachment_key: payload.term_sheet_attachment_key }
+          : item
+      )
+      setItems(nextItems)
+
+      if (targetId === structureId) {
+        setFormValues(prev => ({
+          ...prev,
+          term_sheet_attachment_key: payload.term_sheet_attachment_key ?? ''
+        }))
+      }
+    } catch (error) {
+      console.error('Term sheet attachment upload failed', error)
+      setAttachmentError(
+        error instanceof Error ? error.message : 'Failed to upload attachment'
+      )
+    } finally {
+      const input = fileInputsRef.current[structureId]
+      if (input) {
+        input.value = ''
+      }
+      setUploadingAttachmentId(null)
+    }
+  }
 
   const openEditor = (mode: EditorMode, termSheet?: TermSheet) => {
     setEditorMode(mode)
@@ -256,23 +306,30 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
             Draft, publish, and archive the structured economics that power the investor experience.
           </p>
         </div>
-        <Button
-          onClick={() => openEditor('create')}
-          disabled={isSubmitting}
-          className="gap-2"
-        >
-          <Plus className="h-4 w-4" />
-          New Term Sheet
-        </Button>
-      </div>
+      <Button
+        onClick={() => openEditor('create')}
+        disabled={isSubmitting}
+        className="gap-2"
+      >
+        <Plus className="h-4 w-4" />
+        New Term Sheet
+      </Button>
+    </div>
 
-      {errorMessage && (
-        <Card className="border border-destructive/30 bg-destructive/10">
-          <CardContent className="text-sm text-destructive p-3">
-            {errorMessage}
-          </CardContent>
-        </Card>
-      )}
+    {errorMessage && (
+      <Card className="border border-destructive/30 bg-destructive/10">
+        <CardContent className="text-sm text-destructive p-3">
+          {errorMessage}
+        </CardContent>
+      </Card>
+    )}
+    {attachmentError && (
+      <Card className="border border-amber-400/30 bg-amber-500/10">
+        <CardContent className="text-sm text-amber-800 p-3">
+          {attachmentError}
+        </CardContent>
+      </Card>
+    )}
 
       {published && (
         <Card className="border border-emerald-400/30 bg-emerald-500/10">
@@ -305,9 +362,34 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
                 <Copy className="h-4 w-4" />
                 Clone
               </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                onClick={() => fileInputsRef.current[published.id]?.click()}
+                disabled={uploadingAttachmentId === published.id}
+              >
+                {uploadingAttachmentId === published.id ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Uploading...
+                  </>
+                ) : (
+                  <>
+                    <Upload className="h-4 w-4" />
+                    Upload Attachment
+                  </>
+                )}
+              </Button>
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
+            <div className="text-xs text-emerald-200">
+              {published.term_sheet_attachment_key
+                ? 'Attachment available for investors to download.'
+                : 'No attachment uploaded yet.'}
+            </div>
+
             {/* Transaction Details */}
             <div>
               <h4 className="text-xs font-semibold text-emerald-300 uppercase tracking-wide mb-3">Transaction Details</h4>
@@ -437,6 +519,19 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
                 </div>
               </div>
             </div>
+
+            {published.term_sheet_html && (
+              <>
+                <Separator className="bg-emerald-400/20" />
+                <div>
+                  <h4 className="text-xs font-semibold text-emerald-300 uppercase tracking-wide mb-3">Opportunity Summary</h4>
+                  <div
+                    className="space-y-2 text-sm text-emerald-50/90 leading-relaxed"
+                    dangerouslySetInnerHTML={{ __html: published.term_sheet_html }}
+                  />
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
       )}
@@ -458,6 +553,11 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
               </Badge>
             </CardHeader>
             <CardContent className="space-y-4 text-sm">
+              <div className="text-xs text-muted-foreground">
+                {termSheet.term_sheet_attachment_key
+                  ? 'Attachment uploaded.'
+                  : 'No attachment uploaded yet.'}
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
                   <span className="text-muted-foreground block">Transaction Type</span>
@@ -485,9 +585,35 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
                 </div>
               </div>
 
-              <Separator />
-
+              {termSheet.term_sheet_html && (
+                <>
+                  <div className="space-y-2 text-sm">
+                    <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                      Opportunity Summary
+                    </h4>
+                  <div
+                    className="space-y-2 text-sm text-foreground/90 leading-relaxed"
+                    dangerouslySetInnerHTML={{ __html: termSheet.term_sheet_html }}
+                  />
+                  </div>
+                  <Separator />
+                </>
+              )}
               <div className="flex flex-wrap items-center gap-2">
+                <input
+                  type="file"
+                  accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                  className="hidden"
+                  ref={element => {
+                    fileInputsRef.current[termSheet.id] = element
+                  }}
+                  onChange={event => {
+                    const file = event.target.files?.[0]
+                    if (file) {
+                      handleAttachmentUpload(termSheet.id, file)
+                    }
+                  }}
+                />
                 <Button
                   variant="outline"
                   size="sm"
@@ -533,6 +659,25 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
                     Archive
                   </Button>
                 )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                  onClick={() => fileInputsRef.current[termSheet.id]?.click()}
+                  disabled={uploadingAttachmentId === termSheet.id}
+                >
+                  {uploadingAttachmentId === termSheet.id ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Uploading...
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="h-4 w-4" />
+                      Upload Attachment
+                    </>
+                  )}
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -611,6 +756,9 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
 
             <div className="space-y-2">
               <Label htmlFor="opportunity_summary">Opportunity Summary</Label>
+              <p className="text-xs text-muted-foreground">
+                Supports basic Markdown for emphasis, lists, and headings. The rendered HTML is stored for the investor view.
+              </p>
               <Textarea
                 id="opportunity_summary"
                 rows={3}
