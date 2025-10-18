@@ -43,12 +43,14 @@
       "Bash(cp:*)",
       "Bash(chmod:*)",
       "Bash(cat:*)",
-      "Bash(npx next:*)"
+      "Bash(npx next:*)",
+      "Read(//c/Users/gmmou/Downloads/**)"
     ],
     "deny": []
   },
   "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
-    "supabase"
+    "supabase",
+    "shadcn"
   ]
 }

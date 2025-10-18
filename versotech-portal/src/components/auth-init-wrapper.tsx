@@ -11,3 +11,6 @@ const AuthInit = dynamic(() => import("../app/auth-init").then(mod => ({ default
 export function AuthInitWrapper() {
   return <AuthInit />
 }
+
+
+
