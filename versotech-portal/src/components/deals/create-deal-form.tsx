@@ -326,7 +326,7 @@ export function CreateDealForm({ entities }: CreateDealFormProps) {
                     {companyLogoUrl ? (
                       <Image
                         src={companyLogoUrl}
-                        alt={`${selectedEntity?.name ?? formData.name || 'Deal'} logo`}
+                        alt={`${(selectedEntity?.name ?? formData.name) || 'Deal'} logo`}
                         width={56}
                         height={56}
                         className="rounded-lg object-contain bg-white border border-gray-200 p-2"
