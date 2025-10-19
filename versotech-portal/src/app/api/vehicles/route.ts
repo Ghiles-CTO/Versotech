@@ -9,10 +9,22 @@ const createVehicleSchema = z.object({
   type: z.enum(['fund', 'spv', 'securitization', 'note', 'other']),
   domicile: z.string().min(1, 'Domicile is required'),
   currency: z.string().default('USD'),
+  entity_code: z.string().optional().nullable(),
+  platform: z.string().optional().nullable(),
+  investment_name: z.string().optional().nullable(),
+  former_entity: z.string().optional().nullable(),
+  status: z.enum(['LIVE', 'CLOSED', 'TBD']).optional().nullable(),
   formation_date: z.string().optional().nullable(),
   legal_jurisdiction: z.string().optional().nullable(),
   registration_number: z.string().optional().nullable(),
-  notes: z.string().optional().nullable()
+  reporting_type: z
+    .enum(['Not Required', 'Company Only', 'Online only', 'Company + Online'])
+    .optional()
+    .nullable(),
+  requires_reporting: z.boolean().optional().nullable(),
+  notes: z.string().optional().nullable(),
+  logo_url: z.string().url('Logo must be a valid URL').optional().nullable(),
+  website_url: z.string().url('Website must be a valid URL').optional().nullable()
 })
 
 export async function GET(request: NextRequest) {
@@ -275,17 +287,50 @@ export async function POST(request: NextRequest) {
 
     // Parse and validate request body
     const body = await request.json()
-    const validatedData = createVehicleSchema.parse(body)
+    const sanitizedBody = {
+      ...body,
+      entity_code: typeof body.entity_code === 'string' ? body.entity_code.trim() || null : body.entity_code ?? null,
+      platform: typeof body.platform === 'string' ? body.platform.trim() || null : body.platform ?? null,
+      investment_name:
+        typeof body.investment_name === 'string' ? body.investment_name.trim() || null : body.investment_name ?? null,
+      former_entity:
+        typeof body.former_entity === 'string' ? body.former_entity.trim() || null : body.former_entity ?? null,
+      status: typeof body.status === 'string' ? body.status.trim() || null : body.status ?? null,
+      legal_jurisdiction:
+        typeof body.legal_jurisdiction === 'string' ? body.legal_jurisdiction.trim() || null : body.legal_jurisdiction ?? null,
+      registration_number:
+        typeof body.registration_number === 'string' ? body.registration_number.trim() || null : body.registration_number ?? null,
+      reporting_type:
+        typeof body.reporting_type === 'string' ? body.reporting_type.trim() || null : body.reporting_type ?? null,
+      notes: typeof body.notes === 'string' ? body.notes.trim() || null : body.notes ?? null,
+      logo_url: typeof body.logo_url === 'string' ? body.logo_url.trim() || null : body.logo_url ?? null,
+      website_url: typeof body.website_url === 'string' ? body.website_url.trim() || null : body.website_url ?? null,
+      requires_reporting:
+        typeof body.requires_reporting === 'boolean'
+          ? body.requires_reporting
+          : Boolean(body.requires_reporting)
+    }
+    const validatedData = createVehicleSchema.parse(sanitizedBody)
 
     const payload = {
       name: validatedData.name,
       type: validatedData.type,
       domicile: validatedData.domicile,
-      currency: validatedData.currency,
+      currency: validatedData.currency?.trim().toUpperCase() || 'USD',
+      entity_code: validatedData.entity_code || null,
+      platform: validatedData.platform || null,
+      investment_name: validatedData.investment_name || null,
+      former_entity: validatedData.former_entity || null,
+      status: validatedData.status || 'LIVE',
       formation_date: validatedData.formation_date || null,
-      legal_jurisdiction: validatedData.legal_jurisdiction?.trim() || null,
-      registration_number: validatedData.registration_number?.trim() || null,
-      notes: validatedData.notes?.trim() || null
+      legal_jurisdiction: validatedData.legal_jurisdiction || null,
+      registration_number: validatedData.registration_number || null,
+      reporting_type: validatedData.reporting_type || 'Not Required',
+      requires_reporting:
+        typeof validatedData.requires_reporting === 'boolean' ? validatedData.requires_reporting : false,
+      notes: validatedData.notes || null,
+      logo_url: validatedData.logo_url?.trim() || null,
+      website_url: validatedData.website_url?.trim() || null
     }
 
     // Check if vehicle with same name already exists

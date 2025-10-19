@@ -307,7 +307,9 @@ const updateVehicleSchema = z.object({
   registration_number: z.string().optional().nullable(),
   reporting_type: z.enum(['Not Required', 'Company Only', 'Online only', 'Company + Online']).optional().nullable(),
   requires_reporting: z.boolean().optional().nullable(),
-  notes: z.string().optional().nullable()
+  notes: z.string().optional().nullable(),
+  logo_url: z.string().url('Logo must be a valid URL').optional().nullable(),
+  website_url: z.string().url('Website must be a valid URL').optional().nullable()
 })
 
 export async function PATCH(
@@ -331,7 +333,12 @@ export async function PATCH(
     }
 
     const body = await request.json()
-    const validatedData = updateVehicleSchema.parse(body)
+    const sanitizedBody = {
+      ...body,
+      logo_url: typeof body.logo_url === 'string' ? body.logo_url.trim() || null : body.logo_url ?? null,
+      website_url: typeof body.website_url === 'string' ? body.website_url.trim() || null : body.website_url ?? null
+    }
+    const validatedData = updateVehicleSchema.parse(sanitizedBody)
 
     if (Object.keys(validatedData).length === 0) {
       return NextResponse.json({ error: 'No changes provided' }, { status: 400 })
@@ -344,7 +351,15 @@ export async function PATCH(
         : undefined,
       legal_jurisdiction: validatedData.legal_jurisdiction?.trim(),
       registration_number: validatedData.registration_number?.trim(),
-      notes: validatedData.notes?.trim()
+      notes: validatedData.notes?.trim(),
+      logo_url:
+        validatedData.logo_url === undefined
+          ? undefined
+          : validatedData.logo_url?.trim() || null,
+      website_url:
+        validatedData.website_url === undefined
+          ? undefined
+          : validatedData.website_url?.trim() || null
     }
 
     const { data: vehicle, error } = await supabase

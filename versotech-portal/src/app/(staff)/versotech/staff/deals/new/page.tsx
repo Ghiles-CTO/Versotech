@@ -14,7 +14,7 @@ export default async function CreateDealPage() {
   // Fetch entities for dropdown
   const { data: entities } = await supabase
     .from('vehicles')
-    .select('id, name, type, currency, legal_jurisdiction, formation_date')
+    .select('id, name, type, currency, legal_jurisdiction, formation_date, logo_url, website_url')
     .order('name')
 
   return (

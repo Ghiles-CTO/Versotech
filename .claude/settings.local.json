@@ -44,7 +44,8 @@
       "Bash(chmod:*)",
       "Bash(cat:*)",
       "Bash(npx next:*)",
-      "Read(//c/Users/gmmou/Downloads/**)"
+      "Read(//c/Users/gmmou/Downloads/**)",
+      "Bash(timeout 15 npm run dev:*)"
     ],
     "deny": []
   },

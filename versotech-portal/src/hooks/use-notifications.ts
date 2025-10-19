@@ -13,196 +13,139 @@ interface NotificationCounts {
   totalUnread: number
 }
 
+const INITIAL_COUNTS: NotificationCounts = {
+  tasks: 0,
+  messages: 0,
+  deals: 0,
+  requests: 0,
+  approvals: 0,
+  notifications: 0,
+  totalUnread: 0
+}
+
+const STAFF_REQUEST_STATUSES = ['open', 'assigned', 'in_progress', 'awaiting_info'] as const
+const STAFF_APPROVAL_STATUSES = ['pending'] as const
+const STAFF_STATUS_FILTER = STAFF_REQUEST_STATUSES.join(',')
+const STAFF_APPROVAL_FILTER = STAFF_APPROVAL_STATUSES.join(',')
+
 export function useNotifications(userRole: string, userId?: string) {
-  const [counts, setCounts] = useState<NotificationCounts>({
-    tasks: 0,
-    messages: 0,
-    deals: 0,
-    requests: 0,
-    approvals: 0,
-    notifications: 0,
-    totalUnread: 0
-  })
+  const [counts, setCounts] = useState<NotificationCounts>(INITIAL_COUNTS)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (!userId) return
+    if (!userId) {
+      return
+    }
 
-    const fetchCounts = async () => {
-      const supabase = createClient()
+    let isMounted = true
+    let supabaseClient: ReturnType<typeof createClient> | null = null
+
+    const fetchCounts = async (silent = false) => {
+      if (!silent) {
+        setLoading(true)
+      }
 
       try {
-        // Fetch notification counts based on user role
-        if (userRole === 'investor') {
-          // Investor-specific counts
-          const [tasksRes, messagesRes, dealsRes, notificationsRes] = await Promise.allSettled([
-            // Open tasks for investor
-            supabase
-              .from('tasks')
-              .select('id', { count: 'exact' })
-              .eq('owner_user_id', userId)
-              .in('status', ['pending', 'in_progress']),
+        const response = await fetch('/api/notifications/counts', {
+          cache: 'no-store'
+        })
 
-            // Unread messages in conversations they participate in
-            supabase
-              .from('messages')
-              .select('id', { count: 'exact' })
-              .not('sender_id', 'eq', userId)
-              .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()), // Last 7 days
-
-            // Active deals they can participate in
-            supabase
-              .from('deals')
-              .select('id', { count: 'exact' })
-              .eq('status', 'open'),
-
-            // Unread notifications
-            supabase
-              .from('investor_notifications')
-              .select('id', { count: 'exact' })
-              .eq('user_id', userId)
-              .is('read_at', null)
-          ])
-
-          const taskCount = tasksRes.status === 'fulfilled' ? (tasksRes.value.count || 0) : 0
-          const messageCount = messagesRes.status === 'fulfilled' ? (messagesRes.value.count || 0) : 0
-          const dealCount = dealsRes.status === 'fulfilled' ? (dealsRes.value.count || 0) : 0
-          const notificationCount = notificationsRes.status === 'fulfilled' ? (notificationsRes.value.count || 0) : 0
-
-          setCounts({
-            tasks: taskCount,
-            messages: messageCount,
-            deals: dealCount,
-            requests: 0,
-            approvals: 0,
-            notifications: notificationCount,
-            totalUnread: taskCount + messageCount + notificationCount
-          })
-
-        } else if (userRole.startsWith('staff_')) {
-          // Staff-specific counts
-          const [tasksRes, messagesRes, requestsRes, approvalsRes, notificationsRes] = await Promise.allSettled([
-            // Open tasks assigned to staff
-            supabase
-              .from('tasks')
-              .select('id', { count: 'exact' })
-              .eq('owner_user_id', userId)
-              .in('status', ['pending', 'in_progress']),
-
-            // Recent messages in staff conversations
-            supabase
-              .from('messages')
-              .select('id', { count: 'exact' })
-              .not('sender_id', 'eq', userId)
-              .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()), // Last 24 hours
-
-            // Open request tickets
-            supabase
-              .from('request_tickets')
-              .select('id', { count: 'exact' })
-              .in('status', ['open', 'assigned']),
-
-            // Pending approvals
-            supabase
-              .from('approvals')
-              .select('id', { count: 'exact' })
-              .eq('status', 'pending'),
-
-            // Unread notifications (staff)
-            supabase
-              .from('investor_notifications')
-              .select('id', { count: 'exact' })
-              .eq('user_id', userId)
-              .is('read_at', null)
-          ])
-
-          const taskCount = tasksRes.status === 'fulfilled' ? (tasksRes.value.count || 0) : 0
-          const messageCount = messagesRes.status === 'fulfilled' ? (messagesRes.value.count || 0) : 0
-          const requestCount = requestsRes.status === 'fulfilled' ? (requestsRes.value.count || 0) : 0
-          const approvalCount = approvalsRes.status === 'fulfilled' ? (approvalsRes.value.count || 0) : 0
-           const notificationCount = notificationsRes.status === 'fulfilled' ? (notificationsRes.value.count || 0) : 0
-
-          setCounts({
-            tasks: taskCount,
-            messages: messageCount,
-            deals: 0,
-            requests: requestCount,
-            approvals: approvalCount,
-            notifications: notificationCount,
-            totalUnread: taskCount + messageCount + requestCount + approvalCount + notificationCount
-          })
+        if (!response.ok) {
+          throw new Error(`Failed to load notification counts (${response.status})`)
         }
 
+        const payload = await response.json()
+        if (isMounted && payload?.counts) {
+          setCounts(payload.counts as NotificationCounts)
+        }
       } catch (error) {
-        console.error('Error fetching notification counts:', error)
+        console.error('Failed to fetch notification counts:', error)
       } finally {
-        setLoading(false)
+        if (isMounted && !silent) {
+          setLoading(false)
+        }
       }
     }
 
-    fetchCounts()
+    void fetchCounts()
 
-    // Set up real-time subscriptions for key tables
-    const supabase = createClient()
-
-    const tasksChannel = supabase
-      .channel('tasks_changes')
-      .on('postgres_changes',
-        { event: '*', schema: 'public', table: 'tasks', filter: `owner_user_id=eq.${userId}` },
-        () => fetchCounts()
-      )
-      .subscribe()
-
-    const messagesChannel = supabase
-      .channel('messages_changes')
-      .on('postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'messages' },
-        () => fetchCounts()
-      )
-      .subscribe()
-
-    const requestsChannel = supabase
-      .channel('requests_changes')
-      .on('postgres_changes',
-        { event: '*', schema: 'public', table: 'request_tickets' },
-        () => fetchCounts()
-      )
-      .subscribe()
-
-    const approvalsChannel = supabase
-      .channel('approvals_changes')
-      .on('postgres_changes',
-        { event: '*', schema: 'public', table: 'approvals' },
-        () => fetchCounts()
-      )
-      .subscribe()
-
-    const dealsChannel = supabase
-      .channel('deals_changes')
-      .on('postgres_changes',
-        { event: '*', schema: 'public', table: 'deals' },
-        () => fetchCounts()
-      )
-      .subscribe()
-
-    const investorNotificationsChannel = supabase
-      .channel('investor_notifications_changes')
-      .on('postgres_changes',
-        { event: '*', schema: 'public', table: 'investor_notifications', filter: `user_id=eq.${userId}` },
-        () => fetchCounts()
-      )
-      .subscribe()
-
-    // Cleanup subscriptions
-    return () => {
-      supabase.removeChannel(tasksChannel)
-      supabase.removeChannel(messagesChannel)
-      supabase.removeChannel(requestsChannel)
-      supabase.removeChannel(approvalsChannel)
-      supabase.removeChannel(dealsChannel)
-      supabase.removeChannel(investorNotificationsChannel)
+    try {
+      supabaseClient = createClient()
+    } catch (error) {
+      console.error('Failed to initialize Supabase client for notifications:', error)
+      setLoading(false)
+      return () => {
+        isMounted = false
+      }
     }
 
+    const subscriptions = []
+
+    subscriptions.push(
+      supabaseClient
+        .channel(`notifications_tasks_${userId}`)
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'tasks', filter: `owner_user_id=eq.${userId}` },
+          () => {
+            void fetchCounts(true)
+          }
+        )
+        .subscribe()
+    )
+
+    subscriptions.push(
+      supabaseClient
+        .channel(`notifications_investor_${userId}`)
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'investor_notifications', filter: `user_id=eq.${userId}` },
+          () => {
+            void fetchCounts(true)
+          }
+        )
+        .subscribe()
+    )
+
+    if (userRole.startsWith('staff_')) {
+      subscriptions.push(
+        supabaseClient
+          .channel('notifications_requests')
+          .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'request_tickets', filter: `status=in.(${STAFF_STATUS_FILTER})` },
+            () => {
+              void fetchCounts(true)
+            }
+          )
+          .subscribe()
+      )
+
+      subscriptions.push(
+        supabaseClient
+          .channel('notifications_approvals')
+          .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'approvals', filter: `status=in.(${STAFF_APPROVAL_FILTER})` },
+            () => {
+              void fetchCounts(true)
+            }
+          )
+          .subscribe()
+      )
+    }
+
+    const intervalId = window.setInterval(() => {
+      void fetchCounts(true)
+    }, 60_000)
+
+    return () => {
+      isMounted = false
+      subscriptions.forEach((channel) => {
+        supabaseClient?.removeChannel(channel)
+      })
+      window.clearInterval(intervalId)
+    }
   }, [userId, userRole])
 
   return { counts, loading }

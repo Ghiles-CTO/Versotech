@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -24,6 +24,8 @@ interface CreateDealFormProps {
     name: string
     type: string
     currency: string
+    logo_url?: string | null
+    website_url?: string | null
   }>
 }
 
@@ -61,9 +63,45 @@ export function CreateDealForm({ entities }: CreateDealFormProps) {
   const [logoUploading, setLogoUploading] = useState(false)
   const [logoError, setLogoError] = useState<string | null>(null)
   const [companyLogoUrl, setCompanyLogoUrl] = useState<string>('')
+  const [logoSource, setLogoSource] = useState<'entity' | 'manual' | 'none'>('none')
+
+  const selectedEntity = useMemo(
+    () => entities.find((entity) => entity.id === formData.vehicle_id),
+    [entities, formData.vehicle_id]
+  )
+  const entityLogo = selectedEntity?.logo_url ?? ''
+
+  useEffect(() => {
+    if (!selectedEntity) {
+      if (logoSource === 'entity') {
+        setLogoSource(companyLogoUrl ? 'manual' : 'none')
+      }
+      return
+    }
+
+    if (entityLogo) {
+      if (logoSource !== 'manual') {
+        if (companyLogoUrl !== entityLogo) {
+          setCompanyLogoUrl(entityLogo)
+        }
+        if (logoSource !== 'entity') {
+          setLogoSource('entity')
+        }
+        setLogoError(null)
+      }
+    } else if (logoSource === 'entity') {
+      setCompanyLogoUrl('')
+      setLogoSource('none')
+    }
+  }, [selectedEntity, entityLogo, logoSource, companyLogoUrl])
 
   const updateField = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }))
+  }
+
+  const handleVehicleSelect = (value: string) => {
+    const normalized = value === 'none' ? '' : value
+    updateField('vehicle_id', normalized)
   }
 
   const handleSubmit = async () => {
@@ -228,7 +266,7 @@ export function CreateDealForm({ entities }: CreateDealFormProps) {
                       Entity (Optional)
                     </Label>
                   </div>
-                  <Select value={formData.vehicle_id || 'none'} onValueChange={(v) => updateField('vehicle_id', v === 'none' ? '' : v)}>
+                  <Select value={formData.vehicle_id || 'none'} onValueChange={handleVehicleSelect}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select entity or skip" />
                     </SelectTrigger>
@@ -282,68 +320,95 @@ export function CreateDealForm({ entities }: CreateDealFormProps) {
 
               {/* Company Logo Upload */}
               <div className="space-y-2">
-                <Label className="text-foreground">Company Logo *</Label>
-                <div className="flex items-center gap-4">
-                  {companyLogoUrl ? (
-                    <Image
-                      src={companyLogoUrl}
-                      alt="Company logo preview"
-                      width={56}
-                      height={56}
-                      className="rounded-lg object-contain bg-white border border-gray-200 p-2"
-                    />
-                  ) : (
-                    <div className="h-14 w-14 rounded-lg bg-white/10 border border-white/20 flex items-center justify-center text-muted-foreground">
-                      56×56
-                    </div>
-                  )}
-                  <div className="flex items-center gap-2">
-                    <label className="inline-flex items-center gap-2 px-3 py-2 border rounded-md cursor-pointer text-sm">
-                      <Upload className="h-4 w-4" />
-                      <span>Upload Logo</span>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={async (e) => {
-                          const file = e.target.files?.[0]
-                          if (!file) return
-                          setLogoError(null)
-                          setLogoUploading(true)
-                          try {
-                            const formData = new FormData()
-                            formData.append('file', file)
-                            formData.append('deal_id', 'new')
-                            const res = await fetch('/api/deals/logo-upload', {
-                              method: 'POST',
-                              body: formData
-                            })
-                            const payload = await res.json().catch(() => ({}))
-                            if (!res.ok || !payload?.url) {
-                              throw new Error(payload?.error || 'Failed to upload logo')
-                            }
-                            setCompanyLogoUrl(payload.url)
-                          } catch (err) {
-                            setLogoError(err instanceof Error ? err.message : 'Failed to upload logo')
-                          } finally {
-                            setLogoUploading(false)
-                            // reset input
-                            e.target.value = ''
+                <Label className="text-foreground">Company Logo</Label>
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center gap-4">
+                    {companyLogoUrl ? (
+                      <Image
+                        src={companyLogoUrl}
+                        alt={`${selectedEntity?.name ?? formData.name || 'Deal'} logo`}
+                        width={56}
+                        height={56}
+                        className="rounded-lg object-contain bg-white border border-gray-200 p-2"
+                      />
+                    ) : (
+                      <div className="h-14 w-14 rounded-lg bg-white/10 border border-white/20 flex items-center justify-center text-muted-foreground">
+                        56×56
+                      </div>
+                    )}
+                    <div className="space-y-2">
+                      <label
+                        className="inline-flex items-center gap-2 px-3 py-2 border rounded-md cursor-pointer text-sm"
+                        onClick={() => {
+                          if (logoSource === 'entity') {
+                            setLogoSource('manual')
+                            setCompanyLogoUrl('')
                           }
                         }}
-                      />
-                    </label>
-                    {logoUploading && (
-                      <span className="text-xs text-muted-foreground">Uploading…</span>
-                    )}
+                      >
+                        <Upload className="h-4 w-4" />
+                        <span>{logoSource === 'entity' ? 'Replace Logo' : 'Upload Logo'}</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0]
+                            if (!file) return
+                            setLogoError(null)
+                            setLogoUploading(true)
+                            try {
+                              const formData = new FormData()
+                              formData.append('file', file)
+                              formData.append('deal_id', 'new')
+                              const res = await fetch('/api/deals/logo-upload', {
+                                method: 'POST',
+                                body: formData
+                              })
+                              const payload = await res.json().catch(() => ({}))
+                              if (!res.ok || !payload?.url) {
+                                throw new Error(payload?.error || 'Failed to upload logo')
+                              }
+                              setCompanyLogoUrl(payload.url)
+                              setLogoSource('manual')
+                            } catch (err) {
+                              setLogoError(err instanceof Error ? err.message : 'Failed to upload logo')
+                            } finally {
+                              setLogoUploading(false)
+                              e.target.value = ''
+                            }
+                          }}
+                        />
+                      </label>
+                      {selectedEntity?.logo_url && logoSource === 'manual' && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="px-0 text-xs text-emerald-300 hover:text-emerald-200"
+                          onClick={() => {
+                            setCompanyLogoUrl(selectedEntity.logo_url ?? '')
+                            setLogoSource('entity')
+                            setLogoError(null)
+                          }}
+                        >
+                          Use {selectedEntity.name} logo
+                        </Button>
+                      )}
+                      {logoUploading && (
+                        <span className="text-xs text-muted-foreground">Uploading…</span>
+                      )}
+                    </div>
                   </div>
+                  {logoError && (
+                    <p className="text-xs text-rose-500">{logoError}</p>
+                  )}
+                  <p className="text-xs text-muted-foreground">
+                    {logoSource === 'entity' && selectedEntity?.name
+                      ? `Prefilled from ${selectedEntity.name}. Replace if you need a different logo.`
+                      : 'Optional branding shown to investors.'}
+                  </p>
                 </div>
-                {logoError && (
-                  <p className="text-xs text-rose-500">{logoError}</p>
-                )}
-                {!companyLogoUrl && (
-                  <p className="text-xs text-amber-600">Logo required before submitting the deal.</p>
-                )}
               </div>
             </div>
           )}

@@ -120,6 +120,7 @@ interface DealInterest {
   approved_at: string | null
   indicative_amount: number | null
   indicative_currency: string | null
+  is_post_close: boolean
 }
 
 interface DataRoomAccess {
@@ -419,7 +420,8 @@ export default async function InvestorDealsPage() {
           submitted_at,
           approved_at,
           indicative_amount,
-          indicative_currency
+          indicative_currency,
+          is_post_close
         `)
         .in('deal_id', dealIds)
         .in('investor_id', investorIds)
@@ -670,9 +672,15 @@ export default async function InvestorDealsPage() {
                         <p className="text-xs uppercase tracking-wide text-gray-500">Your pipeline</p>
                         <div className="flex flex-wrap items-center gap-2">
                           {interest ? (
-                            <Badge className={cn('w-fit', interestStatusMeta[interest.status].tone)}>
-                              {interestStatusMeta[interest.status].label}
-                            </Badge>
+                            interest.is_post_close ? (
+                              <Badge className="w-fit bg-purple-100 text-purple-700">
+                                Future interest signal
+                              </Badge>
+                            ) : (
+                              <Badge className={cn('w-fit', interestStatusMeta[interest.status].tone)}>
+                                {interestStatusMeta[interest.status].label}
+                              </Badge>
+                            )
                           ) : (
                             <span className="text-sm text-gray-600">No signal yet</span>
                           )}

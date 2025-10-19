@@ -2,7 +2,7 @@
 
 import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { supabase } from '@/lib/supabase/client'
+import { createClient } from '@/lib/supabase/client'
 import { Loader2, CheckCircle, XCircle } from 'lucide-react'
 
 function AuthCallbackContent() {
@@ -40,6 +40,7 @@ function AuthCallbackContent() {
       }
 
       try {
+        const supabase = createClient()
         console.log('[auth-callback] Exchanging code for session for portal:', portalContext)
         
         // Exchange the code for a session (this handles PKCE automatically)

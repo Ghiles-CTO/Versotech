@@ -330,3 +330,40 @@ export function throttle<T extends (...args: any[]) => any>(
 }
 
 export default performanceMonitor
+
+export const monitor = performanceMonitor
+
+export function measureTime<T>(label: string, fn: () => T): T {
+  performanceMonitor.startTiming(label)
+  try {
+    const result = fn()
+    performanceMonitor.endTiming(label)
+    return result
+  } catch (error) {
+    performanceMonitor.endTiming(label)
+    throw error
+  }
+}
+
+export async function measureTimeAsync<T>(label: string, fn: () => Promise<T>): Promise<T> {
+  performanceMonitor.startTiming(label)
+  try {
+    const result = await fn()
+    performanceMonitor.endTiming(label)
+    return result
+  } catch (error) {
+    performanceMonitor.endTiming(label)
+    throw error
+  }
+}
+
+export function createPerformanceLogger(componentName: string) {
+  return {
+    logOperation: (operationName: string, fn: () => void) => {
+      measureTime(`component:${componentName}:${operationName}`, fn)
+    },
+    logAsyncOperation: (operationName: string, fn: () => Promise<unknown>) => {
+      return measureTimeAsync(`component:${componentName}:${operationName}`, fn)
+    }
+  }
+}

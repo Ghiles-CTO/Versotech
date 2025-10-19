@@ -126,6 +126,8 @@ interface Entity {
   notes: string | null
   created_at: string
   updated_at: string | null
+  logo_url?: string | null
+  website_url?: string | null
 }
 
 interface EntityDetailEnhancedProps {
@@ -176,6 +178,17 @@ const getSeverityColor = (severity: string) => {
       return 'bg-emerald-500/20 border-emerald-400/40 text-emerald-100'
     default:
       return 'bg-white/10 border-white/10 text-foreground'
+  }
+}
+
+const formatWebsite = (website?: string | null) => {
+  if (!website) return null
+
+  try {
+    const url = new URL(website)
+    return url.hostname.replace(/^www\./, '')
+  } catch {
+    return website.replace(/^https?:\/\//, '')
   }
 }
 
@@ -268,11 +281,12 @@ export function EntityDetailEnhanced({
       }
     ]
   }, [entity, stakeholders])
+  const logoUrl = entity.logo_url || ''
 
   return (
     <div className="p-6 space-y-6">
-      <div className="flex items-start justify-between">
-        <div className="space-y-4">
+      <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
+        <div className="space-y-4 max-w-3xl">
           <Link href="/versotech/staff/entities" className="inline-flex">
             <Button
               variant="ghost"
@@ -328,11 +342,40 @@ export function EntityDetailEnhanced({
             </p>
           </div>
         </div>
-        <div className="flex flex-col items-end gap-2">
+        <div className="flex flex-col items-center md:items-end gap-4 shrink-0">
+          <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-5 w-[220px] flex flex-col items-center gap-3 text-sm">
+            <div className="h-24 w-24 rounded-xl border border-white/10 bg-black/60 flex items-center justify-center overflow-hidden">
+              {logoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={logoUrl}
+                  alt={`${entity.name} logo`}
+                  className="h-full w-full object-contain p-2"
+                />
+              ) : (
+                <Building2 className="h-10 w-10 text-muted-foreground" />
+              )}
+            </div>
+            <div className="text-center space-y-1">
+              <p className="text-xs text-muted-foreground uppercase tracking-wide">Branding</p>
+              <p className="text-sm font-medium text-foreground">
+                {logoUrl ? 'Logo uploaded' : 'No logo set'}
+              </p>
+              {formatWebsite(entity.website_url) && (
+                <a
+                  href={entity.website_url || '#'}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-emerald-300 hover:text-emerald-200 transition-colors"
+                >
+                  {formatWebsite(entity.website_url)}
+                </a>
+              )}
+            </div>
+          </div>
           <Button
-            variant="outline"
             onClick={() => setEditEntityModalOpen(true)}
-            className="gap-2 border-white/20 text-foreground hover:bg-white/10 hover:text-emerald-200"
+            className="gap-2 rounded-full bg-emerald-500 text-emerald-950 px-5 shadow-[0_12px_30px_rgba(16,185,129,0.35)] transition-colors hover:bg-emerald-400"
           >
             <Edit className="h-4 w-4" />
             Edit Metadata

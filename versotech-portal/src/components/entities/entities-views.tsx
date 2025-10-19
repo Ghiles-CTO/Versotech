@@ -50,6 +50,8 @@ export interface Entity {
   requires_reporting?: boolean
   notes?: string | null
   created_at: string
+  logo_url?: string | null
+  website_url?: string | null
 }
 
 interface EntitiesViewProps {

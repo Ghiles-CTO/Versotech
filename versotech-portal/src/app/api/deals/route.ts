@@ -10,7 +10,7 @@ const createDealSchema = z.object({
   vehicle_id: z.string().uuid().optional().nullable(),
   deal_type: z.enum(['equity_secondary', 'equity_primary', 'credit_trade_finance', 'other']).default('equity_secondary'),
   currency: z.string().default('USD'),
-  company_logo_url: z.string().url('Company logo is required'),
+  company_logo_url: z.string().url('Invalid company logo URL').optional().nullable(),
   offer_unit_price: z.number().optional().nullable(),
   terms_schema: z.any().optional(),
   open_at: z.string().optional().nullable(),
@@ -163,9 +163,16 @@ export async function POST(request: Request) {
 
     // Parse and validate request body
     const body = await request.json()
+    const sanitizedBody = {
+      ...body,
+      company_logo_url:
+        typeof body.company_logo_url === 'string'
+          ? body.company_logo_url.trim() || null
+          : body.company_logo_url ?? null
+    }
     console.log('[API /deals POST] Request body:', body)
     
-    const validatedData = createDealSchema.parse(body)
+    const validatedData = createDealSchema.parse(sanitizedBody)
     console.log('[API /deals POST] Validated data:', validatedData)
 
     // Get a valid UUID for created_by
@@ -216,8 +223,27 @@ export async function POST(request: Request) {
     }
     
     // Create the deal
+    let companyLogoUrl = validatedData.company_logo_url || null
+
+    if (!companyLogoUrl && validatedData.vehicle_id) {
+      const { data: vehicleLogo, error: vehicleError } = await supabase
+        .from('vehicles')
+        .select('logo_url')
+        .eq('id', validatedData.vehicle_id)
+        .maybeSingle()
+
+      if (vehicleError) {
+        console.error('[API /deals POST] Failed to fetch vehicle logo:', vehicleError)
+      }
+
+      if (vehicleLogo?.logo_url) {
+        companyLogoUrl = vehicleLogo.logo_url
+      }
+    }
+
     const dealData = {
       ...validatedData,
+      company_logo_url: companyLogoUrl,
       created_by: createdBy,
       status: 'draft' // Always start as draft
     }

@@ -9,7 +9,10 @@ export async function POST(request: NextRequest) {
   const clientSupabase = await createClient()
   const serviceSupabase = createServiceClient()
 
-  const { data: { user }, error: authError } = await clientSupabase.auth.getUser()
+  const {
+    data: { user },
+    error: authError
+  } = await clientSupabase.auth.getUser()
 
   if (authError || !user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -21,26 +24,26 @@ export async function POST(request: NextRequest) {
     .eq('id', user.id)
     .single()
 
-  if (!profile || !profile.role?.startsWith('staff_')) {
+  if (!profile?.role?.startsWith('staff_')) {
     return NextResponse.json({ error: 'Staff access required' }, { status: 403 })
   }
 
   const formData = await request.formData()
   const file = formData.get('file') as File | null
-  const dealId = (formData.get('deal_id') as string | null) ?? 'new'
+  const vehicleId = (formData.get('vehicle_id') as string | null) ?? 'new'
 
   if (!file) {
     return NextResponse.json({ error: 'Logo file is required' }, { status: 400 })
   }
 
   const bucket =
-    process.env.NEXT_PUBLIC_DEAL_LOGO_BUCKET ||
+    process.env.NEXT_PUBLIC_VEHICLE_LOGO_BUCKET ||
     process.env.NEXT_PUBLIC_STORAGE_BUCKET_NAME ||
     process.env.DOCS_BUCKET ||
     'documents'
   const timestamp = Date.now()
   const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_')
-  const storagePath = `deal-logos/${dealId}/${timestamp}-${sanitizedName}`
+  const storagePath = `vehicle-logos/${vehicleId}/${timestamp}-${sanitizedName}`
 
   try {
     const arrayBuffer = await file.arrayBuffer()
@@ -54,7 +57,7 @@ export async function POST(request: NextRequest) {
       })
 
     if (uploadError) {
-      console.error('[deals/logo-upload] Failed to upload logo', uploadError)
+      console.error('[vehicles/logo-upload] Failed to upload logo', uploadError)
       return NextResponse.json(
         { error: `Failed to upload logo: ${uploadError.message || 'unknown storage error'}` },
         { status: 500 }
@@ -64,24 +67,19 @@ export async function POST(request: NextRequest) {
     let publicUrl: string | null = null
 
     try {
-      const { data: publicData } = serviceSupabase
-        .storage
-        .from(bucket)
-        .getPublicUrl(storagePath)
-
+      const { data: publicData } = serviceSupabase.storage.from(bucket).getPublicUrl(storagePath)
       publicUrl = publicData?.publicUrl ?? null
     } catch (publicError) {
-      console.warn('[deals/logo-upload] Failed to generate public URL for logo', publicError)
+      console.warn('[vehicles/logo-upload] Failed to get public URL', publicError)
     }
 
     if (!publicUrl) {
-      const { data: signedData, error: signedError } = await serviceSupabase
-        .storage
+      const { data: signedData, error: signedError } = await serviceSupabase.storage
         .from(bucket)
         .createSignedUrl(storagePath, 60 * 60 * 24 * 365) // 1 year
 
       if (signedError || !signedData?.signedUrl) {
-        console.error('[deals/logo-upload] Failed to create signed URL for logo', signedError)
+        console.error('[vehicles/logo-upload] Failed to create signed URL', signedError)
         return NextResponse.json(
           { error: `Failed to generate logo URL: ${signedError?.message || 'unknown error'}` },
           { status: 500 }
@@ -97,7 +95,7 @@ export async function POST(request: NextRequest) {
       path: storagePath
     })
   } catch (error) {
-    console.error('[deals/logo-upload] Unexpected error uploading logo', error)
+    console.error('[vehicles/logo-upload] Unexpected error', error)
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Unexpected error while uploading logo' },
       { status: 500 }

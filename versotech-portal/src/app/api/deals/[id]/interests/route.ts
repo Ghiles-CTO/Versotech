@@ -161,78 +161,9 @@ export async function POST(
 
   const ownerUserId = ownerUsers?.[0]?.user_id ?? null
 
-  // For post-close deals, only record in signals table (no approval workflow)
-  if (is_post_close) {
-    const { error: signalError } = await serviceSupabase
-      .from('investor_interest_signals')
-      .insert({
-        deal_id: dealId,
-        investor_id: resolvedInvestorId,
-        signal_type: 'closed_deal_interest',
-        created_by: user.id,
-        metadata: {
-          indicative_amount,
-          indicative_currency,
-          notes
-        }
-      })
-
-    if (signalError) {
-      console.error('Failed to create interest signal:', signalError)
-      return NextResponse.json({ error: 'Failed to submit interest' }, { status: 500 })
-    }
-
-    await trackDealEvent({
-      supabase: serviceSupabase,
-      dealId,
-      investorId: resolvedInvestorId,
-      eventType: 'closed_deal_interest',
-      payload: {
-        indicative_amount,
-        indicative_currency,
-        notes
-      }
-    })
-
-    if (ownerUserId) {
-      try {
-        await serviceSupabase.from('investor_notifications').insert({
-          user_id: ownerUserId,
-          investor_id: resolvedInvestorId,
-          title: 'Request received',
-          message: `We will notify you when similar opportunities to ${dealRecord?.name ?? 'this deal'} become available.`,
-          link: '/versoholdings/deals',
-          metadata: {
-            type: 'closed_deal_interest',
-            deal_id: dealId
-          }
-        })
-      } catch (notificationError) {
-        console.error('Failed to create closed-deal notification', notificationError)
-      }
-    }
-
-    await auditLogger.log({
-      actor_user_id: user.id,
-      action: AuditActions.CREATE,
-      entity: AuditEntities.DEALS,
-      entity_id: dealId,
-      metadata: {
-        type: 'post_close_interest',
-        deal_id: dealId,
-        investor_id: resolvedInvestorId,
-        indicative_amount,
-        indicative_currency
-      }
-    })
-
-    return NextResponse.json({
-      success: true,
-      message: 'Interest recorded successfully'
-    })
-  }
-
-  // For open deals, create interest with approval workflow
+  // Store all interests in investor_deal_interest table
+  // For post-close deals: status='approved' (no approval workflow needed)
+  // For open deals: status='pending_review' (triggers approval workflow via trigger)
   const { data: interest, error: insertError } = await serviceSupabase
     .from('investor_deal_interest')
     .insert({
@@ -242,7 +173,9 @@ export async function POST(
       indicative_currency,
       notes,
       created_by: user.id,
-      status: 'pending_review'
+      status: is_post_close ? 'approved' : 'pending_review',
+      is_post_close: is_post_close ?? false,
+      approved_at: is_post_close ? new Date().toISOString() : null
     })
     .select(
       `
@@ -260,49 +193,56 @@ export async function POST(
     return NextResponse.json({ error: 'Failed to submit interest' }, { status: 500 })
   }
 
+  // Track analytics event
   await trackDealEvent({
     supabase: serviceSupabase,
     dealId,
     investorId: resolvedInvestorId,
-    eventType: 'im_interested',
+    eventType: is_post_close ? 'closed_deal_interest' : 'im_interested',
     payload: {
       interest_id: interest.id,
       indicative_amount,
       indicative_currency,
-      notes
+      notes,
+      is_post_close
     }
   })
 
+  // Send notification to investor
   if (ownerUserId) {
     try {
       await serviceSupabase.from('investor_notifications').insert({
         user_id: ownerUserId,
         investor_id: resolvedInvestorId,
-        title: 'Interest received',
-        message: `Thanks for sharing your interest in ${dealRecord?.name ?? 'this deal'}. The VERSO team will review and respond shortly.`,
+        title: is_post_close ? 'Request received' : 'Interest received',
+        message: is_post_close
+          ? `We will notify you when similar opportunities to ${dealRecord?.name ?? 'this deal'} become available.`
+          : `Thanks for sharing your interest in ${dealRecord?.name ?? 'this deal'}. The VERSO team will review and respond shortly.`,
         link: '/versoholdings/deals',
         metadata: {
-          type: 'deal_interest_submitted',
+          type: is_post_close ? 'closed_deal_interest' : 'deal_interest_submitted',
           deal_id: dealId,
           interest_id: interest.id
         }
       })
     } catch (notificationError) {
-      console.error('Failed to create interest submission notification', notificationError)
+      console.error('Failed to create interest notification', notificationError)
     }
   }
 
+  // Log audit event
   await auditLogger.log({
     actor_user_id: user.id,
     action: AuditActions.CREATE,
     entity: AuditEntities.DEALS,
     entity_id: interest.id,
     metadata: {
-      type: 'deal_interest',
+      type: is_post_close ? 'post_close_interest' : 'deal_interest',
       deal_id: dealId,
       investor_id: resolvedInvestorId,
       indicative_amount,
-      indicative_currency
+      indicative_currency,
+      is_post_close
     }
   })
 

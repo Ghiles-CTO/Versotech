@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { supabase } from '@/lib/supabase/client'
+import { createClient } from '@/lib/supabase/client'
 
 export function AuthHandler() {
   const router = useRouter()
@@ -27,6 +27,7 @@ export function AuthHandler() {
         console.log('[auth] Processing auth code:', code)
 
         try {
+          const supabase = createClient()
           const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
 
           if (exchangeError || !data?.user) {

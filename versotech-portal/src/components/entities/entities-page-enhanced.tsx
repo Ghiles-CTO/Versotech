@@ -18,6 +18,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { AlertCircle, FileText, LayoutGrid, List, Plus, Search, Table } from 'lucide-react'
 import { Entity, EntitiesTableView, EntitiesListView, EntitiesKanbanView } from './entities-views'
 import { EditEntityModal } from './edit-entity-modal'
+import { CreateEntityModal } from './create-entity-modal'
 
 interface EntitiesPageEnhancedProps {
   entities: Entity[]
@@ -45,6 +46,7 @@ export function EntitiesPageEnhanced({ entities: initialEntities }: EntitiesPage
   const [platformFilter, setPlatformFilter] = useState<'all' | string>('all')
   const [typeFilter, setTypeFilter] = useState<'all' | string>('all')
   const [editEntity, setEditEntity] = useState<Entity | null>(null)
+  const [createOpen, setCreateOpen] = useState(false)
   const [bannerMessage, setBannerMessage] = useState<string | null>(null)
   const [bannerTone, setBannerTone] = useState<'success' | 'error'>('success')
 
@@ -154,11 +156,9 @@ export function EntitiesPageEnhanced({ entities: initialEntities }: EntitiesPage
               Documents Workspace
             </Link>
           </Button>
-          <Button className="gap-2" asChild>
-            <Link href="/versotech/staff/entities">
-              <Plus className="h-4 w-4" />
-              Create Entity
-            </Link>
+          <Button className="gap-2" onClick={() => setCreateOpen(true)}>
+            <Plus className="h-4 w-4" />
+            Create Entity
           </Button>
         </div>
       </div>
@@ -340,6 +340,18 @@ export function EntitiesPageEnhanced({ entities: initialEntities }: EntitiesPage
           }}
         />
       )}
+
+      <CreateEntityModal
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+        onSuccess={(entity) => {
+          setEntities((prev) => [entity, ...prev])
+          setBannerTone('success')
+          setBannerMessage(`Entity "${entity.name}" created successfully.`)
+          setTimeout(() => setBannerMessage(null), 4000)
+          router.refresh()
+        }}
+      />
     </div>
   )
 }

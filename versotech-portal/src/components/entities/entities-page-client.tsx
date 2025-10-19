@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState, MouseEvent } from 'react'
+import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -14,36 +14,11 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/components/ui/select'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle
-} from '@/components/ui/dialog'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { AlertCircle, Building2, Eye, FileText, Pencil, Plus, Search } from 'lucide-react'
-
-interface Entity {
-  id: string
-  name: string
-  entity_code: string | null
-  platform: string | null
-  investment_name: string | null
-  former_entity: string | null
-  status: string | null
-  type: string
-  domicile: string | null
-  currency: string
-  formation_date?: string | null
-  legal_jurisdiction?: string | null
-  registration_number?: string | null
-  reporting_type?: string | null
-  requires_reporting?: boolean
-  notes?: string | null
-  created_at: string
-}
+import { CreateEntityModal } from './create-entity-modal'
+import { EditEntityModal } from './edit-entity-modal'
+import type { Entity } from './entities-views'
 
 interface EntitiesPageClientProps {
   entities: Entity[]
@@ -54,21 +29,11 @@ const entityTypeLabels: Record<string, string> = {
   spv: 'SPV',
   securitization: 'Securitization',
   note: 'Note',
+  venture_capital: 'Venture Capital',
+  private_equity: 'Private Equity',
+  real_estate: 'Real Estate',
   other: 'Other'
 }
-
-const emptyEntityForm = {
-  name: '',
-  type: 'fund',
-  domicile: '',
-  currency: 'USD',
-  legal_jurisdiction: '',
-  formation_date: '',
-  registration_number: '',
-  notes: ''
-}
-
-type EntityFormState = typeof emptyEntityForm
 
 export function EntitiesPageClient({ entities }: EntitiesPageClientProps) {
   const router = useRouter()
@@ -76,12 +41,8 @@ export function EntitiesPageClient({ entities }: EntitiesPageClientProps) {
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState<'all' | string>('all')
   const [currencyFilter, setCurrencyFilter] = useState<'all' | string>('all')
-  const [modalOpen, setModalOpen] = useState(false)
-  const [modalMode, setModalMode] = useState<'create' | 'edit'>('create')
-  const [activeEntity, setActiveEntity] = useState<Entity | null>(null)
-  const [formData, setFormData] = useState<EntityFormState>(emptyEntityForm)
-  const [formError, setFormError] = useState<string | null>(null)
-  const [formLoading, setFormLoading] = useState(false)
+  const [createOpen, setCreateOpen] = useState(false)
+  const [editEntity, setEditEntity] = useState<Entity | null>(null)
   const [bannerMessage, setBannerMessage] = useState<string | null>(null)
   const [bannerTone, setBannerTone] = useState<'success' | 'error'>('success')
 
@@ -126,96 +87,29 @@ export function EntitiesPageClient({ entities }: EntitiesPageClientProps) {
   }, [items, search, typeFilter, currencyFilter])
 
   const openCreateModal = () => {
-    setModalMode('create')
-    setActiveEntity(null)
-    setFormData(emptyEntityForm)
-    setFormError(null)
-    setModalOpen(true)
+    setCreateOpen(true)
   }
 
   const openEditModal = (entity: Entity) => {
-    setModalMode('edit')
-    setActiveEntity(entity)
-    setFormData({
-      name: entity.name,
-      type: entity.type,
-      domicile: entity.domicile || '',
-      currency: entity.currency,
-      legal_jurisdiction: entity.legal_jurisdiction || '',
-      formation_date: entity.formation_date ? entity.formation_date.slice(0, 10) : '',
-      registration_number: entity.registration_number || '',
-      notes: entity.notes || ''
-    })
-    setFormError(null)
-    setModalOpen(true)
+    setEditEntity(entity)
   }
 
-  const closeModal = () => {
-    setModalOpen(false)
-    setActiveEntity(null)
-    setFormError(null)
-    setFormData(emptyEntityForm)
+  const handleEntityCreated = (entity: Entity) => {
+    setItems((prev) => [entity, ...prev])
+    setCreateOpen(false)
+    setBannerTone('success')
+    setBannerMessage(`Entity "${entity.name}" created successfully.`)
+    setTimeout(() => setBannerMessage(null), 4000)
+    router.refresh()
   }
 
-  const handleSubmit = async () => {
-    setFormLoading(true)
-    setFormError(null)
-
-    const payload = {
-      name: formData.name.trim(),
-      type: formData.type,
-      domicile: formData.domicile.trim() || null,
-      currency: formData.currency.trim().toUpperCase() || 'USD',
-      legal_jurisdiction: formData.legal_jurisdiction.trim() || null,
-      formation_date: formData.formation_date || null,
-      registration_number: formData.registration_number.trim() || null,
-      notes: formData.notes.trim() || null
-    }
-
-    try {
-      const endpoint =
-        modalMode === 'create'
-          ? '/api/vehicles'
-          : `/api/vehicles/${activeEntity?.id}`
-      const method = modalMode === 'create' ? 'POST' : 'PATCH'
-
-      const response = await fetch(endpoint, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      })
-
-      if (!response.ok) {
-        const data = await response.json().catch(() => ({}))
-        throw new Error(data.error || data.details || 'Request failed')
-      }
-
-      const data = await response.json()
-      const updatedEntity: Entity = data.vehicle
-
-      if (modalMode === 'create') {
-        setItems((prev) => [updatedEntity, ...prev])
-        setBannerTone('success')
-        setBannerMessage(`Entity “${updatedEntity.name}” created successfully.`)
-      } else {
-        setItems((prev) =>
-          prev.map((entity) =>
-            entity.id === updatedEntity.id ? updatedEntity : entity
-          )
-        )
-        setBannerTone('success')
-        setBannerMessage(`Entity “${updatedEntity.name}” updated successfully.`)
-      }
-
-      closeModal()
-      router.refresh()
-    } catch (error: any) {
-      setFormError(error.message || 'Something went wrong')
-      setBannerTone('error')
-      setBannerMessage(null)
-    } finally {
-      setFormLoading(false)
-    }
+  const handleEntityUpdated = (entity: Entity) => {
+    setItems((prev) => prev.map((item) => (item.id === entity.id ? entity : item)))
+    setEditEntity(null)
+    setBannerTone('success')
+    setBannerMessage(`Entity "${entity.name}" updated successfully.`)
+    setTimeout(() => setBannerMessage(null), 4000)
+    router.refresh()
   }
 
   return (
@@ -454,98 +348,24 @@ export function EntitiesPageClient({ entities }: EntitiesPageClientProps) {
         </CardContent>
       </Card>
 
-      <Dialog open={modalOpen} onOpenChange={(open) => (open ? setModalOpen(true) : closeModal())}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>{modalMode === 'create' ? 'Create Entity' : 'Edit Entity'}</DialogTitle>
-            <DialogDescription>
-              {modalMode === 'create'
-                ? 'Define a new entity to associate with future deals and holdings.'
-                : 'Update the details for this entity. Changes apply immediately to linked records.'}
-            </DialogDescription>
-          </DialogHeader>
+      <CreateEntityModal
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+        onSuccess={handleEntityCreated}
+      />
 
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground" htmlFor="entity-name">
-                Entity Name
-              </label>
-              <Input
-                id="entity-name"
-                placeholder="e.g., Verso Fund II"
-                value={formData.name}
-                onChange={(event) =>
-                  setFormData((prev) => ({ ...prev, name: event.target.value }))
-                }
-              />
-            </div>
+      {editEntity && (
+        <EditEntityModal
+          entity={editEntity}
+          open={true}
+          onClose={() => setEditEntity(null)}
+          onSuccess={(updated) => {
+            handleEntityUpdated(updated as Entity)
+          }}
+        />
+      )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground">Type</label>
-                <Select
-                  value={formData.type}
-                  onValueChange={(value) => setFormData((prev) => ({ ...prev, type: value }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="fund">Fund</SelectItem>
-                    <SelectItem value="spv">SPV</SelectItem>
-                    <SelectItem value="securitization">Securitization</SelectItem>
-                    <SelectItem value="note">Note</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground">Currency</label>
-                <Select
-                  value={formData.currency}
-                  onValueChange={(value) => setFormData((prev) => ({ ...prev, currency: value }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="USD">USD</SelectItem>
-                    <SelectItem value="EUR">EUR</SelectItem>
-                    <SelectItem value="GBP">GBP</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">Domicile / Jurisdiction</label>
-              <Input
-                placeholder="e.g., Luxembourg, BVI, Delaware"
-                value={formData.domicile}
-                onChange={(event) =>
-                  setFormData((prev) => ({ ...prev, domicile: event.target.value }))
-                }
-              />
-            </div>
-
-            {formError && (
-              <div className="rounded-md border border-red-400/40 bg-red-500/10 p-3 text-sm text-red-100">
-                {formError}
-              </div>
-            )}
-          </div>
-
-          <DialogFooter className="pt-4">
-            <Button variant="outline" onClick={closeModal} disabled={formLoading}>
-              Cancel
-            </Button>
-            <Button onClick={handleSubmit} disabled={formLoading || !formData.name.trim()}>
-              {formLoading ? 'Saving...' : 'Save Changes'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   )
 }

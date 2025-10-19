@@ -30,7 +30,8 @@ const interestStatusStyles: Record<string, string> = {
   pending_review: 'bg-amber-500/20 text-amber-100',
   approved: 'bg-emerald-500/20 text-emerald-100',
   rejected: 'bg-rose-500/20 text-rose-100',
-  withdrawn: 'bg-slate-500/20 text-slate-200'
+  withdrawn: 'bg-slate-500/20 text-slate-200',
+  signal: 'bg-purple-500/20 text-purple-100'
 }
 
 const subscriptionStatusStyles: Record<string, string> = {
@@ -42,10 +43,12 @@ const subscriptionStatusStyles: Record<string, string> = {
 
 export function DealInterestTab({ dealId, interests, subscriptions }: DealInterestTabProps) {
   const groupedInterests = useMemo(() => {
-    const pending = interests?.filter(item => item.status === 'pending_review') ?? []
-    const approved = interests?.filter(item => item.status === 'approved') ?? []
-    const other = interests?.filter(item => !['pending_review', 'approved'].includes(item.status)) ?? []
-    return { pending, approved, other }
+    // Separate post-close signals from regular interests
+    const signals = interests?.filter(item => item.is_post_close) ?? []
+    const pending = interests?.filter(item => !item.is_post_close && item.status === 'pending_review') ?? []
+    const approved = interests?.filter(item => !item.is_post_close && item.status === 'approved') ?? []
+    const other = interests?.filter(item => !item.is_post_close && !['pending_review', 'approved'].includes(item.status)) ?? []
+    return { signals, pending, approved, other }
   }, [interests])
 
   return (
@@ -66,6 +69,9 @@ export function DealInterestTab({ dealId, interests, subscriptions }: DealIntere
           </Link>
         </CardHeader>
         <CardContent className="space-y-6">
+          {groupedInterests.signals.length > 0 && (
+            <InterestTable title="Future Interest Signals (Closed Deal)" interests={groupedInterests.signals} emptyLabel="" />
+          )}
           <InterestTable title="Pending Review" interests={groupedInterests.pending} emptyLabel="No pending interests." />
           <InterestTable title="Approved" interests={groupedInterests.approved} emptyLabel="No approved interests yet." />
           {groupedInterests.other.length > 0 && (
@@ -155,6 +161,7 @@ function InterestTable({ title, interests, emptyLabel }: InterestTableProps) {
         <TableHeader>
           <TableRow>
             <TableHead>Investor</TableHead>
+            <TableHead>Action</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Indicative Amount</TableHead>
             <TableHead>Submitted</TableHead>
@@ -162,29 +169,48 @@ function InterestTable({ title, interests, emptyLabel }: InterestTableProps) {
         </TableHeader>
         <TableBody>
           {interests.length ? (
-            interests.map(interest => (
-              <TableRow key={interest.id}>
-                <TableCell>{interest.investors?.legal_name || 'Unknown investor'}</TableCell>
-                <TableCell>
-                  <Badge className={interestStatusStyles[interest.status] ?? 'bg-white/10'}>
-                    {interest.status.replace('_', ' ').toUpperCase()}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  {interest.indicative_amount
-                    ? `${interest.indicative_currency ?? ''} ${interest.indicative_amount.toLocaleString()}`
-                    : '—'}
-                </TableCell>
-                <TableCell>
-                  {interest.submitted_at
-                    ? format(new Date(interest.submitted_at), 'dd MMM yyyy HH:mm')
-                    : '—'}
-                </TableCell>
-              </TableRow>
-            ))
+            interests.map(interest => {
+              // Determine display status for post-close interests
+              const displayStatus = interest.is_post_close ? 'signal' : interest.status
+              const statusLabel = interest.is_post_close
+                ? 'SIGNAL'
+                : interest.status.replace('_', ' ').toUpperCase()
+
+              return (
+                <TableRow key={interest.id}>
+                  <TableCell>{interest.investors?.legal_name || 'Unknown investor'}</TableCell>
+                  <TableCell>
+                    {interest.is_post_close ? (
+                      <Badge className="bg-purple-500/20 text-purple-100">
+                        Notify Me About Similar
+                      </Badge>
+                    ) : (
+                      <Badge className="bg-blue-500/20 text-blue-100">
+                        I'm Interested
+                      </Badge>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <Badge className={interestStatusStyles[displayStatus] ?? 'bg-white/10'}>
+                      {statusLabel}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    {interest.indicative_amount
+                      ? `${interest.indicative_currency ?? ''} ${interest.indicative_amount.toLocaleString()}`
+                      : '—'}
+                  </TableCell>
+                  <TableCell>
+                    {interest.submitted_at
+                      ? format(new Date(interest.submitted_at), 'dd MMM yyyy HH:mm')
+                      : '—'}
+                  </TableCell>
+                </TableRow>
+              )
+            })
           ) : (
             <TableRow>
-              <TableCell colSpan={4} className="text-center text-muted-foreground py-6">
+              <TableCell colSpan={5} className="text-center text-muted-foreground py-6">
                 {emptyLabel}
               </TableCell>
             </TableRow>

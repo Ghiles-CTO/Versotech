@@ -31,6 +31,7 @@ export function RealtimeHoldingsProvider({
   const reconnectAttempts = useRef(0)
   const maxReconnectAttempts = 5
   const reconnectDelay = useRef(1000) // Start with 1 second
+  const reconnectHandlerRef = useRef<() => void>(() => {})
   const router = useRouter()
 
   // Clean up channels on unmount
@@ -322,6 +323,8 @@ export function RealtimeHoldingsProvider({
       }
     }
 
+    reconnectHandlerRef.current = handleReconnect
+
     setupSubscriptions()
 
     // Cleanup function
@@ -340,7 +343,7 @@ export function RealtimeHoldingsProvider({
       if (!isConnected && reconnectAttempts.current < maxReconnectAttempts) {
         console.log('Health check: Connection lost, attempting reconnection...')
         reconnectAttempts.current = 0 // Reset attempts for health check
-        handleReconnect()
+        reconnectHandlerRef.current()
       }
     }, 60000) // Check every minute
 

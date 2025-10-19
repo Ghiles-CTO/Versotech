@@ -27,7 +27,6 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
-import { measureTimeAsync } from '@/lib/performance'
 
 export const dynamic = 'force-dynamic'
 
@@ -110,113 +109,119 @@ async function getDashboardContext(): Promise<DashboardContext> {
 }
 
 async function getPortfolioData(investorIds: string[]): Promise<PortfolioData> {
-  return measureTimeAsync('portfolio-data-fetch', async () => {
-    if (!investorIds.length) {
-      return {
-        hasData: false,
-        vehicles: [],
-        recentActivity: []
-      }
+  const startTime = typeof performance !== 'undefined' ? performance.now() : Date.now()
+
+  if (!investorIds.length) {
+    return {
+      hasData: false,
+      vehicles: [],
+      recentActivity: []
+    }
+  }
+
+  try {
+    const supabase = createServiceClient()
+
+    const [positionsRes, subscriptionsRes, cashflowsRes, performanceRes, vehiclesRes, activityRes] = await Promise.all([
+      supabase
+        .from('positions')
+        .select('*')
+        .in('investor_id', investorIds),
+      supabase
+        .from('subscriptions')
+        .select('commitment')
+        .in('investor_id', investorIds)
+        .eq('status', 'active'),
+      supabase
+        .from('cashflows')
+        .select('type, amount')
+        .in('investor_id', investorIds),
+      supabase
+        .from('performance_snapshots')
+        .select('nav_value, contributed, distributed, dpi, tvpi, irr_net')
+        .in('investor_id', investorIds)
+        .order('snapshot_date', { ascending: false })
+        .limit(investorIds.length),
+      supabase
+        .from('vehicles')
+        .select(`
+          id,
+          name,
+          type,
+          domicile,
+          currency,
+          subscriptions!inner(investor_id, commitment, status),
+          positions(investor_id, units, cost_basis, last_nav, as_of_date)
+        `)
+        .in('subscriptions.investor_id', investorIds)
+        .eq('subscriptions.status', 'active'),
+      supabase
+        .from('activity_feed')
+        .select('*')
+        .in('investor_id', investorIds)
+        .order('created_at', { ascending: false })
+        .limit(10)
+    ])
+
+    const positions = positionsRes.data ?? []
+    const subscriptions = subscriptionsRes.data ?? []
+    const cashflows = cashflowsRes.data ?? []
+    const latestPerformance = performanceRes.data ?? []
+    const vehicles = (vehiclesRes.data ?? []) as PortfolioVehicle[]
+    const recentActivity = (activityRes.data ?? []) as DashboardActivity[]
+
+    const totalContributed = cashflows
+      .filter(cf => cf.type === 'call')
+      .reduce((sum, cf) => sum + (cf.amount ?? 0), 0)
+
+    const totalDistributions = cashflows
+      .filter(cf => cf.type === 'distribution')
+      .reduce((sum, cf) => sum + (cf.amount ?? 0), 0)
+
+    const totalCommitment = subscriptions
+      .reduce((sum, sub) => sum + (sub.commitment ?? 0), 0)
+
+    const unfundedCommitment = totalCommitment - totalContributed
+
+    const currentNAV = positions
+      .reduce((sum, pos) => sum + ((pos.units ?? 0) * (pos.last_nav ?? 0)), 0)
+
+    let finalNAV = currentNAV
+    let finalContributed = totalContributed
+    let finalDistributions = totalDistributions
+
+    if (latestPerformance.length > 0) {
+      const aggregatedNAV = latestPerformance.reduce((sum, perf) => sum + (perf.nav_value ?? 0), 0)
+      const aggregatedContributed = latestPerformance.reduce((sum, perf) => sum + (perf.contributed ?? 0), 0)
+      const aggregatedDistributed = latestPerformance.reduce((sum, perf) => sum + (perf.distributed ?? 0), 0)
+
+      finalNAV = aggregatedNAV || currentNAV
+      finalContributed = aggregatedContributed || totalContributed
+      finalDistributions = aggregatedDistributed || totalDistributions
     }
 
-    try {
-      const supabase = createServiceClient()
+    const costBasis = positions.reduce((sum, pos) => sum + (pos.cost_basis ?? 0), 0)
+    const hasData =
+      finalContributed > 0 || finalNAV > 0 || costBasis > 0 || unfundedCommitment > 0 || finalDistributions > 0
 
-      const [positionsRes, subscriptionsRes, cashflowsRes, performanceRes, vehiclesRes, activityRes] = await Promise.all([
-        supabase
-          .from('positions')
-          .select('*')
-          .in('investor_id', investorIds),
-        supabase
-          .from('subscriptions')
-          .select('commitment')
-          .in('investor_id', investorIds)
-          .eq('status', 'active'),
-        supabase
-          .from('cashflows')
-          .select('type, amount')
-          .in('investor_id', investorIds),
-        supabase
-          .from('performance_snapshots')
-          .select('nav_value, contributed, distributed, dpi, tvpi, irr_net')
-          .in('investor_id', investorIds)
-          .order('snapshot_date', { ascending: false })
-          .limit(investorIds.length),
-        supabase
-          .from('vehicles')
-          .select(`
-            id,
-            name,
-            type,
-            domicile,
-            currency,
-            subscriptions!inner(investor_id, commitment, status),
-            positions(investor_id, units, cost_basis, last_nav, as_of_date)
-          `)
-          .in('subscriptions.investor_id', investorIds)
-          .eq('subscriptions.status', 'active'),
-        supabase
-          .from('activity_feed')
-          .select('*')
-          .in('investor_id', investorIds)
-          .order('created_at', { ascending: false })
-          .limit(10)
-      ])
-
-      const positions = positionsRes.data ?? []
-      const subscriptions = subscriptionsRes.data ?? []
-      const cashflows = cashflowsRes.data ?? []
-      const latestPerformance = performanceRes.data ?? []
-      const vehicles = (vehiclesRes.data ?? []) as PortfolioVehicle[]
-      const recentActivity = (activityRes.data ?? []) as DashboardActivity[]
-
-      const totalContributed = cashflows
-        .filter(cf => cf.type === 'call')
-        .reduce((sum, cf) => sum + (cf.amount ?? 0), 0)
-
-      const totalDistributions = cashflows
-        .filter(cf => cf.type === 'distribution')
-        .reduce((sum, cf) => sum + (cf.amount ?? 0), 0)
-
-      const totalCommitment = subscriptions
-        .reduce((sum, sub) => sum + (sub.commitment ?? 0), 0)
-
-      const unfundedCommitment = totalCommitment - totalContributed
-
-      const currentNAV = positions
-        .reduce((sum, pos) => sum + ((pos.units ?? 0) * (pos.last_nav ?? 0)), 0)
-
-      let finalNAV = currentNAV
-      let finalContributed = totalContributed
-      let finalDistributions = totalDistributions
-
-      if (latestPerformance.length > 0) {
-        const aggregatedNAV = latestPerformance.reduce((sum, perf) => sum + (perf.nav_value ?? 0), 0)
-        const aggregatedContributed = latestPerformance.reduce((sum, perf) => sum + (perf.contributed ?? 0), 0)
-        const aggregatedDistributed = latestPerformance.reduce((sum, perf) => sum + (perf.distributed ?? 0), 0)
-
-        finalNAV = aggregatedNAV || currentNAV
-        finalContributed = aggregatedContributed || totalContributed
-        finalDistributions = aggregatedDistributed || totalDistributions
-      }
-
-      const costBasis = positions.reduce((sum, pos) => sum + (pos.cost_basis ?? 0), 0)
-      const hasData = finalContributed > 0 || finalNAV > 0 || costBasis > 0 || unfundedCommitment > 0 || finalDistributions > 0
-
-      return {
-        hasData,
-        vehicles,
-        recentActivity
-      }
-    } catch (error) {
-      console.error('[Investor Dashboard] Portfolio data error:', error)
-      return {
-        hasData: false,
-        vehicles: [],
-        recentActivity: []
-      }
+    const duration = (typeof performance !== 'undefined' ? performance.now() : Date.now()) - startTime
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`[Investor Dashboard] portfolio-data-fetch: ${duration.toFixed(2)}ms`)
     }
-  })
+
+    return {
+      hasData,
+      vehicles,
+      recentActivity
+    }
+  } catch (error) {
+    console.error('[Investor Dashboard] Portfolio data error:', error)
+    return {
+      hasData: false,
+      vehicles: [],
+      recentActivity: []
+    }
+  }
 }
 
 function getEffectiveStatus(deal: { status: string; close_at: string | null }): string {
