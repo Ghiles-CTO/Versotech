@@ -35,6 +35,8 @@ class VehicleConfig:
     create_if_missing: bool = False
     notes: Optional[str] = None
     deal_id: Optional[str] = None
+    force_sheet_vehicle_code: bool = False
+    skip: bool = False
 
 
 @dataclass
@@ -88,6 +90,8 @@ class ETLConfig:
                 create_if_missing=bool(info.get("create_if_missing", False)),
                 notes=info.get("notes"),
                 deal_id=info.get("deal_id"),
+                force_sheet_vehicle_code=bool(info.get("force_sheet_vehicle_code", False)),
+                skip=bool(info.get("skip", False)),
             )
             for code, info in data.get("vehicles", {}).items()
         }
