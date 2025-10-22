@@ -183,13 +183,14 @@ export function AddDirectorModalEnhanced({ entityId, open, onClose, onSuccess }:
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[700px]">
+      <DialogContent className="sm:max-w-[700px] bg-zinc-950 border-white/10">
         <DialogHeader>
-          <DialogTitle>
+          <DialogTitle className="text-white flex items-center gap-2">
+            <User className="h-5 w-5 text-emerald-400" />
             {mode === 'select' ? 'Add Director from Registry' : 'Register New Director'}
           </DialogTitle>
-          <DialogDescription>
-            {mode === 'select' 
+          <DialogDescription className="text-gray-400">
+            {mode === 'select'
               ? 'Select an existing director or register a new one'
               : 'Add a new director to the registry and assign to this entity'
             }
@@ -199,33 +200,39 @@ export function AddDirectorModalEnhanced({ entityId, open, onClose, onSuccess }:
         {mode === 'select' ? (
           <div className="space-y-4">
             {/* Search */}
-            <div className="relative">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search directors by name or email..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9"
-              />
+            <div className="space-y-2">
+              <Label className="text-sm font-medium text-white">Search Directors</Label>
+              <div className="relative">
+                <Search className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
+                <Input
+                  placeholder="Search directors by name or email..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9 bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-emerald-400/50 focus:ring-emerald-400/20"
+                />
+              </div>
+              <p className="text-xs text-gray-400">Start typing to filter the director registry</p>
             </div>
 
             {/* Directors List */}
-            <ScrollArea className="h-[300px] rounded border border-white/10">
+            <ScrollArea className="h-[300px] rounded border border-white/10 bg-white/5">
               <div className="p-2 space-y-2">
                 {searching ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2" />
-                    Searching...
+                  <div className="text-center py-8 text-gray-400">
+                    <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2 text-emerald-400" />
+                    <p>Searching...</p>
                   </div>
                 ) : directors.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <User className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                    <p>No directors found</p>
+                  <div className="text-center py-8 text-gray-400">
+                    <div className="h-12 w-12 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-2">
+                      <User className="h-6 w-6" />
+                    </div>
+                    <p className="text-white">No directors found</p>
                     <Button
                       variant="link"
                       size="sm"
                       onClick={() => setMode('create')}
-                      className="mt-2"
+                      className="mt-2 text-emerald-400 hover:text-emerald-300"
                     >
                       Register new director
                     </Button>
@@ -234,19 +241,19 @@ export function AddDirectorModalEnhanced({ entityId, open, onClose, onSuccess }:
                   directors.map((director) => (
                     <Card
                       key={director.id}
-                      className={`p-3 cursor-pointer transition-colors ${
+                      className={`p-3 cursor-pointer transition-all ${
                         selectedDirector?.id === director.id
                           ? 'border-emerald-500 bg-emerald-500/10'
                           : 'border-white/10 bg-white/5 hover:bg-white/10'
                       }`}
                       onClick={() => handleSelectDirector(director)}
                     >
-                      <div className="font-medium">{director.full_name}</div>
+                      <div className="font-medium text-white">{director.full_name}</div>
                       {director.email && (
-                        <div className="text-sm text-muted-foreground">{director.email}</div>
+                        <div className="text-sm text-gray-400">{director.email}</div>
                       )}
                       {director.nationality && (
-                        <div className="text-xs text-muted-foreground mt-1">
+                        <div className="text-xs text-gray-400 mt-1">
                           {director.nationality}
                         </div>
                       )}
@@ -259,35 +266,38 @@ export function AddDirectorModalEnhanced({ entityId, open, onClose, onSuccess }:
             {/* Assignment Form (shown when director is selected) */}
             {selectedDirector && (
               <div className="border-t border-white/10 pt-4 space-y-3">
-                <h4 className="font-medium text-sm">Assignment Details</h4>
+                <h4 className="font-medium text-sm text-white">Assignment Details</h4>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <Label htmlFor="role">Role</Label>
+                    <Label htmlFor="role" className="text-sm font-medium text-white">Role</Label>
                     <Input
                       id="role"
                       value={assignmentForm.role}
                       onChange={(e) => setAssignmentForm(prev => ({ ...prev, role: e.target.value }))}
                       placeholder="e.g., Director, Chairman"
+                      className="bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-emerald-400/50 focus:ring-emerald-400/20"
                     />
                   </div>
                   <div>
-                    <Label htmlFor="effective_from">Effective From</Label>
+                    <Label htmlFor="effective_from" className="text-sm font-medium text-white">Effective From</Label>
                     <Input
                       id="effective_from"
                       type="date"
                       value={assignmentForm.effective_from}
                       onChange={(e) => setAssignmentForm(prev => ({ ...prev, effective_from: e.target.value }))}
+                      className="bg-white/5 border-white/10 text-white focus:border-emerald-400/50 focus:ring-emerald-400/20"
                     />
                   </div>
                 </div>
                 <div>
-                  <Label htmlFor="assignment_notes">Notes (Optional)</Label>
+                  <Label htmlFor="assignment_notes" className="text-sm font-medium text-white">Notes (Optional)</Label>
                   <Textarea
                     id="assignment_notes"
                     value={assignmentForm.notes}
                     onChange={(e) => setAssignmentForm(prev => ({ ...prev, notes: e.target.value }))}
                     placeholder="Any additional notes..."
                     rows={2}
+                    className="bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-emerald-400/50 focus:ring-emerald-400/20"
                   />
                 </div>
               </div>
@@ -297,7 +307,7 @@ export function AddDirectorModalEnhanced({ entityId, open, onClose, onSuccess }:
             <Button
               variant="outline"
               onClick={() => setMode('create')}
-              className="w-full gap-2"
+              className="w-full gap-2 border-white/10 text-white hover:bg-white/10"
               disabled={loading}
             >
               <Plus className="h-4 w-4" />
@@ -313,86 +323,106 @@ export function AddDirectorModalEnhanced({ entityId, open, onClose, onSuccess }:
         ) : (
           <div className="space-y-4">
             {/* New Director Form */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="col-span-2">
-                <Label htmlFor="new_full_name">Full Name *</Label>
-                <Input
-                  id="new_full_name"
-                  value={newDirectorForm.full_name}
-                  onChange={(e) => setNewDirectorForm(prev => ({ ...prev, full_name: e.target.value }))}
-                  placeholder="John Smith"
-                  required
-                />
+            <div className="rounded-lg border border-white/10 bg-white/5 p-4 space-y-3">
+              <div className="flex items-center gap-2 pb-2 border-b border-white/10">
+                <div className="h-8 w-8 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                  <User className="h-4 w-4 text-emerald-400" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-white">Director Information</h3>
+                  <p className="text-xs text-gray-400">Enter the director's personal details</p>
+                </div>
               </div>
-              <div>
-                <Label htmlFor="new_email">Email</Label>
-                <Input
-                  id="new_email"
-                  type="email"
-                  value={newDirectorForm.email}
-                  onChange={(e) => setNewDirectorForm(prev => ({ ...prev, email: e.target.value }))}
-                  placeholder="john@example.com"
-                />
-              </div>
-              <div>
-                <Label htmlFor="new_phone">Phone</Label>
-                <Input
-                  id="new_phone"
-                  value={newDirectorForm.phone}
-                  onChange={(e) => setNewDirectorForm(prev => ({ ...prev, phone: e.target.value }))}
-                  placeholder="+1 234 567 8900"
-                />
-              </div>
-              <div>
-                <Label htmlFor="new_nationality">Nationality</Label>
-                <Input
-                  id="new_nationality"
-                  value={newDirectorForm.nationality}
-                  onChange={(e) => setNewDirectorForm(prev => ({ ...prev, nationality: e.target.value }))}
-                  placeholder="e.g., British, American"
-                />
-              </div>
-              <div>
-                <Label htmlFor="new_id_number">ID/Passport Number</Label>
-                <Input
-                  id="new_id_number"
-                  value={newDirectorForm.id_number}
-                  onChange={(e) => setNewDirectorForm(prev => ({ ...prev, id_number: e.target.value }))}
-                  placeholder="AB123456"
-                />
-              </div>
-              <div className="col-span-2">
-                <Label htmlFor="new_notes">Notes</Label>
-                <Textarea
-                  id="new_notes"
-                  value={newDirectorForm.notes}
-                  onChange={(e) => setNewDirectorForm(prev => ({ ...prev, notes: e.target.value }))}
-                  placeholder="Additional information..."
-                  rows={2}
-                />
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="col-span-2">
+                  <Label htmlFor="new_full_name" className="text-sm font-medium text-white">Full Name *</Label>
+                  <Input
+                    id="new_full_name"
+                    value={newDirectorForm.full_name}
+                    onChange={(e) => setNewDirectorForm(prev => ({ ...prev, full_name: e.target.value }))}
+                    placeholder="John Smith"
+                    required
+                    className="bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-emerald-400/50 focus:ring-emerald-400/20"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="new_email" className="text-sm font-medium text-white">Email</Label>
+                  <Input
+                    id="new_email"
+                    type="email"
+                    value={newDirectorForm.email}
+                    onChange={(e) => setNewDirectorForm(prev => ({ ...prev, email: e.target.value }))}
+                    placeholder="john@example.com"
+                    className="bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-emerald-400/50 focus:ring-emerald-400/20"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="new_phone" className="text-sm font-medium text-white">Phone</Label>
+                  <Input
+                    id="new_phone"
+                    value={newDirectorForm.phone}
+                    onChange={(e) => setNewDirectorForm(prev => ({ ...prev, phone: e.target.value }))}
+                    placeholder="+1 234 567 8900"
+                    className="bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-emerald-400/50 focus:ring-emerald-400/20"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="new_nationality" className="text-sm font-medium text-white">Nationality</Label>
+                  <Input
+                    id="new_nationality"
+                    value={newDirectorForm.nationality}
+                    onChange={(e) => setNewDirectorForm(prev => ({ ...prev, nationality: e.target.value }))}
+                    placeholder="e.g., British, American"
+                    className="bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-emerald-400/50 focus:ring-emerald-400/20"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="new_id_number" className="text-sm font-medium text-white">ID/Passport Number</Label>
+                  <Input
+                    id="new_id_number"
+                    value={newDirectorForm.id_number}
+                    onChange={(e) => setNewDirectorForm(prev => ({ ...prev, id_number: e.target.value }))}
+                    placeholder="AB123456"
+                    className="bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-emerald-400/50 focus:ring-emerald-400/20"
+                  />
+                </div>
+                <div className="col-span-2">
+                  <Label htmlFor="new_notes" className="text-sm font-medium text-white">Notes</Label>
+                  <Textarea
+                    id="new_notes"
+                    value={newDirectorForm.notes}
+                    onChange={(e) => setNewDirectorForm(prev => ({ ...prev, notes: e.target.value }))}
+                    placeholder="Additional information..."
+                    rows={2}
+                    className="bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-emerald-400/50 focus:ring-emerald-400/20"
+                  />
+                </div>
               </div>
             </div>
 
             {/* Assignment Details */}
             <div className="border-t border-white/10 pt-4 space-y-3">
-              <h4 className="font-medium text-sm">Entity Assignment</h4>
+              <h4 className="font-medium text-sm text-white">Entity Assignment</h4>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <Label htmlFor="new_role">Role</Label>
+                  <Label htmlFor="new_role" className="text-sm font-medium text-white">Role</Label>
                   <Input
                     id="new_role"
                     value={assignmentForm.role}
                     onChange={(e) => setAssignmentForm(prev => ({ ...prev, role: e.target.value }))}
                     placeholder="e.g., Director, Chairman"
+                    className="bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-emerald-400/50 focus:ring-emerald-400/20"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="new_effective_from">Effective From</Label>
+                  <Label htmlFor="new_effective_from" className="text-sm font-medium text-white">Effective From</Label>
                   <Input
                     id="new_effective_from"
                     type="date"
                     value={assignmentForm.effective_from}
                     onChange={(e) => setAssignmentForm(prev => ({ ...prev, effective_from: e.target.value }))}
+                    className="bg-white/5 border-white/10 text-white focus:border-emerald-400/50 focus:ring-emerald-400/20"
                   />
                 </div>
               </div>
@@ -402,7 +432,7 @@ export function AddDirectorModalEnhanced({ entityId, open, onClose, onSuccess }:
             <Button
               variant="outline"
               onClick={() => setMode('select')}
-              className="w-full"
+              className="w-full border-white/10 text-white hover:bg-white/10"
               disabled={loading}
             >
               Back to Selection
@@ -416,12 +446,13 @@ export function AddDirectorModalEnhanced({ entityId, open, onClose, onSuccess }:
           </div>
         )}
 
-        <DialogFooter>
+        <DialogFooter className="border-t border-white/10 pt-4">
           <Button
             type="button"
-            variant="ghost"
+            variant="outline"
             onClick={handleClose}
             disabled={loading}
+            className="border-white/10 text-white hover:bg-white/10"
           >
             Cancel
           </Button>
@@ -429,6 +460,7 @@ export function AddDirectorModalEnhanced({ entityId, open, onClose, onSuccess }:
             <Button
               onClick={handleAssignDirector}
               disabled={loading || !selectedDirector}
+              className="bg-emerald-500 hover:bg-emerald-600 text-emerald-950 font-semibold"
             >
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Assign Director
@@ -437,6 +469,7 @@ export function AddDirectorModalEnhanced({ entityId, open, onClose, onSuccess }:
             <Button
               onClick={handleCreateAndAssign}
               disabled={loading || !newDirectorForm.full_name.trim()}
+              className="bg-emerald-500 hover:bg-emerald-600 text-emerald-950 font-semibold"
             >
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Register & Assign

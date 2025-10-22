@@ -1,0 +1,1 @@
+-- Storage bucket RLS policies already applied manually;

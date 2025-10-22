@@ -29,14 +29,19 @@ export async function GET(request: NextRequest) {
       .from('documents')
       .select(`
         id,
+        name,
         type,
         file_key,
         created_at,
+        description,
+        external_url,
+        link_type,
         watermark,
         vehicle_id,
         entity_id,
         deal_id,
         owner_investor_id,
+        folder_id,
         created_by_profile:created_by(display_name, email),
         investors:owner_investor_id(id, legal_name),
         vehicles:vehicle_id(id, name, type),
@@ -51,7 +56,10 @@ export async function GET(request: NextRequest) {
     if (deal_id) query = query.eq('deal_id', deal_id)
     if (from_date) query = query.gte('created_at', from_date)
     if (to_date) query = query.lte('created_at', to_date)
-    if (search) query = query.ilike('file_key', `%${search}%`)
+    if (search) {
+      const pattern = `%${search}%`
+      query = query.or(`file_key.ilike.${pattern},name.ilike.${pattern}`)
+    }
 
     // Apply ordering and pagination
     query = query
@@ -68,7 +76,9 @@ export async function GET(request: NextRequest) {
 
     // Extract file names and calculate file sizes
     const enrichedDocuments = (documents || []).map((doc: any) => {
-      const fileName = doc.file_key ? doc.file_key.split('/').pop() : 'Unknown'
+      const fileName = doc.file_key
+        ? doc.file_key.split('/').pop()
+        : doc.name || 'External Link'
 
       // Determine document scope
       const scope: any = {}
@@ -79,12 +89,17 @@ export async function GET(request: NextRequest) {
 
       return {
         id: doc.id,
+        name: doc.name,
         type: doc.type,
+        description: doc.description,
         file_name: fileName,
         file_key: doc.file_key,
+        external_url: doc.external_url,
+        link_type: doc.link_type,
         created_at: doc.created_at,
         created_by: doc.created_by_profile,
         scope,
+        folder_id: doc.folder_id,
         watermark: doc.watermark
       }
     })

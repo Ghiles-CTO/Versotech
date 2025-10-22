@@ -1,0 +1,84 @@
+{
+  "default_target_currency": "USD",
+  "status_mapping": {
+    "settled": "active",
+    "repaid": "closed",
+    "work in progress": "pending",
+    "pending": "pending",
+    "cancelled": "cancelled",
+    "closed": "closed"
+  },
+  "allocation_mapping": {
+    "active": "active",
+    "pending": "pending",
+    "committed": "committed",
+    "closed": "closed",
+    "cancelled": "cancelled"
+  },
+  "fx_rates": {
+    "CHF": {
+      "from": "CHF",
+      "to": "USD",
+      "rate": 1.05859,
+      "as_of": "2020-06-24",
+      "note": "Summary sheet header CHF > USD"
+    },
+    "GBP": {
+      "from": "GBP",
+      "to": "USD",
+      "rate": 1.33505,
+      "as_of": "2022-03-04",
+      "note": "Summary sheet fx row GBP>USD"
+    },
+    "EUR": {
+      "from": "EUR",
+      "to": "USD",
+      "rate": 1.14103,
+      "as_of": "2022-06-14",
+      "note": "Summary sheet fx row EUR>USD"
+    }
+  },
+  "vehicles": {
+    "VC1": {
+      "name": "CRANS",
+      "currency": "CHF",
+      "target_currency": "USD",
+      "fx_rate": 1.05859,
+      "fx_rate_note": "Summary row indicates CHF converted to USD",
+      "type": "fund",
+      "domicile": "Switzerland",
+      "create_if_missing": false,
+      "deal_id": null
+    },
+    "VC2": {
+      "name": "ISDC",
+      "currency": "CHF",
+      "target_currency": "USD",
+      "fx_rate": 1.05859,
+      "type": "fund",
+      "create_if_missing": false,
+      "deal_id": null
+    },
+    "VC6": {
+      "name": "VEGINVEST",
+      "currency": "EUR",
+      "target_currency": "USD",
+      "fx_rate": 1.14103,
+      "type": "fund",
+      "create_if_missing": false,
+      "deal_id": null
+    }
+  },
+  "investor_overrides": {
+    "JULIENMACHOT": {
+      "legal_name": "Julien Machot",
+      "type": "individual",
+      "create_if_missing": true
+    },
+    "LFGROUPSARL": {
+      "legal_name": "LF GROUP SARL",
+      "type": "entity",
+      "create_if_missing": true
+    }
+  }
+}

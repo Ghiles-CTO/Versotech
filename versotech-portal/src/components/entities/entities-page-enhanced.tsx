@@ -15,7 +15,9 @@ import {
   SelectValue
 } from '@/components/ui/select'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { AlertCircle, FileText, LayoutGrid, List, Plus, Search, Table } from 'lucide-react'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Label } from '@/components/ui/label'
+import { AlertCircle, FileText, FlagTriangleRight, LayoutGrid, List, Plus, Search, Table } from 'lucide-react'
 import { Entity, EntitiesTableView, EntitiesListView, EntitiesKanbanView } from './entities-views'
 import { EditEntityModal } from './edit-entity-modal'
 import { CreateEntityModal } from './create-entity-modal'
@@ -49,6 +51,7 @@ export function EntitiesPageEnhanced({ entities: initialEntities }: EntitiesPage
   const [createOpen, setCreateOpen] = useState(false)
   const [bannerMessage, setBannerMessage] = useState<string | null>(null)
   const [bannerTone, setBannerTone] = useState<'success' | 'error'>('success')
+  const [showOnlyFlagged, setShowOnlyFlagged] = useState(false)
 
   const platformOptions = useMemo(() => {
     const set = new Set<string>()
@@ -87,8 +90,12 @@ export function EntitiesPageEnhanced({ entities: initialEntities }: EntitiesPage
       next = next.filter((entity) => entity.type === typeFilter)
     }
 
+    if (showOnlyFlagged) {
+      next = next.filter((entity) => (entity.open_flag_count ?? 0) > 0)
+    }
+
     return next
-  }, [entities, search, statusFilter, platformFilter, typeFilter])
+  }, [entities, search, statusFilter, platformFilter, typeFilter, showOnlyFlagged])
 
   const stats = useMemo(() => {
     return {
@@ -99,6 +106,14 @@ export function EntitiesPageEnhanced({ entities: initialEntities }: EntitiesPage
       platforms: new Set(entities.map((e) => e.platform).filter(Boolean)).size
     }
   }, [entities])
+
+  const flaggedEntities = useMemo(
+    () =>
+      entities
+        .filter((entity) => (entity.open_flag_count ?? 0) > 0)
+        .sort((a, b) => (b.open_flag_count ?? 0) - (a.open_flag_count ?? 0)),
+    [entities]
+  )
 
   const handleEntityClick = (id: string) => {
     router.push(`/versotech/staff/entities/${id}`)
@@ -218,6 +233,48 @@ export function EntitiesPageEnhanced({ entities: initialEntities }: EntitiesPage
         </Card>
       </div>
 
+      {flaggedEntities.length > 0 && (
+        <Card className="border border-red-400/30 bg-red-500/10">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0">
+            <div>
+              <CardTitle className="text-base text-red-100 flex items-center gap-2">
+                <FlagTriangleRight className="h-4 w-4" />
+                Action Center
+              </CardTitle>
+              <CardDescription className="text-red-100/80">
+                Entities with outstanding health flags. Resolve issues to keep governance on track.
+              </CardDescription>
+            </div>
+            <Badge className="bg-red-500/20 border-red-400/40 text-red-100">{flaggedEntities.length}</Badge>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {flaggedEntities.slice(0, 4).map((entity) => (
+              <button
+                key={entity.id}
+                onClick={() => handleEntityClick(entity.id)}
+                className="w-full text-left rounded-lg border border-red-400/30 bg-black/20 px-4 py-3 hover:bg-red-500/10 transition-colors"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">{entity.name}</p>
+                    <p className="text-xs text-red-100/80">
+                      {entity.open_flag_count} unresolved flag{entity.open_flag_count === 1 ? '' : 's'} • Last update{' '}
+                      {entity.last_event_at ? new Date(entity.last_event_at).toLocaleDateString() : 'n/a'}
+                    </p>
+                  </div>
+                  <Badge className="bg-red-500/20 border-red-400/40 text-red-100">Review</Badge>
+                </div>
+              </button>
+            ))}
+            {flaggedEntities.length > 4 && (
+              <p className="text-xs text-red-100/60">
+                Showing top priorities. Use the filter below to focus on all flagged entities.
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       <Card className="border border-white/10 bg-white/5">
         <CardContent className="pt-6 space-y-4">
           <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
@@ -290,6 +347,17 @@ export function EntitiesPageEnhanced({ entities: initialEntities }: EntitiesPage
                 </TabsTrigger>
               </TabsList>
             </Tabs>
+          </div>
+
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Checkbox
+              id="filter-flagged"
+              checked={showOnlyFlagged}
+              onCheckedChange={(checked) => setShowOnlyFlagged(checked === true)}
+            />
+            <Label htmlFor="filter-flagged" className="cursor-pointer">
+              Show only entities with unresolved flags
+            </Label>
           </div>
 
           {filteredEntities.length === 0 ? (

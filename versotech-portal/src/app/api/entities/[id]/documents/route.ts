@@ -20,7 +20,7 @@ export async function GET(
     // Staff get everything, investors rely on RLS to filter
     const { data, error } = await client
       .from('documents')
-      .select('id, name, type, created_at, created_by, entity_id, deal_id, vehicle_id')
+      .select('id, name, type, folder_id, created_at, created_by, entity_id, deal_id, vehicle_id')
       .eq('entity_id', id)
       .order('created_at', { ascending: false })
 
@@ -40,7 +40,8 @@ const uploadSchema = z.object({
   name: z.string().optional(),
   type: z.string().optional(),
   document_id: z.string().uuid('document_id is required'),
-  description: z.string().optional()
+  description: z.string().optional(),
+  folder_id: z.string().uuid().optional().nullable()
 })
 
 export async function POST(
@@ -68,7 +69,7 @@ export async function POST(
 
     const { data: existingDoc, error: fetchError } = await serviceSupabase
       .from('documents')
-      .select('id, entity_id')
+      .select('id, entity_id, folder_id')
       .eq('id', validated.document_id)
       .single()
 
@@ -82,7 +83,8 @@ export async function POST(
         entity_id: id,
         name: validated.name || existingDoc.name,
         type: validated.type || existingDoc.type,
-        description: validated.description || null
+        description: validated.description || null,
+        folder_id: validated.folder_id ?? existingDoc.folder_id ?? null
       })
       .eq('id', validated.document_id)
       .select()

@@ -50,6 +50,16 @@ export function useNotifications(userRole: string, userId?: string) {
           cache: 'no-store'
         })
 
+        if (response.status === 401) {
+          if (isMounted) {
+            setCounts(INITIAL_COUNTS)
+            if (!silent) {
+              setLoading(false)
+            }
+          }
+          return
+        }
+
         if (!response.ok) {
           throw new Error(`Failed to load notification counts (${response.status})`)
         }

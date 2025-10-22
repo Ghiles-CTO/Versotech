@@ -34,6 +34,8 @@ interface EnhancedHolding {
   domicile?: string
   currency: string
   created_at: string
+  allocation_status?: string | null
+  invite_sent_at?: string | null
   position: {
     units: number
     costBasis: number
@@ -43,9 +45,12 @@ interface EnhancedHolding {
     lastUpdated?: string
   } | null
   subscription: {
-    commitment: number
+    commitment: number | null
     currency: string
     status: string
+    effective_date?: string | null
+    funding_due_at?: string | null
+    units?: number | null
   } | null
   valuation: {
     navTotal: number
@@ -55,6 +60,27 @@ interface EnhancedHolding {
   performance: {
     unrealizedGainPct: number
   } | null
+  status?: string
+}
+
+const deriveHoldingStatus = (holding: Partial<EnhancedHolding>) => {
+  if (holding.status) return holding.status
+
+  const allocation = holding.allocation_status?.toLowerCase()
+  if (allocation === 'active' || allocation === 'committed' || allocation === 'pending') {
+    return allocation
+  }
+  if (allocation === 'closed' || allocation === 'cancelled') {
+    return 'closed'
+  }
+
+  const raw = holding.subscription?.status?.toLowerCase()
+  if (raw === 'active') return 'active'
+  if (raw === 'committed' || raw === 'pending') return 'pending'
+  if (raw === 'closed' || raw === 'cancelled') return 'closed'
+
+  if (holding.position && holding.position.currentValue > 0) return 'active'
+  return 'pending'
 }
 
 // Removed DealHolding interface - only showing holdings per user request
@@ -148,7 +174,29 @@ export function CleanHoldingsPage({ initialData }: CleanHoldingsPageProps) {
       }
 
       const data = await response.json()
-      setHoldings(data.vehicles || [])
+      const normalized: EnhancedHolding[] = (data.vehicles || []).map((holding: EnhancedHolding) => {
+        const status = deriveHoldingStatus(holding)
+        const normalizedSubscription = holding.subscription
+          ? {
+              ...holding.subscription,
+              commitment:
+                holding.subscription.commitment === null || holding.subscription.commitment === undefined
+                  ? null
+                  : Number(holding.subscription.commitment),
+              currency: holding.subscription.currency || holding.currency,
+              status: holding.subscription.status || holding.allocation_status || status
+            }
+          : holding.subscription
+
+        return {
+          ...holding,
+          status,
+          allocation_status: holding.allocation_status || normalizedSubscription?.status || status,
+          subscription: normalizedSubscription
+        }
+      })
+
+      setHoldings(normalized)
       // No longer tracking deals
     } catch (err) {
       console.error('Holdings fetch error:', err)
@@ -236,7 +284,7 @@ export function CleanHoldingsPage({ initialData }: CleanHoldingsPageProps) {
     }
 
     if (filters.status !== 'all') {
-      filtered = filtered.filter(h => h.subscription?.status === filters.status)
+      filtered = filtered.filter(h => deriveHoldingStatus(h) === filters.status)
     }
 
     if (filters.performance !== 'all') {

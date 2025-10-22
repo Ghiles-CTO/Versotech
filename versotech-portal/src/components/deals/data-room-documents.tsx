@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { createClient } from '@/lib/supabase/client'
 import { Download, Folder, Loader2 } from 'lucide-react'
 
 export interface DataRoomDocument {
@@ -20,7 +19,6 @@ interface DataRoomDocumentsProps {
 }
 
 export function DataRoomDocuments({ documents }: DataRoomDocumentsProps) {
-  const supabase = createClient()
   const [downloadingId, setDownloadingId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -38,19 +36,25 @@ export function DataRoomDocuments({ documents }: DataRoomDocumentsProps) {
     setError(null)
 
     try {
-      const bucket = process.env.NEXT_PUBLIC_STORAGE_BUCKET_NAME || 'documents'
-      const { data, error } = await supabase.storage
-        .from(bucket)
-        .createSignedUrl(doc.file_key, 120)
+      // Use API endpoint for secure download with audit logging
+      const response = await fetch(`/api/deals/${doc.deal_id}/documents/${doc.id}/download`)
 
-      if (error || !data?.signedUrl) {
-        throw error || new Error('Failed to create download link')
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to generate download link')
       }
 
-      window.open(data.signedUrl, '_blank', 'noopener,noreferrer')
+      const data = await response.json()
+
+      if (!data.download_url) {
+        throw new Error('No download URL received')
+      }
+
+      // Open the pre-signed URL
+      window.open(data.download_url, '_blank', 'noopener,noreferrer')
     } catch (err) {
       console.error('Failed to download file', err)
-      setError('Unable to download this document right now.')
+      setError(err instanceof Error ? err.message : 'Unable to download this document right now.')
     } finally {
       setDownloadingId(null)
     }

@@ -20,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Users } from 'lucide-react'
 
 interface AddStakeholderModalProps {
   entityId: string
@@ -96,11 +96,14 @@ export function AddStakeholderModal({ entityId, open, onClose, onSuccess }: AddS
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto bg-zinc-950 border-white/10">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle>Add Stakeholder</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-white flex items-center gap-2">
+              <Users className="h-5 w-5 text-emerald-400" />
+              Add Stakeholder
+            </DialogTitle>
+            <DialogDescription className="text-gray-400">
               Add lawyers, accountants, auditors, administrators, or strategic partners to this entity
             </DialogDescription>
           </DialogHeader>
@@ -108,18 +111,18 @@ export function AddStakeholderModal({ entityId, open, onClose, onSuccess }: AddS
           <div className="grid gap-4 py-4">
             {/* Role Selection */}
             <div className="grid gap-2">
-              <Label htmlFor="role">Stakeholder Role *</Label>
+              <Label htmlFor="role" className="text-sm font-medium text-white">Stakeholder Role *</Label>
               <Select
                 value={formData.role}
                 onValueChange={(value) => setFormData(prev => ({ ...prev, role: value }))}
                 required
               >
-                <SelectTrigger id="role">
+                <SelectTrigger id="role" className="bg-white/5 border-white/10 text-white">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-zinc-950 border-white/10">
                   {stakeholderRoles.map((role) => (
-                    <SelectItem key={role.value} value={role.value}>
+                    <SelectItem key={role.value} value={role.value} className="text-white">
                       {role.label}
                     </SelectItem>
                   ))}
@@ -129,48 +132,52 @@ export function AddStakeholderModal({ entityId, open, onClose, onSuccess }: AddS
 
             {/* Company/Firm Name */}
             <div className="grid gap-2">
-              <Label htmlFor="company_name">Company / Firm Name *</Label>
+              <Label htmlFor="company_name" className="text-sm font-medium text-white">Company / Firm Name *</Label>
               <Input
                 id="company_name"
                 value={formData.company_name}
                 onChange={(e) => setFormData(prev => ({ ...prev, company_name: e.target.value }))}
                 placeholder="e.g., Arendt & Medernach, KPMG Luxembourg"
+                className="bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-emerald-400/50 focus:ring-emerald-400/20"
                 required
               />
             </div>
 
             {/* Contact Person */}
             <div className="grid gap-2">
-              <Label htmlFor="contact_person">Contact Person</Label>
+              <Label htmlFor="contact_person" className="text-sm font-medium text-white">Contact Person</Label>
               <Input
                 id="contact_person"
                 value={formData.contact_person}
                 onChange={(e) => setFormData(prev => ({ ...prev, contact_person: e.target.value }))}
                 placeholder="Primary contact name"
+                className="bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-emerald-400/50 focus:ring-emerald-400/20"
               />
             </div>
 
             {/* Email and Phone */}
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email" className="text-sm font-medium text-white">Email</Label>
                 <Input
                   id="email"
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
                   placeholder="contact@firm.com"
+                  className="bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-emerald-400/50 focus:ring-emerald-400/20"
                 />
               </div>
 
               <div className="grid gap-2">
-                <Label htmlFor="phone">Phone</Label>
+                <Label htmlFor="phone" className="text-sm font-medium text-white">Phone</Label>
                 <Input
                   id="phone"
                   type="tel"
                   value={formData.phone}
                   onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
                   placeholder="+352 123 456"
+                  className="bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-emerald-400/50 focus:ring-emerald-400/20"
                 />
               </div>
             </div>
@@ -178,37 +185,40 @@ export function AddStakeholderModal({ entityId, open, onClose, onSuccess }: AddS
             {/* Effective Dates */}
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="effective_from">Effective From *</Label>
+                <Label htmlFor="effective_from" className="text-sm font-medium text-white">Effective From *</Label>
                 <Input
                   id="effective_from"
                   type="date"
                   value={formData.effective_from}
                   onChange={(e) => setFormData(prev => ({ ...prev, effective_from: e.target.value }))}
+                  className="bg-white/5 border-white/10 text-white focus:border-emerald-400/50 focus:ring-emerald-400/20"
                   required
                 />
               </div>
 
               <div className="grid gap-2">
-                <Label htmlFor="effective_to">Effective To (Optional)</Label>
+                <Label htmlFor="effective_to" className="text-sm font-medium text-white">Effective To (Optional)</Label>
                 <Input
                   id="effective_to"
                   type="date"
                   value={formData.effective_to}
                   onChange={(e) => setFormData(prev => ({ ...prev, effective_to: e.target.value }))}
                   placeholder="Leave empty if currently active"
+                  className="bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-emerald-400/50 focus:ring-emerald-400/20"
                 />
               </div>
             </div>
 
             {/* Notes */}
             <div className="grid gap-2">
-              <Label htmlFor="notes">Additional Notes</Label>
+              <Label htmlFor="notes" className="text-sm font-medium text-white">Additional Notes</Label>
               <Textarea
                 id="notes"
                 value={formData.notes}
                 onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
                 placeholder="Add any relevant information about this stakeholder..."
                 rows={3}
+                className="bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-emerald-400/50 focus:ring-emerald-400/20"
               />
             </div>
 
@@ -219,16 +229,17 @@ export function AddStakeholderModal({ entityId, open, onClose, onSuccess }: AddS
             )}
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="border-t border-white/10 pt-4">
             <Button
               type="button"
-              variant="ghost"
+              variant="outline"
               onClick={onClose}
               disabled={loading}
+              className="border-white/10 text-white hover:bg-white/10"
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={loading}>
+            <Button type="submit" disabled={loading} className="bg-emerald-500 hover:bg-emerald-600 text-emerald-950 font-semibold">
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Add Stakeholder
             </Button>

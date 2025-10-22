@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -52,6 +52,9 @@ export interface Entity {
   created_at: string
   logo_url?: string | null
   website_url?: string | null
+  investor_count?: number
+  open_flag_count?: number
+  last_event_at?: string | null
 }
 
 interface EntitiesViewProps {
@@ -85,130 +88,178 @@ const getStatusColor = (status: string | null) => {
   return 'bg-white/10 border-white/10 text-foreground'
 }
 
+const formatLastActivity = (timestamp?: string | null) => {
+  if (!timestamp) return 'No activity'
+  try {
+    return new Date(timestamp).toLocaleDateString()
+  } catch {
+    return 'No activity'
+  }
+}
+
 // Table View Component
 export function EntitiesTableView({ entities, onEntityClick, onEntityEdit }: EntitiesViewProps) {
-  const columns: ColumnDef<Entity>[] = [
-    {
-      accessorKey: 'entity_code',
-      header: ({ column }) => <TableColumnHeader column={column} title="Code" />,
-      cell: ({ row }) => (
-        <div className="font-mono text-xs">
-          {row.original.entity_code ? (
-            <Badge variant="outline" className="border-emerald-400/40 text-emerald-100">
-              {row.original.entity_code}
-            </Badge>
-          ) : (
-            <span className="text-muted-foreground">—</span>
-          )}
-        </div>
-      )
-    },
-    {
-      accessorKey: 'name',
-      header: ({ column }) => <TableColumnHeader column={column} title="Name" />,
-      cell: ({ row }) => (
-        <div className="flex items-center gap-2 min-w-[200px]">
-          <Building2 className="h-4 w-4 text-muted-foreground shrink-0" />
-          <div>
-            <div className="font-medium text-foreground">{row.original.name}</div>
-            {row.original.former_entity && (
-              <div className="text-xs text-muted-foreground">
-                Formerly: {row.original.former_entity}
-              </div>
+  const columns: ColumnDef<Entity>[] = useMemo(
+    () => [
+      {
+        accessorKey: 'entity_code',
+        header: ({ column }) => <TableColumnHeader column={column} title="Code" />,
+        cell: ({ row }) => (
+          <div className="font-mono text-xs">
+            {row.original.entity_code ? (
+              <Badge variant="outline" className="border-emerald-400/40 text-emerald-100">
+                {row.original.entity_code}
+              </Badge>
+            ) : (
+              <span className="text-muted-foreground">--</span>
             )}
           </div>
-        </div>
-      )
-    },
-    {
-      accessorKey: 'investment_name',
-      header: ({ column }) => <TableColumnHeader column={column} title="Investment" />,
-      cell: ({ row }) => (
-        <span className="font-medium text-foreground">
-          {row.original.investment_name || '—'}
-        </span>
-      )
-    },
-    {
-      accessorKey: 'platform',
-      header: ({ column }) => <TableColumnHeader column={column} title="Platform" />,
-      cell: ({ row }) =>
-        row.original.platform ? (
+        )
+      },
+      {
+        accessorKey: 'name',
+        header: ({ column }) => <TableColumnHeader column={column} title="Name" />,
+        cell: ({ row }) => (
+          <div className="flex items-center gap-2 min-w-[200px]">
+            <Building2 className="h-4 w-4 text-muted-foreground shrink-0" />
+            <div>
+              <div className="font-medium text-foreground">{row.original.name}</div>
+              {row.original.former_entity && (
+                <div className="text-xs text-muted-foreground">
+                  Formerly: {row.original.former_entity}
+                </div>
+              )}
+            </div>
+          </div>
+        )
+      },
+      {
+        accessorKey: 'investment_name',
+        header: ({ column }) => <TableColumnHeader column={column} title="Investment" />,
+        cell: ({ row }) => (
+          <span className="font-medium text-foreground">
+            {row.original.investment_name || '--'}
+          </span>
+        )
+      },
+      {
+        accessorKey: 'platform',
+        header: ({ column }) => <TableColumnHeader column={column} title="Platform" />,
+        cell: ({ row }) =>
+          row.original.platform ? (
+            <Badge className="bg-white/10 border-white/10 text-foreground">
+              {row.original.platform}
+            </Badge>
+          ) : (
+            '--'
+          )
+      },
+      {
+        accessorKey: 'type',
+        header: ({ column }) => <TableColumnHeader column={column} title="Type" />,
+        cell: ({ row }) => (
           <Badge className="bg-white/10 border-white/10 text-foreground">
-            {row.original.platform}
+            {entityTypeLabels[row.original.type] || row.original.type}
           </Badge>
-        ) : (
-          '—'
         )
-    },
-    {
-      accessorKey: 'type',
-      header: ({ column }) => <TableColumnHeader column={column} title="Type" />,
-      cell: ({ row }) => (
-        <Badge className="bg-white/10 border-white/10 text-foreground">
-          {entityTypeLabels[row.original.type] || row.original.type}
-        </Badge>
-      )
-    },
-    {
-      accessorKey: 'status',
-      header: ({ column }) => <TableColumnHeader column={column} title="Status" />,
-      cell: ({ row }) =>
-        row.original.status ? (
-          <Badge className={getStatusColor(row.original.status)}>
-            {row.original.status}
+      },
+      {
+        accessorKey: 'status',
+        header: ({ column }) => <TableColumnHeader column={column} title="Status" />,
+        cell: ({ row }) =>
+          row.original.status ? (
+            <Badge className={getStatusColor(row.original.status)}>
+              {row.original.status}
+            </Badge>
+          ) : (
+            '--'
+          )
+      },
+      {
+        accessorKey: 'investor_count',
+        header: ({ column }) => <TableColumnHeader column={column} title="Investors" />,
+        cell: ({ row }) => (
+          <Badge className="bg-white/10 border-white/10 text-foreground">
+            {row.original.investor_count ?? 0}
           </Badge>
-        ) : (
-          '—'
         )
-    },
-    {
-      accessorKey: 'currency',
-      header: ({ column }) => <TableColumnHeader column={column} title="Currency" />,
-      cell: ({ row }) => <span className="text-foreground">{row.original.currency}</span>
-    },
-    {
-      accessorKey: 'reporting_type',
-      header: ({ column }) => <TableColumnHeader column={column} title="Reporting" />,
-      cell: ({ row }) => (
-        <span className="text-xs text-muted-foreground">
-          {row.original.reporting_type || '—'}
-        </span>
-      )
-    },
-    {
-      id: 'actions',
-      header: () => <div className="text-right">Actions</div>,
-      cell: ({ row }) => (
-        <div className="flex items-center justify-end gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="gap-2"
-            onClick={(e) => {
-              e.stopPropagation()
-              onEntityClick(row.original.id)
-            }}
-          >
-            <Eye className="h-4 w-4" />
-            View
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="gap-2"
-            onClick={(e) => {
-              e.stopPropagation()
-              onEntityEdit(row.original)
-            }}
-          >
-            <Pencil className="h-4 w-4" />
-            Edit
-          </Button>
-        </div>
-      )
-    }
-  ]
+      },
+      {
+        accessorKey: 'open_flag_count',
+        header: ({ column }) => <TableColumnHeader column={column} title="Open Flags" />,
+        cell: ({ row }) => {
+          const count = row.original.open_flag_count ?? 0
+          return (
+            <Badge
+              className={
+                count > 0
+                  ? 'bg-red-500/20 border-red-400/40 text-red-100'
+                  : 'bg-white/10 border-white/10 text-foreground'
+              }
+            >
+              {count}
+            </Badge>
+          )
+        }
+      },
+      {
+        accessorKey: 'last_event_at',
+        header: ({ column }) => <TableColumnHeader column={column} title="Last Activity" />,
+        cell: ({ row }) => (
+          <span className="text-xs text-muted-foreground">
+            {formatLastActivity(row.original.last_event_at)}
+          </span>
+        )
+      },
+      {
+        accessorKey: 'currency',
+        header: ({ column }) => <TableColumnHeader column={column} title="Currency" />,
+        cell: ({ row }) => <span className="text-foreground">{row.original.currency}</span>
+      },
+      {
+        accessorKey: 'reporting_type',
+        header: ({ column }) => <TableColumnHeader column={column} title="Reporting" />,
+        cell: ({ row }) => (
+          <span className="text-xs text-muted-foreground">
+            {row.original.reporting_type || '--'}
+          </span>
+        )
+      },
+      {
+        id: 'actions',
+        header: () => <div className="text-right">Actions</div>,
+        cell: ({ row }) => (
+          <div className="flex items-center justify-end gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={(e) => {
+                e.stopPropagation()
+                onEntityClick(row.original.id)
+              }}
+            >
+              <Eye className="h-4 w-4" />
+              View
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="gap-2"
+              onClick={(e) => {
+                e.stopPropagation()
+                onEntityEdit(row.original)
+              }}
+            >
+              <Pencil className="h-4 w-4" />
+              Edit
+            </Button>
+          </div>
+        )
+      }
+    ],
+    [onEntityClick, onEntityEdit]
+  )
 
   return (
     <div className="border border-white/10 rounded-lg overflow-hidden">
@@ -225,8 +276,8 @@ export function EntitiesTableView({ entities, onEntityClick, onEntityEdit }: Ent
             <TableRow
               key={row.id}
               row={row}
-              className="cursor-pointer hover:bg-white/10"
               onClick={() => onEntityClick(row.original.id)}
+              className="cursor-pointer hover:bg-white/5 transition-colors"
             >
               {({ cell }) => <TableCell cell={cell} key={cell.id} />}
             </TableRow>
@@ -244,9 +295,7 @@ export function EntitiesListView({ entities, onEntityClick, onStatusChange }: En
     if (!over || !onStatusChange) return
 
     const newStatus = over.id as string
-    const statusExists = statusConfig.find((s) => s.name === newStatus)
-
-    if (statusExists) {
+    if (statusConfig.find((status) => status.name === newStatus)) {
       onStatusChange(active.id as string, newStatus)
     }
   }
@@ -259,13 +308,12 @@ export function EntitiesListView({ entities, onEntityClick, onStatusChange }: En
           <ListItems>
             {entities
               .filter((entity) => entity.status === status.name)
-              .map((entity, index) => (
+              .map((entity) => (
                 <ListItem
-                  id={entity.id}
-                  index={index}
                   key={entity.id}
-                  name={entity.name}
-                  parent={status.name}
+                  id={entity.id}
+                  onClick={() => onEntityClick(entity.id)}
+                  className="hover:bg-white/5 transition-colors"
                 >
                   <div
                     className="h-2 w-2 shrink-0 rounded-full"
@@ -282,12 +330,29 @@ export function EntitiesListView({ entities, onEntityClick, onStatusChange }: En
                     )}
                     <p className="m-0 font-medium text-sm truncate">{entity.name}</p>
                     <p className="m-0 text-xs text-muted-foreground truncate">
-                      {entity.investment_name || entity.platform || '—'}
+                      {entity.investment_name || entity.platform || '-'}
                     </p>
+                    <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                      <Badge className="bg-white/10 border-white/10 text-foreground">
+                        {(entity.investor_count ?? 0)} investors
+                      </Badge>
+                      <Badge
+                        className={
+                          (entity.open_flag_count ?? 0) > 0
+                            ? 'bg-red-500/20 border-red-400/40 text-red-100'
+                            : 'bg-white/10 border-white/10 text-foreground'
+                        }
+                      >
+                        {(entity.open_flag_count ?? 0)} flags
+                      </Badge>
+                      <span className="ml-auto text-xs text-muted-foreground">
+                        {formatLastActivity(entity.last_event_at)}
+                      </span>
+                    </div>
                   </div>
                   <Avatar className="h-6 w-6 shrink-0">
                     <AvatarFallback className="text-xs bg-white/10">
-                      {entity.platform?.slice(0, 2) || entity.entity_code?.slice(0, 2) || '—'}
+                      {entity.platform?.slice(0, 2) || entity.entity_code?.slice(0, 2) || '--'}
                     </AvatarFallback>
                   </Avatar>
                 </ListItem>
@@ -310,14 +375,14 @@ export function EntitiesKanbanView({ entities, onEntityClick, onStatusChange }: 
   const handleDataChange = (newData: Entity[]) => {
     setLocalEntities(newData)
 
-    // Find the entity that changed status
-    const changedEntity = newData.find((newEntity) => {
-      const oldEntity = entities.find((e) => e.id === newEntity.id)
-      return oldEntity && oldEntity.status !== newEntity.status
+    if (!onStatusChange) return
+    const changedEntity = newData.find((next) => {
+      const previous = entities.find((item) => item.id === next.id)
+      return previous && previous.status !== next.status
     })
 
-    if (changedEntity && onStatusChange) {
-      onStatusChange(changedEntity.id, changedEntity.status || 'TBD')
+    if (changedEntity && changedEntity.status) {
+      onStatusChange(changedEntity.id, changedEntity.status)
     }
   }
 
@@ -327,13 +392,10 @@ export function EntitiesKanbanView({ entities, onEntityClick, onStatusChange }: 
         <KanbanBoard id={column.id} key={column.id}>
           <KanbanHeader>
             <div className="flex items-center gap-2">
-              <div
-                className="h-2 w-2 rounded-full"
-                style={{ backgroundColor: column.color }}
-              />
+              <div className="h-2 w-2 rounded-full" style={{ backgroundColor: column.color }} />
               <span>{column.name}</span>
               <Badge variant="outline" className="ml-auto">
-                {localEntities.filter((e) => e.status === column.name).length}
+                {localEntities.filter((entity) => entity.status === column.name).length}
               </Badge>
             </div>
           </KanbanHeader>
@@ -363,7 +425,7 @@ export function EntitiesKanbanView({ entities, onEntityClick, onStatusChange }: 
                       <AvatarFallback className="text-xs bg-white/10">
                         {entity.platform?.slice(0, 2) ||
                           entity.entity_code?.slice(0, 2) ||
-                          '—'}
+                          '--'}
                       </AvatarFallback>
                     </Avatar>
                   </div>
@@ -372,17 +434,27 @@ export function EntitiesKanbanView({ entities, onEntityClick, onStatusChange }: 
                       {entity.investment_name}
                     </p>
                   )}
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                     {entity.platform && (
                       <Badge className="bg-white/10 border-white/10 text-foreground text-xs">
                         {entity.platform}
                       </Badge>
                     )}
-                    {entity.reporting_type && (
-                      <span className="text-xs text-muted-foreground">
-                        {entity.reporting_type}
-                      </span>
-                    )}
+                    <Badge className="bg-white/10 border-white/10 text-foreground text-xs">
+                      {(entity.investor_count ?? 0)} investors
+                    </Badge>
+                    <Badge
+                      className={
+                        (entity.open_flag_count ?? 0) > 0
+                          ? 'bg-red-500/20 border-red-400/40 text-red-100'
+                          : 'bg-white/10 border-white/10 text-foreground'
+                      }
+                    >
+                      {(entity.open_flag_count ?? 0)} flags
+                    </Badge>
+                    <span className="ml-auto text-[11px] text-muted-foreground">
+                      {formatLastActivity(entity.last_event_at)}
+                    </span>
                   </div>
                 </div>
               </KanbanCard>

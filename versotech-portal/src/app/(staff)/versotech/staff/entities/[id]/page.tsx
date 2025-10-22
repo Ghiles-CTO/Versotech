@@ -3,6 +3,7 @@ import { createSmartClient } from '@/lib/supabase/smart-client'
 import { redirect } from 'next/navigation'
 import { EntityDetailEnhanced } from '@/components/entities/entity-detail-enhanced'
 import { getCurrentUser } from '@/lib/auth'
+import { mergeEntityInvestorData } from '@/lib/entities/entity-investor-utils'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -40,7 +41,9 @@ export default async function EntityDetailPage({ params }: { params: Promise<{ i
     { data: folders },
     { data: flags },
     { data: deals },
-    { data: events }
+    { data: events },
+    { data: entityInvestors },
+    { data: vehicleSubscriptions }
   ] = await Promise.all([
     supabase
       .from('entity_directors')
@@ -53,10 +56,10 @@ export default async function EntityDetailPage({ params }: { params: Promise<{ i
       .eq('vehicle_id', id)
       .order('created_at', { ascending: false }),
     supabase
-      .from('entity_folders')
-      .select('*')
+      .from('document_folders')
+      .select('id, parent_folder_id, name, path, folder_type, created_at, updated_at')
       .eq('vehicle_id', id)
-      .order('folder_type', { ascending: true }),
+      .order('path', { ascending: true }),
     supabase
       .from('entity_flags')
       .select('*')
@@ -84,8 +87,120 @@ export default async function EntityDetailPage({ params }: { params: Promise<{ i
       `)
       .eq('vehicle_id', id)
       .order('created_at', { ascending: false })
-      .limit(50)
+      .limit(50),
+    supabase
+      .from('entity_investors')
+      .select(`
+        id,
+        subscription_id,
+        relationship_role,
+        allocation_status,
+        invite_sent_at,
+        created_at,
+        updated_at,
+        notes,
+        investor:investors (
+          id,
+          legal_name,
+          display_name,
+          type,
+          email,
+          country,
+          status,
+          onboarding_status,
+          aml_risk_rating
+        ),
+        subscription:subscriptions (
+          id,
+          commitment,
+          currency,
+          status,
+          effective_date,
+          funding_due_at,
+          units,
+          acknowledgement_notes,
+          created_at
+        )
+      `)
+      .eq('vehicle_id', id)
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('subscriptions')
+      .select(`
+        id,
+        investor_id,
+        vehicle_id,
+        commitment,
+        currency,
+        status,
+        effective_date,
+        funding_due_at,
+        units,
+        acknowledgement_notes,
+        created_at,
+        investor:investors (
+          id,
+          legal_name,
+          display_name,
+          type,
+          email,
+          country,
+          status,
+          onboarding_status,
+          aml_risk_rating
+        )
+      `)
+      .eq('vehicle_id', id)
+      .order('created_at', { ascending: false })
   ])
+
+  let holdings: any[] = []
+  if (deals && deals.length > 0) {
+    const dealIds = deals.map((deal) => deal.id).filter(Boolean)
+    if (dealIds.length > 0) {
+      const { data: holdingRows, error: holdingsError } = await supabase
+        .from('investor_deal_holdings')
+        .select(`
+          id,
+          investor_id,
+          deal_id,
+          subscription_submission_id,
+          status,
+          subscribed_amount,
+          currency,
+          effective_date,
+          funding_due_at,
+          funded_at,
+          created_at,
+          updated_at,
+          investor:investors (
+            id,
+            legal_name,
+            display_name,
+            type,
+            email,
+            country,
+            status,
+            onboarding_status,
+            aml_risk_rating
+          )
+        `)
+        .in('deal_id', dealIds)
+
+      if (holdingsError) {
+        console.error('[EntityDetailPage] Failed to load holdings:', holdingsError)
+      } else {
+        holdings = holdingRows ?? []
+      }
+    }
+  }
+
+  const mergedInvestors = mergeEntityInvestorData({
+    entityInvestors: entityInvestors ?? [],
+    subscriptions: vehicleSubscriptions ?? [],
+    holdings,
+    deals: deals ?? []
+  })
 
   return (
     <AppLayout brand="versotech">
@@ -97,6 +212,7 @@ export default async function EntityDetailPage({ params }: { params: Promise<{ i
         flags={flags || []}
         deals={deals || []}
         events={(events as any) || []}
+        investors={mergedInvestors}
       />
     </AppLayout>
   )

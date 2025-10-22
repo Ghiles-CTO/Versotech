@@ -74,11 +74,12 @@ export async function GET(request: NextRequest) {
       const investorIds = investorLinks.map(link => link.investor_id)
       console.log('Fetching data for investor IDs:', investorIds)
 
-      // Get vehicles that investor has subscriptions to
+      // Collect subscriptions and pending allocations (exclude cancelled)
       const { data: subscriptions, error: subsError } = await supabase
         .from('subscriptions')
-        .select('vehicle_id')
+        .select('*')
         .in('investor_id', investorIds)
+        .neq('status', 'cancelled')
 
       if (subsError) {
         console.error('Subscriptions fetch error:', subsError)
@@ -88,10 +89,44 @@ export async function GET(request: NextRequest) {
         )
       }
 
-      const vehicleIds = [...new Set(subscriptions?.map(s => s.vehicle_id).filter(Boolean) || [])]
-      console.log('Found vehicle IDs from subscriptions:', vehicleIds)
+      const { data: entityInvestorLinks, error: entityInvestorError } = await supabase
+        .from('entity_investors')
+        .select(`
+          vehicle_id,
+          investor_id,
+          allocation_status,
+          invite_sent_at,
+          notes,
+          subscription:subscriptions (
+            id,
+            commitment,
+            currency,
+            status,
+            effective_date,
+            funding_due_at,
+            units
+          )
+        `)
+        .in('investor_id', investorIds)
 
-      if (vehicleIds.length === 0) {
+      if (entityInvestorError) {
+        console.error('Entity investor fetch error:', entityInvestorError)
+        return NextResponse.json(
+          { error: 'Failed to fetch pending allocations', details: entityInvestorError.message },
+          { status: 500 }
+        )
+      }
+
+      const vehicleIds = new Set<string>()
+      subscriptions?.forEach((row) => {
+        if (row.vehicle_id) vehicleIds.add(row.vehicle_id)
+      })
+      entityInvestorLinks?.forEach((row) => {
+        if (row.vehicle_id) vehicleIds.add(row.vehicle_id)
+      })
+      console.log('Resolved investor vehicle IDs:', Array.from(vehicleIds))
+
+      if (vehicleIds.size === 0) {
         console.log('No vehicle IDs found, returning empty')
         return NextResponse.json({ 
           vehicles: [],
@@ -103,7 +138,7 @@ export async function GET(request: NextRequest) {
       const { data: vehicles, error: vehiclesError } = await supabase
         .from('vehicles')
         .select('*')
-        .in('id', vehicleIds)
+        .in('id', Array.from(vehicleIds))
         .order('created_at', { ascending: false })
 
       if (vehiclesError) {
@@ -116,17 +151,25 @@ export async function GET(request: NextRequest) {
 
       console.log(`Found ${vehicles?.length || 0} vehicles for investor`)
 
+      const subscriptionByVehicle = new Map<string, any>()
+      subscriptions?.forEach((row) => {
+        if (row.vehicle_id && !subscriptionByVehicle.has(row.vehicle_id)) {
+          subscriptionByVehicle.set(row.vehicle_id, row)
+        }
+      })
+
+      const entityInvestorByVehicle = new Map<string, any>()
+      entityInvestorLinks?.forEach((row) => {
+        if (row.vehicle_id && !entityInvestorByVehicle.has(row.vehicle_id)) {
+          entityInvestorByVehicle.set(row.vehicle_id, row)
+        }
+      })
+
       // Enrich vehicles with subscription, position, and valuation data
       const enrichedVehicles = await Promise.all((vehicles || []).map(async (vehicle) => {
-        // Get subscription data
-        const { data: subscription } = await supabase
-          .from('subscriptions')
-          .select('*')
-          .eq('vehicle_id', vehicle.id)
-          .in('investor_id', investorIds)
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle()
+        const entityLink = entityInvestorByVehicle.get(vehicle.id) || null
+        const subscriptionRow =
+          entityLink?.subscription || subscriptionByVehicle.get(vehicle.id) || null
 
         // Get position data
         const { data: position } = await supabase
@@ -155,6 +198,24 @@ export async function GET(request: NextRequest) {
         const unrealizedGain = currentValue - costBasis
         const unrealizedGainPct = costBasis > 0 ? (unrealizedGain / costBasis) * 100 : 0
 
+        const subscriptionData = subscriptionRow
+          ? {
+              commitment: parseFloat(subscriptionRow.commitment || 0),
+              currency: subscriptionRow.currency || vehicle.currency,
+              status: subscriptionRow.status || entityLink?.allocation_status || 'pending',
+              effective_date: subscriptionRow.effective_date,
+              funding_due_at: subscriptionRow.funding_due_at,
+              units: subscriptionRow.units
+            }
+          : null
+
+        const allocationStatus =
+          entityLink?.allocation_status ||
+          subscriptionData?.status ||
+          (position && position.units && position.units > 0 ? 'active' : 'pending')
+
+        const normalizedStatus = allocationStatus ? allocationStatus.toLowerCase() : 'pending'
+
         return {
           id: vehicle.id,
           name: vehicle.name,
@@ -162,6 +223,7 @@ export async function GET(request: NextRequest) {
           domicile: vehicle.domicile,
           currency: vehicle.currency,
           created_at: vehicle.created_at,
+          status: normalizedStatus,
           position: position ? {
             units,
             costBasis,
@@ -170,11 +232,9 @@ export async function GET(request: NextRequest) {
             unrealizedGainPct,
             lastUpdated: position.as_of_date
           } : null,
-          subscription: subscription ? {
-            commitment: parseFloat(subscription.commitment || 0),
-            currency: subscription.currency,
-            status: subscription.status
-          } : null,
+          subscription: subscriptionData,
+          allocation_status: allocationStatus,
+          invite_sent_at: entityLink?.invite_sent_at,
           valuation: valuation ? {
             navTotal: parseFloat(valuation.nav_total || 0),
             navPerUnit: parseFloat(valuation.nav_per_unit || 0),
@@ -375,6 +435,15 @@ export async function POST(request: NextRequest) {
         domicile: vehicle.domicile
       }
     })
+
+    const { error: folderSeedError } = await supabase.rpc('ensure_entity_default_folders', {
+      p_vehicle_id: vehicle.id,
+      p_actor: user.id.startsWith('demo-') ? null : user.id
+    })
+
+    if (folderSeedError) {
+      console.error('Vehicle creation folder seed error:', folderSeedError)
+    }
 
     return NextResponse.json({ vehicle }, { status: 201 })
 

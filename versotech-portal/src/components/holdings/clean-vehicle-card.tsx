@@ -34,6 +34,8 @@ interface EnhancedHolding {
   domicile?: string
   currency: string
   created_at: string
+  allocation_status?: string | null
+  invite_sent_at?: string | null
   position: {
     units: number
     costBasis: number
@@ -43,9 +45,12 @@ interface EnhancedHolding {
     lastUpdated?: string
   } | null
   subscription: {
-    commitment: number
+    commitment: number | null
     currency: string
     status: string
+    effective_date?: string | null
+    funding_due_at?: string | null
+    units?: number | null
   } | null
   valuation: {
     navTotal: number
@@ -55,12 +60,36 @@ interface EnhancedHolding {
   performance: {
     unrealizedGainPct: number
   } | null
+  status?: string
+}
+
+const getStatusStyles = (status: string) => {
+  switch (status) {
+    case 'active':
+    case 'committed':
+      return 'bg-emerald-600 border-emerald-500 text-white font-medium'
+    case 'pending':
+      return 'bg-amber-600 border-amber-500 text-white font-medium'
+    case 'closed':
+      return 'bg-blue-600 border-blue-500 text-white font-medium'
+    case 'cancelled':
+      return 'bg-red-600 border-red-500 text-white font-medium'
+    default:
+      return 'bg-gray-600 border-gray-500 text-white font-medium'
+  }
 }
 
 export function CleanVehicleCard({ holding }: { holding: EnhancedHolding }) {
   const router = useRouter()
   const hasPosition = holding.position && holding.position.currentValue > 0
   const isPositive = holding.position?.unrealizedGainPct ? holding.position.unrealizedGainPct >= 0 : false
+  const rawStatus =
+    holding.status ||
+    holding.allocation_status ||
+    holding.subscription?.status ||
+    (hasPosition ? 'active' : 'pending')
+  const status = rawStatus.toLowerCase()
+  const statusLabel = status.replace(/_/g, ' ').toUpperCase()
 
   const handleViewDetails = () => {
     router.push(`/versoholdings/vehicle/${holding.id}`)
@@ -90,6 +119,7 @@ export function CleanVehicleCard({ holding }: { holding: EnhancedHolding }) {
                   {holding.domicile}
                 </Badge>
               )}
+              <Badge className={cn('text-xs', getStatusStyles(status))}>{statusLabel}</Badge>
             </div>
           </div>
           <DropdownMenu>
@@ -200,24 +230,40 @@ export function CleanVehicleCard({ holding }: { holding: EnhancedHolding }) {
             )}
           </>
         ) : (
-          <div className="text-center py-6">
-            <DollarSign className="h-12 w-12 text-muted-foreground/20 mx-auto mb-3" />
-            <p className="text-sm text-muted-foreground">No position data available</p>
-            {holding.subscription && (
-              <div className="mt-4 space-y-2">
-                <Badge variant="outline">
-                  Commitment: {new Intl.NumberFormat('en-US', {
+          <div className="text-center py-6 space-y-3">
+            <DollarSign className="h-12 w-12 text-muted-foreground/20 mx-auto mb-1" />
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-foreground">Awaiting Funding</p>
+              <p className="text-sm text-muted-foreground">
+                Your commitment has been recorded. We will notify you once units are issued.
+              </p>
+            </div>
+            <div className="space-y-1">
+              <Badge variant="outline" className="bg-white/5 border-white/10 text-xs capitalize">
+                Allocation Status: {(holding.allocation_status || holding.subscription?.status || 'pending').replace(/_/g, ' ')}
+              </Badge>
+              {holding.subscription?.commitment !== null && holding.subscription?.commitment !== undefined && (
+                <Badge variant="outline" className="bg-white/5 border-white/10 text-xs">
+                  Commitment:{' '}
+                  {new Intl.NumberFormat('en-US', {
                     style: 'currency',
-                    currency: holding.subscription.currency,
+                    currency: holding.subscription?.currency || holding.currency,
                     minimumFractionDigits: 0,
                     maximumFractionDigits: 0
-                  }).format(holding.subscription.commitment)}
+                  }).format(holding.subscription.commitment ?? 0)}
                 </Badge>
+              )}
+              {holding.subscription?.funding_due_at && (
                 <p className="text-xs text-muted-foreground">
-                  Status: {holding.subscription.status}
+                  Funding due {new Date(holding.subscription.funding_due_at).toLocaleDateString()}
                 </p>
-              </div>
-            )}
+              )}
+              {holding.invite_sent_at && (
+                <p className="text-xs text-muted-foreground">
+                  Invite sent {new Date(holding.invite_sent_at).toLocaleDateString()}
+                </p>
+              )}
+            </div>
           </div>
         )}
 

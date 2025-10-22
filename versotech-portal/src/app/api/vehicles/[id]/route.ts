@@ -57,7 +57,8 @@ export async function GET(
       { data: folders },
       { data: flags },
       { data: deals },
-      { data: entityEvents }
+      { data: entityEvents },
+      { data: entityInvestors }
     ] = await Promise.all([
       supabase
         .from('entity_directors')
@@ -70,10 +71,10 @@ export async function GET(
         .eq('vehicle_id', vehicleId)
         .order('created_at', { ascending: false }),
       supabase
-        .from('entity_folders')
-        .select('*')
+        .from('document_folders')
+        .select('id, parent_folder_id, name, path, folder_type, created_at, updated_at')
         .eq('vehicle_id', vehicleId)
-        .order('folder_type', { ascending: true }),
+        .order('path', { ascending: true }),
       supabase
         .from('entity_flags')
         .select('*')
@@ -97,7 +98,42 @@ export async function GET(
         `)
         .eq('vehicle_id', vehicleId)
         .order('created_at', { ascending: false})
-        .limit(50)
+        .limit(50),
+      supabase
+        .from('entity_investors')
+        .select(`
+          id,
+          relationship_role,
+          allocation_status,
+          invite_sent_at,
+          created_at,
+          updated_at,
+          notes,
+          investor:investors (
+            id,
+            legal_name,
+            display_name,
+            type,
+            email,
+            country,
+            status,
+            onboarding_status,
+            aml_risk_rating
+          ),
+          subscription:subscriptions (
+            id,
+            commitment,
+            currency,
+            status,
+            effective_date,
+            funding_due_at,
+            units,
+            acknowledgement_notes,
+            created_at
+          )
+        `)
+        .eq('vehicle_id', vehicleId)
+        .order('created_at', { ascending: false })
     ])
 
     // For investors, check if they have access to this vehicle
@@ -164,7 +200,12 @@ export async function GET(
 
     if (profile.role === 'investor') {
       // Investors can only see their own documents or vehicle-level documents
-      documentsQuery = documentsQuery.or(`owner_investor_id.in.(${investorIds.join(',')}),owner_investor_id.is.null`)
+      if (investorIds.length > 0) {
+        const investorList = investorIds.join(',')
+        documentsQuery = documentsQuery.or(`owner_investor_id.in.(${investorList}),owner_investor_id.is.null`)
+      } else {
+        documentsQuery = documentsQuery.is('owner_investor_id', null)
+      }
     }
 
     const { data: documents } = await documentsQuery.order('created_at', { ascending: false })
@@ -253,6 +294,7 @@ export async function GET(
       folders: folders || [],
       flags: flags || [],
       deals: deals || [],
+      investors: entityInvestors || [],
       entity_events: entityEvents || [],
       position: positionData,
       subscription: subscriptionData,

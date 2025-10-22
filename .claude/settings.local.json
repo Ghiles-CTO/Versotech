@@ -45,7 +45,18 @@
       "Bash(cat:*)",
       "Bash(npx next:*)",
       "Read(//c/Users/gmmou/Downloads/**)",
-      "Bash(timeout 15 npm run dev:*)"
+      "Bash(timeout 15 npm run dev:*)",
+      "Bash(supabase migration fetch 20251020141242)",
+      "Bash(supabase migration list)",
+      "Read(//c/Users/gmmou/Desktop/VERSOTECH/**)",
+      "Bash(PGPASSWORD=\"XXooKd3LIVm6JHru\" supabase migration fetch 20251020141242 --yes)",
+      "Bash(export DB_PASSWORD=\"XXooKd3LIVm6JHru\")",
+      "Bash(printf \"XXooKd3LIVm6JHru\\ny\\n\")",
+      "Bash(supabase migration fetch 20251020141242 --db-url \"postgresql://postgres.ipguxdssecfexudnvtia:XXooKd3LIVm6JHru@aws-1-eu-central-2.pooler.supabase.com:6543/postgres\")",
+      "Bash(supabase migration list --db-url \"postgresql://postgres.ipguxdssecfexudnvtia:XXooKd3LIVm6JHru@db.ipguxdssecfexudnvtia.supabase.co:5432/postgres\")",
+      "Bash(supabase migration fetch 20251020144429 --db-url \"postgresql://postgres.ipguxdssecfexudnvtia:XXooKd3LIVm6JHru@aws-1-eu-central-2.pooler.supabase.com:6543/postgres\")",
+      "Bash(supabase migration fetch 20251020144445 --db-url \"postgresql://postgres.ipguxdssecfexudnvtia:XXooKd3LIVm6JHru@aws-1-eu-central-2.pooler.supabase.com:6543/postgres\")",
+      "Bash(supabase migration list --db-url \"postgresql://postgres.ipguxdssecfexudnvtia:XXooKd3LIVm6JHru@aws-1-eu-central-2.pooler.supabase.com:6543/postgres\")"
     ],
     "deny": []
   },
