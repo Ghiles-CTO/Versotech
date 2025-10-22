@@ -247,6 +247,111 @@ const formatCurrencyValue = (amount?: number | null, currency?: string | null) =
   }
 }
 
+const formatWorkbookDate = (value?: string | number | null) => {
+  if (value == null || value === '') {
+    return '—'
+  }
+
+  const castNumber = typeof value === 'number' ? value : Number(value)
+  if (!Number.isNaN(castNumber) && castNumber > 0) {
+    const excelEpoch = new Date(1899, 11, 30)
+    const computed = new Date(excelEpoch.getTime() + castNumber * 24 * 60 * 60 * 1000)
+    if (!Number.isNaN(computed.getTime())) {
+      return computed.toLocaleDateString()
+    }
+  }
+
+  if (typeof value === 'string') {
+    const parsed = new Date(value)
+    if (!Number.isNaN(parsed.getTime())) {
+      return parsed.toLocaleDateString()
+    }
+  }
+
+  return String(value)
+}
+
+const AcknowledgementNotes = ({ notes }: { notes: string }) => {
+  try {
+    const parsed = JSON.parse(notes)
+    const lineItems: Array<Record<string, unknown>> = Array.isArray(parsed?.line_items)
+      ? parsed.line_items
+      : []
+
+    if (lineItems.length > 0) {
+      return (
+        <div className="mt-2 space-y-2 rounded-md border border-emerald-400/30 bg-emerald-500/5 p-3 text-xs text-emerald-50">
+          <div className="flex flex-wrap items-center gap-2 text-emerald-200">
+            <span className="font-semibold uppercase tracking-wide">
+              {parsed?.source ? String(parsed.source) : 'Legacy workbook import'}
+            </span>
+            {parsed?.run_id && <span>Run ID {parsed.run_id}</span>}
+          </div>
+          <div className="space-y-2">
+            {lineItems.map((item, index) => {
+              const sheet = String(item.sheet ?? 'Sheet')
+              const row = item.row != null ? String(item.row) : '?'
+              const amountValue =
+                item.amount_converted ??
+                item.amount_original ??
+                undefined
+              const amountNumber =
+                typeof amountValue === 'number'
+                  ? amountValue
+                  : amountValue != null
+                    ? Number(amountValue)
+                    : undefined
+              const currency =
+                item.currency_converted ??
+                item.currency_original ??
+                parsed?.currency ??
+                'USD'
+              const comment = item.comments ? String(item.comments) : null
+              const orderDate = formatWorkbookDate(item.order_date as string | number | null)
+              const settlementDate = formatWorkbookDate(
+                item.settlement_date as string | number | null
+              )
+
+              const amountDisplay =
+                amountNumber != null && !Number.isNaN(amountNumber)
+                  ? formatCurrencyValue(amountNumber, String(currency)) ??
+                    amountNumber.toLocaleString()
+                  : null
+
+              return (
+                <div
+                  key={`${sheet}-${row}-${index}`}
+                  className="rounded border border-emerald-500/20 bg-emerald-500/10 p-2"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="font-semibold uppercase tracking-wide text-emerald-200">
+                      {sheet} #{row}
+                    </span>
+                    {amountDisplay && <span>{amountDisplay}</span>}
+                  </div>
+                  <div className="mt-1 flex flex-wrap gap-4 text-emerald-100">
+                    {orderDate !== '—' && <span>Order: {orderDate}</span>}
+                    {settlementDate !== '—' && <span>Settlement: {settlementDate}</span>}
+                  </div>
+                  {comment && <p className="mt-1 italic text-emerald-200">{comment}</p>}
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )
+    }
+  } catch (error) {
+    // fall back to default rendering below
+  }
+
+  return (
+    <p className="mt-2 whitespace-pre-wrap break-words text-emerald-50">
+      {notes}
+    </p>
+  )
+}
+
 const stakeholderCategoryConfig = [
   { key: 'shareholders', label: 'Shareholders', roles: ['shareholder'] },
   { key: 'legal', label: 'Legal & Counsel', roles: ['lawyer'] },
@@ -1254,9 +1359,7 @@ export function EntityDetailEnhanced({
                                           </div>
                                         </div>
                                         {entry.acknowledgement_notes && (
-                                          <p className="mt-2 text-emerald-50">
-                                            {entry.acknowledgement_notes}
-                                          </p>
+                                          <AcknowledgementNotes notes={entry.acknowledgement_notes} />
                                         )}
                                       </div>
                                     )

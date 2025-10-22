@@ -21,7 +21,7 @@ import json
 import logging
 import sys
 from dataclasses import dataclass
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Tuple
 
@@ -213,23 +213,245 @@ class WorkbookParser:
         lines: List[SubscriptionLine] = []
         headers: Dict[str, str] = {}
         header_detected = False
+        header_meta: Dict[str, List[str] | Optional[str]] = {}
         vehicle_config: Optional[VehicleConfig] = self.config.vehicles.get(vehicle_code)
+
+        def _match_first(header_map: Dict[str, str], keywords: Iterable[str], *, exclude: Iterable[str] = ()) -> Optional[str]:
+            keywords_lower = [kw.lower() for kw in keywords]
+            exclude_lower = [ex.lower() for ex in exclude]
+            for col, title in header_map.items():
+                title_lower = title.lower()
+                if any(ex in title_lower for ex in exclude_lower):
+                    continue
+                if all(kw in title_lower for kw in keywords_lower):
+                    return col
+            return None
+
+        def _match_all(header_map: Dict[str, str], keyword_sets: Iterable[Iterable[str]], *, exclude: Iterable[str] = ()) -> List[str]:
+            seen: List[str] = []
+            for keywords in keyword_sets:
+                col = _match_first(header_map, keywords, exclude=exclude)
+                if col and col not in seen:
+                    seen.append(col)
+            return seen
+
+        def _first_nonempty(row: Dict[str, Optional[str]], columns: Iterable[str]) -> Optional[str]:
+            for col in columns:
+                value = row.get(col)
+                if value is not None and clean_string(value) not in {None, "-", "--"}:
+                    return value
+            return None
+
+        def _first_decimal(row: Dict[str, Optional[str]], columns: Iterable[str]) -> Optional[Decimal]:
+            for col in columns:
+                value = parse_decimal(row.get(col))
+                if value is not None:
+                    return value
+            return None
+
+        def _is_numeric_label(label: str) -> bool:
+            if not label:
+                return False
+            stripped = "".join(ch for ch in label if ch not in {" ", "\t", "\n", "\r"})
+            if not stripped:
+                return False
+            try:
+                Decimal(stripped)
+                return True
+            except InvalidOperation:
+                return False
 
         for row_index, row in reader.iter_rows(sheet_name):
             raw = {col: clean_string(val) for col, val in row.items()}
-            counterparty = clean_string(row.get("C"))
-            nominal = parse_decimal(row.get("E"))
-
             if not header_detected:
-                header_detected = bool(counterparty and counterparty.lower() in {"counterparty", "investor"})
+                header_detected = any(
+                    clean_string(value)
+                    and clean_string(value).lower()
+                    in {"counterparty", "investor", "opportunity", "tranches", "index"}
+                    for value in row.values()
+                )
                 if header_detected:
                     headers = {col: clean_string(val) or f"COL_{col}" for col, val in row.items()}
+                    header_meta = {}
+                    # Investor display columns
+                    display_cols = _match_all(
+                        headers,
+                        [
+                            ("counterparty",),
+                            ("investor", "name"),
+                            ("investor", "first"),
+                            ("investor", "last"),
+                            ("names",),
+                        ],
+                    )
+                    if not display_cols:
+                        display_cols = _match_all(headers, [("opportunity",)])
+                    header_meta["display_cols"] = display_cols
+                    # Investor entity column
+                    header_meta["entity_col"] = _match_first(headers, ("entity",))
+                    # Opportunity column (fallback display)
+                    header_meta["opportunity_col"] = _match_first(headers, ("opportunity",))
+                    # Index column for skipping totals
+                    header_meta["index_col"] = _match_first(headers, ("index",))
+                    # Vehicle column
+                    header_meta["vehicle_col"] = _match_first(headers, ("vehicle",))
+                    # Nominal/original amount columns
+                    header_meta["nominal_cols"] = _match_all(
+                        headers,
+                        [
+                            ("nominal",),
+                            ("amount", "invested"),
+                            ("investment", "amount"),
+                            ("principal",),
+                        ],
+                    )
+                    # Cash/converted amount columns
+                    header_meta["amount_cols"] = _match_all(
+                        headers,
+                        [
+                            ("amount",),
+                            ("cash",),
+                            ("drawn",),
+                        ],
+                        exclude=("invested",),
+                    )
+                    # Price per share / PPS
+                    header_meta["price_cols"] = _match_all(
+                        headers,
+                        [
+                            ("price per share",),
+                            ("note price",),
+                            ("pps",),
+                            ("cost per share",),
+                        ],
+                    )
+                    # Ownership percent
+                    header_meta["ownership_cols"] = _match_all(
+                        headers,
+                        [
+                            ("ownership",),
+                            ("position",),
+                            ("% holdings",),
+                        ],
+                    )
+                    # Fee percent and amount
+                    header_meta["fee_percent_cols"] = _match_all(
+                        headers,
+                        [
+                            ("fees", "%"),
+                            ("fee", "%"),
+                            ("subscription fees", "%"),
+                        ],
+                    )
+                    header_meta["fee_amount_cols"] = _match_all(
+                        headers,
+                        [
+                            ("fees",),
+                            ("subscription fees",),
+                        ],
+                        exclude=("%",),
+                    )
+                    # Date columns
+                    header_meta["order_date_cols"] = _match_all(
+                        headers,
+                        [
+                            ("order date",),
+                            ("contract date",),
+                            ("order",),
+                        ],
+                    )
+                    header_meta["trade_date_cols"] = _match_all(
+                        headers,
+                        [
+                            ("trade date",),
+                            ("td",),
+                        ],
+                    )
+                    header_meta["settlement_date_cols"] = _match_all(
+                        headers,
+                        [
+                            ("settlement date",),
+                            ("sd",),
+                        ],
+                    )
+                    # Status column
+                    header_meta["status_cols"] = _match_all(
+                        headers,
+                        [
+                            ("trade status",),
+                            ("status",),
+                        ]
+                    )
+                    # ISIN and settlement location
+                    header_meta["isin_col"] = _match_first(headers, ("isin",))
+                    header_meta["settlement_col"] = _match_first(headers, ("settlement",))
+                    # Comments and notes
+                    header_meta["comments_cols"] = _match_all(
+                        headers,
+                        [
+                            ("comments",),
+                        ],
+                    )
+                    header_meta["notes_cols"] = _match_all(
+                        headers,
+                        [
+                            ("to do",),
+                            ("notes",),
+                        ],
+                    )
                 continue
 
-            if not counterparty and not nominal:
+            if not headers:
                 continue
 
-            status_raw = clean_string(row.get("P"))
+            investor_display = None
+            display_parts: List[str] = []
+            for col in header_meta.get("display_cols", []):
+                value = clean_string(row.get(col))
+                if value:
+                    display_parts.append(value)
+            if display_parts:
+                investor_display = " ".join(dict.fromkeys(display_parts))
+
+            investor_entity = clean_string(_first_nonempty(row, [header_meta.get("entity_col")] if header_meta.get("entity_col") else []))
+            if not investor_display:
+                investor_display = investor_entity
+            if not investor_display:
+                opportunity_col = header_meta.get("opportunity_col")
+                if opportunity_col:
+                    investor_display = clean_string(row.get(opportunity_col))
+            if investor_display is None:
+                continue
+
+            index_value = clean_string(row.get(header_meta.get("index_col"))) if header_meta.get("index_col") else None
+            if investor_display and investor_display.lower() in {"total", "subtotal"}:
+                continue
+            if index_value and index_value.lower() in {"total", "subtotal"}:
+                continue
+            if investor_display and _is_numeric_label(investor_display):
+                continue
+
+            vehicle_col = header_meta.get("vehicle_col")
+            row_vehicle_code = clean_string(row.get(vehicle_col)) if vehicle_col else None
+            if vehicle_config and vehicle_config.force_sheet_vehicle_code:
+                row_vehicle_code = vehicle_code
+            row_vehicle_code = row_vehicle_code or vehicle_code
+
+            nominal = _first_decimal(row, header_meta.get("nominal_cols", []))
+            amount_converted = _first_decimal(row, header_meta.get("amount_cols", []))
+            if amount_converted is None:
+                amount_converted = nominal
+            if nominal is None and amount_converted is None:
+                continue
+
+            fee_percent = _first_decimal(row, header_meta.get("fee_percent_cols", []))
+            fees_amount = _first_decimal(row, header_meta.get("fee_amount_cols", []))
+            price_per_share = _first_decimal(row, header_meta.get("price_cols", []))
+            ownership_percent = _first_decimal(row, header_meta.get("ownership_cols", []))
+            order_date = self._format_date(_first_nonempty(row, header_meta.get("order_date_cols", [])))
+            trade_date = self._format_date(_first_nonempty(row, header_meta.get("trade_date_cols", [])))
+            settlement_date = self._format_date(_first_nonempty(row, header_meta.get("settlement_date_cols", [])))
+            status_raw = clean_string(_first_nonempty(row, header_meta.get("status_cols", [])))
             status_mapped = self._map_status(status_raw)
 
             currency_original = vehicle_config.currency if vehicle_config else None
@@ -244,37 +466,55 @@ class WorkbookParser:
                     target_currency = fx.to_currency
 
             amount_original = nominal
-            amount_converted: Optional[Decimal] = None
-            if amount_original is not None and fx_rate is not None:
-                amount_converted = (amount_original * fx_rate).quantize(Decimal("0.01"))
-            currency_converted = target_currency if amount_converted is not None else currency_original or target_currency
+            converted_amount = amount_converted
+            if converted_amount is not None and fx_rate is None:
+                # If amount appears already converted (e.g. USD), keep currency.
+                converted = converted_amount
+            elif amount_original is not None and fx_rate is not None:
+                converted = (amount_original * fx_rate).quantize(Decimal("0.01"))
+            else:
+                converted = converted_amount
+            currency_converted = target_currency if converted is not None else currency_original or target_currency
+
+            comments_parts = [
+                clean_string(row.get(col))
+                for col in header_meta.get("comments_cols", [])
+                if clean_string(row.get(col))
+            ]
+            comments = "; ".join(dict.fromkeys(comments_parts)) if comments_parts else None
+            notes_parts = [
+                clean_string(row.get(col))
+                for col in header_meta.get("notes_cols", [])
+                if clean_string(row.get(col))
+            ]
+            notes = "; ".join(dict.fromkeys(notes_parts)) if notes_parts else None
 
             lines.append(
                 SubscriptionLine(
-                    vehicle_code=vehicle_code,
+                    vehicle_code=row_vehicle_code.upper(),
                     sheet_code=sheet_name,
-                    investor_display_name=counterparty,
-                    investor_entity=clean_string(row.get("D")) if clean_string(row.get("D")) not in {None, vehicle_code} else counterparty,
-                    nominal_amount=nominal,
-                    cash_amount=parse_decimal(row.get("J")),
-                    fees_amount=parse_decimal(row.get("L")),
-                    fee_percent=parse_decimal(row.get("K")),
+                    investor_display_name=investor_display,
+                    investor_entity=investor_entity if investor_entity not in {None, row_vehicle_code} else investor_display,
+                    nominal_amount=amount_original,
+                    cash_amount=amount_converted if amount_converted is not None else converted,
+                    fees_amount=fees_amount,
+                    fee_percent=fee_percent,
                     amount_original=amount_original,
                     currency_original=currency_original,
                     fx_rate=fx_rate,
-                    amount_converted=amount_converted,
+                    amount_converted=converted,
                     currency_converted=currency_converted,
-                    price_per_share=parse_decimal(row.get("F")),
-                    ownership_percent=parse_decimal(row.get("G")),
-                    order_date=self._format_date(row.get("M")),
-                    trade_date=self._format_date(row.get("N")),
-                    settlement_date=self._format_date(row.get("O")),
+                    price_per_share=price_per_share,
+                    ownership_percent=ownership_percent,
+                    order_date=order_date,
+                    trade_date=trade_date,
+                    settlement_date=settlement_date,
                     status_raw=status_raw,
                     status_mapped=status_mapped,
-                    isin=clean_string(row.get("Q")),
-                    settlement_location=clean_string(row.get("R")),
-                    comments=clean_string(row.get("S")),
-                    notes=clean_string(row.get("T")),
+                    isin=clean_string(row.get(header_meta.get("isin_col"))) if header_meta.get("isin_col") else None,
+                    settlement_location=clean_string(row.get(header_meta.get("settlement_col"))) if header_meta.get("settlement_col") else None,
+                    comments=comments,
+                    notes=notes,
                     source_sheet=sheet_name,
                     source_row=row_index,
                     raw_data=raw,
@@ -570,6 +810,31 @@ class Database:
             )
             return cur.fetchone()
 
+    def fetch_vehicle_by_investment_name(self, investment_name: str) -> Optional[Dict]:
+        with self.conn.cursor() as cur:
+            cur.execute(
+                """
+                select * from public.vehicles
+                 where upper(investment_name) = %s
+                 order by created_at asc
+                 limit 1
+                """,
+                (investment_name.upper(),),
+            )
+            return cur.fetchone()
+
+    def fetch_vehicle_by_id(self, vehicle_id: str) -> Optional[Dict]:
+        with self.conn.cursor() as cur:
+            cur.execute(
+                """
+                select * from public.vehicles
+                 where id = %s
+                 limit 1
+                """,
+                (vehicle_id,),
+            )
+            return cur.fetchone()
+
     def create_vehicle(self, cfg: VehicleConfig) -> Dict:
         with self.conn.cursor() as cur:
             cur.execute(
@@ -775,23 +1040,27 @@ class Loader:
             return self.vehicle_cache[code]
 
         cfg = self.config.vehicles.get(code)
+        if cfg and cfg.skip:
+            raise RuntimeError(f"Vehicle code {code} is configured to skip; update mapping before import.")
         vehicle: Optional[Dict] = None
         if cfg and cfg.vehicle_id:
-            with self.db.conn.cursor() as cur:
-                cur.execute("select * from public.vehicles where id = %s", (cfg.vehicle_id,))
-                vehicle = cur.fetchone()
-                if not vehicle:
-                    LOGGER.warning("Configured vehicle_id %s for %s not found", cfg.vehicle_id, code)
+            vehicle = self.db.fetch_vehicle_by_id(cfg.vehicle_id)
+            if not vehicle:
+                raise RuntimeError(f"Configured vehicle_id {cfg.vehicle_id} for {code} not found in public.vehicles")
 
         if vehicle is None and summary_row and summary_row.vehicle_name:
-            vehicle = self.db.fetch_vehicle_by_name(summary_row.vehicle_name)
+            name = summary_row.vehicle_name
+            vehicle = self.db.fetch_vehicle_by_investment_name(name)
+            if vehicle is None:
+                vehicle = self.db.fetch_vehicle_by_name(name)
 
-        if vehicle is None and cfg and cfg.name:
-            vehicle = self.db.fetch_vehicle_by_name(cfg.name)
-
-        if vehicle is None and cfg and cfg.create_if_missing and cfg.name:
-            LOGGER.info("Creating vehicle %s (%s)", code, cfg.name)
-            vehicle = self.db.create_vehicle(cfg)
+        if vehicle is None and cfg:
+            if cfg.name:
+                vehicle = self.db.fetch_vehicle_by_name(cfg.name)
+            if vehicle is None and cfg.notes:
+                hint = clean_string(cfg.notes)
+                if hint:
+                    vehicle = self.db.fetch_vehicle_by_investment_name(hint) or self.db.fetch_vehicle_by_name(hint)
 
         if vehicle is None:
             raise RuntimeError(f"Could not resolve vehicle for code {code}. Update configuration.")
@@ -823,7 +1092,7 @@ class Loader:
 
         if investor is None and override and override.create_if_missing:
             stub = InvestorStub(
-                legal_name=override.legal_name or investor_name,
+                legal_name=override.legal_name if override.key != "DEFAULT" or override.legal_name else investor_name,
                 display_name=override.display_name or investor_name,
                 investor_type=override.investor_type,
                 email=override.email,
@@ -842,6 +1111,10 @@ class Loader:
         status_priority = ["active", "committed", "pending", "closed", "cancelled"]
         priority_index = {status: idx for idx, status in enumerate(status_priority)}
         for agg in aggregated:
+            cfg = self.config.vehicles.get(agg.vehicle_code.upper())
+            if cfg and cfg.skip:
+                LOGGER.info("Skipping vehicle %s (configured to skip)", agg.vehicle_code.upper())
+                continue
             vehicle = self.resolve_vehicle(agg.vehicle_code, agg.summary_row)
             investor = self.resolve_investor(agg.investor_display_name)
 
@@ -977,6 +1250,7 @@ def aggregate_lines(
                 statuses=statuses,
             )
         )
+
     return aggregated
 
 

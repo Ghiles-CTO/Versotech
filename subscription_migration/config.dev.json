@@ -23,6 +23,13 @@
       "as_of": "2020-06-24",
       "note": "Summary sheet header CHF > USD"
     },
+    "EUR": {
+      "from": "EUR",
+      "to": "USD",
+      "rate": 1.14103,
+      "as_of": "2022-06-14",
+      "note": "Summary sheet fx row EUR>USD"
+    },
     "GBP": {
       "from": "GBP",
       "to": "USD",
@@ -30,39 +37,233 @@
       "as_of": "2022-03-04",
       "note": "Summary sheet fx row GBP>USD"
     },
-    "EUR": {
-      "from": "EUR",
+    "USD": {
+      "from": "USD",
       "to": "USD",
-      "rate": 1.14103,
-      "as_of": "2022-06-14",
-      "note": "Summary sheet fx row EUR>USD"
+      "rate": 1,
+      "note": "Identity rate for USD amounts"
     }
   },
   "vehicles": {
     "VC1": {
-      "name": "CRANS",
+      "vehicle_id": "471ce5a0-4f02-479b-9050-b0360f9667b2",
       "currency": "CHF",
       "target_currency": "USD",
-      "fx_rate": 1.05859,
-      "type": "fund",
-      "create_if_missing": false
+      "fx_rate": 1.05859
     },
     "VC2": {
-      "name": "ISDC",
+      "vehicle_id": "2f2267e2-13a2-4927-a20f-0c5c369db608",
       "currency": "CHF",
       "target_currency": "USD",
-      "fx_rate": 1.05859,
-      "type": "fund",
-      "create_if_missing": false
+      "fx_rate": 1.05859
+    },
+    "VC3": {
+      "vehicle_id": "6fdabfaf-9c40-40ab-a558-11e9f8d0c44f",
+      "currency": "USD"
+    },
+    "VC4": {
+      "vehicle_id": "65909db2-d2c7-4edb-8dee-200666649595",
+      "currency": "USD"
+    },
+    "VC5": {
+      "vehicle_id": "02a2e6d0-5831-4730-826d-bd32346992ee",
+      "currency": "USD"
     },
     "VC6": {
-      "name": "VEGINVEST",
+      "vehicle_id": "ba584abd-ea2b-4a3f-893a-c7e0999f4039",
       "currency": "EUR",
       "target_currency": "USD",
-      "fx_rate": 1.14103,
-      "type": "fund",
-      "create_if_missing": false
+      "fx_rate": 1.14103
+    },
+    "VC7": {
+      "vehicle_id": "42d15ea6-577d-4cc6-9b4b-00ce7e1d1ede",
+      "currency": "USD"
+    },
+    "VC8": {
+      "vehicle_id": "364d4350-4231-4392-b083-18809d36f01e",
+      "currency": "USD"
+    },
+    "VC9": {
+      "vehicle_id": "80a6d019-4f6e-46b6-a451-5f659e0440fd",
+      "currency": "USD"
+    },
+    "VC10": {
+      "vehicle_id": "6a6d5e13-b414-4705-aae3-0540c6fb0448",
+      "currency": "USD"
+    },
+    "VC11": {
+      "vehicle_id": "ccc0bfd0-2c76-4b80-bcb9-12702cfb60bd",
+      "currency": "USD"
+    },
+    "VC12": {
+      "vehicle_id": "a76af65f-d0cb-45e7-927d-5f61791d86db",
+      "currency": "USD"
+    },
+    "VC13": {
+      "vehicle_id": "8d4db38a-0119-4eef-bb1a-d9f266aef1e7",
+      "currency": "USD"
+    },
+    "VC14": {
+      "vehicle_id": "e8a7e695-129f-4b99-a7eb-3d92fcf7fc80",
+      "currency": "USD"
+    },
+    "VC15": {
+      "vehicle_id": "bb688299-b442-49af-9b53-373a87dfd277",
+      "currency": "USD"
+    },
+    "VC16": {
+      "vehicle_id": "c231310b-09e6-4730-9160-ecf712c2fb22",
+      "currency": "USD"
+    },
+    "VC17": {
+      "vehicle_id": "c693f77f-b89e-4b52-b93e-46223d9595c7",
+      "currency": "USD"
+    },
+    "VC18": {
+      "vehicle_id": "47250a24-66cb-45f2-b99e-05c7db3b0b08",
+      "currency": "USD"
+    },
+    "VC19": {
+      "vehicle_id": "4024f119-20b0-4099-8f42-de2a787a92d9",
+      "currency": "USD"
+    },
+    "VC20": {
+      "vehicle_id": "386ac333-ddac-4a0d-a16a-bcb97e6c2d35",
+      "currency": "USD"
+    },
+    "VC21": {
+      "vehicle_id": "48e86517-6b0b-4e40-bd07-5c7d6e4e3321",
+      "currency": "USD"
+    },
+    "VC22": {
+      "vehicle_id": "58e852f7-ed8f-40b1-9052-e0fa53ae7839",
+      "currency": "USD"
+    },
+    "VC23": {
+      "vehicle_id": "57487736-debe-441b-aaa7-ff07a70f492b",
+      "currency": "USD"
+    },
+    "VC24": {
+      "vehicle_id": "0f964c92-7941-4b78-9cad-e6831e9fbdca",
+      "currency": "GBP",
+      "target_currency": "USD",
+      "fx_rate": 1.33505
+    },
+    "VC25": {
+      "vehicle_id": "606a4626-6397-40e4-9178-8ba187524589",
+      "currency": "USD"
+    },
+    "VC26": {
+      "vehicle_id": "060cf007-0671-4854-9eea-88d2b1497c53",
+      "currency": "USD"
+    },
+    "VC27": {
+      "vehicle_id": "52ce11ea-f96e-4193-80c3-fa191e5b0ae8",
+      "currency": "USD"
+    },
+    "VC28": {
+      "vehicle_id": "2df9e790-9e6e-4764-8fe2-b0c846f7ca21",
+      "currency": "USD"
+    },
+    "VC29": {
+      "vehicle_id": "ece390ff-c52d-4b5c-83a8-95d89c79a6dc",
+      "currency": "USD"
+    },
+    "VC30": {
+      "vehicle_id": "8140c262-6e0f-4120-a3ed-f451af2c85f3",
+      "currency": "USD"
+    },
+    "VC31": {
+      "vehicle_id": "4045c54c-7b68-44c1-810d-676d6a07862d",
+      "currency": "USD"
+    },
+    "VC32": {
+      "vehicle_id": "89b57c64-b0f8-441e-98e6-6d6dc8876099",
+      "currency": "USD"
+    },
+    "VC33": {
+      "vehicle_id": "3baefb31-5712-4b0c-9b46-beec2a37f9e4",
+      "currency": "USD"
+    },
+    "VC34": {
+      "vehicle_id": "9ad6af44-cf68-4127-9120-a0f17fbb33a9",
+      "currency": "CHF",
+      "target_currency": "USD",
+      "fx_rate": 1.05859
+    },
+    "VC35": {
+      "vehicle_id": "6d1c3992-1dd9-4a79-acf3-7c609fb99247",
+      "currency": "CHF",
+      "target_currency": "USD",
+      "fx_rate": 1.05859
+    },
+    "VC36": {
+      "vehicle_id": "997204a1-41f7-4a44-b32e-c6039a8cb6fd",
+      "currency": "USD"
+    },
+    "VC37": {
+      "vehicle_id": "864b46b5-5740-4e9f-acd5-0d4bf89558fd",
+      "currency": "USD"
+    },
+    "VC38": {
+      "vehicle_id": "37eb3030-b5e1-4556-8f49-8f8b148c1b00",
+      "currency": "USD"
+    },
+    "VC39": {
+      "vehicle_id": "166f0e97-b086-411c-852e-67d049b28d37",
+      "currency": "USD"
+    },
+    "VC40": {
+      "vehicle_id": "fc2d3cbf-d998-4337-b89f-e9adb8116fd9",
+      "currency": "USD"
+    },
+    "VC41": {
+      "vehicle_id": "c62c3fe6-e992-4e05-99f5-0db3261ecab4",
+      "currency": "EUR",
+      "target_currency": "USD",
+      "fx_rate": 1.14103
+    },
+    "VC42": {
+      "vehicle_id": "3b300bc4-9e09-49d3-b6f8-16b95f6bd361",
+      "currency": "USD"
+    },
+    "VC43": {
+      "vehicle_id": "9c9bed79-a7bf-4efb-858d-3fffe0668525",
+      "currency": "USD"
+    },
+    "VC44": {
+      "skip": true
     }
   },
-  "investor_overrides": {}
+  "investor_overrides": {
+    "JULIENMACHOT": {
+      "investor_id": "c1275254-2c71-48e3-adaf-b5fffff9d73c",
+      "investor_type": "individual",
+      "create_if_missing": false
+    },
+    "BONDPARTNERS": {
+      "investor_id": "73906632-b36f-4680-908b-fcccaea7029d",
+      "investor_type": "entity",
+      "create_if_missing": false
+    },
+    "JULIUSBR": {
+      "investor_id": "cf94f081-5ef6-4b4b-a3d0-2cac0a5d9da5",
+      "investor_type": "entity",
+      "create_if_missing": false
+    },
+    "LOMBARDODIER": {
+      "investor_id": "06dc9d49-45f9-4ec3-89c7-623d5c613a53",
+      "investor_type": "entity",
+      "create_if_missing": false
+    },
+    "VONTOBEL": {
+      "investor_id": "c77aa163-4445-4395-b159-5b1747b943dd",
+      "investor_type": "entity",
+      "create_if_missing": false
+    },
+    "DEFAULT": {
+      "create_if_missing": true,
+      "investor_type": "entity"
+    }
+  }
 }
