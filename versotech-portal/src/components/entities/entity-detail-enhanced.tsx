@@ -1276,7 +1276,12 @@ export function EntityDetailEnhanced({
                                 <div className="flex flex-wrap items-center justify-between gap-3">
                                   <div className="space-y-1">
                                     <div className="flex items-center gap-2">
-                                      <p className="font-semibold text-emerald-100">Subscription</p>
+                                      <p className="font-semibold text-emerald-100">
+                                        Subscription{subscriptionEntries.length > 1 ? 's' : ''}
+                                        {subscriptionEntries.length > 1 && (
+                                          <span className="ml-1 text-xs">({subscriptionEntries.length})</span>
+                                        )}
+                                      </p>
                                       <Button
                                         variant="ghost"
                                         size="sm"

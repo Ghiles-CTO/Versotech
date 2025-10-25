@@ -9,6 +9,7 @@ import { ArrowLeft, Mail, Phone, Globe, Building2, Calendar, User, DollarSign } 
 import { notFound } from 'next/navigation'
 import { InvestorDetailActions } from '@/components/investors/investor-detail-actions'
 import { PortalUsersSection } from '@/components/investors/portal-users-section'
+import { SubscriptionsTab } from '@/components/investors/subscriptions-tab'
 
 export const dynamic = 'force-dynamic'
 
@@ -321,6 +322,9 @@ export default async function InvestorDetailPage({
             </CardContent>
           </Card>
         </div>
+
+        {/* Subscriptions */}
+        <SubscriptionsTab investorId={investorData.id} />
 
         {/* Portal Users */}
         <PortalUsersSection

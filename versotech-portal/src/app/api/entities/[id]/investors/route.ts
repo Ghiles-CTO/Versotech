@@ -240,6 +240,14 @@ export async function POST(
       return NextResponse.json({ error: 'Staff access required' }, { status: 403 })
     }
 
+    // DEPRECATION WARNING: This endpoint bypasses the multi-subscription system
+    // Use POST /api/investors/[investorId]/subscriptions instead
+    // This endpoint creates subscription #1 only and does not support follow-on subscriptions
+    console.warn(
+      '[DEPRECATED] POST /api/entities/[id]/investors bypasses subscription_number system. ' +
+      'Use POST /api/investors/[investorId]/subscriptions for proper multi-subscription support.'
+    )
+
     const rawBody = await request.json().catch(() => ({}))
     let payload: LinkPayload
 

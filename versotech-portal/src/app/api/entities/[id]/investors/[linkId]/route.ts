@@ -207,16 +207,38 @@ export async function DELETE(
       return NextResponse.json({ error: 'Investor link not found' }, { status: 404 })
     }
 
-    // If there's a linked subscription, mark it as cancelled
-    if (existing.subscription_id) {
-      const { error: subscriptionError } = await supabase
-        .from('subscriptions')
-        .update({ status: 'cancelled' })
-        .eq('id', existing.subscription_id)
+    // Cancel ALL subscriptions for this investor-vehicle pair
+    // This includes subscription #1, #2, #3, etc. (follow-on investments)
+    const { error: subscriptionsError } = await supabase
+      .from('subscriptions')
+      .update({ status: 'cancelled' })
+      .eq('investor_id', existing.investor_id)
+      .eq('vehicle_id', vehicleId)
 
-      if (subscriptionError) {
-        console.error('Failed to cancel subscription:', subscriptionError)
-        // Continue with deletion even if subscription update fails
+    if (subscriptionsError) {
+      console.error('Failed to cancel subscriptions:', subscriptionsError)
+      // Continue with deletion even if subscription update fails
+    }
+
+    // Also cancel any associated deal holdings for this investor-vehicle pair
+    // First, get the list of deal IDs for this vehicle
+    const { data: vehicleDeals } = await supabase
+      .from('deals')
+      .select('id')
+      .eq('vehicle_id', vehicleId)
+
+    if (vehicleDeals && vehicleDeals.length > 0) {
+      const dealIds = vehicleDeals.map((deal) => deal.id)
+
+      const { error: holdingsError } = await supabase
+        .from('investor_deal_holdings')
+        .update({ status: 'cancelled' })
+        .eq('investor_id', existing.investor_id)
+        .in('deal_id', dealIds)
+
+      if (holdingsError) {
+        console.error('Failed to cancel holdings:', holdingsError)
+        // Continue with deletion even if holdings update fails
       }
     }
 
