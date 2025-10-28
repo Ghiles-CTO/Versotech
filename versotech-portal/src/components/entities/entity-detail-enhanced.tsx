@@ -1515,7 +1515,7 @@ export function EntityDetailEnhanced({
                                 <div className="space-y-2">
                                   {subscriptionEntries.map((entry) => {
                                     const displayAmount = formatCurrencyValue(entry.commitment, entry.currency)
-                                    const percentFunded = entry.commitment > 0 && entry.funded_amount ? (entry.funded_amount / entry.commitment) * 100 : 0
+                                    const percentFunded = entry.commitment && entry.commitment > 0 && entry.funded_amount ? (entry.funded_amount / entry.commitment) * 100 : 0
                                     const hasFees = entry.subscription_fee_amount || entry.bd_fee_amount || entry.spread_fee_amount || entry.finra_fee_amount
                                     const totalFees = [
                                       entry.subscription_fee_amount,
