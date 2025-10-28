@@ -11,6 +11,8 @@ import { AdvancedSubscriptionFilters, AdvancedSubscriptionFilters as FilterType 
 import { SubscriptionQuickStats } from '@/components/subscriptions/subscription-quick-stats'
 import { SubscriptionBulkActions } from '@/components/subscriptions/subscription-bulk-actions'
 import { SubscriptionColumnToggle, ColumnConfig } from '@/components/subscriptions/subscription-column-toggle'
+import { SubscriptionListView } from '@/components/subscriptions/subscription-list-view'
+import { SubscriptionKanbanView } from '@/components/subscriptions/subscription-kanban-view'
 import { NewSubscriptionDialog } from '@/components/subscriptions/new-subscription-dialog'
 import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -210,6 +212,24 @@ export function EnhancedSubscriptionsPage() {
     }
   }
 
+  // Kanban status change handler
+  const handleStatusChange = async (id: string, newStatus: string) => {
+    try {
+      const response = await fetch(`/api/subscriptions/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      })
+
+      if (!response.ok) throw new Error('Failed to update status')
+
+      await fetchSubscriptions()
+    } catch (error) {
+      console.error('Status change error:', error)
+      throw error
+    }
+  }
+
   const handleExport = async (ids?: string[]) => {
     try {
       setIsExporting(true)
@@ -385,24 +405,15 @@ export function EnhancedSubscriptionsPage() {
 
             {/* List View */}
             {view === 'list' && (
-              <Card className="bg-gray-900/70 border-gray-800">
-                <CardContent className="p-6">
-                  <p className="text-gray-400 text-center py-12">
-                    List view coming soon
-                  </p>
-                </CardContent>
-              </Card>
+              <SubscriptionListView subscriptions={filteredSubscriptions} />
             )}
 
             {/* Kanban View */}
             {view === 'kanban' && (
-              <Card className="bg-gray-900/70 border-gray-800">
-                <CardContent className="p-6">
-                  <p className="text-gray-400 text-center py-12">
-                    Kanban view coming soon
-                  </p>
-                </CardContent>
-              </Card>
+              <SubscriptionKanbanView
+                subscriptions={filteredSubscriptions}
+                onStatusChange={handleStatusChange}
+              />
             )}
           </div>
         </div>
