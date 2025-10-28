@@ -19,6 +19,7 @@ export interface EntityInvestorSubscriptionSummary {
   opportunity_name?: string | null
   num_shares?: number | null
   price_per_share?: number | null
+  spread_per_share?: number | null
 }
 
 export interface EntityInvestorHoldingSummary {
