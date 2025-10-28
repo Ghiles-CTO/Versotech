@@ -153,7 +153,6 @@ export function StaffGanttView({ title, description, features, markers = [], bra
           >
             <GanttProvider
               className="flex h-full w-full"
-              range="monthly"
               zoom={120}
               startDate={timelineBounds.start}
               endDate={timelineBounds.end}
