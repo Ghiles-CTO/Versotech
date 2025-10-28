@@ -1522,7 +1522,7 @@ export function EntityDetailEnhanced({
                                       entry.bd_fee_amount,
                                       entry.spread_fee_amount,
                                       entry.finra_fee_amount
-                                    ].reduce((sum, fee) => sum + (fee || 0), 0)
+                                    ].reduce((sum: number, fee) => sum + (fee || 0), 0)
                                     const moic = entry.funded_amount && entry.funded_amount > 0 && entry.current_nav ? entry.current_nav / entry.funded_amount : null
 
                                     return (
