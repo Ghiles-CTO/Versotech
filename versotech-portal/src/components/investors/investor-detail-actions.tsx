@@ -4,8 +4,7 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { EditInvestorModal } from './edit-investor-modal'
 import { AddUserToInvestorModal } from './add-user-to-investor-modal'
-import { AddSubscriptionDialog } from './add-subscription-dialog'
-import { Edit, UserPlus, FileText } from 'lucide-react'
+import { Edit, UserPlus, List } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
 type InvestorDetailActionsProps = {
@@ -27,7 +26,6 @@ export function InvestorDetailActions({ investor }: InvestorDetailActionsProps) 
   const router = useRouter()
   const [editOpen, setEditOpen] = useState(false)
   const [addUserOpen, setAddUserOpen] = useState(false)
-  const [addSubscriptionOpen, setAddSubscriptionOpen] = useState(false)
 
   const handleSuccess = () => {
     router.refresh()
@@ -54,10 +52,10 @@ export function InvestorDetailActions({ investor }: InvestorDetailActionsProps) 
 
       <Button
         className="bg-green-600 text-white hover:bg-green-700"
-        onClick={() => setAddSubscriptionOpen(true)}
+        onClick={() => router.push('/versotech/staff/subscriptions')}
       >
-        <FileText className="h-4 w-4 mr-2" />
-        Add Subscription
+        <List className="h-4 w-4 mr-2" />
+        Manage Subscriptions
       </Button>
 
       <EditInvestorModal
@@ -70,13 +68,6 @@ export function InvestorDetailActions({ investor }: InvestorDetailActionsProps) 
         investorId={investor.id}
         open={addUserOpen}
         onOpenChange={setAddUserOpen}
-      />
-
-      <AddSubscriptionDialog
-        open={addSubscriptionOpen}
-        onOpenChange={setAddSubscriptionOpen}
-        investorId={investor.id}
-        onSuccess={handleSuccess}
       />
     </div>
   )

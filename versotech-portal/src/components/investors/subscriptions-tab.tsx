@@ -5,9 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Edit, XCircle, Building2, DollarSign, Calendar, Hash } from 'lucide-react'
-import { EditSubscriptionDialog } from './edit-subscription-dialog'
-import { toast } from 'sonner'
+import { Building2, DollarSign, Calendar, Hash, ArrowRight } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 
 type Subscription = {
   id: string
@@ -83,11 +82,10 @@ type SubscriptionsData = {
 }
 
 export function SubscriptionsTab({ investorId }: { investorId: string }) {
+  const router = useRouter()
   const [data, setData] = useState<SubscriptionsData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [editDialogOpen, setEditDialogOpen] = useState(false)
-  const [editingSubscription, setEditingSubscription] = useState<Subscription | null>(null)
 
   const fetchSubscriptions = async () => {
     try {
@@ -125,34 +123,6 @@ export function SubscriptionsTab({ investorId }: { investorId: string }) {
   useEffect(() => {
     fetchSubscriptions()
   }, [investorId])
-
-  const handleCancelSubscription = async (subscriptionId: string, subscriptionNumber: number) => {
-    if (!confirm(`Are you sure you want to cancel subscription #${subscriptionNumber}? This action cannot be undone.`)) {
-      return
-    }
-
-    try {
-      const res = await fetch(`/api/investors/${investorId}/subscriptions/${subscriptionId}`, {
-        method: 'DELETE'
-      })
-
-      if (!res.ok) {
-        const error = await res.json()
-        throw new Error(error.error || 'Failed to cancel subscription')
-      }
-
-      toast.success(`Cancelled subscription #${subscriptionNumber}`)
-      fetchSubscriptions()
-    } catch (err) {
-      console.error('Failed to cancel subscription:', err)
-      toast.error(err instanceof Error ? err.message : 'Failed to cancel subscription')
-    }
-  }
-
-  const handleEdit = (subscription: Subscription) => {
-    setEditingSubscription(subscription)
-    setEditDialogOpen(true)
-  }
 
   const formatCurrency = (amount: number, currency: string) => {
     return new Intl.NumberFormat('en-US', {
@@ -222,7 +192,7 @@ export function SubscriptionsTab({ investorId }: { investorId: string }) {
           Subscriptions ({data.summary.total_subscriptions})
         </h2>
         <p className="text-muted-foreground">
-          {data.summary.total_vehicles} vehicles. Use "Add Subscription" button in the page header to create new subscriptions.
+          {data.summary.total_vehicles} vehicles. Use "Manage Subscriptions" button to view and manage all subscriptions.
         </p>
       </div>
 
@@ -230,7 +200,7 @@ export function SubscriptionsTab({ investorId }: { investorId: string }) {
         <Card>
           <CardContent className="pt-6 text-center">
             <p className="text-muted-foreground">
-              No subscriptions yet. Use the "Add Subscription" button in the page header to create the first subscription.
+              No subscriptions yet. Use the "Manage Subscriptions" button to navigate to the subscriptions page.
             </p>
           </CardContent>
         </Card>
@@ -297,21 +267,13 @@ export function SubscriptionsTab({ investorId }: { investorId: string }) {
                           </div>
                           <div className="flex items-center gap-2">
                             <Button
-                              variant="ghost"
+                              variant="outline"
                               size="sm"
-                              onClick={() => handleEdit(sub)}
+                              onClick={() => router.push('/versotech/staff/subscriptions')}
                             >
-                              <Edit className="h-4 w-4" />
+                              View Details
+                              <ArrowRight className="h-4 w-4 ml-2" />
                             </Button>
-                            {sub.status !== 'cancelled' && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleCancelSubscription(sub.id, sub.subscription_number)}
-                              >
-                                <XCircle className="h-4 w-4 text-destructive" />
-                              </Button>
-                            )}
                           </div>
                         </div>
 
@@ -441,19 +403,6 @@ export function SubscriptionsTab({ investorId }: { investorId: string }) {
             </CardContent>
           </Card>
         </>
-      )}
-
-      {editingSubscription && (
-        <EditSubscriptionDialog
-          open={editDialogOpen}
-          onOpenChange={setEditDialogOpen}
-          investorId={investorId}
-          subscription={editingSubscription}
-          onSuccess={() => {
-            fetchSubscriptions()
-            setEditingSubscription(null)
-          }}
-        />
       )}
     </div>
   )

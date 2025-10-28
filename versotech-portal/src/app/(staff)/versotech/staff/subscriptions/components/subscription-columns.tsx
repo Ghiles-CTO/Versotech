@@ -46,6 +46,10 @@ export type SubscriptionRow = {
 
   // Business context
   opportunity_name: string | null
+  contract_date: string | null
+  sourcing_contract_ref: string | null
+  introducer_id: string | null
+  introduction_id: string | null
 
   investor?: {
     id: string
@@ -493,6 +497,51 @@ export const subscriptionColumns: ColumnDef<SubscriptionRow>[] = [
           <div className="text-sm font-medium truncate" title={opportunityName}>
             {opportunityName}
           </div>
+        </div>
+      )
+    },
+  },
+  {
+    accessorKey: 'contract_date',
+    header: ({ column }) => (
+      <Button
+        variant="ghost"
+        onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+        className="-ml-4"
+      >
+        Contract Date
+        <ArrowUpDown className="ml-2 h-4 w-4" />
+      </Button>
+    ),
+    cell: ({ row }) => {
+      const date = row.original.contract_date
+      return <div className="text-sm">{formatDate(date)}</div>
+    },
+  },
+  {
+    id: 'performance_fees',
+    header: () => <div className="text-right">Performance Fees</div>,
+    cell: ({ row }) => {
+      const subscription = row.original
+      const hasPerformanceFees = subscription.performance_fee_tier1_percent != null ||
+                                 subscription.performance_fee_tier2_percent != null
+
+      if (!hasPerformanceFees) {
+        return <span className="text-muted-foreground text-sm">-</span>
+      }
+
+      return (
+        <div className="text-right text-xs">
+          {subscription.performance_fee_tier1_percent != null && (
+            <div className="text-purple-400">
+              Tier 1: {subscription.performance_fee_tier1_percent}%
+            </div>
+          )}
+          {subscription.performance_fee_tier2_percent != null && (
+            <div className="text-purple-300">
+              Tier 2: {subscription.performance_fee_tier2_percent}%
+            </div>
+          )}
         </div>
       )
     },
