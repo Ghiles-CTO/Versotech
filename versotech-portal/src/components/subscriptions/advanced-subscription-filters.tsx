@@ -198,7 +198,7 @@ export function AdvancedSubscriptionFilters({
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-4 pt-4 max-h-[calc(100vh-200px)] overflow-y-auto">
+      <CardContent className="space-y-4 pt-4 max-h-[calc(100vh-200px)] overflow-y-auto scrollbar-hide">
         {/* Global Search */}
         <div className="space-y-2">
           <Label className="text-white text-sm font-semibold">Search Everything</Label>
@@ -335,7 +335,7 @@ export function AdvancedSubscriptionFilters({
             {/* Vehicles Multi-select */}
             <div className="space-y-2">
               <Label className="text-white text-xs">Vehicles</Label>
-              <div className="max-h-40 overflow-y-auto space-y-1 bg-gray-800/50 rounded p-2">
+              <div className="max-h-40 overflow-y-auto scrollbar-hide space-y-1 bg-gray-800/50 rounded p-2">
                 {vehicles.map(vehicle => (
                   <div key={vehicle.id} className="flex items-center gap-2">
                     <Checkbox

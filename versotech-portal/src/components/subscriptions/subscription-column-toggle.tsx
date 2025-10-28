@@ -137,7 +137,7 @@ export function SubscriptionColumnToggle({
 
         <DropdownMenuSeparator className="bg-gray-700" />
 
-        <div className="max-h-64 overflow-y-auto">
+        <div className="max-h-64 overflow-y-auto scrollbar-hide">
           {columns.map((column) => (
             <DropdownMenuCheckboxItem
               key={column.id}
