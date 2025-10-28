@@ -1523,7 +1523,7 @@ export function EntityDetailEnhanced({
                                       entry.spread_fee_amount,
                                       entry.finra_fee_amount
                                     ].reduce((sum, fee) => sum + (fee || 0), 0)
-                                    const moic = entry.funded_amount > 0 && entry.current_nav ? entry.current_nav / entry.funded_amount : null
+                                    const moic = entry.funded_amount && entry.funded_amount > 0 && entry.current_nav ? entry.current_nav / entry.funded_amount : null
 
                                     return (
                                       <div key={entry.id} className="text-xs border-b border-emerald-400/10 pb-2 last:border-0">

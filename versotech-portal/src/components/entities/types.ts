@@ -9,6 +9,13 @@ export interface EntityInvestorSubscriptionSummary {
   acknowledgement_notes: string | null
   created_at: string | null
   origin?: 'linked' | 'auto_discovered' | 'holding_projection'
+  funded_amount?: number | null
+  current_nav?: number | null
+  subscription_fee_amount?: number | null
+  bd_fee_amount?: number | null
+  spread_fee_amount?: number | null
+  finra_fee_amount?: number | null
+  opportunity_name?: string | null
 }
 
 export interface EntityInvestorHoldingSummary {
