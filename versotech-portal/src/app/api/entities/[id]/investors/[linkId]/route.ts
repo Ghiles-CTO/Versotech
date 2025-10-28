@@ -150,14 +150,14 @@ export async function PATCH(
         existing.subscription_id && updated.subscription
           ? [
               {
-                ...updated.subscription,
-                id: updated.subscription.id,
+                ...(updated.subscription as any)?.[0],
+                id: (updated.subscription as any)?.[0]?.id,
                 investor_id: existing.investor_id,
                 vehicle_id: vehicleId,
                 investor: updated.investor ?? null
               }
-            ]
-          : [],
+            ] as any
+          : [] as any,
       holdings: [],
       deals: []
     })
@@ -167,7 +167,7 @@ export async function PATCH(
     return NextResponse.json({ investor: investorSummary })
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: 'Invalid input', details: error.errors }, { status: 400 })
+      return NextResponse.json({ error: 'Invalid input', details: (error as any).errors }, { status: 400 })
     }
 
     console.error('Entity investor PATCH error:', error)

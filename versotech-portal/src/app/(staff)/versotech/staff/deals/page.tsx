@@ -1,4 +1,3 @@
-import { AppLayout } from '@/components/layout/app-layout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -93,10 +92,8 @@ export default async function DealsPage() {
   }
 
   return (
-    <AppLayout brand="versotech">
-      <DealsListClient deals={dealsData} summary={summary} />
-    </AppLayout>
-  )
+    <DealsListClient deals={dealsData} summary={summary} />
+    )
 }
 
 

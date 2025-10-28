@@ -109,36 +109,37 @@ export function AddEntityFlagModal({ entityId, open, onClose, onSuccess }: AddEn
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg bg-zinc-950 border-white/10 text-white">
         <DialogHeader>
-          <DialogTitle>Raise Entity Flag</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="text-white">Raise Entity Flag</DialogTitle>
+          <DialogDescription className="text-gray-400">
             Highlight a compliance issue, missing documentation, or follow-up item for this vehicle.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="flag-title">Title *</Label>
+            <Label htmlFor="flag-title" className="text-white">Title *</Label>
             <Input
               id="flag-title"
               value={title}
               onChange={(event) => setTitle(event.target.value)}
               placeholder="e.g., KYC documents outstanding"
+              className="bg-white/5 border-white/10 text-white placeholder:text-gray-500"
               autoFocus
             />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="flag-severity">Severity</Label>
+              <Label htmlFor="flag-severity" className="text-white">Severity</Label>
               <Select value={severity} onValueChange={setSeverity}>
-                <SelectTrigger id="flag-severity">
+                <SelectTrigger id="flag-severity" className="bg-white/5 border-white/10 text-white">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-zinc-950 border-white/10">
                   {severityOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
+                    <SelectItem key={option.value} value={option.value} className="text-white">
                       {option.label}
                     </SelectItem>
                   ))}
@@ -147,14 +148,14 @@ export function AddEntityFlagModal({ entityId, open, onClose, onSuccess }: AddEn
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="flag-type">Category</Label>
+              <Label htmlFor="flag-type" className="text-white">Category</Label>
               <Select value={flagType} onValueChange={setFlagType}>
-                <SelectTrigger id="flag-type">
+                <SelectTrigger id="flag-type" className="bg-white/5 border-white/10 text-white">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-zinc-950 border-white/10">
                   {flagTypeOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
+                    <SelectItem key={option.value} value={option.value} className="text-white">
                       {option.label}
                     </SelectItem>
                   ))}
@@ -164,32 +165,43 @@ export function AddEntityFlagModal({ entityId, open, onClose, onSuccess }: AddEn
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="flag-due-date">Due Date</Label>
+            <Label htmlFor="flag-due-date" className="text-white">Due Date</Label>
             <Input
               id="flag-due-date"
               type="date"
               value={dueDate}
               onChange={(event) => setDueDate(event.target.value)}
+              className="bg-white/5 border-white/10 text-white"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="flag-description">Details</Label>
+            <Label htmlFor="flag-description" className="text-white">Details</Label>
             <Textarea
               id="flag-description"
               rows={4}
               value={description}
               onChange={(event) => setDescription(event.target.value)}
               placeholder="Optional context or remediation steps."
+              className="bg-white/5 border-white/10 text-white placeholder:text-gray-500"
             />
           </div>
         </div>
 
         <DialogFooter className="gap-2 sm:gap-0">
-          <Button variant="outline" onClick={handleClose} disabled={loading}>
+          <Button
+            variant="outline"
+            onClick={handleClose}
+            disabled={loading}
+            className="border-white/10 text-white hover:bg-white/10"
+          >
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={loading}>
+          <Button
+            onClick={handleSubmit}
+            disabled={loading}
+            className="bg-emerald-500 hover:bg-emerald-600 text-emerald-950 font-semibold"
+          >
             {loading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

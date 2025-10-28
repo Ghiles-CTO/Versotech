@@ -58,7 +58,7 @@ function groupDocumentsByScope(documents: Document[]) {
       const dealId = doc.scope.deal.id
       if (!groups.deals[dealId]) {
         groups.deals[dealId] = {
-          deal: doc.scope.deal,
+          deal: doc.scope.deal as any,
           documents: []
         }
       }

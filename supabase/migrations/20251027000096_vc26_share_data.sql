@@ -1,0 +1,117 @@
+-- VC26 Share Data: 33 rows
+UPDATE public.subscriptions s
+SET
+    cost_per_share = CASE
+        WHEN (i.legal_name ILIKE '%CLOUDSAFE HOLDINGS LIMITED%' OR i.legal_name ILIKE '%CLOUDSAFE%LIMITED%' OR i.legal_name ILIKE '%LIMITED%CLOUDSAFE%') AND s.commitment = 600000.0 THEN 502.953
+        WHEN (i.legal_name ILIKE '%AS Advisory DWC-LLC%' OR i.legal_name ILIKE '%AS%DWC-LLC%' OR i.legal_name ILIKE '%DWC-LLC%AS%') AND s.commitment = 50000.0 THEN 502.953
+        WHEN (i.legal_name ILIKE '%Scott FLETCHER%' OR i.legal_name ILIKE '%Scott%FLETCHER%' OR i.legal_name ILIKE '%FLETCHER%Scott%') AND s.commitment = 1250000.0 THEN 502.953
+        WHEN (i.legal_name ILIKE '%Scott FLETCHER%' OR i.legal_name ILIKE '%Scott%FLETCHER%' OR i.legal_name ILIKE '%FLETCHER%Scott%') AND s.commitment = 250000.0 THEN 502.953
+        WHEN (i.legal_name ILIKE '%Anand RATHI%' OR i.legal_name ILIKE '%Anand%RATHI%' OR i.legal_name ILIKE '%RATHI%Anand%') AND s.commitment = 250000.0 THEN 502.953
+        WHEN (i.legal_name ILIKE '%Tuygan GOKER%' OR i.legal_name ILIKE '%Tuygan%GOKER%' OR i.legal_name ILIKE '%GOKER%Tuygan%') AND s.commitment = 1000000.0 THEN 502.953
+        WHEN (i.legal_name ILIKE '%Julien MACHOT%' OR i.legal_name ILIKE '%Julien%MACHOT%' OR i.legal_name ILIKE '%MACHOT%Julien%') AND s.commitment = 50000.0 THEN 502.953
+        WHEN (i.legal_name ILIKE '%VERSO MANAGEMENT LTD.%' OR i.legal_name ILIKE '%VERSO%LTD.%' OR i.legal_name ILIKE '%LTD.%VERSO%') AND s.commitment = 158673.88 THEN 502.953
+        WHEN (i.legal_name ILIKE '%OEP Ltd%' OR i.legal_name ILIKE '%OEP%Ltd%' OR i.legal_name ILIKE '%Ltd%OEP%') AND s.commitment = 50000.0 THEN 502.953
+        WHEN (i.legal_name ILIKE '%FITAIHI Holdings SARL%' OR i.legal_name ILIKE '%FITAIHI%SARL%' OR i.legal_name ILIKE '%SARL%FITAIHI%') AND s.commitment = 64500.0 THEN 560.0
+        WHEN (i.legal_name ILIKE '%SC TBC INVEST 3%' OR i.legal_name ILIKE '%SC%3%' OR i.legal_name ILIKE '%3%SC%') AND s.commitment = 595000.0 THEN 55.0
+        WHEN (i.legal_name ILIKE '%ODIN (ANIM X II LP)%' OR i.legal_name ILIKE '%ODIN%LP)%' OR i.legal_name ILIKE '%LP)%ODIN%') AND s.commitment = 380000.0 THEN 55.0
+        WHEN (i.legal_name ILIKE '%Serge AURIER%' OR i.legal_name ILIKE '%Serge%AURIER%' OR i.legal_name ILIKE '%AURIER%Serge%') AND s.commitment = 50000.0 THEN 55.0
+        WHEN (i.legal_name ILIKE '%John BARROWMAN%' OR i.legal_name ILIKE '%John%BARROWMAN%' OR i.legal_name ILIKE '%BARROWMAN%John%') AND s.commitment = 50000.0 THEN 55.0
+        WHEN (i.legal_name ILIKE '%Anand RATHI%' OR i.legal_name ILIKE '%Anand%RATHI%' OR i.legal_name ILIKE '%RATHI%Anand%') AND s.commitment = 250000.0 THEN 55.0
+        WHEN (i.legal_name ILIKE '%DRussell Goman RD LLC%' OR i.legal_name ILIKE '%DRussell%LLC%' OR i.legal_name ILIKE '%LLC%DRussell%') AND s.commitment = 25000.0 THEN 55.0
+        WHEN (i.legal_name ILIKE '%Garson LEVY%' OR i.legal_name ILIKE '%Garson%LEVY%' OR i.legal_name ILIKE '%LEVY%Garson%') AND s.commitment = 25000.0 THEN 55.0
+        WHEN (i.legal_name ILIKE '%Mrs Anisha Bansal and Mr Rahul KARKUN%' OR i.legal_name ILIKE '%Mrs%KARKUN%' OR i.legal_name ILIKE '%KARKUN%Mrs%') AND s.commitment = 25000.0 THEN 55.0
+        WHEN (i.legal_name ILIKE '%Mathieu MARIOTTI%' OR i.legal_name ILIKE '%Mathieu%MARIOTTI%' OR i.legal_name ILIKE '%MARIOTTI%Mathieu%') AND s.commitment = 125000.0 THEN 55.0
+        WHEN (i.legal_name ILIKE '%Alexandre BARBARANELLI%' OR i.legal_name ILIKE '%Alexandre%BARBARANELLI%' OR i.legal_name ILIKE '%BARBARANELLI%Alexandre%') AND s.commitment = 30000.0 THEN 55.0
+        WHEN (i.legal_name ILIKE '%Keir BENBOW%' OR i.legal_name ILIKE '%Keir%BENBOW%' OR i.legal_name ILIKE '%BENBOW%Keir%') AND s.commitment = 100000.0 THEN 55.0
+        WHEN (i.legal_name ILIKE '%Amanda RYZOWY%' OR i.legal_name ILIKE '%Amanda%RYZOWY%' OR i.legal_name ILIKE '%RYZOWY%Amanda%') AND s.commitment = 25000.0 THEN 55.0
+        WHEN (i.legal_name ILIKE '%ALPHA GAIA CAPITAL FZE%' OR i.legal_name ILIKE '%ALPHA%FZE%' OR i.legal_name ILIKE '%FZE%ALPHA%') AND s.commitment = 100000.0 THEN 80.0
+        WHEN (i.legal_name ILIKE '%Desmond CARBERY%' OR i.legal_name ILIKE '%Desmond%CARBERY%' OR i.legal_name ILIKE '%CARBERY%Desmond%') AND s.commitment = 100000.0 THEN 80.0
+        WHEN (i.legal_name ILIKE '%Odile and Georges MRAD and FENERGI%' OR i.legal_name ILIKE '%Odile%FENERGI%' OR i.legal_name ILIKE '%FENERGI%Odile%') AND s.commitment = 100000.0 THEN 80.0
+        WHEN (i.legal_name ILIKE '%Georgi GEORGIEV%' OR i.legal_name ILIKE '%Georgi%GEORGIEV%' OR i.legal_name ILIKE '%GEORGIEV%Georgi%') AND s.commitment = 200000.0 THEN 80.0
+        WHEN (i.legal_name ILIKE '%Anatoliy KOGAN%' OR i.legal_name ILIKE '%Anatoliy%KOGAN%' OR i.legal_name ILIKE '%KOGAN%Anatoliy%') AND s.commitment = 100000.0 THEN 80.0
+        WHEN (i.legal_name ILIKE '%GESTIO CAPITAL LTD%' OR i.legal_name ILIKE '%GESTIO%LTD%' OR i.legal_name ILIKE '%LTD%GESTIO%') AND s.commitment = 350000.0 THEN 69.0625
+        WHEN (i.legal_name ILIKE '%Danielle BURNS%' OR i.legal_name ILIKE '%Danielle%BURNS%' OR i.legal_name ILIKE '%BURNS%Danielle%') AND s.commitment = 10000.0 THEN 80.0
+        WHEN (i.legal_name ILIKE '%LF GROUP SARL%' OR i.legal_name ILIKE '%LF%SARL%' OR i.legal_name ILIKE '%SARL%LF%') AND s.commitment = 200000.0 THEN 80.0
+        WHEN (i.legal_name ILIKE '%BSV SPV III LLC%' OR i.legal_name ILIKE '%BSV%LLC%' OR i.legal_name ILIKE '%LLC%BSV%') AND s.commitment = 984400.0 THEN 80.0
+        WHEN (i.legal_name ILIKE '%ODIN (ANIM X II LP)%' OR i.legal_name ILIKE '%ODIN%LP)%' OR i.legal_name ILIKE '%LP)%ODIN%') AND s.commitment = 261331.0 THEN 80.0
+        WHEN (i.legal_name ILIKE '%Julien MACHOT%' OR i.legal_name ILIKE '%Julien%MACHOT%' OR i.legal_name ILIKE '%MACHOT%Julien%') AND s.commitment = 50000.0 THEN 650.0
+        ELSE cost_per_share
+    END,
+    price_per_share = CASE
+        WHEN (i.legal_name ILIKE '%CLOUDSAFE HOLDINGS LIMITED%' OR i.legal_name ILIKE '%CLOUDSAFE%LIMITED%' OR i.legal_name ILIKE '%LIMITED%CLOUDSAFE%') AND s.commitment = 600000.0 THEN 675.0
+        WHEN (i.legal_name ILIKE '%AS Advisory DWC-LLC%' OR i.legal_name ILIKE '%AS%DWC-LLC%' OR i.legal_name ILIKE '%DWC-LLC%AS%') AND s.commitment = 50000.0 THEN 650.0
+        WHEN (i.legal_name ILIKE '%Scott FLETCHER%' OR i.legal_name ILIKE '%Scott%FLETCHER%' OR i.legal_name ILIKE '%FLETCHER%Scott%') AND s.commitment = 1250000.0 THEN 620.0
+        WHEN (i.legal_name ILIKE '%Scott FLETCHER%' OR i.legal_name ILIKE '%Scott%FLETCHER%' OR i.legal_name ILIKE '%FLETCHER%Scott%') AND s.commitment = 250000.0 THEN 620.0
+        WHEN (i.legal_name ILIKE '%Anand RATHI%' OR i.legal_name ILIKE '%Anand%RATHI%' OR i.legal_name ILIKE '%RATHI%Anand%') AND s.commitment = 250000.0 THEN 620.0
+        WHEN (i.legal_name ILIKE '%Tuygan GOKER%' OR i.legal_name ILIKE '%Tuygan%GOKER%' OR i.legal_name ILIKE '%GOKER%Tuygan%') AND s.commitment = 1000000.0 THEN 620.0
+        WHEN (i.legal_name ILIKE '%Julien MACHOT%' OR i.legal_name ILIKE '%Julien%MACHOT%' OR i.legal_name ILIKE '%MACHOT%Julien%') AND s.commitment = 50000.0 THEN 560.0
+        WHEN (i.legal_name ILIKE '%VERSO MANAGEMENT LTD.%' OR i.legal_name ILIKE '%VERSO%LTD.%' OR i.legal_name ILIKE '%LTD.%VERSO%') AND s.commitment = 158673.88 THEN 503.0
+        WHEN (i.legal_name ILIKE '%OEP Ltd%' OR i.legal_name ILIKE '%OEP%Ltd%' OR i.legal_name ILIKE '%Ltd%OEP%') AND s.commitment = 50000.0 THEN 650.0
+        WHEN (i.legal_name ILIKE '%FITAIHI Holdings SARL%' OR i.legal_name ILIKE '%FITAIHI%SARL%' OR i.legal_name ILIKE '%SARL%FITAIHI%') AND s.commitment = 64500.0 THEN 724.71
+        WHEN (i.legal_name ILIKE '%SC TBC INVEST 3%' OR i.legal_name ILIKE '%SC%3%' OR i.legal_name ILIKE '%3%SC%') AND s.commitment = 595000.0 THEN 98.0
+        WHEN (i.legal_name ILIKE '%ODIN (ANIM X II LP)%' OR i.legal_name ILIKE '%ODIN%LP)%' OR i.legal_name ILIKE '%LP)%ODIN%') AND s.commitment = 380000.0 THEN 77.0
+        WHEN (i.legal_name ILIKE '%Serge AURIER%' OR i.legal_name ILIKE '%Serge%AURIER%' OR i.legal_name ILIKE '%AURIER%Serge%') AND s.commitment = 50000.0 THEN 77.0
+        WHEN (i.legal_name ILIKE '%John BARROWMAN%' OR i.legal_name ILIKE '%John%BARROWMAN%' OR i.legal_name ILIKE '%BARROWMAN%John%') AND s.commitment = 50000.0 THEN 68.0
+        WHEN (i.legal_name ILIKE '%Anand RATHI%' OR i.legal_name ILIKE '%Anand%RATHI%' OR i.legal_name ILIKE '%RATHI%Anand%') AND s.commitment = 250000.0 THEN 68.0
+        WHEN (i.legal_name ILIKE '%DRussell Goman RD LLC%' OR i.legal_name ILIKE '%DRussell%LLC%' OR i.legal_name ILIKE '%LLC%DRussell%') AND s.commitment = 25000.0 THEN 68.0
+        WHEN (i.legal_name ILIKE '%Garson LEVY%' OR i.legal_name ILIKE '%Garson%LEVY%' OR i.legal_name ILIKE '%LEVY%Garson%') AND s.commitment = 25000.0 THEN 68.0
+        WHEN (i.legal_name ILIKE '%Mrs Anisha Bansal and Mr Rahul KARKUN%' OR i.legal_name ILIKE '%Mrs%KARKUN%' OR i.legal_name ILIKE '%KARKUN%Mrs%') AND s.commitment = 25000.0 THEN 68.0
+        WHEN (i.legal_name ILIKE '%Mathieu MARIOTTI%' OR i.legal_name ILIKE '%Mathieu%MARIOTTI%' OR i.legal_name ILIKE '%MARIOTTI%Mathieu%') AND s.commitment = 125000.0 THEN 68.0
+        WHEN (i.legal_name ILIKE '%Alexandre BARBARANELLI%' OR i.legal_name ILIKE '%Alexandre%BARBARANELLI%' OR i.legal_name ILIKE '%BARBARANELLI%Alexandre%') AND s.commitment = 30000.0 THEN 68.0
+        WHEN (i.legal_name ILIKE '%Keir BENBOW%' OR i.legal_name ILIKE '%Keir%BENBOW%' OR i.legal_name ILIKE '%BENBOW%Keir%') AND s.commitment = 100000.0 THEN 68.0
+        WHEN (i.legal_name ILIKE '%Amanda RYZOWY%' OR i.legal_name ILIKE '%Amanda%RYZOWY%' OR i.legal_name ILIKE '%RYZOWY%Amanda%') AND s.commitment = 25000.0 THEN 68.0
+        WHEN (i.legal_name ILIKE '%ALPHA GAIA CAPITAL FZE%' OR i.legal_name ILIKE '%ALPHA%FZE%' OR i.legal_name ILIKE '%FZE%ALPHA%') AND s.commitment = 100000.0 THEN 90.0
+        WHEN (i.legal_name ILIKE '%Desmond CARBERY%' OR i.legal_name ILIKE '%Desmond%CARBERY%' OR i.legal_name ILIKE '%CARBERY%Desmond%') AND s.commitment = 100000.0 THEN 90.0
+        WHEN (i.legal_name ILIKE '%Odile and Georges MRAD and FENERGI%' OR i.legal_name ILIKE '%Odile%FENERGI%' OR i.legal_name ILIKE '%FENERGI%Odile%') AND s.commitment = 100000.0 THEN 90.0
+        WHEN (i.legal_name ILIKE '%Georgi GEORGIEV%' OR i.legal_name ILIKE '%Georgi%GEORGIEV%' OR i.legal_name ILIKE '%GEORGIEV%Georgi%') AND s.commitment = 200000.0 THEN 81.0
+        WHEN (i.legal_name ILIKE '%Anatoliy KOGAN%' OR i.legal_name ILIKE '%Anatoliy%KOGAN%' OR i.legal_name ILIKE '%KOGAN%Anatoliy%') AND s.commitment = 100000.0 THEN 90.0
+        WHEN (i.legal_name ILIKE '%GESTIO CAPITAL LTD%' OR i.legal_name ILIKE '%GESTIO%LTD%' OR i.legal_name ILIKE '%LTD%GESTIO%') AND s.commitment = 350000.0 THEN 81.0
+        WHEN (i.legal_name ILIKE '%Danielle BURNS%' OR i.legal_name ILIKE '%Danielle%BURNS%' OR i.legal_name ILIKE '%BURNS%Danielle%') AND s.commitment = 10000.0 THEN 90.0
+        WHEN (i.legal_name ILIKE '%LF GROUP SARL%' OR i.legal_name ILIKE '%LF%SARL%' OR i.legal_name ILIKE '%SARL%LF%') AND s.commitment = 200000.0 THEN 88.0
+        WHEN (i.legal_name ILIKE '%BSV SPV III LLC%' OR i.legal_name ILIKE '%BSV%LLC%' OR i.legal_name ILIKE '%LLC%BSV%') AND s.commitment = 984400.0 THEN 92.0
+        WHEN (i.legal_name ILIKE '%ODIN (ANIM X II LP)%' OR i.legal_name ILIKE '%ODIN%LP)%' OR i.legal_name ILIKE '%LP)%ODIN%') AND s.commitment = 261331.0 THEN 92.0
+        WHEN (i.legal_name ILIKE '%Julien MACHOT%' OR i.legal_name ILIKE '%Julien%MACHOT%' OR i.legal_name ILIKE '%MACHOT%Julien%') AND s.commitment = 50000.0 THEN 650.0
+        ELSE price_per_share
+    END,
+    num_shares = CASE
+        WHEN (i.legal_name ILIKE '%CLOUDSAFE HOLDINGS LIMITED%' OR i.legal_name ILIKE '%CLOUDSAFE%LIMITED%' OR i.legal_name ILIKE '%LIMITED%CLOUDSAFE%') AND s.commitment = 600000.0 THEN 888.0
+        WHEN (i.legal_name ILIKE '%AS Advisory DWC-LLC%' OR i.legal_name ILIKE '%AS%DWC-LLC%' OR i.legal_name ILIKE '%DWC-LLC%AS%') AND s.commitment = 50000.0 THEN 76.0
+        WHEN (i.legal_name ILIKE '%Scott FLETCHER%' OR i.legal_name ILIKE '%Scott%FLETCHER%' OR i.legal_name ILIKE '%FLETCHER%Scott%') AND s.commitment = 1250000.0 THEN 2016.0
+        WHEN (i.legal_name ILIKE '%Scott FLETCHER%' OR i.legal_name ILIKE '%Scott%FLETCHER%' OR i.legal_name ILIKE '%FLETCHER%Scott%') AND s.commitment = 250000.0 THEN 403.0
+        WHEN (i.legal_name ILIKE '%Anand RATHI%' OR i.legal_name ILIKE '%Anand%RATHI%' OR i.legal_name ILIKE '%RATHI%Anand%') AND s.commitment = 250000.0 THEN 403.0
+        WHEN (i.legal_name ILIKE '%Tuygan GOKER%' OR i.legal_name ILIKE '%Tuygan%GOKER%' OR i.legal_name ILIKE '%GOKER%Tuygan%') AND s.commitment = 1000000.0 THEN 1612.0
+        WHEN (i.legal_name ILIKE '%Julien MACHOT%' OR i.legal_name ILIKE '%Julien%MACHOT%' OR i.legal_name ILIKE '%MACHOT%Julien%') AND s.commitment = 50000.0 THEN 89.0
+        WHEN (i.legal_name ILIKE '%VERSO MANAGEMENT LTD.%' OR i.legal_name ILIKE '%VERSO%LTD.%' OR i.legal_name ILIKE '%LTD.%VERSO%') AND s.commitment = 158673.88 THEN 315.0
+        WHEN (i.legal_name ILIKE '%OEP Ltd%' OR i.legal_name ILIKE '%OEP%Ltd%' OR i.legal_name ILIKE '%Ltd%OEP%') AND s.commitment = 50000.0 THEN 77.0
+        WHEN (i.legal_name ILIKE '%FITAIHI Holdings SARL%' OR i.legal_name ILIKE '%FITAIHI%SARL%' OR i.legal_name ILIKE '%SARL%FITAIHI%') AND s.commitment = 64500.0 THEN 89.0
+        WHEN (i.legal_name ILIKE '%SC TBC INVEST 3%' OR i.legal_name ILIKE '%SC%3%' OR i.legal_name ILIKE '%3%SC%') AND s.commitment = 595000.0 THEN 6071.0
+        WHEN (i.legal_name ILIKE '%ODIN (ANIM X II LP)%' OR i.legal_name ILIKE '%ODIN%LP)%' OR i.legal_name ILIKE '%LP)%ODIN%') AND s.commitment = 380000.0 THEN 4935.0
+        WHEN (i.legal_name ILIKE '%Serge AURIER%' OR i.legal_name ILIKE '%Serge%AURIER%' OR i.legal_name ILIKE '%AURIER%Serge%') AND s.commitment = 50000.0 THEN 649.0
+        WHEN (i.legal_name ILIKE '%John BARROWMAN%' OR i.legal_name ILIKE '%John%BARROWMAN%' OR i.legal_name ILIKE '%BARROWMAN%John%') AND s.commitment = 50000.0 THEN 735.0
+        WHEN (i.legal_name ILIKE '%Anand RATHI%' OR i.legal_name ILIKE '%Anand%RATHI%' OR i.legal_name ILIKE '%RATHI%Anand%') AND s.commitment = 250000.0 THEN 3676.0
+        WHEN (i.legal_name ILIKE '%DRussell Goman RD LLC%' OR i.legal_name ILIKE '%DRussell%LLC%' OR i.legal_name ILIKE '%LLC%DRussell%') AND s.commitment = 25000.0 THEN 367.0
+        WHEN (i.legal_name ILIKE '%Garson LEVY%' OR i.legal_name ILIKE '%Garson%LEVY%' OR i.legal_name ILIKE '%LEVY%Garson%') AND s.commitment = 25000.0 THEN 367.0
+        WHEN (i.legal_name ILIKE '%Mrs Anisha Bansal and Mr Rahul KARKUN%' OR i.legal_name ILIKE '%Mrs%KARKUN%' OR i.legal_name ILIKE '%KARKUN%Mrs%') AND s.commitment = 25000.0 THEN 367.0
+        WHEN (i.legal_name ILIKE '%Mathieu MARIOTTI%' OR i.legal_name ILIKE '%Mathieu%MARIOTTI%' OR i.legal_name ILIKE '%MARIOTTI%Mathieu%') AND s.commitment = 125000.0 THEN 1838.0
+        WHEN (i.legal_name ILIKE '%Alexandre BARBARANELLI%' OR i.legal_name ILIKE '%Alexandre%BARBARANELLI%' OR i.legal_name ILIKE '%BARBARANELLI%Alexandre%') AND s.commitment = 30000.0 THEN 441.0
+        WHEN (i.legal_name ILIKE '%Keir BENBOW%' OR i.legal_name ILIKE '%Keir%BENBOW%' OR i.legal_name ILIKE '%BENBOW%Keir%') AND s.commitment = 100000.0 THEN 1470.0
+        WHEN (i.legal_name ILIKE '%Amanda RYZOWY%' OR i.legal_name ILIKE '%Amanda%RYZOWY%' OR i.legal_name ILIKE '%RYZOWY%Amanda%') AND s.commitment = 25000.0 THEN 367.0
+        WHEN (i.legal_name ILIKE '%ALPHA GAIA CAPITAL FZE%' OR i.legal_name ILIKE '%ALPHA%FZE%' OR i.legal_name ILIKE '%FZE%ALPHA%') AND s.commitment = 100000.0 THEN 1111.0
+        WHEN (i.legal_name ILIKE '%Desmond CARBERY%' OR i.legal_name ILIKE '%Desmond%CARBERY%' OR i.legal_name ILIKE '%CARBERY%Desmond%') AND s.commitment = 100000.0 THEN 1111.0
+        WHEN (i.legal_name ILIKE '%Odile and Georges MRAD and FENERGI%' OR i.legal_name ILIKE '%Odile%FENERGI%' OR i.legal_name ILIKE '%FENERGI%Odile%') AND s.commitment = 100000.0 THEN 1111.0
+        WHEN (i.legal_name ILIKE '%Georgi GEORGIEV%' OR i.legal_name ILIKE '%Georgi%GEORGIEV%' OR i.legal_name ILIKE '%GEORGIEV%Georgi%') AND s.commitment = 200000.0 THEN 2469.0
+        WHEN (i.legal_name ILIKE '%Anatoliy KOGAN%' OR i.legal_name ILIKE '%Anatoliy%KOGAN%' OR i.legal_name ILIKE '%KOGAN%Anatoliy%') AND s.commitment = 100000.0 THEN 1111.0
+        WHEN (i.legal_name ILIKE '%GESTIO CAPITAL LTD%' OR i.legal_name ILIKE '%GESTIO%LTD%' OR i.legal_name ILIKE '%LTD%GESTIO%') AND s.commitment = 350000.0 THEN 4320.0
+        WHEN (i.legal_name ILIKE '%Danielle BURNS%' OR i.legal_name ILIKE '%Danielle%BURNS%' OR i.legal_name ILIKE '%BURNS%Danielle%') AND s.commitment = 10000.0 THEN 111.0
+        WHEN (i.legal_name ILIKE '%LF GROUP SARL%' OR i.legal_name ILIKE '%LF%SARL%' OR i.legal_name ILIKE '%SARL%LF%') AND s.commitment = 200000.0 THEN 2272.0
+        WHEN (i.legal_name ILIKE '%BSV SPV III LLC%' OR i.legal_name ILIKE '%BSV%LLC%' OR i.legal_name ILIKE '%LLC%BSV%') AND s.commitment = 984400.0 THEN 10700.0
+        WHEN (i.legal_name ILIKE '%ODIN (ANIM X II LP)%' OR i.legal_name ILIKE '%ODIN%LP)%' OR i.legal_name ILIKE '%LP)%ODIN%') AND s.commitment = 261331.0 THEN 2840.0
+        WHEN (i.legal_name ILIKE '%Julien MACHOT%' OR i.legal_name ILIKE '%Julien%MACHOT%' OR i.legal_name ILIKE '%MACHOT%Julien%') AND s.commitment = 50000.0 THEN 77.0
+        ELSE num_shares
+    END,
+    spread_per_share = price_per_share - cost_per_share,
+    spread_fee_amount = (price_per_share - cost_per_share) * num_shares
+FROM public.vehicles v, public.investors i
+WHERE s.vehicle_id = v.id
+  AND s.investor_id = i.id
+  AND v.entity_code = 'VC126';

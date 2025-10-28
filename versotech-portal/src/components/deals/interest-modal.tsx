@@ -128,7 +128,7 @@ export function InterestModal({
           </DialogTitle>
           <DialogDescription>
             {isClosed
-              ? `Let the VERSO team know you're interested in similar opportunities to ${dealName}. We'll notify you when comparable deals become available.`
+              ? `Let the VERSO team know you&apos;re interested in similar opportunities to ${dealName}. We'll notify you when comparable deals become available.`
               : `Share a quick signal and the VERSO team will review your interest in ${dealName}.`
             }
           </DialogDescription>

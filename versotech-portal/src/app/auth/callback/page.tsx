@@ -72,18 +72,21 @@ function AuthCallbackContent() {
         console.log('[auth-callback] User metadata:', data.user.user_metadata)
 
         // Check if profile exists (should be created by trigger)
-        let { data: profile, error: profileError } = await supabase
+        let profile: any
+        const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select('role, display_name')
           .eq('id', data.user.id)
           .maybeSingle()
 
-        // If profile doesn't exist (trigger failed), create it via API
+        profile = profileData
+
+        // If profile doesn&apos;t exist (trigger failed), create it via API
         if (!profile) {
           console.log('[auth-callback] Profile not found, creating it...')
-          
+
           const metadataRole = data.user.user_metadata?.role || 'investor'
-          const metadataDisplayName = data.user.user_metadata?.display_name || 
+          const metadataDisplayName = data.user.user_metadata?.display_name ||
                                        data.user.user_metadata?.full_name ||
                                        data.user.email?.split('@')[0] ||
                                        'User'

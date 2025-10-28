@@ -5,8 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Plus, Edit, XCircle, Building2, DollarSign, Calendar, Hash } from 'lucide-react'
-import { AddSubscriptionDialog } from './add-subscription-dialog'
+import { Edit, XCircle, Building2, DollarSign, Calendar, Hash } from 'lucide-react'
 import { EditSubscriptionDialog } from './edit-subscription-dialog'
 import { toast } from 'sonner'
 
@@ -17,10 +16,39 @@ type Subscription = {
   commitment: number
   currency: string
   status: string
-  effective_date: string | null
-  funding_due_at: string | null
-  acknowledgement_notes: string | null
+  committed_at: string | null
   created_at: string
+  acknowledgement_notes: string | null
+
+  // Share/Unit fields
+  price_per_share: number | null
+  cost_per_share: number | null
+  num_shares: number | null
+  spread_per_share: number | null
+  units: number | null
+
+  // Fee fields
+  subscription_fee_percent: number | null
+  subscription_fee_amount: number | null
+  bd_fee_percent: number | null
+  bd_fee_amount: number | null
+  finra_fee_amount: number | null
+  spread_fee_amount: number | null
+  performance_fee_tier1_percent: number | null
+  performance_fee_tier1_threshold: number | null
+  performance_fee_tier2_percent: number | null
+  performance_fee_tier2_threshold: number | null
+
+  // Financial tracking
+  funded_amount: number
+  outstanding_amount: number | null
+  capital_calls_total: number
+  distributions_total: number
+  current_nav: number | null
+
+  // Business context
+  opportunity_name: string | null
+
   vehicle?: {
     id: string
     name: string
@@ -56,7 +84,6 @@ export function SubscriptionsTab({ investorId }: { investorId: string }) {
   const [data, setData] = useState<SubscriptionsData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [addDialogOpen, setAddDialogOpen] = useState(false)
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [editingSubscription, setEditingSubscription] = useState<Subscription | null>(null)
 
@@ -188,31 +215,21 @@ export function SubscriptionsTab({ investorId }: { investorId: string }) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold">
-            Subscriptions ({data.summary.total_subscriptions})
-          </h2>
-          <p className="text-muted-foreground">
-            {data.summary.total_vehicles} vehicles
-          </p>
-        </div>
-        <Button onClick={() => setAddDialogOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Add Subscription
-        </Button>
+      <div>
+        <h2 className="text-2xl font-bold">
+          Subscriptions ({data.summary.total_subscriptions})
+        </h2>
+        <p className="text-muted-foreground">
+          {data.summary.total_vehicles} vehicles. Use "Add Subscription" button in the page header to create new subscriptions.
+        </p>
       </div>
 
       {data.grouped_by_vehicle.length === 0 ? (
         <Card>
           <CardContent className="pt-6 text-center">
-            <p className="text-muted-foreground mb-4">
-              No subscriptions yet
+            <p className="text-muted-foreground">
+              No subscriptions yet. Use the "Add Subscription" button in the page header to create the first subscription.
             </p>
-            <Button onClick={() => setAddDialogOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Add First Subscription
-            </Button>
           </CardContent>
         </Card>
       ) : (
@@ -243,52 +260,160 @@ export function SubscriptionsTab({ investorId }: { investorId: string }) {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {group.subscriptions.map((sub) => (
-                    <div
-                      key={sub.id}
-                      className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent/50 transition-colors"
-                    >
-                      <div className="flex items-center gap-4 flex-1">
-                        <div className="flex items-center gap-2">
-                          <Hash className="h-4 w-4 text-muted-foreground" />
-                          <span className="font-mono font-semibold">
-                            {sub.subscription_number}
-                          </span>
+                  {group.subscriptions.map((sub) => {
+                    const percentFunded = sub.commitment > 0 ? (sub.funded_amount / sub.commitment) * 100 : 0
+                    const hasFees = sub.subscription_fee_amount || sub.bd_fee_amount || sub.spread_fee_amount || sub.finra_fee_amount
+                    const totalFees = [
+                      sub.subscription_fee_amount,
+                      sub.bd_fee_amount,
+                      sub.spread_fee_amount,
+                      sub.finra_fee_amount
+                    ].reduce((sum, fee) => sum + (fee || 0), 0)
+                    const moic = sub.funded_amount > 0 && sub.current_nav ? sub.current_nav / sub.funded_amount : null
+
+                    return (
+                      <div
+                        key={sub.id}
+                        className="p-4 border rounded-lg hover:bg-accent/50 transition-colors"
+                      >
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-2">
+                              <Hash className="h-4 w-4 text-muted-foreground" />
+                              <span className="font-mono font-semibold text-lg">
+                                {sub.subscription_number}
+                              </span>
+                            </div>
+                            <Badge className={getStatusColor(sub.status)}>
+                              {sub.status}
+                            </Badge>
+                            {sub.opportunity_name && (
+                              <span className="text-sm text-muted-foreground italic">
+                                {sub.opportunity_name}
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleEdit(sub)}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            {sub.status !== 'cancelled' && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleCancelSubscription(sub.id, sub.subscription_number)}
+                              >
+                                <XCircle className="h-4 w-4 text-destructive" />
+                              </Button>
+                            )}
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <DollarSign className="h-4 w-4 text-muted-foreground" />
-                          <span className="font-semibold">
-                            {formatCurrency(sub.commitment, sub.currency)}
-                          </span>
-                          <Badge className={getStatusColor(sub.status)}>
-                            {sub.status}
-                          </Badge>
+
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                          {/* Commitment & Funded */}
+                          <div>
+                            <p className="text-xs text-muted-foreground mb-1">Commitment</p>
+                            <p className="font-semibold">{formatCurrency(sub.commitment, sub.currency)}</p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Funded: {formatCurrency(sub.funded_amount, sub.currency)} ({percentFunded.toFixed(0)}%)
+                            </p>
+                            {sub.outstanding_amount != null && sub.outstanding_amount > 0 && (
+                              <p className="text-xs text-yellow-600 font-medium">
+                                Outstanding: {formatCurrency(sub.outstanding_amount, sub.currency)}
+                              </p>
+                            )}
+                          </div>
+
+                          {/* Dates */}
+                          <div>
+                            <p className="text-xs text-muted-foreground mb-1">Important Dates</p>
+                            {sub.committed_at && (
+                              <p className="text-sm">Committed: {formatDate(sub.committed_at)}</p>
+                            )}
+                            {sub.created_at && (
+                              <p className="text-sm">Created: {formatDate(sub.created_at)}</p>
+                            )}
+                            {!sub.committed_at && !sub.created_at && (
+                              <p className="text-sm text-muted-foreground">No dates set</p>
+                            )}
+                          </div>
+
+                          {/* Share Structure */}
+                          <div>
+                            <p className="text-xs text-muted-foreground mb-1">Share Structure</p>
+                            {sub.num_shares != null ? (
+                              <>
+                                <p className="text-sm font-medium">{sub.num_shares.toLocaleString()} shares</p>
+                                {sub.price_per_share != null && (
+                                  <p className="text-xs">@ {formatCurrency(sub.price_per_share, sub.currency)}</p>
+                                )}
+                                {sub.spread_per_share != null && sub.spread_per_share > 0 && (
+                                  <p className="text-xs text-green-600">
+                                    Spread: {formatCurrency(sub.spread_per_share, sub.currency)}
+                                  </p>
+                                )}
+                              </>
+                            ) : (
+                              <p className="text-sm text-muted-foreground">No share data</p>
+                            )}
+                          </div>
+
+                          {/* Fees & Performance */}
+                          <div>
+                            <p className="text-xs text-muted-foreground mb-1">Fees & Performance</p>
+                            {hasFees ? (
+                              <>
+                                <p className="text-sm font-medium">Total Fees: {formatCurrency(totalFees, sub.currency)}</p>
+                                {sub.subscription_fee_percent && (
+                                  <p className="text-xs">Sub: {sub.subscription_fee_percent.toFixed(2)}%</p>
+                                )}
+                                {sub.bd_fee_percent && (
+                                  <p className="text-xs">BD: {sub.bd_fee_percent.toFixed(2)}%</p>
+                                )}
+                              </>
+                            ) : (
+                              <p className="text-sm text-muted-foreground">No fees</p>
+                            )}
+                            {moic != null && (
+                              <p className={`text-xs font-medium mt-1 ${moic >= 1 ? 'text-green-600' : 'text-red-600'}`}>
+                                MOIC: {moic.toFixed(2)}x
+                              </p>
+                            )}
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Calendar className="h-4 w-4" />
-                          {formatDate(sub.effective_date)}
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleEdit(sub)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        {sub.status !== 'cancelled' && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleCancelSubscription(sub.id, sub.subscription_number)}
-                          >
-                            <XCircle className="h-4 w-4 text-destructive" />
-                          </Button>
+
+                        {/* Additional Financial Info */}
+                        {(sub.capital_calls_total > 0 || sub.distributions_total > 0 || sub.current_nav != null) && (
+                          <div className="mt-3 pt-3 border-t grid grid-cols-3 gap-4 text-sm">
+                            {sub.capital_calls_total > 0 && (
+                              <div>
+                                <p className="text-xs text-muted-foreground">Capital Calls</p>
+                                <p className="font-medium">{formatCurrency(sub.capital_calls_total, sub.currency)}</p>
+                              </div>
+                            )}
+                            {sub.distributions_total > 0 && (
+                              <div>
+                                <p className="text-xs text-muted-foreground">Distributions</p>
+                                <p className="font-medium text-green-600">{formatCurrency(sub.distributions_total, sub.currency)}</p>
+                              </div>
+                            )}
+                            {sub.current_nav != null && (
+                              <div>
+                                <p className="text-xs text-muted-foreground">Current NAV</p>
+                                <p className={`font-medium ${moic && moic >= 1 ? 'text-green-600' : 'text-red-600'}`}>
+                                  {formatCurrency(sub.current_nav, sub.currency)}
+                                </p>
+                              </div>
+                            )}
+                          </div>
                         )}
                       </div>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
               </CardContent>
             </Card>
@@ -315,13 +440,6 @@ export function SubscriptionsTab({ investorId }: { investorId: string }) {
           </Card>
         </>
       )}
-
-      <AddSubscriptionDialog
-        open={addDialogOpen}
-        onOpenChange={setAddDialogOpen}
-        investorId={investorId}
-        onSuccess={fetchSubscriptions}
-      />
 
       {editingSubscription && (
         <EditSubscriptionDialog

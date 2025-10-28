@@ -35,10 +35,11 @@ const priorityColors = {
   critical: 'bg-red-500/20 text-red-300'
 }
 
-const statusColors = {
+const statusColors: Record<string, string> = {
   pending: 'bg-amber-500/20 text-amber-300',
   approved: 'bg-emerald-500/20 text-emerald-300',
-  rejected: 'bg-rose-500/20 text-rose-300'
+  rejected: 'bg-rose-500/20 text-rose-300',
+  cancelled: 'bg-slate-500/20 text-slate-300'
 }
 
 export function ApprovalsKanbanView({ approvals, onApprovalClick }: ApprovalsKanbanViewProps) {

@@ -91,7 +91,7 @@ function formatDueCopy(dueDate: string | null, status: DashboardTask['status']) 
 
   if (status === 'completed') return `Completed ${formatted}`
 
-  if (date < now && status !== 'completed') {
+  if (date < now) {
     const diffDays = Math.ceil((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24))
     return diffDays > 1 ? `${diffDays} days overdue` : 'Overdue'
   }

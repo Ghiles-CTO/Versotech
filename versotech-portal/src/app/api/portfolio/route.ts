@@ -102,11 +102,11 @@ export async function GET(request: Request) {
       }
 
       if (includeBreakdown) {
-        emptyResponse.vehicleBreakdown = []
+        (emptyResponse as any).vehicleBreakdown = []
       }
 
       if (includeTrends) {
-        emptyResponse.trends = {
+        (emptyResponse as any).trends = {
           navChange: 0,
           navChangePct: 0,
           performanceChange: 0,
@@ -120,10 +120,12 @@ export async function GET(request: Request) {
     const investorIds = investorLinks.map(link => link.investor_id)
 
     // Calculate comprehensive KPIs using enhanced database function that includes deals
-    let { data: kpiData, error: kpiError } = await supabase
+    let kpiData: any
+    const { data, error: kpiError } = await supabase
       .rpc('calculate_investor_kpis_with_deals', {
         investor_ids: investorIds
       })
+    kpiData = data
 
     if (kpiError) {
       console.error('KPI calculation error:', kpiError)

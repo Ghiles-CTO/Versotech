@@ -126,7 +126,7 @@ export async function POST(
     return NextResponse.json({ flag }, { status: 201 })
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: 'Invalid input', details: error.errors }, { status: 400 })
+      return NextResponse.json({ error: 'Invalid input', details: (error as any).errors }, { status: 400 })
     }
 
     console.error('[EntityFlags] POST error:', error)

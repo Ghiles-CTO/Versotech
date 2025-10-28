@@ -122,6 +122,8 @@ export function EntityDetailClient({ entity: initialEntity, directors: initialDi
   const [documentsError, setDocumentsError] = useState<string | null>(null)
   const [events, setEvents] = useState<EntityEvent[]>(initialEvents)
   const [eventsLoading, setEventsLoading] = useState(false)
+  const [directorLoading, setDirectorLoading] = useState(false)
+  const [directorError, setDirectorError] = useState<string | null>(null)
   const [directorModalOpen, setDirectorModalOpen] = useState(false)
   const [editEntityModalOpen, setEditEntityModalOpen] = useState(false)
 

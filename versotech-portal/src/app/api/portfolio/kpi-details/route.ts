@@ -28,10 +28,11 @@ interface KPIDetail {
 }
 
 export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url)
+  const kpiType = searchParams.get('type') || 'nav_breakdown'
+
   try {
     const supabase = await createClient()
-    const { searchParams } = new URL(request.url)
-    const kpiType = searchParams.get('type') || 'nav_breakdown'
 
     // Get the authenticated user
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -90,10 +91,12 @@ export async function GET(request: Request) {
     switch (kpiType) {
       case 'nav_breakdown':
         // Try enhanced function first, fallback to manual query
-        let { data: vehicleBreakdown, error: vehicleError } = await supabase
+        let vehicleBreakdown: any
+        const { data, error: vehicleError } = await supabase
           .rpc('get_investor_vehicle_breakdown', {
             investor_ids: investorIds
           })
+        vehicleBreakdown = data
 
         console.log(`Vehicle breakdown query result: ${vehicleBreakdown?.length || 0} vehicles, error:`, vehicleError)
 
@@ -583,7 +586,6 @@ export async function GET(request: Request) {
     console.error('KPI Details API error:', error)
     console.error('Error details:', {
       kpiType,
-      investorIds: investorIds?.length || 0,
       errorMessage: error instanceof Error ? error.message : 'Unknown error',
       errorStack: error instanceof Error ? error.stack : 'No stack trace'
     })
@@ -594,7 +596,6 @@ export async function GET(request: Request) {
         message: error instanceof Error ? error.message : 'Unknown error',
         debug: process.env.NODE_ENV === 'development' ? {
           kpiType,
-          investorIds: investorIds?.length || 0,
           errorDetails: error instanceof Error ? error.stack : String(error)
         } : undefined
       },

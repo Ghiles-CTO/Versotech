@@ -78,7 +78,7 @@ export async function GET(request: NextRequest) {
           .single()
 
         if (staffInConv) {
-          existingConversation = conv.conversations
+          existingConversation = (conv.conversations as any)?.[0] || conv.conversations
           break
         }
       }
@@ -117,7 +117,7 @@ export async function GET(request: NextRequest) {
             )
           )
         `)
-        .eq('id', existingConversation.id)
+        .eq('id', (existingConversation as any).id)
         .single()
 
       if (convError) {

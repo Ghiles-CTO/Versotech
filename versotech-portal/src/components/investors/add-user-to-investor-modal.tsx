@@ -130,62 +130,66 @@ export function AddUserToInvestorModal({ investorId, open, onOpenChange }: AddUs
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="bg-zinc-950 border-white/10 text-white">
         <DialogHeader>
-          <DialogTitle>Add Portal User</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="text-white">Add Portal User</DialogTitle>
+          <DialogDescription className="text-gray-400">
             Link an existing user or send an invitation to create a new account
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Mode Selection with Tabs */}
           <Tabs value={mode} onValueChange={(value: any) => setMode(value)}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="existing">Select Existing User</TabsTrigger>
-              <TabsTrigger value="invite">Send Invitation</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 bg-white/5 border-white/10">
+              <TabsTrigger value="existing" className="data-[state=active]:bg-white/10 data-[state=active]:text-white">
+                Select Existing User
+              </TabsTrigger>
+              <TabsTrigger value="invite" className="data-[state=active]:bg-white/10 data-[state=active]:text-white">
+                Send Invitation
+              </TabsTrigger>
             </TabsList>
 
             {/* Existing User Selection */}
             <TabsContent value="existing" className="space-y-4 mt-4">
               <div className="space-y-2">
-                <Label htmlFor="user_select">
-                  Select User <span className="text-red-500">*</span>
+                <Label htmlFor="user_select" className="text-white">
+                  Select User <span className="text-red-400">*</span>
                 </Label>
                 <Select
                   value={selectedUserId}
                   onValueChange={setSelectedUserId}
                   disabled={loadingUsers}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="bg-white/5 border-white/10 text-white">
                     <SelectValue placeholder={loadingUsers ? "Loading users..." : "Choose a user"} />
                   </SelectTrigger>
-                  <SelectContent className="max-h-[300px]">
+                  <SelectContent className="max-h-[300px] bg-zinc-950 border-white/10">
                     {existingUsers.length > 0 ? (
                       existingUsers.map((user) => (
-                        <SelectItem key={user.id} value={user.id}>
+                        <SelectItem key={user.id} value={user.id} className="text-white">
                           <div className="flex items-center gap-2">
                             <Users className="h-3 w-3" />
                             <span>{user.display_name}</span>
-                            <span className="text-xs text-muted-foreground">({user.email})</span>
+                            <span className="text-xs text-gray-400">({user.email})</span>
                           </div>
                         </SelectItem>
                       ))
                     ) : (
-                      <SelectItem value="no-users" disabled>
+                      <SelectItem value="no-users" disabled className="text-gray-400">
                         {loadingUsers ? "Loading..." : "No users found"}
                       </SelectItem>
                     )}
                   </SelectContent>
                 </Select>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-gray-400">
                   Select from existing users in the system
                 </p>
               </div>
 
               {/* Info Box */}
-              <div className="rounded-md bg-blue-50 dark:bg-blue-950/20 p-3 text-xs text-blue-900 dark:text-blue-300">
-                <strong>How it works:</strong>
-                <ul className="list-disc list-inside mt-1 space-y-1">
+              <div className="rounded-md bg-blue-500/10 border border-blue-400/20 p-3 text-xs text-blue-100">
+                <strong className="text-blue-100">How it works:</strong>
+                <ul className="list-disc list-inside mt-1 space-y-1 text-blue-200">
                   <li>User is immediately linked to this investor</li>
                   <li>They can access this investor's data in the portal</li>
                 </ul>
@@ -195,8 +199,8 @@ export function AddUserToInvestorModal({ investorId, open, onOpenChange }: AddUs
             {/* New Email Invitation */}
             <TabsContent value="invite" className="space-y-4 mt-4">
               <div className="space-y-2">
-                <Label htmlFor="email">
-                  Email Address <span className="text-red-500">*</span>
+                <Label htmlFor="email" className="text-white">
+                  Email Address <span className="text-red-400">*</span>
                 </Label>
                 <Input
                   id="email"
@@ -204,16 +208,17 @@ export function AddUserToInvestorModal({ investorId, open, onOpenChange }: AddUs
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="newuser@email.com"
+                  className="bg-white/5 border-white/10 text-white placeholder:text-gray-500"
                 />
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-gray-400">
                   An invitation email will be sent to this address
                 </p>
               </div>
 
               {/* Info Box */}
-              <div className="rounded-md bg-blue-50 dark:bg-blue-950/20 p-3 text-xs text-blue-900 dark:text-blue-300">
-                <strong>How it works:</strong>
-                <ul className="list-disc list-inside mt-1 space-y-1">
+              <div className="rounded-md bg-blue-500/10 border border-blue-400/20 p-3 text-xs text-blue-100">
+                <strong className="text-blue-100">How it works:</strong>
+                <ul className="list-disc list-inside mt-1 space-y-1 text-blue-200">
                   <li>Invitation email sent with signup link</li>
                   <li>They create account and get portal access</li>
                   <li>Automatically linked to this investor</li>
@@ -228,10 +233,11 @@ export function AddUserToInvestorModal({ investorId, open, onOpenChange }: AddUs
               variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={loading}
+              className="border-white/10 text-white hover:bg-white/10 bg-white/5"
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={loading}>
+            <Button type="submit" disabled={loading} className="bg-blue-600 hover:bg-blue-700 text-white">
               {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               Add User
             </Button>

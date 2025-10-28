@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
     
     if (!validation.success) {
       return NextResponse.json(
-        { error: 'Invalid request data', details: validation.error.errors },
+        { error: 'Invalid request data', details: (validation.error as any).errors },
         { status: 400 }
       )
     }
@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
           .eq('id', entity_id)
           .single()
         entityExists = !!commitment
-        entityName = commitment?.investors?.legal_name || 'Unknown'
+        entityName = (commitment?.investors as any)?.[0]?.legal_name || 'Unknown'
         break
 
       case 'deal_interest':
@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
           .eq('id', entity_id)
           .single()
         entityExists = !!interest
-        entityName = interest?.investors?.legal_name || 'Unknown'
+        entityName = (interest?.investors as any)?.[0]?.legal_name || 'Unknown'
         break
 
       case 'deal_subscription':
@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
           .eq('id', entity_id)
           .single()
         entityExists = !!subscription
-        entityName = subscription?.investors?.legal_name || 'Unknown'
+        entityName = (subscription?.investors as any)?.[0]?.legal_name || 'Unknown'
         break
         
       case 'allocation':
@@ -105,7 +105,7 @@ export async function POST(request: NextRequest) {
           .eq('id', entity_id)
           .single()
         entityExists = !!allocation
-        entityName = allocation?.investors?.legal_name || 'Unknown'
+        entityName = (allocation?.investors as any)?.[0]?.legal_name || 'Unknown'
         break
         
       case 'document':
@@ -373,8 +373,8 @@ export async function GET(request: NextRequest) {
       },
       counts: {
         pending: approvals?.filter(a => a.status === 'pending').length || 0,
-        approved: statsData?.total_approved_30d || 0,
-        rejected: statsData?.total_rejected_30d || 0
+        approved: (statsData as any)?.total_approved_30d || 0,
+        rejected: (statsData as any)?.total_rejected_30d || 0
       },
       total: totalCount || 0,
       pagination: {
@@ -432,7 +432,7 @@ export async function PATCH(request: NextRequest) {
     
     if (!validation.success) {
       return NextResponse.json(
-        { error: 'Invalid request data', details: validation.error.errors },
+        { error: 'Invalid request data', details: (validation.error as any).errors },
         { status: 400 }
       )
     }

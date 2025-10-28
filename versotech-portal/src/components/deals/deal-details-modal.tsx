@@ -528,12 +528,12 @@ export function DealDetailsModal({ deal, investorId, children }: DealDetailsModa
                   Term sheet details will appear here once published.
                 </div>
               )}
-              {termSheet?.term_sheet_html && (
+              {(termSheet as any)?.term_sheet_html && (
                 <div className="mt-6 space-y-2">
                   <h4 className="text-sm font-semibold text-gray-800">Opportunity Summary</h4>
                   <div
                     className="text-sm text-gray-700 leading-relaxed"
-                    dangerouslySetInnerHTML={{ __html: termSheet.term_sheet_html }}
+                    dangerouslySetInnerHTML={{ __html: (termSheet as any).term_sheet_html }}
                   />
                 </div>
               )}

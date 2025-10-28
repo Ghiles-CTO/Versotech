@@ -78,8 +78,8 @@ export default async function TasksPage() {
     .eq('status', 'active')
 
   const userVehicles = vehicles
-    ?.map(v => v.vehicles)
-    .filter((v, i, arr) => arr.findIndex(x => x.id === v.id) === i) || []
+    ?.map(v => v.vehicles?.[0])
+    .filter((v, i, arr) => v && arr.findIndex(x => x?.id === v.id) === i) || []
 
   // Fetch all tasks
   let tasksQuery = supabase

@@ -1,5 +1,5 @@
 import { AppLayout } from '@/components/layout/app-layout'
-import { CleanHoldingsPage } from '@/components/holdings/clean-holdings-page'
+import { HoldingsPage } from '@/components/holdings/holdings-page'
 import { createClient } from '@/lib/supabase/server'
 
 export const dynamic = 'force-dynamic'
@@ -20,7 +20,7 @@ export default async function InvestorHoldings() {
     .select('investor_id')
     .eq('user_id', user.id)
 
-  let initialData = null
+  let initialData: any = null
 
   if (investorLinks && investorLinks.length > 0) {
     const investorIds = investorLinks.map(link => link.investor_id)
@@ -89,7 +89,7 @@ export default async function InvestorHoldings() {
           : null
 
         // Process breakdown data
-        let breakdownData = []
+        let breakdownData: any[] = []
         if (breakdownResponse.status === 'fulfilled' && !breakdownResponse.value.error && breakdownResponse.value.data) {
           // Transform the vehicle data into the expected format
           breakdownData = breakdownResponse.value.data.map((vehicle: any) => {
@@ -155,7 +155,7 @@ export default async function InvestorHoldings() {
 
   return (
     <AppLayout brand="versoholdings">
-      <CleanHoldingsPage initialData={initialData} />
+      <HoldingsPage initialData={initialData} />
     </AppLayout>
   )
 }

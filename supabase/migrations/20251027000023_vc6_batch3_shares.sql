@@ -1,0 +1,179 @@
+-- VC6 Batch 3/4: Share data
+UPDATE public.subscriptions s
+SET
+    cost_per_share = CASE
+        WHEN i.legal_name LIKE '%Imran HAKIM%' AND s.commitment = 100000.0 THEN 21.0
+        WHEN i.legal_name LIKE '%Kenilworth Ltd%' AND s.commitment = 100000.0 THEN 21.0
+        WHEN i.legal_name LIKE '%Adil KHAWAJA%' AND s.commitment = 250000.0 THEN 21.0
+        WHEN i.legal_name LIKE '%Bharat JATANIA%' AND s.commitment = 100000.0 THEN 21.0
+        WHEN i.legal_name LIKE '%Lubna QUNASH%' AND s.commitment = 100000.0 THEN 21.0
+        WHEN i.legal_name LIKE '%Bank SYZ AG%' AND s.commitment = 4661508.64 THEN 20.0
+        WHEN i.legal_name LIKE '%Bank SYZ AG%' AND s.commitment = 62892.48 THEN 21.0
+        WHEN i.legal_name LIKE '%Bank SYZ AG%' AND s.commitment = 36361.92 THEN 16.0
+        WHEN i.legal_name LIKE '%Bank SYZ AG%' AND s.commitment = 46569.6 THEN 16.0
+        WHEN i.legal_name LIKE '%Bank SYZ AG%' AND s.commitment = 124444.32 THEN 14.0
+        WHEN i.legal_name LIKE '%Bank SYZ AG%' AND s.commitment = 3763.2 THEN 14.0
+        WHEN i.legal_name LIKE '%Bank SYZ AG%' AND s.commitment = 129407.04 THEN 13.5
+        WHEN i.legal_name LIKE '%Bank SYZ AG%' AND s.commitment = 15052.8 THEN 13.5
+        WHEN i.legal_name LIKE '%Damien KRAUSER%' AND s.commitment = 50000.0 THEN 21.0
+        WHEN i.legal_name LIKE '%Bright Phoenix Holdings Limited%' AND s.commitment = 100000.0 THEN 21.0
+        WHEN i.legal_name LIKE '%Michel GUERIN%' AND s.commitment = 200000.0 THEN 21.0
+        WHEN i.legal_name LIKE '%Eric LE SEIGNEUR%' AND s.commitment = 100000.0 THEN 21.0
+        WHEN i.legal_name LIKE '%Swip Holdings Ltd%' AND s.commitment = 150000.0 THEN 21.0
+        WHEN i.legal_name LIKE '%Phaena Advisory Ltd%' AND s.commitment = 50000.0 THEN 21.0
+        WHEN i.legal_name LIKE '%Bhikhu PATEL%' AND s.commitment = 250000.0 THEN 21.0
+        WHEN i.legal_name LIKE '%Vijaykumar PATEL%' AND s.commitment = 750000.0 THEN 21.0
+        WHEN i.legal_name LIKE '%POTASSIUM Capital%' AND s.commitment = 100000.0 THEN 21.0
+        WHEN i.legal_name LIKE '%Aatif HASSAN%' AND s.commitment = 100000.0 THEN 21.0
+        WHEN i.legal_name LIKE '%Kevin WILTSHIRE%' AND s.commitment = 75000.0 THEN 21.0
+        WHEN i.legal_name LIKE '%GTV Partners SA%' AND s.commitment = 500000.0 THEN 21.0
+        WHEN i.legal_name LIKE '%LENN Participations SARL%' AND s.commitment = 100000.0 THEN 21.0
+        WHEN i.legal_name LIKE '%WEALTH TRAIN LIMITED%' AND s.commitment = 450000.0 THEN 21.0
+        WHEN i.legal_name LIKE '%Anke RICE%' AND s.commitment = 85000.0 THEN 21.0
+        WHEN i.legal_name LIKE '%TERSANE INTERNATIONAL LTD%' AND s.commitment = 250000.0 THEN 21.0
+        WHEN i.legal_name LIKE '%Brahma Finance (BVI) Ltd%' AND s.commitment = 250000.0 THEN 21.0
+        WHEN i.legal_name LIKE '%James HARTSHORN%' AND s.commitment = 100000.0 THEN 21.0
+        WHEN i.legal_name LIKE '%Murat Cem and Mehmet Can GOKER%' AND s.commitment = 350000.0 THEN 21.0
+        WHEN i.legal_name LIKE '%Cyrus ALAMOUTI%' AND s.commitment = 100000.0 THEN 21.0
+        WHEN i.legal_name LIKE '%Darius ALAMOUTI%' AND s.commitment = 100000.0 THEN 21.0
+        WHEN i.legal_name LIKE '%Kaveh ALAMOUTI%' AND s.commitment = 100000.0 THEN 21.0
+        WHEN i.legal_name LIKE '%Caspian Enterprises Limited%' AND s.commitment = 1000000.0 THEN 21.0
+        WHEN i.legal_name LIKE '%Rensburg Client Nominees Limited A/c CLT%' AND s.commitment = 100000.0 THEN 21.0
+        WHEN i.legal_name LIKE '%DCMS Holdings Limited%' AND s.commitment = 400000.0 THEN 21.0
+        WHEN i.legal_name LIKE '%GELIGA LIMITED%' AND s.commitment = 500000.0 THEN 21.0
+        WHEN i.legal_name LIKE '%Damien KRAUSER%' AND s.commitment = 100000.0 THEN 21.0
+        WHEN i.legal_name LIKE '%Eric LE SEIGNEUR%' AND s.commitment = 100000.0 THEN 21.0
+        WHEN i.legal_name LIKE '%REVERY CAPITAL Limited%' AND s.commitment = 500000.0 THEN 21.0
+        WHEN i.legal_name LIKE '%Sandra KOHLER CABIAN%' AND s.commitment = 50000.0 THEN 21.0
+        WHEN i.legal_name LIKE '%Maria Christina CHANDRIS%' AND s.commitment = 250000.0 THEN 21.0
+        WHEN i.legal_name LIKE '%Dimitri CHANDRIS%' AND s.commitment = 100000.0 THEN 21.0
+        WHEN i.legal_name LIKE '%Nicki ASQUITH%' AND s.commitment = 100000.0 THEN 21.0
+        WHEN i.legal_name LIKE '%Isabella CHANDRIS%' AND s.commitment = 100000.0 THEN 21.0
+        WHEN i.legal_name LIKE '%Martin AVETISYAN%' AND s.commitment = 500000.0 THEN 21.0
+        WHEN i.legal_name LIKE '%Herve STEIMES%' AND s.commitment = 100000.0 THEN 21.0
+        WHEN i.legal_name LIKE '%Julien SERRA%' AND s.commitment = 100000.0 THEN 21.0
+        ELSE cost_per_share
+    END,
+    price_per_share = CASE
+        WHEN i.legal_name LIKE '%Imran HAKIM%' AND s.commitment = 100000.0 THEN 23.52
+        WHEN i.legal_name LIKE '%Kenilworth Ltd%' AND s.commitment = 100000.0 THEN 23.52
+        WHEN i.legal_name LIKE '%Adil KHAWAJA%' AND s.commitment = 250000.0 THEN 23.52
+        WHEN i.legal_name LIKE '%Bharat JATANIA%' AND s.commitment = 100000.0 THEN 23.52
+        WHEN i.legal_name LIKE '%Lubna QUNASH%' AND s.commitment = 100000.0 THEN 23.52
+        WHEN i.legal_name LIKE '%Bank SYZ AG%' AND s.commitment = 4661508.64 THEN 23.52
+        WHEN i.legal_name LIKE '%Bank SYZ AG%' AND s.commitment = 62892.48 THEN 23.52
+        WHEN i.legal_name LIKE '%Bank SYZ AG%' AND s.commitment = 36361.92 THEN 23.52
+        WHEN i.legal_name LIKE '%Bank SYZ AG%' AND s.commitment = 46569.6 THEN 23.52
+        WHEN i.legal_name LIKE '%Bank SYZ AG%' AND s.commitment = 124444.32 THEN 23.52
+        WHEN i.legal_name LIKE '%Bank SYZ AG%' AND s.commitment = 3763.2 THEN 23.52
+        WHEN i.legal_name LIKE '%Bank SYZ AG%' AND s.commitment = 129407.04 THEN 23.52
+        WHEN i.legal_name LIKE '%Bank SYZ AG%' AND s.commitment = 15052.8 THEN 23.52
+        WHEN i.legal_name LIKE '%Damien KRAUSER%' AND s.commitment = 50000.0 THEN 23.52
+        WHEN i.legal_name LIKE '%Bright Phoenix Holdings Limited%' AND s.commitment = 100000.0 THEN 23.52
+        WHEN i.legal_name LIKE '%Michel GUERIN%' AND s.commitment = 200000.0 THEN 23.52
+        WHEN i.legal_name LIKE '%Eric LE SEIGNEUR%' AND s.commitment = 100000.0 THEN 23.52
+        WHEN i.legal_name LIKE '%Swip Holdings Ltd%' AND s.commitment = 150000.0 THEN 23.52
+        WHEN i.legal_name LIKE '%Phaena Advisory Ltd%' AND s.commitment = 50000.0 THEN 23.52
+        WHEN i.legal_name LIKE '%Bhikhu PATEL%' AND s.commitment = 250000.0 THEN 23.52
+        WHEN i.legal_name LIKE '%Vijaykumar PATEL%' AND s.commitment = 750000.0 THEN 23.52
+        WHEN i.legal_name LIKE '%POTASSIUM Capital%' AND s.commitment = 100000.0 THEN 23.52
+        WHEN i.legal_name LIKE '%Aatif HASSAN%' AND s.commitment = 100000.0 THEN 23.52
+        WHEN i.legal_name LIKE '%Kevin WILTSHIRE%' AND s.commitment = 75000.0 THEN 23.52
+        WHEN i.legal_name LIKE '%GTV Partners SA%' AND s.commitment = 500000.0 THEN 24.52
+        WHEN i.legal_name LIKE '%LENN Participations SARL%' AND s.commitment = 100000.0 THEN 23.52
+        WHEN i.legal_name LIKE '%WEALTH TRAIN LIMITED%' AND s.commitment = 450000.0 THEN 23.52
+        WHEN i.legal_name LIKE '%Anke RICE%' AND s.commitment = 85000.0 THEN 22.0
+        WHEN i.legal_name LIKE '%TERSANE INTERNATIONAL LTD%' AND s.commitment = 250000.0 THEN 23.52
+        WHEN i.legal_name LIKE '%Brahma Finance (BVI) Ltd%' AND s.commitment = 250000.0 THEN 23.52
+        WHEN i.legal_name LIKE '%James HARTSHORN%' AND s.commitment = 100000.0 THEN 23.52
+        WHEN i.legal_name LIKE '%Murat Cem and Mehmet Can GOKER%' AND s.commitment = 350000.0 THEN 23.52
+        WHEN i.legal_name LIKE '%Cyrus ALAMOUTI%' AND s.commitment = 100000.0 THEN 23.52
+        WHEN i.legal_name LIKE '%Darius ALAMOUTI%' AND s.commitment = 100000.0 THEN 23.52
+        WHEN i.legal_name LIKE '%Kaveh ALAMOUTI%' AND s.commitment = 100000.0 THEN 23.52
+        WHEN i.legal_name LIKE '%Caspian Enterprises Limited%' AND s.commitment = 1000000.0 THEN 23.52
+        WHEN i.legal_name LIKE '%Rensburg Client Nominees Limited A/c CLT%' AND s.commitment = 100000.0 THEN 23.52
+        WHEN i.legal_name LIKE '%DCMS Holdings Limited%' AND s.commitment = 400000.0 THEN 23.52
+        WHEN i.legal_name LIKE '%GELIGA LIMITED%' AND s.commitment = 500000.0 THEN 23.52
+        WHEN i.legal_name LIKE '%Eric SARASIN%' AND s.commitment = 500000.0 THEN 23.52
+        WHEN i.legal_name LIKE '%Damien KRAUSER%' AND s.commitment = 100000.0 THEN 23.52
+        WHEN i.legal_name LIKE '%Eric LE SEIGNEUR%' AND s.commitment = 100000.0 THEN 23.52
+        WHEN i.legal_name LIKE '%Scott FLETCHER%' AND s.commitment = 500000.0 THEN 23.52
+        WHEN i.legal_name LIKE '%REVERY CAPITAL Limited%' AND s.commitment = 500000.0 THEN 23.52
+        WHEN i.legal_name LIKE '%Sandra KOHLER CABIAN%' AND s.commitment = 50000.0 THEN 23.52
+        WHEN i.legal_name LIKE '%Maria Christina CHANDRIS%' AND s.commitment = 250000.0 THEN 23.52
+        WHEN i.legal_name LIKE '%Dimitri CHANDRIS%' AND s.commitment = 100000.0 THEN 23.52
+        WHEN i.legal_name LIKE '%Nicki ASQUITH%' AND s.commitment = 100000.0 THEN 23.52
+        WHEN i.legal_name LIKE '%Isabella CHANDRIS%' AND s.commitment = 100000.0 THEN 23.52
+        WHEN i.legal_name LIKE '%Martin AVETISYAN%' AND s.commitment = 500000.0 THEN 23.52
+        WHEN i.legal_name LIKE '%Herve STEIMES%' AND s.commitment = 100000.0 THEN 23.52
+        WHEN i.legal_name LIKE '%Julien SERRA%' AND s.commitment = 100000.0 THEN 23.52
+        ELSE price_per_share
+    END,
+    num_shares = CASE
+        WHEN i.legal_name LIKE '%Imran HAKIM%' AND s.commitment = 100000.0 THEN 4251.0
+        WHEN i.legal_name LIKE '%Kenilworth Ltd%' AND s.commitment = 100000.0 THEN 4251.0
+        WHEN i.legal_name LIKE '%Adil KHAWAJA%' AND s.commitment = 250000.0 THEN 10629.0
+        WHEN i.legal_name LIKE '%Bharat JATANIA%' AND s.commitment = 100000.0 THEN 4251.0
+        WHEN i.legal_name LIKE '%Lubna QUNASH%' AND s.commitment = 100000.0 THEN 4251.0
+        WHEN i.legal_name LIKE '%Bank SYZ AG%' AND s.commitment = 4661508.64 THEN 198193.0
+        WHEN i.legal_name LIKE '%Bank SYZ AG%' AND s.commitment = 62892.48 THEN 2674.0
+        WHEN i.legal_name LIKE '%Bank SYZ AG%' AND s.commitment = 36361.92 THEN 1546.0
+        WHEN i.legal_name LIKE '%Bank SYZ AG%' AND s.commitment = 46569.6 THEN 1980.0
+        WHEN i.legal_name LIKE '%Bank SYZ AG%' AND s.commitment = 124444.32 THEN 5291.0
+        WHEN i.legal_name LIKE '%Bank SYZ AG%' AND s.commitment = 3763.2 THEN 160.0
+        WHEN i.legal_name LIKE '%Bank SYZ AG%' AND s.commitment = 129407.04 THEN 5502.0
+        WHEN i.legal_name LIKE '%Bank SYZ AG%' AND s.commitment = 15052.8 THEN 640.0
+        WHEN i.legal_name LIKE '%Damien KRAUSER%' AND s.commitment = 50000.0 THEN 2125.0
+        WHEN i.legal_name LIKE '%Bright Phoenix Holdings Limited%' AND s.commitment = 100000.0 THEN 4251.0
+        WHEN i.legal_name LIKE '%Michel GUERIN%' AND s.commitment = 200000.0 THEN 8503.0
+        WHEN i.legal_name LIKE '%Eric LE SEIGNEUR%' AND s.commitment = 100000.0 THEN 4251.0
+        WHEN i.legal_name LIKE '%Swip Holdings Ltd%' AND s.commitment = 150000.0 THEN 6377.0
+        WHEN i.legal_name LIKE '%Phaena Advisory Ltd%' AND s.commitment = 50000.0 THEN 2125.0
+        WHEN i.legal_name LIKE '%Bhikhu PATEL%' AND s.commitment = 250000.0 THEN 10629.0
+        WHEN i.legal_name LIKE '%Vijaykumar PATEL%' AND s.commitment = 750000.0 THEN 31887.0
+        WHEN i.legal_name LIKE '%POTASSIUM Capital%' AND s.commitment = 100000.0 THEN 4251.0
+        WHEN i.legal_name LIKE '%Aatif HASSAN%' AND s.commitment = 100000.0 THEN 4251.0
+        WHEN i.legal_name LIKE '%Kevin WILTSHIRE%' AND s.commitment = 75000.0 THEN 3188.0
+        WHEN i.legal_name LIKE '%GTV Partners SA%' AND s.commitment = 500000.0 THEN 20391.0
+        WHEN i.legal_name LIKE '%LENN Participations SARL%' AND s.commitment = 100000.0 THEN 4251.0
+        WHEN i.legal_name LIKE '%WEALTH TRAIN LIMITED%' AND s.commitment = 450000.0 THEN 19132.0
+        WHEN i.legal_name LIKE '%Anke RICE%' AND s.commitment = 85000.0 THEN 3863.0
+        WHEN i.legal_name LIKE '%TERSANE INTERNATIONAL LTD%' AND s.commitment = 250000.0 THEN 10629.0
+        WHEN i.legal_name LIKE '%Brahma Finance (BVI) Ltd%' AND s.commitment = 250000.0 THEN 10629.0
+        WHEN i.legal_name LIKE '%James HARTSHORN%' AND s.commitment = 100000.0 THEN 4251.0
+        WHEN i.legal_name LIKE '%Murat Cem and Mehmet Can GOKER%' AND s.commitment = 350000.0 THEN 14880.0
+        WHEN i.legal_name LIKE '%Cyrus ALAMOUTI%' AND s.commitment = 100000.0 THEN 4251.0
+        WHEN i.legal_name LIKE '%Darius ALAMOUTI%' AND s.commitment = 100000.0 THEN 4251.0
+        WHEN i.legal_name LIKE '%Kaveh ALAMOUTI%' AND s.commitment = 100000.0 THEN 4251.0
+        WHEN i.legal_name LIKE '%Caspian Enterprises Limited%' AND s.commitment = 1000000.0 THEN 42517.0
+        WHEN i.legal_name LIKE '%Rensburg Client Nominees Limited A/c CLT%' AND s.commitment = 100000.0 THEN 4251.0
+        WHEN i.legal_name LIKE '%DCMS Holdings Limited%' AND s.commitment = 400000.0 THEN 17006.0
+        WHEN i.legal_name LIKE '%GELIGA LIMITED%' AND s.commitment = 500000.0 THEN 21258.0
+        WHEN i.legal_name LIKE '%Eric SARASIN%' AND s.commitment = 500000.0 THEN 21258.0
+        WHEN i.legal_name LIKE '%Damien KRAUSER%' AND s.commitment = 100000.0 THEN 4251.0
+        WHEN i.legal_name LIKE '%Eric LE SEIGNEUR%' AND s.commitment = 100000.0 THEN 4251.0
+        WHEN i.legal_name LIKE '%Scott FLETCHER%' AND s.commitment = 500000.0 THEN 21258.0
+        WHEN i.legal_name LIKE '%REVERY CAPITAL Limited%' AND s.commitment = 500000.0 THEN 21258.0
+        WHEN i.legal_name LIKE '%Sandra KOHLER CABIAN%' AND s.commitment = 50000.0 THEN 2125.0
+        WHEN i.legal_name LIKE '%Maria Christina CHANDRIS%' AND s.commitment = 250000.0 THEN 10629.0
+        WHEN i.legal_name LIKE '%Dimitri CHANDRIS%' AND s.commitment = 100000.0 THEN 4251.0
+        WHEN i.legal_name LIKE '%Nicki ASQUITH%' AND s.commitment = 100000.0 THEN 4251.0
+        WHEN i.legal_name LIKE '%Isabella CHANDRIS%' AND s.commitment = 100000.0 THEN 4251.0
+        WHEN i.legal_name LIKE '%Martin AVETISYAN%' AND s.commitment = 500000.0 THEN 21258.0
+        WHEN i.legal_name LIKE '%Herve STEIMES%' AND s.commitment = 100000.0 THEN 4251.0
+        WHEN i.legal_name LIKE '%Julien SERRA%' AND s.commitment = 100000.0 THEN 4251.0
+        ELSE num_shares
+    END,
+    spread_per_share = CASE
+        WHEN cost_per_share IS NOT NULL AND price_per_share IS NOT NULL THEN price_per_share - cost_per_share
+        ELSE spread_per_share
+    END,
+    spread_fee_amount = CASE
+        WHEN cost_per_share IS NOT NULL AND price_per_share IS NOT NULL AND num_shares IS NOT NULL
+            THEN (price_per_share - cost_per_share) * num_shares
+        ELSE spread_fee_amount
+    END
+FROM public.vehicles v, public.investors i
+WHERE s.vehicle_id = v.id
+  AND s.investor_id = i.id
+  AND v.entity_code = 'VC106';

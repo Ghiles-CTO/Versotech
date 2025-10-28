@@ -8,7 +8,7 @@ const FIVE_MINUTES_MS = 5 * 60 * 1000
 
 const schema = z.object({
   entity_type: z.string().optional(),
-  payload: z.record(z.any()),
+  payload: z.record(z.string(), z.any()),
   workflow_category: z.string().optional()
 })
 
@@ -71,8 +71,8 @@ export async function POST(
     for (const [key, fieldConfig] of Object.entries(workflow.input_schema ?? {})) {
       if (!fieldConfig) continue
 
-      if (fieldConfig.required && !payload[key]) {
-        validationErrors.push(`${fieldConfig.label || key} is required`)
+      if ((fieldConfig as any).required && !payload[key]) {
+        validationErrors.push(`${(fieldConfig as any).label || key} is required`)
       }
     }
 

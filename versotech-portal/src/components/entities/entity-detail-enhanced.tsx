@@ -46,9 +46,11 @@ import {
   DialogTitle
 } from '@/components/ui/dialog'
 import { UploadDocumentModal } from '@/components/deals/upload-document-modal'
-import { AddDirectorModalEnhanced } from './add-director-modal-enhanced'
-import { AddStakeholderModal } from './add-stakeholder-modal'
-import { EditEntityModal } from './edit-entity-modal'
+import { DirectorModalRefactored } from './director-modal-refactored'
+import { StakeholderModalRefactored } from './stakeholder-modal-refactored'
+import { EditEntityModalRefactored } from './edit-entity-modal-refactored'
+import { DeleteEntityDialog } from './delete-entity-dialog'
+import { EditDocumentModal } from './edit-document-modal'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
 import { LinkEntityInvestorModal } from './link-entity-investor-modal'
@@ -61,6 +63,8 @@ import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
+import { useConfirmationDialog } from '@/hooks/use-confirmation-dialog'
+import { SubscriptionEditModal } from './subscription-edit-modal'
 
 interface Director {
   id: string
@@ -404,8 +408,13 @@ export function EntityDetailEnhanced({
   const [events, setEvents] = useState<EntityEvent[]>(initialEvents)
   const [eventsLoading, setEventsLoading] = useState(false)
   const [directorModalOpen, setDirectorModalOpen] = useState(false)
+  const [directorModalMode, setDirectorModalMode] = useState<'create' | 'edit'>('create')
+  const [editingDirector, setEditingDirector] = useState<Director | null>(null)
   const [stakeholderModalOpen, setStakeholderModalOpen] = useState(false)
+  const [stakeholderModalMode, setStakeholderModalMode] = useState<'create' | 'edit'>('create')
+  const [editingStakeholder, setEditingStakeholder] = useState<Stakeholder | null>(null)
   const [editEntityModalOpen, setEditEntityModalOpen] = useState(false)
+  const [deleteEntityDialogOpen, setDeleteEntityDialogOpen] = useState(false)
   const [investors, setInvestors] = useState<EntityInvestorSummary[]>(initialInvestors)
   const [investorModalOpen, setInvestorModalOpen] = useState(false)
   const [updatingInvestorId, setUpdatingInvestorId] = useState<string | null>(null)
@@ -418,9 +427,13 @@ export function EntityDetailEnhanced({
   const [previewModalOpen, setPreviewModalOpen] = useState(false)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [loadingPreview, setLoadingPreview] = useState(false)
+  const [editingDocument, setEditingDocument] = useState<EntityDocument | null>(null)
+  const [editDocumentModalOpen, setEditDocumentModalOpen] = useState(false)
   const [editingSubscription, setEditingSubscription] = useState<{investorId: string, subscription: any} | null>(null)
   const [subscriptionModalOpen, setSubscriptionModalOpen] = useState(false)
   const [savingSubscription, setSavingSubscription] = useState(false)
+  const [editingInvestorId, setEditingInvestorId] = useState<string | null>(null)
+  const [editingSubscriptionData, setEditingSubscriptionData] = useState<any>(null)
 
   // Subscription form refs
   const commitmentRef = useRef<HTMLInputElement>(null)
@@ -430,6 +443,9 @@ export function EntityDetailEnhanced({
   const fundingDueDateRef = useRef<HTMLInputElement>(null)
   const unitsRef = useRef<HTMLInputElement>(null)
   const notesRef = useRef<HTMLTextAreaElement>(null)
+
+  // Confirmation dialog hook
+  const { confirm, ConfirmationDialog } = useConfirmationDialog()
 
   const fetchFolders = useCallback(async () => {
     try {
@@ -465,7 +481,7 @@ export function EntityDetailEnhanced({
 
   const refreshEntityData = useCallback(async () => {
     try {
-      const response = await fetch(`/api/vehicles/${entity.id}`)
+      const response = await fetch(`/api/entities/${entity.id}`)
       if (response.ok) {
         const data = await response.json()
         setEntity(data.entity)
@@ -707,28 +723,39 @@ export function EntityDetailEnhanced({
   }, [editingSubscription, entity.id])
 
   const handleRemoveInvestor = useCallback(
-    async (linkId: string) => {
-      setRemovingInvestorId(linkId)
-      try {
-        const response = await fetch(`/api/entities/${entity.id}/investors/${linkId}`, {
-          method: 'DELETE'
-        })
+    async (linkId: string, investorName: string) => {
+      confirm(
+        {
+          title: 'Remove Investor',
+          description: `Are you sure you want to unlink ${investorName} from this entity? This action cannot be undone. The entity-investor link data will be permanently deleted.`,
+          confirmText: 'Remove Investor',
+          cancelText: 'Keep Investor',
+          variant: 'destructive'
+        },
+        async () => {
+          setRemovingInvestorId(linkId)
+          try {
+            const response = await fetch(`/api/entities/${entity.id}/investors/${linkId}`, {
+              method: 'DELETE'
+            })
 
-        if (!response.ok) {
-          const data = await response.json().catch(() => ({}))
-          throw new Error(data.error || 'Failed to remove investor')
+            if (!response.ok) {
+              const data = await response.json().catch(() => ({}))
+              throw new Error(data.error || 'Failed to remove investor')
+            }
+
+            setInvestors((prev) => prev.filter((inv) => inv.id !== linkId))
+            toast.success('Investor unlinked from entity.')
+          } catch (error) {
+            console.error('Failed to remove investor:', error)
+            toast.error('Unable to remove investor from entity.')
+          } finally {
+            setRemovingInvestorId(null)
+          }
         }
-
-        setInvestors((prev) => prev.filter((inv) => inv.id !== linkId))
-        toast.success('Investor unlinked from entity.')
-      } catch (error) {
-        console.error('Failed to remove investor:', error)
-        toast.error('Unable to remove investor from entity.')
-      } finally {
-        setRemovingInvestorId(null)
-      }
+      )
     },
-    [entity.id]
+    [entity.id, confirm]
   )
 
   const handlePreviewDocument = useCallback(async (doc: EntityDocument) => {
@@ -737,19 +764,52 @@ export function EntityDetailEnhanced({
     setLoadingPreview(true)
     setPreviewUrl(null)
 
+    // File size limit (10MB)
+    const MAX_PREVIEW_SIZE_MB = 10
+    const PREVIEWABLE_TYPES = ['pdf', 'png', 'jpeg', 'jpg', 'gif', 'txt', 'text']
+
     try {
+      // Check file type if available
+      if (doc.type) {
+        const isPreviewable = PREVIEWABLE_TYPES.some(type =>
+          doc.type?.toLowerCase().includes(type)
+        )
+        if (!isPreviewable) {
+          toast.error('This file type cannot be previewed. Please download instead.')
+          setLoadingPreview(false)
+          return
+        }
+      }
+
       const response = await fetch(`/api/documents/${doc.id}/download`)
       if (!response.ok) {
         throw new Error('Failed to get document URL')
       }
 
       const data = await response.json()
+
+      // Check file size if available
+      if (data.size && data.size > MAX_PREVIEW_SIZE_MB * 1024 * 1024) {
+        toast.error(
+          `File is too large to preview (${(data.size / 1024 / 1024).toFixed(1)}MB). Please download instead.`
+        )
+        setLoadingPreview(false)
+        return
+      }
+
       if (data.download_url) {
         setPreviewUrl(data.download_url)
+      } else {
+        throw new Error('No download URL returned')
       }
     } catch (error) {
       console.error('Failed to load document preview:', error)
-      toast.error('Failed to load document preview')
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : 'Failed to load document preview. Try downloading instead.'
+      )
+      setPreviewUrl(null)
     } finally {
       setLoadingPreview(false)
     }
@@ -771,6 +831,45 @@ export function EntityDetailEnhanced({
       toast.error('Failed to download document')
     }
   }, [])
+
+  const handleEditDocument = useCallback((doc: EntityDocument) => {
+    setEditingDocument(doc)
+    setEditDocumentModalOpen(true)
+  }, [])
+
+  const handleDeleteDocument = useCallback(
+    async (docId: string, docName: string) => {
+      confirm(
+        {
+          title: 'Delete Document',
+          description: `Are you sure you want to delete "${docName}"? This action cannot be undone and will permanently remove the document and all its versions.`,
+          confirmText: 'Delete Document',
+          variant: 'destructive'
+        },
+        async () => {
+          try {
+            const response = await fetch(`/api/staff/documents/${docId}`, {
+              method: 'DELETE'
+            })
+
+            if (!response.ok) {
+              const data = await response.json().catch(() => ({}))
+              throw new Error(data.error || 'Failed to delete document')
+            }
+
+            // Remove from local state
+            setDocuments((prev) => prev.filter((d) => d.id !== docId))
+            toast.success('Document deleted successfully')
+            await fetchDocuments()
+          } catch (error) {
+            console.error('Failed to delete document:', error)
+            toast.error(error instanceof Error ? error.message : 'Failed to delete document')
+          }
+        }
+      )
+    },
+    [confirm, fetchDocuments]
+  )
 
   const handleFlagCreated = useCallback(
     (flag: EntityFlagSummary) => {
@@ -838,25 +937,117 @@ export function EntityDetailEnhanced({
   )
 
   const handleDeleteFlag = useCallback(
-    async (flagId: string) => {
-      try {
-        const response = await fetch(`/api/entities/${entity.id}/flags/${flagId}`, {
-          method: 'DELETE'
-        })
+    async (flagId: string, flagTitle: string) => {
+      confirm(
+        {
+          title: 'Delete Flag',
+          description: `Are you sure you want to delete the flag "${flagTitle}"? This action cannot be undone.`,
+          confirmText: 'Delete Flag',
+          variant: 'destructive'
+        },
+        async () => {
+          try {
+            const response = await fetch(`/api/entities/${entity.id}/flags/${flagId}`, {
+              method: 'DELETE'
+            })
 
-        if (!response.ok) {
-          const data = await response.json().catch(() => ({}))
-          throw new Error(data.error || 'Failed to remove flag')
+            if (!response.ok) {
+              const data = await response.json().catch(() => ({}))
+              throw new Error(data.error || 'Failed to remove flag')
+            }
+
+            setFlags((prev) => prev.filter((flag) => flag.id !== flagId))
+            toast.success('Flag removed from entity.')
+          } catch (error) {
+            console.error('Failed to delete flag:', error)
+            toast.error(error instanceof Error ? error.message : 'Unable to delete flag.')
+          }
         }
-
-        setFlags((prev) => prev.filter((flag) => flag.id !== flagId))
-        toast.success('Flag removed from entity.')
-      } catch (error) {
-        console.error('Failed to delete flag:', error)
-        toast.error(error instanceof Error ? error.message : 'Unable to delete flag.')
-      }
+      )
     },
-    [entity.id]
+    [entity.id, confirm]
+  )
+
+  // Director handlers
+  const handleEditDirector = useCallback((director: Director) => {
+    setEditingDirector(director)
+    setDirectorModalMode('edit')
+    setDirectorModalOpen(true)
+  }, [])
+
+  const handleDeleteDirector = useCallback(
+    async (directorId: string, directorName: string) => {
+      confirm(
+        {
+          title: 'Delete Director',
+          description: `Are you sure you want to remove ${directorName} from this entity? This action cannot be undone.`,
+          confirmText: 'Delete Director',
+          variant: 'destructive'
+        },
+        async () => {
+          try {
+            const response = await fetch(
+              `/api/entities/${entity.id}/directors/${directorId}`,
+              { method: 'DELETE' }
+            )
+
+            if (!response.ok) {
+              const data = await response.json().catch(() => ({}))
+              throw new Error(data.error || 'Failed to delete director')
+            }
+
+            setDirectors((prev) => prev.filter((d) => d.id !== directorId))
+            toast.success('Director removed successfully')
+            await refreshEntityData()
+          } catch (error) {
+            console.error('Failed to delete director:', error)
+            toast.error(error instanceof Error ? error.message : 'Failed to delete director')
+          }
+        }
+      )
+    },
+    [entity.id, confirm, refreshEntityData]
+  )
+
+  // Stakeholder handlers
+  const handleEditStakeholder = useCallback((stakeholder: Stakeholder) => {
+    setEditingStakeholder(stakeholder)
+    setStakeholderModalMode('edit')
+    setStakeholderModalOpen(true)
+  }, [])
+
+  const handleDeleteStakeholder = useCallback(
+    async (stakeholderId: string, stakeholderName: string) => {
+      confirm(
+        {
+          title: 'Delete Stakeholder',
+          description: `Are you sure you want to remove ${stakeholderName} from this entity? This action cannot be undone.`,
+          confirmText: 'Delete Stakeholder',
+          variant: 'destructive'
+        },
+        async () => {
+          try {
+            const response = await fetch(
+              `/api/entities/${entity.id}/stakeholders/${stakeholderId}`,
+              { method: 'DELETE' }
+            )
+
+            if (!response.ok) {
+              const data = await response.json().catch(() => ({}))
+              throw new Error(data.error || 'Failed to delete stakeholder')
+            }
+
+            setStakeholders((prev) => prev.filter((s) => s.id !== stakeholderId))
+            toast.success('Stakeholder removed successfully')
+            await refreshEntityData()
+          } catch (error) {
+            console.error('Failed to delete stakeholder:', error)
+            toast.error(error instanceof Error ? error.message : 'Failed to delete stakeholder')
+          }
+        }
+      )
+    },
+    [entity.id, confirm, refreshEntityData]
   )
 
   const overviewStats = useMemo(() => {
@@ -977,23 +1168,42 @@ export function EntityDetailEnhanced({
               )}
             </div>
           </div>
-          <Button
-            onClick={() => setEditEntityModalOpen(true)}
-            className="gap-2 rounded-full bg-emerald-500 text-emerald-950 px-5 shadow-[0_12px_30px_rgba(16,185,129,0.35)] transition-colors hover:bg-emerald-400"
-          >
-            <Edit className="h-4 w-4" />
-            Edit Metadata
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              onClick={() => setEditEntityModalOpen(true)}
+              className="gap-2 rounded-full bg-emerald-500 text-emerald-950 px-5 shadow-[0_12px_30px_rgba(16,185,129,0.35)] transition-colors hover:bg-emerald-400"
+            >
+              <Edit className="h-4 w-4" />
+              Edit Metadata
+            </Button>
+            <Button
+              onClick={() => setDeleteEntityDialogOpen(true)}
+              variant="outline"
+              className="gap-2 rounded-full border-red-500/50 text-red-400 hover:bg-red-500/10 hover:text-red-300"
+            >
+              <Trash2 className="h-4 w-4" />
+              Delete Entity
+            </Button>
+          </div>
         </div>
       </div>
 
       {flags.length > 0 && (
         <Card className="border-amber-400/40 bg-amber-500/10">
-          <CardHeader className="pb-3">
+          <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
             <CardTitle className="text-amber-100 flex items-center gap-2">
               <AlertTriangle className="h-5 w-5" />
               Action Required ({flags.length})
             </CardTitle>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setFlagModalOpen(true)}
+              className="gap-2 border-amber-400/40 text-amber-100 hover:bg-amber-500/20"
+            >
+              <Plus className="h-4 w-4" />
+              Add Flag
+            </Button>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
@@ -1236,12 +1446,13 @@ export function EntityDetailEnhanced({
                     return (
                       <div
                         key={investor.id}
-                        className="rounded-lg border border-white/10 bg-white/5 p-4 transition-colors hover:bg-white/10"
+                        className="rounded-lg border border-white/10 bg-white/5 p-3 transition-colors hover:bg-white/10"
                       >
-                        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-                          <div className="space-y-2">
+                        <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                          <div className="flex-1 space-y-2.5">
+                            {/* Investor Header */}
                             <div className="flex flex-wrap items-center gap-2">
-                              <p className="text-lg font-semibold text-foreground">
+                              <p className="text-base font-semibold text-foreground">
                                 {investorProfile?.legal_name || 'Unknown Investor'}
                               </p>
                               {investorProfile?.type && (
@@ -1253,116 +1464,143 @@ export function EntityDetailEnhanced({
                                 {allocationStatus.replace(/_/g, ' ').toUpperCase()}
                               </Badge>
                             </div>
-                            <div className="text-xs text-muted-foreground space-y-1">
+
+                            {/* Investor Meta */}
+                            <div className="text-xs text-muted-foreground flex flex-wrap gap-x-4 gap-y-1">
                               {investor.relationship_role && (
-                                <p>
+                                <span>
                                   <span className="font-medium text-foreground">Role:</span>{' '}
-                                  {investor.relationship_role || '-'}
-                                </p>
+                                  {investor.relationship_role}
+                                </span>
                               )}
-                              {investorProfile?.email && <p>{investorProfile.email}</p>}
-                              {investor.invite_sent_at && (
-                                <p>
-                                  Invite sent {new Date(investor.invite_sent_at).toLocaleString()}
-                                </p>
-                              )}
-                              <p>
-                                Linked {new Date(investor.created_at).toLocaleString()}
-                              </p>
+                              {investorProfile?.email && <span>{investorProfile.email}</span>}
+                              <span>Linked {new Date(investor.created_at).toLocaleDateString()}</span>
                             </div>
 
+                            {/* Subscriptions Section - Compact */}
                             {hasSubscription && (
-                              <div className="rounded-md border border-emerald-400/30 bg-emerald-500/10 p-3 text-sm">
-                                <div className="flex flex-wrap items-center justify-between gap-3">
-                                  <div className="space-y-1">
-                                    <div className="flex items-center gap-2">
-                                      <p className="font-semibold text-emerald-100">
-                                        Subscription{subscriptionEntries.length > 1 ? 's' : ''}
-                                        {subscriptionEntries.length > 1 && (
-                                          <span className="ml-1 text-xs">({subscriptionEntries.length})</span>
-                                        )}
-                                      </p>
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="h-6 px-2 text-xs text-emerald-200 hover:text-emerald-100 hover:bg-emerald-500/20"
-                                        onClick={() => {
-                                          setEditingSubscription({
-                                            investorId: investor.id,
-                                            subscription: primarySubscription
-                                          })
-                                          setSubscriptionModalOpen(true)
-                                        }}
-                                      >
-                                        <Edit className="h-3 w-3 mr-1" />
-                                        Edit
-                                      </Button>
-                                    </div>
-                                    {totalCommitment != null ? (
-                                      <p className="text-sm text-emerald-200">
-                                        {formatCurrencyValue(
-                                          totalCommitment,
-                                          primarySubscription?.currency
-                                        )}
-                                      </p>
-                                    ) : (
-                                      <p className="text-sm text-emerald-200">Not set</p>
+                              <div className="rounded-md border border-emerald-400/30 bg-emerald-500/5 p-2.5">
+                                <div className="flex items-center justify-between mb-2">
+                                  <div className="flex items-center gap-1.5">
+                                    <h4 className="text-xs font-semibold text-emerald-100 uppercase">
+                                      Subscription{subscriptionEntries.length > 1 ? 's' : ''}
+                                    </h4>
+                                    {subscriptionEntries.length > 1 && (
+                                      <Badge variant="outline" className="border-emerald-400/40 bg-emerald-500/10 text-emerald-100 text-xs h-4 px-1.5">
+                                        {subscriptionEntries.length}
+                                      </Badge>
                                     )}
                                   </div>
-                                  <Badge
-                                    variant="outline"
-                                    className="border-emerald-400/40 bg-emerald-500/10 text-emerald-100 uppercase"
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-6 px-1.5 text-xs text-emerald-200 hover:text-emerald-100 hover:bg-emerald-500/20"
+                                    onClick={() => {
+                                      setEditingInvestorId(investor.id)
+                                      setEditingSubscriptionData(primarySubscription)
+                                      setSubscriptionModalOpen(true)
+                                    }}
                                   >
-                                    {primarySubscription?.status?.replace(/_/g, ' ') || allocationStatus}
-                                  </Badge>
+                                    <Edit className="h-3 w-3 mr-1" />
+                                    Edit
+                                  </Button>
                                 </div>
-                                <div className="mt-3 space-y-3 text-xs text-emerald-200">
+
+                                {totalCommitment != null && (
+                                  <div className="text-base font-bold text-emerald-100 mb-2">
+                                    {formatCurrencyValue(totalCommitment, primarySubscription?.currency)}
+                                  </div>
+                                )}
+
+                                <div className="space-y-2">
                                   {subscriptionEntries.map((entry) => {
-                                    const displayAmount = formatCurrencyValue(
-                                      entry.commitment,
-                                      entry.currency
-                                    )
+                                    const displayAmount = formatCurrencyValue(entry.commitment, entry.currency)
+                                    const percentFunded = entry.commitment > 0 && entry.funded_amount ? (entry.funded_amount / entry.commitment) * 100 : 0
+                                    const hasFees = entry.subscription_fee_amount || entry.bd_fee_amount || entry.spread_fee_amount || entry.finra_fee_amount
+                                    const totalFees = [
+                                      entry.subscription_fee_amount,
+                                      entry.bd_fee_amount,
+                                      entry.spread_fee_amount,
+                                      entry.finra_fee_amount
+                                    ].reduce((sum, fee) => sum + (fee || 0), 0)
+                                    const moic = entry.funded_amount > 0 && entry.current_nav ? entry.current_nav / entry.funded_amount : null
+
                                     return (
-                                      <div
-                                        key={entry.id}
-                                        className="rounded border border-emerald-400/20 bg-emerald-500/5 p-2"
-                                      >
-                                        <div className="flex flex-wrap items-center justify-between gap-2">
-                                          <span className="font-medium text-emerald-100">
-                                            {displayAmount || 'Commitment pending'}
-                                          </span>
-                                          <Badge className="bg-emerald-500/20 text-emerald-100 uppercase">
+                                      <div key={entry.id} className="text-xs border-b border-emerald-400/10 pb-2 last:border-0">
+                                        <div className="flex items-center justify-between mb-1.5">
+                                          <div className="flex items-center gap-2">
+                                            <span className="font-medium text-emerald-100">
+                                              {displayAmount || 'Pending'}
+                                            </span>
+                                            {entry.opportunity_name && (
+                                              <span className="text-emerald-300 italic text-[10px]">
+                                                ({entry.opportunity_name})
+                                              </span>
+                                            )}
+                                          </div>
+                                          <Badge className="bg-emerald-500/20 text-emerald-100 text-xs h-4 px-1.5 uppercase">
                                             {entry.status?.replace(/_/g, ' ') || 'Pending'}
                                           </Badge>
                                         </div>
-                                        <div className="mt-1 grid gap-2 md:grid-cols-3">
-                                          <div>
-                                            <p className="font-semibold uppercase tracking-wide text-emerald-300">
-                                              Effective
-                                            </p>
-                                            <p>
-                                              {entry.effective_date
-                                                ? new Date(entry.effective_date).toLocaleDateString()
-                                                : '—'}
-                                            </p>
+
+                                        {/* Dates row */}
+                                        {(entry.committed_at || entry.created_at) && (
+                                          <div className="flex gap-3 text-emerald-200 mb-1">
+                                            {entry.committed_at && (
+                                              <span>
+                                                <span className="text-emerald-300">Committed:</span>{' '}
+                                                {new Date(entry.committed_at).toLocaleDateString()}
+                                              </span>
+                                            )}
+                                            {entry.created_at && (
+                                              <span>
+                                                <span className="text-emerald-300">Created:</span>{' '}
+                                                {new Date(entry.created_at).toLocaleDateString()}
+                                              </span>
+                                            )}
                                           </div>
-                                          <div>
-                                            <p className="font-semibold uppercase tracking-wide text-emerald-300">
-                                              Funding Due
-                                            </p>
-                                            <p>
-                                              {entry.funding_due_at
-                                                ? new Date(entry.funding_due_at).toLocaleDateString()
-                                                : '—'}
-                                            </p>
+                                        )}
+
+                                        {/* Share structure */}
+                                        {(entry.num_shares || entry.price_per_share) && (
+                                          <div className="flex gap-3 text-emerald-200 mb-1">
+                                            {entry.num_shares && (
+                                              <span>
+                                                <span className="text-emerald-300">Shares:</span> {entry.num_shares.toLocaleString()}
+                                              </span>
+                                            )}
+                                            {entry.price_per_share && (
+                                              <span>
+                                                <span className="text-emerald-300">Price:</span> {formatCurrencyValue(entry.price_per_share, entry.currency)}
+                                              </span>
+                                            )}
+                                            {entry.spread_per_share && entry.spread_per_share > 0 && (
+                                              <span className="text-green-300">
+                                                <span className="text-emerald-300">Spread:</span> {formatCurrencyValue(entry.spread_per_share, entry.currency)}
+                                              </span>
+                                            )}
                                           </div>
-                                          <div>
-                                            <p className="font-semibold uppercase tracking-wide text-emerald-300">
-                                              Units
-                                            </p>
-                                            <p>{entry.units ?? '—'}</p>
-                                          </div>
+                                        )}
+
+                                        {/* Fees and funded amount */}
+                                        <div className="flex gap-3 text-emerald-200">
+                                          {entry.funded_amount != null && (
+                                            <span>
+                                              <span className="text-emerald-300">Funded:</span> {formatCurrencyValue(entry.funded_amount, entry.currency)} ({percentFunded.toFixed(0)}%)
+                                            </span>
+                                          )}
+                                          {hasFees && (
+                                            <span>
+                                              <span className="text-emerald-300">Fees:</span> {formatCurrencyValue(totalFees, entry.currency)}
+                                            </span>
+                                          )}
+                                          {moic != null && (
+                                            <span className={moic >= 1 ? 'text-green-300' : 'text-red-300'}>
+                                              <span className="text-emerald-300">MOIC:</span> {moic.toFixed(2)}x
+                                            </span>
+                                          )}
                                         </div>
+
                                         {entry.acknowledgement_notes && (
                                           <AcknowledgementNotes notes={entry.acknowledgement_notes} />
                                         )}
@@ -1373,70 +1611,56 @@ export function EntityDetailEnhanced({
                               </div>
                             )}
 
+                            {/* Holdings Section - Compact */}
                             {hasHoldings && (
-                              <div className="rounded-md border border-blue-400/30 bg-blue-500/10 p-3 text-sm">
-                                <div className="flex flex-wrap items-center justify-between gap-3">
-                                  <div className="space-y-1">
-                                    <p className="font-semibold text-blue-100">Holdings</p>
-                                    {totalHoldingsAmount != null && (
-                                      <p className="text-xs text-blue-200">
-                                        Total Exposure:{' '}
-                                        {formatCurrencyValue(
-                                          totalHoldingsAmount,
-                                          holdings[0]?.currency ?? primarySubscription?.currency
-                                        )}
-                                      </p>
-                                    )}
-                                  </div>
-                                  <Badge className="bg-blue-500/20 text-blue-100">
-                                    {holdings.length} {holdings.length === 1 ? 'Position' : 'Positions'}
+                              <div className="rounded-md border border-blue-400/30 bg-blue-500/5 p-2.5">
+                                <div className="flex items-center gap-1.5 mb-2">
+                                  <h4 className="text-xs font-semibold text-blue-100 uppercase">Holdings</h4>
+                                  <Badge variant="outline" className="border-blue-400/40 bg-blue-500/10 text-blue-100 text-xs h-4 px-1.5">
+                                    {holdings.length}
                                   </Badge>
                                 </div>
-                                <div className="mt-3 space-y-2 text-xs text-blue-100">
+
+                                {totalHoldingsAmount != null && (
+                                  <div className="text-base font-bold text-blue-100 mb-2">
+                                    {formatCurrencyValue(
+                                      totalHoldingsAmount,
+                                      holdings[0]?.currency ?? primarySubscription?.currency
+                                    )}
+                                  </div>
+                                )}
+
+                                <div className="space-y-1.5">
                                   {holdings.map((holding) => {
-                                    const holdingAmount = formatCurrencyValue(
-                                      holding.subscribed_amount,
-                                      holding.currency
-                                    )
+                                    const holdingAmount = formatCurrencyValue(holding.subscribed_amount, holding.currency)
                                     return (
-                                      <div
-                                        key={holding.id}
-                                        className="rounded border border-blue-400/20 bg-blue-500/5 p-2"
-                                      >
-                                        <div className="flex flex-wrap items-center justify-between gap-2">
-                                          <div className="flex flex-col">
-                                            <span className="font-medium text-blue-100">
+                                      <div key={holding.id} className="text-xs">
+                                        <div className="flex items-center justify-between mb-1">
+                                          <div>
+                                            <div className="font-medium text-blue-100">
                                               {holding.deal_name || 'Deal Allocation'}
-                                            </span>
-                                            <span className="text-blue-200">
-                                              {holdingAmount || 'Amount pending'}
-                                            </span>
+                                            </div>
+                                            <div className="font-semibold text-blue-100">
+                                              {holdingAmount || 'Pending'}
+                                            </div>
                                           </div>
-                                          <Badge className="bg-blue-500/20 text-blue-100 uppercase">
+                                          <Badge className="bg-blue-500/20 text-blue-100 text-xs h-4 px-1.5 uppercase">
                                             {holding.status?.replace(/_/g, ' ') || 'Pending'}
                                           </Badge>
                                         </div>
-                                        <div className="mt-1 grid gap-2 md:grid-cols-2">
-                                          <div>
-                                            <p className="font-semibold uppercase tracking-wide text-blue-300">
-                                              Effective
-                                            </p>
-                                            <p>
-                                              {holding.effective_date
-                                                ? new Date(holding.effective_date).toLocaleDateString()
-                                                : '—'}
-                                            </p>
-                                          </div>
-                                          <div>
-                                            <p className="font-semibold uppercase tracking-wide text-blue-300">
-                                              Funding Due
-                                            </p>
-                                            <p>
-                                              {holding.funding_due_at
-                                                ? new Date(holding.funding_due_at).toLocaleDateString()
-                                                : '—'}
-                                            </p>
-                                          </div>
+                                        <div className="flex gap-3 text-blue-200">
+                                          <span>
+                                            <span className="text-blue-300">Eff:</span>{' '}
+                                            {holding.effective_date
+                                              ? new Date(holding.effective_date).toLocaleDateString()
+                                              : '—'}
+                                          </span>
+                                          <span>
+                                            <span className="text-blue-300">Due:</span>{' '}
+                                            {holding.funding_due_at
+                                              ? new Date(holding.funding_due_at).toLocaleDateString()
+                                              : '—'}
+                                          </span>
                                         </div>
                                       </div>
                                     )
@@ -1445,18 +1669,18 @@ export function EntityDetailEnhanced({
                               </div>
                             )}
 
+                            {/* Notes Section */}
                             {investor.notes && (
-                              <p className="text-sm text-muted-foreground whitespace-pre-wrap border-l border-white/10 pl-3">
+                              <div className="text-sm text-muted-foreground whitespace-pre-wrap border-l-2 border-white/10 pl-3 py-1">
                                 {investor.notes}
-                              </p>
+                              </div>
                             )}
                           </div>
 
-                          <div className="flex flex-col items-end gap-3">
-                            <div className="space-y-2 text-right">
-                              <Label className="text-xs uppercase text-muted-foreground">
-                                Allocation Status
-                              </Label>
+                          {/* Right Controls Column */}
+                          <div className="flex flex-col items-end gap-2 min-w-[160px]">
+                            <div className="space-y-1.5 text-right w-full">
+                              <Label className="text-xs uppercase text-muted-foreground">Status</Label>
                               <Select
                                 value={allocationStatus}
                                 onValueChange={(value) =>
@@ -1464,7 +1688,7 @@ export function EntityDetailEnhanced({
                                 }
                                 disabled={updatingInvestorId === investor.id}
                               >
-                                <SelectTrigger className="w-[180px]">
+                                <SelectTrigger className="w-full h-8 text-xs">
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -1476,23 +1700,24 @@ export function EntityDetailEnhanced({
                                 </SelectContent>
                               </Select>
                             </div>
+
                             {investor.source === 'entity_link' || investor.source === 'hybrid' ? (
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                className="text-red-400 hover:text-red-200"
-                                onClick={() => handleRemoveInvestor(investor.id)}
+                                className="text-red-400 hover:text-red-200 text-xs"
+                                onClick={() =>
+                                  handleRemoveInvestor(investor.id, investorProfile?.legal_name || 'this investor')
+                                }
                                 disabled={removingInvestorId === investor.id}
                               >
                                 {removingInvestorId === investor.id ? (
-                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                  <Loader2 className="mr-1 h-3 w-3 animate-spin" />
                                 ) : null}
                                 Remove
                               </Button>
                             ) : (
-                              <div className="text-xs text-gray-500 italic">
-                                Auto-discovered
-                              </div>
+                              <div className="text-xs text-gray-500 italic">Auto-discovered</div>
                             )}
                           </div>
                         </div>
@@ -1625,16 +1850,34 @@ export function EntityDetailEnhanced({
                         </div>
                         <div className="flex items-center gap-2">
                           {isExternal ? (
-                            <Button variant="outline" size="sm" className="gap-2" asChild>
-                              <Link
-                                href={actionHref}
-                                target="_blank"
-                                rel="noopener noreferrer"
+                            <>
+                              <Button variant="outline" size="sm" className="gap-2" asChild>
+                                <Link
+                                  href={actionHref}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                >
+                                  <ExternalLink className="h-4 w-4" />
+                                  Visit
+                                </Link>
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 px-2 text-white hover:text-emerald-100 hover:bg-white/10"
+                                onClick={() => handleEditDocument(doc)}
                               >
-                                <ExternalLink className="h-4 w-4" />
-                                Visit
-                              </Link>
-                            </Button>
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 px-2 text-white hover:text-red-400 hover:bg-red-500/10"
+                                onClick={() => handleDeleteDocument(doc.id, doc.name || 'Untitled document')}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </>
                           ) : (
                             <>
                               <Button
@@ -1654,6 +1897,22 @@ export function EntityDetailEnhanced({
                               >
                                 <Download className="h-4 w-4" />
                                 Download
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 px-2 text-white hover:text-emerald-100 hover:bg-white/10"
+                                onClick={() => handleEditDocument(doc)}
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 px-2 text-white hover:text-red-400 hover:bg-red-500/10"
+                                onClick={() => handleDeleteDocument(doc.id, doc.name || 'Untitled document')}
+                              >
+                                <Trash2 className="h-4 w-4" />
                               </Button>
                             </>
                           )}
@@ -1677,7 +1936,15 @@ export function EntityDetailEnhanced({
                   Lawyers, accountants, auditors, administrators, and strategic partners
                 </CardDescription>
               </div>
-              <Button size="sm" className="gap-2" onClick={() => setStakeholderModalOpen(true)}>
+              <Button
+                size="sm"
+                className="gap-2"
+                onClick={() => {
+                  setStakeholderModalMode('create')
+                  setEditingStakeholder(null)
+                  setStakeholderModalOpen(true)
+                }}
+              >
                 <Plus className="h-4 w-4" />
                 Add Stakeholder
               </Button>
@@ -1715,7 +1982,7 @@ export function EntityDetailEnhanced({
                               className="rounded-md border border-white/10 bg-black/20 px-4 py-3"
                             >
                               <div className="flex items-center justify-between">
-                                <div>
+                                <div className="flex-1">
                                   <p className="font-medium text-white">
                                     {stakeholder.company_name || stakeholder.contact_person || 'Unnamed'}
                                   </p>
@@ -1725,9 +1992,32 @@ export function EntityDetailEnhanced({
                                     {stakeholder.phone && ` • ${stakeholder.phone}`}
                                   </p>
                                 </div>
-                                <Badge className="bg-white/10 border border-white/10 text-white">
-                                  {stakeholder.effective_to ? 'Former' : 'Active'}
-                                </Badge>
+                                <div className="flex items-center gap-2">
+                                  <Badge className="bg-white/10 border border-white/10 text-white">
+                                    {stakeholder.effective_to ? 'Former' : 'Active'}
+                                  </Badge>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-8 px-2 text-white hover:text-emerald-100 hover:bg-white/10"
+                                    onClick={() => handleEditStakeholder(stakeholder)}
+                                  >
+                                    <Edit className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-8 px-2 text-white hover:text-red-400 hover:bg-red-500/10"
+                                    onClick={() =>
+                                      handleDeleteStakeholder(
+                                        stakeholder.id,
+                                        stakeholder.company_name || stakeholder.contact_person || 'stakeholder'
+                                      )
+                                    }
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </div>
                               </div>
                               <p className="text-xs text-gray-400 mt-1">
                                 Effective {stakeholder.effective_from
@@ -1762,7 +2052,15 @@ export function EntityDetailEnhanced({
                   Maintain the current roster and historical appointments
                 </CardDescription>
               </div>
-              <Button size="sm" className="gap-2" onClick={() => setDirectorModalOpen(true)}>
+              <Button
+                size="sm"
+                className="gap-2"
+                onClick={() => {
+                  setDirectorModalMode('create')
+                  setEditingDirector(null)
+                  setDirectorModalOpen(true)
+                }}
+              >
                 <Plus className="h-4 w-4" />
                 Add Director
               </Button>
@@ -1778,16 +2076,34 @@ export function EntityDetailEnhanced({
                       className="rounded-lg border border-white/10 bg-white/5 px-4 py-3"
                     >
                       <div className="flex items-center justify-between">
-                        <div>
+                        <div className="flex-1">
                           <p className="font-medium text-white">{director.full_name}</p>
                           <p className="text-xs text-gray-400">
                             {director.role || 'Role not specified'}
                             {director.email && ` • ${director.email}`}
                           </p>
                         </div>
-                        <Badge className="bg-white/10 border border-white/10 text-white">
-                          {director.effective_to ? 'Former' : 'Active'}
-                        </Badge>
+                        <div className="flex items-center gap-2">
+                          <Badge className="bg-white/10 border border-white/10 text-white">
+                            {director.effective_to ? 'Former' : 'Active'}
+                          </Badge>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 px-2 text-white hover:text-emerald-100 hover:bg-white/10"
+                            onClick={() => handleEditDirector(director)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 px-2 text-white hover:text-red-400 hover:bg-red-500/10"
+                            onClick={() => handleDeleteDirector(director.id, director.full_name)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
                       <div className="text-xs text-gray-400 mt-2">
                         Effective{' '}
@@ -1888,6 +2204,9 @@ export function EntityDetailEnhanced({
                 case 'link_investor':
                   setInvestorModalOpen(true)
                   break
+                case 'create_flag':
+                  setFlagModalOpen(true)
+                  break
                 case 'upload_document':
                 case 'create_folder':
                   setActiveTab('documents')
@@ -1897,6 +2216,15 @@ export function EntityDetailEnhanced({
               }
             }}
           />
+          <div className="flex justify-end">
+            <Button
+              onClick={() => setFlagModalOpen(true)}
+              className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white"
+            >
+              <Plus className="h-4 w-4" />
+              Create Health Flag
+            </Button>
+          </div>
         </TabsContent>
 
         {/* Activity Tab */}
@@ -1950,18 +2278,30 @@ export function EntityDetailEnhanced({
       </Tabs>
 
       {/* Modals */}
-      <AddDirectorModalEnhanced
+      <DirectorModalRefactored
         entityId={entity.id}
         open={directorModalOpen}
-        onClose={() => setDirectorModalOpen(false)}
+        onClose={() => {
+          setDirectorModalOpen(false)
+          setDirectorModalMode('create')
+          setEditingDirector(null)
+        }}
         onSuccess={refreshEntityData}
+        mode={directorModalMode}
+        existingDirector={editingDirector || undefined}
       />
 
-      <AddStakeholderModal
+      <StakeholderModalRefactored
         entityId={entity.id}
         open={stakeholderModalOpen}
-        onClose={() => setStakeholderModalOpen(false)}
+        onClose={() => {
+          setStakeholderModalOpen(false)
+          setStakeholderModalMode('create')
+          setEditingStakeholder(null)
+        }}
         onSuccess={refreshEntityData}
+        mode={stakeholderModalMode}
+        existingStakeholder={editingStakeholder || undefined}
       />
 
       <AddEntityFlagModal
@@ -1981,7 +2321,7 @@ export function EntityDetailEnhanced({
         onSuccess={handleInvestorAdded}
       />
 
-      <EditEntityModal
+      <EditEntityModalRefactored
         entity={entity}
         open={editEntityModalOpen}
         onClose={() => setEditEntityModalOpen(false)}
@@ -2011,14 +2351,37 @@ export function EntityDetailEnhanced({
                 <p className="text-gray-400">Loading document...</p>
               </div>
             ) : previewUrl ? (
-              <iframe
-                src={previewUrl}
-                className="w-full h-full min-h-[600px] bg-white rounded"
-                title={previewDocument?.name || 'Document preview'}
-              />
+              <>
+                <iframe
+                  src={previewUrl}
+                  className="w-full h-full min-h-[600px] bg-white rounded"
+                  title={previewDocument?.name || 'Document preview'}
+                  onError={(e) => {
+                    toast.error('Failed to load document in preview. Please download instead.')
+                    setPreviewUrl(null)
+                  }}
+                />
+                {previewDocument?.type?.toLowerCase().includes('pdf') && (
+                  <p className="text-xs text-gray-400 mt-2 absolute bottom-20 left-0 right-0 text-center">
+                    Tip: If preview is slow, try downloading the file instead
+                  </p>
+                )}
+              </>
             ) : (
-              <div className="text-center text-gray-400">
-                <p>Unable to load document preview</p>
+              <div className="text-center text-gray-400 space-y-4">
+                <AlertCircle className="h-12 w-12 mx-auto text-amber-400" />
+                <div>
+                  <p className="font-medium text-white">Unable to preview this document</p>
+                  <p className="text-sm mt-1">The file may be too large or in an unsupported format.</p>
+                  <Button
+                    variant="outline"
+                    className="mt-4 gap-2 bg-emerald-600 hover:bg-emerald-700 text-white border-0"
+                    onClick={() => previewDocument && handleDownloadDocument(previewDocument.id)}
+                  >
+                    <Download className="h-4 w-4" />
+                    Download Instead
+                  </Button>
+                </div>
               </div>
             )}
           </div>
@@ -2040,131 +2403,56 @@ export function EntityDetailEnhanced({
         </DialogContent>
       </Dialog>
 
-      {/* Edit Subscription Modal */}
-      {editingSubscription && (
-        <Dialog open={subscriptionModalOpen} onOpenChange={setSubscriptionModalOpen}>
-          <DialogContent className="bg-zinc-950 border-white/10 text-white max-w-2xl">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2 text-white">
-                <Edit className="h-5 w-5 text-emerald-400" />
-                Edit Subscription
-              </DialogTitle>
-              <DialogDescription className="text-gray-400">
-                Update subscription details for this investor's commitment to the vehicle
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label className="text-white">Commitment Amount</Label>
-                  <Input
-                    ref={commitmentRef}
-                    type="number"
-                    defaultValue={editingSubscription.subscription?.commitment}
-                    className="bg-white/5 border-white/10 text-white"
-                    placeholder="0.00"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-white">Currency</Label>
-                  <Input
-                    ref={currencyRef}
-                    defaultValue={editingSubscription.subscription?.currency || 'USD'}
-                    maxLength={3}
-                    className="bg-white/5 border-white/10 text-white uppercase"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label className="text-white">Status</Label>
-                <Select
-                  defaultValue={editingSubscription.subscription?.status || 'pending'}
-                  onValueChange={(value) => { statusRef.current = value }}
-                >
-                  <SelectTrigger className="bg-white/5 border-white/10 text-white">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-zinc-950 border-white/10">
-                    <SelectItem value="pending" className="text-white">Pending</SelectItem>
-                    <SelectItem value="committed" className="text-white">Committed</SelectItem>
-                    <SelectItem value="active" className="text-white">Active</SelectItem>
-                    <SelectItem value="closed" className="text-white">Closed</SelectItem>
-                    <SelectItem value="cancelled" className="text-white">Cancelled</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label className="text-white">Effective Date</Label>
-                  <Input
-                    ref={effectiveDateRef}
-                    type="date"
-                    defaultValue={editingSubscription.subscription?.effective_date}
-                    className="bg-white/5 border-white/10 text-white"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-white">Funding Due Date</Label>
-                  <Input
-                    ref={fundingDueDateRef}
-                    type="date"
-                    defaultValue={editingSubscription.subscription?.funding_due_at}
-                    className="bg-white/5 border-white/10 text-white"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label className="text-white">Units</Label>
-                <Input
-                  ref={unitsRef}
-                  type="number"
-                  defaultValue={editingSubscription.subscription?.units}
-                  className="bg-white/5 border-white/10 text-white"
-                  placeholder="Number of units"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label className="text-white">Acknowledgement Notes</Label>
-                <Textarea
-                  ref={notesRef}
-                  defaultValue={editingSubscription.subscription?.acknowledgement_notes}
-                  className="bg-white/5 border-white/10 text-white"
-                  placeholder="Internal notes about this subscription"
-                  rows={3}
-                />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => setSubscriptionModalOpen(false)}
-                className="bg-gray-700 text-white border-gray-600 hover:bg-gray-600"
-                disabled={savingSubscription}
-              >
-                Cancel
-              </Button>
-              <Button
-                className="bg-emerald-600 hover:bg-emerald-700 text-white"
-                onClick={handleSaveSubscription}
-                disabled={savingSubscription}
-              >
-                {savingSubscription ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  'Save Changes'
-                )}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+      {/* Edit Subscription Modal - New */}
+      {editingInvestorId && (
+        <SubscriptionEditModal
+          open={subscriptionModalOpen}
+          onClose={() => {
+            setSubscriptionModalOpen(false)
+            setEditingInvestorId(null)
+            setEditingSubscriptionData(null)
+          }}
+          entityId={entity.id}
+          investorId={editingInvestorId}
+          defaultValues={editingSubscriptionData}
+          onSuccess={(updatedInvestor) => {
+            setInvestors((prev) =>
+              prev.map((inv) => (inv.id === editingInvestorId ? updatedInvestor : inv))
+            )
+            setSubscriptionModalOpen(false)
+            setEditingInvestorId(null)
+            setEditingSubscriptionData(null)
+          }}
+        />
       )}
+
+      {/* Delete Entity Dialog */}
+      <DeleteEntityDialog
+        open={deleteEntityDialogOpen}
+        onClose={() => setDeleteEntityDialogOpen(false)}
+        entityId={entity.id}
+        entityName={entity.name}
+      />
+
+      {/* Edit Document Modal */}
+      {editingDocument && (
+        <EditDocumentModal
+          open={editDocumentModalOpen}
+          onClose={() => {
+            setEditDocumentModalOpen(false)
+            setEditingDocument(null)
+          }}
+          document={editingDocument}
+          onSuccess={() => {
+            fetchDocuments()
+            setEditDocumentModalOpen(false)
+            setEditingDocument(null)
+          }}
+        />
+      )}
+
+      {/* Confirmation Dialog */}
+      <ConfirmationDialog />
     </div>
   )
 }

@@ -1,4 +1,3 @@
-import { AppLayout } from '@/components/layout/app-layout'
 import { createServiceClient } from '@/lib/supabase/server'
 import { requireStaffAuth } from '@/lib/auth'
 import { CreateDealForm } from '@/components/deals/create-deal-form'
@@ -18,10 +17,8 @@ export default async function CreateDealPage() {
     .order('name')
 
   return (
-    <AppLayout brand="versotech">
-      <div className="p-6 max-w-5xl mx-auto">
+    <div className="p-6 max-w-5xl mx-auto">
         <CreateDealForm entities={entities || []} />
       </div>
-    </AppLayout>
-  )
+    )
 }

@@ -542,7 +542,7 @@ export async function POST(
 
     if (!validation.success) {
       return NextResponse.json(
-        { error: 'Invalid request data', details: validation.error.errors },
+        { error: 'Invalid request data', details: (validation.error as any).errors },
         { status: 400 }
       )
     }
@@ -643,7 +643,7 @@ export async function POST(
     // Log in audit trail
     await auditLogger.log({
       actor_user_id: user.id,
-      action: action === 'approve' ? AuditActions.APPROVE : AuditActions.REJECT,
+      action: AuditActions.UPDATE,
       entity: 'approvals',
       entity_id: approvalId,
       metadata: {

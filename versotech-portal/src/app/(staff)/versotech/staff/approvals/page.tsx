@@ -1,4 +1,3 @@
-import { AppLayout } from '@/components/layout/app-layout'
 import { Filter, Download } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ApprovalsPageClient } from '@/components/approvals/approvals-page-client'
@@ -75,7 +74,7 @@ async function fetchApprovalData(): Promise<{
       console.warn('[Approvals] Error fetching stats:', statsError)
     }
 
-    const stats: ApprovalStats = statsData || {
+    const stats: ApprovalStats = (statsData || {
       total_pending: approvals?.length || 0,
       overdue_count: 0,
       avg_processing_time_hours: 0,
@@ -83,7 +82,7 @@ async function fetchApprovalData(): Promise<{
       total_approved_30d: 0,
       total_rejected_30d: 0,
       total_awaiting_info: 0
-    }
+    }) as ApprovalStats
 
     console.log('[Approvals] Stats:', stats)
 
@@ -125,8 +124,7 @@ export default async function ApprovalsPage() {
   const { approvals, stats, counts, hasData } = await fetchApprovalData()
 
   return (
-    <AppLayout brand="versotech">
-      <div className="p-6 space-y-8">
+    <div className="p-6 space-y-8">
         {/* Header */}
         <div className="border-b border-gray-800 pb-6">
           <h1 className="text-3xl font-bold text-foreground">Approval Queue</h1>
@@ -142,6 +140,5 @@ export default async function ApprovalsPage() {
           initialCounts={counts}
         />
       </div>
-    </AppLayout>
-  )
+    )
 }

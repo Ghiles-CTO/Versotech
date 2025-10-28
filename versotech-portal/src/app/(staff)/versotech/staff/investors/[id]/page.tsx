@@ -1,4 +1,3 @@
-import { AppLayout } from '@/components/layout/app-layout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -10,6 +9,7 @@ import { notFound } from 'next/navigation'
 import { InvestorDetailActions } from '@/components/investors/investor-detail-actions'
 import { PortalUsersSection } from '@/components/investors/portal-users-section'
 import { SubscriptionsTab } from '@/components/investors/subscriptions-tab'
+import { ActivityTimelineWrapper } from '@/components/investors/activity-timeline-wrapper'
 
 export const dynamic = 'force-dynamic'
 
@@ -137,8 +137,7 @@ export default async function InvestorDetailPage({
   const investorData = investor as unknown as InvestorDetail
 
   return (
-    <AppLayout brand="versotech">
-      <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -326,12 +325,14 @@ export default async function InvestorDetailPage({
         {/* Subscriptions */}
         <SubscriptionsTab investorId={investorData.id} />
 
+        {/* Activity Timeline */}
+        <ActivityTimelineWrapper investorId={investorData.id} />
+
         {/* Portal Users */}
         <PortalUsersSection
           investorId={investorData.id}
           users={investorData.investor_users || []}
         />
       </div>
-    </AppLayout>
-  )
+    )
 }

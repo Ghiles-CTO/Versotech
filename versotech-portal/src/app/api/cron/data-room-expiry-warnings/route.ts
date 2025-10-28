@@ -101,7 +101,7 @@ export async function GET(request: NextRequest) {
           user_id: ownerUserId,
           investor_id: access.investor_id,
           title: 'Data room access expiring soon',
-          message: `Your access to the data room for ${access.deals?.name || 'the deal'} expires in ${daysUntilExpiry} ${daysUntilExpiry === 1 ? 'day' : 'days'}. Request an extension if you need more time.`,
+          message: `Your access to the data room for ${(access.deals as any)?.[0]?.name || 'the deal'} expires in ${daysUntilExpiry} ${daysUntilExpiry === 1 ? 'day' : 'days'}. Request an extension if you need more time.`,
           link: `/versoholdings/data-rooms`,
           metadata: {
             type: 'data_room_expiring',

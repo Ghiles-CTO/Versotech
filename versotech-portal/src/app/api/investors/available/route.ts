@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
     // Now get entity info separately to avoid join issues
     const investorIds = (investorUsers || []).map((u: any) => u.investor_id).filter(Boolean)
     
-    let entitiesMap = new Map()
+    const entitiesMap = new Map()
     if (investorIds.length > 0) {
       const { data: entities } = await supabase
         .from('investor_entities')

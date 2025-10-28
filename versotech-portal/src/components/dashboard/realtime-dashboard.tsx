@@ -425,7 +425,7 @@ export function RealtimeDashboard({ initialData, investorIds, userId }: Realtime
         <div className="lg:col-span-2">
           <DealContextSelector
             investorIds={investorIds}
-            selectedDealId={selectedDealId}
+            selectedDealId={selectedDealId ?? undefined}
             onDealChange={handleDealChange}
           />
         </div>
@@ -565,7 +565,7 @@ export function RealtimeDashboard({ initialData, investorIds, userId }: Realtime
       </div>
 
       {/* Performance Trends */}
-      <PerformanceTrends investorIds={investorIds} selectedDealId={selectedDealId} />
+      <PerformanceTrends investorIds={investorIds} selectedDealId={selectedDealId ?? undefined} />
 
       {/* Investment Vehicles */}
       <Card>

@@ -148,16 +148,16 @@ export function AddSubscriptionDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Add Subscription</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="text-white">Add Subscription</DialogTitle>
+          <DialogDescription className="text-gray-300">
             Create a new subscription for this investor
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="vehicle_id">
-              Vehicle <span className="text-destructive">*</span>
+            <Label htmlFor="vehicle_id" className="text-white">
+              Vehicle <span className="text-red-400">*</span>
             </Label>
             <Select
               value={formData.vehicle_id}
@@ -179,8 +179,8 @@ export function AddSubscriptionDialog({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="commitment">
-                Commitment <span className="text-destructive">*</span>
+              <Label htmlFor="commitment" className="text-white">
+                Commitment <span className="text-red-400">*</span>
               </Label>
               <Input
                 id="commitment"
@@ -190,12 +190,13 @@ export function AddSubscriptionDialog({
                 placeholder="0.00"
                 value={formData.commitment}
                 onChange={(e) => setFormData(prev => ({ ...prev, commitment: e.target.value }))}
+                className="bg-zinc-900 border-zinc-700 text-white placeholder:text-gray-500"
                 required
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="currency">Currency</Label>
+              <Label htmlFor="currency" className="text-white">Currency</Label>
               <Select
                 value={formData.currency}
                 onValueChange={(value) => setFormData(prev => ({ ...prev, currency: value }))}
@@ -214,7 +215,7 @@ export function AddSubscriptionDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="status">Status</Label>
+            <Label htmlFor="status" className="text-white">Status</Label>
             <Select
               value={formData.status}
               onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}
@@ -233,34 +234,37 @@ export function AddSubscriptionDialog({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="effective_date">Effective Date</Label>
+              <Label htmlFor="effective_date" className="text-white">Effective Date</Label>
               <Input
                 id="effective_date"
                 type="date"
                 value={formData.effective_date}
                 onChange={(e) => setFormData(prev => ({ ...prev, effective_date: e.target.value }))}
+                className="bg-zinc-900 border-zinc-700 text-white placeholder:text-gray-500"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="funding_due_at">Funding Due</Label>
+              <Label htmlFor="funding_due_at" className="text-white">Funding Due</Label>
               <Input
                 id="funding_due_at"
                 type="date"
                 value={formData.funding_due_at}
                 onChange={(e) => setFormData(prev => ({ ...prev, funding_due_at: e.target.value }))}
+                className="bg-zinc-900 border-zinc-700 text-white placeholder:text-gray-500"
               />
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="acknowledgement_notes">Notes</Label>
+            <Label htmlFor="acknowledgement_notes" className="text-white">Notes</Label>
             <Textarea
               id="acknowledgement_notes"
               placeholder="Optional notes about this subscription"
               rows={3}
               value={formData.acknowledgement_notes}
               onChange={(e) => setFormData(prev => ({ ...prev, acknowledgement_notes: e.target.value }))}
+              className="bg-zinc-900 border-zinc-700 text-white placeholder:text-gray-500"
             />
           </div>
 

@@ -41,7 +41,7 @@ export async function PATCH(
     if (payload.status === 'closed') {
       updates.resolved_at = new Date().toISOString()
       updates.resolved_by = user.id.startsWith('demo-') ? null : user.id
-    } else if (payload.status && payload.status !== 'closed') {
+    } else if (payload.status) {
       updates.resolved_at = null
       updates.resolved_by = null
     }
@@ -86,7 +86,7 @@ export async function PATCH(
     return NextResponse.json({ flag })
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: 'Invalid input', details: error.errors }, { status: 400 })
+      return NextResponse.json({ error: 'Invalid input', details: (error as any).errors }, { status: 400 })
     }
 
     console.error('[EntityFlags] PATCH error:', error)

@@ -7,7 +7,7 @@ const payloadSchema = z.object({
   workflow_run_id: z.string().uuid(),
   status: z.enum(['queued', 'running', 'completed', 'failed', 'cancelled']),
   error_message: z.string().optional(),
-  output_data: z.record(z.any()).nullable().optional(),
+  output_data: z.record(z.string(), z.any()).nullable().optional(),
   result_doc_id: z.string().uuid().nullable().optional(),
   created_task_ids: z.array(z.string().uuid()).optional(),
   n8n_execution_id: z.string().optional(),

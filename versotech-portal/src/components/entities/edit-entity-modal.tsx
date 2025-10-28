@@ -165,7 +165,7 @@ export function EditEntityModal({ entity, open, onClose, onSuccess }: EditEntity
       payload.append('file', file)
       payload.append('vehicle_id', entity.id)
 
-      const response = await fetch('/api/vehicles/logo-upload', {
+      const response = await fetch('/api/entities/logo-upload', {
         method: 'POST',
         body: payload
       })
@@ -238,7 +238,7 @@ export function EditEntityModal({ entity, open, onClose, onSuccess }: EditEntity
         website_url: formData.website_url.trim() || null
       }
 
-      const response = await fetch(`/api/vehicles/${entity.id}`, {
+      const response = await fetch(`/api/entities/${entity.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)

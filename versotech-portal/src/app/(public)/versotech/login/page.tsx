@@ -59,7 +59,7 @@ export default function StaffLogin() {
         console.log('[StaffLogin] SignIn result:', result)
         
         if (result?.success) {
-          if (result.user?.demo) {
+          if ((result.user as any)?.demo) {
             window.location.href = result.redirect ?? '/versotech/staff'
           } else {
             router.replace(result.redirect ?? '/versotech/staff')

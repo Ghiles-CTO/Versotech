@@ -86,7 +86,7 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
       id: profile.id,
       email: profile.email,
       displayName: profile.display_name,
-      avatar: profile.avatar,
+      avatar: profile.avatar_url,
       role: profile.role as UserRole,
       title: profile.title,
       created_at: profile.created_at

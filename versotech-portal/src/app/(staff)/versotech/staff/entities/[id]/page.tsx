@@ -1,4 +1,3 @@
-import { AppLayout } from '@/components/layout/app-layout'
 import { createSmartClient } from '@/lib/supabase/smart-client'
 import { redirect } from 'next/navigation'
 import { EntityDetailEnhanced } from '@/components/entities/entity-detail-enhanced'
@@ -111,15 +110,7 @@ export default async function EntityDetailPage({ params }: { params: Promise<{ i
           aml_risk_rating
         ),
         subscription:subscriptions (
-          id,
-          commitment,
-          currency,
-          status,
-          effective_date,
-          funding_due_at,
-          units,
-          acknowledgement_notes,
-          created_at
+          *
         )
       `)
       .eq('vehicle_id', id)
@@ -127,17 +118,7 @@ export default async function EntityDetailPage({ params }: { params: Promise<{ i
     supabase
       .from('subscriptions')
       .select(`
-        id,
-        investor_id,
-        vehicle_id,
-        commitment,
-        currency,
-        status,
-        effective_date,
-        funding_due_at,
-        units,
-        acknowledgement_notes,
-        created_at,
+        *,
         investor:investors (
           id,
           legal_name,
@@ -196,15 +177,14 @@ export default async function EntityDetailPage({ params }: { params: Promise<{ i
   }
 
   const mergedInvestors = mergeEntityInvestorData({
-    entityInvestors: entityInvestors ?? [],
-    subscriptions: vehicleSubscriptions ?? [],
+    entityInvestors: entityInvestors ?? [] as any,
+    subscriptions: vehicleSubscriptions ?? [] as any,
     holdings,
-    deals: deals ?? []
+    deals: deals ?? [] as any
   })
 
   return (
-    <AppLayout brand="versotech">
-      <EntityDetailEnhanced
+    <EntityDetailEnhanced
         entity={{ ...entity, updated_at: null }}
         directors={directors || []}
         stakeholders={stakeholders || []}
@@ -214,8 +194,7 @@ export default async function EntityDetailPage({ params }: { params: Promise<{ i
         events={(events as any) || []}
         investors={mergedInvestors}
       />
-    </AppLayout>
-  )
+    )
 }
 
 

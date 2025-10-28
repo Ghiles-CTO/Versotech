@@ -94,7 +94,7 @@ export async function GET(request: NextRequest) {
     const { data: stats } = await serviceSupabase
       .from('documents')
       .select('status')
-      .then(result => {
+      .then((result: any) => {
         const statusCounts: Record<string, number> = {
           draft: 0,
           pending_approval: 0,
@@ -102,12 +102,12 @@ export async function GET(request: NextRequest) {
           published: 0,
           archived: 0
         }
-        
-        result.data?.forEach(doc => {
+
+        result.data?.forEach((doc: any) => {
           const status = doc.status || 'draft'
           statusCounts[status] = (statusCounts[status] || 0) + 1
         })
-        
+
         return { data: statusCounts }
       })
 

@@ -1,8 +1,6 @@
-import { AppLayout } from '@/components/layout/app-layout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Input } from '@/components/ui/input'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { requireStaffAuth } from '@/lib/auth'
 import { cookies } from 'next/headers'
@@ -10,9 +8,11 @@ import Link from 'next/link'
 import { AddInvestorModal } from '@/components/investors/add-investor-modal'
 import { InvestorFilters } from '@/components/investors/investor-filters'
 import { ExportInvestorsButton } from '@/components/investors/export-investors-button'
+import { InvestorSearch } from '@/components/investors/investor-search'
+import { InvestorsDataTable } from '@/components/investors/investors-data-table'
+import { investorColumns } from '@/components/investors/investor-columns'
 import {
   Users,
-  Search,
   Eye,
   AlertTriangle,
   CheckCircle,
@@ -434,8 +434,7 @@ function renderPage(
   }
 
   return (
-    <AppLayout brand="versotech">
-      <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-foreground">Investor Management</h1>
@@ -492,10 +491,7 @@ function renderPage(
           <CardContent className="p-4">
             <div className="flex flex-col sm:flex-row gap-4">
               <div className="flex-1">
-                <div className="relative">
-                  <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input placeholder="Search investors by name, email, or ID..." className="pl-10" />
-                </div>
+                <InvestorSearch />
               </div>
               <div className="flex gap-2">
                 <InvestorFilters />
@@ -507,171 +503,15 @@ function renderPage(
 
         <Card>
           <CardHeader>
-            <CardTitle>All Investors</CardTitle>
-            <CardDescription>Complete list of investors with linked users and key metrics</CardDescription>
+            <CardTitle>All Investors ({investorList.length})</CardTitle>
+            <CardDescription>
+              Comprehensive investor list with sortable columns and bulk actions
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {investorList.map((investor) => (
-                <div
-                  key={investor.id}
-                  className="border border-gray-800 rounded-lg p-4 hover:bg-gray-900/50 transition-colors"
-                >
-                  <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                    <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 bg-blue-950/30 rounded-lg flex items-center justify-center border border-blue-800">
-                        <Users className="h-6 w-6 text-blue-400" />
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <h3 className="font-semibold text-foreground">{investor.name}</h3>
-                          <Badge variant="outline" className="text-xs capitalize">
-                            {investor.type}
-                          </Badge>
-                          {getKycStatusIcon(investor.kycStatus)}
-                        </div>
-                        <div className="flex flex-col sm:flex-row sm:items-center gap-2 text-sm text-muted-foreground mt-1">
-                          <span className="flex items-center gap-1">
-                            <Mail className="h-3 w-3" />
-                            {investor.email}
-                          </span>
-                          <span className="hidden sm:block">•</span>
-                          <span>{investor.country}</span>
-                          <span className="hidden sm:block">•</span>
-                          <span>RM: {investor.relationshipManager}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-6">
-                      <div className="text-right">
-                        <div className="font-semibold">
-                          {new Intl.NumberFormat('en-US', {
-                            style: 'currency',
-                            currency: 'USD',
-                            minimumFractionDigits: 0,
-                            maximumFractionDigits: 0
-                          }).format(investor.totalCommitment)}
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          {investor.totalCommitment > 0
-                            ? `${Math.round((investor.totalContributed / investor.totalCommitment) * 100)}% funded`
-                            : 'No contributions yet'}
-                        </div>
-                      </div>
-
-                      <div className="flex flex-col gap-1">
-                        <Badge className={getKycStatusColor(investor.kycStatus)}>
-                          KYC: {investor.kycStatus}
-                        </Badge>
-                        <Badge className={getRiskColor(investor.riskRating)}>
-                          Risk: {investor.riskRating}
-                        </Badge>
-                      </div>
-
-                      <div className="flex gap-2">
-                        <Link href={`/versotech/staff/investors/${investor.id}`}>
-                          <Button variant="outline" size="sm" className="bg-white text-black hover:bg-gray-100">
-                            <Eye className="h-4 w-4 mr-2" />
-                            View Details
-                          </Button>
-                        </Link>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="mt-4 pt-4 border-t border-gray-800 flex flex-col gap-3">
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-sm">
-                      <span className="text-muted-foreground">
-                        <strong className="text-foreground">{investor.vehicleCount}</strong> vehicles
-                      </span>
-                      <span className="text-muted-foreground">
-                        Last activity:{' '}
-                        <strong className="text-foreground">
-                          {new Date(investor.lastActivity).toLocaleDateString()}
-                        </strong>
-                      </span>
-                    </div>
-                    
-                    <div className="flex flex-col gap-2">
-                      <div className="flex items-center justify-between">
-                        <h4 className="text-sm font-semibold text-foreground">Investor Users</h4>
-                      </div>
-                      {investor.users.length > 0 ? (
-                        <div className="space-y-2">
-                          {investor.users.map((user) => (
-                            <div
-                              key={user.id}
-                              className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 rounded-md border border-gray-800 p-3"
-                            >
-                              <div>
-                                <p className="text-sm font-medium text-foreground">{user.name}</p>
-                                <p className="text-xs text-muted-foreground">
-                                  {user.email} • {user.title}
-                                </p>
-                              </div>
-                              <Badge variant="outline" className="self-start sm:self-center text-xs">
-                                Portal User
-                              </Badge>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="text-sm text-muted-foreground">
-                          No linked users yet. Invite team members or investor contacts to collaborate.
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <InvestorsDataTable columns={investorColumns} data={investorList} />
           </CardContent>
-          {meta?.pagination && meta.pagination.totalPages > 1 && (
-            <CardContent className="pt-0">
-              <div className="flex items-center justify-between border-t border-gray-800 pt-4">
-                <div className="text-sm text-muted-foreground">
-                  Showing {((meta.pagination.currentPage - 1) * meta.pagination.limit) + 1} to{' '}
-                  {Math.min(meta.pagination.currentPage * meta.pagination.limit, meta.pagination.totalCount)} of{' '}
-                  {meta.pagination.totalCount} investors
-                </div>
-                <div className="flex gap-2">
-                  {meta.pagination.currentPage > 1 && (
-                    <Link href={`?page=${meta.pagination.currentPage - 1}${meta.filters?.q ? `&q=${meta.filters.q}` : ''}${meta.filters?.status ? `&status=${meta.filters.status}` : ''}${meta.filters?.type ? `&type=${meta.filters.type}` : ''}${meta.filters?.rm ? `&rm=${meta.filters.rm}` : ''}`}>
-                      <Button variant="outline" size="sm">
-                        Previous
-                      </Button>
-                    </Link>
-                  )}
-                  <div className="flex items-center gap-2">
-                    {[...Array(Math.min(5, meta.pagination.totalPages))].map((_, i) => {
-                      const pageNum = i + 1
-                      return (
-                        <Link key={pageNum} href={`?page=${pageNum}${meta.filters?.q ? `&q=${meta.filters.q}` : ''}${meta.filters?.status ? `&status=${meta.filters.status}` : ''}${meta.filters?.type ? `&type=${meta.filters.type}` : ''}${meta.filters?.rm ? `&rm=${meta.filters.rm}` : ''}`}>
-                          <Button 
-                            variant={meta.pagination?.currentPage === pageNum ? 'default' : 'outline'} 
-                            size="sm"
-                          >
-                            {pageNum}
-                          </Button>
-                        </Link>
-                      )
-                    })}
-                    {meta.pagination.totalPages > 5 && <span className="px-2">...</span>}
-                  </div>
-                  {meta.pagination.currentPage < meta.pagination.totalPages && (
-                    <Link href={`?page=${meta.pagination.currentPage + 1}${meta.filters?.q ? `&q=${meta.filters.q}` : ''}${meta.filters?.status ? `&status=${meta.filters.status}` : ''}${meta.filters?.type ? `&type=${meta.filters.type}` : ''}${meta.filters?.rm ? `&rm=${meta.filters.rm}` : ''}`}>
-                      <Button variant="outline" size="sm">
-                        Next
-                      </Button>
-                    </Link>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          )}
         </Card>
       </div>
-    </AppLayout>
-  )
+    )
 }

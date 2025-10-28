@@ -1,5 +1,4 @@
 import { requireStaffAuth } from '@/lib/auth'
-import { AppLayout } from '@/components/layout/app-layout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -161,7 +160,6 @@ export default async function StaffDashboard() {
   ]
 
   return (
-    <AppLayout brand="versotech">
       <div className="bg-[#020204] text-slate-100 min-h-screen">
         <div className="p-6 space-y-6">
           <div className="flex flex-col gap-4">
@@ -341,6 +339,5 @@ export default async function StaffDashboard() {
           </section>
         </div>
       </div>
-    </AppLayout>
   )
 }

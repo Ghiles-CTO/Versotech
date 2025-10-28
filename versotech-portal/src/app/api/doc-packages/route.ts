@@ -9,7 +9,7 @@ const createDocPackageSchema = z.object({
   investor_id: z.string().uuid('Invalid investor ID'),
   kind: z.enum(['term_sheet', 'subscription_pack', 'nda']),
   template_keys: z.array(z.string()).min(1, 'At least one template key is required'),
-  merge_data: z.record(z.any()).optional(),
+  merge_data: z.record(z.string(), z.any()).optional(),
   auto_send: z.boolean().default(false)
 })
 
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
     
     if (!validation.success) {
       return NextResponse.json(
-        { error: 'Invalid request data', details: validation.error.errors },
+        { error: 'Invalid request data', details: (validation.error as any).errors },
         { status: 400 }
       )
     }

@@ -356,7 +356,7 @@ export function EntitiesPageClient({ entities }: EntitiesPageClientProps) {
 
       {editEntity && (
         <EditEntityModal
-          entity={editEntity}
+          entity={editEntity as any}
           open={true}
           onClose={() => setEditEntity(null)}
           onSuccess={(updated) => {

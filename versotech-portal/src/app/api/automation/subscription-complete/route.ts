@@ -9,7 +9,7 @@ const payloadSchema = z.object({
   subscription_id: z.string().uuid().optional(),
   approval_id: z.string().uuid().optional(),
   agreement_url: z.string().url().optional().nullable(),
-  metadata: z.record(z.any()).optional().default({}),
+  metadata: z.record(z.string(), z.any()).optional().default({}),
   allocation_amount: z.number().optional().nullable()
 })
 
@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
 
   if (!parsed.success) {
     return NextResponse.json(
-      { error: 'Invalid payload', details: parsed.error.errors },
+      { error: 'Invalid payload', details: (parsed.error as any).errors },
       { status: 400 }
     )
   }
@@ -244,7 +244,7 @@ export async function POST(request: NextRequest) {
   }
 
   await auditLogger.log({
-    actor_user_id: null,
+    actor_user_id: undefined,
     action: AuditActions.UPDATE,
     entity: AuditEntities.DEALS,
     entity_id: deal_id,

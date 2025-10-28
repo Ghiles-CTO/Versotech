@@ -350,15 +350,15 @@ export function DealDetailClient({
         </TabsContent>
 
         <TabsContent value="inventory">
-          <DealInventoryTab deal={deal} inventorySummary={inventorySummary} />
+          <DealInventoryTab dealId={deal.id} shareLots={[]} inventorySummary={inventorySummary} />
         </TabsContent>
 
         <TabsContent value="members">
-          <DealMembersTab deal={deal} />
+          <DealMembersTab dealId={deal.id} members={[]} />
         </TabsContent>
 
         <TabsContent value="fees">
-          <DealFeePlansTab deal={deal} />
+          <DealFeePlansTab dealId={deal.id} feePlans={[]} />
         </TabsContent>
 
         <TabsContent value="documents">

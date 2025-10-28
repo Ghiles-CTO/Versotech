@@ -1,4 +1,3 @@
-import { AppLayout } from '@/components/layout/app-layout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -164,8 +163,7 @@ export default async function DocumentAutomationPage() {
   }
 
   return (
-    <AppLayout brand="versotech">
-      <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6">
         {/* Page Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -526,6 +524,5 @@ export default async function DocumentAutomationPage() {
           </TabsContent>
         </Tabs>
       </div>
-    </AppLayout>
-  )
+    )
 }

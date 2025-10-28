@@ -18,7 +18,7 @@ interface ApprovalsListViewProps {
   approvals: Approval[]
   onApprovalClick: (approval: Approval) => void
   onApprove?: (approvalId: string) => Promise<void>
-  onReject?: (approvalId: string) => Promise<void>
+  onReject?: (approvalId: string, reason: string) => Promise<void>
 }
 
 const priorityColors = {
@@ -141,7 +141,7 @@ export function ApprovalsListView({
                         e.stopPropagation()
                         const reason = prompt('Please provide a rejection reason:')
                         if (reason) {
-                          onReject(approval.id)
+                          onReject(approval.id, reason)
                         }
                       }}
                       className="min-w-[100px]"

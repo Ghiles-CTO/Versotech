@@ -70,8 +70,8 @@ export async function GET(request: NextRequest) {
           .update({
             revoked_at: now,
             revoked_by: null, // System revocation
-            notes: access.notes 
-              ? `${access.notes}\n\nAutomatically revoked due to expiration.`
+            notes: (access as any).notes
+              ? `${(access as any).notes}\n\nAutomatically revoked due to expiration.`
               : 'Automatically revoked due to expiration.'
           })
           .eq('id', access.id)
@@ -85,7 +85,7 @@ export async function GET(request: NextRequest) {
 
         // Log audit trail
         await auditLogger.log({
-          actor_user_id: null,
+          actor_user_id: undefined,
           action: AuditActions.UPDATE,
           entity: AuditEntities.DEALS,
           entity_id: access.deal_id,
@@ -114,7 +114,7 @@ export async function GET(request: NextRequest) {
             user_id: ownerUserId,
             investor_id: access.investor_id,
             title: 'Data room access expired',
-            message: `Your access to the data room for ${access.deals?.name || 'the deal'} has expired. Contact the VERSO team if you need an extension.`,
+            message: `Your access to the data room for ${(access.deals as any)?.[0]?.name || 'the deal'} has expired. Contact the VERSO team if you need an extension.`,
             link: `/versoholdings/data-rooms`,
             metadata: {
               type: 'data_room_expired',

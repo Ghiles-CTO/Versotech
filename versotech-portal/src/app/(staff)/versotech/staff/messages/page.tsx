@@ -1,4 +1,3 @@
-import { AppLayout } from '@/components/layout/app-layout'
 import { MessagingClient } from '@/components/messaging/staff/messaging-client'
 import { requireAuth } from '@/lib/auth'
 import { createServiceClient } from '@/lib/supabase/server'
@@ -89,9 +88,7 @@ export default async function StaffMessages() {
   }
 
   return (
-    <AppLayout brand="versotech">
-      <MessagingClient initialConversations={normalizedConversations} currentUserId={profile.id} />
-    </AppLayout>
-  )
+    <MessagingClient initialConversations={normalizedConversations} currentUserId={profile.id} />
+    )
 }
 

@@ -206,7 +206,7 @@ export function ConversationView({ conversation, currentUserId, onRead, onError,
           console.log('[ConversationView] Messages after add:', updated.length)
           return updated
         })
-        // Mark as read if we're viewing
+        // Mark as read if we&apos;re viewing
         markConversationRead(conversation.id).catch(console.error)
       }
     })

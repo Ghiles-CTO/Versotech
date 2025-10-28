@@ -6,7 +6,7 @@ import { trackDealEvent } from '@/lib/analytics'
 
 const submissionSchema = z.object({
   investor_id: z.string().uuid().optional(),
-  payload: z.record(z.any()).optional().default({}),
+  payload: z.record(z.string(), z.any()).optional().default({}),
   notes: z.string().max(4000).optional().nullable()
 })
 
@@ -90,7 +90,7 @@ export async function POST(
 
   if (!parsed.success) {
     return NextResponse.json(
-      { error: 'Invalid request data', details: parsed.error.errors },
+      { error: 'Invalid request data', details: (parsed.error as any).errors },
       { status: 400 }
     )
   }
@@ -119,7 +119,7 @@ export async function POST(
     )
   }
 
-  let resolvedInvestorId = investor_id ?? investorIds[0]
+  const resolvedInvestorId = investor_id ?? investorIds[0]
 
   if (investor_id && !isStaff && !investorIds.includes(investor_id)) {
     return NextResponse.json(

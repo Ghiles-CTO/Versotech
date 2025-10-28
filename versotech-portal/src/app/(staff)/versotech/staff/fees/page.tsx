@@ -1,4 +1,3 @@
-import { AppLayout } from '@/components/layout/app-layout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -94,8 +93,7 @@ export default async function FeesPage() {
   }
 
   return (
-    <AppLayout brand="versotech">
-      <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6">
         {/* Page Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -120,9 +118,9 @@ export default async function FeesPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{feePlans.length}</div>
+              <div className="text-2xl font-bold">{feePlans?.length ?? 0}</div>
               <div className="text-sm text-muted-foreground mt-1">
-                {feePlans.filter(p => p.is_default).length} default
+                {feePlans?.filter(p => p.is_default).length ?? 0} default
               </div>
             </CardContent>
           </Card>
@@ -135,7 +133,7 @@ export default async function FeesPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{investorTerms.length}</div>
+              <div className="text-2xl font-bold">{investorTerms?.length ?? 0}</div>
               <div className="text-sm text-muted-foreground mt-1">Active configurations</div>
             </CardContent>
           </Card>
@@ -148,9 +146,9 @@ export default async function FeesPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{feeEvents.length}</div>
+              <div className="text-2xl font-bold">{feeEvents?.length ?? 0}</div>
               <div className="text-sm text-muted-foreground mt-1">
-                {feeEvents.filter(e => e.status === 'accrued').length} pending
+                {feeEvents?.filter(e => e.status === 'accrued').length ?? 0} pending
               </div>
             </CardContent>
           </Card>
@@ -164,7 +162,7 @@ export default async function FeesPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                ${feeEvents.reduce((sum, e) => sum + e.computed_amount, 0).toLocaleString()}
+                ${(feeEvents ?? []).reduce((sum, e) => sum + e.computed_amount, 0).toLocaleString()}
               </div>
               <div className="text-sm text-muted-foreground mt-1">This period</div>
             </CardContent>
@@ -189,7 +187,7 @@ export default async function FeesPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                {feePlans.map((plan) => (
+                {(feePlans ?? []).map((plan) => (
                     <div key={plan.id} className="border border-gray-800 rounded-lg p-4 bg-gray-900/30">
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-3">
@@ -197,7 +195,7 @@ export default async function FeesPage() {
                             <h3 className="font-semibold text-foreground">{plan.name}</h3>
                             <div className="text-sm text-muted-foreground">{plan.description}</div>
                             <div className="text-xs text-muted-foreground mt-1">
-                              {plan.deals?.name ?? 'Unassigned'} • Created {new Date(plan.created_at).toLocaleDateString()}
+                              {(plan.deals as any)?.[0]?.name ?? 'Unassigned'} • Created {new Date(plan.created_at).toLocaleDateString()}
                             </div>
                           </div>
                           {plan.is_default && (
@@ -251,20 +249,20 @@ export default async function FeesPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                {investorTerms.map((terms) => (
+                {(investorTerms ?? []).map((terms) => (
                     <div key={terms.id} className="border border-gray-800 rounded-lg p-4 bg-gray-900/30">
                       <div className="flex items-center justify-between">
                         <div>
-                          <h3 className="font-semibold text-foreground">{terms.investors?.legal_name ?? 'Unknown investor'}</h3>
-                          <div className="text-sm text-muted-foreground">{terms.deals?.name ?? 'Unassigned deal'}</div>
+                          <h3 className="font-semibold text-foreground">{(terms.investors as any)?.[0]?.legal_name ?? 'Unknown investor'}</h3>
+                          <div className="text-sm text-muted-foreground">{(terms.deals as any)?.[0]?.name ?? 'Unassigned deal'}</div>
                           <div className="text-sm text-muted-foreground mt-1">
-                            Plan: {terms.fee_plans?.name ?? 'Custom'} • {new Date(terms.created_at).toLocaleDateString()}
+                            Plan: {(terms.fee_plans as any)?.[0]?.name ?? 'Custom'} • {new Date(terms.created_at).toLocaleDateString()}
                           </div>
                           {terms.overrides && Object.keys(terms.overrides).length > 0 && (
                             <div className="flex gap-4 mt-2">
                               {Object.entries(terms.overrides).map(([key, value]) => (
                                 <Badge key={key} variant="outline" className="text-xs">
-                                  {key.replace('_', ' ')}: {value} bps
+                                  {key.replace('_', ' ')}: {String(value)} bps
                                 </Badge>
                               ))}
                             </div>
@@ -296,7 +294,7 @@ export default async function FeesPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                {feeEvents.map((event) => (
+                {(feeEvents ?? []).map((event) => (
                     <div key={event.id} className="border border-gray-800 rounded-lg p-4 bg-gray-900/30">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
@@ -305,8 +303,8 @@ export default async function FeesPage() {
                             event.status === 'accrued' ? 'bg-yellow-500' : 'bg-gray-400'
                           }`} />
                           <div>
-                            <h3 className="font-medium text-foreground">{event.investors?.legal_name ?? 'Unknown investor'}</h3>
-                            <div className="text-sm text-muted-foreground">{event.deals?.name ?? 'Unassigned deal'}</div>
+                            <h3 className="font-medium text-foreground">{(event.investors as any)?.[0]?.legal_name ?? 'Unknown investor'}</h3>
+                            <div className="text-sm text-muted-foreground">{(event.deals as any)?.[0]?.name ?? 'Unassigned deal'}</div>
                             <div className="text-sm text-muted-foreground">
                               {event.fee_type ? event.fee_type.charAt(0).toUpperCase() + event.fee_type.slice(1) : 'Fee'} fee • {event.event_date}
                             </div>
@@ -355,7 +353,7 @@ export default async function FeesPage() {
                           <SelectValue placeholder="Select fee plan" />
                         </SelectTrigger>
                         <SelectContent>
-                          {feePlans.map(plan => (
+                          {(feePlans ?? []).map(plan => (
                             <SelectItem key={plan.id} value={plan.id}>{plan.name}</SelectItem>
                           ))}
                         </SelectContent>
@@ -406,6 +404,5 @@ export default async function FeesPage() {
           </TabsContent>
         </Tabs>
       </div>
-    </AppLayout>
-  )
+    )
 }

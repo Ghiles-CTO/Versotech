@@ -10,8 +10,7 @@ const createFeeComponentSchema = z.object({
     'percent_of_investment',
     'percent_per_annum',
     'percent_of_profit',
-    'per_unit_spread',
-    'fixed'
+    'per_unit_spread'
   ]).optional(),
   rate_bps: z.number().int().min(0).max(100000).optional(), // Max 1000%
   flat_amount: z.number().positive().optional(),
@@ -22,15 +21,15 @@ const createFeeComponentSchema = z.object({
 }).refine(
   (data) => {
     // Validate that appropriate fields are provided based on calc_method
-    if (data.calc_method === 'fixed') {
-      return data.flat_amount !== undefined
-    }
-    if (data.calc_method && data.calc_method !== 'fixed') {
+    if (data.calc_method) {
       return data.rate_bps !== undefined
+    }
+    if (data.kind === 'flat') {
+      return data.flat_amount !== undefined
     }
     return true
   },
-  { message: 'Must provide rate_bps for percentage methods or flat_amount for fixed method' }
+  { message: 'Must provide rate_bps for percentage methods or flat_amount for flat fees' }
 )
 
 export async function POST(
@@ -116,7 +115,7 @@ export async function POST(
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Invalid request data', details: error.errors },
+        { error: 'Invalid request data', details: (error as any).errors },
         { status: 400 }
       )
     }

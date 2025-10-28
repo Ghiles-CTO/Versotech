@@ -122,7 +122,7 @@ export function CreateEntityModal({ open, onOpenChange, onSuccess }: CreateEntit
       payload.append('file', file)
       payload.append('vehicle_id', 'new')
 
-      const response = await fetch('/api/vehicles/logo-upload', {
+      const response = await fetch('/api/entities/logo-upload', {
         method: 'POST',
         body: payload
       })

@@ -93,7 +93,7 @@ function InvestorLoginContent() {
         const result = await signIn(email, password, 'investor')
         
         if (result?.success) {
-          if (result.user?.demo) {
+          if ((result.user as any)?.demo) {
             window.location.href = result.redirect ?? '/versoholdings/dashboard'
           } else {
             router.replace(result.redirect ?? '/versoholdings/dashboard')

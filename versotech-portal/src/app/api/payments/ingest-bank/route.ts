@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
     
     if (!validation.success) {
       return NextResponse.json(
-        { error: 'Invalid request data', details: validation.error.errors },
+        { error: 'Invalid request data', details: (validation.error as any).errors },
         { status: 400 }
       )
     }
@@ -130,7 +130,7 @@ export async function POST(request: NextRequest) {
             transaction_id: transaction.id,
             invoice_id: invoice.id,
             matched_amount: transaction.amount,
-            investor_name: invoice.investors?.legal_name
+            investor_name: (invoice.investors as any)?.[0]?.legal_name
           })
         }
       }

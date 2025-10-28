@@ -1,0 +1,181 @@
+-- VC6 Batch 1/4: Share data
+UPDATE public.subscriptions s
+SET
+    cost_per_share = CASE
+        WHEN i.legal_name LIKE '%Blaine ROLLINS%' AND s.commitment = 150000.0 THEN 13.5
+        WHEN i.legal_name LIKE '%Blaine ROLLINS%' AND s.commitment = 50000.0 THEN 14.0
+        WHEN i.legal_name LIKE '%Laurence CHANG%' AND s.commitment = 100000.0 THEN 13.5
+        WHEN i.legal_name LIKE '%Laurence CHANG%' AND s.commitment = 50000.0 THEN 14.0
+        WHEN i.legal_name LIKE '%Chang NGAN%' AND s.commitment = 100800.0 THEN 13.5
+        WHEN i.legal_name LIKE '%SHEILA and KAMLESH MADHVANI%' AND s.commitment = 220000.0 THEN 13.5
+        WHEN i.legal_name LIKE '%SAMIR KOHI%' AND s.commitment = 100000.0 THEN 13.5
+        WHEN i.legal_name LIKE '%Sheikh AL SABAH%' AND s.commitment = 50000.0 THEN 13.5
+        WHEN i.legal_name LIKE '%Han CHIH-HENG%' AND s.commitment = 100000.0 THEN 13.5
+        WHEN i.legal_name LIKE '%Rajiv AGARWALA%' AND s.commitment = 50000.0 THEN 13.5
+        WHEN i.legal_name LIKE '%Daphne CHANDRA%' AND s.commitment = 30040.0 THEN 13.5
+        WHEN i.legal_name LIKE '%Daryl YONGJIE%' AND s.commitment = 165006.0 THEN 13.5
+        WHEN i.legal_name LIKE '%Ekkawat SAE-JEE%' AND s.commitment = 25000.0 THEN 13.5
+        WHEN i.legal_name LIKE '%Tan GEOK%' AND s.commitment = 80064.0 THEN 13.5
+        WHEN i.legal_name LIKE '%DALINGA HOLDING AG%' AND s.commitment = 50000.0 THEN 13.5
+        WHEN i.legal_name LIKE '%Matteo MARTINI%' AND s.commitment = 100000.0 THEN 13.5
+        WHEN i.legal_name LIKE '%AS ADVISORY DWC-LLC%' AND s.commitment = 250000.0 THEN 13.5
+        WHEN i.legal_name LIKE '%MA GROUP AG%' AND s.commitment = 30000.0 THEN 13.5
+        WHEN i.legal_name LIKE '%KRANA INVESTMENTS PTE. LTD.%' AND s.commitment = 300000.0 THEN 13.5
+        WHEN i.legal_name LIKE '%Johann AKERMANN%' AND s.commitment = 225200.0 THEN 13.5
+        WHEN i.legal_name LIKE '%Sandra CABIAN%' AND s.commitment = 50000.0 THEN 13.5
+        WHEN i.legal_name LIKE '%Dario SCIMONE%' AND s.commitment = 50000.0 THEN 13.5
+        WHEN i.legal_name LIKE '%OFBR Trust%' AND s.commitment = 200000.0 THEN 13.5
+        WHEN i.legal_name LIKE '%Elidon Estate Inc%' AND s.commitment = 200000.0 THEN 13.5
+        WHEN i.legal_name LIKE '%Adam Smith Singapore Pte Ltd%' AND s.commitment = 25000.0 THEN 14.0
+        WHEN i.legal_name LIKE '%Julien MACHOT%' AND s.commitment = 82917.0 THEN 13.5
+        WHEN i.legal_name LIKE '%Julien MACHOT%' AND s.commitment = 2240.0 THEN 14.0
+        WHEN i.legal_name LIKE '%Mrs and Mr Beatrice & Marcel KNOPF%' AND s.commitment = 50000.0 THEN 14.0
+        WHEN i.legal_name LIKE '%VOLF Trust%' AND s.commitment = 250000.0 THEN 14.0
+        WHEN i.legal_name LIKE '%Bahama Global Towers Limited%' AND s.commitment = 149500.0 THEN 14.0
+        WHEN i.legal_name LIKE '%CAUSE FIRST Holdings Ltd%' AND s.commitment = 100000.0 THEN 14.0
+        WHEN i.legal_name LIKE '%Heinz & Barbara WINZ%' AND s.commitment = 100000.0 THEN 14.0
+        WHEN i.legal_name LIKE '%Sabrina WINZ%' AND s.commitment = 50000.0 THEN 14.0
+        WHEN i.legal_name LIKE '%Mrs and Mr KARKUN%' AND s.commitment = 50000.0 THEN 14.0
+        WHEN i.legal_name LIKE '%Craig BROWN%' AND s.commitment = 50000.0 THEN 14.0
+        WHEN i.legal_name LIKE '%TRUE INVESTMENTS 4 LLC%' AND s.commitment = 619989.0 THEN 14.0
+        WHEN i.legal_name LIKE '%ROSEN INVEST HOLDINGS Inc%' AND s.commitment = 100000.0 THEN 14.0
+        WHEN i.legal_name LIKE '%Mrs & Mr Subbiah  SUBRAMANIAN%' AND s.commitment = 155000.0 THEN 14.0
+        WHEN i.legal_name LIKE '%JIMENEZ TRADING INC%' AND s.commitment = 5000352.0 THEN 14.0
+        WHEN i.legal_name LIKE '%LEE RAND GROUP%' AND s.commitment = 49989.0 THEN 14.0
+        WHEN i.legal_name LIKE '%LEE RAND GROUP%' AND s.commitment = 24985.0 THEN 14.0
+        WHEN i.legal_name LIKE '%LEE RAND GROUP%' AND s.commitment = 199994.0 THEN 14.0
+        WHEN i.legal_name LIKE '%LEE RAND GROUP%' AND s.commitment = 34998.0 THEN 14.0
+        WHEN i.legal_name LIKE '%PANT Investments Inc%' AND s.commitment = 99997.0 THEN 14.0
+        WHEN i.legal_name LIKE '%LEE RAND GROUP%' AND s.commitment = 49989.0 THEN 14.0
+        WHEN i.legal_name LIKE '%LEE RAND GROUP%' AND s.commitment = 49989.0 THEN 14.0
+        WHEN i.legal_name LIKE '%LEE RAND GROUP%' AND s.commitment = 24985.0 THEN 14.0
+        WHEN i.legal_name LIKE '%Julien MACHOT%' AND s.commitment = 349344.0 THEN 16.0
+        WHEN i.legal_name LIKE '%Hedgebay Securities LLC%' AND s.commitment = 100007.04 THEN 16.0
+        WHEN i.legal_name LIKE '%Hedgebay Securities LLC%' AND s.commitment = 24978.24 THEN 16.0
+        WHEN i.legal_name LIKE '%Hedgebay Securities LLC%' AND s.commitment = 24978.24 THEN 16.0
+        WHEN i.legal_name LIKE '%Hedgebay Securities LLC%' AND s.commitment = 24978.24 THEN 16.0
+        ELSE cost_per_share
+    END,
+    price_per_share = CASE
+        WHEN i.legal_name LIKE '%Blaine ROLLINS%' AND s.commitment = 150000.0 THEN 20.0
+        WHEN i.legal_name LIKE '%Blaine ROLLINS%' AND s.commitment = 50000.0 THEN 20.0
+        WHEN i.legal_name LIKE '%Laurence CHANG%' AND s.commitment = 100000.0 THEN 20.0
+        WHEN i.legal_name LIKE '%Laurence CHANG%' AND s.commitment = 50000.0 THEN 20.0
+        WHEN i.legal_name LIKE '%Chang NGAN%' AND s.commitment = 100800.0 THEN 18.0
+        WHEN i.legal_name LIKE '%SHEILA and KAMLESH MADHVANI%' AND s.commitment = 220000.0 THEN 22.0
+        WHEN i.legal_name LIKE '%SAMIR KOHI%' AND s.commitment = 100000.0 THEN 20.0
+        WHEN i.legal_name LIKE '%Sheikh AL SABAH%' AND s.commitment = 50000.0 THEN 19.0
+        WHEN i.legal_name LIKE '%Han CHIH-HENG%' AND s.commitment = 100000.0 THEN 18.0
+        WHEN i.legal_name LIKE '%Rajiv AGARWALA%' AND s.commitment = 50000.0 THEN 20.0
+        WHEN i.legal_name LIKE '%Daphne CHANDRA%' AND s.commitment = 30040.0 THEN 17.1
+        WHEN i.legal_name LIKE '%Daryl YONGJIE%' AND s.commitment = 165006.0 THEN 18.0
+        WHEN i.legal_name LIKE '%Ekkawat SAE-JEE%' AND s.commitment = 25000.0 THEN 18.0
+        WHEN i.legal_name LIKE '%Tan GEOK%' AND s.commitment = 80064.0 THEN 18.0
+        WHEN i.legal_name LIKE '%DALINGA HOLDING AG%' AND s.commitment = 50000.0 THEN 19.9
+        WHEN i.legal_name LIKE '%Matteo MARTINI%' AND s.commitment = 100000.0 THEN 19.9
+        WHEN i.legal_name LIKE '%AS ADVISORY DWC-LLC%' AND s.commitment = 250000.0 THEN 21.0
+        WHEN i.legal_name LIKE '%MA GROUP AG%' AND s.commitment = 30000.0 THEN 19.9
+        WHEN i.legal_name LIKE '%KRANA INVESTMENTS PTE. LTD.%' AND s.commitment = 300000.0 THEN 21.9
+        WHEN i.legal_name LIKE '%Johann AKERMANN%' AND s.commitment = 225200.0 THEN 22.52
+        WHEN i.legal_name LIKE '%Sandra CABIAN%' AND s.commitment = 50000.0 THEN 19.9
+        WHEN i.legal_name LIKE '%Dario SCIMONE%' AND s.commitment = 50000.0 THEN 20.9
+        WHEN i.legal_name LIKE '%OFBR Trust%' AND s.commitment = 200000.0 THEN 22.52
+        WHEN i.legal_name LIKE '%Elidon Estate Inc%' AND s.commitment = 200000.0 THEN 21.9
+        WHEN i.legal_name LIKE '%Adam Smith Singapore Pte Ltd%' AND s.commitment = 25000.0 THEN 21.9
+        WHEN i.legal_name LIKE '%Julien MACHOT%' AND s.commitment = 82917.0 THEN 13.5
+        WHEN i.legal_name LIKE '%Julien MACHOT%' AND s.commitment = 2240.0 THEN 14.0
+        WHEN i.legal_name LIKE '%Mrs and Mr Beatrice & Marcel KNOPF%' AND s.commitment = 50000.0 THEN 22.52
+        WHEN i.legal_name LIKE '%VOLF Trust%' AND s.commitment = 250000.0 THEN 22.52
+        WHEN i.legal_name LIKE '%Bahama Global Towers Limited%' AND s.commitment = 149500.0 THEN 23.0
+        WHEN i.legal_name LIKE '%CAUSE FIRST Holdings Ltd%' AND s.commitment = 100000.0 THEN 22.52
+        WHEN i.legal_name LIKE '%Heinz & Barbara WINZ%' AND s.commitment = 100000.0 THEN 22.52
+        WHEN i.legal_name LIKE '%Sabrina WINZ%' AND s.commitment = 50000.0 THEN 22.52
+        WHEN i.legal_name LIKE '%Mrs and Mr KARKUN%' AND s.commitment = 50000.0 THEN 22.0
+        WHEN i.legal_name LIKE '%Craig BROWN%' AND s.commitment = 50000.0 THEN 20.0
+        WHEN i.legal_name LIKE '%TRUE INVESTMENTS 4 LLC%' AND s.commitment = 619989.0 THEN 19.0
+        WHEN i.legal_name LIKE '%ROSEN INVEST HOLDINGS Inc%' AND s.commitment = 100000.0 THEN 22.52
+        WHEN i.legal_name LIKE '%Mrs & Mr Subbiah  SUBRAMANIAN%' AND s.commitment = 155000.0 THEN 23.02
+        WHEN i.legal_name LIKE '%JIMENEZ TRADING INC%' AND s.commitment = 5000352.0 THEN 23.52
+        WHEN i.legal_name LIKE '%LEE RAND GROUP%' AND s.commitment = 49989.0 THEN 19.0
+        WHEN i.legal_name LIKE '%LEE RAND GROUP%' AND s.commitment = 24985.0 THEN 19.0
+        WHEN i.legal_name LIKE '%LEE RAND GROUP%' AND s.commitment = 199994.0 THEN 19.0
+        WHEN i.legal_name LIKE '%LEE RAND GROUP%' AND s.commitment = 34998.0 THEN 19.0
+        WHEN i.legal_name LIKE '%PANT Investments Inc%' AND s.commitment = 99997.0 THEN 19.0
+        WHEN i.legal_name LIKE '%LEE RAND GROUP%' AND s.commitment = 49989.0 THEN 19.0
+        WHEN i.legal_name LIKE '%LEE RAND GROUP%' AND s.commitment = 49989.0 THEN 19.0
+        WHEN i.legal_name LIKE '%LEE RAND GROUP%' AND s.commitment = 24985.0 THEN 19.0
+        WHEN i.legal_name LIKE '%Julien MACHOT%' AND s.commitment = 349344.0 THEN 16.0
+        WHEN i.legal_name LIKE '%Hedgebay Securities LLC%' AND s.commitment = 100007.04 THEN 23.52
+        WHEN i.legal_name LIKE '%Hedgebay Securities LLC%' AND s.commitment = 24978.24 THEN 23.52
+        WHEN i.legal_name LIKE '%Hedgebay Securities LLC%' AND s.commitment = 24978.24 THEN 23.52
+        WHEN i.legal_name LIKE '%Hedgebay Securities LLC%' AND s.commitment = 24978.24 THEN 23.52
+        ELSE price_per_share
+    END,
+    num_shares = CASE
+        WHEN i.legal_name LIKE '%Blaine ROLLINS%' AND s.commitment = 150000.0 THEN 7500.0
+        WHEN i.legal_name LIKE '%Blaine ROLLINS%' AND s.commitment = 50000.0 THEN 2500.0
+        WHEN i.legal_name LIKE '%Laurence CHANG%' AND s.commitment = 100000.0 THEN 5000.0
+        WHEN i.legal_name LIKE '%Laurence CHANG%' AND s.commitment = 50000.0 THEN 2500.0
+        WHEN i.legal_name LIKE '%Chang NGAN%' AND s.commitment = 100800.0 THEN 5600.0
+        WHEN i.legal_name LIKE '%SHEILA and KAMLESH MADHVANI%' AND s.commitment = 220000.0 THEN 10000.0
+        WHEN i.legal_name LIKE '%SAMIR KOHI%' AND s.commitment = 100000.0 THEN 5000.0
+        WHEN i.legal_name LIKE '%Sheikh AL SABAH%' AND s.commitment = 50000.0 THEN 2631.0
+        WHEN i.legal_name LIKE '%Han CHIH-HENG%' AND s.commitment = 100000.0 THEN 5555.0
+        WHEN i.legal_name LIKE '%Rajiv AGARWALA%' AND s.commitment = 50000.0 THEN 2500.0
+        WHEN i.legal_name LIKE '%Daphne CHANDRA%' AND s.commitment = 30040.0 THEN 1756.0
+        WHEN i.legal_name LIKE '%Daryl YONGJIE%' AND s.commitment = 165006.0 THEN 9167.0
+        WHEN i.legal_name LIKE '%Ekkawat SAE-JEE%' AND s.commitment = 25000.0 THEN 1388.0
+        WHEN i.legal_name LIKE '%Tan GEOK%' AND s.commitment = 80064.0 THEN 4448.0
+        WHEN i.legal_name LIKE '%DALINGA HOLDING AG%' AND s.commitment = 50000.0 THEN 2512.0
+        WHEN i.legal_name LIKE '%Matteo MARTINI%' AND s.commitment = 100000.0 THEN 5025.0
+        WHEN i.legal_name LIKE '%AS ADVISORY DWC-LLC%' AND s.commitment = 250000.0 THEN 11904.0
+        WHEN i.legal_name LIKE '%MA GROUP AG%' AND s.commitment = 30000.0 THEN 1507.0
+        WHEN i.legal_name LIKE '%KRANA INVESTMENTS PTE. LTD.%' AND s.commitment = 300000.0 THEN 13698.0
+        WHEN i.legal_name LIKE '%Johann AKERMANN%' AND s.commitment = 225200.0 THEN 10000.0
+        WHEN i.legal_name LIKE '%Sandra CABIAN%' AND s.commitment = 50000.0 THEN 2512.0
+        WHEN i.legal_name LIKE '%Dario SCIMONE%' AND s.commitment = 50000.0 THEN 2392.0
+        WHEN i.legal_name LIKE '%OFBR Trust%' AND s.commitment = 200000.0 THEN 8880.0
+        WHEN i.legal_name LIKE '%Elidon Estate Inc%' AND s.commitment = 200000.0 THEN 9132.0
+        WHEN i.legal_name LIKE '%Adam Smith Singapore Pte Ltd%' AND s.commitment = 25000.0 THEN 1141.0
+        WHEN i.legal_name LIKE '%Julien MACHOT%' AND s.commitment = 82917.0 THEN 6142.0
+        WHEN i.legal_name LIKE '%Julien MACHOT%' AND s.commitment = 2240.0 THEN 160.0
+        WHEN i.legal_name LIKE '%Mrs and Mr Beatrice & Marcel KNOPF%' AND s.commitment = 50000.0 THEN 2220.0
+        WHEN i.legal_name LIKE '%VOLF Trust%' AND s.commitment = 250000.0 THEN 11101.0
+        WHEN i.legal_name LIKE '%Bahama Global Towers Limited%' AND s.commitment = 149500.0 THEN 6500.0
+        WHEN i.legal_name LIKE '%CAUSE FIRST Holdings Ltd%' AND s.commitment = 100000.0 THEN 4440.0
+        WHEN i.legal_name LIKE '%Heinz & Barbara WINZ%' AND s.commitment = 100000.0 THEN 4440.0
+        WHEN i.legal_name LIKE '%Sabrina WINZ%' AND s.commitment = 50000.0 THEN 2220.0
+        WHEN i.legal_name LIKE '%Mrs and Mr KARKUN%' AND s.commitment = 50000.0 THEN 2272.0
+        WHEN i.legal_name LIKE '%Craig BROWN%' AND s.commitment = 50000.0 THEN 2500.0
+        WHEN i.legal_name LIKE '%TRUE INVESTMENTS 4 LLC%' AND s.commitment = 619989.0 THEN 32631.0
+        WHEN i.legal_name LIKE '%ROSEN INVEST HOLDINGS Inc%' AND s.commitment = 100000.0 THEN 4440.0
+        WHEN i.legal_name LIKE '%Mrs & Mr Subbiah  SUBRAMANIAN%' AND s.commitment = 155000.0 THEN 6733.0
+        WHEN i.legal_name LIKE '%JIMENEZ TRADING INC%' AND s.commitment = 5000352.0 THEN 212600.0
+        WHEN i.legal_name LIKE '%LEE RAND GROUP%' AND s.commitment = 49989.0 THEN 2631.0
+        WHEN i.legal_name LIKE '%LEE RAND GROUP%' AND s.commitment = 24985.0 THEN 1315.0
+        WHEN i.legal_name LIKE '%LEE RAND GROUP%' AND s.commitment = 199994.0 THEN 10526.0
+        WHEN i.legal_name LIKE '%LEE RAND GROUP%' AND s.commitment = 34998.0 THEN 1842.0
+        WHEN i.legal_name LIKE '%PANT Investments Inc%' AND s.commitment = 99997.0 THEN 5263.0
+        WHEN i.legal_name LIKE '%LEE RAND GROUP%' AND s.commitment = 49989.0 THEN 2631.0
+        WHEN i.legal_name LIKE '%LEE RAND GROUP%' AND s.commitment = 49989.0 THEN 2631.0
+        WHEN i.legal_name LIKE '%LEE RAND GROUP%' AND s.commitment = 24985.0 THEN 1315.0
+        WHEN i.legal_name LIKE '%Julien MACHOT%' AND s.commitment = 349344.0 THEN 21834.0
+        WHEN i.legal_name LIKE '%Hedgebay Securities LLC%' AND s.commitment = 100007.04 THEN 4252.0
+        WHEN i.legal_name LIKE '%Hedgebay Securities LLC%' AND s.commitment = 24978.24 THEN 1062.0
+        WHEN i.legal_name LIKE '%Hedgebay Securities LLC%' AND s.commitment = 24978.24 THEN 1062.0
+        WHEN i.legal_name LIKE '%Hedgebay Securities LLC%' AND s.commitment = 24978.24 THEN 1062.0
+        ELSE num_shares
+    END,
+    spread_per_share = CASE
+        WHEN cost_per_share IS NOT NULL AND price_per_share IS NOT NULL THEN price_per_share - cost_per_share
+        ELSE spread_per_share
+    END,
+    spread_fee_amount = CASE
+        WHEN cost_per_share IS NOT NULL AND price_per_share IS NOT NULL AND num_shares IS NOT NULL
+            THEN (price_per_share - cost_per_share) * num_shares
+        ELSE spread_fee_amount
+    END
+FROM public.vehicles v, public.investors i
+WHERE s.vehicle_id = v.id
+  AND s.investor_id = i.id
+  AND v.entity_code = 'VC106';

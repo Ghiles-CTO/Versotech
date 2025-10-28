@@ -1,4 +1,3 @@
-import { AppLayout } from '@/components/layout/app-layout'
 import { createServiceClient, createClient } from '@/lib/supabase/server'
 import { requireStaffAuth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
@@ -207,8 +206,7 @@ export default async function DealDetailPage({
   }, {})
 
   return (
-    <AppLayout brand="versotech">
-      <DealDetailClient
+    <DealDetailClient
         deal={deal}
         inventorySummary={inventorySummary?.[0] || {
           total_units: 0,
@@ -225,6 +223,5 @@ export default async function DealDetailPage({
         activitySummary={activitySummary}
         userProfile={{ role: userRole }}
       />
-    </AppLayout>
-  )
+    )
 }

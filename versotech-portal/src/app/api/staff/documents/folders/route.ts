@@ -95,14 +95,15 @@ export async function POST(request: NextRequest) {
     const validation = createFolderSchema.safeParse(body)
     
     if (!validation.success) {
-      console.error('[API] Validation failed:', validation.error.errors)
+      console.error('[API] Validation failed:', (validation.error as any).errors)
       return NextResponse.json(
-        { error: 'Invalid request data', details: validation.error.errors },
+        { error: 'Invalid request data', details: (validation.error as any).errors },
         { status: 400 }
       )
     }
 
-    let { name, parent_folder_id, vehicle_id, folder_type } = validation.data
+    const { name, parent_folder_id, folder_type } = validation.data
+    let vehicle_id = validation.data.vehicle_id
 
     // If creating subfolder, inherit vehicle_id from parent
     if (parent_folder_id && !vehicle_id) {

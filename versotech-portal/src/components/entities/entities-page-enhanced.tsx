@@ -125,7 +125,7 @@ export function EntitiesPageEnhanced({ entities: initialEntities }: EntitiesPage
 
   const handleStatusChange = async (entityId: string, newStatus: string) => {
     try {
-      const response = await fetch(`/api/vehicles/${entityId}`, {
+      const response = await fetch(`/api/entities/${entityId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus })
@@ -399,7 +399,7 @@ export function EntitiesPageEnhanced({ entities: initialEntities }: EntitiesPage
 
       {editEntity && (
         <EditEntityModal
-          entity={editEntity}
+          entity={editEntity as any}
           open={true}
           onClose={() => setEditEntity(null)}
           onSuccess={(updated) => {

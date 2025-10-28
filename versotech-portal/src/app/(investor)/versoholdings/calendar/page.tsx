@@ -118,7 +118,7 @@ export default async function InvestorCalendarPage() {
       startAt: openDate.toISOString(),
       endAt: closeDate.toISOString(),
       status: palette,
-      description: deal.vehicles?.name ? `Vehicle • ${deal.vehicles.name}` : undefined
+      description: deal.vehicles?.[0]?.name ? `Vehicle • ${deal.vehicles[0].name}` : undefined
     })
   }
 

@@ -94,11 +94,11 @@ export async function GET(request: NextRequest) {
 
             if (staffParticipant) {
               conversationId = conv.conversation_id
-              lastMessageAt = conv.conversations?.last_message_at || null
+              lastMessageAt = (conv.conversations as any)?.[0]?.last_message_at || null
 
               const lastReadAt = conv.last_read_at
-              if (lastReadAt && conv.conversations?.messages) {
-                unreadCount = conv.conversations.messages.filter((message: any) => {
+              if (lastReadAt && (conv.conversations as any)?.[0]?.messages) {
+                unreadCount = (conv.conversations as any)[0].messages.filter((message: any) => {
                   return message.sender_id !== user.id && new Date(message.created_at) > new Date(lastReadAt)
                 }).length
               }

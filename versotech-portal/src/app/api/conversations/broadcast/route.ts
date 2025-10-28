@@ -67,9 +67,8 @@ export async function POST(request: NextRequest) {
 
     participantInserts.push({
       conversation_id: conversation.id,
-      user_id: user.id,
-      participant_role: 'owner'
-    })
+      user_id: user.id
+    } as any)
 
     const { error: participantsError } = await serviceClient
       .from('conversation_participants')

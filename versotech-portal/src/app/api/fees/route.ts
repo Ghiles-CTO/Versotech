@@ -115,8 +115,8 @@ export async function GET(request: Request) {
     const dealFees = dealFeesResponse.status === 'fulfilled' ? dealFeesResponse.value.data || [] : []
 
     // If no fee events found, create mock data based on positions and allocations
-    let mockVehicleFees = []
-    let mockDealFees = []
+    let mockVehicleFees: any[] = []
+    let mockDealFees: any[] = []
 
     if (vehicleFees.length === 0 && dealFees.length === 0) {
       console.log('No fee events found, generating estimates based on positions')

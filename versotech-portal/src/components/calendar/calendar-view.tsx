@@ -108,7 +108,7 @@ export function CalendarView({ title, description, events, emptyMessage, brand =
               startYear={startYear}
               endYear={endYear}
               legend={legend}
-              events={parsedEvents}
+              events={parsedEvents as any}
               emptyMessage={emptyMessage}
               brand={brand}
             />
@@ -205,7 +205,6 @@ function CalendarSurface({
         date={clickedDate}
         events={dayEvents}
         brand={brand}
-        emptyMessage={emptyMessage}
       />
     </div>
   )

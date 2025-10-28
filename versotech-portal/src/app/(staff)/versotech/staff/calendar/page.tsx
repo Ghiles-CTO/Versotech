@@ -1,4 +1,3 @@
-import { AppLayout } from '@/components/layout/app-layout'
 import { CalendarSplitView } from '@/components/calendar/calendar-split-view'
 import type { CalendarEvent } from '@/components/calendar/calendar-view'
 import { requireStaffAuth } from '@/lib/auth'
@@ -115,8 +114,8 @@ export default async function StaffCalendarPage() {
       startAt: startDate.toISOString(),
       endAt: endDate.toISOString(),
       status: palette,
-      description: request.assigned_to_profile?.display_name
-        ? `Assigned to ${request.assigned_to_profile.display_name}`
+      description: request.assigned_to_profile?.[0]?.display_name
+        ? `Assigned to ${request.assigned_to_profile[0].display_name}`
         : `Status • ${toSentence(request.status) || 'Unassigned'}`
     })
   }
@@ -169,16 +168,14 @@ export default async function StaffCalendarPage() {
   calendarEvents.sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime())
 
   return (
-    <AppLayout brand="versotech">
-      <div className="space-y-8 px-6 py-8">
+    <div className="space-y-8 px-6 py-8">
         <CalendarSplitView
           calendarEvents={calendarEvents}
           emptyCalendarMessage="Once workflows are scheduled or assigned, they will appear here."
           brand="versotech"
         />
       </div>
-    </AppLayout>
-  )
+    )
 }
 
 function addDays(base: Date, days: number) {

@@ -99,7 +99,7 @@ export async function POST(
 
   if (!parsed.success) {
     return NextResponse.json(
-      { error: 'Invalid request data', details: parsed.error.errors },
+      { error: 'Invalid request data', details: (parsed.error as any).errors },
       { status: 400 }
     )
   }
@@ -210,7 +210,7 @@ export async function DELETE(
 
   if (!parsed.success) {
     return NextResponse.json(
-      { error: 'Invalid request data', details: parsed.error.errors },
+      { error: 'Invalid request data', details: (parsed.error as any).errors },
       { status: 400 }
     )
   }

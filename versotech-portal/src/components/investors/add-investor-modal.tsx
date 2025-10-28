@@ -132,41 +132,43 @@ export function AddInvestorModal() {
       </DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Add New Investor</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="text-white">Add New Investor</DialogTitle>
+          <DialogDescription className="text-gray-300">
             Create a new investor profile. Onboarding tasks will be created automatically.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Legal Name */}
           <div className="space-y-2">
-            <Label htmlFor="legal_name">
-              Legal Name <span className="text-red-500">*</span>
+            <Label htmlFor="legal_name" className="text-white">
+              Legal Name <span className="text-red-400">*</span>
             </Label>
             <Input
               id="legal_name"
               value={formData.legal_name}
               onChange={(e) => setFormData({ ...formData, legal_name: e.target.value })}
               placeholder="John Smith / Acme Investment Fund LP"
+              className="bg-zinc-900 border-zinc-700 text-white placeholder:text-gray-500"
               required
             />
           </div>
 
           {/* Display Name */}
           <div className="space-y-2">
-            <Label htmlFor="display_name">Display Name</Label>
+            <Label htmlFor="display_name" className="text-white">Display Name</Label>
             <Input
               id="display_name"
               value={formData.display_name}
               onChange={(e) => setFormData({ ...formData, display_name: e.target.value })}
               placeholder="Optional short name"
+              className="bg-zinc-900 border-zinc-700 text-white placeholder:text-gray-500"
             />
           </div>
 
           {/* Investor Type */}
           <div className="space-y-2">
-            <Label htmlFor="type">
-              Investor Type <span className="text-red-500">*</span>
+            <Label htmlFor="type" className="text-white">
+              Investor Type <span className="text-red-400">*</span>
             </Label>
             <Select
               value={formData.type}
@@ -188,25 +190,27 @@ export function AddInvestorModal() {
           <div className="grid grid-cols-2 gap-4">
             {/* Email */}
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email" className="text-white">Email</Label>
               <Input
                 id="email"
                 type="email"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 placeholder="investor@email.com"
+                className="bg-zinc-900 border-zinc-700 text-white placeholder:text-gray-500"
               />
             </div>
 
             {/* Phone */}
             <div className="space-y-2">
-              <Label htmlFor="phone">Phone</Label>
+              <Label htmlFor="phone" className="text-white">Phone</Label>
               <Input
                 id="phone"
                 type="tel"
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                 placeholder="+1 (555) 123-4567"
+                className="bg-zinc-900 border-zinc-700 text-white placeholder:text-gray-500"
               />
             </div>
           </div>
@@ -214,41 +218,44 @@ export function AddInvestorModal() {
           <div className="grid grid-cols-2 gap-4">
             {/* Country */}
             <div className="space-y-2">
-              <Label htmlFor="country">Country</Label>
+              <Label htmlFor="country" className="text-white">Country</Label>
               <Input
                 id="country"
                 value={formData.country}
                 onChange={(e) => setFormData({ ...formData, country: e.target.value })}
                 placeholder="United States"
+                className="bg-zinc-900 border-zinc-700 text-white placeholder:text-gray-500"
               />
             </div>
 
             {/* Country of Incorporation */}
             <div className="space-y-2">
-              <Label htmlFor="country_of_incorporation">Country of Incorporation</Label>
+              <Label htmlFor="country_of_incorporation" className="text-white">Country of Incorporation</Label>
               <Input
                 id="country_of_incorporation"
                 value={formData.country_of_incorporation}
                 onChange={(e) => setFormData({ ...formData, country_of_incorporation: e.target.value })}
                 placeholder="Cayman Islands"
+                className="bg-zinc-900 border-zinc-700 text-white placeholder:text-gray-500"
               />
             </div>
           </div>
 
           {/* Tax Residency */}
           <div className="space-y-2">
-            <Label htmlFor="tax_residency">Tax Residency</Label>
+            <Label htmlFor="tax_residency" className="text-white">Tax Residency</Label>
             <Input
               id="tax_residency"
               value={formData.tax_residency}
               onChange={(e) => setFormData({ ...formData, tax_residency: e.target.value })}
               placeholder="United States"
+              className="bg-zinc-900 border-zinc-700 text-white placeholder:text-gray-500"
             />
           </div>
 
           {/* Relationship Manager */}
           <div className="space-y-2">
-            <Label htmlFor="primary_rm">Relationship Manager</Label>
+            <Label htmlFor="primary_rm" className="text-white">Relationship Manager</Label>
             <Select
               value={formData.primary_rm || undefined}
               onValueChange={(value) => setFormData({ ...formData, primary_rm: value || '' })}

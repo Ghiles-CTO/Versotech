@@ -1,4 +1,3 @@
-import { AppLayout } from '@/components/layout/app-layout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -78,8 +77,7 @@ export default async function ReconciliationPage() {
   }
 
   return (
-    <AppLayout brand="versotech">
-      <div className="p-6 space-y-6 text-foreground">
+    <div className="p-6 space-y-6 text-foreground">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-foreground">Bank Reconciliation</h1>
@@ -199,12 +197,12 @@ export default async function ReconciliationPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {suggestedMatches.length === 0 && (
+              {(suggestedMatches ?? []).length === 0 && (
                 <div className="text-sm text-muted-foreground">No suggested matches available.</div>
               )}
-              {suggestedMatches.map((match) => {
-                const transaction = bankTransactions.find(t => t.id === match.bank_transaction_id)
-                const invoice = invoices.find(i => i.id === match.invoice_id)
+              {(suggestedMatches ?? []).map((match) => {
+                const transaction = (bankTransactions ?? []).find(t => t.id === match.bank_transaction_id)
+                const invoice = (invoices ?? []).find(i => i.id === match.invoice_id)
                 return (
                   <div key={match.id} className="border border-white/10 rounded-lg p-4 bg-white/5">
                     <div className="flex items-center justify-between">
@@ -225,9 +223,9 @@ export default async function ReconciliationPage() {
                           <div>
                             <div className="font-medium text-foreground">Invoice</div>
                             <div className="text-sm text-muted-foreground">
-                              ${invoice?.total.toLocaleString() ?? '0'} • {invoice?.investors?.legal_name ?? 'Unknown investor'}
+                              ${invoice?.total.toLocaleString() ?? '0'} • {(invoice?.investors as any)?.[0]?.legal_name ?? 'Unknown investor'}
                             </div>
-                            <div className="text-xs text-muted-foreground">{invoice?.deals?.name ?? 'No deal'}</div>
+                            <div className="text-xs text-muted-foreground">{(invoice?.deals as any)?.[0]?.name ?? 'No deal'}</div>
                           </div>
                         </div>
                       </div>
@@ -269,10 +267,10 @@ export default async function ReconciliationPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {bankTransactions.length === 0 && (
+                {(bankTransactions ?? []).length === 0 && (
                   <div className="text-sm text-muted-foreground">No bank transactions found.</div>
                 )}
-                {bankTransactions.map((transaction) => (
+                {(bankTransactions ?? []).map((transaction) => (
                   <div key={transaction.id} className="border border-white/10 rounded-lg p-4 bg-white/5">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
@@ -318,10 +316,10 @@ export default async function ReconciliationPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {invoices.length === 0 && (
+                {(invoices ?? []).length === 0 && (
                   <div className="text-sm text-muted-foreground">No outstanding invoices.</div>
                 )}
-                {invoices.map((invoice) => (
+                {(invoices ?? []).map((invoice) => (
                   <div key={invoice.id} className="border border-white/10 rounded-lg p-4 bg-white/5">
                     <div className="flex items-center justify-between">
                       <div>
@@ -329,7 +327,7 @@ export default async function ReconciliationPage() {
                           {invoice.id}
                         </div>
                         <div className="text-sm text-muted-foreground">
-                          {invoice.investors?.legal_name ?? 'Unknown investor'} • {invoice.deals?.name ?? 'No deal'}
+                          {(invoice.investors as any)?.[0]?.legal_name ?? 'Unknown investor'} • {(invoice.deals as any)?.[0]?.name ?? 'No deal'}
                         </div>
                         <div className="text-xs text-muted-foreground">Due {invoice.due_date}</div>
                       </div>
@@ -349,6 +347,5 @@ export default async function ReconciliationPage() {
           </Card>
         </div>
       </div>
-    </AppLayout>
-  )
+    )
 }

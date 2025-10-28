@@ -68,7 +68,7 @@ export default async function ReportsPage({
       <ReportsPageClient
         initialReports={reports}
         initialRequests={requests}
-        initialDocuments={documentsData.documents}
+        initialDocuments={documentsData.documents as any}
         folders={documentsData.folders}
         vehicles={documentsData.vehicles}
         initialView={initialView}

@@ -1,4 +1,3 @@
-import { AppLayout } from '@/components/layout/app-layout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -139,8 +138,7 @@ const vehicles = [
 
 export default function AdminPage() {
   return (
-    <AppLayout brand="versotech">
-      <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6">
         {/* Page Header */}
         <div>
           <h1 className="text-2xl font-bold text-foreground">System Administration</h1>
@@ -481,6 +479,5 @@ export default function AdminPage() {
           </Card>
         </div>
       </div>
-    </AppLayout>
-  )
+    )
 }

@@ -41,7 +41,7 @@ export async function GET(
     const visitedIds = new Set<string>()
     
     // Start with the current document
-    let currentId: string | null = documentId
+    const currentId: string | null = documentId
     
     // Walk backwards through the chain (find documents that point to this one)
     const { data: allDocs } = await serviceSupabase

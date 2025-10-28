@@ -311,9 +311,11 @@ export function EntitiesListView({ entities, onEntityClick, onStatusChange }: En
               .map((entity) => (
                 <ListItem
                   key={entity.id}
-                  id={entity.id}
-                  onClick={() => onEntityClick(entity.id)}
-                  className="hover:bg-white/5 transition-colors"
+                  {...({
+                    id: entity.id,
+                    onClick: () => onEntityClick(entity.id),
+                    className: "hover:bg-white/5 transition-colors"
+                  } as any)}
                 >
                   <div
                     className="h-2 w-2 shrink-0 rounded-full"

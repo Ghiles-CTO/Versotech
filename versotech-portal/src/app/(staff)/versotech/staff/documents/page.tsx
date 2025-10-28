@@ -1,6 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
 import { requireStaffAuth } from '@/lib/auth'
-import { AppLayout } from '@/components/layout/app-layout'
 import { StaffDocumentsClient } from '@/components/documents/staff-documents-client'
 
 export const dynamic = 'force-dynamic'
@@ -25,11 +24,9 @@ export default async function StaffDocumentsPage() {
   }
 
   return (
-    <AppLayout brand="versotech">
-      <StaffDocumentsClient
+    <StaffDocumentsClient
         initialVehicles={vehicles || []}
         userProfile={userProfile}
       />
-    </AppLayout>
-  )
+    )
 }

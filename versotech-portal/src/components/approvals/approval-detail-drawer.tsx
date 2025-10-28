@@ -330,7 +330,7 @@ export function ApprovalDetailDrawer({
                     </div>
                     <div>
                       <p className="text-sm text-slate-400">Currency</p>
-                      <p className="font-medium text-white">{approval.related_deal.currency || 'USD'}</p>
+                      <p className="font-medium text-white">{(approval.related_deal as any).currency || 'USD'}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -360,7 +360,7 @@ export function ApprovalDetailDrawer({
                     </div>
                     <div>
                       <p className="text-sm text-slate-400">Type</p>
-                      <p className="font-medium text-white capitalize">{approval.related_investor.type || 'N/A'}</p>
+                      <p className="font-medium text-white capitalize">{(approval.related_investor as any).type || 'N/A'}</p>
                     </div>
                   </div>
                 </CardContent>

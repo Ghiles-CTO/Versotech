@@ -1,4 +1,3 @@
-import { AppLayout } from '@/components/layout/app-layout'
 import { IntroducersDashboard, type IntroducersDashboardProps } from '@/components/staff/introducers/introducers-dashboard'
 import { AddIntroducerProvider } from '@/components/staff/introducers/add-introducer-context'
 import { AddIntroducerDialog } from '@/components/staff/introducers/add-introducer-dialog'
@@ -6,7 +5,6 @@ import { getAuthenticatedUser } from '@/lib/api-auth'
 import { requireStaffAuth } from '@/lib/auth'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { AddIntroducerDialogWrapper } from '@/components/staff/introducers/add-introducer-dialog-wrapper'
 
 export const dynamic = 'force-dynamic'
 
@@ -185,7 +183,7 @@ export default async function IntroducersPage() {
   const recentIntroductions: IntroducersDashboardProps['recentIntroductions'] = (recentData ?? [])
     .filter(Boolean)
     .map((entry) => {
-      const record = entry as RecentIntroductionRecord
+      const record = entry as unknown as RecentIntroductionRecord
       const commission = record.id ? commissionLookup.get(record.id) : undefined
 
       return {
@@ -223,8 +221,7 @@ export default async function IntroducersPage() {
   )
 
   return (
-    <AppLayout brand="versotech">
-      <AddIntroducerProvider>
+    <AddIntroducerProvider>
         <IntroducersDashboard
           summary={summary}
           introducers={introducers}
@@ -233,7 +230,6 @@ export default async function IntroducersPage() {
         />
         <AddIntroducerDialog />
       </AddIntroducerProvider>
-    </AppLayout>
-  )
+    )
 }
 

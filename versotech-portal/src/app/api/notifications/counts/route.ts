@@ -106,7 +106,7 @@ export async function GET() {
         }
 
         messageCount += (data ?? []).reduce(
-          (total, row) => total + Number(row?.unread_count ?? 0),
+          (total: number, row: any) => total + Number(row?.unread_count ?? 0),
           0
         )
       }

@@ -26,7 +26,7 @@ export function EmptyHoldingsState({
   const defaultMessage = hasAnyHoldings ? 'No Holdings Match Your Filters' : 'No Investment Holdings Found'
   const defaultDescription = hasAnyHoldings 
     ? "Try adjusting your filters to see more holdings."
-    : "You don't have access to any investment vehicles yet."
+    : "You don&apos;t have access to any investment vehicles yet."
 
   return (
     <Card className="border-0 shadow-md">

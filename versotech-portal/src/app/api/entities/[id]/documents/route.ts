@@ -69,7 +69,7 @@ export async function POST(
 
     const { data: existingDoc, error: fetchError } = await serviceSupabase
       .from('documents')
-      .select('id, entity_id, folder_id')
+      .select('id, entity_id, folder_id, name, type')
       .eq('id', validated.document_id)
       .single()
 

@@ -134,7 +134,7 @@ export async function POST(
 
   if (!payload.success) {
     return NextResponse.json(
-      { error: 'Invalid request data', details: payload.error.errors },
+      { error: 'Invalid request data', details: (payload.error as any).errors },
       { status: 400 }
     )
   }
@@ -234,7 +234,7 @@ export async function PATCH(
 
   if (!parsed.success) {
     return NextResponse.json(
-      { error: 'Invalid request data', details: parsed.error.errors },
+      { error: 'Invalid request data', details: (parsed.error as any).errors },
       { status: 400 }
     )
   }

@@ -208,10 +208,10 @@ export async function GET(
     }
 
     const mergedInvestors = mergeEntityInvestorData({
-      entityInvestors: entityInvestors ?? [],
-      subscriptions: subscriptions ?? [],
+      entityInvestors: (entityInvestors ?? []) as any,
+      subscriptions: (subscriptions ?? []) as any,
       holdings,
-      deals: deals ?? []
+      deals: (deals ?? []) as any
     })
 
     return NextResponse.json({ investors: mergedInvestors })
@@ -408,7 +408,7 @@ export async function POST(
 
       if (latestDeal) {
         activeDeal = latestDeal
-        const holdingCurrency = subInput.currency?.toUpperCase() || activeDeal.currency || 'USD'
+        const holdingCurrency = subInput.currency?.toUpperCase() || (activeDeal as any).currency || 'USD'
         const holdingStatus = subInput.status === 'active' ? 'funded' : 'pending_funding'
 
         const { data: insertedHolding, error: holdingError } = await supabase
@@ -519,7 +519,7 @@ export async function POST(
     await supabase.from('entity_events').insert({
       vehicle_id: vehicleId,
       event_type: 'investor_linked',
-      description: `Linked investor ${entityInvestor.investor?.legal_name ?? investorId} (${allocationStatus})`,
+      description: `Linked investor ${(entityInvestor.investor as any)?.[0]?.legal_name ?? investorId} (${allocationStatus})`,
       changed_by: user.id.startsWith('demo-') ? null : user.id,
       payload: {
         investor_id: investorId,
@@ -552,13 +552,13 @@ export async function POST(
         subscriptionId && entityInvestor.subscription
           ? [
               {
-                ...entityInvestor.subscription,
-                id: entityInvestor.subscription.id,
+                ...(entityInvestor.subscription as any)?.[0],
+                id: (entityInvestor.subscription as any)?.[0]?.id,
                 investor_id: investorId,
                 vehicle_id: vehicleId,
                 investor: entityInvestor.investor ?? null
               }
-            ]
+            ] as any
           : subscriptionId && !entityInvestor.subscription
             ? [
                 {
@@ -587,7 +587,7 @@ export async function POST(
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Invalid input', details: error.errors },
+        { error: 'Invalid input', details: (error as any).errors },
         { status: 400 }
       )
     }

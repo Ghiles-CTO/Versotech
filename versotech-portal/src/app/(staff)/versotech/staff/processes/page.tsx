@@ -1,4 +1,3 @@
-import { AppLayout } from '@/components/layout/app-layout'
 import { requireStaffAuth } from '@/lib/auth'
 import { ProcessCenterClient } from '@/components/staff/process-center-client'
 
@@ -8,8 +7,6 @@ export default async function ProcessesPage() {
   const profile = await requireStaffAuth()
 
   return (
-    <AppLayout brand="versotech">
-      <ProcessCenterClient profile={profile} />
-    </AppLayout>
-  )
+    <ProcessCenterClient profile={profile as any} />
+    )
 }

@@ -307,7 +307,7 @@ export function AddDirectorModalEnhanced({ entityId, open, onClose, onSuccess }:
             <Button
               variant="outline"
               onClick={() => setMode('create')}
-              className="w-full gap-2 border-white/10 text-white hover:bg-white/10"
+              className="w-full gap-2 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 bg-emerald-500/5"
               disabled={loading}
             >
               <Plus className="h-4 w-4" />
@@ -432,7 +432,7 @@ export function AddDirectorModalEnhanced({ entityId, open, onClose, onSuccess }:
             <Button
               variant="outline"
               onClick={() => setMode('select')}
-              className="w-full border-white/10 text-white hover:bg-white/10"
+              className="w-full border-white/10 text-white hover:bg-white/10 bg-white/5"
               disabled={loading}
             >
               Back to Selection
@@ -452,7 +452,7 @@ export function AddDirectorModalEnhanced({ entityId, open, onClose, onSuccess }:
             variant="outline"
             onClick={handleClose}
             disabled={loading}
-            className="border-white/10 text-white hover:bg-white/10"
+            className="border-white/10 text-white hover:bg-white/10 bg-white/5"
           >
             Cancel
           </Button>

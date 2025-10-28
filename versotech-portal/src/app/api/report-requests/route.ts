@@ -159,7 +159,7 @@ export async function POST(request: Request) {
       currency: body.currency || null,
       include_excel: body.includeExcel ?? false,
       include_pdf: body.includePdf ?? true,
-      include_benchmark: body.includeBenchmark ?? false,
+      include_benchmark: (body as any).includeBenchmark ?? false,
       notes: body.notes || null
     }
 

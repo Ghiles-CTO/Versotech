@@ -170,6 +170,12 @@ const staffNavItems: SidebarItem[] = [
     description: 'Manage investor accounts and KYC'
   },
   {
+    name: 'Subscriptions',
+    href: '/versotech/staff/subscriptions',
+    icon: FileText,
+    description: 'Manage subscriptions across all vehicles'
+  },
+  {
     name: 'Processes',
     href: '/versotech/staff/processes',
     icon: Workflow,
@@ -463,14 +469,14 @@ export function Sidebar({ brand, userProfile }: SidebarProps) {
         sidebarDarkMode ? "border" : "border-gray-200"
       )}>
         {/* Settings Link */}
-        <Link href={`/${brand}/settings`}>
+        <Link href={`/${brand}${brand === 'versotech' ? '/staff' : ''}/profile`}>
           <div className={cn(
             "group flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200",
             "border border-transparent",
             sidebarDarkMode
               ? "text-foreground hover:bg-muted hover:border"
               : "text-gray-700 hover:text-gray-900 hover:bg-gray-100 hover:border-gray-200",
-            pathname.includes('/settings') && (sidebarDarkMode
+            pathname.includes('/profile') && (sidebarDarkMode
               ? "bg-muted text-primary border"
               : "bg-blue-50 text-blue-600 border-blue-200/60")
           )}>

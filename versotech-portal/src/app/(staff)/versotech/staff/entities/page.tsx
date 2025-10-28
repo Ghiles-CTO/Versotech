@@ -1,4 +1,3 @@
-import { AppLayout } from '@/components/layout/app-layout'
 import { createSmartClient } from '@/lib/supabase/smart-client'
 import { EntitiesPageEnhanced } from '@/components/entities/entities-page-enhanced'
 import { getCurrentUser } from '@/lib/auth'
@@ -122,9 +121,7 @@ export default async function EntitiesPage() {
   console.log('[EntitiesPage] Loaded', enrichedEntities.length, 'entities')
 
   return (
-    <AppLayout brand="versotech">
-      <EntitiesPageEnhanced entities={enrichedEntities} />
-    </AppLayout>
-  )
+    <EntitiesPageEnhanced entities={enrichedEntities} />
+    )
 }
 

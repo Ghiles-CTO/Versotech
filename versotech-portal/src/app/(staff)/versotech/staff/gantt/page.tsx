@@ -1,4 +1,3 @@
-import { AppLayout } from '@/components/layout/app-layout'
 import { StaffGanttView, type GanttFeatureDTO, type GanttMarkerDTO } from '@/components/gantt/staff-gantt-view'
 import { requireStaffAuth } from '@/lib/auth'
 import { createServiceClient } from '@/lib/supabase/server'
@@ -112,8 +111,8 @@ export default async function StaffGanttPage() {
       endAt: endDate.toISOString(),
       status: palette,
       group: { id: 'requests', name: 'Investor requests' },
-      owner: request.assigned_to_profile?.display_name
-        ? { id: request.assigned_to_profile.display_name, name: request.assigned_to_profile.display_name }
+      owner: request.assigned_to_profile?.[0]?.display_name
+        ? { id: request.assigned_to_profile[0].display_name, name: request.assigned_to_profile[0].display_name }
         : undefined
     })
   }
@@ -163,8 +162,7 @@ export default async function StaffGanttPage() {
   features.sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime())
 
   return (
-    <AppLayout brand="versotech">
-      <div className="space-y-8 px-6 py-8">
+    <div className="space-y-8 px-6 py-8">
         <StaffGanttView
           title="Execution roadmap"
           description="Track deal execution, investor deliverables, and operational workload across the team."
@@ -172,7 +170,6 @@ export default async function StaffGanttPage() {
           markers={markers}
         />
       </div>
-    </AppLayout>
-  )
+    )
 }
 

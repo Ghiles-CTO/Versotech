@@ -235,7 +235,7 @@ export function AddStakeholderModal({ entityId, open, onClose, onSuccess }: AddS
               variant="outline"
               onClick={onClose}
               disabled={loading}
-              className="border-white/10 text-white hover:bg-white/10"
+              className="border-white/10 text-white hover:bg-white/10 bg-white/5"
             >
               Cancel
             </Button>
