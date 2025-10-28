@@ -1,10 +1,11 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Download, Plus, Table as TableIcon, List, LayoutGrid, Settings } from 'lucide-react'
+import { Download, Plus, Table as TableIcon, List, LayoutGrid, Settings, TrendingUp } from 'lucide-react'
 import { SubscriptionsDataTable } from './subscriptions-data-table'
 import { subscriptionColumns } from './subscription-columns'
 import { AdvancedSubscriptionFilters, AdvancedSubscriptionFilters as FilterType } from '@/components/subscriptions/advanced-subscription-filters'
@@ -50,6 +51,8 @@ const DEFAULT_COLUMNS: ColumnConfig[] = [
 ]
 
 export function EnhancedSubscriptionsPage() {
+  const router = useRouter()
+
   // State management
   const [data, setData] = useState<SubscriptionData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -309,6 +312,14 @@ export function EnhancedSubscriptionsPage() {
             </p>
           </div>
           <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              onClick={() => router.push('/versotech/staff/subscriptions/vehicle-summary')}
+              className="bg-gray-800 text-white border-gray-700 hover:bg-gray-700"
+            >
+              <TrendingUp className="h-4 w-4 mr-2" />
+              Vehicle Summary
+            </Button>
             <Button
               variant="outline"
               onClick={() => handleExport()}
