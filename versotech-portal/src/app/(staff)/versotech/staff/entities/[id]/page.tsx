@@ -56,7 +56,7 @@ export default async function EntityDetailPage({ params }: { params: Promise<{ i
       .order('created_at', { ascending: false }),
     supabase
       .from('document_folders')
-      .select('id, parent_folder_id, name, path, folder_type, created_at, updated_at')
+      .select('id, parent_folder_id, name, path, folder_type, vehicle_id, created_at, updated_at')
       .eq('vehicle_id', id)
       .order('path', { ascending: true }),
     supabase
