@@ -842,7 +842,7 @@ function RequestCard({
   currentUserId?: string | null
 }) {
   const statusConfig = REQUEST_STATUS_CONFIG[request.status as keyof typeof REQUEST_STATUS_CONFIG]
-  const overdue = request.due_date && isOverdue(request.due_date)
+  const overdue = !!(request.due_date && isOverdue(request.due_date))
 
   return (
     <Card
@@ -971,7 +971,7 @@ function RequestDetails({ request, onUpdate, currentUserId }: {
   currentUserId?: string | null
 }) {
   const [isCreatingConversation, setIsCreatingConversation] = useState(false)
-  const overdue = request.due_date && request.status !== 'closed' && request.status !== 'ready' && isOverdue(request.due_date)
+  const overdue = !!(request.due_date && request.status !== 'closed' && request.status !== 'ready' && isOverdue(request.due_date))
   const statusConfig = REQUEST_STATUS_CONFIG[request.status as keyof typeof REQUEST_STATUS_CONFIG]
 
   const handleCreateConversation = async () => {

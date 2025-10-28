@@ -54,6 +54,7 @@ interface NotificationCounts {
   deals: number
   requests: number
   approvals: number
+  notifications: number
   totalUnread: number
 }
 
@@ -423,15 +424,15 @@ export function Sidebar({ brand, userProfile }: SidebarProps) {
                   {!collapsed && (
                     <>
                       <span className="flex-1">{item.name}</span>
-                      {badgeCount && badgeCount > 0 && (
+                      {badgeCount && Number(badgeCount) > 0 && (
                         <div className={cn(
                           "flex items-center justify-center min-w-[18px] h-[18px] rounded-full text-xs font-medium",
-                          badgeCount > 9 ? "px-1.5" : "",
+                          Number(badgeCount) > 9 ? "px-1.5" : "",
                           sidebarDarkMode
                             ? "bg-blue-500 text-white"
                             : "bg-blue-500 text-white"
                         )}>
-                          {badgeCount > 99 ? '99+' : badgeCount}
+                          {Number(badgeCount) > 99 ? '99+' : badgeCount}
                         </div>
                       )}
                     </>
@@ -447,12 +448,12 @@ export function Sidebar({ brand, userProfile }: SidebarProps) {
                       : "bg-gray-900 text-white"
                   )}>
                     <div className="font-medium">{item.name}</div>
-                    {badgeCount && badgeCount > 0 && (
+                    {badgeCount && Number(badgeCount) > 0 && (
                       <div className={cn(
                         "text-xs mt-1",
                         sidebarDarkMode ? "text-blue-400" : "text-blue-600"
                       )}>
-                        {badgeCount} {badgeCount === 1 ? 'item' : 'items'}
+                        {badgeCount} {Number(badgeCount) === 1 ? 'item' : 'items'}
                       </div>
                     )}
                   </div>

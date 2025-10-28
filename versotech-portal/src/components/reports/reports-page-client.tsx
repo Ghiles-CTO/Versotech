@@ -27,7 +27,8 @@ import type {
   RequestTicket,
   ReportRequestWithRelations,
   RequestTicketWithRelations,
-  ReportType
+  ReportType,
+  CreateCustomRequest
 } from '@/types/reports'
 import type { Document, Vehicle } from '@/types/documents'
 
@@ -39,7 +40,7 @@ interface DocumentFolder {
   vehicle?: {
     id: string
     name: string
-  } | null
+  }
 }
 
 interface ReportsPageClientProps {
@@ -82,9 +83,17 @@ export function ReportsPageClient({
   const supabase = createClient()
 
   const documentsForFolders = useMemo(() => {
-    return initialDocuments.map((doc) => ({
-      ...doc,
-      file_size_bytes: doc.file_size_bytes ?? 0
+    return initialDocuments.map((doc): Document => ({
+      id: doc.id,
+      type: doc.type,
+      file_name: doc.name ?? doc.file_key,
+      file_key: doc.file_key,
+      file_size_bytes: doc.file_size_bytes ?? 0,
+      created_at: doc.created_at,
+      created_by: doc.created_by,
+      scope: doc.scope,
+      watermark: doc.watermark,
+      metadata: doc.metadata
     }))
   }, [initialDocuments])
 
@@ -241,6 +250,31 @@ export function ReportsPageClient({
     }
   }
 
+  async function submitCustomRequest(data: CreateCustomRequest) {
+    try {
+      const response = await fetch('/api/custom-requests', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to submit custom request')
+      }
+
+      const result = await response.json()
+      toast.success(result.message || 'Custom request submitted successfully')
+
+      setRequestModalOpen(false)
+      fetchReportsAndRequests()
+    } catch (error) {
+      console.error('Error submitting custom request:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to submit custom request')
+      throw error
+    }
+  }
+
   const quickReportCards = useMemo(() => {
     return Object.values(REPORT_TYPES).filter((config) => config.workflowKey !== 'custom')
   }, [])
@@ -365,7 +399,11 @@ export function ReportsPageClient({
         submitting={isSubmittingQuickReport}
       />
 
-      <CustomRequestModal open={requestModalOpen} onOpenChange={setRequestModalOpen} />
+      <CustomRequestModal
+        open={requestModalOpen}
+        onOpenChange={setRequestModalOpen}
+        onSubmit={submitCustomRequest}
+      />
     </div>
   )
 }
@@ -404,7 +442,7 @@ function DocumentsTab({ documents, folders, vehicles, documentsForFolders }: Doc
               <CategorizedDocumentsClient initialDocuments={documents} vehicles={vehicles} />
             </TabsContent>
             <TabsContent value="folders">
-              <InvestorFoldersClient folders={folders} documents={documentsForFolders} />
+              <InvestorFoldersClient folders={folders} documents={documentsForFolders as any} />
             </TabsContent>
           </Tabs>
         )}

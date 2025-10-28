@@ -123,11 +123,11 @@ interface KanbanBoardProps {
 }
 
 export function KanbanBoard({ id, children }: KanbanBoardProps) {
-  const { droppable } = useSortable({ id });
+  const { setNodeRef } = useSortable({ id });
 
   return (
     <div
-      ref={droppable?.setNodeRef}
+      ref={setNodeRef}
       className="flex min-w-[300px] flex-1 flex-col rounded-lg border border-white/10 bg-white/5"
     >
       {children}

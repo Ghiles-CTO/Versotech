@@ -120,7 +120,7 @@ export function IntroducersDashboard({ summary, introducers, recentIntroductions
           icon={<DollarSign className="h-4 w-4" />}
           label="Commissions Paid"
           primary={formatCurrency(summary.totalCommissionPaid)}
-          secondary="All-time" bars
+          secondary="All-time"
         />
         <DashboardStatCard
           icon={<Clock className="h-4 w-4" />}

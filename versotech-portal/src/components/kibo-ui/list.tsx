@@ -81,11 +81,11 @@ interface ListGroupProps {
 }
 
 export function ListGroup({ id, children }: ListGroupProps) {
-  const { droppable } = useSortable({ id });
+  const { setNodeRef } = useSortable({ id });
 
   return (
     <div
-      ref={droppable?.setNodeRef}
+      ref={setNodeRef}
       className="rounded-lg border border-white/10 bg-white/5"
     >
       {children}

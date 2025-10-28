@@ -271,7 +271,7 @@ export function EntitiesTableView({ entities, onEntityClick, onEntityEdit }: Ent
             </TableHeaderGroup>
           )}
         </TableHeader>
-        <TableBody>
+        <TableBody<Entity>>
           {({ row }) => (
             <TableRow
               key={row.id}

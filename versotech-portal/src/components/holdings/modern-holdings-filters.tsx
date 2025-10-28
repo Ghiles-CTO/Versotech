@@ -380,7 +380,7 @@ export function ModernHoldingsFilters({
               </div>
               <Slider
                 value={valueRange}
-                onValueChange={setValueRange}
+                onValueChange={(value) => setValueRange(value as [number, number])}
                 max={10000000}
                 step={100000}
                 className="w-full"
@@ -396,7 +396,7 @@ export function ModernHoldingsFilters({
               </div>
               <Slider
                 value={returnRange}
-                onValueChange={setReturnRange}
+                onValueChange={(value) => setReturnRange(value as [number, number])}
                 min={-50}
                 max={100}
                 step={5}

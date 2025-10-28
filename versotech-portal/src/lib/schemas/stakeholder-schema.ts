@@ -13,9 +13,7 @@ export const stakeholderRoles = [
 
 // Schema for creating a stakeholder
 export const stakeholderFormSchema = z.object({
-  role: z.enum(stakeholderRoles, {
-    required_error: 'Stakeholder role is required'
-  }),
+  role: z.enum(stakeholderRoles),
 
   company_name: z
     .string()
@@ -89,9 +87,7 @@ export type StakeholderFormData = z.infer<typeof stakeholderFormSchema>
 
 // Schema for editing an existing stakeholder
 export const stakeholderEditSchema = z.object({
-  role: z.enum(stakeholderRoles, {
-    required_error: 'Stakeholder role is required'
-  }),
+  role: z.enum(stakeholderRoles),
 
   company_name: z
     .string()

@@ -97,14 +97,14 @@ export class ExcelExporter {
   /**
    * Format value based on type
    */
-  private static formatValue(value: any, type: ExportColumn['type'], format?: string): string {
+  private static formatValue(value: any, type: ExportColumn['type'], formatString?: string): string {
     if (value === null || value === undefined) return ''
 
     switch (type) {
       case 'currency':
         return new Intl.NumberFormat('en-US', {
           style: 'currency',
-          currency: format || 'USD',
+          currency: formatString || 'USD',
           minimumFractionDigits: 0,
           maximumFractionDigits: 0
         }).format(Number(value))
@@ -121,7 +121,7 @@ export class ExcelExporter {
       case 'date':
         try {
           const date = new Date(value)
-          return format(date, format || 'yyyy-MM-dd')
+          return format(date, formatString || 'yyyy-MM-dd')
         } catch {
           return String(value)
         }

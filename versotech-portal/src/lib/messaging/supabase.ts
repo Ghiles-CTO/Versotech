@@ -213,7 +213,7 @@ export function normalizeMessage(raw: any): ConversationMessage {
     // Sender might not be available in realtime payloads, that's ok
     sender: sender ? {
       id: sender.id ?? null,
-      displayName: sender.displayName ?? sender.display_name ?? null,
+      displayName: sender.displayName ?? (sender as any).display_name ?? null,
       email: sender.email ?? null,
       role: sender.role ?? null,
     } : null,

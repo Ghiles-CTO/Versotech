@@ -65,7 +65,7 @@ export function TableProvider<T>({
 
 interface TableHeaderProps<T> {
   children: (context: {
-    headerGroup: ReturnType<typeof useReactTable<T>>["getHeaderGroups"][number];
+    headerGroup: ReturnType<ReturnType<typeof useReactTable<T>>["getHeaderGroups"]>[number];
   }) => ReactNode;
 }
 
@@ -82,9 +82,9 @@ export function TableHeader<T>({ children }: TableHeaderProps<T>) {
 }
 
 interface TableHeaderGroupProps<T> {
-  headerGroup: ReturnType<typeof useReactTable<T>>["getHeaderGroups"][number];
+  headerGroup: ReturnType<ReturnType<typeof useReactTable<T>>["getHeaderGroups"]>[number];
   children: (context: {
-    header: ReturnType<typeof useReactTable<T>>["getHeaderGroups"][number]["headers"][number];
+    header: ReturnType<ReturnType<typeof useReactTable<T>>["getHeaderGroups"]>[number]["headers"][number];
   }) => ReactNode;
 }
 
@@ -97,8 +97,8 @@ export function TableHeaderGroup<T>({
 
 interface TableHeadProps<T> {
   header: ReturnType<
-    typeof useReactTable<T>
-  >["getHeaderGroups"][number]["headers"][number];
+    ReturnType<typeof useReactTable<T>>["getHeaderGroups"]
+  >[number]["headers"][number];
 }
 
 export function TableHead<T>({ header }: TableHeadProps<T>) {
@@ -145,7 +145,7 @@ export function TableColumnHeader({ column, title }: TableColumnHeaderProps) {
 
 interface TableBodyProps<T> {
   children: (context: {
-    row: ReturnType<typeof useReactTable<T>>["getRowModel"]["rows"][number];
+    row: ReturnType<ReturnType<typeof useReactTable<T>>["getRowModel"]>["rows"][number];
   }) => ReactNode;
 }
 
@@ -171,11 +171,11 @@ export function TableBody<T>({ children }: TableBodyProps<T>) {
 }
 
 interface TableRowProps<T> {
-  row: ReturnType<typeof useReactTable<T>>["getRowModel"]["rows"][number];
+  row: ReturnType<ReturnType<typeof useReactTable<T>>["getRowModel"]>["rows"][number];
   children: (context: {
     cell: ReturnType<
-      typeof useReactTable<T>
-    >["getRowModel"]["rows"][number]["getVisibleCells"][number];
+      ReturnType<ReturnType<typeof useReactTable<T>>["getRowModel"]>["rows"][number]["getVisibleCells"]
+    >[number];
   }) => ReactNode;
   className?: string;
   onClick?: () => void;
@@ -195,8 +195,8 @@ export function TableRow<T>({ row, children, className, onClick }: TableRowProps
 
 interface TableCellProps<T> {
   cell: ReturnType<
-    typeof useReactTable<T>
-  >["getRowModel"]["rows"][number]["getVisibleCells"][number];
+    ReturnType<ReturnType<typeof useReactTable<T>>["getRowModel"]>["rows"][number]["getVisibleCells"]
+  >[number];
 }
 
 export function TableCell<T>({ cell }: TableCellProps<T>) {

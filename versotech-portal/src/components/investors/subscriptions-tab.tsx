@@ -19,6 +19,8 @@ type Subscription = {
   committed_at: string | null
   created_at: string
   acknowledgement_notes: string | null
+  effective_date: string | null
+  funding_due_at: string | null
 
   // Share/Unit fields
   price_per_share: number | null
@@ -268,7 +270,7 @@ export function SubscriptionsTab({ investorId }: { investorId: string }) {
                       sub.bd_fee_amount,
                       sub.spread_fee_amount,
                       sub.finra_fee_amount
-                    ].reduce((sum, fee) => sum + (fee || 0), 0)
+                    ].reduce((sum: number, fee) => sum + (fee || 0), 0)
                     const moic = sub.funded_amount > 0 && sub.current_nav ? sub.current_nav / sub.funded_amount : null
 
                     return (

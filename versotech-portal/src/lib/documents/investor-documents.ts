@@ -9,7 +9,7 @@ interface DocumentFolder {
   vehicle?: {
     id: string
     name: string
-  } | null
+  }
 }
 
 interface RawDocument {
@@ -76,14 +76,14 @@ export async function loadInvestorDocuments(
     .in('investor_id', investorIds)
     .eq('status', 'active')
 
-  const vehicles: Vehicle[] = Array.from(
+  const vehicles = Array.from(
     new Map(
       (subscriptionData ?? [])
         .map((entry) => entry.vehicles)
         .filter(Boolean)
-        .map((vehicle) => [vehicle!.id, vehicle!])
+        .map((vehicle: any) => [vehicle.id, vehicle])
     ).values()
-  ) as Vehicle[]
+  ) as unknown as Vehicle[]
 
   const collectDocuments = (entries: RawDocument[] | null | undefined) => {
     if (!entries) return

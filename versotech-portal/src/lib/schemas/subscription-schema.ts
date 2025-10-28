@@ -4,10 +4,7 @@ export const subscriptionFormSchema = z
   .object({
     // Core fields (required)
     commitment: z
-      .number({
-        required_error: 'Commitment amount is required',
-        invalid_type_error: 'Commitment must be a number'
-      })
+      .number()
       .nonnegative('Commitment must be positive'),
 
     currency: z
@@ -15,9 +12,7 @@ export const subscriptionFormSchema = z
       .length(3, 'Currency must be 3 letters')
       .transform((val) => val.toUpperCase()),
 
-    status: z.enum(['pending', 'committed', 'active', 'closed', 'cancelled'], {
-      required_error: 'Status is required'
-    }),
+    status: z.enum(['pending', 'committed', 'active', 'closed', 'cancelled']),
 
     // Date fields (optional)
     effective_date: z.string().optional().nullable(),

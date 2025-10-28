@@ -24,25 +24,18 @@ export const entityFormSchema = z.object({
     .max(200, 'Former entity name must be less than 200 characters')
     .nullable(),
 
-  status: z.enum(['LIVE', 'CLOSED', 'TBD'], {
-    required_error: 'Status is required'
-  }),
+  status: z.enum(['LIVE', 'CLOSED', 'TBD']),
 
-  type: z.enum(
-    [
-      'fund',
-      'spv',
-      'securitization',
-      'note',
-      'venture_capital',
-      'private_equity',
-      'real_estate',
-      'other'
-    ],
-    {
-      required_error: 'Entity type is required'
-    }
-  ),
+  type: z.enum([
+    'fund',
+    'spv',
+    'securitization',
+    'note',
+    'venture_capital',
+    'private_equity',
+    'real_estate',
+    'other'
+  ]),
 
   domicile: z.string().max(100, 'Domicile must be less than 100 characters').nullable(),
 

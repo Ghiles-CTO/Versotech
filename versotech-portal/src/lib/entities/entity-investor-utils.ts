@@ -222,15 +222,14 @@ export function mergeEntityInvestorData({
   const subscriptionIdsSeen = new Set<string>()
   const dealNames = new Map<string, string | null>()
 
-  deals.forEach((deal) => {
+  deals?.forEach((deal) => {
     if (!deal?.id) return
     dealNames.set(deal.id, deal.name ?? null)
   })
 
-  entityInvestors.forEach((link) => {
+  entityInvestors?.forEach((link) => {
     const investorId =
       link.investor?.id ??
-      // @ts-expect-error - fallback for legacy payloads
       (link as any).investor_id ??
       link.id
 
@@ -261,7 +260,7 @@ export function mergeEntityInvestorData({
     investorMap.set(investorId, entry)
   })
 
-  subscriptions.forEach((subscriptionRow) => {
+  subscriptions?.forEach((subscriptionRow) => {
     if (!subscriptionRow?.investor_id || subscriptionIdsSeen.has(subscriptionRow.id)) {
       return
     }
@@ -305,7 +304,7 @@ export function mergeEntityInvestorData({
     }
   })
 
-  holdings.forEach((holding) => {
+  holdings?.forEach((holding) => {
     if (!holding?.investor_id) return
     const normalizedHolding = normalizeHolding(holding, dealNames)
     const existing = investorMap.get(holding.investor_id)

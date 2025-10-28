@@ -89,7 +89,7 @@ export function useNotifications(userRole: string, userId?: string) {
       }
     }
 
-    const subscriptions = []
+    const subscriptions: any[] = []
 
     subscriptions.push(
       supabaseClient

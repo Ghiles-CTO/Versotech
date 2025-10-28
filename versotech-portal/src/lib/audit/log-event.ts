@@ -22,7 +22,7 @@ interface LogAuditEventParams {
 export async function logAuditEvent(params: LogAuditEventParams) {
   const supabase = await createClient()
 
-  const h = headers()
+  const h = await headers()
   const ipAddress = h.get('x-forwarded-for') ?? h.get('x-real-ip') ?? 'unknown'
   const userAgent = h.get('user-agent') ?? 'unknown'
 

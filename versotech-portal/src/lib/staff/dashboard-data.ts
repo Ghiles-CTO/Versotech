@@ -90,13 +90,13 @@ export async function getStaffDashboardData(): Promise<StaffDashboardData> {
       supabase
         .from('investors')
         .select('id', { head: true, count: 'exact' })
-        .eq('status', 'active')
+        .eq('status', 'active') as any
     ),
     fetchCount(
       supabase
         .from('investors')
         .select('id', { head: true, count: 'exact' })
-        .in('kyc_status', ['pending', 'review'])
+        .in('kyc_status', ['pending', 'review']) as any
     ),
     fetchCount(
       supabase
@@ -104,43 +104,43 @@ export async function getStaffDashboardData(): Promise<StaffDashboardData> {
         .select('id', { head: true, count: 'exact' })
         .in('kind', ['kyc_individual', 'kyc_entity', 'kyc_aml_check'])
         .in('status', ['pending', 'in_progress'])
-        .eq('priority', 'high')
+        .eq('priority', 'high') as any
     ),
     fetchCount(
       supabase
         .from('workflow_runs')
         .select('id', { head: true, count: 'exact' })
-        .gte('created_at', startOfMonth)
+        .gte('created_at', startOfMonth) as any
     ),
     fetchCount(
-      supabase.from('investors').select('id', { head: true, count: 'exact' })
+      supabase.from('investors').select('id', { head: true, count: 'exact' }) as any
     ),
     fetchCount(
       supabase
         .from('investors')
         .select('id', { head: true, count: 'exact' })
-        .eq('kyc_status', 'approved')
+        .eq('kyc_status', 'approved') as any
     ),
     fetchCount(
       supabase
         .from('tasks')
         .select('id', { head: true, count: 'exact' })
         .in('kind', ['kyc_individual', 'kyc_entity', 'kyc_aml_check'])
-        .in('status', ['pending', 'in_progress'])
+        .in('status', ['pending', 'in_progress']) as any
     ),
     fetchCount(
       supabase
         .from('tasks')
         .select('id', { head: true, count: 'exact' })
         .eq('kind', 'compliance_nda')
-        .in('status', ['pending', 'in_progress'])
+        .in('status', ['pending', 'in_progress']) as any
     ),
     fetchCount(
       supabase
         .from('tasks')
         .select('id', { head: true, count: 'exact' })
         .eq('kind', 'compliance_subscription_agreement')
-        .in('status', ['pending', 'in_progress'])
+        .in('status', ['pending', 'in_progress']) as any
     ),
     supabase
       .from('capital_calls')
@@ -152,19 +152,19 @@ export async function getStaffDashboardData(): Promise<StaffDashboardData> {
       supabase
         .from('workflows')
         .select('id', { head: true, count: 'exact' })
-        .eq('is_active', true)
+        .eq('is_active', true) as any
     ),
     fetchCount(
       supabase
         .from('deals')
         .select('id', { head: true, count: 'exact' })
-        .in('status', ['open', 'allocation_pending'])
+        .in('status', ['open', 'allocation_pending']) as any
     ),
     fetchCount(
       supabase
         .from('request_tickets')
         .select('id', { head: true, count: 'exact' })
-        .in('status', ['open', 'assigned', 'in_progress'])
+        .in('status', ['open', 'assigned', 'in_progress']) as any
     ),
     supabase
       .from('activity_feed')
