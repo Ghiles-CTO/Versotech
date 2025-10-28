@@ -111,7 +111,7 @@ interface EntityDocument {
   link_type?: string | null
   created_at: string
   created_by?: string | null
-  folder_id?: string | null
+  folder_id: string | null
 }
 
 interface EntityEvent {
