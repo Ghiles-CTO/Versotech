@@ -8,6 +8,7 @@ export interface EntityInvestorSubscriptionSummary {
   units: number | null
   acknowledgement_notes: string | null
   created_at: string | null
+  committed_at?: string | null
   origin?: 'linked' | 'auto_discovered' | 'holding_projection'
   funded_amount?: number | null
   current_nav?: number | null
