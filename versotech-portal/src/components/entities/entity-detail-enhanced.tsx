@@ -96,6 +96,7 @@ interface Folder {
   name: string
   path: string
   folder_type: string
+  vehicle_id: string
   created_at: string
   updated_at: string
 }
