@@ -206,14 +206,15 @@ export function StaffGanttView({ title, description, features, markers = [], bra
 
                 <GanttFeatureList>
                   {parsedData.map((group) => (
-                    <GanttFeatureListGroup key={group.id} className="space-y-3 px-2 py-4">
-                      <p
-                        className={`px-2 text-[11px] font-semibold uppercase tracking-wide ${
-                          isLight ? 'text-slate-500' : 'text-muted-foreground'
-                        }`}
-                      >
-                        {group.name}
-                      </p>
+                    <GanttFeatureListGroup key={group.id}>
+                      <div className="space-y-3 px-2 py-4">
+                        <p
+                          className={`px-2 text-[11px] font-semibold uppercase tracking-wide ${
+                            isLight ? 'text-slate-500' : 'text-muted-foreground'
+                          }`}
+                        >
+                          {group.name}
+                        </p>
                       {group.items.map((feature) => (
                         <div className="flex items-center gap-2 px-2" key={feature.id}>
                           <GanttFeatureItem
@@ -239,6 +240,7 @@ export function StaffGanttView({ title, description, features, markers = [], bra
                           </GanttFeatureItem>
                         </div>
                       ))}
+                      </div>
                     </GanttFeatureListGroup>
                   ))}
                 </GanttFeatureList>
