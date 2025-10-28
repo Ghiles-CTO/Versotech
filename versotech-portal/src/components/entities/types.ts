@@ -17,6 +17,8 @@ export interface EntityInvestorSubscriptionSummary {
   spread_fee_amount?: number | null
   finra_fee_amount?: number | null
   opportunity_name?: string | null
+  num_shares?: number | null
+  price_per_share?: number | null
 }
 
 export interface EntityInvestorHoldingSummary {
