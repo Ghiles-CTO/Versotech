@@ -41,3 +41,5 @@ yarn-error.log*
 # Logs
 *.log
 server.log
+.venv/
+nul
