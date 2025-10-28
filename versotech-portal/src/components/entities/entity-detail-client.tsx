@@ -122,8 +122,6 @@ export function EntityDetailClient({ entity: initialEntity, directors: initialDi
   const [documentsError, setDocumentsError] = useState<string | null>(null)
   const [events, setEvents] = useState<EntityEvent[]>(initialEvents)
   const [eventsLoading, setEventsLoading] = useState(false)
-  const [directorLoading, setDirectorLoading] = useState(false)
-  const [directorError, setDirectorError] = useState<string | null>(null)
   const [directorModalOpen, setDirectorModalOpen] = useState(false)
   const [editEntityModalOpen, setEditEntityModalOpen] = useState(false)
 
@@ -179,45 +177,6 @@ export function EntityDetailClient({ entity: initialEntity, directors: initialDi
   useEffect(() => {
     fetchDocuments()
   }, [fetchDocuments])
-
-  const handleDirectorSubmit = async () => {
-    setDirectorLoading(true)
-    setDirectorError(null)
-    try {
-      const payload = {
-        full_name: directorForm.full_name.trim(),
-        role: directorForm.role.trim() || undefined,
-        email: directorForm.email.trim() || undefined,
-        effective_from: directorForm.effective_from || undefined,
-        notes: directorForm.notes.trim() || undefined
-      }
-
-      if (!payload.full_name) {
-        throw new Error('Director name is required')
-      }
-
-      const response = await fetch(`/api/entities/${entity.id}/directors`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      })
-
-      if (!response.ok) {
-        const data = await response.json().catch(() => ({}))
-        throw new Error(data.error || 'Failed to add director')
-      }
-
-      const { director } = await response.json()
-      setDirectors((prev) => [director, ...prev])
-      setDirectorModalOpen(false)
-      setDirectorForm({ full_name: '', role: '', email: '', effective_from: '', notes: '' })
-      fetchEvents()
-    } catch (error: any) {
-      setDirectorError(error.message)
-    } finally {
-      setDirectorLoading(false)
-    }
-  }
 
   const overviewStats = useMemo(() => {
     return [
