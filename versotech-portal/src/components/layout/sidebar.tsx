@@ -372,7 +372,7 @@ export function Sidebar({ brand, userProfile }: SidebarProps) {
       </div>
 
       {/* Menu Section */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto scrollbar-hide">
         {!collapsed && (
           <div className="px-4 py-3">
             <p className={cn(

@@ -192,7 +192,7 @@ export function SubscriptionEditDialog({
                     <Label htmlFor="status" className="text-white">Status *</Label>
                     <Select
                       value={formData.status}
-                      onValueChange={(value) => setFormData({ ...formData, status: value })}
+                      onValueChange={(value) => setFormData({ ...formData, status: value as any })}
                     >
                       <SelectTrigger id="status" className="bg-gray-800 border-gray-700 text-white">
                         <SelectValue />

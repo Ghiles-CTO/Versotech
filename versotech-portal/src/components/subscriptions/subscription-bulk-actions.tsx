@@ -30,7 +30,6 @@ import {
 import {
   CheckCircle2,
   X,
-  Download,
   Mail,
   Edit,
   Archive,
@@ -47,7 +46,6 @@ interface SubscriptionBulkActionsProps {
   selectedSubscriptions: any[]
   onClearSelection: () => void
   onBulkUpdate: (ids: string[], updates: Record<string, any>) => Promise<void>
-  onExport: (ids: string[]) => Promise<void>
 }
 
 export function SubscriptionBulkActions({
@@ -55,7 +53,6 @@ export function SubscriptionBulkActions({
   selectedSubscriptions,
   onClearSelection,
   onBulkUpdate,
-  onExport,
 }: SubscriptionBulkActionsProps) {
   const [showStatusDialog, setShowStatusDialog] = useState(false)
   const [newStatus, setNewStatus] = useState('')
@@ -81,19 +78,6 @@ export function SubscriptionBulkActions({
     } catch (error) {
       console.error('Bulk update error:', error)
       toast.error('Failed to update subscriptions')
-    } finally {
-      setIsProcessing(false)
-    }
-  }
-
-  const handleBulkExport = async () => {
-    setIsProcessing(true)
-    try {
-      await onExport(selectedIds)
-      toast.success(`Exported ${selectedIds.length} subscription(s)`)
-    } catch (error) {
-      console.error('Export error:', error)
-      toast.error('Failed to export subscriptions')
     } finally {
       setIsProcessing(false)
     }
@@ -172,15 +156,6 @@ export function SubscriptionBulkActions({
                   >
                     <Edit className="mr-2 h-4 w-4" />
                     Change Status
-                  </DropdownMenuItem>
-
-                  <DropdownMenuItem
-                    onClick={handleBulkExport}
-                    disabled={isProcessing}
-                    className="text-white hover:bg-gray-800 cursor-pointer"
-                  >
-                    <Download className="mr-2 h-4 w-4" />
-                    Export Selected
                   </DropdownMenuItem>
 
                   <DropdownMenuSeparator className="bg-gray-700" />

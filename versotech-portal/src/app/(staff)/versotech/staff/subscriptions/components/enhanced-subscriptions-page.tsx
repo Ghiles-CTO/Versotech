@@ -341,7 +341,6 @@ export function EnhancedSubscriptionsPage() {
             selectedSubscriptions={selectedSubscriptions}
             onClearSelection={() => setSelectedIds([])}
             onBulkUpdate={handleBulkUpdate}
-            onExport={handleExport}
           />
         )}
 

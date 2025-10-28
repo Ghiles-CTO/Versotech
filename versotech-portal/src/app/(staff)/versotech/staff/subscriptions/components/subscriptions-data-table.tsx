@@ -28,28 +28,43 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Input } from '@/components/ui/input'
-import { Search, Download, X } from 'lucide-react'
+import { X } from 'lucide-react'
 import { toast } from 'sonner'
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
+  selectedIds?: string[]
+  onSelectionChange?: (ids: string[]) => void
   onBulkUpdate?: (ids: string[], updates: Record<string, any>) => Promise<void>
 }
 
 export function SubscriptionsDataTable<TData, TValue>({
   columns,
   data,
+  selectedIds,
+  onSelectionChange,
   onBulkUpdate,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
   const [rowSelection, setRowSelection] = React.useState({})
-  const [globalFilter, setGlobalFilter] = React.useState('')
   const [bulkAction, setBulkAction] = React.useState('')
   const [isApplyingBulk, setIsApplyingBulk] = React.useState(false)
+
+  // Sync row selection with parent selectedIds
+  React.useEffect(() => {
+    if (selectedIds && data) {
+      const selectionMap: Record<string, boolean> = {}
+      data.forEach((row: any, index) => {
+        if (selectedIds.includes(row.id)) {
+          selectionMap[index] = true
+        }
+      })
+      setRowSelection(selectionMap)
+    }
+  }, [selectedIds, data])
 
   const table = useReactTable({
     data,
@@ -61,19 +76,27 @@ export function SubscriptionsDataTable<TData, TValue>({
     getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
-    onGlobalFilterChange: setGlobalFilter,
     state: {
       sorting,
       columnFilters,
       columnVisibility,
       rowSelection,
-      globalFilter,
     },
   })
 
   const selectedCount = table.getFilteredSelectedRowModel().rows.length
   const totalCount = table.getFilteredRowModel().rows.length
   const displayedRows = table.getRowModel().rows
+
+  // Notify parent of selection changes
+  React.useEffect(() => {
+    if (onSelectionChange) {
+      const selectedRowIds = table
+        .getFilteredSelectedRowModel()
+        .rows.map((row) => (row.original as any).id)
+      onSelectionChange(selectedRowIds)
+    }
+  }, [rowSelection, onSelectionChange, table])
 
   const handleBulkAction = async () => {
     if (!bulkAction || selectedCount === 0) {
@@ -129,23 +152,6 @@ export function SubscriptionsDataTable<TData, TValue>({
 
   return (
     <div className="space-y-4">
-      {/* Search and Filters */}
-      <div className="flex items-center gap-4">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-          <Input
-            placeholder="Search by subscription # or investor..."
-            value={globalFilter ?? ''}
-            onChange={(e) => setGlobalFilter(e.target.value)}
-            className="pl-10 bg-gray-800 border-gray-700 text-white"
-          />
-        </div>
-        <Button variant="outline" size="sm" className="bg-gray-800 text-white border-gray-700 hover:bg-gray-700">
-          <Download className="h-4 w-4 mr-2" />
-          Export All
-        </Button>
-      </div>
-
       {/* Bulk Actions */}
       {selectedCount > 0 && (
         <div className="flex items-center gap-4 p-3 bg-blue-950 rounded-lg border border-blue-800">
