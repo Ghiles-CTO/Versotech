@@ -294,7 +294,7 @@ export function AdvancedSubscriptionFilters({
               <div key={status.value} className="flex items-center gap-2">
                 <Checkbox
                   id={`status-${status.value}`}
-                  checked={filters.statuses?.includes(status.value)}
+                  checked={filters.statuses?.includes(status.value) || false}
                   onCheckedChange={() => toggleArrayFilter('statuses', status.value)}
                   className="border-gray-600"
                 />
@@ -340,7 +340,7 @@ export function AdvancedSubscriptionFilters({
                   <div key={vehicle.id} className="flex items-center gap-2">
                     <Checkbox
                       id={`vehicle-${vehicle.id}`}
-                      checked={filters.vehicleIds?.includes(vehicle.id)}
+                      checked={filters.vehicleIds?.includes(vehicle.id) || false}
                       onCheckedChange={() => toggleArrayFilter('vehicleIds', vehicle.id)}
                       className="border-gray-600"
                     />
@@ -363,7 +363,7 @@ export function AdvancedSubscriptionFilters({
                   <div key={type} className="flex items-center gap-2">
                     <Checkbox
                       id={`investor-type-${type}`}
-                      checked={filters.investorTypes?.includes(type)}
+                      checked={filters.investorTypes?.includes(type) || false}
                       onCheckedChange={() => toggleArrayFilter('investorTypes', type)}
                       className="border-gray-600"
                     />
@@ -549,7 +549,7 @@ export function AdvancedSubscriptionFilters({
             <div className="flex items-center gap-2">
               <Checkbox
                 id="has-performance-fees"
-                checked={filters.hasPerformanceFees}
+                checked={filters.hasPerformanceFees || false}
                 onCheckedChange={(checked) => updateFilter('hasPerformanceFees', checked as boolean)}
                 className="border-gray-600"
               />
@@ -561,7 +561,7 @@ export function AdvancedSubscriptionFilters({
             <div className="flex items-center gap-2">
               <Checkbox
                 id="has-introducer"
-                checked={filters.hasIntroducer}
+                checked={filters.hasIntroducer || false}
                 onCheckedChange={(checked) => updateFilter('hasIntroducer', checked as boolean)}
                 className="border-gray-600"
               />
@@ -573,7 +573,7 @@ export function AdvancedSubscriptionFilters({
             <div className="flex items-center gap-2">
               <Checkbox
                 id="has-outstanding"
-                checked={filters.hasOutstanding}
+                checked={filters.hasOutstanding || false}
                 onCheckedChange={(checked) => updateFilter('hasOutstanding', checked as boolean)}
                 className="border-gray-600"
               />
@@ -585,7 +585,7 @@ export function AdvancedSubscriptionFilters({
             <div className="flex items-center gap-2">
               <Checkbox
                 id="is-overdue"
-                checked={filters.isOverdue}
+                checked={filters.isOverdue || false}
                 onCheckedChange={(checked) => updateFilter('isOverdue', checked as boolean)}
                 className="border-gray-600"
               />

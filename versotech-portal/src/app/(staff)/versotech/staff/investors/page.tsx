@@ -204,8 +204,8 @@ export default async function InvestorsPage({
   // Await searchParams (Next.js 15 requirement)
   const params = await searchParams
 
-  // Pagination setup
-  const limit = parseInt(params.limit || '20')
+  // Pagination setup - increased default limit to load more investors
+  const limit = parseInt(params.limit || '1000')  // Increased from 20 to 1000
   const page = parseInt(params.page || '1')
   const offset = (page - 1) * limit
 
@@ -503,9 +503,14 @@ function renderPage(
 
         <Card>
           <CardHeader>
-            <CardTitle>All Investors ({investorList.length})</CardTitle>
+            <CardTitle>All Investors ({meta?.pagination?.totalCount || investorList.length})</CardTitle>
             <CardDescription>
               Comprehensive investor list with sortable columns and bulk actions
+              {meta?.pagination?.totalCount && meta.pagination.totalCount > investorList.length && (
+                <span className="text-muted-foreground text-sm ml-2">
+                  (Showing {investorList.length} of {meta.pagination.totalCount})
+                </span>
+              )}
             </CardDescription>
           </CardHeader>
           <CardContent>

@@ -57,7 +57,7 @@ export function InvestorsDataTable<TData, TValue>({
     },
     initialState: {
       pagination: {
-        pageSize: 20,
+        pageSize: 50,  // Increased from 20 to 50 for better view
       },
     },
   })

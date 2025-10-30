@@ -424,8 +424,292 @@ export function SubscriptionDetailClient({
                       : '0%'}
                   </span>
                 </div>
+
+                <Separator className="bg-gray-800" />
+
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-400">Capital Calls Total</span>
+                  <span className="text-sm font-semibold text-white">
+                    {formatCurrency(subscription.capital_calls_total || 0)}
+                  </span>
+                </div>
+
+                <Separator className="bg-gray-800" />
+
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-400">Distributions Total</span>
+                  <span className="text-sm font-semibold text-green-400">
+                    {formatCurrency(subscription.distributions_total || 0)}
+                  </span>
+                </div>
+
+                {subscription.outstanding_amount != null && (
+                  <>
+                    <Separator className="bg-gray-800" />
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-400">Outstanding Amount</span>
+                      <span className="text-sm font-semibold text-yellow-400">
+                        {formatCurrency(subscription.outstanding_amount)}
+                      </span>
+                    </div>
+                  </>
+                )}
               </CardContent>
             </Card>
+
+            {/* Share Structure */}
+            {(subscription.num_shares != null || subscription.price_per_share != null || subscription.cost_per_share != null) && (
+              <Card className="bg-gray-900 border-gray-800">
+                <CardHeader>
+                  <CardTitle className="text-white">Share Structure</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {subscription.num_shares != null && (
+                    <>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-400">Number of Shares</span>
+                        <span className="text-sm font-semibold text-white">
+                          {subscription.num_shares.toLocaleString()}
+                        </span>
+                      </div>
+                      <Separator className="bg-gray-800" />
+                    </>
+                  )}
+
+                  {subscription.price_per_share != null && (
+                    <>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-400">Price Per Share</span>
+                        <span className="text-sm font-semibold text-white">
+                          {formatCurrency(subscription.price_per_share)}
+                        </span>
+                      </div>
+                      <Separator className="bg-gray-800" />
+                    </>
+                  )}
+
+                  {subscription.cost_per_share != null && (
+                    <>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-400">Cost Per Share</span>
+                        <span className="text-sm font-semibold text-white">
+                          {formatCurrency(subscription.cost_per_share)}
+                        </span>
+                      </div>
+                      <Separator className="bg-gray-800" />
+                    </>
+                  )}
+
+                  {subscription.spread_per_share != null && (
+                    <>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-400">Spread Per Share</span>
+                        <span className="text-sm font-semibold text-green-400">
+                          {formatCurrency(subscription.spread_per_share)}
+                        </span>
+                      </div>
+                      <Separator className="bg-gray-800" />
+                    </>
+                  )}
+
+                  {subscription.spread_fee_amount != null && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-400">Spread Fee Amount</span>
+                      <span className="text-sm font-semibold text-white">
+                        {formatCurrency(subscription.spread_fee_amount)}
+                      </span>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Fee Structure */}
+            {(subscription.subscription_fee_amount != null || subscription.bd_fee_amount != null || subscription.finra_fee_amount != null) && (
+              <Card className="bg-gray-900 border-gray-800">
+                <CardHeader>
+                  <CardTitle className="text-white">Fee Structure</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {subscription.subscription_fee_percent != null && (
+                    <>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-400">Subscription Fee</span>
+                        <div className="text-right">
+                          <div className="text-sm font-semibold text-white">
+                            {formatCurrency(subscription.subscription_fee_amount || 0)}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {subscription.subscription_fee_percent}%
+                          </div>
+                        </div>
+                      </div>
+                      <Separator className="bg-gray-800" />
+                    </>
+                  )}
+
+                  {subscription.bd_fee_percent != null && (
+                    <>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-400">Broker-Dealer Fee</span>
+                        <div className="text-right">
+                          <div className="text-sm font-semibold text-white">
+                            {formatCurrency(subscription.bd_fee_amount || 0)}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {subscription.bd_fee_percent}%
+                          </div>
+                        </div>
+                      </div>
+                      <Separator className="bg-gray-800" />
+                    </>
+                  )}
+
+                  {subscription.finra_fee_amount != null && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-400">FINRA Fee</span>
+                      <span className="text-sm font-semibold text-white">
+                        {formatCurrency(subscription.finra_fee_amount)}
+                      </span>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Performance Fees */}
+            {(subscription.performance_fee_tier1_percent != null || subscription.performance_fee_tier2_percent != null) && (
+              <Card className="bg-gray-900 border-gray-800">
+                <CardHeader>
+                  <CardTitle className="text-white">Performance Fees</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {subscription.performance_fee_tier1_percent != null && (
+                    <>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-400">Tier 1</span>
+                        <div className="text-right">
+                          <div className="text-sm font-semibold text-purple-400">
+                            {subscription.performance_fee_tier1_percent}%
+                          </div>
+                          {subscription.performance_fee_tier1_threshold != null && (
+                            <div className="text-xs text-gray-500">
+                              Threshold: {formatCurrency(subscription.performance_fee_tier1_threshold)}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <Separator className="bg-gray-800" />
+                    </>
+                  )}
+
+                  {subscription.performance_fee_tier2_percent != null && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-400">Tier 2</span>
+                      <div className="text-right">
+                        <div className="text-sm font-semibold text-purple-300">
+                          {subscription.performance_fee_tier2_percent}%
+                        </div>
+                        {subscription.performance_fee_tier2_threshold != null && (
+                          <div className="text-xs text-gray-500">
+                            Threshold: {formatCurrency(subscription.performance_fee_tier2_threshold)}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Opportunity & Contract */}
+            {(subscription.opportunity_name || subscription.contract_date || subscription.sourcing_contract_ref) && (
+              <Card className="bg-gray-900 border-gray-800">
+                <CardHeader>
+                  <CardTitle className="text-white">Opportunity & Contract</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {subscription.opportunity_name && (
+                    <>
+                      <div className="flex items-start gap-3">
+                        <FileText className="h-4 w-4 text-gray-400 mt-1" />
+                        <div className="flex-1">
+                          <div className="text-sm text-gray-400">Opportunity Name</div>
+                          <div className="text-sm font-medium text-white">
+                            {subscription.opportunity_name}
+                          </div>
+                        </div>
+                      </div>
+                      <Separator className="bg-gray-800" />
+                    </>
+                  )}
+
+                  {subscription.contract_date && (
+                    <>
+                      <div className="flex items-start gap-3">
+                        <Calendar className="h-4 w-4 text-gray-400 mt-1" />
+                        <div className="flex-1">
+                          <div className="text-sm text-gray-400">Contract Date</div>
+                          <div className="text-sm font-medium text-white">
+                            {formatDate(subscription.contract_date)}
+                          </div>
+                        </div>
+                      </div>
+                      <Separator className="bg-gray-800" />
+                    </>
+                  )}
+
+                  {subscription.sourcing_contract_ref && (
+                    <div className="flex items-start gap-3">
+                      <FileText className="h-4 w-4 text-gray-400 mt-1" />
+                      <div className="flex-1">
+                        <div className="text-sm text-gray-400">Sourcing Contract Reference</div>
+                        <div className="text-sm font-medium text-white font-mono">
+                          {subscription.sourcing_contract_ref}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Relationships */}
+            {(subscription.introducer_id || subscription.introduction_id) && (
+              <Card className="bg-gray-900 border-gray-800">
+                <CardHeader>
+                  <CardTitle className="text-white">Relationships</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {subscription.introducer_id && (
+                    <>
+                      <div className="flex items-start gap-3">
+                        <User className="h-4 w-4 text-gray-400 mt-1" />
+                        <div className="flex-1">
+                          <div className="text-sm text-gray-400">Introducer ID</div>
+                          <div className="text-sm font-medium text-white font-mono text-xs">
+                            {subscription.introducer_id}
+                          </div>
+                        </div>
+                      </div>
+                      <Separator className="bg-gray-800" />
+                    </>
+                  )}
+
+                  {subscription.introduction_id && (
+                    <div className="flex items-start gap-3">
+                      <User className="h-4 w-4 text-gray-400 mt-1" />
+                      <div className="flex-1">
+                        <div className="text-sm text-gray-400">Introduction ID</div>
+                        <div className="text-sm font-medium text-white font-mono text-xs">
+                          {subscription.introduction_id}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
           </div>
         </TabsContent>
 

@@ -25,7 +25,7 @@ import {
   Eye
 } from 'lucide-react'
 
-type SortField = 'vehicle_name' | 'total_commitment' | 'total_funded' | 'total_nav' | 'subscription_count' | 'investor_count' | 'moic'
+type SortField = 'vehicle_name' | 'total_commitment' | 'total_funded' | 'total_nav' | 'subscription_count' | 'investor_count' | 'moic' | 'total_fees' | 'total_capital_calls' | 'total_distributions' | 'total_outstanding' | 'total_shares'
 type SortDirection = 'asc' | 'desc'
 
 interface VehicleSummary {
@@ -102,8 +102,14 @@ export function VehicleSummaryTable({ summaries }: VehicleSummaryTableProps) {
 
   const sortedSummaries = [...summaries].sort((a, b) => {
     const multiplier = sortDirection === 'asc' ? 1 : -1
-    const aVal = a[sortField]
-    const bVal = b[sortField]
+
+    // Handle total_fees which is computed
+    const aVal = sortField === 'total_fees'
+      ? (a.total_subscription_fees + a.total_bd_fees + a.total_finra_fees + a.total_spread_fees)
+      : a[sortField]
+    const bVal = sortField === 'total_fees'
+      ? (b.total_subscription_fees + b.total_bd_fees + b.total_finra_fees + b.total_spread_fees)
+      : b[sortField]
 
     if (typeof aVal === 'string' && typeof bVal === 'string') {
       return multiplier * aVal.localeCompare(bVal)
@@ -206,6 +212,57 @@ export function VehicleSummaryTable({ summaries }: VehicleSummaryTableProps) {
                     <SortIcon field="moic" />
                   </Button>
                 </TableHead>
+                <TableHead className="text-white bg-gray-900 text-right">
+                  <Button
+                    variant="ghost"
+                    onClick={() => handleSort('total_fees')}
+                    className="hover:bg-gray-800 text-white font-semibold"
+                  >
+                    Total Fees
+                    <SortIcon field="total_fees" />
+                  </Button>
+                </TableHead>
+                <TableHead className="text-white bg-gray-900 text-right">
+                  <Button
+                    variant="ghost"
+                    onClick={() => handleSort('total_capital_calls')}
+                    className="hover:bg-gray-800 text-white font-semibold"
+                  >
+                    Capital Calls
+                    <SortIcon field="total_capital_calls" />
+                  </Button>
+                </TableHead>
+                <TableHead className="text-white bg-gray-900 text-right">
+                  <Button
+                    variant="ghost"
+                    onClick={() => handleSort('total_distributions')}
+                    className="hover:bg-gray-800 text-white font-semibold"
+                  >
+                    Distributions
+                    <SortIcon field="total_distributions" />
+                  </Button>
+                </TableHead>
+                <TableHead className="text-white bg-gray-900 text-right">
+                  <Button
+                    variant="ghost"
+                    onClick={() => handleSort('total_outstanding')}
+                    className="hover:bg-gray-800 text-white font-semibold"
+                  >
+                    Outstanding
+                    <SortIcon field="total_outstanding" />
+                  </Button>
+                </TableHead>
+                <TableHead className="text-white bg-gray-900 text-right">
+                  <Button
+                    variant="ghost"
+                    onClick={() => handleSort('total_shares')}
+                    className="hover:bg-gray-800 text-white font-semibold"
+                  >
+                    Shares
+                    <SortIcon field="total_shares" />
+                  </Button>
+                </TableHead>
+                <TableHead className="text-white bg-gray-900">Period</TableHead>
                 <TableHead className="text-white bg-gray-900">Status</TableHead>
                 <TableHead className="text-white bg-gray-900 text-center">Actions</TableHead>
               </TableRow>
@@ -213,7 +270,7 @@ export function VehicleSummaryTable({ summaries }: VehicleSummaryTableProps) {
             <TableBody>
               {sortedSummaries.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={9} className="h-24 text-center text-gray-400">
+                  <TableCell colSpan={15} className="h-24 text-center text-gray-400">
                     No vehicles found
                   </TableCell>
                 </TableRow>
@@ -261,16 +318,67 @@ export function VehicleSummaryTable({ summaries }: VehicleSummaryTableProps) {
                       <div className="font-medium text-blue-400">
                         {formatCurrency(vehicle.total_nav)}
                       </div>
-                      {vehicle.total_outstanding > 0 && (
-                        <div className="text-xs text-yellow-400">
-                          Outstanding: {formatCurrency(vehicle.total_outstanding)}
-                        </div>
-                      )}
                     </TableCell>
                     <TableCell className="text-white text-right">
                       <div className={`font-medium ${vehicle.moic >= 1 ? 'text-green-400' : 'text-red-400'}`}>
                         {formatNumber(vehicle.moic, 2)}x
                       </div>
+                    </TableCell>
+                    <TableCell className="text-white text-right">
+                      <div className="font-medium text-orange-400">
+                        {formatCurrency(
+                          vehicle.total_subscription_fees +
+                          vehicle.total_bd_fees +
+                          vehicle.total_finra_fees +
+                          vehicle.total_spread_fees
+                        )}
+                      </div>
+                      <div className="text-xs text-gray-400">
+                        Sub: {formatCurrency(vehicle.total_subscription_fees)}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-white text-right">
+                      <div className="font-medium text-red-400">
+                        {formatCurrency(vehicle.total_capital_calls)}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-white text-right">
+                      <div className="font-medium text-green-400">
+                        {formatCurrency(vehicle.total_distributions)}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-white text-right">
+                      {vehicle.total_outstanding > 0 ? (
+                        <div className="font-medium text-yellow-400">
+                          {formatCurrency(vehicle.total_outstanding)}
+                        </div>
+                      ) : (
+                        <span className="text-gray-500 text-sm">-</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-white text-right">
+                      {vehicle.total_shares > 0 ? (
+                        <div className="font-medium">
+                          {vehicle.total_shares.toLocaleString()}
+                        </div>
+                      ) : vehicle.total_units > 0 ? (
+                        <div className="font-medium">
+                          {vehicle.total_units.toLocaleString()} units
+                        </div>
+                      ) : (
+                        <span className="text-gray-500 text-sm">-</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-white">
+                      {vehicle.earliest_subscription && vehicle.latest_subscription ? (
+                        <div className="text-xs">
+                          <div>{new Date(vehicle.earliest_subscription).toLocaleDateString('en-US', { year: 'numeric', month: 'short' })}</div>
+                          <div className="text-gray-500">to</div>
+                          <div>{new Date(vehicle.latest_subscription).toLocaleDateString('en-US', { year: 'numeric', month: 'short' })}</div>
+                        </div>
+                      ) : (
+                        <span className="text-gray-500 text-sm">-</span>
+                      )}
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-1">

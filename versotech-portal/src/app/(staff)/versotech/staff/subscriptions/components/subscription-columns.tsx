@@ -50,6 +50,7 @@ export type SubscriptionRow = {
   sourcing_contract_ref: string | null
   introducer_id: string | null
   introduction_id: string | null
+  acknowledgement_notes: string | null
 
   investor?: {
     id: string
@@ -113,7 +114,10 @@ export const subscriptionColumns: ColumnDef<SubscriptionRow>[] = [
     id: 'select',
     header: ({ table }) => (
       <Checkbox
-        checked={table.getIsAllPageRowsSelected()}
+        checked={
+          table.getIsAllPageRowsSelected() ||
+          (table.getIsSomePageRowsSelected() && 'indeterminate')
+        }
         onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
         aria-label="Select all"
         className="translate-y-[2px]"
@@ -299,71 +303,248 @@ export const subscriptionColumns: ColumnDef<SubscriptionRow>[] = [
     },
   },
   {
-    id: 'share_structure',
-    header: () => <div className="text-right">Share Structure</div>,
+    accessorKey: 'num_shares',
+    header: ({ column }) => (
+      <div className="text-right">
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          className="-mr-4"
+        >
+          Num Shares
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      </div>
+    ),
     cell: ({ row }) => {
-      const subscription = row.original
-      const hasShareData = subscription.num_shares != null || subscription.price_per_share != null
-
-      if (!hasShareData) {
-        return <span className="text-muted-foreground text-sm">-</span>
-      }
-
+      const shares = row.original.num_shares
+      if (shares == null) return <span className="text-muted-foreground text-sm">-</span>
       return (
-        <div className="text-right">
-          {subscription.num_shares != null && (
-            <div className="text-sm font-semibold">
-              {subscription.num_shares.toLocaleString()} shares
-            </div>
-          )}
-          {subscription.price_per_share != null && (
-            <div className="text-xs text-muted-foreground">
-              @ {formatCurrency(subscription.price_per_share, subscription.currency)}
-            </div>
-          )}
-          {subscription.spread_per_share != null && subscription.spread_per_share > 0 && (
-            <div className="text-xs text-green-600">
-              Spread: {formatCurrency(subscription.spread_per_share, subscription.currency)}
-            </div>
-          )}
+        <div className="text-right font-semibold text-sm">
+          {shares.toLocaleString()}
         </div>
       )
     },
   },
   {
-    id: 'fees',
-    header: () => <div className="text-right">Fees</div>,
+    accessorKey: 'price_per_share',
+    header: ({ column }) => (
+      <div className="text-right">
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          className="-mr-4"
+        >
+          Price/Share
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      </div>
+    ),
     cell: ({ row }) => {
-      const subscription = row.original
-      const hasFees = subscription.subscription_fee_amount != null ||
-                      subscription.bd_fee_amount != null ||
-                      subscription.spread_fee_amount != null ||
-                      subscription.finra_fee_amount != null
-
-      if (!hasFees) {
-        return <span className="text-muted-foreground text-sm">-</span>
-      }
-
-      const totalFees = [
-        subscription.subscription_fee_amount,
-        subscription.bd_fee_amount,
-        subscription.spread_fee_amount,
-        subscription.finra_fee_amount
-      ].reduce((sum: number, fee) => sum + (fee || 0), 0)
-
+      const price = row.original.price_per_share
+      const currency = row.original.currency
+      if (price == null) return <span className="text-muted-foreground text-sm">-</span>
       return (
-        <div className="text-right">
-          <div className="text-sm font-semibold">
-            {formatCurrency(totalFees, subscription.currency)}
-          </div>
-          <div className="text-xs text-muted-foreground space-y-0.5">
-            {subscription.subscription_fee_percent != null && (
-              <div>Sub: {subscription.subscription_fee_percent.toFixed(2)}%</div>
-            )}
-            {subscription.bd_fee_percent != null && (
-              <div>BD: {subscription.bd_fee_percent.toFixed(2)}%</div>
-            )}
-          </div>
+        <div className="text-right font-semibold text-sm">
+          {formatCurrency(price, currency)}
+        </div>
+      )
+    },
+  },
+  {
+    accessorKey: 'cost_per_share',
+    header: ({ column }) => (
+      <div className="text-right">
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          className="-mr-4"
+        >
+          Cost/Share
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      </div>
+    ),
+    cell: ({ row }) => {
+      const cost = row.original.cost_per_share
+      const currency = row.original.currency
+      if (cost == null) return <span className="text-muted-foreground text-sm">-</span>
+      return (
+        <div className="text-right font-semibold text-sm">
+          {formatCurrency(cost, currency)}
+        </div>
+      )
+    },
+  },
+  {
+    accessorKey: 'spread_per_share',
+    header: ({ column }) => (
+      <div className="text-right">
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          className="-mr-4"
+        >
+          Spread/Share
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      </div>
+    ),
+    cell: ({ row }) => {
+      const spread = row.original.spread_per_share
+      const currency = row.original.currency
+      if (spread == null) return <span className="text-muted-foreground text-sm">-</span>
+      return (
+        <div className="text-right font-semibold text-sm text-green-400">
+          {formatCurrency(spread, currency)}
+        </div>
+      )
+    },
+  },
+  {
+    accessorKey: 'spread_fee_amount',
+    header: ({ column }) => (
+      <div className="text-right">
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          className="-mr-4"
+        >
+          Spread Fee
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      </div>
+    ),
+    cell: ({ row }) => {
+      const fee = row.original.spread_fee_amount
+      const currency = row.original.currency
+      if (fee == null) return <span className="text-muted-foreground text-sm">-</span>
+      return (
+        <div className="text-right font-semibold text-sm">
+          {formatCurrency(fee, currency)}
+        </div>
+      )
+    },
+  },
+  {
+    accessorKey: 'subscription_fee_percent',
+    header: ({ column }) => (
+      <div className="text-right">
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          className="-mr-4"
+        >
+          Sub Fee %
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      </div>
+    ),
+    cell: ({ row }) => {
+      const percent = row.original.subscription_fee_percent
+      if (percent == null) return <span className="text-muted-foreground text-sm">-</span>
+      return (
+        <div className="text-right font-semibold text-sm">
+          {percent.toFixed(2)}%
+        </div>
+      )
+    },
+  },
+  {
+    accessorKey: 'subscription_fee_amount',
+    header: ({ column }) => (
+      <div className="text-right">
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          className="-mr-4"
+        >
+          Sub Fee $
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      </div>
+    ),
+    cell: ({ row }) => {
+      const amount = row.original.subscription_fee_amount
+      const currency = row.original.currency
+      if (amount == null) return <span className="text-muted-foreground text-sm">-</span>
+      return (
+        <div className="text-right font-semibold text-sm">
+          {formatCurrency(amount, currency)}
+        </div>
+      )
+    },
+  },
+  {
+    accessorKey: 'bd_fee_percent',
+    header: ({ column }) => (
+      <div className="text-right">
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          className="-mr-4"
+        >
+          BD Fee %
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      </div>
+    ),
+    cell: ({ row }) => {
+      const percent = row.original.bd_fee_percent
+      if (percent == null) return <span className="text-muted-foreground text-sm">-</span>
+      return (
+        <div className="text-right font-semibold text-sm">
+          {percent.toFixed(2)}%
+        </div>
+      )
+    },
+  },
+  {
+    accessorKey: 'bd_fee_amount',
+    header: ({ column }) => (
+      <div className="text-right">
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          className="-mr-4"
+        >
+          BD Fee $
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      </div>
+    ),
+    cell: ({ row }) => {
+      const amount = row.original.bd_fee_amount
+      const currency = row.original.currency
+      if (amount == null) return <span className="text-muted-foreground text-sm">-</span>
+      return (
+        <div className="text-right font-semibold text-sm">
+          {formatCurrency(amount, currency)}
+        </div>
+      )
+    },
+  },
+  {
+    accessorKey: 'finra_fee_amount',
+    header: ({ column }) => (
+      <div className="text-right">
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          className="-mr-4"
+        >
+          FINRA Fee
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      </div>
+    ),
+    cell: ({ row }) => {
+      const amount = row.original.finra_fee_amount
+      const currency = row.original.currency
+      if (amount == null) return <span className="text-muted-foreground text-sm">-</span>
+      return (
+        <div className="text-right font-semibold text-sm">
+          {formatCurrency(amount, currency)}
         </div>
       )
     },
@@ -377,25 +558,18 @@ export const subscriptionColumns: ColumnDef<SubscriptionRow>[] = [
           onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
           className="-mr-4"
         >
-          Funded
+          Funded Amount
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       </div>
     ),
     cell: ({ row }) => {
       const funded = parseFloat(row.getValue('funded_amount'))
-      const commitment = row.original.commitment
       const currency = row.original.currency
-      const percentFunded = commitment > 0 ? (funded / commitment) * 100 : 0
 
       return (
-        <div className="text-right">
-          <div className="font-semibold text-sm">
-            {formatCurrency(funded, currency)}
-          </div>
-          <div className="text-xs text-muted-foreground">
-            {percentFunded.toFixed(0)}% of commitment
-          </div>
+        <div className="text-right font-semibold text-sm">
+          {formatCurrency(funded, currency)}
         </div>
       )
     },
@@ -451,24 +625,15 @@ export const subscriptionColumns: ColumnDef<SubscriptionRow>[] = [
     ),
     cell: ({ row }) => {
       const nav = row.original.current_nav
-      const funded = row.original.funded_amount
       const currency = row.original.currency
 
       if (nav == null) {
         return <span className="text-muted-foreground text-sm">-</span>
       }
 
-      const multiple = funded > 0 ? nav / funded : 0
-      const isPositive = multiple >= 1
-
       return (
-        <div className="text-right">
-          <div className={`font-semibold text-sm ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
-            {formatCurrency(nav, currency)}
-          </div>
-          <div className="text-xs text-muted-foreground">
-            {multiple.toFixed(2)}x MOIC
-          </div>
+        <div className="text-right font-semibold text-sm">
+          {formatCurrency(nav, currency)}
         </div>
       )
     },
@@ -519,49 +684,180 @@ export const subscriptionColumns: ColumnDef<SubscriptionRow>[] = [
     },
   },
   {
-    id: 'performance_fees',
-    header: () => <div className="text-right">Performance Fees</div>,
+    accessorKey: 'sourcing_contract_ref',
+    header: ({ column }) => (
+      <Button
+        variant="ghost"
+        onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+        className="-ml-4"
+      >
+        Sourcing Ref
+        <ArrowUpDown className="ml-2 h-4 w-4" />
+      </Button>
+    ),
     cell: ({ row }) => {
-      const subscription = row.original
-      const hasPerformanceFees = subscription.performance_fee_tier1_percent != null ||
-                                 subscription.performance_fee_tier2_percent != null
-
-      if (!hasPerformanceFees) {
-        return <span className="text-muted-foreground text-sm">-</span>
-      }
-
+      const ref = row.original.sourcing_contract_ref
+      if (!ref) return <span className="text-muted-foreground text-sm">-</span>
       return (
-        <div className="text-right text-xs">
-          {subscription.performance_fee_tier1_percent != null && (
-            <div className="text-purple-400">
-              Tier 1: {subscription.performance_fee_tier1_percent}%
-            </div>
-          )}
-          {subscription.performance_fee_tier2_percent != null && (
-            <div className="text-purple-300">
-              Tier 2: {subscription.performance_fee_tier2_percent}%
-            </div>
-          )}
+        <div className="text-sm font-mono max-w-[150px] truncate" title={ref}>
+          {ref}
+        </div>
+      )
+    },
+  },
+  {
+    id: 'introducer',
+    header: () => <div>Introducer</div>,
+    cell: ({ row }) => {
+      const introducerId = row.original.introducer_id
+      if (!introducerId) return <span className="text-muted-foreground text-sm">-</span>
+      return (
+        <div className="text-xs font-mono text-muted-foreground max-w-[100px] truncate" title={introducerId}>
+          {introducerId.substring(0, 8)}...
+        </div>
+      )
+    },
+  },
+  {
+    id: 'introduction',
+    header: () => <div>Introduction</div>,
+    cell: ({ row }) => {
+      const introductionId = row.original.introduction_id
+      if (!introductionId) return <span className="text-muted-foreground text-sm">-</span>
+      return (
+        <div className="text-xs font-mono text-muted-foreground max-w-[100px] truncate" title={introductionId}>
+          {introductionId.substring(0, 8)}...
+        </div>
+      )
+    },
+  },
+  {
+    id: 'notes',
+    header: () => <div>Notes</div>,
+    cell: ({ row }) => {
+      const notes = row.original.acknowledgement_notes
+      if (!notes) return <span className="text-muted-foreground text-sm">-</span>
+      return (
+        <div className="text-sm max-w-[200px] truncate" title={notes}>
+          {notes}
+        </div>
+      )
+    },
+  },
+  {
+    accessorKey: 'performance_fee_tier1_percent',
+    header: ({ column }) => (
+      <div className="text-right">
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          className="-mr-4"
+        >
+          Perf Tier 1 %
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      </div>
+    ),
+    cell: ({ row }) => {
+      const percent = row.original.performance_fee_tier1_percent
+      if (percent == null) return <span className="text-muted-foreground text-sm">-</span>
+      return (
+        <div className="text-right font-semibold text-sm text-purple-400">
+          {percent}%
+        </div>
+      )
+    },
+  },
+  {
+    accessorKey: 'performance_fee_tier1_threshold',
+    header: ({ column }) => (
+      <div className="text-right">
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          className="-mr-4"
+        >
+          Perf Tier 1 Threshold
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      </div>
+    ),
+    cell: ({ row }) => {
+      const threshold = row.original.performance_fee_tier1_threshold
+      const currency = row.original.currency
+      if (threshold == null) return <span className="text-muted-foreground text-sm">-</span>
+      return (
+        <div className="text-right font-semibold text-sm">
+          {formatCurrency(threshold, currency)}
+        </div>
+      )
+    },
+  },
+  {
+    accessorKey: 'performance_fee_tier2_percent',
+    header: ({ column }) => (
+      <div className="text-right">
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          className="-mr-4"
+        >
+          Perf Tier 2 %
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      </div>
+    ),
+    cell: ({ row }) => {
+      const percent = row.original.performance_fee_tier2_percent
+      if (percent == null) return <span className="text-muted-foreground text-sm">-</span>
+      return (
+        <div className="text-right font-semibold text-sm text-purple-300">
+          {percent}%
+        </div>
+      )
+    },
+  },
+  {
+    accessorKey: 'performance_fee_tier2_threshold',
+    header: ({ column }) => (
+      <div className="text-right">
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          className="-mr-4"
+        >
+          Perf Tier 2 Threshold
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      </div>
+    ),
+    cell: ({ row }) => {
+      const threshold = row.original.performance_fee_tier2_threshold
+      const currency = row.original.currency
+      if (threshold == null) return <span className="text-muted-foreground text-sm">-</span>
+      return (
+        <div className="text-right font-semibold text-sm">
+          {formatCurrency(threshold, currency)}
         </div>
       )
     },
   },
   {
     id: 'actions',
-    header: () => <div className="text-right">Actions</div>,
+    header: () => <div className="text-center">Actions</div>,
     cell: ({ row }) => {
       const subscription = row.original
 
       return (
-        <div className="text-right">
+        <div className="flex justify-center">
           <Link href={`/versotech/staff/subscriptions/${subscription.id}`}>
             <Button
               variant="outline"
-              size="sm"
-              className="bg-white text-black border-white hover:bg-gray-200"
+              size="icon"
+              className="h-8 w-8 rounded-full bg-white text-black border-white hover:bg-gray-200"
+              title="View Details"
             >
-              <Eye className="mr-2 h-4 w-4" />
-              View Details
+              <Eye className="h-4 w-4" />
             </Button>
           </Link>
         </div>

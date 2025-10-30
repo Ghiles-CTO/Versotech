@@ -63,7 +63,7 @@ export async function AppLayout({ children, brand }: AppLayoutProps) {
         </header>
 
         {/* Content Area */}
-        <main className={`flex-1 overflow-y-auto ${isStaff ? 'bg-[#0a0a0a]' : 'bg-transparent backdrop-blur-sm'}`}>
+        <main className={`flex-1 overflow-y-auto scrollbar-hide ${isStaff ? 'bg-[#0a0a0a]' : 'bg-transparent backdrop-blur-sm'}`}>
           <div className={`min-h-full ${isStaff ? '' : 'bg-white/60 backdrop-blur-sm'}`}>
             {children}
           </div>
