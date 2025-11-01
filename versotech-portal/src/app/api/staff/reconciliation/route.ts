@@ -4,7 +4,15 @@ import { NextResponse } from 'next/server'
 
 export const dynamic = 'force-dynamic'
 
-// Get all bank transactions with subscription/investor/vehicle details
+type NumericLike = number | string | null | undefined
+
+const toNumber = (value: NumericLike): number => {
+  if (value === null || value === undefined) return 0
+  if (typeof value === 'number') return value
+  const parsed = parseFloat(value)
+  return Number.isNaN(parsed) ? 0 : parsed
+}
+
 export async function GET(req: Request) {
   const profile = await requireStaffAuth()
   if (!profile) {
@@ -14,43 +22,75 @@ export async function GET(req: Request) {
   try {
     const supabase = await createClient()
 
-    // Fetch all bank transactions with related data
     const { data: transactions, error } = await supabase
       .from('bank_transactions')
       .select(`
-        *,
-        subscriptions:matched_subscription_id (
+        id,
+        account_ref,
+        amount,
+        currency,
+        value_date,
+        memo,
+        counterparty,
+        bank_reference,
+        status,
+        matched_invoice_ids,
+        match_confidence,
+        match_notes,
+        match_group_id,
+        import_batch_id,
+        created_at,
+        updated_at,
+        matches:reconciliation_matches_bank_transaction_id_fkey (
           id,
-          commitment,
-          funded_amount,
-          currency,
-          status,
-          investors (
-            id,
-            legal_name
-          ),
-          vehicles (
-            id,
-            name,
-            vehicle_type
-          )
-        ),
-        suggested_matches!suggested_matches_bank_transaction_id_fkey (
-          id,
-          subscription_id,
-          confidence,
+          invoice_id,
+          match_type,
+          matched_amount,
+          match_confidence,
           match_reason,
-          amount_difference,
-          subscriptions (
+          status,
+          approved_at,
+          approved_by,
+          invoices (
             id,
-            commitment,
-            funded_amount,
+            invoice_number,
+            total,
+            paid_amount,
+            balance_due,
+            status,
+            match_status,
             currency,
-            investors (
+            investor:investor_id (
               id,
               legal_name
             ),
-            vehicles (
+            deal:deal_id (
+              id,
+              name
+            )
+          )
+        ),
+        suggestions:suggested_matches!suggested_matches_bank_transaction_id_fkey (
+          id,
+          invoice_id,
+          confidence,
+          match_reason,
+          amount_difference,
+          created_at,
+          invoices (
+            id,
+            invoice_number,
+            total,
+            paid_amount,
+            balance_due,
+            status,
+            match_status,
+            currency,
+            investor:investor_id (
+              id,
+              legal_name
+            ),
+            deal:deal_id (
               id,
               name
             )
@@ -64,24 +104,44 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    // Calculate summary stats
+    const transactionsWithDerived = (transactions || []).map(tx => {
+      const matches = (tx.matches as any[]) || []
+      const matchedAmount = matches.reduce((sum, match) => sum + toNumber(match.matched_amount), 0)
+      const remaining = Math.max(toNumber(tx.amount) - matchedAmount, 0)
+      return {
+        ...tx,
+        matched_amount_total: matchedAmount,
+        remaining_amount: remaining,
+      }
+    })
+
+    const matchedCount = transactionsWithDerived.filter(t => t.status === 'matched').length
+    const partiallyMatchedCount = transactionsWithDerived.filter(t => t.status === 'partially_matched').length
+    const unmatchedCount = transactionsWithDerived.filter(t => t.status === 'unmatched').length
+    const totalAmount = transactionsWithDerived.reduce((sum, t) => sum + toNumber(t.amount), 0)
+    const matchedAmountTotal = transactionsWithDerived.reduce((sum, t) => sum + toNumber(t.matched_amount_total), 0)
+    const unmatchedAmountTotal = transactionsWithDerived
+      .filter(t => t.status === 'unmatched')
+      .reduce((sum, t) => sum + toNumber(t.amount), 0)
+
     const stats = {
-      total: transactions.length,
-      matched: transactions.filter(t => t.status === 'matched').length,
-      unmatched: transactions.filter(t => t.status === 'unmatched').length,
-      resolved: transactions.filter(t => t.status === 'resolved').length,
-      withDiscrepancies: transactions.filter(t => t.discrepancy_amount && t.discrepancy_amount !== 0).length,
-      totalAmount: transactions.reduce((sum, t) => sum + Number(t.amount || 0), 0),
-      matchedAmount: transactions.filter(t => t.status === 'matched').reduce((sum, t) => sum + Number(t.amount || 0), 0),
-      unmatchedAmount: transactions.filter(t => t.status === 'unmatched').reduce((sum, t) => sum + Number(t.amount || 0), 0),
-      suggestedMatchesCount: transactions.reduce((sum, t) => sum + ((t.suggested_matches as any)?.length || 0), 0)
+      total: transactionsWithDerived.length,
+      matched: matchedCount,
+      partiallyMatched: partiallyMatchedCount,
+      partially_matched: partiallyMatchedCount,
+      unmatched: unmatchedCount,
+      totalAmount,
+      matchedAmount: matchedAmountTotal,
+      unmatchedAmount: unmatchedAmountTotal,
+      suggestedMatchesCount: transactionsWithDerived.reduce((sum, t) => sum + (((t.suggestions as any[]) || []).length), 0),
+      resolved: 0,
+      withDiscrepancies: 0
     }
 
     return NextResponse.json({
-      transactions,
+      transactions: transactionsWithDerived,
       stats
     })
-
   } catch (error: any) {
     console.error('Reconciliation error:', error)
     return NextResponse.json({

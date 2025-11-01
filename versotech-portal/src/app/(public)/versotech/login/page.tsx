@@ -138,7 +138,7 @@ export default function StaffLogin() {
               <form onSubmit={handleAuth} className="space-y-5">
                 {isSignUp && (
                   <div className="space-y-2">
-                    <Label htmlFor="displayName" className="text-sm font-medium">Full Name</Label>
+                    <Label htmlFor="displayName" className="text-sm font-medium text-gray-900">Full Name</Label>
                     <Input
                       id="displayName"
                       type="text"
@@ -147,13 +147,13 @@ export default function StaffLogin() {
                       onChange={(e) => setDisplayName(e.target.value)}
                       required={isSignUp}
                       disabled={isLoading}
-                      className="h-11"
+                      className="h-11 text-gray-900 placeholder:text-gray-400"
                     />
                   </div>
                 )}
-                
+
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="text-sm font-medium">Staff Email</Label>
+                  <Label htmlFor="email" className="text-sm font-medium text-gray-900">Staff Email</Label>
                   <Input
                     id="email"
                     type="email"
@@ -162,12 +162,12 @@ export default function StaffLogin() {
                     onChange={(e) => setEmail(e.target.value)}
                     required
                     disabled={isLoading}
-                    className="h-11"
+                    className="h-11 text-gray-900 placeholder:text-gray-400"
                   />
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="password" className="text-sm font-medium">Password</Label>
+                  <Label htmlFor="password" className="text-sm font-medium text-gray-900">Password</Label>
                   <div className="relative">
                     <Input
                       id="password"
@@ -177,7 +177,7 @@ export default function StaffLogin() {
                       onChange={(e) => setPassword(e.target.value)}
                       required
                       disabled={isLoading}
-                      className="h-11 pr-10"
+                      className="h-11 pr-10 text-gray-900 placeholder:text-gray-400"
                     />
                     <Button
                       type="button"

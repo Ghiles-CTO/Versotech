@@ -73,6 +73,7 @@ export default async function DealDetailPage({
         name,
         description,
         is_default,
+        is_active,
         fee_components (
           id,
           kind,
@@ -80,8 +81,15 @@ export default async function DealDetailPage({
           rate_bps,
           flat_amount,
           frequency,
+          payment_schedule,
+          duration_periods,
+          duration_unit,
           hurdle_rate_bps,
+          has_catchup,
+          catchup_rate_bps,
           has_high_water_mark,
+          tier_threshold_multiplier,
+          base_calculation,
           notes
         )
       ),
@@ -205,9 +213,15 @@ export default async function DealDetailPage({
     return acc
   }, {})
 
+  // Filter only active fee plans
+  const dealWithActiveFeePlans = {
+    ...deal,
+    fee_plans: (deal.fee_plans || []).filter((plan: any) => plan.is_active !== false)
+  }
+
   return (
     <DealDetailClient
-        deal={deal}
+        deal={dealWithActiveFeePlans}
         inventorySummary={inventorySummary?.[0] || {
           total_units: 0,
           available_units: 0,

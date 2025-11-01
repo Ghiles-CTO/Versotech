@@ -66,6 +66,32 @@ export async function middleware(request: NextRequest) {
     // SECURE: Use getUser() which validates against Supabase Auth server
     const { data: { user }, error: userError } = await supabase.auth.getUser()
 
+    // Handle refresh token errors specifically
+    if (userError) {
+      const isRefreshTokenError =
+        userError.message?.includes('refresh') ||
+        userError.message?.includes('Invalid Refresh Token')
+
+      if (isRefreshTokenError) {
+        console.log('[auth] Refresh token error detected, clearing session:', userError.message)
+        // Clear the invalid session
+        await supabase.auth.signOut({ scope: 'local' })
+
+        // Clear cookies
+        const response = NextResponse.redirect(
+          new URL(
+            pathname.startsWith('/versotech')
+              ? '/versotech/login?error=session_expired'
+              : '/versoholdings/login?error=session_expired',
+            request.url
+          )
+        )
+        response.cookies.delete('sb-access-token')
+        response.cookies.delete('sb-refresh-token')
+        return response
+      }
+    }
+
     if (userError || !user) {
       if (isPublicRoute) {
         const response = NextResponse.next({

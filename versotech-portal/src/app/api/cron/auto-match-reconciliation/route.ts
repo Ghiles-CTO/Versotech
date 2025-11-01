@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic'
 /**
  * Cron job to automatically run reconciliation matching algorithm
  * Runs every 6 hours to find matches for unmatched bank transactions
- * Schedule: 0 */6 * * * (every 6 hours)
+ * Schedule: 0 (star-slash)6 (star) (star) (star) (every 6 hours)
  */
 export async function GET(request: NextRequest) {
   // Verify cron authorization

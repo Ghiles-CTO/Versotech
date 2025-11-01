@@ -47,7 +47,8 @@ export function useNotifications(userRole: string, userId?: string) {
 
       try {
         const response = await fetch('/api/notifications/counts', {
-          cache: 'no-store'
+          cache: 'no-store',
+          signal: AbortSignal.timeout(10000), // 10s timeout
         })
 
         if (response.status === 401) {
@@ -61,7 +62,11 @@ export function useNotifications(userRole: string, userId?: string) {
         }
 
         if (!response.ok) {
-          throw new Error(`Failed to load notification counts (${response.status})`)
+          // Don't throw on 404 or other errors during dev server restarts
+          if (!silent) {
+            console.warn(`Failed to load notification counts (${response.status})`)
+          }
+          return
         }
 
         const payload = await response.json()
@@ -69,7 +74,10 @@ export function useNotifications(userRole: string, userId?: string) {
           setCounts(payload.counts as NotificationCounts)
         }
       } catch (error) {
-        console.error('Failed to fetch notification counts:', error)
+        // Silently ignore fetch errors during polling - they happen during dev server restarts
+        if (!silent && error instanceof Error && error.name !== 'TimeoutError' && error.name !== 'AbortError') {
+          console.warn('Failed to fetch notification counts:', error.message)
+        }
       } finally {
         if (isMounted && !silent) {
           setLoading(false)

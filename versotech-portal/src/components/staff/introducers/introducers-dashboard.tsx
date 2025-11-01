@@ -1,6 +1,9 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
+import Link from 'next/link'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -21,10 +24,14 @@ import {
   Filter,
   Search,
   TrendingUp,
+  Edit,
+  UserPlus,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatCurrency, formatDate, formatBps } from '@/lib/format'
 import { useAddIntroducer } from '@/components/staff/introducers/add-introducer-context'
+import { EditIntroducerDialog } from '@/components/staff/introducers/edit-introducer-dialog'
+import { AddIntroductionDialog } from '@/components/staff/introducers/add-introduction-dialog'
 
 export type IntroducersDashboardProps = {
   summary: {
@@ -61,6 +68,7 @@ export type IntroducersDashboardProps = {
     commissionAmount: number | null
     commissionStatus: string | null
   }>
+  deals?: Array<{ id: string; name: string }>
   isDemo?: boolean
 }
 
@@ -71,9 +79,11 @@ const statusFilters = [
   { label: 'Suspended', value: 'suspended' },
 ]
 
-export function IntroducersDashboard({ summary, introducers, recentIntroductions, isDemo = false }: IntroducersDashboardProps) {
+export function IntroducersDashboard({ summary, introducers, recentIntroductions, deals = [], isDemo = false }: IntroducersDashboardProps) {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
+  const [editingIntroducer, setEditingIntroducer] = useState<IntroducersDashboardProps['introducers'][number] | null>(null)
+  const [addIntroductionOpen, setAddIntroductionOpen] = useState(false)
   const { setOpen } = useAddIntroducer()
 
   const filteredIntroducers = useMemo(() => {
@@ -96,6 +106,10 @@ export function IntroducersDashboard({ summary, introducers, recentIntroductions
           </p>
         </div>
         <div className="flex items-center gap-3">
+          <Button variant="outline" onClick={() => setAddIntroductionOpen(true)}>
+            <UserPlus className="h-4 w-4 mr-2" />
+            Record Introduction
+          </Button>
           <Button onClick={() => setOpen(true)}>
             <Plus className="h-4 w-4 mr-2" />
             Add Introducer
@@ -186,7 +200,11 @@ export function IntroducersDashboard({ summary, introducers, recentIntroductions
             <EmptyState message={search ? 'No introducers match your filters.' : 'No introducers available yet.'} />
           ) : (
             filteredIntroducers.map((introducer) => (
-              <IntroducerRow key={introducer.id} introducer={introducer} />
+              <IntroducerRow
+                key={introducer.id}
+                introducer={introducer}
+                onEdit={() => setEditingIntroducer(introducer)}
+              />
             ))
           )}
         </CardContent>
@@ -209,6 +227,19 @@ export function IntroducersDashboard({ summary, introducers, recentIntroductions
           )}
         </CardContent>
       </Card>
+
+      <EditIntroducerDialog
+        open={!!editingIntroducer}
+        onOpenChange={(open) => !open && setEditingIntroducer(null)}
+        introducer={editingIntroducer}
+      />
+
+      <AddIntroductionDialog
+        open={addIntroductionOpen}
+        onOpenChange={setAddIntroductionOpen}
+        introducers={introducers.map((i) => ({ id: i.id, legalName: i.legalName }))}
+        deals={deals}
+      />
     </div>
   )
 }
@@ -242,7 +273,13 @@ function DashboardStatCard({
   )
 }
 
-function IntroducerRow({ introducer }: { introducer: IntroducersDashboardProps['introducers'][number] }) {
+function IntroducerRow({
+  introducer,
+  onEdit,
+}: {
+  introducer: IntroducersDashboardProps['introducers'][number]
+  onEdit: () => void
+}) {
   const statusStyles: Record<string, string> = {
     active: 'bg-green-100 text-green-800',
     inactive: 'bg-gray-100 text-foreground',
@@ -250,14 +287,28 @@ function IntroducerRow({ introducer }: { introducer: IntroducersDashboardProps['
   }
 
   return (
-    <div className="border border-border rounded-lg p-4 bg-background/60">
+    <div className="border border-border rounded-lg p-4 bg-background/60 hover:bg-background/80 transition-colors">
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-        <div className="flex items-start gap-4">
+        <div className="flex items-start gap-4 flex-1">
           <div className="w-12 h-12 rounded-lg border border-primary/30 bg-primary/10 flex items-center justify-center">
             <TrendingUp className="h-6 w-6 text-primary" />
           </div>
-          <div className="space-y-1">
-            <h3 className="text-lg font-semibold text-foreground">{introducer.legalName}</h3>
+          <div className="space-y-1 flex-1">
+            <div className="flex items-center gap-2">
+              <Link href={`/versotech/staff/introducers/${introducer.id}`}>
+                <h3 className="text-lg font-semibold text-foreground hover:text-primary transition-colors cursor-pointer">
+                  {introducer.legalName}
+                </h3>
+              </Link>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onEdit}
+                className="h-7 w-7 p-0"
+              >
+                <Edit className="h-4 w-4" />
+              </Button>
+            </div>
             <div className="text-sm text-muted-foreground">
               {introducer.contactName || 'No contact'} • {introducer.email || 'No email provided'}
             </div>
@@ -299,6 +350,10 @@ function Stat({ label, value, className }: { label: string; value: React.ReactNo
 }
 
 function RecentIntroductionRow({ introduction }: { introduction: IntroducersDashboardProps['recentIntroductions'][number] }) {
+  const [status, setStatus] = useState(introduction.status)
+  const [isPending, startTransition] = useTransition()
+  const router = useRouter()
+
   const statusStyles: Record<string, string> = {
     allocated: 'border-green-200 text-green-700',
     joined: 'border-blue-200 text-blue-700',
@@ -307,14 +362,46 @@ function RecentIntroductionRow({ introduction }: { introduction: IntroducersDash
     inactive: 'border-gray-200 text-gray-700',
   }
 
+  const handleStatusChange = (newStatus: string) => {
+    startTransition(async () => {
+      try {
+        const response = await fetch(`/api/staff/introductions/${introduction.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: newStatus }),
+        })
+
+        if (!response.ok) {
+          toast.error('Failed to update introduction status')
+          return
+        }
+
+        setStatus(newStatus)
+        toast.success('Introduction status updated')
+        router.refresh()
+      } catch (err) {
+        toast.error('Failed to update introduction status')
+      }
+    })
+  }
+
   return (
     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border border-border rounded-lg p-4">
-      <div className="space-y-1">
-        <div className="flex items-center gap-2">
+      <div className="space-y-1 flex-1">
+        <div className="flex items-center gap-2 flex-wrap">
           <h4 className="text-sm font-semibold text-foreground">{introduction.prospectEmail}</h4>
-          <Badge variant="outline" className={cn('capitalize', statusStyles[introduction.status] ?? 'border-gray-200 text-foreground')}>
-            {introduction.status}
-          </Badge>
+          <Select value={status} onValueChange={handleStatusChange} disabled={isPending}>
+            <SelectTrigger className={cn('w-32 h-7 text-xs capitalize', statusStyles[status] ?? 'border-gray-200 text-foreground')}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="invited">Invited</SelectItem>
+              <SelectItem value="joined">Joined</SelectItem>
+              <SelectItem value="allocated">Allocated</SelectItem>
+              <SelectItem value="lost">Lost</SelectItem>
+              <SelectItem value="inactive">Inactive</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         <div className="text-sm text-muted-foreground">
           {introduction.introducerName} • {introduction.dealName}

@@ -22,47 +22,73 @@ export default async function TransactionDetailPage({ params }: PageProps) {
   const { data: transaction, error } = await supabase
     .from('bank_transactions')
     .select(`
-      *,
-      subscriptions:matched_subscription_id (
+      id,
+      account_ref,
+      amount,
+      currency,
+      value_date,
+      memo,
+      counterparty,
+      bank_reference,
+      status,
+      match_confidence,
+      match_notes,
+      matched_invoice_ids,
+      import_batch_id,
+      created_at,
+      updated_at,
+      matches:reconciliation_matches_bank_transaction_id_fkey (
         id,
-        commitment,
-        funded_amount,
-        currency,
+        invoice_id,
+        match_type,
+        matched_amount,
+        match_confidence,
+        match_reason,
         status,
-        subscription_number,
-        effective_date,
-        investors (
+        approved_at,
+        approved_by,
+        invoices (
           id,
-          legal_name
-        ),
-        vehicles (
-          id,
-          name,
-          vehicle_type
+          invoice_number,
+          total,
+          paid_amount,
+          balance_due,
+          status,
+          match_status,
+          currency,
+          investor:investor_id (
+            id,
+            legal_name
+          ),
+          deal:deal_id (
+            id,
+            name
+          )
         )
       ),
-      suggested_matches!suggested_matches_bank_transaction_id_fkey (
+      suggestions:suggested_matches!suggested_matches_bank_transaction_id_fkey (
         id,
-        subscription_id,
+        invoice_id,
         confidence,
         match_reason,
         amount_difference,
         created_at,
-        subscriptions (
+        invoices (
           id,
-          commitment,
-          funded_amount,
-          currency,
+          invoice_number,
+          total,
+          paid_amount,
+          balance_due,
           status,
-          subscription_number,
-          investors (
+          match_status,
+          currency,
+          investor:investor_id (
             id,
             legal_name
           ),
-          vehicles (
+          deal:deal_id (
             id,
-            name,
-            vehicle_type
+            name
           )
         )
       )
@@ -74,34 +100,37 @@ export default async function TransactionDetailPage({ params }: PageProps) {
     notFound()
   }
 
-  // Fetch all active subscriptions for manual matching
-  const { data: allSubscriptions } = await supabase
-    .from('subscriptions')
+  // Fetch open invoices for manual matching
+  const { data: openInvoices } = await supabase
+    .from('invoices')
     .select(`
       id,
-      commitment,
-      funded_amount,
-      currency,
+      invoice_number,
+      total,
+      paid_amount,
+      balance_due,
       status,
-      subscription_number,
-      investors (
+      match_status,
+      currency,
+      due_date,
+      investor:investor_id (
         id,
         legal_name
       ),
-      vehicles (
+      deal:deal_id (
         id,
-        name,
-        vehicle_type
+        name
       )
     `)
-    .in('status', ['active', 'committed'])
-    .order('subscription_number', { ascending: false })
+    .in('status', ['sent', 'partially_paid', 'overdue'])
+    .gt('balance_due', 0)
+    .order('due_date', { ascending: true })
 
   return (
     <div className="p-6">
       <TransactionDetailClient
         transaction={transaction}
-        allSubscriptions={allSubscriptions || []}
+        openInvoices={openInvoices || []}
         staffProfile={profile}
       />
     </div>

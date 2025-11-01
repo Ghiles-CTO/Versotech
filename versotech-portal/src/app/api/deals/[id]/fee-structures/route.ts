@@ -3,6 +3,7 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { z } from 'zod'
 import { auditLogger, AuditActions, AuditEntities } from '@/lib/audit'
 import { marked } from 'marked'
+import { syncTermSheetToFeePlan } from '@/lib/fees/term-sheet-sync'
 
 const termSheetFieldsSchema = z.object({
   term_sheet_date: z.string().optional().nullable(),
@@ -203,6 +204,20 @@ export async function POST(
     }
   })
 
+  // If term sheet is published, sync to fee plan
+  if (data.status === 'published') {
+    const syncResult = await syncTermSheetToFeePlan(
+      serviceSupabase,
+      data,
+      dealId,
+      user.id
+    );
+
+    if (!syncResult.success) {
+      console.warn('Failed to sync term sheet to fee plan:', syncResult.error);
+    }
+  }
+
   return NextResponse.json({ term_sheet: data })
 }
 
@@ -311,6 +326,20 @@ export async function PATCH(
       version: data.version
     }
   })
+
+  // If term sheet is published, sync to fee plan
+  if (data.status === 'published') {
+    const syncResult = await syncTermSheetToFeePlan(
+      serviceSupabase,
+      data,
+      dealId,
+      user.id
+    );
+
+    if (!syncResult.success) {
+      console.warn('Failed to sync term sheet to fee plan:', syncResult.error);
+    }
+  }
 
   return NextResponse.json({ term_sheet: data })
 }

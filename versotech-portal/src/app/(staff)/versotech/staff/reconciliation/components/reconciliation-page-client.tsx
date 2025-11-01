@@ -5,17 +5,14 @@ import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
 import {
   Upload,
   RefreshCw,
   Search,
-  Filter,
   CheckCircle,
   AlertCircle,
   Clock,
-  Activity,
-  DollarSign
+  Activity
 } from 'lucide-react'
 import { TransactionsDataTable } from './transactions-data-table'
 import { transactionColumns, BankTransactionRow } from './transaction-columns'
@@ -79,14 +76,35 @@ export function ReconciliationPageClient() {
     if (quickSearch) {
       const search = quickSearch.toLowerCase()
       result = result.filter(txn => {
+        const matchTerms = (txn.matches || []).flatMap(match => {
+          const invoice = match.invoices
+          return [
+            invoice?.invoice_number,
+            invoice?.investor?.legal_name,
+            invoice?.deal?.name
+          ]
+        })
+        const suggestionTerms = (txn.suggestions || []).flatMap(suggestion => {
+          const invoice = suggestion.invoices
+          return [
+            invoice?.invoice_number,
+            invoice?.investor?.legal_name,
+            invoice?.deal?.name
+          ]
+        })
+
         const searchable = [
           txn.counterparty,
           txn.memo,
           txn.bank_reference,
           txn.account_ref,
-          txn.subscriptions?.investors?.legal_name,
-          txn.subscriptions?.vehicles?.name,
-        ].filter(Boolean).join(' ').toLowerCase()
+          ...matchTerms,
+          ...suggestionTerms
+        ]
+          .filter(Boolean)
+          .join(' ')
+          .toLowerCase()
+
         return searchable.includes(search)
       })
     }
@@ -119,6 +137,14 @@ export function ReconciliationPageClient() {
   }
 
   const matchRate = stats?.total > 0 ? Math.round((stats.matched / stats.total) * 100) : 0
+  const partialRemainingAmount = rawData
+    .filter(txn => txn.status === 'partially_matched')
+    .reduce((sum, txn) => {
+      const remaining = typeof txn.remaining_amount === 'number'
+        ? txn.remaining_amount
+        : Math.max((txn.amount || 0) - (txn.matched_amount_total || 0), 0)
+      return sum + remaining
+    }, 0)
 
   return (
     <div className="space-y-6">
@@ -127,7 +153,7 @@ export function ReconciliationPageClient() {
         <div>
           <h1 className="text-2xl font-bold text-foreground">Bank Reconciliation</h1>
           <p className="text-muted-foreground mt-1">
-            Import bank transactions and match with investor subscriptions
+            Import bank transactions and allocate payments to investor invoices
           </p>
         </div>
         <div className="flex gap-2">
@@ -179,14 +205,14 @@ export function ReconciliationPageClient() {
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <Clock className="h-4 w-4" />
-              Unmatched
+              <AlertCircle className="h-4 w-4" />
+              Partial
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-amber-200">{stats?.unmatched || 0}</div>
+            <div className="text-2xl font-bold text-amber-200">{stats?.partiallyMatched || stats?.partially_matched || 0}</div>
             <div className="text-sm text-muted-foreground mt-1">
-              {formatCurrency(stats?.unmatchedAmount || 0)}
+              {formatCurrency(partialRemainingAmount || 0)}
             </div>
           </CardContent>
         </Card>
@@ -194,13 +220,15 @@ export function ReconciliationPageClient() {
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <AlertCircle className="h-4 w-4" />
-              With Discrepancies
+              <Clock className="h-4 w-4" />
+              Unmatched
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-rose-200">{stats?.withDiscrepancies || 0}</div>
-            <div className="text-sm text-muted-foreground mt-1">Need resolution</div>
+            <div className="text-2xl font-bold text-rose-200">{stats?.unmatched || 0}</div>
+            <div className="text-sm text-muted-foreground mt-1">
+              {formatCurrency(stats?.unmatchedAmount || 0)}
+            </div>
           </CardContent>
         </Card>
 
@@ -237,7 +265,7 @@ export function ReconciliationPageClient() {
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search by counterparty, investor, vehicle, reference..."
+                placeholder="Search by counterparty, invoice, investor, reference..."
                 value={quickSearch}
                 onChange={(e) => setQuickSearch(e.target.value)}
                 className="pl-10"
@@ -259,18 +287,18 @@ export function ReconciliationPageClient() {
                 Unmatched
               </Button>
               <Button
+                variant={statusFilter === 'partially_matched' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setStatusFilter('partially_matched')}
+              >
+                Partial
+              </Button>
+              <Button
                 variant={statusFilter === 'matched' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setStatusFilter('matched')}
               >
                 Matched
-              </Button>
-              <Button
-                variant={statusFilter === 'resolved' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setStatusFilter('resolved')}
-              >
-                Resolved
               </Button>
             </div>
           </div>

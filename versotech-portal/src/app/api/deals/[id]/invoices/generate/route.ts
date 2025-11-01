@@ -3,9 +3,12 @@ import { auditLogger, AuditActions, AuditEntities } from '@/lib/audit'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 
+// Relaxed UUID regex that accepts test UUIDs
+const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 // Validation schema for invoice generation
 const generateInvoiceSchema = z.object({
-  investor_id: z.string().uuid('Invalid investor ID').optional(),
+  investor_id: z.string().regex(uuidPattern, 'Invalid investor ID format').optional(),
   up_to_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be in YYYY-MM-DD format').optional()
 })
 

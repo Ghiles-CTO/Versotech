@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { getAuthenticatedUser, isStaffUser } from '@/lib/api-auth'
 import { auditLogger, AuditActions, AuditEntities } from '@/lib/audit'
+import { calculateSubscriptionFeeEvents, createFeeEvents } from '@/lib/fees/subscription-fee-calculator'
 
 const updateSubscriptionSchema = z.object({
   commitment: z.number().positive('Commitment must be positive').optional(),
@@ -94,7 +95,7 @@ export async function PATCH(
     // Verify subscription exists and belongs to investor
     const { data: existing, error: fetchError } = await supabase
       .from('subscriptions')
-      .select('id, subscription_number, vehicle_id, investor_id')
+      .select('id, subscription_number, vehicle_id, investor_id, status')
       .eq('id', subscriptionId)
       .eq('investor_id', investorId)
       .single()
@@ -144,6 +145,44 @@ export async function PATCH(
         .eq('investor_id', existing.investor_id)
     }
 
+    // AUTO-CALCULATE FEE EVENTS when subscription becomes 'committed'
+    let feeEventsCreated = false
+    if (updates.status === 'committed' && existing.status !== 'committed') {
+      console.log(`[Subscription PATCH] Auto-calculating fee events for subscription ${subscriptionId}`)
+
+      // Check if fee events already exist
+      const { data: existingFeeEvents } = await supabase
+        .from('fee_events')
+        .select('id')
+        .eq('allocation_id', subscriptionId)
+        .limit(1)
+
+      if (!existingFeeEvents || existingFeeEvents.length === 0) {
+        // Calculate fee events from subscription
+        const calculationResult = await calculateSubscriptionFeeEvents(supabase, subscriptionId)
+
+        if (calculationResult.success && calculationResult.feeEvents && calculationResult.feeEvents.length > 0) {
+          // Create fee events in database
+          const creationResult = await createFeeEvents(
+            supabase,
+            subscriptionId,
+            existing.investor_id,
+            null, // subscriptions don't have deal_id, only vehicle_id
+            calculationResult.feeEvents
+          )
+
+          if (creationResult.success) {
+            feeEventsCreated = true
+            console.log(`[Subscription PATCH] Created ${creationResult.feeEventIds?.length || 0} fee events`)
+          } else {
+            console.error('[Subscription PATCH] Failed to create fee events:', creationResult.error)
+          }
+        }
+      } else {
+        console.log(`[Subscription PATCH] Fee events already exist for subscription ${subscriptionId}`)
+      }
+    }
+
     // Audit log
     await auditLogger.log({
       actor_user_id: user.id,
@@ -152,13 +191,15 @@ export async function PATCH(
       entity_id: subscriptionId,
       metadata: {
         updates,
-        subscription_number: existing.subscription_number
+        subscription_number: existing.subscription_number,
+        fee_events_created: feeEventsCreated
       }
     })
 
     return NextResponse.json({
       subscription: updated,
-      message: `Updated subscription #${existing.subscription_number}`
+      message: `Updated subscription #${existing.subscription_number}`,
+      fee_events_created: feeEventsCreated
     })
   } catch (error) {
     if (error instanceof z.ZodError) {

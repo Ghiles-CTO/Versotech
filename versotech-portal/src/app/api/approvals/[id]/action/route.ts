@@ -157,6 +157,106 @@ async function executeApprovalActions(
           return { success: false, error: 'Failed to approve commitment' }
         }
 
+        // Auto-create subscription with fees from deal's fee plan
+        try {
+          // Fetch commitment details
+          const { data: commitment } = await supabase
+            .from('deal_commitments')
+            .select('*, deal:deals(id, vehicle_id)')
+            .eq('id', entityId)
+            .single()
+
+          if (commitment && commitment.deal?.vehicle_id) {
+            // Fetch default fee plan for this deal
+            const { data: feePlan } = await supabase
+              .from('fee_plans')
+              .select('*, fee_components(*)')
+              .eq('deal_id', commitment.deal_id)
+              .eq('is_default', true)
+              .single()
+
+            // Prepare subscription data with fees from fee plan
+            const subscriptionData: any = {
+              investor_id: commitment.investor_id,
+              vehicle_id: commitment.deal.vehicle_id,
+              deal_id: commitment.deal_id,
+              commitment: commitment.requested_amount,
+              status: 'pending',
+              subscription_date: new Date().toISOString(),
+              fee_plan_id: feePlan?.id || null
+            }
+
+            // Map fee components to subscription fields
+            if (feePlan?.fee_components) {
+              for (const component of feePlan.fee_components) {
+                const ratePercent = component.rate_bps ? component.rate_bps / 10000 : null
+
+                switch (component.kind) {
+                  case 'subscription':
+                    subscriptionData.subscription_fee_percent = ratePercent
+                    if (component.flat_amount) {
+                      subscriptionData.subscription_fee_amount = component.flat_amount
+                    }
+                    break
+                  case 'management':
+                    subscriptionData.management_fee_percent = ratePercent
+                    if (component.flat_amount) {
+                      subscriptionData.management_fee_amount = component.flat_amount
+                    }
+                    // Set frequency from component
+                    subscriptionData.management_fee_frequency = component.frequency || 'quarterly'
+                    break
+                  case 'performance':
+                    subscriptionData.performance_fee_tier1_percent = ratePercent
+                    if (component.tier_threshold_multiplier) {
+                      subscriptionData.performance_fee_tier1_threshold = component.tier_threshold_multiplier
+                    }
+                    // Check for tier 2 (next_tier_component_id)
+                    if (component.next_tier_component_id) {
+                      const tier2 = feePlan.fee_components.find(
+                        (c: any) => c.id === component.next_tier_component_id
+                      )
+                      if (tier2) {
+                        subscriptionData.performance_fee_tier2_percent = tier2.rate_bps ? tier2.rate_bps / 10000 : null
+                        subscriptionData.performance_fee_tier2_threshold = tier2.tier_threshold_multiplier
+                      }
+                    }
+                    break
+                  case 'spread_markup':
+                    if (component.flat_amount) {
+                      subscriptionData.spread_per_share = component.flat_amount
+                    }
+                    break
+                  case 'bd_fee':
+                    subscriptionData.bd_fee_percent = ratePercent
+                    if (component.flat_amount) {
+                      subscriptionData.bd_fee_amount = component.flat_amount
+                    }
+                    break
+                  case 'finra_fee':
+                    if (component.flat_amount) {
+                      subscriptionData.finra_fee_amount = component.flat_amount
+                    }
+                    break
+                }
+              }
+            }
+
+            // Create subscription
+            const { error: subscriptionError } = await supabase
+              .from('subscriptions')
+              .insert(subscriptionData)
+
+            if (subscriptionError) {
+              console.error('Error creating subscription:', subscriptionError)
+              // Don't fail the approval, just log
+            }
+          }
+        } catch (error) {
+          console.error('Error auto-creating subscription:', error)
+          // Don't fail the approval
+        }
+
         // Optionally create reservation or allocation here
         // This would call the inventory reservation function
         break

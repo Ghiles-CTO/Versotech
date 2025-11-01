@@ -24,7 +24,7 @@ export async function GET(
 
     const { id: dealId } = await params
 
-    // Fetch fee plans with components
+    // Fetch fee plans with components (only active plans)
     const { data: feePlans, error } = await supabase
       .from('fee_plans')
       .select(`
@@ -42,6 +42,7 @@ export async function GET(
         )
       `)
       .eq('deal_id', dealId)
+      .eq('is_active', true)
       .order('is_default', { ascending: false })
       .order('created_at', { ascending: true })
 
@@ -104,7 +105,9 @@ export async function POST(
         deal_id: dealId,
         name: validatedData.name,
         description: validatedData.description,
-        is_default: validatedData.is_default
+        is_default: validatedData.is_default,
+        is_active: true,
+        created_by: user.id
       })
       .select()
       .single()

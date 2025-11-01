@@ -220,12 +220,22 @@ export default async function IntroducersPage() {
     }
   )
 
+  // Fetch deals for introduction dialog
+  const { data: dealsData } = await serviceSupabase
+    .from('deals')
+    .select('id, name')
+    .in('status', ['draft', 'open', 'allocation_pending'])
+    .order('name', { ascending: true })
+
+  const deals = (dealsData ?? []).map((d) => ({ id: d.id, name: d.name || 'Untitled Deal' }))
+
   return (
     <AddIntroducerProvider>
         <IntroducersDashboard
           summary={summary}
           introducers={introducers}
           recentIntroductions={recentIntroductions}
+          deals={deals}
           isDemo={false}
         />
         <AddIntroducerDialog />

@@ -77,8 +77,7 @@ export async function GET(request: Request) {
           role,
           invited_at,
           accepted_at
-        ),
-        _inventory_summary:fn_deal_inventory_summary(id)
+        )
       `)
 
     // Apply filters

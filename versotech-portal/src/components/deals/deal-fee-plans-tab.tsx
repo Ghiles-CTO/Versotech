@@ -1,11 +1,12 @@
 'use client'
 
+import { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Plus, DollarSign, Star } from 'lucide-react'
-import { CreateFeePlanModal } from './create-fee-plan-modal'
-import { AddFeeComponentModal } from './add-fee-component-modal'
+import { Plus, DollarSign, Star, Edit, Trash2 } from 'lucide-react'
+import FeePlanEditModal from '@/components/fees/FeePlanEditModal'
+import { useRouter } from 'next/navigation'
 
 interface DealFeePlansTabProps {
   dealId: string
@@ -13,6 +14,10 @@ interface DealFeePlansTabProps {
 }
 
 export function DealFeePlansTab({ dealId, feePlans }: DealFeePlansTabProps) {
+  const router = useRouter()
+  const [modalOpen, setModalOpen] = useState(false)
+  const [selectedPlan, setSelectedPlan] = useState<any>(null)
+
   const feeKindLabels: Record<string, string> = {
     subscription: 'Subscription Fee',
     management: 'Management Fee',
@@ -20,6 +25,32 @@ export function DealFeePlansTab({ dealId, feePlans }: DealFeePlansTabProps) {
     spread_markup: 'Spread Markup',
     flat: 'Flat Fee',
     other: 'Other'
+  }
+
+  const handleCreateNew = () => {
+    setSelectedPlan(null)
+    setModalOpen(true)
+  }
+
+  const handleEdit = (plan: any) => {
+    // Transform fee_components to components for the modal
+    const normalizedPlan = {
+      ...plan,
+      components: plan.fee_components || []
+    }
+    setSelectedPlan(normalizedPlan)
+    setModalOpen(true)
+  }
+
+  const handleModalSuccess = () => {
+    setModalOpen(false)
+    setSelectedPlan(null)
+    router.refresh()
+  }
+
+  const handleModalClose = () => {
+    setModalOpen(false)
+    setSelectedPlan(null)
   }
 
   return (
@@ -34,7 +65,10 @@ export function DealFeePlansTab({ dealId, feePlans }: DealFeePlansTabProps) {
               </CardTitle>
               <CardDescription>Configure fee structures for investors</CardDescription>
             </div>
-            <CreateFeePlanModal dealId={dealId} />
+            <Button onClick={handleCreateNew} className="gap-2">
+              <Plus className="h-4 w-4" />
+              Create Fee Plan
+            </Button>
           </div>
         </CardHeader>
         <CardContent>
@@ -48,7 +82,7 @@ export function DealFeePlansTab({ dealId, feePlans }: DealFeePlansTabProps) {
                 <Card key={plan.id} className="border border-white/10 bg-white/5">
                   <CardHeader>
                     <div className="flex items-start justify-between">
-                      <div>
+                      <div className="flex-1">
                         <CardTitle className="text-lg text-foreground flex items-center gap-2">
                           {plan.name}
                           {plan.is_default && (
@@ -59,6 +93,14 @@ export function DealFeePlansTab({ dealId, feePlans }: DealFeePlansTabProps) {
                           <CardDescription className="mt-1">{plan.description}</CardDescription>
                         )}
                       </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEdit(plan)}
+                        className="text-blue-400 hover:text-blue-300"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-3">
@@ -73,16 +115,25 @@ export function DealFeePlansTab({ dealId, feePlans }: DealFeePlansTabProps) {
                               {feeKindLabels[component.kind]}
                             </span>
                             <Badge variant="outline" className="border-white/20 text-muted-foreground">
-                              {component.rate_bps ? `${component.rate_bps / 100}%` : 
+                              {component.rate_bps ? `${component.rate_bps / 100}%` :
                                component.flat_amount ? `$${component.flat_amount}` : '—'}
                             </Badge>
                           </div>
                         ))}
                       </div>
                     ) : (
-                      <p className="text-sm text-muted-foreground mb-3">No components added</p>
+                      <div className="text-center py-4">
+                        <p className="text-sm text-muted-foreground mb-2">No components added yet</p>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEdit(plan)}
+                          className="text-xs"
+                        >
+                          Add Components
+                        </Button>
+                      </div>
                     )}
-                    <AddFeeComponentModal dealId={dealId} feePlanId={plan.id} />
                   </CardContent>
                 </Card>
               ))}
@@ -90,6 +141,15 @@ export function DealFeePlansTab({ dealId, feePlans }: DealFeePlansTabProps) {
           )}
         </CardContent>
       </Card>
+
+      {/* Fee Plan Edit Modal */}
+      <FeePlanEditModal
+        open={modalOpen}
+        onClose={handleModalClose}
+        onSuccess={handleModalSuccess}
+        feePlan={selectedPlan}
+        dealId={dealId}
+      />
     </div>
   )
 }

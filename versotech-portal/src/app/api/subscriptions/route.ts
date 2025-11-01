@@ -1,6 +1,7 @@
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { requireStaffAuth } from '@/lib/auth'
 import { NextRequest, NextResponse } from 'next/server'
+import { calculateSubscriptionFeeEvents, createFeeEvents } from '@/lib/fees/subscription-fee-calculator'
 
 export const dynamic = 'force-dynamic'
 
@@ -11,6 +12,7 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url)
     const vehicleId = searchParams.get('vehicle')
+    const investorId = searchParams.get('investor_id')
     const status = searchParams.get('status')
     const search = searchParams.get('q')
     // Default to fetching ALL subscriptions (no pagination by default)
@@ -47,6 +49,10 @@ export async function GET(request: NextRequest) {
     // Apply filters
     if (vehicleId) {
       query = query.eq('vehicle_id', vehicleId)
+    }
+
+    if (investorId) {
+      query = query.eq('investor_id', investorId)
     }
 
     if (status) {
@@ -114,6 +120,7 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json({
+      data: subscriptions || [],
       subscriptions: subscriptions || [],
       summary,
       pagination: limit ? {
@@ -137,6 +144,7 @@ export async function PATCH(request: NextRequest) {
   try {
     await requireStaffAuth()
     const supabase = await createClient()
+    const serviceSupabase = createServiceClient()
 
     const body = await request.json()
     const { subscription_ids, updates } = body
@@ -167,6 +175,20 @@ export async function PATCH(request: NextRequest) {
       )
     }
 
+    // If status is being changed to 'committed', fetch subscriptions to check old status
+    let subsToAutoCalculateFees: string[] = []
+    if (updates.status === 'committed') {
+      const { data: existingSubs } = await serviceSupabase
+        .from('subscriptions')
+        .select('id, status')
+        .in('id', subscription_ids)
+
+      // Only auto-calculate fees for subscriptions that are NOT already committed
+      subsToAutoCalculateFees = (existingSubs || [])
+        .filter((sub) => sub.status !== 'committed')
+        .map((sub) => sub.id)
+    }
+
     const { error } = await supabase
       .from('subscriptions')
       .update({
@@ -183,10 +205,55 @@ export async function PATCH(request: NextRequest) {
       )
     }
 
+    // AUTO-CALCULATE FEE EVENTS for subscriptions that became 'committed'
+    let feeEventsCreatedCount = 0
+    if (subsToAutoCalculateFees.length > 0) {
+      console.log(`[Subscriptions API] Auto-calculating fee events for ${subsToAutoCalculateFees.length} subscription(s)`)
+
+      for (const subId of subsToAutoCalculateFees) {
+        // Check if fee events already exist
+        const { data: existingFeeEvents } = await serviceSupabase
+          .from('fee_events')
+          .select('id')
+          .eq('allocation_id', subId)
+          .limit(1)
+
+        if (!existingFeeEvents || existingFeeEvents.length === 0) {
+          // Get subscription details
+          const { data: sub } = await serviceSupabase
+            .from('subscriptions')
+            .select('investor_id, vehicle_id')
+            .eq('id', subId)
+            .single()
+
+          if (sub) {
+            // Calculate fee events
+            const calculationResult = await calculateSubscriptionFeeEvents(serviceSupabase, subId)
+
+            if (calculationResult.success && calculationResult.feeEvents && calculationResult.feeEvents.length > 0) {
+              // Create fee events (subscriptions don't have deal_id)
+              const creationResult = await createFeeEvents(
+                serviceSupabase,
+                subId,
+                sub.investor_id,
+                null, // subscriptions are linked to vehicles, not deals
+                calculationResult.feeEvents
+              )
+
+              if (creationResult.success) {
+                feeEventsCreatedCount++
+              }
+            }
+          }
+        }
+      }
+    }
+
     return NextResponse.json({
       success: true,
       message: `Successfully updated ${subscription_ids.length} subscription(s)`,
       updated_count: subscription_ids.length,
+      fee_events_created_for: feeEventsCreatedCount,
     })
   } catch (error) {
     console.error('[Subscriptions API] PATCH exception:', error)
