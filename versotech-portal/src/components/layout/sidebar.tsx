@@ -220,12 +220,6 @@ const staffNavItems: SidebarItem[] = [
     description: 'Bank reconciliation and payments'
   },
   {
-    name: 'Doc Automation',
-    href: '/versotech/staff/documents/automation',
-    icon: Package,
-    description: 'Document templates and automation'
-  },
-  {
     name: 'Audit',
     href: '/versotech/staff/audit',
     icon: Shield,
@@ -298,8 +292,8 @@ export function Sidebar({ brand, userProfile }: SidebarProps) {
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white border border-slate-200 shadow-sm overflow-hidden">
                 <Image
-                  src="/verso-logo.jpg"
-                  alt="VERSO Logo"
+                  src={brand === 'versotech' ? '/versotech-logo.jpg' : '/versoholdings-logo.jpg'}
+                  alt={brand === 'versotech' ? 'VERSO Tech Logo' : 'VERSO Holdings Logo'}
                   width={32}
                   height={32}
                   className="object-contain w-full h-full"
@@ -317,8 +311,8 @@ export function Sidebar({ brand, userProfile }: SidebarProps) {
           {collapsed && (
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white border border-slate-200 shadow-sm overflow-hidden mx-auto">
               <Image
-                src="/verso-logo.jpg"
-                alt="VERSO Logo"
+                src={brand === 'versotech' ? '/versotech-logo.jpg' : '/versoholdings-logo.jpg'}
+                alt={brand === 'versotech' ? 'VERSO Tech Logo' : 'VERSO Holdings Logo'}
                 width={24}
                 height={24}
                 className="object-contain w-full h-full"

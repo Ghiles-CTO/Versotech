@@ -224,19 +224,6 @@ async function getPortfolioData(investorIds: string[]): Promise<PortfolioData> {
   }
 }
 
-function getEffectiveStatus(deal: { status: string; close_at: string | null }): string {
-  if (deal.status === 'closed' || deal.status === 'cancelled') {
-    return deal.status
-  }
-
-  // Auto-close deals that are past their close date
-  if (deal.close_at && new Date(deal.close_at) < new Date()) {
-    return 'closed'
-  }
-
-  return deal.status
-}
-
 async function getFeaturedDeals(userId: string | null): Promise<FeaturedDeal[]> {
   if (!userId) {
     return []
@@ -244,6 +231,8 @@ async function getFeaturedDeals(userId: string | null): Promise<FeaturedDeal[]> 
 
   try {
     const supabase = createServiceClient()
+    const now = new Date().toISOString()
+
     const { data, error } = await supabase
       .from('deals')
       .select(`
@@ -263,20 +252,17 @@ async function getFeaturedDeals(userId: string | null): Promise<FeaturedDeal[]> 
         deal_memberships!inner ( user_id )
       `)
       .eq('deal_memberships.user_id', userId)
-      .in('status', ['open', 'allocation_pending'])
-      .order('status', { ascending: true })
+      .eq('status', 'open')
+      .or(`close_at.is.null,close_at.gte.${now}`)
       .order('close_at', { ascending: true, nullsFirst: false })
+      .limit(3)
 
     if (error) {
       console.error('[Investor Dashboard] Featured deals error:', error.message)
       return []
     }
 
-    // Filter by effective status and limit to 3
-    const deals = (data ?? []) as unknown as FeaturedDeal[]
-    const effectiveOpenDeals = deals.filter(deal => getEffectiveStatus(deal) === 'open')
-    
-    return effectiveOpenDeals.slice(0, 3)
+    return (data ?? []) as unknown as FeaturedDeal[]
   } catch (error) {
     console.error('[Investor Dashboard] Featured deals exception:', error)
     return []
@@ -571,9 +557,9 @@ function buildUpcomingHighlights(deals: FeaturedDeal[], tasks: DashboardTask[]):
   const now = new Date()
   now.setHours(0, 0, 0, 0) // Start of today
 
-  // Filter and sort deals that close in the future
+  // Deals are already filtered server-side to only include future closing dates
   const nextDeal = deals
-    .filter(deal => deal.close_at && new Date(deal.close_at) >= now)
+    .filter(deal => deal.close_at)
     .sort((a, b) => new Date(a.close_at ?? 0).getTime() - new Date(b.close_at ?? 0).getTime())[0]
 
   if (nextDeal?.close_at) {

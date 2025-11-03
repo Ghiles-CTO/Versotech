@@ -214,7 +214,7 @@ export function HoldingsPage({ initialData }: HoldingsPageProps) {
         // Get investor IDs first
         const supabase = createClient()
         const { data: { user } } = await supabase.auth.getUser()
-        
+
         if (user) {
           const { data: investorLinks } = await supabase
             .from('investor_users')
@@ -227,13 +227,18 @@ export function HoldingsPage({ initialData }: HoldingsPageProps) {
           }
         }
 
-        // Fetch data in parallel
-        const [portfolioResult] = await Promise.all([
-          portfolioData ? Promise.resolve(portfolioData) : fetchPortfolioData(),
-          fetchHoldings()
-        ])
-
-        setPortfolioData(portfolioResult)
+        // Use server-provided initial data if available, otherwise fetch
+        if (initialData) {
+          setPortfolioData(initialData)
+          await fetchHoldings()
+        } else {
+          // Fetch data in parallel only if no initial data
+          const [portfolioResult] = await Promise.all([
+            fetchPortfolioData(),
+            fetchHoldings()
+          ])
+          setPortfolioData(portfolioResult)
+        }
       } catch (err) {
         console.error('Data load error:', err)
         setError(err instanceof Error ? err.message : 'Failed to load portfolio data')
@@ -243,7 +248,7 @@ export function HoldingsPage({ initialData }: HoldingsPageProps) {
     }
 
     loadData()
-  }, [])
+  }, [initialData])
 
   // Handle refresh
   const handleRefresh = async () => {

@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { requireStaffAuth } from '@/lib/auth'
 import { NextResponse } from 'next/server'
+import { auditLogger, AuditActions, AuditEntities } from '@/lib/audit'
 
 export const dynamic = 'force-dynamic'
 
@@ -20,7 +21,18 @@ export async function POST(req: Request) {
 
     const supabase = await createClient()
 
-    // Just delete the suggested match
+    // First verify the suggestion exists and get details for audit
+    const { data: suggestion, error: fetchError } = await supabase
+      .from('suggested_matches')
+      .select('id, bank_transaction_id, invoice_id')
+      .eq('id', suggested_match_id)
+      .single()
+
+    if (fetchError || !suggestion) {
+      return NextResponse.json({ error: 'Suggestion not found' }, { status: 404 })
+    }
+
+    // Delete the suggested match
     const { error } = await supabase
       .from('suggested_matches')
       .delete()
@@ -31,9 +43,21 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
+    await auditLogger.log({
+      actor_user_id: profile.id,
+      action: AuditActions.DELETE,
+      entity: AuditEntities.BANK_TRANSACTIONS,
+      entity_id: suggestion.bank_transaction_id,
+      metadata: {
+        action: 'rejected_suggestion',
+        suggestion_id: suggested_match_id,
+        invoice_id: suggestion.invoice_id
+      }
+    })
+
     return NextResponse.json({
       success: true,
-      message: 'Match rejected'
+      message: 'Suggestion rejected successfully'
     })
 
   } catch (error: any) {

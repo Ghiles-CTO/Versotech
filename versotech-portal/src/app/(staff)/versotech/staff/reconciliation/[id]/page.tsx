@@ -37,7 +37,7 @@ export default async function TransactionDetailPage({ params }: PageProps) {
       import_batch_id,
       created_at,
       updated_at,
-      matches:reconciliation_matches_bank_transaction_id_fkey (
+      matches:reconciliation_matches!reconciliation_matches_bank_transaction_id_fkey (
         id,
         invoice_id,
         match_type,
@@ -100,7 +100,8 @@ export default async function TransactionDetailPage({ params }: PageProps) {
     notFound()
   }
 
-  // Fetch open invoices for manual matching
+  // Fetch open invoices for manual matching (same currency as transaction)
+  const transactionCurrency = transaction.currency || 'USD'
   const { data: openInvoices } = await supabase
     .from('invoices')
     .select(`
@@ -123,6 +124,7 @@ export default async function TransactionDetailPage({ params }: PageProps) {
       )
     `)
     .in('status', ['sent', 'partially_paid', 'overdue'])
+    .eq('currency', transactionCurrency)
     .gt('balance_due', 0)
     .order('due_date', { ascending: true })
 

@@ -85,7 +85,6 @@ export function EditIntroducerDialog({ open, onOpenChange, introducer }: EditInt
 
         if (!response.ok) {
           const data = await response.json().catch(() => null)
-          console.error('[EditIntroducerDialog] Failed to update introducer', data)
           toast.error(data?.error ?? 'Failed to update introducer')
           return
         }
@@ -94,7 +93,6 @@ export function EditIntroducerDialog({ open, onOpenChange, introducer }: EditInt
         onOpenChange(false)
         router.refresh()
       } catch (err) {
-        console.error('[EditIntroducerDialog] Unexpected error', err)
         toast.error('Failed to update introducer')
       }
     })
@@ -103,7 +101,7 @@ export function EditIntroducerDialog({ open, onOpenChange, introducer }: EditInt
   const handleDelete = () => {
     if (!introducer) return
 
-    if (!confirm('Are you sure you want to delete this introducer? This will set their status to inactive.')) {
+    if (!confirm('Are you sure you want to delete this introducer? This action cannot be undone.')) {
       return
     }
 
@@ -114,8 +112,16 @@ export function EditIntroducerDialog({ open, onOpenChange, introducer }: EditInt
         })
 
         if (!response.ok) {
-          const data = await response.json().catch(() => null)
-          console.error('[EditIntroducerDialog] Failed to delete introducer', data)
+          const text = await response.text()
+
+          let data
+          try {
+            data = JSON.parse(text)
+          } catch (e) {
+            toast.error(`Failed to delete introducer: ${text || 'Unknown error'}`)
+            return
+          }
+
           toast.error(data?.error ?? 'Failed to delete introducer')
           return
         }
@@ -124,7 +130,6 @@ export function EditIntroducerDialog({ open, onOpenChange, introducer }: EditInt
         onOpenChange(false)
         router.refresh()
       } catch (err) {
-        console.error('[EditIntroducerDialog] Unexpected error', err)
         toast.error('Failed to delete introducer')
       }
     })

@@ -38,9 +38,13 @@ type IntroducerRecord = {
 
 type RecentIntroductionRecord = {
   id: string
+  introducer_id: string | null
   prospect_email: string | null
+  deal_id: string | null
   status: string | null
   introduced_at: string | null
+  commission_rate_override_bps: number | null
+  notes: string | null
   introducer: { legal_name: string | null } | null
   deal: { name: string | null } | null
 }
@@ -166,9 +170,13 @@ export default async function IntroducersPage() {
     .select(
       `
         id,
+        introducer_id,
         prospect_email,
+        deal_id,
         status,
         introduced_at,
+        commission_rate_override_bps,
+        notes,
         introducer:introducers ( legal_name ),
         deal:deals ( name )
       `
@@ -188,13 +196,17 @@ export default async function IntroducersPage() {
 
       return {
         id: record.id,
+        introducerId: record.introducer_id ?? undefined,
         introducerName: record.introducer?.legal_name ?? 'Unknown Introducer',
         prospectEmail: record.prospect_email ?? 'Unknown prospect',
+        dealId: record.deal_id ?? undefined,
         dealName: record.deal?.name ?? 'Untitled deal',
         status: record.status ?? 'invited',
         introducedAt: record.introduced_at,
         commissionAmount: commission?.amount ?? null,
         commissionStatus: commission?.status ?? null,
+        commissionRateOverrideBps: record.commission_rate_override_bps ?? null,
+        notes: record.notes ?? null,
       }
     })
 

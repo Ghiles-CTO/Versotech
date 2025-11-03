@@ -41,7 +41,7 @@ export async function GET(req: Request) {
         import_batch_id,
         created_at,
         updated_at,
-        matches:reconciliation_matches_bank_transaction_id_fkey (
+        matches:reconciliation_matches!reconciliation_matches_bank_transaction_id_fkey (
           id,
           invoice_id,
           match_type,
@@ -105,11 +105,24 @@ export async function GET(req: Request) {
     }
 
     const transactionsWithDerived = (transactions || []).map(tx => {
-      const matches = (tx.matches as any[]) || []
-      const matchedAmount = matches.reduce((sum, match) => sum + toNumber(match.matched_amount), 0)
-      const remaining = Math.max(toNumber(tx.amount) - matchedAmount, 0)
+      const allMatches = (tx.matches as any[]) || []
+      // Only count approved matches
+      const approvedMatches = allMatches.filter(match => match.status === 'approved')
+      const matchedAmount = approvedMatches.reduce((sum, match) => sum + toNumber(match.matched_amount), 0)
+      const transactionAmount = toNumber(tx.amount)
+      const remaining = Math.max(transactionAmount - matchedAmount, 0)
+      const tolerance = 0.01
+      const derivedStatus = approvedMatches.length === 0
+        ? 'unmatched'
+        : Math.abs(matchedAmount - transactionAmount) <= tolerance
+        ? 'matched'
+        : 'partially_matched'
+      const approvedInvoiceIds = Array.from(new Set(approvedMatches.map(match => match.invoice_id).filter(Boolean)))
       return {
         ...tx,
+        status: derivedStatus,
+        matched_invoice_ids: approvedInvoiceIds,
+        matches: approvedMatches, // Replace with filtered list
         matched_amount_total: matchedAmount,
         remaining_amount: remaining,
       }

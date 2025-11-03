@@ -36,7 +36,7 @@ export function AddIntroductionDialog({ open, onOpenChange, introducers, deals }
 
   const handleCreate = () => {
     startTransition(async () => {
-      if (!introducerId) {
+      if (!introducerId || introducerId.trim() === '') {
         toast.error('Please select an introducer')
         return
       }
@@ -46,7 +46,7 @@ export function AddIntroductionDialog({ open, onOpenChange, introducers, deals }
         return
       }
 
-      if (!dealId) {
+      if (!dealId || dealId.trim() === '') {
         toast.error('Please select a deal')
         return
       }
@@ -57,22 +57,36 @@ export function AddIntroductionDialog({ open, onOpenChange, introducers, deals }
       }
 
       try {
+        const payload = {
+          introducer_id: introducerId,
+          prospect_email: prospectEmail.trim(),
+          deal_id: dealId,
+          commission_rate_override_bps: commissionOverride === '' ? null : Number(commissionOverride),
+          notes: notes.trim() || null,
+        }
+
         const response = await fetch('/api/staff/introductions', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            introducer_id: introducerId,
-            prospect_email: prospectEmail.trim(),
-            deal_id: dealId,
-            commission_rate_override_bps: commissionOverride === '' ? null : Number(commissionOverride),
-            notes: notes.trim() || null,
-          }),
+          body: JSON.stringify(payload),
         })
 
         if (!response.ok) {
-          const data = await response.json().catch(() => null)
-          console.error('[AddIntroductionDialog] Failed to create introduction', data)
-          toast.error(data?.error ?? 'Failed to create introduction')
+          const text = await response.text()
+
+          let data
+          try {
+            data = JSON.parse(text)
+          } catch (e) {
+            toast.error(`Failed to create introduction: ${text || 'Unknown error'}`)
+            return
+          }
+
+          if (data?.details) {
+            toast.error(`Validation failed: ${JSON.stringify(data.details.fieldErrors || data.details)}`)
+          } else {
+            toast.error(data?.error ?? 'Failed to create introduction')
+          }
           return
         }
 
@@ -81,7 +95,6 @@ export function AddIntroductionDialog({ open, onOpenChange, introducers, deals }
         resetForm()
         router.refresh()
       } catch (err) {
-        console.error('[AddIntroductionDialog] Unexpected error', err)
         toast.error('Failed to create introduction')
       }
     })

@@ -32,6 +32,7 @@ import { formatCurrency, formatDate, formatBps } from '@/lib/format'
 import { useAddIntroducer } from '@/components/staff/introducers/add-introducer-context'
 import { EditIntroducerDialog } from '@/components/staff/introducers/edit-introducer-dialog'
 import { AddIntroductionDialog } from '@/components/staff/introducers/add-introduction-dialog'
+import { EditIntroductionDialog } from '@/components/staff/introducers/edit-introduction-dialog'
 
 export type IntroducersDashboardProps = {
   summary: {
@@ -60,13 +61,17 @@ export type IntroducersDashboardProps = {
   }>
   recentIntroductions: Array<{
     id: string
+    introducerId?: string
     introducerName: string
     prospectEmail: string
+    dealId?: string
     dealName: string
     status: string
     introducedAt: string | null
     commissionAmount: number | null
     commissionStatus: string | null
+    commissionRateOverrideBps?: number | null
+    notes?: string | null
   }>
   deals?: Array<{ id: string; name: string }>
   isDemo?: boolean
@@ -83,6 +88,7 @@ export function IntroducersDashboard({ summary, introducers, recentIntroductions
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [editingIntroducer, setEditingIntroducer] = useState<IntroducersDashboardProps['introducers'][number] | null>(null)
+  const [editingIntroduction, setEditingIntroduction] = useState<IntroducersDashboardProps['recentIntroductions'][number] | null>(null)
   const [addIntroductionOpen, setAddIntroductionOpen] = useState(false)
   const { setOpen } = useAddIntroducer()
 
@@ -222,7 +228,11 @@ export function IntroducersDashboard({ summary, introducers, recentIntroductions
             <EmptyState message="No recent introductions " />
           ) : (
             recentIntroductions.map((introduction) => (
-              <RecentIntroductionRow key={introduction.id} introduction={introduction} />
+              <RecentIntroductionRow
+                key={introduction.id}
+                introduction={introduction}
+                onEdit={() => setEditingIntroduction(introduction)}
+              />
             ))
           )}
         </CardContent>
@@ -237,6 +247,14 @@ export function IntroducersDashboard({ summary, introducers, recentIntroductions
       <AddIntroductionDialog
         open={addIntroductionOpen}
         onOpenChange={setAddIntroductionOpen}
+        introducers={introducers.map((i) => ({ id: i.id, legalName: i.legalName }))}
+        deals={deals}
+      />
+
+      <EditIntroductionDialog
+        open={!!editingIntroduction}
+        onOpenChange={(open) => !open && setEditingIntroduction(null)}
+        introduction={editingIntroduction}
         introducers={introducers.map((i) => ({ id: i.id, legalName: i.legalName }))}
         deals={deals}
       />
@@ -282,7 +300,7 @@ function IntroducerRow({
 }) {
   const statusStyles: Record<string, string> = {
     active: 'bg-green-100 text-green-800',
-    inactive: 'bg-gray-100 text-foreground',
+    inactive: 'bg-gray-100 text-gray-800',
     suspended: 'bg-yellow-100 text-yellow-800',
   }
 
@@ -349,7 +367,13 @@ function Stat({ label, value, className }: { label: string; value: React.ReactNo
   )
 }
 
-function RecentIntroductionRow({ introduction }: { introduction: IntroducersDashboardProps['recentIntroductions'][number] }) {
+function RecentIntroductionRow({
+  introduction,
+  onEdit
+}: {
+  introduction: IntroducersDashboardProps['recentIntroductions'][number]
+  onEdit: () => void
+}) {
   const [status, setStatus] = useState(introduction.status)
   const [isPending, startTransition] = useTransition()
   const router = useRouter()
@@ -410,13 +434,23 @@ function RecentIntroductionRow({ introduction }: { introduction: IntroducersDash
           Introduced {introduction.introducedAt ? formatDate(introduction.introducedAt) : '—'}
         </div>
       </div>
-      <div className="text-right">
-        <div className="text-sm font-medium">
-          {introduction.commissionAmount ? formatCurrency(introduction.commissionAmount) : 'Commission TBD'}
+      <div className="flex items-center gap-3">
+        <div className="text-right">
+          <div className="text-sm font-medium">
+            {introduction.commissionAmount ? formatCurrency(introduction.commissionAmount) : 'Commission TBD'}
+          </div>
+          <div className="text-xs text-muted-foreground">
+            {introduction.commissionStatus ? `Status: ${introduction.commissionStatus}` : 'Awaiting accrual'}
+          </div>
         </div>
-        <div className="text-xs text-muted-foreground">
-          {introduction.commissionStatus ? `Status: ${introduction.commissionStatus}` : 'Awaiting accrual'}
-        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onEdit}
+          className="h-8 w-8 p-0"
+        >
+          <Edit className="h-4 w-4" />
+        </Button>
       </div>
     </div>
   )

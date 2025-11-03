@@ -87,7 +87,11 @@ export function TransactionDetailClient({ transaction, openInvoices, staffProfil
   const [manualAmount, setManualAmount] = useState<string>('')
   const [manualNotes, setManualNotes] = useState<string>('')
 
-  const matches = useMemo(() => (transaction.matches || []) as any[], [transaction])
+  // Filter only approved matches
+  const matches = useMemo(() =>
+    ((transaction.matches || []) as any[]).filter(m => m.status === 'approved'),
+    [transaction]
+  )
   const suggestions = useMemo(() => (transaction.suggestions || []) as any[], [transaction])
 
   const matchedAmount = useMemo(
@@ -132,11 +136,13 @@ export function TransactionDetailClient({ transaction, openInvoices, staffProfil
         throw new Error(data.error || 'Failed to accept match')
       }
 
-      toast.success(data.message || 'Match accepted')
-      router.refresh()
+      toast.success('Match accepted successfully - reloading...')
+
+      setTimeout(() => {
+        window.location.reload()
+      }, 500)
     } catch (error: any) {
       toast.error(error.message || 'Failed to accept match')
-    } finally {
       setIsProcessing(false)
     }
   }
@@ -156,11 +162,12 @@ export function TransactionDetailClient({ transaction, openInvoices, staffProfil
         throw new Error(data.error || 'Failed to reject match')
       }
 
-      toast.success(data.message || 'Match rejected')
-      router.refresh()
+      toast.success('Suggestion rejected successfully')
+
+      // Force hard refresh with cache bypass
+      window.location.href = window.location.href
     } catch (error: any) {
       toast.error(error.message || 'Failed to reject match')
-    } finally {
       setIsProcessing(false)
     }
   }

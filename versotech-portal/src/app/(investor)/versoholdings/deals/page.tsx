@@ -184,6 +184,7 @@ export default async function InvestorDealsPage() {
   const investorIds = investorLinks.map(link => link.investor_id)
   const primaryInvestorId = investorIds[0]
 
+  // Fetch all deals accessible to this user (including closed ones for historical view)
   const { data: deals, error: dealsError } = await serviceSupabase
     .from('deals')
     .select(`
@@ -215,7 +216,7 @@ export default async function InvestorDealsPage() {
     `)
     .eq('deal_memberships.user_id', user.id)
     .order('status', { ascending: true })
-    .order('close_at', { ascending: true })
+    .order('close_at', { ascending: true, nullsFirst: false })
 
   if (dealsError) {
     console.error('Failed to load deals', dealsError)
@@ -353,11 +354,13 @@ export default async function InvestorDealsPage() {
   const accessByDeal = groupByDealId(ndaAccessRecords)
   const subscriptionByDeal = groupByDealId(subscriptionRecords)
 
+  // Calculate summary statistics (client-side filtering for getEffectiveStatus compatibility)
+  const now = new Date()
   const summary = {
     totalDeals: dealsData.length,
     openDeals: dealsData.filter(deal => {
       if (deal.status === 'closed' || deal.status === 'cancelled') return false
-      if (deal.close_at && new Date(deal.close_at) < new Date()) return false
+      if (deal.close_at && new Date(deal.close_at) < now) return false
       return deal.status === 'open'
     }).length,
     pendingInterests: investorInterests.filter(interest => interest.status === 'pending_review').length,

@@ -316,10 +316,18 @@ export async function POST(req: Request) {
       transactionAfter = correctedTransaction
     }
 
-    await supabase
+    // Delete the suggestion - CRITICAL to prevent duplicate accepts
+    const { error: deleteError } = await supabase
       .from('suggested_matches')
       .delete()
       .eq('id', suggested_match_id)
+
+    if (deleteError) {
+      return NextResponse.json({
+        error: 'Match created but failed to remove suggestion. Please refresh the page.',
+        deleteError: deleteError.message
+      }, { status: 500 })
+    }
 
     if (invoiceAfter?.status === 'paid') {
       await supabase

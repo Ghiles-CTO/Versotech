@@ -181,15 +181,6 @@ export function CommandPalette({ onQuickAddSubscription, brand = 'versotech' }: 
       group: 'navigation'
     },
     {
-      id: 'nav-doc-automation',
-      label: 'Doc Automation',
-      description: 'Document templates',
-      icon: Package,
-      keywords: ['templates', 'documents'],
-      action: () => router.push('/versotech/staff/documents/automation'),
-      group: 'navigation'
-    },
-    {
       id: 'nav-audit',
       label: 'Audit',
       description: 'Audit logs',

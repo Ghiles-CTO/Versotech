@@ -3,16 +3,16 @@ import { createClient } from "@/lib/supabase/server"
 import { z } from "zod"
 
 const createSchema = z.object({
-  introducer_id: z.string().uuid(),
+  introducer_id: z.string().min(36).max(36),
   prospect_email: z.string().email(),
-  deal_id: z.string().uuid(),
-  commission_rate_override_bps: z.number().int().min(0).max(300).optional().nullable(),
+  deal_id: z.string().min(36).max(36),
+  commission_rate_override_bps: z.coerce.number().int().min(0).max(300).optional().nullable(),
   notes: z.string().trim().optional().nullable(),
 })
 
 const updateSchema = z.object({
   status: z.enum(["invited", "joined", "allocated", "lost", "inactive"]).optional(),
-  commission_rate_override_bps: z.number().int().min(0).max(300).optional().nullable(),
+  commission_rate_override_bps: z.coerce.number().int().min(0).max(300).optional().nullable(),
   notes: z.string().trim().optional().nullable(),
 })
 
@@ -34,7 +34,16 @@ export async function POST(request: NextRequest) {
     }
 
     const json = await request.json()
-    const parsed = createSchema.parse(json)
+    const result = createSchema.safeParse(json)
+
+    if (!result.success) {
+      return NextResponse.json(
+        { error: "Validation failed", details: result.error.flatten() },
+        { status: 400 }
+      )
+    }
+
+    const parsed = result.data
 
     // Check if prospect already has an introduction for this deal
     const { data: existing } = await supabase
@@ -62,13 +71,11 @@ export async function POST(request: NextRequest) {
     })
 
     if (error) {
-      console.error("[Introductions API] Insert failed", error)
       return NextResponse.json({ error: "Failed to create introduction" }, { status: 500 })
     }
 
     return NextResponse.json({ success: true }, { status: 201 })
   } catch (error) {
-    console.error("[Introductions API] Unexpected error", error)
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 })
   }
 }

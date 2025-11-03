@@ -6,8 +6,8 @@ const updateSchema = z.object({
   legal_name: z.string().trim().min(1).optional(),
   contact_name: z.string().trim().optional().nullable(),
   email: z.string().trim().email().optional().nullable(),
-  default_commission_bps: z.number().int().min(0).max(300).optional().nullable(),
-  commission_cap_amount: z.number().min(0).optional().nullable(),
+  default_commission_bps: z.coerce.number().int().min(0).max(300).optional().nullable(),
+  commission_cap_amount: z.coerce.number().min(0).optional().nullable(),
   payment_terms: z.string().trim().optional().nullable(),
   status: z.enum(["active", "inactive", "suspended"]).optional(),
   notes: z.string().trim().optional().nullable(),
@@ -36,7 +36,16 @@ export async function PATCH(
     }
 
     const json = await request.json()
-    const parsed = updateSchema.parse(json)
+    const result = updateSchema.safeParse(json)
+
+    if (!result.success) {
+      return NextResponse.json(
+        { error: "Validation failed", details: result.error.flatten() },
+        { status: 400 }
+      )
+    }
+
+    const parsed = result.data
 
     const updateData: Record<string, any> = {}
     if (parsed.legal_name !== undefined) updateData.legal_name = parsed.legal_name
@@ -55,13 +64,11 @@ export async function PATCH(
       .eq("id", id)
 
     if (error) {
-      console.error("[Introducers API] Update failed", error)
       return NextResponse.json({ error: "Failed to update introducer" }, { status: 500 })
     }
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error("[Introducers API] Unexpected error", error)
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 })
   }
 }
@@ -87,35 +94,17 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 })
     }
 
-    // Check for pending commissions
-    const { data: pendingCommissions } = await supabase
-      .from("introducer_commissions")
-      .select("id")
-      .eq("introducer_id", id)
-      .in("status", ["accrued", "invoiced"])
-      .limit(1)
-
-    if (pendingCommissions && pendingCommissions.length > 0) {
-      return NextResponse.json(
-        { error: "Cannot delete introducer with pending commissions" },
-        { status: 400 }
-      )
-    }
-
-    // Soft delete by setting status to inactive
     const { error } = await supabase
       .from("introducers")
-      .update({ status: "inactive" })
+      .delete()
       .eq("id", id)
 
     if (error) {
-      console.error("[Introducers API] Delete failed", error)
-      return NextResponse.json({ error: "Failed to delete introducer" }, { status: 500 })
+      return NextResponse.json({ error: `Failed to delete introducer: ${error.message}` }, { status: 500 })
     }
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error("[Introducers API] Unexpected error", error)
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 })
   }
 }

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Upload,
   RefreshCw,
@@ -12,18 +13,27 @@ import {
   CheckCircle,
   AlertCircle,
   Clock,
-  Activity
+  Activity,
+  FileText,
+  DollarSign
 } from 'lucide-react'
 import { TransactionsDataTable } from './transactions-data-table'
 import { transactionColumns, BankTransactionRow } from './transaction-columns'
+import { InvoicesDataTable } from './invoices-data-table'
+import { invoiceColumns, ReconciliationInvoiceRow } from './invoice-columns'
 import { UploadCSVDialog, AutoMatchButton } from '@/components/staff/reconciliation-client'
 import { toast } from 'sonner'
 
 export function ReconciliationPageClient() {
   const router = useRouter()
 
+  const [activeTab, setActiveTab] = useState<'transactions' | 'invoices'>('transactions')
+
   const [rawData, setRawData] = useState<BankTransactionRow[]>([])
   const [stats, setStats] = useState<any>(null)
+  const [invoices, setInvoices] = useState<ReconciliationInvoiceRow[]>([])
+  const [invoiceStats, setInvoiceStats] = useState<any>(null)
+
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
 
@@ -32,6 +42,7 @@ export function ReconciliationPageClient() {
 
   useEffect(() => {
     loadData()
+    loadInvoices()
   }, [])
 
   const loadData = async () => {
@@ -51,15 +62,37 @@ export function ReconciliationPageClient() {
     }
   }
 
+  const loadInvoices = async () => {
+    try {
+      const response = await fetch('/api/staff/reconciliation/invoices')
+      if (!response.ok) throw new Error('Failed to load invoices')
+
+      const data = await response.json()
+      setInvoices(data.invoices || [])
+      setInvoiceStats(data.stats || {})
+    } catch (err) {
+      console.error('Invoice load error:', err)
+      toast.error('Failed to load invoices')
+    }
+  }
+
   const handleRefresh = async () => {
     setRefreshing(true)
     try {
-      const response = await fetch('/api/staff/reconciliation')
-      if (!response.ok) throw new Error('Failed to refresh')
-
-      const data = await response.json()
-      setRawData(data.transactions || [])
-      setStats(data.stats || {})
+      await Promise.all([
+        fetch('/api/staff/reconciliation').then(async (response) => {
+          if (!response.ok) throw new Error('Failed to refresh transactions')
+          const data = await response.json()
+          setRawData(data.transactions || [])
+          setStats(data.stats || {})
+        }),
+        fetch('/api/staff/reconciliation/invoices').then(async (response) => {
+          if (!response.ok) throw new Error('Failed to refresh invoices')
+          const data = await response.json()
+          setInvoices(data.invoices || [])
+          setInvoiceStats(data.stats || {})
+        })
+      ])
       toast.success('Data refreshed')
     } catch (err) {
       toast.error('Failed to refresh data')
@@ -116,6 +149,39 @@ export function ReconciliationPageClient() {
     return result
   }, [rawData, quickSearch, statusFilter])
 
+  const filteredInvoices = useMemo(() => {
+    if (!invoices || invoices.length === 0) return []
+
+    let result = invoices
+
+    if (quickSearch) {
+      const search = quickSearch.toLowerCase()
+      result = result.filter(inv => {
+        const searchable = [
+          inv.invoice_number,
+          inv.investor?.legal_name,
+          inv.deal?.name
+        ]
+          .filter(Boolean)
+          .join(' ')
+          .toLowerCase()
+
+        return searchable.includes(search)
+      })
+    }
+
+    if (statusFilter) {
+      // For invoices, statusFilter can be payment status or match status
+      if (['paid', 'partially_paid', 'sent', 'overdue', 'draft'].includes(statusFilter)) {
+        result = result.filter(inv => inv.status === statusFilter)
+      } else if (['matched', 'partially_matched', 'unmatched'].includes(statusFilter)) {
+        result = result.filter(inv => inv.match_status === statusFilter)
+      }
+    }
+
+    return result
+  }, [invoices, quickSearch, statusFilter])
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -146,6 +212,9 @@ export function ReconciliationPageClient() {
       return sum + remaining
     }, 0)
 
+  const currentStats = activeTab === 'transactions' ? stats : invoiceStats
+  const currentData = activeTab === 'transactions' ? filteredTransactions : filteredInvoices
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -170,8 +239,21 @@ export function ReconciliationPageClient() {
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+      {/* Tabs */}
+      <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val as 'transactions' | 'invoices')}>
+        <TabsList className="grid w-full max-w-md grid-cols-2">
+          <TabsTrigger value="transactions" className="flex items-center gap-2">
+            <Activity className="h-4 w-4" />
+            Transactions ({rawData.length})
+          </TabsTrigger>
+          <TabsTrigger value="invoices" className="flex items-center gap-2">
+            <FileText className="h-4 w-4" />
+            Invoices ({invoices.length})
+          </TabsTrigger>
+        </TabsList>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mt-6">
         <Card className="bg-white/5 border border-white/10">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
@@ -246,71 +328,155 @@ export function ReconciliationPageClient() {
         </Card>
       </div>
 
-      {/* Filters */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>All Transactions</CardTitle>
-              <CardDescription>
-                {filteredTransactions.length} transaction{filteredTransactions.length !== 1 ? 's' : ''}
-                {filteredTransactions.length !== rawData.length && ` (filtered from ${rawData.length})`}
-              </CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Search and Filters */}
-          <div className="flex gap-3">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search by counterparty, invoice, investor, reference..."
-                value={quickSearch}
-                onChange={(e) => setQuickSearch(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            <div className="flex gap-2">
-              <Button
-                variant={statusFilter === '' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setStatusFilter('')}
-              >
-                All
-              </Button>
-              <Button
-                variant={statusFilter === 'unmatched' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setStatusFilter('unmatched')}
-              >
-                Unmatched
-              </Button>
-              <Button
-                variant={statusFilter === 'partially_matched' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setStatusFilter('partially_matched')}
-              >
-                Partial
-              </Button>
-              <Button
-                variant={statusFilter === 'matched' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setStatusFilter('matched')}
-              >
-                Matched
-              </Button>
-            </div>
-          </div>
+        {/* Transactions Tab */}
+        <TabsContent value="transactions" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>All Transactions</CardTitle>
+                  <CardDescription>
+                    {filteredTransactions.length} transaction{filteredTransactions.length !== 1 ? 's' : ''}
+                    {filteredTransactions.length !== rawData.length && ` (filtered from ${rawData.length})`}
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Search and Filters */}
+              <div className="flex gap-3">
+                <div className="flex-1 relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search by counterparty, invoice, investor, reference..."
+                    value={quickSearch}
+                    onChange={(e) => setQuickSearch(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant={statusFilter === '' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setStatusFilter('')}
+                  >
+                    All
+                  </Button>
+                  <Button
+                    variant={statusFilter === 'unmatched' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setStatusFilter('unmatched')}
+                  >
+                    Unmatched
+                  </Button>
+                  <Button
+                    variant={statusFilter === 'partially_matched' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setStatusFilter('partially_matched')}
+                  >
+                    Partial
+                  </Button>
+                  <Button
+                    variant={statusFilter === 'matched' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setStatusFilter('matched')}
+                  >
+                    Matched
+                  </Button>
+                </div>
+              </div>
 
-          {/* DataTable */}
-          <TransactionsDataTable
-            columns={transactionColumns}
-            data={filteredTransactions}
-            pageSize={25}
-          />
-        </CardContent>
-      </Card>
+              {/* DataTable */}
+              <TransactionsDataTable
+                columns={transactionColumns}
+                data={filteredTransactions}
+                pageSize={25}
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Invoices Tab */}
+        <TabsContent value="invoices" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>All Invoices</CardTitle>
+                  <CardDescription>
+                    {filteredInvoices.length} invoice{filteredInvoices.length !== 1 ? 's' : ''}
+                    {filteredInvoices.length !== invoices.length && ` (filtered from ${invoices.length})`}
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Search and Filters */}
+              <div className="flex gap-3">
+                <div className="flex-1 relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search by invoice number, investor, deal..."
+                    value={quickSearch}
+                    onChange={(e) => setQuickSearch(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant={statusFilter === '' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setStatusFilter('')}
+                  >
+                    All
+                  </Button>
+                  <Button
+                    variant={statusFilter === 'sent' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setStatusFilter('sent')}
+                  >
+                    Sent
+                  </Button>
+                  <Button
+                    variant={statusFilter === 'partially_paid' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setStatusFilter('partially_paid')}
+                  >
+                    Partial
+                  </Button>
+                  <Button
+                    variant={statusFilter === 'paid' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setStatusFilter('paid')}
+                  >
+                    Paid
+                  </Button>
+                  <Button
+                    variant={statusFilter === 'matched' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setStatusFilter('matched')}
+                  >
+                    Matched
+                  </Button>
+                  <Button
+                    variant={statusFilter === 'unmatched' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setStatusFilter('unmatched')}
+                  >
+                    Unmatched
+                  </Button>
+                </div>
+              </div>
+
+              {/* DataTable */}
+              <InvoicesDataTable
+                columns={invoiceColumns}
+                data={filteredInvoices}
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }
