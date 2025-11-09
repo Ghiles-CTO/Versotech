@@ -27,8 +27,11 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Return with 'data' key to match what the modal expects
-    return NextResponse.json({ data: investors || [] })
+    // Return with both 'data' and 'investors' keys for compatibility
+    return NextResponse.json({
+      data: investors || [],
+      investors: investors || []
+    })
 
   } catch (error) {
     console.error('API /investors error:', error)

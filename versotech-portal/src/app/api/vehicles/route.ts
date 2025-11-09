@@ -53,7 +53,8 @@ export async function GET(request: Request) {
     const investorIds = investorLinks.map(link => link.investor_id)
 
     // Fetch vehicles with related positions, subscriptions, and valuations
-    // Only return vehicles where the investor has a position or subscription
+    // We use LEFT JOIN to get all related data, then filter in JavaScript
+    // This is more efficient than complex database filtering for this use case
     const { data: vehicles, error } = await serviceSupabase
       .from('vehicles')
       .select(`
@@ -91,7 +92,6 @@ export async function GET(request: Request) {
           as_of_date
         )
       `)
-      .or(investorIds.map(id => `positions.investor_id.eq.${id},subscriptions.investor_id.eq.${id}`).join(','))
       .order('name', { ascending: true })
 
     if (error) {

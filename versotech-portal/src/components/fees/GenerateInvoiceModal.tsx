@@ -399,7 +399,7 @@ export function GenerateInvoiceModal({ open, onClose, onSuccess, preselectedInve
           ) : (
             // Show investor selector only when not preselected
             <div>
-              <Label htmlFor="investor">Investor *</Label>
+              <Label htmlFor="investor" className="text-white">Investor *</Label>
               <Select value={investorId} onValueChange={setInvestorId}>
                 <SelectTrigger id="investor">
                   <SelectValue placeholder="Select investor" />
@@ -418,7 +418,7 @@ export function GenerateInvoiceModal({ open, onClose, onSuccess, preselectedInve
           {/* Subscription Selection - shows after investor is selected */}
           {investorId && (
             <div>
-              <Label htmlFor="subscription">Subscription *</Label>
+              <Label htmlFor="subscription" className="text-white">Subscription *</Label>
               {fetchingSubscriptions ? (
                 <div className="flex items-center justify-center p-2 border border-white/20 rounded-md">
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
@@ -451,7 +451,7 @@ export function GenerateInvoiceModal({ open, onClose, onSuccess, preselectedInve
 
           {/* Due Date */}
           <div>
-            <Label htmlFor="due_date">Due Date *</Label>
+            <Label htmlFor="due_date" className="text-white">Due Date *</Label>
             <Input
               id="due_date"
               type="date"
@@ -464,7 +464,7 @@ export function GenerateInvoiceModal({ open, onClose, onSuccess, preselectedInve
           {investorId && subscriptionId && (
             <div>
               <div className="flex items-center justify-between mb-2">
-                <Label>Fee Events to Invoice *</Label>
+                <Label className="text-white">Fee Events to Invoice *</Label>
                 {feeEvents.length > 0 && (
                   <Button
                     type="button"
@@ -527,7 +527,7 @@ export function GenerateInvoiceModal({ open, onClose, onSuccess, preselectedInve
           {/* Custom Line Items */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <Label>Custom Line Items (Optional)</Label>
+              <Label className="text-white">Custom Line Items (Optional)</Label>
               <Button
                 type="button"
                 variant="outline"
@@ -580,7 +580,7 @@ export function GenerateInvoiceModal({ open, onClose, onSuccess, preselectedInve
 
           {/* Notes */}
           <div>
-            <Label htmlFor="notes">Notes (Optional)</Label>
+            <Label htmlFor="notes" className="text-white">Notes (Optional)</Label>
             <Textarea
               id="notes"
               value={notes}

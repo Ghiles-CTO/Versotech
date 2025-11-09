@@ -69,7 +69,7 @@ export function QuickAddSubscriptionModal({
           .select('id, legal_name, email')
           .eq('status', 'active')
           .order('legal_name')
-          .limit(100)
+          .limit(1000)
 
         if (investorsError) throw investorsError
         setInvestors(investorsData || [])

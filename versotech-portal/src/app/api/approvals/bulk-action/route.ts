@@ -125,7 +125,7 @@ export async function POST(request: NextRequest) {
     // Fetch all approvals to validate (use service client to bypass RLS for demo mode)
     const { data: approvals, error: fetchError } = await serviceSupabase
       .from('approvals')
-      .select('id, entity_type, entity_metadata, status, assigned_to, priority')
+      .select('id, entity_type, entity_metadata, status, assigned_to, priority, created_at')
       .in('id', approval_ids)
 
     if (fetchError) {
@@ -170,12 +170,20 @@ export async function POST(request: NextRequest) {
           continue
         }
 
+        // Calculate processing time in hours
+        const createdAt = new Date(approval.created_at)
+        const nowDate = new Date()
+        const processingTimeHours = (nowDate.getTime() - createdAt.getTime()) / (1000 * 60 * 60)
+
         // Update approval status
         const newStatus = action === 'approve' ? 'approved' : 'rejected'
+        const now = new Date().toISOString()
         const updateData: any = {
           status: newStatus,
           approved_by: user.id,
-          approved_at: new Date().toISOString(),
+          approved_at: now,
+          resolved_at: now,
+          actual_processing_time_hours: Math.round(processingTimeHours * 100) / 100, // Round to 2 decimals
           notes: notes || null
         }
 
@@ -202,13 +210,8 @@ export async function POST(request: NextRequest) {
         // If approved, trigger downstream actions based on entity_type
         if (action === 'approve') {
           try {
-            if (approval.entity_type === 'deal_commitment') {
-              // Update commitment status
-              await serviceSupabase
-                .from('deal_commitments')
-                .update({ status: 'approved' })
-                .eq('id', approval.entity_metadata?.entity_id || approval.id)
-            } else if (approval.entity_type === 'reservation') {
+            // REMOVED: 'deal_commitment' case - table deleted
+            if (approval.entity_type === 'reservation') {
               // Reservations deprecated - skip processing
               console.log('Skipping deprecated reservation approval:', approval.id)
             } else if (approval.entity_type === 'allocation') {

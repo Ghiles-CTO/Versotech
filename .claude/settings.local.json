@@ -10,7 +10,14 @@
       "Bash(rm:*)",
       "mcp__supabase__apply_migration",
       "mcp__supabase__execute_sql",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nAdd client requirements analysis and enhance reconciliation invoice tracking\n\n- Add AGENTS.md with comprehensive analysis of client meeting requirements\n- Update meetings.md with latest client discussions and priorities\n- Add brand logos for VersoHoldings and VersoTech\n- Enhance reconciliation system with invoice tracking columns and data tables\n- Add commission creation API endpoint for introducer fee management\n- Improve introducer management with edit introduction dialog\n- Update UI components (button, input, label) for better consistency\n- Add reconciliation database migrations for invoice tracking\n- Remove deprecated doc-packages route and automation page\n- Update Claude settings for improved development workflow\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git push:*)",
+      "Bash(git log:*)",
+      "Bash(tree:*)",
+      "Bash(find:*)",
+      "WebFetch(domain:paperos.com)",
+      "WebSearch"
     ],
     "deny": [],
     "ask": []

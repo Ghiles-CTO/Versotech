@@ -119,19 +119,7 @@ export async function DELETE(
 
     const { id: dealId, lotId } = await params
 
-    // Check if lot has any allocations (reservations deprecated)
-    const { data: allocationItems } = await supabase
-      .from('allocation_lot_items')
-      .select('allocation_id')
-      .eq('lot_id', lotId)
-      .limit(1)
-
-    if (allocationItems && allocationItems.length > 0) {
-      return NextResponse.json(
-        { error: 'Cannot delete share lot with active allocations' },
-        { status: 400 }
-      )
-    }
+    // Note: allocation_lot_items check removed - table deprecated and deleted
 
     // Delete the share lot
     const { error } = await supabase

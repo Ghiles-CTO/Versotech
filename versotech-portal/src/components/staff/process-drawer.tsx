@@ -64,6 +64,8 @@ export function ProcessDrawer({ workflow, open, onClose }: ProcessDrawerProps) {
   const [isTriggering, setIsTriggering] = useState(false)
   const [recentRuns, setRecentRuns] = useState<WorkflowRun[]>([])
   const [activeTab, setActiveTab] = useState('configure')
+  const [isTestingWebhook, setIsTestingWebhook] = useState(false)
+  const [webhookTestResult, setWebhookTestResult] = useState<any>(null)
 
   // Reset form when workflow changes
   useEffect(() => {
@@ -80,6 +82,7 @@ export function ProcessDrawer({ workflow, open, onClose }: ProcessDrawerProps) {
       setFormData(defaults)
       setErrors({})
       setActiveTab('configure')
+      setWebhookTestResult(null)
     }
   }, [workflow])
 
@@ -210,6 +213,55 @@ export function ProcessDrawer({ workflow, open, onClose }: ProcessDrawerProps) {
       })
     } finally {
       setIsTriggering(false)
+    }
+  }
+
+  const handleTestWebhook = async () => {
+    setIsTestingWebhook(true)
+    setWebhookTestResult(null)
+
+    try {
+      const response = await fetch('/api/workflows/test-webhook', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          webhook_url: 'https://n8n.srv967106.hstgr.cloud/webhook-test/testing',
+          test_data: {
+            workflow_key: workflow?.key || 'investor-onboarding',
+            investor_email: formData.investor_email || 'test@example.com',
+            investment_amount: formData.investment_amount || 1000000,
+            target_vehicle: formData.target_vehicle || 'test-vehicle',
+            investor_type: formData.investor_type || 'individual',
+            ...formData
+          }
+        }),
+      })
+
+      const result = await response.json()
+      setWebhookTestResult(result)
+
+      if (result.success) {
+        toast.success('Webhook test successful!', {
+          description: `Response in ${result.duration_ms}ms`
+        })
+      } else {
+        toast.error('Webhook test failed', {
+          description: `Status: ${result.status} ${result.status_text || ''}`
+        })
+      }
+    } catch (error) {
+      console.error('Webhook test error:', error)
+      toast.error('Failed to test webhook', {
+        description: error instanceof Error ? error.message : 'Unknown error'
+      })
+      setWebhookTestResult({
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      })
+    } finally {
+      setIsTestingWebhook(false)
     }
   }
 

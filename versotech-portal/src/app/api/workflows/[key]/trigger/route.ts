@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { requireStaffAuth } from '@/lib/auth'
 import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
@@ -19,6 +19,7 @@ export async function POST(
 ) {
   try {
     const supabase = await createClient()
+    const serviceSupabase = createServiceClient()
     const user = await requireStaffAuth()
 
     const { key: workflowKey } = await params
@@ -38,7 +39,7 @@ export async function POST(
 
     const { payload, entity_type } = parsed.data
 
-    const { data: workflow, error: workflowError } = await supabase
+    const { data: workflow, error: workflowError } = await serviceSupabase
       .from('workflows')
       .select('*')
       .eq('key', workflowKey)
@@ -49,7 +50,8 @@ export async function POST(
       return NextResponse.json({ error: 'Workflow not found' }, { status: 404 })
     }
 
-    if (workflow.required_role && workflow.required_role !== user.role) {
+    // Allow staff_admin to override all role requirements
+    if (workflow.required_role && workflow.required_role !== user.role && user.role !== 'staff_admin') {
       return NextResponse.json(
         { error: `Requires ${workflow.required_role} role` },
         { status: 403 }
@@ -85,7 +87,7 @@ export async function POST(
 
     const fiveMinutesAgo = new Date(Date.now() - FIVE_MINUTES_MS).toISOString()
 
-    const { data: duplicateRun } = await supabase
+    const { data: duplicateRun } = await serviceSupabase
       .from('workflow_runs')
       .select('id')
       .eq('workflow_id', workflow.id)
@@ -109,12 +111,14 @@ export async function POST(
       .update(`${workflow.id}:${user.id}:${JSON.stringify(payload)}`)
       .digest('hex')
 
+    // Generate webhook signature if secret is configured
+    const webhookSecret = process.env.N8N_WEBHOOK_SECRET || process.env.N8N_OUTBOUND_SECRET || 'default-webhook-secret'
     const webhookSignature = crypto
-      .createHmac('sha256', process.env.N8N_WEBHOOK_SECRET!)
+      .createHmac('sha256', webhookSecret)
       .update(idempotencyToken)
       .digest('hex')
 
-    const { data: workflowRun, error: runError } = await supabase
+    const { data: workflowRun, error: runError } = await serviceSupabase
       .from('workflow_runs')
       .insert({
         workflow_id: workflow.id,
@@ -130,8 +134,9 @@ export async function POST(
       .single()
 
     if (runError || !workflowRun) {
+      console.error('Failed to create workflow run:', runError)
       return NextResponse.json(
-        { error: 'Failed to create workflow run' },
+        { error: 'Failed to create workflow run', details: runError?.message },
         { status: 500 }
       )
     }
@@ -161,14 +166,21 @@ export async function POST(
       body: JSON.stringify(n8nPayload)
     })
 
-    const n8nResult = await n8nResponse.json().catch(() => ({}))
+    // Read response body once
+    const responseText = await n8nResponse.text()
+    let n8nResult: any = {}
+    try {
+      n8nResult = JSON.parse(responseText)
+    } catch {
+      n8nResult = { raw: responseText }
+    }
 
     if (!n8nResponse.ok) {
-      await supabase
+      await serviceSupabase
         .from('workflow_runs')
         .update({
           status: 'failed',
-          error_message: `Failed to trigger n8n: ${await n8nResponse.text()}`,
+          error_message: `Failed to trigger n8n: ${responseText}`,
           completed_at: new Date().toISOString()
         })
         .eq('id', workflowRun.id)
@@ -179,16 +191,16 @@ export async function POST(
       )
     }
 
-    await supabase
+    await serviceSupabase
       .from('workflow_runs')
       .update({
         status: 'running',
         started_at: new Date().toISOString(),
-        n8n_execution_id: n8nResult.execution_id ?? null
+        output_data: n8nResult.execution_id ? { execution_id: n8nResult.execution_id } : null
       })
       .eq('id', workflowRun.id)
 
-    await supabase.from('audit_log').insert({
+    await serviceSupabase.from('audit_log').insert({
       actor_user_id: user.id,
       action: 'workflow_triggered',
       entity: 'workflow_runs',
@@ -204,7 +216,7 @@ export async function POST(
       success: true,
       workflow_run_id: workflowRun.id,
       status: 'running',
-      n8n_execution_id: n8nResult.execution_id ?? null
+      execution_id: n8nResult.execution_id ?? null
     })
   } catch (error) {
     console.error('Workflow trigger error:', error)

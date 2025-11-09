@@ -1,265 +1,190 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
-import { getAuthenticatedUser } from '@/lib/api-auth'
+import { requireStaffAuth } from '@/lib/auth'
 import { auditLogger, AuditActions } from '@/lib/audit'
-import { trackDealEvent } from '@/lib/analytics'
-import { NextRequest, NextResponse } from 'next/server'
-import { z } from 'zod'
+import { NextResponse } from 'next/server'
 
-// Validation schema for approval action
-const approvalActionSchema = z.object({
-  action: z.enum(['approve', 'reject']),
-  notes: z.string().optional(),
-  rejection_reason: z.string().optional()
-}).refine(
-  (data) => {
-    // Require rejection_reason for reject action
-    if (data.action === 'reject' && !data.rejection_reason) {
-      return false
-    }
-    return true
-  },
-  {
-    message: 'rejection_reason is required when rejecting an approval',
-    path: ['rejection_reason']
-  }
-)
-
-// Check if staff user has authority to approve this specific approval
-function checkApprovalAuthority(
-  profile: any,
-  approval: any
-): { authorized: boolean; reason?: string } {
-  // staff_admin can approve anything
-  if (profile.role === 'staff_admin') {
-    return { authorized: true }
-  }
-
-  // Extract amount from entity_metadata if available
-  let amount = 0
-  if (approval.entity_metadata?.requested_amount) {
-    amount = parseFloat(approval.entity_metadata.requested_amount)
-  } else if (approval.entity_metadata?.amount) {
-    amount = parseFloat(approval.entity_metadata.amount)
-  }
-
-  // staff_ops can approve <$50K
-  if (profile.role === 'staff_ops') {
-    if (amount < 50000) {
-      return { authorized: true }
-    }
-    return {
-      authorized: false,
-      reason: 'Operations staff can only approve amounts under $50,000'
-    }
-  }
-
-  // staff_rm can approve unlimited for assigned investors (standard requests)
-  if (profile.role === 'staff_rm') {
-    // Check if this RM is assigned to this approval
-    if (approval.assigned_to === profile.id) {
-      return { authorized: true }
-    }
-    return {
-      authorized: false,
-      reason: 'Relationship managers can only approve approvals assigned to them'
-    }
-  }
-
-  return {
-    authorized: false,
-    reason: 'Insufficient permissions to approve this request'
-  }
-}
-
-async function getPrimaryInvestorUserId(
-  supabase: any,
-  investorId: string
+export async function POST(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const { data, error } = await supabase
-    .from('investor_users')
-    .select('user_id')
-    .eq('investor_id', investorId)
-    .order('created_at', { ascending: true })
-    .limit(1)
-
-  if (error) {
-    console.error('Failed to resolve investor user', error)
-    return null
-  }
-
-  return data?.[0]?.user_id ?? null
-}
-
-async function ensureInvestorTask(
-  supabase: any,
-  investorId: string | null,
-  task: {
-    owner_user_id: string | null
-    kind: string
-    category: string
-    title: string
-    description: string
-    priority?: 'low' | 'medium' | 'high'
-    related_entity_type?: string
-    related_entity_id?: string
-    deal_id?: string | null
-    due_in_days?: number
-    instructions?: Record<string, any>
-  }
-) {
-  if (!investorId || !task.owner_user_id) return
-
-  const dueAt = task.due_in_days
-    ? new Date(Date.now() + task.due_in_days * 24 * 60 * 60 * 1000).toISOString()
-    : null
-
   try {
-    await supabase.from('tasks').insert({
-      owner_user_id: task.owner_user_id,
-      owner_investor_id: investorId,
-      kind: task.kind,
-      category: task.category,
-      title: task.title,
-      description: task.description,
-      priority: task.priority ?? 'high',
-      related_entity_type: task.related_entity_type ?? null,
-      related_entity_id: task.related_entity_id ?? null,
-      due_at: dueAt,
-      instructions: task.instructions ?? null
+    const { id } = await params
+    const body = await request.json()
+    const { action, notes, rejection_reason } = body
+
+    // Validate action
+    if (!['approve', 'reject'].includes(action)) {
+      return NextResponse.json(
+        { error: 'Invalid action. Must be approve or reject.' },
+        { status: 400 }
+      )
+    }
+
+    // Check authentication
+    const user = await requireStaffAuth()
+    const supabase = await createClient()
+    const serviceSupabase = createServiceClient()
+
+    // Get approval details with related data
+    const { data: approval, error: fetchError } = await serviceSupabase
+      .from('approvals')
+      .select(`
+        *,
+        requested_by_profile:profiles!approvals_requested_by_fkey(id, display_name, email),
+        related_investor:investors!approvals_related_investor_id_fkey(id, legal_name),
+        related_deal:deals!approvals_related_deal_id_fkey(id, name)
+      `)
+      .eq('id', id)
+      .single()
+
+    if (fetchError || !approval) {
+      console.error('Approval fetch error:', fetchError)
+      return NextResponse.json(
+        { error: 'Approval not found' },
+        { status: 404 }
+      )
+    }
+
+    // Check if approval is already processed
+    if (approval.status !== 'pending') {
+      return NextResponse.json(
+        { error: 'Approval has already been processed' },
+        { status: 400 }
+      )
+    }
+
+    // Start transaction
+    const now = new Date().toISOString()
+    let transactionError = null
+    let transactionSuccess = true
+    let notificationData = null
+
+    // Calculate processing time in hours
+    const createdAt = new Date(approval.created_at)
+    const nowDate = new Date(now)
+    const processingTimeHours = (nowDate.getTime() - createdAt.getTime()) / (1000 * 60 * 60)
+
+    // Update approval status
+    const updateData: any = {
+      status: action === 'approve' ? 'approved' : 'rejected',
+      approved_by: user.id,
+      approved_at: now,
+      resolved_at: now,
+      updated_at: now,
+      actual_processing_time_hours: Math.round(processingTimeHours * 100) / 100 // Round to 2 decimals
+    }
+
+    // Add notes if provided
+    if (notes) {
+      updateData.notes = notes
+    }
+
+    // Add rejection reason if rejecting
+    if (action === 'reject' && rejection_reason) {
+      updateData.rejection_reason = rejection_reason
+    }
+
+    const { error: updateError } = await serviceSupabase
+      .from('approvals')
+      .update(updateData)
+      .eq('id', id)
+
+    if (updateError) {
+      console.error('Approval update error:', updateError)
+      return NextResponse.json(
+        { error: 'Failed to update approval' },
+        { status: 500 }
+      )
+    }
+
+    // Handle entity-specific actions on approval
+    if (action === 'approve') {
+      const result = await handleEntityApproval(
+        serviceSupabase,
+        approval,
+        user.id
+      )
+
+      if (!result.success) {
+        transactionError = result.error
+        transactionSuccess = false
+      } else if (result.notificationData) {
+        notificationData = result.notificationData
+      }
+    } else if (action === 'reject') {
+      // Handle rejection
+      await handleEntityRejection(serviceSupabase, approval, rejection_reason || '')
+    }
+
+    // Audit log
+    await auditLogger.log({
+      actor_user_id: user.id,
+      action: action === 'approve' ? AuditActions.APPROVE : AuditActions.REJECT,
+      entity: 'approvals',
+      entity_id: id,
+      metadata: {
+        entity_type: approval.entity_type,
+        entity_id: approval.entity_id,
+        notes,
+        rejection_reason
+      }
+    })
+
+    // Create notification for requester
+    if (approval.requested_by) {
+      const notificationMessage = action === 'approve'
+        ? `Your ${approval.entity_type} request has been approved`
+        : `Your ${approval.entity_type} request has been rejected`
+
+      await serviceSupabase
+        .from('investor_notifications')
+        .insert({
+          user_id: approval.requested_by,
+          title: `${approval.entity_type} ${action}d`,
+          message: notificationMessage,
+          type: action === 'approve' ? 'approval_granted' : 'approval_rejected',
+          metadata: {
+            approval_id: id,
+            entity_type: approval.entity_type,
+            entity_id: approval.entity_id,
+            rejection_reason: rejection_reason || undefined,
+            notes: notes || undefined
+          }
+        })
+    }
+
+    return NextResponse.json({
+      success: transactionSuccess,
+      message: action === 'approve'
+        ? 'Approval confirmed successfully'
+        : 'Approval rejected successfully',
+      error: transactionError,
+      notificationData
     })
   } catch (error) {
-    console.error('Failed to create investor task', error)
+    console.error('Approval action error:', error)
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
   }
 }
 
-// Execute downstream actions when approval is approved
-async function executeApprovalActions(
+// Handle entity-specific approval actions
+async function handleEntityApproval(
   supabase: any,
   approval: any,
   actorId: string
-): Promise<{ success: boolean; error?: string }> {
+): Promise<{ success: boolean; error?: string; notificationData?: any }> {
   try {
     const entityType = approval.entity_type
     const entityId = approval.entity_id
     const metadata = approval.entity_metadata || {}
 
     switch (entityType) {
-      case 'commitment':
-      case 'deal_commitment':
-        // Create allocation from commitment
-        const { error: commitmentError } = await supabase
-          .from('deal_commitments')
-          .update({ status: 'approved' })
-          .eq('id', entityId)
-
-        if (commitmentError) {
-          console.error('Error approving commitment:', commitmentError)
-          return { success: false, error: 'Failed to approve commitment' }
-        }
-
-        // Auto-create subscription with fees from deal's fee plan
-        try {
-          // Fetch commitment details
-          const { data: commitment } = await supabase
-            .from('deal_commitments')
-            .select('*, deal:deals(id, vehicle_id)')
-            .eq('id', entityId)
-            .single()
-
-          if (commitment && commitment.deal?.vehicle_id) {
-            // Fetch default fee plan for this deal
-            const { data: feePlan } = await supabase
-              .from('fee_plans')
-              .select('*, fee_components(*)')
-              .eq('deal_id', commitment.deal_id)
-              .eq('is_default', true)
-              .single()
-
-            // Prepare subscription data with fees from fee plan
-            const subscriptionData: any = {
-              investor_id: commitment.investor_id,
-              vehicle_id: commitment.deal.vehicle_id,
-              deal_id: commitment.deal_id,
-              commitment: commitment.requested_amount,
-              status: 'pending',
-              subscription_date: new Date().toISOString(),
-              fee_plan_id: feePlan?.id || null
-            }
-
-            // Map fee components to subscription fields
-            if (feePlan?.fee_components) {
-              for (const component of feePlan.fee_components) {
-                const ratePercent = component.rate_bps ? component.rate_bps / 10000 : null
-
-                switch (component.kind) {
-                  case 'subscription':
-                    subscriptionData.subscription_fee_percent = ratePercent
-                    if (component.flat_amount) {
-                      subscriptionData.subscription_fee_amount = component.flat_amount
-                    }
-                    break
-                  case 'management':
-                    subscriptionData.management_fee_percent = ratePercent
-                    if (component.flat_amount) {
-                      subscriptionData.management_fee_amount = component.flat_amount
-                    }
-                    // Set frequency from component
-                    subscriptionData.management_fee_frequency = component.frequency || 'quarterly'
-                    break
-                  case 'performance':
-                    subscriptionData.performance_fee_tier1_percent = ratePercent
-                    if (component.tier_threshold_multiplier) {
-                      subscriptionData.performance_fee_tier1_threshold = component.tier_threshold_multiplier
-                    }
-                    // Check for tier 2 (next_tier_component_id)
-                    if (component.next_tier_component_id) {
-                      const tier2 = feePlan.fee_components.find(
-                        (c: any) => c.id === component.next_tier_component_id
-                      )
-                      if (tier2) {
-                        subscriptionData.performance_fee_tier2_percent = tier2.rate_bps ? tier2.rate_bps / 10000 : null
-                        subscriptionData.performance_fee_tier2_threshold = tier2.tier_threshold_multiplier
-                      }
-                    }
-                    break
-                  case 'spread_markup':
-                    if (component.flat_amount) {
-                      subscriptionData.spread_per_share = component.flat_amount
-                    }
-                    break
-                  case 'bd_fee':
-                    subscriptionData.bd_fee_percent = ratePercent
-                    if (component.flat_amount) {
-                      subscriptionData.bd_fee_amount = component.flat_amount
-                    }
-                    break
-                  case 'finra_fee':
-                    if (component.flat_amount) {
-                      subscriptionData.finra_fee_amount = component.flat_amount
-                    }
-                    break
-                }
-              }
-            }
-
-            // Create subscription
-            const { error: subscriptionError } = await supabase
-              .from('subscriptions')
-              .insert(subscriptionData)
-
-            if (subscriptionError) {
-              console.error('Error creating subscription:', subscriptionError)
-              // Don't fail the approval, just log
-            }
-          }
-        } catch (error) {
-          console.error('Error auto-creating subscription:', error)
-          // Don't fail the approval
-        }
-
-        // Optionally create reservation or allocation here
-        // This would call the inventory reservation function
-        break
+      // REMOVED: 'commitment' and 'deal_commitment' cases - tables deleted
+      // The commitment workflow has been deprecated and replaced by
+      // investor_deal_interest -> deal_subscription_submissions flow
 
       case 'allocation':
         // Finalize allocation (call DB function if exists)
@@ -278,49 +203,99 @@ async function executeApprovalActions(
         }
         break
 
-      case 'reservation':
-        // Convert reservation to allocation
-        const { error: reservationError } = await supabase
-          .from('reservations')
-          .update({ status: 'approved' })
+      case 'investor_onboarding':
+        // Update investor KYC status
+        const { error: kycError } = await supabase
+          .from('investors')
+          .update({
+            kyc_status: 'approved',
+            kyc_approved_at: new Date().toISOString(),
+            kyc_approved_by: actorId
+          })
           .eq('id', entityId)
 
-        if (reservationError) {
-          console.error('Error approving reservation:', reservationError)
-          return { success: false, error: 'Failed to approve reservation' }
+        if (kycError) {
+          console.error('Error updating KYC status:', kycError)
+          return { success: false, error: 'Failed to update KYC status' }
         }
-        break
 
-      case 'kyc_change':
-        // Apply KYC changes to investor record
-        if (metadata.kyc_updates && approval.related_investor_id) {
-          const { error: kycError } = await supabase
-            .from('investors')
-            .update({
-              ...metadata.kyc_updates,
-              kyc_status: 'completed'
-            })
-            .eq('id', approval.related_investor_id)
+        // Create user account for investor if doesn't exist
+        if (metadata.email) {
+          const { data: existingProfile } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('email', metadata.email)
+            .single()
 
-          if (kycError) {
-            console.error('Error applying KYC changes:', kycError)
-            return { success: false, error: 'Failed to apply KYC changes' }
+          if (!existingProfile) {
+            // Generate temporary password
+            const tempPassword = Math.random().toString(36).slice(-8) + 'Aa1!'
+
+            // Note: In production, this would trigger email verification
+            const { error: profileError } = await supabase
+              .from('profiles')
+              .insert({
+                email: metadata.email,
+                display_name: metadata.display_name || metadata.email.split('@')[0],
+                role: 'investor',
+                is_active: true,
+                metadata: {
+                  investor_id: entityId,
+                  temp_password: tempPassword,
+                  needs_password_reset: true
+                }
+              })
+
+            if (profileError) {
+              console.error('Error creating investor profile:', profileError)
+              // Don't fail the approval, just log
+            }
+
+            // Link investor to the new profile
+            const { data: newProfile } = await supabase
+              .from('profiles')
+              .select('id')
+              .eq('email', metadata.email)
+              .single()
+
+            if (newProfile) {
+              await supabase
+                .from('investor_users')
+                .insert({
+                  investor_id: entityId,
+                  user_id: newProfile.id,
+                  role: 'primary',
+                  is_active: true
+                })
+            }
           }
         }
         break
 
-      case 'withdrawal':
-        // Mark withdrawal as approved
-        // Actual withdrawal processing would be handled separately
-        console.log('Withdrawal approved:', entityId)
+      case 'deal':
+        // Update deal status
+        const { error: dealError } = await supabase
+          .from('deals')
+          .update({
+            status: metadata.target_status || 'approved',
+            approved_by: actorId,
+            approved_at: new Date().toISOString()
+          })
+          .eq('id', entityId)
+
+        if (dealError) {
+          console.error('Error approving deal:', dealError)
+          return { success: false, error: 'Failed to approve deal' }
+        }
         break
 
-      case 'deal_interest': {
+      case 'deal_interest':
+        // Update investor deal interest status
         const { error: interestError } = await supabase
           .from('investor_deal_interest')
           .update({
             status: 'approved',
-            approved_at: new Date().toISOString()
+            updated_at: new Date().toISOString()
           })
           .eq('id', entityId)
 
@@ -329,443 +304,283 @@ async function executeApprovalActions(
           return { success: false, error: 'Failed to approve deal interest' }
         }
 
-        const ownerUserId = await getPrimaryInvestorUserId(supabase, approval.related_investor_id)
-        await ensureInvestorTask(supabase, approval.related_investor_id, {
-          owner_user_id: ownerUserId,
-          kind: 'deal_nda_signature',
-          category: 'investment_setup',
-          title: `Sign NDA for ${approval.related_deal?.name ?? 'deal'}`,
-          description: 'Please execute the NDA so we can open the data room for this opportunity.',
-          related_entity_type: 'deal_interest',
-          related_entity_id: approval.entity_id,
-          deal_id: approval.related_deal_id,
-          due_in_days: 3,
-          instructions: {
-            type: 'nda_sign',
-            deal_id: approval.related_deal_id,
-            interest_id: approval.entity_id
-          }
-        })
+        // Grant data room access automatically if deal has data room
+        const { data: dealInterest } = await supabase
+          .from('investor_deal_interest')
+          .select(`
+            *,
+            deal:deals!inner(
+              id,
+              name,
+              has_data_room
+            )
+          `)
+          .eq('id', entityId)
+          .single()
 
-        if (ownerUserId) {
-          try {
-            await supabase.from('investor_notifications').insert({
-              user_id: ownerUserId,
-              investor_id: approval.related_investor_id,
-              title: 'Interest approved',
-              message: `Your interest in ${approval.related_deal?.name ?? 'this deal'} has been approved. Review and sign the NDA to unlock the data room.`,
-              link: '/versoholdings/tasks',
-              metadata: {
-                type: 'deal_interest_approved',
-                deal_id: approval.related_deal_id,
-                approval_id: approval.id,
-                interest_id: approval.entity_id
-              }
-            })
-          } catch (notificationError) {
-            console.error('Failed to create investor notification for interest approval', notificationError)
-          }
-        }
+        if (dealInterest?.deal?.has_data_room) {
+          // Check if access already exists
+          const { data: existingAccess } = await supabase
+            .from('deal_data_room_access')
+            .select('id')
+            .eq('deal_id', dealInterest.deal_id)
+            .eq('investor_id', dealInterest.investor_id)
+            .single()
 
-        try {
-          await supabase.from('automation_webhook_events').insert({
-            event_type: 'nda_generate_request',
-            related_deal_id: approval.related_deal_id,
-            related_investor_id: approval.related_investor_id,
-            payload: {
-              approval_id: approval.id,
-              deal_id: approval.related_deal_id,
-              investor_id: approval.related_investor_id,
-              indicative_amount: metadata.indicative_amount ?? null,
-              indicative_currency: metadata.indicative_currency ?? null,
-              notes: metadata.notes ?? null
-            }
-          })
-        } catch (eventError) {
-          console.error('Failed to enqueue NDA generation event:', eventError)
-        }
-
-        if (process.env.AUTOMATION_NDA_GENERATE_URL) {
-          try {
-            await fetch(process.env.AUTOMATION_NDA_GENERATE_URL, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                approval_id: approval.id,
-                deal_id: approval.related_deal_id,
-                investor_id: approval.related_investor_id,
-                indicative_amount: metadata.indicative_amount ?? null,
-                indicative_currency: metadata.indicative_currency ?? null
+          if (!existingAccess) {
+            const { error: accessError } = await supabase
+              .from('deal_data_room_access')
+              .insert({
+                deal_id: dealInterest.deal_id,
+                investor_id: dealInterest.investor_id,
+                granted_by: actorId,
+                expires_at: metadata.data_room_expiry || null
               })
-            })
-          } catch (automationError) {
-            console.error('Failed to trigger NDA automation webhook:', automationError)
+
+            if (accessError) {
+              console.error('Error granting data room access:', accessError)
+              // Don't fail the approval
+            }
+          }
+
+          // Create task for NDA if required
+          if (metadata.require_nda) {
+            const { error: taskError } = await supabase
+              .from('tasks')
+              .insert({
+                title: `Sign NDA for ${dealInterest.deal.name}`,
+                description: `Please sign the NDA to access the data room for ${dealInterest.deal.name}`,
+                entity_type: 'deal_nda',
+                entity_id: dealInterest.deal_id,
+                assigned_to: dealInterest.investor_id,
+                owner_user_id: dealInterest.investor_id, // This would be the investor's user ID
+                status: 'pending',
+                priority: 'high',
+                due_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 days
+              })
+
+            if (taskError) {
+              console.error('Error creating NDA task:', taskError)
+              // Don't fail the approval
+            }
+          }
+
+          return {
+            success: true,
+            notificationData: {
+              type: 'data_room_access_granted',
+              deal_name: dealInterest.deal.name
+            }
           }
         }
-
-        await trackDealEvent({
-          supabase,
-          dealId: approval.related_deal_id,
-          investorId: approval.related_investor_id,
-          eventType: 'deal_interest_approved',
-          payload: {
-            approval_id: approval.id,
-            interest_id: approval.entity_id,
-            indicative_amount: metadata.indicative_amount ?? null,
-            indicative_currency: metadata.indicative_currency ?? null
-          }
-        })
-
-        // TODO: invoke automation (nda_generate) once integration endpoint is available
         break
-      }
 
-      case 'deal_subscription': {
-        const { error: subscriptionError } = await supabase
+      case 'deal_subscription':
+        // Update subscription submission status
+        const { error: subError } = await supabase
           .from('deal_subscription_submissions')
           .update({
             status: 'approved',
-            decided_at: new Date().toISOString(),
-            decided_by: actorId
+            approved_by: actorId,
+            approved_at: new Date().toISOString()
           })
           .eq('id', entityId)
 
-        if (subscriptionError) {
-          console.error('Error approving subscription submission:', subscriptionError)
+        if (subError) {
+          console.error('Error approving subscription submission:', subError)
           return { success: false, error: 'Failed to approve subscription submission' }
         }
 
-        const ownerUserId = await getPrimaryInvestorUserId(supabase, approval.related_investor_id)
-        await ensureInvestorTask(supabase, approval.related_investor_id, {
-          owner_user_id: ownerUserId,
-          kind: 'investment_allocation_confirmation',
-          category: 'investment_setup',
-          title: `Confirm allocation for ${approval.related_deal?.name ?? 'deal'}`,
-          description: 'Review the subscription pack and confirm the final allocation details.',
-          related_entity_type: 'deal_subscription',
-          related_entity_id: approval.entity_id,
-          deal_id: approval.related_deal_id,
-          due_in_days: 5,
-          instructions: {
-            type: 'subscription_review',
-            deal_id: approval.related_deal_id,
-            submission_id: approval.entity_id
-          }
-        })
+        // Create formal subscription from submission
+        const { data: submission } = await supabase
+          .from('deal_subscription_submissions')
+          .select(`
+            *,
+            deal:deals!inner(
+              id,
+              name,
+              vehicle_id,
+              currency
+            )
+          `)
+          .eq('id', entityId)
+          .single()
 
-        try {
-          await supabase.from('automation_webhook_events').insert({
-            event_type: 'subscription_pack_generate_request',
-            related_deal_id: approval.related_deal_id,
-            related_investor_id: approval.related_investor_id,
-            payload: {
-              approval_id: approval.id,
-              deal_id: approval.related_deal_id,
-              investor_id: approval.related_investor_id,
-              submission_id: entityId,
-              payload: metadata.payload ?? null
-            }
-          })
-        } catch (eventError) {
-          console.error('Failed to enqueue subscription pack event:', eventError)
-        }
+        if (submission && submission.deal?.vehicle_id) {
+          // Check if subscription already exists
+          const { data: existingSub } = await supabase
+            .from('subscriptions')
+            .select('id')
+            .eq('investor_id', submission.investor_id)
+            .eq('vehicle_id', submission.deal.vehicle_id)
+            .eq('deal_id', submission.deal_id)
+            .single()
 
-        if (process.env.AUTOMATION_SUBSCRIPTION_PACK_URL) {
-          try {
-            await fetch(process.env.AUTOMATION_SUBSCRIPTION_PACK_URL, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                approval_id: approval.id,
-                deal_id: approval.related_deal_id,
-                investor_id: approval.related_investor_id,
-                submission_id: entityId
+          if (!existingSub) {
+            const { error: createSubError } = await supabase
+              .from('subscriptions')
+              .insert({
+                investor_id: submission.investor_id,
+                vehicle_id: submission.deal.vehicle_id,
+                deal_id: submission.deal_id,
+                commitment: submission.amount_requested,
+                currency: submission.deal.currency || 'USD',
+                status: 'pending_documentation',
+                subscription_date: new Date().toISOString(),
+                effective_date: submission.effective_date || new Date().toISOString(),
+                acknowledgement_notes: `Approved from submission ${submission.id}`
               })
-            })
-          } catch (automationError) {
-            console.error('Failed to trigger subscription automation webhook:', automationError)
+
+            if (createSubError) {
+              console.error('Error creating subscription:', createSubError)
+              return { success: false, error: 'Failed to create subscription' }
+            }
+          }
+
+          return {
+            success: true,
+            notificationData: {
+              type: 'subscription_approved',
+              deal_name: submission.deal.name,
+              amount: submission.amount_requested
+            }
           }
         }
-
-        await trackDealEvent({
-          supabase,
-          dealId: approval.related_deal_id,
-          investorId: approval.related_investor_id,
-          eventType: 'deal_subscription_approved',
-          payload: {
-            approval_id: approval.id,
-            submission_id: approval.entity_id,
-            amount: metadata.payload?.amount ?? null,
-            currency: metadata.payload?.currency ?? null
-          }
-        })
         break
-      }
+
+      case 'document':
+        // Update document status
+        const { error: docError } = await supabase
+          .from('documents')
+          .update({
+            status: 'approved',
+            approved_by: actorId,
+            approved_at: new Date().toISOString()
+          })
+          .eq('id', entityId)
+
+        if (docError) {
+          console.error('Error approving document:', docError)
+          return { success: false, error: 'Failed to approve document' }
+        }
+        break
+
+      case 'wire_instruction':
+        // Update wire instruction status
+        const { error: wireError } = await supabase
+          .from('wire_instructions')
+          .update({
+            status: 'approved',
+            approved_by: actorId,
+            approved_at: new Date().toISOString()
+          })
+          .eq('id', entityId)
+
+        if (wireError) {
+          console.error('Error approving wire instruction:', wireError)
+          return { success: false, error: 'Failed to approve wire instruction' }
+        }
+        break
 
       default:
-        console.log(`No downstream action defined for entity type: ${entityType}`)
+        console.log(`No specific approval handler for entity type: ${entityType}`)
     }
 
     return { success: true }
   } catch (error) {
-    console.error('Error executing approval actions:', error)
-    return { success: false, error: 'Failed to execute approval actions' }
+    console.error('Entity approval handler error:', error)
+    return { success: false, error: 'Failed to process entity approval' }
   }
 }
 
-// Execute actions when approval is rejected
-async function executeRejectionActions(
+// Handle entity-specific rejection actions
+async function handleEntityRejection(
   supabase: any,
   approval: any,
   reason: string
-): Promise<{ success: boolean; error?: string }> {
+): Promise<void> {
   try {
-    // Create task for user to address rejection
-    if (approval.requested_by) {
-      const { error: taskError } = await supabase
-        .from('tasks')
-        .insert({
-          owner_user_id: approval.requested_by,
-          owner_investor_id: approval.related_investor_id,
-          kind: 'other',
-          category: 'investment_setup',
-          title: `Address rejected ${approval.entity_type} request`,
-          description: `Your ${approval.entity_type} request was rejected. Reason: ${reason}`,
-          priority: 'high',
-          status: 'pending',
-          due_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 days
-        })
-
-      if (taskError) {
-        console.error('Error creating rejection task:', taskError)
-      }
-    }
-
-    // Update entity status if applicable
     const entityType = approval.entity_type
     const entityId = approval.entity_id
 
-    if (entityType === 'deal_commitment') {
-      await supabase
-        .from('deal_commitments')
-        .update({ status: 'rejected' })
-        .eq('id', entityId)
-    } else if (entityType === 'allocation') {
-      await supabase
-        .from('allocations')
-        .update({ status: 'rejected' })
-        .eq('id', entityId)
-    } else if (entityType === 'reservation') {
-      await supabase
-        .from('reservations')
-        .update({ status: 'cancelled' })
-        .eq('id', entityId)
-    } else if (entityType === 'deal_interest') {
+    // REMOVED: 'deal_commitment' case - table deleted
+
+    if (entityType === 'deal_interest') {
       await supabase
         .from('investor_deal_interest')
-        .update({ status: 'rejected' })
-        .eq('id', entityId)
-    } else if (entityType === 'deal_subscription') {
-      await supabase
-        .from('deal_subscription_submissions')
-        .update({ status: 'rejected', decided_at: new Date().toISOString(), decided_by: null })
+        .update({
+          status: 'rejected',
+          rejection_reason: reason,
+          updated_at: new Date().toISOString()
+        })
         .eq('id', entityId)
     }
 
-    return { success: true }
+    if (entityType === 'deal_subscription') {
+      await supabase
+        .from('deal_subscription_submissions')
+        .update({
+          status: 'rejected',
+          rejection_reason: reason,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', entityId)
+    }
+
+    if (entityType === 'investor_onboarding') {
+      await supabase
+        .from('investors')
+        .update({
+          kyc_status: 'rejected',
+          kyc_rejected_reason: reason,
+          kyc_rejected_at: new Date().toISOString()
+        })
+        .eq('id', entityId)
+    }
+
+    if (entityType === 'allocation') {
+      await supabase
+        .from('allocations')
+        .update({
+          status: 'rejected',
+          rejection_reason: reason
+        })
+        .eq('id', entityId)
+    }
   } catch (error) {
-    console.error('Error executing rejection actions:', error)
-    return { success: false, error: 'Failed to execute rejection actions' }
+    console.error('Entity rejection handler error:', error)
+    // Don't fail the rejection, just log
   }
 }
 
-export async function POST(
-  req: NextRequest,
+export async function DELETE(
+  request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
+    await requireStaffAuth()
     const supabase = await createClient()
-    const serviceSupabase = createServiceClient()
 
-    // Await params
-    const { id: approvalId } = await params
-
-    // Get authenticated user (supports both real auth and demo mode)
-    const { user, error: authError } = await getAuthenticatedUser(supabase)
-
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
-
-    // Get staff profile
-    let profile = null
-    
-    // For demo mode, create a mock profile from user metadata
-    if (user.user_metadata?.role) {
-      profile = {
-        id: user.id,
-        role: user.user_metadata.role,
-        display_name: user.email?.split('@')[0] || 'Demo User',
-        title: null,
-        email: user.email
-      }
-    } else {
-      // For real auth, fetch from database
-      const { data: dbProfile, error: profileError } = await supabase
-        .from('profiles')
-        .select('id, role, display_name, title, email')
-        .eq('id', user.id)
-        .single()
-      
-      if (profileError) {
-        return NextResponse.json(
-          { error: 'Profile not found' },
-          { status: 404 }
-        )
-      }
-      profile = dbProfile
-    }
-
-    if (!profile || !['staff_admin', 'staff_ops', 'staff_rm'].includes(profile.role)) {
-      return NextResponse.json(
-        { error: 'Staff access required' },
-        { status: 403 }
-      )
-    }
-
-    // Parse and validate request body
-    const body = await req.json()
-    const validation = approvalActionSchema.safeParse(body)
-
-    if (!validation.success) {
-      return NextResponse.json(
-        { error: 'Invalid request data', details: (validation.error as any).errors },
-        { status: 400 }
-      )
-    }
-
-    const { action, notes, rejection_reason } = validation.data
-
-    // Fetch approval with related data (use service client to bypass RLS for demo mode)
-    const { data: approval, error: approvalError } = await serviceSupabase
+    // Soft delete the approval
+    const { error } = await supabase
       .from('approvals')
-      .select(`
-        *,
-        requested_by_profile:requested_by (display_name, email),
-        assigned_to_profile:assigned_to (display_name, email),
-        related_deal:deals (id, name),
-        related_investor:investors (id, legal_name)
-      `)
-      .eq('id', approvalId)
-      .single()
+      .update({
+        deleted_at: new Date().toISOString()
+      })
+      .eq('id', id)
 
-    if (approvalError || !approval) {
-      console.error('[Approval Action] Approval not found:', approvalId, approvalError)
+    if (error) {
+      console.error('Approval deletion error:', error)
       return NextResponse.json(
-        { error: 'Approval not found' },
-        { status: 404 }
-      )
-    }
-
-    // Check if already processed
-    if (approval.status !== 'pending') {
-      return NextResponse.json(
-        { error: `Approval already ${approval.status}` },
-        { status: 400 }
-      )
-    }
-
-    // Check approval authority
-    const authCheck = checkApprovalAuthority(profile, approval)
-    if (!authCheck.authorized) {
-      return NextResponse.json(
-        { error: authCheck.reason || 'Insufficient authority' },
-        { status: 403 }
-      )
-    }
-
-    // Update approval status
-    const newStatus = action === 'approve' ? 'approved' : 'rejected'
-    const updateData: any = {
-      status: newStatus,
-      approved_by: user.id,
-      approved_at: new Date().toISOString(),
-      notes: notes || approval.notes
-    }
-
-    if (action === 'reject') {
-      updateData.rejection_reason = rejection_reason
-    }
-
-    const { data: updatedApproval, error: updateError } = await serviceSupabase
-      .from('approvals')
-      .update(updateData)
-      .eq('id', approvalId)
-      .select(`
-        *,
-        requested_by_profile:requested_by (display_name, email),
-        assigned_to_profile:assigned_to (display_name, email),
-        approved_by_profile:approved_by (display_name, email),
-        related_deal:deals (id, name),
-        related_investor:investors (id, legal_name)
-      `)
-      .single()
-
-    if (updateError) {
-      console.error('Approval update error:', updateError)
-      return NextResponse.json(
-        { error: 'Failed to update approval' },
+        { error: 'Failed to delete approval' },
         { status: 500 }
       )
     }
 
-    // Execute downstream actions
-    if (action === 'approve') {
-      const actionResult = await executeApprovalActions(serviceSupabase, updatedApproval, user.id)
-      if (!actionResult.success) {
-        // Log warning but don't fail the approval
-        console.warn('Approval succeeded but downstream actions failed:', actionResult.error)
-      }
-    } else {
-      const rejectionResult = await executeRejectionActions(
-        serviceSupabase,
-        updatedApproval,
-        rejection_reason || 'No reason provided'
-      )
-      if (!rejectionResult.success) {
-        console.warn('Approval rejection succeeded but downstream actions failed:', rejectionResult.error)
-      }
-    }
-
-    // Log in audit trail
-    await auditLogger.log({
-      actor_user_id: user.id,
-      action: AuditActions.UPDATE,
-      entity: 'approvals',
-      entity_id: approvalId,
-      metadata: {
-        entity_type: approval.entity_type,
-        target_entity_id: approval.entity_id,
-        decision: action,
-        decided_by: profile.display_name,
-        notes: notes,
-        rejection_reason: rejection_reason,
-        investor: approval.related_investor?.legal_name,
-        deal: approval.related_deal?.name
-      }
-    })
-
-    return NextResponse.json({
-      success: true,
-      approval: updatedApproval,
-      message: `${approval.entity_type} ${action}d successfully`
-    })
-
+    return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('Approval action API error:', error)
+    console.error('Approval deletion error:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

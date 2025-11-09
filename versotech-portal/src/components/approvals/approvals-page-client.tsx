@@ -344,11 +344,11 @@ export function ApprovalsPageClient({
 
   // Quick action: Show low priority
   const handleProcessLowValue = async () => {
-    const newFilters = { 
-      entity_types: ['deal_commitment'] as any[], 
-      priorities: ['low'] as any[], 
-      assigned_to_me: false, 
-      overdue_only: false 
+    const newFilters = {
+      entity_types: [] as any[],
+      priorities: ['low'] as any[],
+      assigned_to_me: false,
+      overdue_only: false
     }
     setFilters(newFilters)
     setPagination(prev => ({ ...prev, page: 1 }))

@@ -68,15 +68,7 @@ export async function POST(request: NextRequest) {
     let entityName = ''
     
     switch (entity_type) {
-      case 'deal_commitment':
-        const { data: commitment } = await supabase
-          .from('deal_commitments')
-          .select('id, investors(legal_name)')
-          .eq('id', entity_id)
-          .single()
-        entityExists = !!commitment
-        entityName = (commitment?.investors as any)?.[0]?.legal_name || 'Unknown'
-        break
+      // REMOVED: 'deal_commitment' case - table deleted
 
       case 'deal_interest':
         const { data: interest } = await supabase

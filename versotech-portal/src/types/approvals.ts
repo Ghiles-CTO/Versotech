@@ -1,10 +1,7 @@
 // Approval entity types that can be approved/rejected
 export type ApprovalEntityType =
-  | 'commitment'
-  | 'deal_commitment'
   | 'deal_interest'
   | 'deal_subscription'
-  | 'reservation'
   | 'allocation'
   | 'withdrawal'
   | 'kyc_change'

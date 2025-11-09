@@ -93,24 +93,7 @@ export async function GET(
       .rpc('fn_deal_inventory_summary', { p_deal_id: dealId })
       .single()
 
-    // Get recent reservations and allocations for this deal
-    const { data: reservations } = await supabase
-      .from('reservations')
-      .select(`
-        id,
-        investor_id,
-        requested_units,
-        proposed_unit_price,
-        expires_at,
-        status,
-        created_at,
-        investors:investor_id (
-          legal_name
-        )
-      `)
-      .eq('deal_id', dealId)
-      .order('created_at', { ascending: false })
-      .limit(10)
+    // REMOVED: reservations table deleted - deprecated workflow
 
     const { data: allocations } = await supabase
       .from('allocations')
@@ -145,8 +128,8 @@ export async function GET(
     return NextResponse.json({
       deal,
       inventorySummary,
-      reservations: reservations || [],
       allocations: allocations || []
+      // reservations removed - table deleted
     })
 
   } catch (error) {

@@ -59,11 +59,8 @@ const statusColors = {
 }
 
 const entityTypeLabels: Record<string, string> = {
-  commitment: 'Commitment',
-  deal_commitment: 'Deal Commitment',
   deal_interest: 'Deal Interest',
   deal_subscription: 'Subscription',
-  reservation: 'Reservation',
   allocation: 'Allocation',
   withdrawal: 'Withdrawal',
   kyc_change: 'KYC Change',

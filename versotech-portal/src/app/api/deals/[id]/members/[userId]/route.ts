@@ -25,21 +25,8 @@ export async function DELETE(
 
     const { id: dealId, userId } = await params
 
-    // Check if user has active commitments or allocations
-    const { data: commitments } = await supabase
-      .from('deal_commitments')
-      .select('id, status')
-      .eq('deal_id', dealId)
-      .eq('created_by', userId)
-      .in('status', ['submitted', 'under_review', 'approved'])
-      .limit(1)
-
-    if (commitments && commitments.length > 0) {
-      return NextResponse.json(
-        { error: 'Cannot remove member with active commitments. Cancel or reject commitments first.' },
-        { status: 400 }
-      )
-    }
+    // REMOVED: deal_commitments check - table deleted
+    // Commitments workflow replaced by deal_subscription_submissions
 
     // Delete membership
     const { error } = await supabase
