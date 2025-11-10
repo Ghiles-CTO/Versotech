@@ -105,11 +105,9 @@ export async function POST(req: NextRequest) {
     // Load PDF document
     const pdfDoc = await PDFDocument.load(pdfBytes)
 
-    // Convert base64 signature to PNG image
-    const signatureImageBytes = Uint8Array.from(
-      atob(signature_data_url.split(',')[1]),
-      c => c.charCodeAt(0)
-    )
+    // Convert base64 signature to PNG image (Node.js Buffer API)
+    const base64Data = signature_data_url.split(',')[1]
+    const signatureImageBytes = Buffer.from(base64Data, 'base64')
 
     // Embed signature image
     const signatureImage = await pdfDoc.embedPng(signatureImageBytes)
