@@ -11,9 +11,10 @@ import { useRouter } from 'next/navigation'
 
 interface AddMemberModalProps {
   dealId: string
+  onMemberAdded?: () => void
 }
 
-export function AddMemberModal({ dealId }: AddMemberModalProps) {
+export function AddMemberModal({ dealId, onMemberAdded }: AddMemberModalProps) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -36,7 +37,8 @@ export function AddMemberModal({ dealId }: AddMemberModalProps) {
 
   const fetchInvestors = async () => {
     try {
-      const response = await fetch('/api/investors')
+      // Only fetch investors that have linked user accounts
+      const response = await fetch('/api/investors?has_users=true')
       if (response.ok) {
         const data = await response.json()
         setInvestors(data.investors || [])
@@ -76,6 +78,12 @@ export function AddMemberModal({ dealId }: AddMemberModalProps) {
       setFormData({ email: '', role: 'investor' })
       setSelectedInvestor('')
       setOpen(false)
+
+      // Call callback to refresh members list instantly
+      if (onMemberAdded) {
+        onMemberAdded()
+      }
+
       router.refresh()
     } catch (err: any) {
       setError(err.message)
@@ -129,8 +137,8 @@ export function AddMemberModal({ dealId }: AddMemberModalProps) {
                     }}
                     className="p-3 hover:bg-white/5 cursor-pointer border-b border-white/5 last:border-0"
                   >
-                    <p className="font-medium text-foreground">{inv.legal_name}</p>
-                    <p className="text-sm text-muted-foreground">{inv.type}</p>
+                    <p className="font-medium text-white">{inv.legal_name}</p>
+                    <p className="text-sm text-gray-400">{inv.type}</p>
                   </div>
                 ))}
               </div>

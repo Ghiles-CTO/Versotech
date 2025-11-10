@@ -71,26 +71,115 @@ export const processWorkflows: WorkflowDefinition[] = [
     triggerType: 'manual',
     requiredRole: 'staff_rm',
     inputSchema: {
-      investor_email: {
-        label: 'Investor Email',
+      series_number: {
+        label: 'Series Number',
+        type: 'text',
+        placeholder: 'VC206',
+        required: true,
+        helperText: 'Series identifier (e.g., VC206)'
+      },
+      project_description: {
+        label: 'Project Description',
+        type: 'text',
+        placeholder: 'VERSO Capital 2 SCSP Series 206',
+        required: true,
+        helperText: 'Full project/series description'
+      },
+      investment_description: {
+        label: 'Investment Description',
+        type: 'text',
+        placeholder: 'OPEN AI Primary Issuance July 2025',
+        required: true,
+        helperText: 'Description of the investment opportunity'
+      },
+      party_a_name: {
+        label: 'Party A Name',
+        type: 'text',
+        placeholder: 'Investor/Company Name',
+        required: true,
+        helperText: 'Name of the investor or company'
+      },
+      party_a_registered_address: {
+        label: 'Party A Address',
+        type: 'text',
+        placeholder: 'Full registered address',
+        required: true,
+        helperText: 'Registered address of Party A'
+      },
+      party_a_city_country: {
+        label: 'Party A City/Country',
+        type: 'text',
+        placeholder: 'City, Country Code',
+        required: true,
+        helperText: 'City and country (e.g., London, GB)'
+      },
+      party_a_representative_name: {
+        label: 'Party A Representative',
+        type: 'text',
+        placeholder: 'Representative Name',
+        required: true,
+        helperText: 'Name of authorized representative'
+      },
+      party_a_representative_title: {
+        label: 'Party A Rep. Title',
+        type: 'text',
+        placeholder: 'CEO, Director, etc.',
+        required: true,
+        helperText: 'Title of the representative'
+      },
+      party_b_name: {
+        label: 'Party B Name',
+        type: 'text',
+        placeholder: 'VERSO Capital 2 SCSP Series 206',
+        defaultValue: 'VERSO Capital 2 SCSP Series 206 ("VC206")',
+        helperText: 'VERSO entity name (pre-filled)'
+      },
+      party_b_registered_address: {
+        label: 'Party B Address',
+        type: 'text',
+        placeholder: '2, Avenue Charles de Gaulle – L-1653',
+        defaultValue: '2, Avenue Charles de Gaulle – L-1653',
+        helperText: 'VERSO registered address'
+      },
+      party_b_city_country: {
+        label: 'Party B City/Country',
+        type: 'text',
+        placeholder: 'Luxembourg, LU',
+        defaultValue: 'Luxembourg, LU',
+        helperText: 'VERSO city and country'
+      },
+      party_b_representative_name: {
+        label: 'Party B Representative',
+        type: 'text',
+        placeholder: 'Julien Machot',
+        defaultValue: 'Julien Machot',
+        helperText: 'VERSO representative name'
+      },
+      party_b_representative_title: {
+        label: 'Party B Rep. Title',
+        type: 'text',
+        placeholder: 'Managing Partner',
+        defaultValue: 'Managing Partner',
+        helperText: 'VERSO representative title'
+      },
+      dataroom_email: {
+        label: 'Data Room Email',
         type: 'email',
         placeholder: 'investor@example.com',
         required: true,
-        helperText: 'Email address where the NDA will be sent'
+        helperText: 'Email for data room access'
       },
-      investment_type: {
-        label: 'Investment Type',
+      execution_date: {
+        label: 'Execution Date',
+        type: 'date',
+        required: true,
+        helperText: 'Date of NDA execution'
+      },
+      zoho_sign_document_id: {
+        label: 'Zoho Sign Document ID',
         type: 'text',
-        placeholder: 'VERSO FUND, REAL Empire, etc.',
-        required: true,
-        helperText: 'Specify the investment vehicle or opportunity'
-      },
-      nda_template: {
-        label: 'NDA Template',
-        type: 'select',
-        options: ['standard', 'institutional', 'high-net-worth'],
-        required: true,
-        helperText: 'Choose the appropriate NDA template'
+        placeholder: 'Optional - auto-generated if empty',
+        helperText: 'Zoho Sign tracking ID (optional)'
       }
     }
   },
@@ -348,6 +437,45 @@ export const processWorkflows: WorkflowDefinition[] = [
         options: ['individual', 'institution', 'corporate'],
         required: true,
         helperText: 'Classification for KYC processing'
+      }
+    }
+  },
+  {
+    key: 'generate-subscription-pack',
+    title: 'Subscription Pack',
+    description: 'Generate subscription agreements, PPM, and onboarding documents for new investors',
+    detailedDescription: 'Automatically generate a complete subscription package including subscription agreements, Private Placement Memorandum (PPM), and all required onboarding documents. The package is tailored to the specific vehicle and investor type, ready for e-signature.',
+    icon: 'FileCheck',
+    category: 'documents',
+    triggerType: 'manual',
+    requiredRole: 'staff_ops',
+    inputSchema: {
+      investor_id: {
+        label: 'Investor',
+        type: 'investor_select',
+        placeholder: 'Select investor',
+        required: true,
+        helperText: 'Choose the investor for subscription pack generation'
+      },
+      vehicle_id: {
+        label: 'Vehicle',
+        type: 'vehicle_select',
+        placeholder: 'Select vehicle',
+        required: true,
+        helperText: 'Fund or vehicle for the subscription'
+      },
+      commitment_amount: {
+        label: 'Commitment Amount',
+        type: 'number',
+        placeholder: '1000000',
+        required: true,
+        helperText: 'Total commitment amount in USD'
+      },
+      include_ppm: {
+        label: 'Include PPM',
+        type: 'checkbox',
+        defaultValue: true,
+        helperText: 'Include Private Placement Memorandum'
       }
     }
   }

@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -12,7 +13,25 @@ interface DealMembersTabProps {
   members: any[]
 }
 
-export function DealMembersTab({ dealId, members }: DealMembersTabProps) {
+export function DealMembersTab({ dealId, members: initialMembers }: DealMembersTabProps) {
+  const [members, setMembers] = useState(initialMembers)
+
+  // Update local state when server data changes
+  useEffect(() => {
+    setMembers(initialMembers)
+  }, [initialMembers])
+
+  const refreshMembers = async () => {
+    try {
+      const response = await fetch(`/api/deals/${dealId}/members`)
+      if (response.ok) {
+        const data = await response.json()
+        setMembers(data.members || [])
+      }
+    } catch (err) {
+      console.error('Failed to refresh members:', err)
+    }
+  }
   const roleColors: Record<string, string> = {
     investor: 'bg-emerald-500/20 text-emerald-200',
     co_investor: 'bg-blue-500/20 text-blue-200',
@@ -38,13 +57,13 @@ export function DealMembersTab({ dealId, members }: DealMembersTabProps) {
             </div>
             <div className="flex items-center gap-2">
               <GenerateInviteLinkModal dealId={dealId} />
-              <AddMemberModal dealId={dealId} />
+              <AddMemberModal dealId={dealId} onMemberAdded={refreshMembers} />
             </div>
           </div>
         </CardHeader>
         <CardContent>
           {!members || members.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
+            <div className="text-center py-8 text-gray-400">
               No members added yet. Click "Add Member" to invite participants.
             </div>
           ) : (
@@ -57,19 +76,19 @@ export function DealMembersTab({ dealId, members }: DealMembersTabProps) {
                   <div className="flex items-start justify-between">
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
-                        <span className="font-medium text-foreground">
+                        <span className="font-medium text-white">
                           {member.profiles?.display_name || member.profiles?.email}
                         </span>
                         <Badge className={roleColors[member.role] || 'bg-white/20 text-white'}>
                           {member.role.replace('_', ' ')}
                         </Badge>
                         {member.investors && (
-                          <Badge variant="outline" className="border-white/20">
+                          <Badge variant="outline" className="border-white/20 text-white">
                             {member.investors.legal_name}
                           </Badge>
                         )}
                       </div>
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                      <div className="flex items-center gap-4 text-sm text-gray-400">
                         <span>{member.profiles?.email}</span>
                         <span>Invited: {new Date(member.invited_at).toLocaleDateString()}</span>
                         {member.accepted_at ? (

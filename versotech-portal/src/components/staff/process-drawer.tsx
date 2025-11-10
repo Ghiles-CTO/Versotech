@@ -14,15 +14,16 @@ import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { ProcessFormBuilder } from './process-form-builder'
 import { WorkflowDefinition } from '@/lib/workflows'
-import { 
-  PlayCircle, 
-  Clock, 
-  CheckCircle, 
-  XCircle, 
+import {
+  PlayCircle,
+  Clock,
+  CheckCircle,
+  XCircle,
   Loader2,
   Calendar,
   BarChart3,
   FileText,
+  FileCheck,
   Database,
   MessageSquare,
   Target,
@@ -42,6 +43,7 @@ interface ProcessDrawerProps {
 const iconMap: Record<string, any> = {
   BarChart3,
   FileText,
+  FileCheck,
   Database,
   MessageSquare,
   Target,

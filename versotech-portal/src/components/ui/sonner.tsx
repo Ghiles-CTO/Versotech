@@ -8,21 +8,23 @@ const Toaster = ({ ...props }: ToasterProps) => {
 
   return (
     <Sonner
-      theme={theme as ToasterProps["theme"]}
+      theme="dark"
       className="toaster group"
       toastOptions={{
         style: {
-          color: 'white',
+          background: '#18181b',
+          color: '#ffffff',
+          border: '1px solid rgba(255, 255, 255, 0.2)',
         },
         classNames: {
-          toast: 'group toast group-[.toaster]:bg-background group-[.toaster]:text-white group-[.toaster]:border-border group-[.toaster]:shadow-lg',
-          description: 'group-[.toast]:text-white/90',
-          actionButton: 'group-[.toast]:bg-primary group-[.toast]:text-primary-foreground',
-          cancelButton: 'group-[.toast]:bg-muted group-[.toast]:text-muted-foreground',
-          success: 'group-[.toast]:text-white',
-          error: 'group-[.toast]:text-white',
-          info: 'group-[.toast]:text-white',
-          warning: 'group-[.toast]:text-white',
+          toast: 'group toast group-[.toaster]:bg-zinc-900 group-[.toaster]:text-white group-[.toaster]:border-white/20 group-[.toaster]:shadow-lg',
+          description: 'group-[.toast]:text-gray-300',
+          actionButton: 'group-[.toast]:bg-sky-500 group-[.toast]:text-white group-[.toast]:hover:bg-sky-600',
+          cancelButton: 'group-[.toast]:bg-zinc-800 group-[.toast]:text-gray-300 group-[.toast]:hover:bg-zinc-700',
+          success: 'group-[.toast]:text-green-400',
+          error: 'group-[.toast]:text-red-400',
+          info: 'group-[.toast]:text-blue-400',
+          warning: 'group-[.toast]:text-yellow-400',
         },
       }}
       {...props}

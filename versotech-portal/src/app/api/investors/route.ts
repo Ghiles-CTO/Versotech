@@ -9,15 +9,48 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams
     const limit = parseInt(searchParams.get('limit') || '100')
     const offset = parseInt(searchParams.get('offset') || '0')
+    const hasUsers = searchParams.get('has_users') === 'true'
 
-    // Fetch all investors with more fields
-    const query = supabase
-      .from('investors')
-      .select('id, legal_name, display_name, email, type, kyc_status')
-      .order('legal_name')
-      .range(offset, offset + limit - 1)
+    let investors: any[] = []
+    let error: any = null
 
-    const { data: investors, error } = await query
+    if (hasUsers) {
+      // Fetch only investors that have linked user accounts
+      const result = await supabase
+        .from('investors')
+        .select(`
+          id,
+          legal_name,
+          display_name,
+          email,
+          type,
+          kyc_status,
+          investor_users!inner (
+            user_id,
+            profiles:user_id (
+              id,
+              display_name,
+              email,
+              role
+            )
+          )
+        `)
+        .order('legal_name')
+        .range(offset, offset + limit - 1)
+
+      investors = result.data || []
+      error = result.error
+    } else {
+      // Fetch all investors with more fields
+      const result = await supabase
+        .from('investors')
+        .select('id, legal_name, display_name, email, type, kyc_status')
+        .order('legal_name')
+        .range(offset, offset + limit - 1)
+
+      investors = result.data || []
+      error = result.error
+    }
 
     if (error) {
       console.error('Fetch investors error:', error)

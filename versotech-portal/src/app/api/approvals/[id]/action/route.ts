@@ -2,6 +2,7 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { requireStaffAuth } from '@/lib/auth'
 import { auditLogger, AuditActions } from '@/lib/audit'
 import { NextResponse } from 'next/server'
+import { triggerWorkflow } from '@/lib/trigger-workflow'
 
 export async function POST(
   request: Request,
@@ -102,7 +103,9 @@ export async function POST(
       const result = await handleEntityApproval(
         serviceSupabase,
         approval,
-        user.id
+        user.id,
+        request,
+        user
       )
 
       if (!result.success) {
@@ -174,7 +177,9 @@ export async function POST(
 async function handleEntityApproval(
   supabase: any,
   approval: any,
-  actorId: string
+  actorId: string,
+  request?: Request,
+  user?: any
 ): Promise<{ success: boolean; error?: string; notificationData?: any }> {
   try {
     const entityType = approval.entity_type
@@ -182,9 +187,57 @@ async function handleEntityApproval(
     const metadata = approval.entity_metadata || {}
 
     switch (entityType) {
-      // REMOVED: 'commitment' and 'deal_commitment' cases - tables deleted
-      // The commitment workflow has been deprecated and replaced by
-      // investor_deal_interest -> deal_subscription_submissions flow
+      case 'deal_commitment':
+        // Auto-trigger Subscription Pack workflow for deal commitment approvals
+        try {
+          const { data: investorData } = await supabase
+            .from('investors')
+            .select('*')
+            .eq('id', approval.related_investor_id)
+            .single()
+
+          const { data: dealData } = await supabase
+            .from('deals')
+            .select('*, vehicle:vehicles(*)')
+            .eq('id', approval.related_deal_id)
+            .single()
+
+          if (investorData && dealData && user) {
+            const subscriptionPayload = {
+              investor_id: investorData.id,
+              vehicle_id: dealData.vehicle_id,
+              commitment_amount: metadata.requested_amount || metadata.commitment_amount || 0,
+              include_ppm: true
+            }
+
+            console.log('🔔 Triggering Subscription Pack workflow:', { investor: investorData.legal_name })
+
+            const result = await triggerWorkflow({
+              workflowKey: 'generate-subscription-pack',
+              payload: subscriptionPayload,
+              entityType: 'deal_commitment_subscription',
+              user: {
+                id: user.id,
+                email: user.email,
+                displayName: user.displayName,
+                role: user.role,
+                title: user.title
+              }
+            })
+
+            if (!result.success) {
+              console.error('❌ Failed to trigger Subscription Pack workflow:', result.error)
+            } else {
+              console.log('✅ Subscription Pack workflow triggered successfully:', {
+                investor: investorData.legal_name,
+                workflow_run_id: result.workflow_run_id
+              })
+            }
+          }
+        } catch (subError) {
+          console.error('Error triggering Subscription Pack workflow:', subError)
+        }
+        break
 
       case 'allocation':
         // Finalize allocation (call DB function if exists)
@@ -304,73 +357,90 @@ async function handleEntityApproval(
           return { success: false, error: 'Failed to approve deal interest' }
         }
 
-        // Grant data room access automatically if deal has data room
+        // Fetch deal interest details for NDA workflow
         const { data: dealInterest } = await supabase
           .from('investor_deal_interest')
           .select(`
             *,
             deal:deals!inner(
               id,
-              name,
-              has_data_room
+              name
             )
           `)
           .eq('id', entityId)
           .single()
 
-        if (dealInterest?.deal?.has_data_room) {
-          // Check if access already exists
-          const { data: existingAccess } = await supabase
-            .from('deal_data_room_access')
-            .select('id')
-            .eq('deal_id', dealInterest.deal_id)
-            .eq('investor_id', dealInterest.investor_id)
-            .single()
+        if (dealInterest) {
+          // Auto-trigger NDA workflow after interest approval
+          try {
+            // Fetch complete investor and deal data for NDA
+            const { data: investorData } = await supabase
+              .from('investors')
+              .select('*, profiles!investors_created_by_fkey(display_name)')
+              .eq('id', dealInterest.investor_id)
+              .single()
 
-          if (!existingAccess) {
-            const { error: accessError } = await supabase
-              .from('deal_data_room_access')
-              .insert({
-                deal_id: dealInterest.deal_id,
-                investor_id: dealInterest.investor_id,
-                granted_by: actorId,
-                expires_at: metadata.data_room_expiry || null
+            const { data: dealData } = await supabase
+              .from('deals')
+              .select('*, vehicle:vehicles(*)')
+              .eq('id', dealInterest.deal_id)
+              .single()
+
+            if (investorData && dealData && user) {
+              // Prepare NDA payload with all required fields
+              const ndaPayload = {
+                series_number: dealData.vehicle?.entity_code || 'VC206',
+                project_description: dealData.vehicle?.name || 'VERSO Capital 2 SCSP Series 206',
+                investment_description: dealData.name || dealData.description || 'Investment Opportunity',
+
+                // Party A (Investor)
+                party_a_name: investorData.legal_name || investorData.display_name,
+                party_a_registered_address: investorData.registered_address || 'Address to be provided',
+                party_a_city_country: investorData.city || `${investorData.country || 'Country to be provided'}`,
+                party_a_representative_name: investorData.representative_name || 'Representative to be provided',
+                party_a_representative_title: investorData.representative_title || 'Title to be provided',
+
+                // Party B (VERSO)
+                party_b_name: dealData.vehicle?.name || 'VERSO Capital 2 SCSP Series 206 ("VC206")',
+                party_b_registered_address: '2, Avenue Charles de Gaulle – L-1653',
+                party_b_city_country: dealData.vehicle?.domicile || 'Luxembourg, LU',
+                party_b_representative_name: 'Julien Machot',
+                party_b_representative_title: 'Managing Partner',
+
+                // Execution details
+                dataroom_email: investorData.email || 'email@required.com',
+                execution_date: new Date().toISOString().split('T')[0],
+                zoho_sign_document_id: '' // Auto-generated by n8n
+              }
+
+              // Trigger NDA workflow
+              console.log('🔔 Triggering NDA workflow:', { investor: investorData.legal_name })
+
+              const result = await triggerWorkflow({
+                workflowKey: 'process-nda',
+                payload: ndaPayload,
+                entityType: 'deal_interest_nda',
+                user: {
+                  id: user.id,
+                  email: user.email,
+                  displayName: user.displayName,
+                  role: user.role,
+                  title: user.title
+                }
               })
 
-            if (accessError) {
-              console.error('Error granting data room access:', accessError)
-              // Don't fail the approval
+              if (!result.success) {
+                console.error('❌ Failed to trigger NDA workflow:', result.error)
+              } else {
+                console.log('✅ NDA workflow triggered successfully:', {
+                  investor: investorData.legal_name,
+                  workflow_run_id: result.workflow_run_id
+                })
+              }
             }
-          }
-
-          // Create task for NDA if required
-          if (metadata.require_nda) {
-            const { error: taskError } = await supabase
-              .from('tasks')
-              .insert({
-                title: `Sign NDA for ${dealInterest.deal.name}`,
-                description: `Please sign the NDA to access the data room for ${dealInterest.deal.name}`,
-                entity_type: 'deal_nda',
-                entity_id: dealInterest.deal_id,
-                assigned_to: dealInterest.investor_id,
-                owner_user_id: dealInterest.investor_id, // This would be the investor's user ID
-                status: 'pending',
-                priority: 'high',
-                due_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 days
-              })
-
-            if (taskError) {
-              console.error('Error creating NDA task:', taskError)
-              // Don't fail the approval
-            }
-          }
-
-          return {
-            success: true,
-            notificationData: {
-              type: 'data_room_access_granted',
-              deal_name: dealInterest.deal.name
-            }
+          } catch (ndaError) {
+            console.error('Error triggering NDA workflow:', ndaError)
+            // Don't fail the approval if NDA trigger fails
           }
         }
         break

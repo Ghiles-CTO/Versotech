@@ -17,7 +17,13 @@
       "Bash(tree:*)",
       "Bash(find:*)",
       "WebFetch(domain:paperos.com)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(git commit:*)",
+      "Bash(npx supabase:*)",
+      "Bash(src/types/supabase.ts)",
+      "mcp__supabase__get_logs",
+      "Bash(taskkill /F /PID 33916)",
+      "Bash(npx kill-port:*)"
     ],
     "deny": [],
     "ask": []
