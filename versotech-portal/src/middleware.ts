@@ -60,7 +60,7 @@ export async function middleware(request: NextRequest) {
       '/logout'
     ]
 
-    const isPublicRoute = publicRoutes.includes(pathname)
+    const isPublicRoute = publicRoutes.includes(pathname) || pathname.startsWith('/sign/')
     const isLoginRoute = pathname === '/versoholdings/login' || pathname === '/versotech/login'
 
     // SECURE: Use getUser() which validates against Supabase Auth server

@@ -22,6 +22,7 @@ export async function triggerWorkflow({
 }: TriggerWorkflowParams): Promise<{
   success: boolean
   workflow_run_id?: string
+  n8n_response?: any
   error?: string
 }> {
   try {
@@ -128,7 +129,7 @@ export async function triggerWorkflow({
       .update({
         status: 'running',
         started_at: new Date().toISOString(),
-        output_data: n8nResult.execution_id ? { execution_id: n8nResult.execution_id } : null
+        output_data: n8nResult
       })
       .eq('id', workflowRun.id)
 
@@ -147,7 +148,8 @@ export async function triggerWorkflow({
 
     return {
       success: true,
-      workflow_run_id: workflowRun.id
+      workflow_run_id: workflowRun.id,
+      n8n_response: n8nResult
     }
   } catch (error) {
     console.error('Workflow trigger error:', error)

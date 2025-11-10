@@ -436,6 +436,40 @@ async function handleEntityApproval(
                   investor: investorData.legal_name,
                   workflow_run_id: result.workflow_run_id
                 })
+
+                // Create signature request if n8n returned Google Drive file
+                if (result.n8n_response && result.n8n_response.length > 0) {
+                  const googleDriveFile = result.n8n_response[0]
+
+                  try {
+                    const sigResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/signature/request`, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        workflow_run_id: result.workflow_run_id,
+                        investor_id: investorData.id,
+                        signer_email: investorData.email,
+                        signer_name: investorData.legal_name || investorData.display_name,
+                        document_type: 'nda',
+                        google_drive_file_id: googleDriveFile.id,
+                        google_drive_url: googleDriveFile.webContentLink || googleDriveFile.webViewLink
+                      })
+                    })
+
+                    if (sigResponse.ok) {
+                      const sigData = await sigResponse.json()
+                      console.log('📧 Signature request created:', {
+                        signature_request_id: sigData.signature_request_id,
+                        signing_url: sigData.signing_url
+                      })
+                    } else {
+                      console.error('Failed to create signature request:', await sigResponse.text())
+                    }
+                  } catch (sigError) {
+                    console.error('Error creating signature request:', sigError)
+                    // Don't fail approval if signature request fails
+                  }
+                }
               }
             }
           } catch (ndaError) {

@@ -23,7 +23,9 @@
       "Bash(src/types/supabase.ts)",
       "mcp__supabase__get_logs",
       "Bash(taskkill /F /PID 33916)",
-      "Bash(npx kill-port:*)"
+      "Bash(npx kill-port:*)",
+      "Bash(git checkout:*)",
+      "Bash(npm install:*)"
     ],
     "deny": [],
     "ask": []
