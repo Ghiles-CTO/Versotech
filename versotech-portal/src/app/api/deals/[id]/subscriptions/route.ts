@@ -200,6 +200,66 @@ export async function POST(
     }
   })
 
+  // AUTO-CREATE APPROVAL for subscription review
+  try {
+    const { data: deal } = await serviceSupabase
+      .from('deals')
+      .select('name, currency')
+      .eq('id', dealId)
+      .single()
+
+    const { data: investor } = await serviceSupabase
+      .from('investors')
+      .select('legal_name')
+      .eq('id', resolvedInvestorId)
+      .single()
+
+    const amount = payload?.amount || 0
+    const currency = payload?.currency || deal?.currency || 'USD'
+
+    const { data: approval, error: approvalError } = await serviceSupabase
+      .from('approvals')
+      .insert({
+        entity_type: 'deal_subscription',
+        entity_id: submission.id,
+        requested_by: user.id,
+        related_investor_id: resolvedInvestorId,
+        related_deal_id: dealId,
+        status: 'pending',
+        priority: 'high',
+        title: `Subscription Request - ${investor?.legal_name || 'Investor'}`,
+        description: `Subscription request for ${deal?.name || 'deal'}: ${new Intl.NumberFormat('en-US', {
+          style: 'currency',
+          currency: currency,
+          minimumFractionDigits: 0
+        }).format(amount)}`,
+        entity_metadata: {
+          subscription_submission_id: submission.id,
+          amount_requested: amount,
+          currency: currency,
+          bank_confirmation: payload?.bank_confirmation || false,
+          notes: payload?.notes || null
+        }
+      })
+      .select()
+      .single()
+
+    if (approvalError) {
+      console.error('Failed to create approval for subscription:', approvalError)
+      // Don't fail the submission if approval creation fails
+    } else {
+      console.log('✅ Approval created for subscription:', {
+        approval_id: approval.id,
+        submission_id: submission.id,
+        investor_id: resolvedInvestorId,
+        deal_id: dealId
+      })
+    }
+  } catch (approvalCreationError) {
+    console.error('Error creating approval for subscription:', approvalCreationError)
+    // Don't fail the submission if approval creation fails
+  }
+
   return NextResponse.json({
     success: true,
     submission

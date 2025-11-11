@@ -634,6 +634,55 @@ async function handleEntityApproval(
               console.error('Error creating subscription:', createSubError)
               return { success: false, error: 'Failed to create subscription' }
             }
+
+            // AUTO-TRIGGER SUBSCRIPTION PACK WORKFLOW
+            try {
+              const { data: investorData } = await supabase
+                .from('investors')
+                .select('*')
+                .eq('id', submission.investor_id)
+                .single()
+
+              if (investorData && user) {
+                const subscriptionPayload = {
+                  investor_id: investorData.id,
+                  vehicle_id: submission.deal.vehicle_id,
+                  commitment_amount: submission.amount_requested || 0,
+                  include_ppm: true
+                }
+
+                console.log('🔔 Triggering Subscription Pack workflow:', {
+                  investor: investorData.legal_name,
+                  deal: submission.deal.name
+                })
+
+                const result = await triggerWorkflow({
+                  workflowKey: 'generate-subscription-pack',
+                  payload: subscriptionPayload,
+                  entityType: 'deal_subscription',
+                  entityId: submission.id,
+                  user: {
+                    id: user.id,
+                    email: user.email,
+                    displayName: user.displayName,
+                    role: user.role,
+                    title: user.title
+                  }
+                })
+
+                if (!result.success) {
+                  console.error('❌ Failed to trigger Subscription Pack workflow:', result.error)
+                } else {
+                  console.log('✅ Subscription Pack workflow triggered successfully:', {
+                    investor: investorData.legal_name,
+                    workflow_run_id: result.workflow_run_id
+                  })
+                }
+              }
+            } catch (workflowError) {
+              console.error('Error triggering Subscription Pack workflow:', workflowError)
+              // Don't fail the approval if workflow trigger fails
+            }
           }
 
           return {
