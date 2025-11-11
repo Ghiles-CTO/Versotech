@@ -393,10 +393,10 @@ export async function POST(req: NextRequest) {
                   // 🔑 AUTOMATIC DATA ROOM ACCESS GRANT
                   // Now that NDA is fully executed, grant investor access to deal's data room
                   try {
-                    // Get deal's close date for access expiry
+                    // Get deal info
                     const { data: deal } = await supabase
                       .from('deals')
-                      .select('close_at, name')
+                      .select('id, name')
                       .eq('id', dealInterest.deal_id)
                       .single()
 
@@ -411,16 +411,20 @@ export async function POST(req: NextRequest) {
                     if (existingAccess && !existingAccess.revoked_at) {
                       console.log('ℹ️ Data room access already exists for this investor')
                     } else {
-                      // Grant new access
+                      // Calculate expiry: 7 days from now
+                      const expiryDate = new Date()
+                      expiryDate.setDate(expiryDate.getDate() + 7)
+
+                      // Grant new access (7 days only)
                       const { data: newAccess, error: accessError } = await supabase
                         .from('deal_data_room_access')
                         .insert({
                           deal_id: dealInterest.deal_id,
                           investor_id: dealInterest.investor_id,
                           granted_at: new Date().toISOString(),
-                          expires_at: deal?.close_at || null,
+                          expires_at: expiryDate.toISOString(),
                           auto_granted: true,
-                          notes: `Automatically granted upon NDA execution for ${deal?.name || 'deal'}`
+                          notes: `Automatically granted upon NDA execution for ${deal?.name || 'deal'}. Initial 7-day access period.`
                         })
                         .select()
                         .single()

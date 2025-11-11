@@ -343,6 +343,7 @@ async function handleEntityApproval(
         break
 
       case 'deal_interest':
+      case 'deal_interest_nda':
         // Update investor deal interest status
         const { error: interestError } = await supabase
           .from('investor_deal_interest')
@@ -370,6 +371,8 @@ async function handleEntityApproval(
           .eq('id', entityId)
           .single()
 
+        console.log('🔍 DEBUG: dealInterest:', dealInterest ? 'EXISTS' : 'NULL')
+
         if (dealInterest) {
           // Auto-trigger NDA workflow after interest approval
           try {
@@ -385,6 +388,12 @@ async function handleEntityApproval(
               .select('*, vehicle:vehicles(*)')
               .eq('id', dealInterest.deal_id)
               .single()
+
+            console.log('🔍 DEBUG: Data check:', {
+              hasInvestor: !!investorData,
+              hasDeal: !!dealData,
+              hasUser: !!user
+            })
 
             if (investorData && dealData && user) {
               // Prepare NDA payload with all required fields
@@ -420,6 +429,7 @@ async function handleEntityApproval(
                 workflowKey: 'process-nda',
                 payload: ndaPayload,
                 entityType: 'deal_interest_nda',
+                entityId: dealInterest.id,
                 user: {
                   id: user.id,
                   email: user.email,
@@ -437,46 +447,131 @@ async function handleEntityApproval(
                   workflow_run_id: result.workflow_run_id
                 })
 
-                // Create signature request if n8n returned Google Drive file
-                if (result.n8n_response && result.n8n_response.length > 0) {
-                  const googleDriveFile = result.n8n_response[0]
+                // Create TWO signature requests if n8n returned Google Drive file
+                if (result.n8n_response) {
+                  const googleDriveFile = Array.isArray(result.n8n_response)
+                    ? result.n8n_response[0]
+                    : result.n8n_response
 
                   try {
-                    const sigResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/signature/request`, {
+                    // Create investor signature request (PARTY A - left column)
+                    const investorSigPayload = {
+                      workflow_run_id: result.workflow_run_id,
+                      investor_id: investorData.id,
+                      signer_email: investorData.email,
+                      signer_name: investorData.legal_name || investorData.display_name,
+                      document_type: 'nda',
+                      google_drive_file_id: googleDriveFile.id,
+                      google_drive_url: googleDriveFile.webContentLink || googleDriveFile.webViewLink,
+                      signer_role: 'investor',
+                      signature_position: 'party_a'
+                    }
+
+                    console.log('🔍 Investor signature request payload:', investorSigPayload)
+
+                    const investorSigResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/signature/request`, {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({
-                        workflow_run_id: result.workflow_run_id,
-                        investor_id: investorData.id,
-                        signer_email: investorData.email,
-                        signer_name: investorData.legal_name || investorData.display_name,
-                        document_type: 'nda',
-                        google_drive_file_id: googleDriveFile.id,
-                        google_drive_url: googleDriveFile.webContentLink || googleDriveFile.webViewLink
-                      })
+                      body: JSON.stringify(investorSigPayload)
                     })
 
-                    if (sigResponse.ok) {
-                      const sigData = await sigResponse.json()
-                      console.log('📧 Signature request created:', {
-                        signature_request_id: sigData.signature_request_id,
-                        signing_url: sigData.signing_url
+                    if (investorSigResponse.ok) {
+                      const investorSigData = await investorSigResponse.json()
+                      console.log('📧 Investor signature request created:', {
+                        signature_request_id: investorSigData.signature_request_id,
+                        signing_url: investorSigData.signing_url
                       })
                     } else {
-                      console.error('Failed to create signature request:', await sigResponse.text())
+                      console.error('Failed to create investor signature request:', await investorSigResponse.text())
+                    }
+
+                    // Create admin signature request (PARTY B - right column)
+                    const adminSigPayload = {
+                      workflow_run_id: result.workflow_run_id,
+                      investor_id: investorData.id,
+                      signer_email: 'cto@versoholdings.com',
+                      signer_name: 'Julien Machot',
+                      document_type: 'nda',
+                      google_drive_file_id: googleDriveFile.id,
+                      google_drive_url: googleDriveFile.webContentLink || googleDriveFile.webViewLink,
+                      signer_role: 'admin',
+                      signature_position: 'party_b'
+                    }
+
+                    console.log('🔍 Admin signature request payload:', adminSigPayload)
+
+                    const adminSigResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/signature/request`, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify(adminSigPayload)
+                    })
+
+                    if (adminSigResponse.ok) {
+                      const adminSigData = await adminSigResponse.json()
+                      console.log('📧 Admin signature request created:', {
+                        signature_request_id: adminSigData.signature_request_id,
+                        signing_url: adminSigData.signing_url
+                      })
+                    } else {
+                      console.error('Failed to create admin signature request:', await adminSigResponse.text())
                     }
                   } catch (sigError) {
-                    console.error('Error creating signature request:', sigError)
+                    console.error('Error creating signature requests:', sigError)
                     // Don't fail approval if signature request fails
                   }
                 }
               }
+            } else {
+              console.log('⚠️ Skipping NDA workflow - missing data:', {
+                hasInvestor: !!investorData,
+                hasDeal: !!dealData,
+                hasUser: !!user
+              })
             }
           } catch (ndaError) {
-            console.error('Error triggering NDA workflow:', ndaError)
+            console.error('❌ Error triggering NDA workflow:', ndaError)
             // Don't fail the approval if NDA trigger fails
           }
+        } else {
+          console.log('⚠️ No deal interest found for entityId:', entityId)
         }
+        break
+
+      case 'data_room_access_extension':
+        // Extend data room access by 7 days
+        const { data: currentAccess } = await supabase
+          .from('deal_data_room_access')
+          .select('expires_at')
+          .eq('id', entityId)
+          .single()
+
+        if (!currentAccess) {
+          return { success: false, error: 'Access record not found' }
+        }
+
+        // Calculate new expiry: add 7 days to current expiry (not from now)
+        const currentExpiry = new Date(currentAccess.expires_at)
+        const newExpiry = new Date(currentExpiry)
+        newExpiry.setDate(newExpiry.getDate() + 7)
+
+        const { error: extendError } = await supabase
+          .from('deal_data_room_access')
+          .update({
+            expires_at: newExpiry.toISOString(),
+            notes: `Extended by 7 days upon approval on ${new Date().toLocaleDateString()}`
+          })
+          .eq('id', entityId)
+
+        if (extendError) {
+          console.error('Error extending data room access:', extendError)
+          return { success: false, error: 'Failed to extend data room access' }
+        }
+
+        console.log('✅ Data room access extended:', {
+          access_id: entityId,
+          old_expiry: currentAccess.expires_at,
+          new_expiry: newExpiry.toISOString()
+        })
         break
 
       case 'deal_subscription':

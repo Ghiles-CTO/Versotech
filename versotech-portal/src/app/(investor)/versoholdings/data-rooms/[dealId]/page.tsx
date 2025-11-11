@@ -22,6 +22,7 @@ import {
 import { DataRoomDocumentsGrouped } from '@/components/deals/data-room-documents-grouped'
 import { DataRoomDocument } from '@/components/deals/data-room-documents'
 import { SubmitSubscriptionForm } from '@/components/deals/submit-subscription-form'
+import { RequestExtensionButton } from '@/components/deals/request-extension-button'
 import Link from 'next/link'
 
 export const dynamic = 'force-dynamic'
@@ -236,14 +237,22 @@ export default async function DataRoomDetailPage({ params }: PageProps) {
                   </span>
                 </div>
               </div>
-              {daysRemaining !== null && daysRemaining <= 7 && (
-                <div className="flex items-center gap-2 text-sm">
-                  <AlertCircle className="h-4 w-4 text-amber-500" />
-                  <span className="text-amber-700 font-medium">
-                    {daysRemaining} day{daysRemaining !== 1 ? 's' : ''} remaining
-                  </span>
-                </div>
-              )}
+              <div className="flex items-center gap-3">
+                {daysRemaining !== null && daysRemaining <= 7 && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <AlertCircle className="h-4 w-4 text-amber-500" />
+                    <span className="text-amber-700 font-medium">
+                      {daysRemaining} day{daysRemaining !== 1 ? 's' : ''} remaining
+                    </span>
+                  </div>
+                )}
+                <RequestExtensionButton
+                  dealId={dealId}
+                  dealName={deal.name}
+                  expiresAt={accessData.expires_at}
+                  daysRemaining={daysRemaining}
+                />
+              </div>
             </div>
           </div>
         </div>

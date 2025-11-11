@@ -2,48 +2,52 @@
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { createClient } from '@/lib/supabase/client'
-import { CalendarClock, Loader2, Check } from 'lucide-react'
+import { Clock, Loader2, Check } from 'lucide-react'
 
 interface RequestExtensionButtonProps {
   dealId: string
-  investorId: string
+  dealName: string
+  expiresAt: string | null
+  daysRemaining: number | null
   className?: string
 }
 
-export function RequestExtensionButton({ dealId, investorId, className }: RequestExtensionButtonProps) {
+export function RequestExtensionButton({ dealId, dealName, expiresAt, daysRemaining, className }: RequestExtensionButtonProps) {
   const [status, setStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
   const [error, setError] = useState<string | null>(null)
-  const supabase = createClient()
+
+  // Only show button if access is expiring soon (7 days or less)
+  if (!expiresAt || (daysRemaining !== null && daysRemaining > 7)) {
+    return null
+  }
 
   const handleClick = async () => {
     setStatus('saving')
     setError(null)
 
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-
-      const { error: insertError } = await supabase
-        .from('investor_interest_signals')
-        .insert({
+      const response = await fetch('/api/data-room-access/request-extension', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
           deal_id: dealId,
-          investor_id: investorId,
-          signal_type: 'data_room_extension_request',
-          created_by: user?.id ?? null,
-          metadata: {}
+          reason: `Requesting additional time to review ${dealName} data room materials`
         })
+      })
 
-      if (insertError) {
-        throw insertError
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to submit extension request')
       }
 
       setStatus('saved')
-      setTimeout(() => setStatus('idle'), 2500)
+      setTimeout(() => setStatus('idle'), 3000)
     } catch (err) {
       console.error('Failed to request extension', err)
       setStatus('error')
-      setError('Could not submit the request. Please try again.')
-      setTimeout(() => setStatus('idle'), 3000)
+      setError(err instanceof Error ? err.message : 'Could not submit the request. Please try again.')
+      setTimeout(() => setStatus('idle'), 4000)
     }
   }
 
@@ -52,29 +56,30 @@ export function RequestExtensionButton({ dealId, investorId, className }: Reques
       <Button
         type="button"
         variant="outline"
-        className={className}
-        disabled={status === 'saving'}
+        size="sm"
+        className={className || "border-2 border-blue-600 text-blue-700 hover:bg-blue-50"}
+        disabled={status === 'saving' || status === 'saved'}
         onClick={handleClick}
       >
         {status === 'saving' ? (
           <>
-            <Loader2 className="h-4 w-4 animate-spin mr-2" />
-            Sending…
+            <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
+            Requesting…
           </>
         ) : status === 'saved' ? (
           <>
-            <Check className="h-4 w-4 mr-2 text-emerald-500" />
-            Request received
+            <Check className="h-4 w-4 mr-1.5 text-emerald-600" />
+            Request Submitted
           </>
         ) : (
           <>
-            <CalendarClock className="h-4 w-4 mr-2" />
-            Request access extension
+            <Clock className="h-4 w-4 mr-1.5" />
+            Request Extension
           </>
         )}
       </Button>
       {status === 'error' && error && (
-        <p className="text-xs text-destructive">{error}</p>
+        <p className="text-xs text-red-600">{error}</p>
       )}
     </div>
   )
