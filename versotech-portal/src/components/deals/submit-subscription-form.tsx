@@ -109,6 +109,7 @@ export function SubmitSubscriptionForm({ dealId, currency, existingSubmission }:
             value={amount}
             onChange={event => setAmount(event.target.value)}
             placeholder="e.g. 250000"
+            className="text-black"
           />
         </div>
         <div className="space-y-2">
@@ -119,7 +120,7 @@ export function SubmitSubscriptionForm({ dealId, currency, existingSubmission }:
               checked={bankConfirmation}
               onCheckedChange={checked => setBankConfirmation(Boolean(checked))}
             />
-            <Label htmlFor={`bank-confirmation-${dealId}`} className="text-xs text-gray-600">
+            <Label htmlFor={`bank-confirmation-${dealId}`} className="text-xs text-black font-normal cursor-pointer">
               I confirm my bank/KYC documentation is ready for the subscription pack.
             </Label>
           </div>
@@ -134,6 +135,7 @@ export function SubmitSubscriptionForm({ dealId, currency, existingSubmission }:
           onChange={event => setNotes(event.target.value)}
           rows={4}
           placeholder="Share wiring preferences, co-investor details, or other information for the VERSO team."
+          className="text-black"
         />
       </div>
 
@@ -144,7 +146,7 @@ export function SubmitSubscriptionForm({ dealId, currency, existingSubmission }:
         <div className="text-sm text-emerald-600">{feedback}</div>
       )}
 
-      <Button type="submit" disabled={isSubmitting} className="gap-2">
+      <Button type="submit" disabled={isSubmitting} variant="outline" className="gap-2 border-2 border-blue-600 text-black hover:bg-blue-50">
         {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
         Submit Subscription
       </Button>
