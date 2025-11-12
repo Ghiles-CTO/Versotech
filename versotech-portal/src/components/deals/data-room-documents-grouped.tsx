@@ -74,7 +74,7 @@ export function DataRoomDocumentsGrouped({ documents }: DataRoomDocumentsGrouped
       const url = window.URL.createObjectURL(data)
       const link = document.createElement('a')
       link.href = url
-      link.download = doc.file_name
+      link.download = doc.file_name || 'document'
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
@@ -139,9 +139,9 @@ export function DataRoomDocumentsGrouped({ documents }: DataRoomDocumentsGrouped
                     className="px-4 py-2.5 flex items-center justify-between hover:bg-gray-50"
                   >
                     <div className="flex items-center gap-2 flex-1 min-w-0">
-                      {getFileIcon(doc.file_name)}
+                      {getFileIcon(doc.file_name || '')}
                       <span className="text-sm text-black truncate">
-                        {doc.file_name}
+                        {doc.file_name || 'Untitled'}
                       </span>
                       <span className="text-xs text-gray-500">
                         {new Date(doc.created_at).toLocaleDateString()}

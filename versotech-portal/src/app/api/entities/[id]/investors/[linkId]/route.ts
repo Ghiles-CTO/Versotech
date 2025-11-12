@@ -47,7 +47,7 @@ export async function PATCH(
 
     const { data: existing, error: fetchError } = await supabase
       .from('entity_investors')
-      .select('id, investor_id, subscription_id')
+      .select('id, investor_id')
       .eq('vehicle_id', vehicleId)
       .eq('id', linkId)
       .maybeSingle()
@@ -56,7 +56,7 @@ export async function PATCH(
       return NextResponse.json({ error: 'Investor link not found' }, { status: 404 })
     }
 
-    if (payload.subscription && existing.subscription_id) {
+    if (payload.subscription) {
       const subInput = payload.subscription
       const { error: updateSubError } = await supabase
         .from('subscriptions')
@@ -69,7 +69,8 @@ export async function PATCH(
           units: subInput.units ?? undefined,
           acknowledgement_notes: subInput.acknowledgement_notes ?? undefined
         })
-        .eq('id', existing.subscription_id)
+        .eq('vehicle_id', vehicleId)
+        .eq('investor_id', existing.investor_id)
 
       if (updateSubError) {
         console.error('Failed to update subscription:', updateSubError)
@@ -89,7 +90,6 @@ export async function PATCH(
       .select(
         `
           id,
-          subscription_id,
           relationship_role,
           allocation_status,
           invite_sent_at,
@@ -142,12 +142,11 @@ export async function PATCH(
     const merged = mergeEntityInvestorData({
       entityInvestors: [
         {
-          ...updated,
-          subscription_id: existing.subscription_id
+          ...updated
         } as any
       ],
       subscriptions:
-        existing.subscription_id && updated.subscription
+        updated.subscription
           ? [
               {
                 ...(updated.subscription as any)?.[0],
@@ -198,7 +197,7 @@ export async function DELETE(
 
     const { data: existing, error: fetchError } = await supabase
       .from('entity_investors')
-      .select('id, investor_id, subscription_id')
+      .select('id, investor_id')
       .eq('vehicle_id', vehicleId)
       .eq('id', linkId)
       .maybeSingle()
@@ -258,8 +257,7 @@ export async function DELETE(
       description: `Removed investor link ${existing.investor_id}`,
       changed_by: user.id.startsWith('demo-') ? null : user.id,
       payload: {
-        investor_id: existing.investor_id,
-        subscription_id: existing.subscription_id
+        investor_id: existing.investor_id
       }
     })
 

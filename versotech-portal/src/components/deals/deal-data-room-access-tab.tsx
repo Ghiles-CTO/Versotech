@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import {
   Card,
   CardContent,
@@ -37,8 +38,9 @@ import {
 import { Textarea } from '@/components/ui/textarea'
 import { Checkbox } from '@/components/ui/checkbox'
 import { format, formatDistanceToNow } from 'date-fns'
-import { Loader2, ShieldCheck, KeyRound, Clock, Trash2, Plus } from 'lucide-react'
+import { Loader2, ShieldCheck, KeyRound, Clock, Trash2, Plus, Edit, Download, FileText, ExternalLink } from 'lucide-react'
 import { DataRoomDocumentUpload } from './data-room-document-upload'
+import { toast } from 'sonner'
 
 interface DealDataRoomAccessTabProps {
   dealId: string
@@ -69,12 +71,16 @@ export function DealDataRoomAccessTab({
   accessRecords,
   documents
 }: DealDataRoomAccessTabProps) {
+  const router = useRouter()
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [formValues, setFormValues] = useState<AccessFormState>(emptyForm)
   const [editingAccessId, setEditingAccessId] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [items, setItems] = useState(accessRecords ?? [])
+  const [editingDocId, setEditingDocId] = useState<string | null>(null)
+  const [docFormValues, setDocFormValues] = useState<any>({})
+  const [isDocDialogOpen, setIsDocDialogOpen] = useState(false)
 
   useEffect(() => {
     setItems(accessRecords ?? [])
@@ -195,6 +201,90 @@ export function DealDataRoomAccessTab({
     }
   }
 
+  const handleDownloadDoc = async (doc: any) => {
+    try {
+      // If document has external link, open it directly
+      if (doc.external_link) {
+        window.open(doc.external_link, '_blank', 'noopener,noreferrer')
+        toast.success('Opening document in new tab')
+      } else {
+        // Otherwise, fetch download URL from API
+        const response = await fetch(`/api/deals/${dealId}/documents/${doc.id}/download`)
+        if (!response.ok) {
+          throw new Error('Failed to get download link')
+        }
+        const data = await response.json()
+        window.open(data.download_url, '_blank')
+        toast.success('Document download started')
+      }
+    } catch (error) {
+      toast.error('Failed to open document')
+    }
+  }
+
+  const openEditDocDialog = (doc: any) => {
+    setEditingDocId(doc.id)
+    setDocFormValues({
+      file_name: doc.file_name || '',
+      folder: doc.folder || 'Legal',
+      visible_to_investors: doc.visible_to_investors || false,
+      document_notes: doc.document_notes || '',
+      external_link: doc.external_link || ''
+    })
+    setIsDocDialogOpen(true)
+  }
+
+  const handleSaveDocEdit = async () => {
+    if (!editingDocId) return
+
+    setIsSubmitting(true)
+    try {
+      const response = await fetch(`/api/deals/${dealId}/documents/${editingDocId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(docFormValues)
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to update document')
+      }
+
+      toast.success('Document updated successfully')
+      setIsDocDialogOpen(false)
+      setEditingDocId(null)
+      router.refresh()
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to update document')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleDeleteDoc = async (doc: any) => {
+    if (!confirm(`Are you sure you want to delete "${doc.file_name}"? This action cannot be undone.`)) {
+      return
+    }
+
+    setIsSubmitting(true)
+    try {
+      const response = await fetch(`/api/deals/${dealId}/documents/${doc.id}`, {
+        method: 'DELETE'
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to delete document')
+      }
+
+      toast.success('Document deleted successfully')
+      router.refresh()
+    } catch (error) {
+      toast.error('Failed to delete document')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
   return (
     <div className="space-y-6">
       <Card className="border border-white/10 bg-white/5">
@@ -306,28 +396,94 @@ export function DealDataRoomAccessTab({
             }
           />
         </CardHeader>
-        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {groupedDocuments.length ? (
-            groupedDocuments.map(([folder, docs]) => (
-              <div key={folder} className="rounded-lg border border-white/10 bg-white/5 p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <h4 className="text-sm font-semibold text-foreground">{folder}</h4>
-                  <Badge variant="outline">{docs.length} files</Badge>
-                </div>
-                <ul className="space-y-2 text-xs text-muted-foreground">
-                  {docs.slice(0, 4).map(doc => (
-                    <li key={doc.id} className="truncate">
-                      • {doc.file_name || doc.file_key}
-                    </li>
-                  ))}
-                  {docs.length > 4 && (
-                    <li className="italic">and {docs.length - 4} more…</li>
-                  )}
-                </ul>
-              </div>
-            ))
+        <CardContent>
+          {documents?.length ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Document</TableHead>
+                  <TableHead>Folder</TableHead>
+                  <TableHead>Visible to Investors</TableHead>
+                  <TableHead>Uploaded</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {documents.map(doc => (
+                  <TableRow key={doc.id}>
+                    <TableCell className="font-medium">
+                      <div className="flex items-center gap-2">
+                        {doc.external_link ? (
+                          <ExternalLink className="h-4 w-4 text-blue-500" />
+                        ) : (
+                          <FileText className="h-4 w-4 text-muted-foreground" />
+                        )}
+                        {doc.file_name || doc.file_key?.split('/').pop() || 'Untitled'}
+                        {doc.external_link && (
+                          <Badge variant="outline" className="ml-2 text-xs bg-blue-50 text-blue-700 border-blue-200">
+                            Link
+                          </Badge>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline">{doc.folder || 'Uncategorized'}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge className={doc.visible_to_investors ? 'bg-emerald-500/20 text-emerald-100' : 'bg-gray-500/20 text-gray-200'}>
+                        {doc.visible_to_investors ? 'YES' : 'NO'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {doc.created_at ? format(new Date(doc.created_at), 'MMM d, yyyy') : '—'}
+                    </TableCell>
+                    <TableCell className="text-right space-x-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-2"
+                        onClick={() => handleDownloadDoc(doc)}
+                        disabled={isSubmitting}
+                      >
+                        {doc.external_link ? (
+                          <>
+                            <ExternalLink className="h-4 w-4" />
+                            View
+                          </>
+                        ) : (
+                          <>
+                            <Download className="h-4 w-4" />
+                            Download
+                          </>
+                        )}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-2"
+                        onClick={() => openEditDocDialog(doc)}
+                        disabled={isSubmitting}
+                      >
+                        <Edit className="h-4 w-4" />
+                        Edit
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-2 text-rose-300"
+                        onClick={() => handleDeleteDoc(doc)}
+                        disabled={isSubmitting}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        Delete
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           ) : (
-            <div className="text-sm text-muted-foreground">
+            <div className="text-center py-8 text-muted-foreground">
               No documents have been published to the data room yet.
             </div>
           )}
@@ -414,6 +570,103 @@ export function DealDataRoomAccessTab({
             <Button onClick={submitForm} disabled={isSubmitting}>
               {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Save Access
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Document Edit Dialog */}
+      <Dialog open={isDocDialogOpen} onOpenChange={setIsDocDialogOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Edit Document</DialogTitle>
+            <CardDescription>
+              Update document metadata, folder, and visibility settings.
+            </CardDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="fileName">Document Name</Label>
+              <Input
+                id="fileName"
+                value={docFormValues.file_name || ''}
+                onChange={event => setDocFormValues((prev: any) => ({ ...prev, file_name: event.target.value }))}
+                placeholder="Enter document name..."
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="externalLink">External Link (optional)</Label>
+              <Input
+                id="externalLink"
+                type="url"
+                value={docFormValues.external_link || ''}
+                onChange={event => setDocFormValues((prev: any) => ({ ...prev, external_link: event.target.value }))}
+                placeholder="https://drive.google.com/file/d/..."
+              />
+              <p className="text-xs text-muted-foreground">
+                Leave empty for uploaded files. Add a Google Drive, Dropbox, or other external link to reference documents hosted elsewhere.
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Folder</Label>
+              <Select
+                value={docFormValues.folder}
+                onValueChange={value => setDocFormValues((prev: any) => ({ ...prev, folder: value }))}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Legal">Legal</SelectItem>
+                  <SelectItem value="KYC">KYC</SelectItem>
+                  <SelectItem value="Reports">Reports</SelectItem>
+                  <SelectItem value="Presentations">Presentations</SelectItem>
+                  <SelectItem value="Financial Models">Financial Models</SelectItem>
+                  <SelectItem value="Misc">Misc</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="docVisible"
+                checked={docFormValues.visible_to_investors}
+                onCheckedChange={checked =>
+                  setDocFormValues((prev: any) => ({ ...prev, visible_to_investors: Boolean(checked) }))
+                }
+              />
+              <Label htmlFor="docVisible" className="text-sm font-medium">
+                Visible to investors
+              </Label>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="docNotes">Notes</Label>
+              <Textarea
+                id="docNotes"
+                rows={3}
+                value={docFormValues.document_notes}
+                onChange={event => setDocFormValues((prev: any) => ({ ...prev, document_notes: event.target.value }))}
+                placeholder="Internal notes about this document..."
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="flex items-center justify-between">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setIsDocDialogOpen(false)}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleSaveDocEdit} disabled={isSubmitting}>
+              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Save Changes
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -25,7 +25,15 @@
       "Bash(taskkill /F /PID 33916)",
       "Bash(npx kill-port:*)",
       "Bash(git checkout:*)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(git diff:*)",
+      "Bash(npm run build:*)",
+      "Bash(cat:*)",
+      "Bash(versotech-portal/src/types/supabase.ts)",
+      "mcp__supabase__generate_typescript_types",
+      "Bash(cd:*)",
+      "Bash(ls:*)",
+      "Bash(NEXT_PUBLIC_SUPABASE_URL=\"https://ipguxdssecfexudnvtia.supabase.co\" SUPABASE_SERVICE_ROLE_KEY=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlwZ3V4ZHNzZWNmZXh1ZG52dGlhIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODM2MTgzNywiZXhwIjoyMDczOTM3ODM3fQ.hs1lPI8D8iW5kWOQHRXBAy8JdgmpegzJgWTnIjRz8Qw\" npx supabase gen types:*)"
     ],
     "deny": [],
     "ask": []
@@ -34,5 +42,6 @@
   "enabledMcpjsonServers": [
     "supabase",
     "shadcn"
-  ]
+  ],
+  "outputStyle": "default"
 }

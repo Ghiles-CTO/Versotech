@@ -38,10 +38,7 @@ export async function GET(request: NextRequest) {
       .from('fee_plans')
       .select(
         includeComponents
-          ? `
-          *,
-          components:fee_components(*)
-        `
+          ? '*, components:fee_components(*)'
           : '*'
       )
       .order('created_at', { ascending: false });
@@ -69,7 +66,7 @@ export async function GET(request: NextRequest) {
 
     // Add usage count (number of subscriptions using each plan)
     const plansWithUsage = await Promise.all(
-      (data || []).map(async (plan) => {
+      (data || []).map(async (plan: any) => {
         const { count } = await supabase
           .from('subscriptions')
           .select('*', { count: 'exact', head: true })

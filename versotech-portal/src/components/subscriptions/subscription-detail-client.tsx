@@ -23,6 +23,7 @@ import Link from 'next/link'
 import { SubscriptionEditDialog } from './subscription-edit-dialog'
 import { CapitalActivityTable } from './capital-activity-table'
 import { SubscriptionWithRelations, SubscriptionMetrics } from '@/types/subscription'
+import { SubscriptionDocumentsTab } from './subscription-documents-tab'
 
 interface SubscriptionDetailClientProps {
   subscription: SubscriptionWithRelations
@@ -733,20 +734,7 @@ export function SubscriptionDetailClient({
         </TabsContent>
 
         <TabsContent value="documents" className="mt-6">
-          <Card className="bg-gray-900 border-gray-800">
-            <CardHeader>
-              <CardTitle className="text-white">Documents</CardTitle>
-              <CardDescription className="text-gray-400">
-                Subscription agreements and related documents
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-12 text-gray-400">
-                <FileText className="h-12 w-12 mx-auto mb-4 text-gray-600" />
-                <p>Document management coming soon</p>
-              </div>
-            </CardContent>
-          </Card>
+          <SubscriptionDocumentsTab subscriptionId={subscription.id} />
         </TabsContent>
       </Tabs>
 

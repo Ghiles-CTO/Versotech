@@ -5,6 +5,7 @@ interface TriggerWorkflowParams {
   workflowKey: string
   payload: Record<string, any>
   entityType?: string
+  entityId?: string
   user: {
     id: string
     email: string
@@ -18,6 +19,7 @@ export async function triggerWorkflow({
   workflowKey,
   payload,
   entityType,
+  entityId,
   user
 }: TriggerWorkflowParams): Promise<{
   success: boolean
@@ -62,6 +64,7 @@ export async function triggerWorkflow({
         workflow_key: workflow.key,
         triggered_by: user.id,
         entity_type: entityType ?? 'process',
+        entity_id: entityId || null,
         input_params: payload,
         status: 'queued',
         idempotency_token: idempotencyToken,

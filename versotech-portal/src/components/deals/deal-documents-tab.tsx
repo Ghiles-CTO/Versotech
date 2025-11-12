@@ -20,6 +20,7 @@ export function DealDocumentsTab({ dealId, documents }: DealDocumentsTabProps) {
   const [editingDocument, setEditingDocument] = useState<any | null>(null)
   const [versionHistoryDoc, setVersionHistoryDoc] = useState<string | null>(null)
   const [deleting, setDeleting] = useState<string | null>(null)
+  const [downloading, setDownloading] = useState<string | null>(null)
   
   const docTypeColors: Record<string, string> = {
     nda: 'bg-purple-500/20 text-purple-200',
@@ -34,6 +35,30 @@ export function DealDocumentsTab({ dealId, documents }: DealDocumentsTabProps) {
     setRefreshKey(prev => prev + 1)
     // Trigger page refresh to show new documents
     window.location.reload()
+  }
+
+  const handleDownload = async (documentId: string) => {
+    setDownloading(documentId)
+
+    try {
+      const response = await fetch(`/api/documents/${documentId}/download`)
+
+      if (!response.ok) {
+        throw new Error('Failed to generate download link')
+      }
+
+      const data = await response.json()
+
+      // Open the signed URL in a new tab
+      window.open(data.download_url, '_blank')
+
+      toast.success('Document download started')
+    } catch (error) {
+      console.error('Download error:', error)
+      toast.error('Failed to download document')
+    } finally {
+      setDownloading(null)
+    }
   }
 
   const handleDelete = async (documentId: string) => {
@@ -138,10 +163,11 @@ export function DealDocumentsTab({ dealId, documents }: DealDocumentsTabProps) {
                       variant="outline"
                       size="sm"
                       className="gap-2"
-                      disabled={deleting === doc.id}
+                      onClick={() => handleDownload(doc.id)}
+                      disabled={downloading === doc.id}
                     >
                       <Download className="h-4 w-4" />
-                      Download
+                      {downloading === doc.id ? 'Downloading...' : 'Download'}
                     </Button>
                     <Button
                       variant="outline"

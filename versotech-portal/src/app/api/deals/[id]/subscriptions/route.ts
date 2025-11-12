@@ -53,6 +53,17 @@ export async function GET(
         investors (
           id,
           legal_name
+        ),
+        documents!subscription_submission_id (
+          id,
+          name,
+          type,
+          status,
+          file_key,
+          mime_type,
+          file_size_bytes,
+          created_at,
+          created_by
         )
       `
     )
@@ -69,7 +80,41 @@ export async function GET(
     return NextResponse.json({ error: 'Failed to fetch submissions' }, { status: 500 })
   }
 
-  return NextResponse.json({ submissions: data ?? [] })
+  // Enrich each submission with pack status derived from documents
+  const enrichedSubmissions = (data ?? []).map((submission: any) => {
+    const documents = submission.documents || []
+    let packStatus: 'no_pack' | 'draft' | 'final' | 'pending_signature' | 'signed' = 'no_pack'
+    let packDocumentId: string | undefined
+
+    if (documents.length > 0) {
+      // Sort by created_at DESC to get most recent document
+      const sortedDocs = [...documents].sort((a, b) =>
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      )
+      const latestDoc = sortedDocs[0]
+      packDocumentId = latestDoc.id
+
+      // Determine pack status based on document status
+      if (latestDoc.status === 'signed' || latestDoc.status === 'executed') {
+        packStatus = 'signed'
+      } else if (latestDoc.status === 'pending_signature' || latestDoc.status === 'awaiting_signature') {
+        packStatus = 'pending_signature'
+      } else if (latestDoc.status === 'final') {
+        packStatus = 'final'
+      } else if (latestDoc.status === 'draft') {
+        packStatus = 'draft'
+      }
+    }
+
+    return {
+      ...submission,
+      pack_status: packStatus,
+      pack_document_id: packDocumentId,
+      document_count: documents.length
+    }
+  })
+
+  return NextResponse.json({ submissions: enrichedSubmissions })
 }
 
 export async function POST(
@@ -135,19 +180,41 @@ export async function POST(
     )
   }
 
-  const { data: membership } = await supabase
-    .from('deal_memberships')
-    .select('deal_id')
+  // Check if investor has data room access (granted via NDA signature)
+  const { data: dataRoomAccess } = await serviceSupabase
+    .from('deal_data_room_access')
+    .select('id, expires_at, revoked_at')
     .eq('deal_id', dealId)
     .eq('investor_id', resolvedInvestorId)
+    .is('revoked_at', null)
     .maybeSingle()
 
-  if (!membership && !isStaff) {
+  if (!dataRoomAccess && !isStaff) {
     return NextResponse.json(
-      { error: 'Investor does not have access to this deal' },
+      { error: 'You must have active data room access to submit a subscription' },
       { status: 403 }
     )
   }
+
+  // Check if access has expired
+  if (dataRoomAccess && dataRoomAccess.expires_at) {
+    const expiryDate = new Date(dataRoomAccess.expires_at)
+    if (expiryDate < new Date() && !isStaff) {
+      return NextResponse.json(
+        { error: 'Your data room access has expired. Please request an extension.' },
+        { status: 403 }
+      )
+    }
+  }
+
+  // Auto-cancel any existing pending submissions before creating new one
+  // This prevents duplicate pending submissions and maintains clean workflow state
+  await serviceSupabase
+    .from('deal_subscription_submissions')
+    .update({ status: 'cancelled' })
+    .eq('deal_id', dealId)
+    .eq('investor_id', resolvedInvestorId)
+    .eq('status', 'pending_review')
 
   const { data: submission, error: insertError } = await serviceSupabase
     .from('deal_subscription_submissions')
@@ -200,65 +267,8 @@ export async function POST(
     }
   })
 
-  // AUTO-CREATE APPROVAL for subscription review
-  try {
-    const { data: deal } = await serviceSupabase
-      .from('deals')
-      .select('name, currency')
-      .eq('id', dealId)
-      .single()
-
-    const { data: investor } = await serviceSupabase
-      .from('investors')
-      .select('legal_name')
-      .eq('id', resolvedInvestorId)
-      .single()
-
-    const amount = payload?.amount || 0
-    const currency = payload?.currency || deal?.currency || 'USD'
-
-    const { data: approval, error: approvalError } = await serviceSupabase
-      .from('approvals')
-      .insert({
-        entity_type: 'deal_subscription',
-        entity_id: submission.id,
-        requested_by: user.id,
-        related_investor_id: resolvedInvestorId,
-        related_deal_id: dealId,
-        status: 'pending',
-        priority: 'high',
-        title: `Subscription Request - ${investor?.legal_name || 'Investor'}`,
-        description: `Subscription request for ${deal?.name || 'deal'}: ${new Intl.NumberFormat('en-US', {
-          style: 'currency',
-          currency: currency,
-          minimumFractionDigits: 0
-        }).format(amount)}`,
-        entity_metadata: {
-          subscription_submission_id: submission.id,
-          amount_requested: amount,
-          currency: currency,
-          bank_confirmation: payload?.bank_confirmation || false,
-          notes: payload?.notes || null
-        }
-      })
-      .select()
-      .single()
-
-    if (approvalError) {
-      console.error('Failed to create approval for subscription:', approvalError)
-      // Don't fail the submission if approval creation fails
-    } else {
-      console.log('✅ Approval created for subscription:', {
-        approval_id: approval.id,
-        submission_id: submission.id,
-        investor_id: resolvedInvestorId,
-        deal_id: dealId
-      })
-    }
-  } catch (approvalCreationError) {
-    console.error('Error creating approval for subscription:', approvalCreationError)
-    // Don't fail the submission if approval creation fails
-  }
+  // NOTE: Approval is automatically created by database trigger 'create_deal_subscription_approval'
+  // when status = 'pending_review'. See migration 20251102093000_deal_workflow_phase1_finish.sql
 
   return NextResponse.json({
     success: true,

@@ -19,7 +19,6 @@ import {
 } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { CategorizedDocumentsClient } from '@/components/documents/categorized-documents-client'
-import { InvestorFoldersClient } from '@/components/documents/investor-folders-client'
 import { REPORT_TYPES } from '@/lib/reports/constants'
 import { createClient } from '@/lib/supabase/client'
 import type {
@@ -416,7 +415,7 @@ function DocumentsTab({ documents, folders, vehicles, documentsForFolders }: Doc
       <CardHeader>
         <CardTitle className="text-xl font-semibold text-gray-900">Documents hub</CardTitle>
         <CardDescription className="text-gray-600">
-          Investor statements, agreements, NDAs, and tax packs now live under Reports for easier access.
+          Investor statements, agreements, NDAs, and tax packs organized by category for easier access.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -429,22 +428,7 @@ function DocumentsTab({ documents, folders, vehicles, documentsForFolders }: Doc
             </p>
           </div>
         ) : (
-          <Tabs defaultValue="categories" className="space-y-6">
-            <TabsList className="grid w-full max-w-md grid-cols-2 bg-gray-100 border border-gray-200">
-              <TabsTrigger value="categories" className="text-gray-700 data-[state=active]:bg-white data-[state=active]:text-gray-900">
-                By category
-              </TabsTrigger>
-              <TabsTrigger value="folders" className="text-gray-700 data-[state=active]:bg-white data-[state=active]:text-gray-900">
-                By folder
-              </TabsTrigger>
-            </TabsList>
-            <TabsContent value="categories">
-              <CategorizedDocumentsClient initialDocuments={documents} vehicles={vehicles} />
-            </TabsContent>
-            <TabsContent value="folders">
-              <InvestorFoldersClient folders={folders} documents={documentsForFolders as any} />
-            </TabsContent>
-          </Tabs>
+          <CategorizedDocumentsClient initialDocuments={documents} vehicles={vehicles} />
         )}
       </CardContent>
     </Card>

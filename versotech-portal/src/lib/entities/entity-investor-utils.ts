@@ -14,7 +14,6 @@ type EntityInvestorLinkRow = {
   created_at: string
   updated_at: string | null
   notes: string | null
-  subscription_id?: string | null
   investor?: EntityInvestorSummary['investor']
   subscription?: {
     id: string

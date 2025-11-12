@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
     // Calculate upcoming fees
     const upcomingFees: any[] = [];
 
-    for (const sub of subscriptions || []) {
+    for (const sub of (subscriptions as any[]) || []) {
       const startDate = sub.effective_date ? new Date(sub.effective_date) : new Date(sub.created_at);
 
       // Helper to calculate next due date based on frequency

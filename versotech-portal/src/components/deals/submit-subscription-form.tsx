@@ -28,7 +28,8 @@ export function SubmitSubscriptionForm({ dealId, currency, existingSubmission }:
   const [feedback, setFeedback] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  const isLocked = existingSubmission && ['pending_review', 'approved'].includes(existingSubmission.status)
+  // Only lock form after approval - allow resubmission during pending review to enable corrections
+  const isLocked = existingSubmission && existingSubmission.status === 'approved'
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()

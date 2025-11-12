@@ -210,7 +210,7 @@ export default function OverviewTab() {
                   <div className="p-4 bg-gray-800 rounded border border-gray-600">
                     <p className="text-xs text-gray-300 mb-1 font-semibold">TOTAL ALL FEES</p>
                     <p className="text-xl font-bold text-white">
-                      {formatCurrency(projectedFees.totals.total_all_fees)}
+                      {formatCurrency(projectedFees.totals.total_fees)}
                     </p>
                   </div>
                 </div>

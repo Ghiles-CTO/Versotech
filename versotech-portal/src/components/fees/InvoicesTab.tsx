@@ -397,7 +397,7 @@ export default function InvoicesTab() {
                         <div>
                           <CardTitle className="text-lg">{invoice.invoice_number}</CardTitle>
                           <p className="text-sm text-muted-foreground mt-1">
-                            {invoice.investor?.legal_name || invoice.investor?.display_name || 'Unknown Investor'}
+                            {invoice.investor?.display_name || 'Unknown Investor'}
                             {invoice.deal && ` • ${invoice.deal.name}`}
                           </p>
                         </div>

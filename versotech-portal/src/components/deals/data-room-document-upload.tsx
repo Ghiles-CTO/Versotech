@@ -1,9 +1,11 @@
 'use client'
 
 import { useState, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import { useDropzone } from 'react-dropzone'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -27,12 +29,16 @@ const FOLDERS = [
 ]
 
 export function DataRoomDocumentUpload({ dealId, onUploadComplete, trigger }: DocumentUploadProps) {
+  const router = useRouter()
   const [open, setOpen] = useState(false)
   const [files, setFiles] = useState<File[]>([])
   const [folder, setFolder] = useState('Legal')
   const [visibleToInvestors, setVisibleToInvestors] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
+  const [uploadMode, setUploadMode] = useState<'file' | 'link'>('file')
+  const [externalLink, setExternalLink] = useState('')
+  const [linkFileName, setLinkFileName] = useState('')
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     setFiles(prev => [...prev, ...acceptedFiles])
@@ -48,50 +54,87 @@ export function DataRoomDocumentUpload({ dealId, onUploadComplete, trigger }: Do
   }
 
   const handleUpload = async () => {
-    if (files.length === 0) {
+    if (uploadMode === 'file' && files.length === 0) {
       toast.error('Please select files to upload')
       return
+    }
+
+    if (uploadMode === 'link') {
+      if (!externalLink.trim()) {
+        toast.error('Please enter a link')
+        return
+      }
+      if (!linkFileName.trim()) {
+        toast.error('Please enter a document name')
+        return
+      }
     }
 
     setUploading(true)
     setUploadProgress(0)
 
     try {
-      let successCount = 0
-      
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i]
-        const formData = new FormData()
-        formData.append('file', file)
-        formData.append('folder', folder)
-        formData.append('visible_to_investors', visibleToInvestors.toString())
-
-        const response = await fetch(`/api/deals/${dealId}/documents/upload`, {
+      if (uploadMode === 'link') {
+        // Upload external link
+        const response = await fetch(`/api/deals/${dealId}/documents/link`, {
           method: 'POST',
-          body: formData
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            external_link: externalLink,
+            file_name: linkFileName,
+            folder,
+            visible_to_investors: visibleToInvestors
+          })
         })
 
         if (!response.ok) {
           const error = await response.json()
-          toast.error(`Failed to upload ${file.name}: ${error.error}`)
-          continue
+          toast.error(`Failed to add link: ${error.error}`)
+        } else {
+          toast.success('Link added successfully')
         }
 
-        successCount++
-        setUploadProgress(Math.round(((i + 1) / files.length) * 100))
+        setUploadProgress(100)
+      } else {
+        // Upload files
+        let successCount = 0
+
+        for (let i = 0; i < files.length; i++) {
+          const file = files[i]
+          const formData = new FormData()
+          formData.append('file', file)
+          formData.append('folder', folder)
+          formData.append('visible_to_investors', visibleToInvestors.toString())
+
+          const response = await fetch(`/api/deals/${dealId}/documents/upload`, {
+            method: 'POST',
+            body: formData
+          })
+
+          if (!response.ok) {
+            const error = await response.json()
+            toast.error(`Failed to upload ${file.name}: ${error.error}`)
+            continue
+          }
+
+          successCount++
+          setUploadProgress(Math.round(((i + 1) / files.length) * 100))
+        }
+
+        toast.success(`Successfully uploaded ${successCount} of ${files.length} files`)
       }
 
-      toast.success(`Successfully uploaded ${successCount} of ${files.length} files`)
-      
       // Reset form
       setFiles([])
       setFolder('Legal')
       setVisibleToInvestors(false)
+      setExternalLink('')
+      setLinkFileName('')
       setOpen(false)
 
-      if (onUploadComplete) {
-        onUploadComplete()
-      }
+      // Refresh to show new documents
+      onUploadComplete?.()
+      router.refresh()
     } catch (error) {
       console.error('Upload error:', error)
       toast.error('Failed to upload documents')
@@ -108,38 +151,89 @@ export function DataRoomDocumentUpload({ dealId, onUploadComplete, trigger }: Do
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Upload Documents</DialogTitle>
+            <DialogTitle>Add Documents</DialogTitle>
             <DialogDescription>
-              Upload files to the deal data room. Drag and drop or click to browse.
+              Upload files or add links to external documents (Google Drive, Dropbox, etc.)
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4">
-            {/* Dropzone */}
-            <div
-              {...getRootProps()}
-              className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
-                isDragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-gray-400'
-              }`}
-            >
-              <input {...getInputProps()} />
-              <Upload className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-              {isDragActive ? (
-                <p className="text-blue-600 font-medium">Drop files here...</p>
-              ) : (
-                <>
-                  <p className="text-gray-700 font-medium mb-1">
-                    Drag and drop files here, or click to browse
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    Supports all document types (PDF, DOCX, XLSX, etc.)
-                  </p>
-                </>
-              )}
+            {/* Mode Selector */}
+            <div className="flex gap-2 border-b">
+              <Button
+                variant={uploadMode === 'file' ? 'default' : 'ghost'}
+                onClick={() => setUploadMode('file')}
+                className="flex-1"
+              >
+                Upload Files
+              </Button>
+              <Button
+                variant={uploadMode === 'link' ? 'default' : 'ghost'}
+                onClick={() => setUploadMode('link')}
+                className="flex-1"
+              >
+                Add Link
+              </Button>
             </div>
 
+            {uploadMode === 'file' ? (
+              <>
+                {/* Dropzone */}
+                <div
+                  {...getRootProps()}
+                  className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
+                    isDragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-gray-400'
+                  }`}
+                >
+                  <input {...getInputProps()} />
+                  <Upload className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+                  {isDragActive ? (
+                    <p className="text-blue-600 font-medium">Drop files here...</p>
+                  ) : (
+                    <>
+                      <p className="text-gray-700 font-medium mb-1">
+                        Drag and drop files here, or click to browse
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        Supports all document types (PDF, DOCX, XLSX, JSON, etc.)
+                      </p>
+                    </>
+                  )}
+                </div>
+              </>
+            ) : (
+              <>
+                {/* Link Input */}
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="linkUrl">Document Link</Label>
+                    <Input
+                      id="linkUrl"
+                      type="url"
+                      value={externalLink}
+                      onChange={(e) => setExternalLink(e.target.value)}
+                      placeholder="https://drive.google.com/file/d/..."
+                    />
+                    <p className="text-xs text-gray-500">
+                      Paste a Google Drive, Dropbox, or any public link
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="linkName">Document Name</Label>
+                    <Input
+                      id="linkName"
+                      value={linkFileName}
+                      onChange={(e) => setLinkFileName(e.target.value)}
+                      placeholder="Q4 2024 Report"
+                    />
+                  </div>
+                </div>
+              </>
+            )}
+
             {/* File List */}
-            {files.length > 0 && (
+            {uploadMode === 'file' && files.length > 0 && (
               <div className="space-y-2">
                 <Label>Selected Files ({files.length})</Label>
                 <div className="max-h-48 overflow-y-auto space-y-2">
@@ -222,9 +316,9 @@ export function DataRoomDocumentUpload({ dealId, onUploadComplete, trigger }: Do
               <Button variant="outline" onClick={() => setOpen(false)} disabled={uploading}>
                 Cancel
               </Button>
-              <Button onClick={handleUpload} disabled={uploading || files.length === 0}>
+              <Button onClick={handleUpload} disabled={uploading || (uploadMode === 'file' && files.length === 0)}>
                 {uploading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Upload {files.length > 0 && `(${files.length})`}
+                {uploadMode === 'link' ? 'Add Link' : `Upload ${files.length > 0 ? `(${files.length})` : ''}`}
               </Button>
             </div>
           </div>

@@ -10,8 +10,7 @@ import {
   MoreVertical,
   Edit,
   Trash2,
-  FolderTree as FolderTreeIcon,
-  UserPlus
+  FolderTree as FolderTreeIcon
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -44,7 +43,6 @@ interface FolderTreeProps {
   onCreateFolder?: (parentId: string | null) => void
   onRenameFolder?: (folderId: string) => void
   onDeleteFolder?: (folderId: string) => void
-  onManageAccess?: (folderId: string) => void
   expandedFolders?: Set<string>
   onToggleFolder?: (folderId: string) => void
 }
@@ -56,7 +54,6 @@ export function FolderTree({
   onCreateFolder,
   onRenameFolder,
   onDeleteFolder,
-  onManageAccess,
   expandedFolders = new Set(),
   onToggleFolder
 }: FolderTreeProps) {
@@ -157,12 +154,6 @@ export function FolderTree({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              {onManageAccess && (
-                <DropdownMenuItem onClick={() => onManageAccess(folder.id)}>
-                  <UserPlus className="h-4 w-4 mr-2" />
-                  Manage Investor Access
-                </DropdownMenuItem>
-              )}
               {folder.folder_type !== 'vehicle_root' && onCreateFolder && (
                 <DropdownMenuItem onClick={() => onCreateFolder(folder.id)}>
                   <FolderPlus className="h-4 w-4 mr-2" />

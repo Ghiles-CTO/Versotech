@@ -35,7 +35,7 @@ async function recalcTransactionState(supabase: any, bankTransactionId: string) 
   }
 
   const approved = approvedMatches || []
-  const totalMatched = approved.reduce((sum, match) => sum + toNumber(match.matched_amount), 0)
+  const totalMatched = approved.reduce((sum: number, match: any) => sum + toNumber(match.matched_amount), 0)
   const transactionAmount = toNumber(transaction.amount)
 
   const desiredStatus = totalMatched <= TOLERANCE
@@ -44,7 +44,7 @@ async function recalcTransactionState(supabase: any, bankTransactionId: string) 
     ? 'matched'
     : 'partially_matched'
 
-  const invoiceIds = Array.from(new Set(approved.map(match => match.invoice_id)))
+  const invoiceIds = Array.from(new Set(approved.map((match: any) => match.invoice_id)))
 
   const updatePayload: Record<string, any> = {
     status: desiredStatus,

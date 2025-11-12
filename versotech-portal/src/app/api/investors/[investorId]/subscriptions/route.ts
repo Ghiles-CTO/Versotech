@@ -337,14 +337,6 @@ export async function POST(
       subscription_id: subscription.id
     })
 
-    // Fetch entity_investor link (created by trigger)
-    const { data: entityInvestor } = await supabase
-      .from('entity_investors')
-      .select('id, allocation_status, created_at')
-      .eq('vehicle_id', input.vehicle_id)
-      .eq('investor_id', investorId)
-      .single()
-
     // Audit log
     await auditLogger.log({
       actor_user_id: user.id,
@@ -364,7 +356,6 @@ export async function POST(
     return NextResponse.json(
       {
         subscription,
-        entity_investor: entityInvestor,
         message: `Created subscription #${subscription.subscription_number} for ${investor.legal_name} in ${vehicle.name}`
       },
       { status: 201 }

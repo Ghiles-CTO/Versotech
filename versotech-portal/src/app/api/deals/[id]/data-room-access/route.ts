@@ -126,11 +126,16 @@ export async function POST(
     .select('*')
     .eq('deal_id', dealId)
     .eq('investor_id', investor_id)
-    .is('revoked_at', null)
+    .order('granted_at', { ascending: false })
+    .limit(1)
     .maybeSingle()
 
   let accessRecord
   if (existing) {
+    // If re-granting after revocation, clear old revocation notes
+    const wasRevoked = Boolean(existing.revoked_at)
+    const cleanNotes = wasRevoked && notes?.toLowerCase().includes('revoke') ? null : notes
+
     const { data, error } = await serviceSupabase
       .from('deal_data_room_access')
       .update({
@@ -138,7 +143,7 @@ export async function POST(
         revoked_at: null,
         revoked_by: null,
         auto_granted,
-        notes,
+        notes: cleanNotes,
         granted_by: user.id,
         granted_at: new Date().toISOString()
       })

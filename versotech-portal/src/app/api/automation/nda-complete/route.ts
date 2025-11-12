@@ -94,7 +94,9 @@ export async function POST(request: NextRequest) {
         auto_granted: true,
         expires_at: expires_at ? new Date(expires_at).toISOString() : null,
         granted_by: null,
-        granted_at: new Date().toISOString()
+        granted_at: new Date().toISOString(),
+        revoked_at: null,
+        revoked_by: null
       },
       { onConflict: 'deal_id,investor_id' }
     )

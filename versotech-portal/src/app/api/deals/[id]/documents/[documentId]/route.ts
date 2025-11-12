@@ -11,7 +11,8 @@ const updateSchema = z.object({
   visible_to_investors: z.boolean().optional(),
   tags: z.array(z.string()).optional(),
   document_notes: z.string().optional(),
-  document_expires_at: z.string().datetime().optional().nullable()
+  document_expires_at: z.string().datetime().optional().nullable(),
+  external_link: z.string().url().optional().or(z.literal('')).nullable()
 })
 
 export async function GET(

@@ -169,9 +169,9 @@ export function CategorizedDocumentsClient({
 }: CategorizedDocumentsClientProps) {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
 
-  // Filter to investor-facing documents (exclude deal-specific files)
+  // Filter to investor-facing documents (exclude deal-specific files, but keep NDAs)
   const displayableDocuments = useMemo(() => {
-    return initialDocuments.filter(doc => !doc.scope.deal)
+    return initialDocuments.filter(doc => !doc.scope.deal || doc.type === 'nda')
   }, [initialDocuments])
 
   const categorizedDocuments = useMemo(() => {

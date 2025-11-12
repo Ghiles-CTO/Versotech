@@ -19,7 +19,6 @@ import {
   Grid,
   List as ListIcon,
   ChevronRight,
-  UserPlus,
   FolderInput
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -35,8 +34,6 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { FolderTree, FolderNode } from './folder-tree'
 import { DocumentUploadDialog } from './document-upload-dialog'
-import { FolderAccessDialog } from './folder-access-dialog'
-import { DocumentAccessDialog } from './document-access-dialog'
 import { MoveDocumentDialog } from './move-document-dialog'
 import { CreateFolderDialog } from './create-folder-dialog'
 import { toast } from 'sonner'
@@ -90,10 +87,6 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false)
   const [createFolderDialogOpen, setCreateFolderDialogOpen] = useState(false)
   const [createFolderParentId, setCreateFolderParentId] = useState<string | null>(null)
-  const [accessDialogOpen, setAccessDialogOpen] = useState(false)
-  const [accessDialogFolderId, setAccessDialogFolderId] = useState<string | null>(null)
-  const [docAccessDialogOpen, setDocAccessDialogOpen] = useState(false)
-  const [docAccessDialogId, setDocAccessDialogId] = useState<string | null>(null)
   const [moveDialogOpen, setMoveDialogOpen] = useState(false)
   const [moveDialogDocId, setMoveDialogDocId] = useState<string | null>(null)
   const [moveDialogDocName, setMoveDialogDocName] = useState<string>('')
@@ -254,16 +247,6 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
       }
       return next
     })
-  }
-
-  const handleManageAccess = (folderId: string) => {
-    setAccessDialogFolderId(folderId)
-    setAccessDialogOpen(true)
-  }
-
-  const handleManageDocumentAccess = (documentId: string, documentName: string) => {
-    setDocAccessDialogId(documentId)
-    setDocAccessDialogOpen(true)
   }
 
   const handleMoveDocument = (documentId: string, documentName: string, currentFolderId: string | null) => {
@@ -439,7 +422,6 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
                 selectedFolderId={selectedFolderId}
                 onSelectFolder={handleSelectFolder}
                 onCreateFolder={handleCreateFolder}
-                onManageAccess={handleManageAccess}
                 expandedFolders={expandedFolders}
                 onToggleFolder={handleToggleFolder}
               />
@@ -580,14 +562,7 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem 
-                              onClick={() => handleManageDocumentAccess(doc.id, doc.name)}
-                              className="cursor-pointer"
-                            >
-                              <UserPlus className="h-4 w-4 mr-2" />
-                              Manage Investor Access
-                            </DropdownMenuItem>
-                            <DropdownMenuItem 
+                            <DropdownMenuItem
                               onClick={() => handleMoveDocument(doc.id, doc.name, doc.folder?.id || null)}
                               className="cursor-pointer"
                             >
@@ -637,28 +612,6 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
         folderId={selectedFolderId}
         vehicleId={selectedFolder?.vehicle_id || undefined}
         onSuccess={() => loadDocuments()}
-      />
-
-      {/* Folder Access Dialog */}
-      <FolderAccessDialog
-        open={accessDialogOpen}
-        onOpenChange={setAccessDialogOpen}
-        folderId={accessDialogFolderId}
-        folderName={folders.find(f => f.id === accessDialogFolderId)?.name}
-        onSuccess={() => {
-          // Refresh data if needed
-        }}
-      />
-
-      {/* Document Access Dialog */}
-      <DocumentAccessDialog
-        open={docAccessDialogOpen}
-        onOpenChange={setDocAccessDialogOpen}
-        documentId={docAccessDialogId}
-        documentName={documents.find(d => d.id === docAccessDialogId)?.name}
-        onSuccess={() => {
-          // Refresh data if needed
-        }}
       />
 
       {/* Move Document Dialog */}

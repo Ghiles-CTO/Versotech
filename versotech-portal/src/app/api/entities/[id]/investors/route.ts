@@ -83,7 +83,6 @@ export async function GET(
         .select(
           `
             id,
-            subscription_id,
             relationship_role,
             allocation_status,
             invite_sent_at,
@@ -469,7 +468,6 @@ export async function POST(
       .insert({
         vehicle_id: vehicleId,
         investor_id: investorId,
-        subscription_id: subscriptionId,
         relationship_role: relationshipRole,
         allocation_status: allocationStatus,
         notes,
@@ -479,7 +477,6 @@ export async function POST(
       .select(
         `
           id,
-          subscription_id,
           relationship_role,
           allocation_status,
           invite_sent_at,
@@ -523,7 +520,6 @@ export async function POST(
       changed_by: user.id.startsWith('demo-') ? null : user.id,
       payload: {
         investor_id: investorId,
-        subscription_id: subscriptionId,
         allocation_status: allocationStatus
       }
     })
@@ -544,8 +540,7 @@ export async function POST(
     const merged = mergeEntityInvestorData({
       entityInvestors: [
         {
-          ...entityInvestor,
-          subscription_id: subscriptionId
+          ...entityInvestor
         } as any
       ],
       subscriptions:
