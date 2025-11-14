@@ -48,7 +48,36 @@ export async function middleware(request: NextRequest) {
     const error = searchParams.get('error')
 
     if (code || error) {
-      console.log('[middleware] Auth code detected, skipping auth check:', { code: code?.substring(0, 8) + '...', error })
+      console.log('[middleware] Auth code/error detected, skipping auth check:', { code: code?.substring(0, 8) + '...', error })
+
+      // If there's an error param (like session_expired), clear cookies to prevent loops
+      if (error) {
+        console.log('[middleware] Clearing cookies due to error param:', error)
+
+        // Redirect to same URL without error param to break the cycle
+        const cleanUrl = new URL(request.url)
+        cleanUrl.searchParams.delete('error')
+        cleanUrl.searchParams.delete('code')
+
+        const response = NextResponse.redirect(cleanUrl)
+
+        // Delete Supabase auth cookies using correct names (project-specific)
+        response.cookies.delete('sb-ipguxdssecfexudnvtia-auth-token')
+        response.cookies.delete('sb-ipguxdssecfexudnvtia-auth-token-code-verifier')
+
+        // Also set to empty as fallback
+        response.cookies.set('sb-ipguxdssecfexudnvtia-auth-token', '', {
+          maxAge: 0,
+          path: '/'
+        })
+        response.cookies.set('sb-ipguxdssecfexudnvtia-auth-token-code-verifier', '', {
+          maxAge: 0,
+          path: '/'
+        })
+
+        return response
+      }
+
       return supabaseResponse
     }
 
@@ -86,8 +115,10 @@ export async function middleware(request: NextRequest) {
             request.url
           )
         )
-        response.cookies.delete('sb-access-token')
-        response.cookies.delete('sb-refresh-token')
+        response.cookies.delete('sb-ipguxdssecfexudnvtia-auth-token')
+        response.cookies.delete('sb-ipguxdssecfexudnvtia-auth-token-code-verifier')
+        response.cookies.set('sb-ipguxdssecfexudnvtia-auth-token', '', { maxAge: 0, path: '/' })
+        response.cookies.set('sb-ipguxdssecfexudnvtia-auth-token-code-verifier', '', { maxAge: 0, path: '/' })
         return response
       }
     }
@@ -99,10 +130,10 @@ export async function middleware(request: NextRequest) {
         })
 
         if (isLoginRoute) {
-          response.cookies.delete('sb-access-token')
-          response.cookies.delete('sb-refresh-token')
-          response.cookies.set('sb-access-token', '', { maxAge: 0 })
-          response.cookies.set('sb-refresh-token', '', { maxAge: 0 })
+          response.cookies.delete('sb-ipguxdssecfexudnvtia-auth-token')
+          response.cookies.delete('sb-ipguxdssecfexudnvtia-auth-token-code-verifier')
+          response.cookies.set('sb-ipguxdssecfexudnvtia-auth-token', '', { maxAge: 0, path: '/' })
+          response.cookies.set('sb-ipguxdssecfexudnvtia-auth-token-code-verifier', '', { maxAge: 0, path: '/' })
         }
 
         return response
@@ -125,10 +156,10 @@ export async function middleware(request: NextRequest) {
       
       const response = NextResponse.redirect(redirectUrl)
 
-      response.cookies.delete('sb-access-token')
-      response.cookies.delete('sb-refresh-token')
-      response.cookies.set('sb-access-token', '', { maxAge: 0 })
-      response.cookies.set('sb-refresh-token', '', { maxAge: 0 })
+      response.cookies.delete('sb-ipguxdssecfexudnvtia-auth-token')
+      response.cookies.delete('sb-ipguxdssecfexudnvtia-auth-token-code-verifier')
+      response.cookies.set('sb-ipguxdssecfexudnvtia-auth-token', '', { maxAge: 0, path: '/' })
+      response.cookies.set('sb-ipguxdssecfexudnvtia-auth-token-code-verifier', '', { maxAge: 0, path: '/' })
 
       return response
     }

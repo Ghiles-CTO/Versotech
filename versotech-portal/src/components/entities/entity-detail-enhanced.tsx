@@ -48,6 +48,8 @@ import {
 import { UploadDocumentModal } from '@/components/deals/upload-document-modal'
 import { DirectorModalRefactored } from './director-modal-refactored'
 import { StakeholderModalRefactored } from './stakeholder-modal-refactored'
+import { useDocumentViewer } from '@/hooks/useDocumentViewer'
+import { DocumentViewerFullscreen } from '@/components/documents/DocumentViewerFullscreen'
 import { EditEntityModalRefactored } from './edit-entity-modal-refactored'
 import { DeleteEntityDialog } from './delete-entity-dialog'
 import { EditDocumentModal } from './edit-document-modal'
@@ -104,6 +106,7 @@ interface Folder {
 interface EntityDocument {
   id: string
   name: string | null
+  file_name?: string | null
   type: string | null
   description?: string | null
   file_key?: string | null
@@ -424,10 +427,10 @@ export function EntityDetailEnhanced({
   const [flagModalOpen, setFlagModalOpen] = useState(false)
   const [resolvingFlagId, setResolvingFlagId] = useState<string | null>(null)
   const [flagRefreshLoading, setFlagRefreshLoading] = useState(false)
-  const [previewDocument, setPreviewDocument] = useState<EntityDocument | null>(null)
-  const [previewModalOpen, setPreviewModalOpen] = useState(false)
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
-  const [loadingPreview, setLoadingPreview] = useState(false)
+
+  // Document preview hook (replaces old preview state)
+  const documentViewer = useDocumentViewer()
+
   const [editingDocument, setEditingDocument] = useState<EntityDocument | null>(null)
   const [editDocumentModalOpen, setEditDocumentModalOpen] = useState(false)
   const [editingSubscription, setEditingSubscription] = useState<{investorId: string, subscription: any} | null>(null)
@@ -759,62 +762,7 @@ export function EntityDetailEnhanced({
     [entity.id, confirm]
   )
 
-  const handlePreviewDocument = useCallback(async (doc: EntityDocument) => {
-    setPreviewDocument(doc)
-    setPreviewModalOpen(true)
-    setLoadingPreview(true)
-    setPreviewUrl(null)
-
-    // File size limit (10MB)
-    const MAX_PREVIEW_SIZE_MB = 10
-    const PREVIEWABLE_TYPES = ['pdf', 'png', 'jpeg', 'jpg', 'gif', 'txt', 'text']
-
-    try {
-      // Check file type if available
-      if (doc.type) {
-        const isPreviewable = PREVIEWABLE_TYPES.some(type =>
-          doc.type?.toLowerCase().includes(type)
-        )
-        if (!isPreviewable) {
-          toast.error('This file type cannot be previewed. Please download instead.')
-          setLoadingPreview(false)
-          return
-        }
-      }
-
-      const response = await fetch(`/api/documents/${doc.id}/download`)
-      if (!response.ok) {
-        throw new Error('Failed to get document URL')
-      }
-
-      const data = await response.json()
-
-      // Check file size if available
-      if (data.size && data.size > MAX_PREVIEW_SIZE_MB * 1024 * 1024) {
-        toast.error(
-          `File is too large to preview (${(data.size / 1024 / 1024).toFixed(1)}MB). Please download instead.`
-        )
-        setLoadingPreview(false)
-        return
-      }
-
-      if (data.download_url) {
-        setPreviewUrl(data.download_url)
-      } else {
-        throw new Error('No download URL returned')
-      }
-    } catch (error) {
-      console.error('Failed to load document preview:', error)
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : 'Failed to load document preview. Try downloading instead.'
-      )
-      setPreviewUrl(null)
-    } finally {
-      setLoadingPreview(false)
-    }
-  }, [])
+  // Document preview now handled by useDocumentViewer hook
 
   const handleDownloadDocument = useCallback(async (docId: string) => {
     try {
@@ -1885,7 +1833,13 @@ export function EntityDetailEnhanced({
                                 variant="outline"
                                 size="sm"
                                 className="gap-2"
-                                onClick={() => handlePreviewDocument(doc)}
+                                onClick={() => documentViewer.openPreview({
+                                  id: doc.id,
+                                  file_name: doc.name || doc.file_name || 'document',
+                                  mime_type: doc.type || undefined,
+                                  type: doc.type || undefined,
+                                  file_size_bytes: undefined,
+                                })}
                               >
                                 <Eye className="h-4 w-4" />
                                 Preview
@@ -2332,77 +2286,16 @@ export function EntityDetailEnhanced({
         }}
       />
 
-      {/* Document Preview Modal */}
-      <Dialog open={previewModalOpen} onOpenChange={setPreviewModalOpen}>
-        <DialogContent className="bg-zinc-950 border-white/10 text-white max-w-6xl h-[90vh]">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-white">
-              <FileText className="h-5 w-5 text-emerald-400" />
-              {previewDocument?.name || previewDocument?.file_key?.split('/').pop() || 'Document Preview'}
-            </DialogTitle>
-            <DialogDescription className="text-gray-400">
-              {previewDocument?.type && `Type: ${previewDocument.type.replace('_', ' ')} • `}
-              {previewDocument?.created_at && `Uploaded ${new Date(previewDocument.created_at).toLocaleString()}`}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex-1 overflow-auto bg-white/5 rounded-lg p-4 flex items-center justify-center">
-            {loadingPreview ? (
-              <div className="flex flex-col items-center gap-4">
-                <Loader2 className="h-8 w-8 animate-spin text-emerald-400" />
-                <p className="text-gray-400">Loading document...</p>
-              </div>
-            ) : previewUrl ? (
-              <>
-                <iframe
-                  src={previewUrl}
-                  className="w-full h-full min-h-[600px] bg-white rounded"
-                  title={previewDocument?.name || 'Document preview'}
-                  onError={(e) => {
-                    toast.error('Failed to load document in preview. Please download instead.')
-                    setPreviewUrl(null)
-                  }}
-                />
-                {previewDocument?.type?.toLowerCase().includes('pdf') && (
-                  <p className="text-xs text-gray-400 mt-2 absolute bottom-20 left-0 right-0 text-center">
-                    Tip: If preview is slow, try downloading the file instead
-                  </p>
-                )}
-              </>
-            ) : (
-              <div className="text-center text-gray-400 space-y-4">
-                <AlertCircle className="h-12 w-12 mx-auto text-amber-400" />
-                <div>
-                  <p className="font-medium text-white">Unable to preview this document</p>
-                  <p className="text-sm mt-1">The file may be too large or in an unsupported format.</p>
-                  <Button
-                    variant="outline"
-                    className="mt-4 gap-2 bg-emerald-600 hover:bg-emerald-700 text-white border-0"
-                    onClick={() => previewDocument && handleDownloadDocument(previewDocument.id)}
-                  >
-                    <Download className="h-4 w-4" />
-                    Download Instead
-                  </Button>
-                </div>
-              </div>
-            )}
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setPreviewModalOpen(false)} className="bg-gray-700 text-white border-gray-600 hover:bg-gray-600">
-              Close
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white border-0"
-              onClick={() => previewDocument && handleDownloadDocument(previewDocument.id)}
-              disabled={!previewDocument}
-            >
-              <Download className="h-4 w-4" />
-              Download
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Document Preview - Full Screen */}
+      <DocumentViewerFullscreen
+        isOpen={documentViewer.isOpen}
+        document={documentViewer.document}
+        previewUrl={documentViewer.previewUrl}
+        isLoading={documentViewer.isLoading}
+        error={documentViewer.error}
+        onClose={documentViewer.closePreview}
+        onDownload={documentViewer.downloadDocument}
+      />
 
       {/* Edit Subscription Modal - New */}
       {editingInvestorId && (

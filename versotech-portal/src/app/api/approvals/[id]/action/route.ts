@@ -5,6 +5,33 @@ import { NextResponse } from 'next/server'
 import { triggerWorkflow } from '@/lib/trigger-workflow'
 import { createSignatureRequest } from '@/lib/signature/client'
 
+/**
+ * Generate subscription pack filename with standardized format:
+ * {ENTITY_CODE} - SUBSCRIPTION PACK - {INVESTMENT_NAME} - {INVESTOR_NAME} - {DDMMYY}.docx
+ *
+ * Example: "VC206 - SUBSCRIPTION PACK - OPEN AI - Ghiless Business Ventures LLC - 121125.docx"
+ */
+function generateSubscriptionPackFilename(
+  entityCode: string,
+  investmentName: string,
+  investorName: string,
+  submittedAt: string | Date
+): string {
+  // Format date as DDMMYY
+  const date = new Date(submittedAt)
+  const day = date.getUTCDate().toString().padStart(2, '0')
+  const month = (date.getUTCMonth() + 1).toString().padStart(2, '0')
+  const year = date.getUTCFullYear().toString().slice(-2)
+  const formattedDate = `${day}${month}${year}`
+
+  // Clean up names (remove special chars, collapse multiple spaces)
+  const cleanEntityCode = entityCode.trim()
+  const cleanInvestmentName = investmentName.trim().replace(/\s+/g, ' ')
+  const cleanInvestorName = investorName.trim().replace(/\s+/g, ' ')
+
+  return `${cleanEntityCode} - SUBSCRIPTION PACK - ${cleanInvestmentName} - ${cleanInvestorName} - ${formattedDate}.docx`
+}
+
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -546,7 +573,16 @@ async function handleEntityApproval(
               id,
               name,
               vehicle_id,
-              currency
+              currency,
+              vehicle:vehicles(
+                entity_code,
+                investment_name,
+                name
+              )
+            ),
+            investor:investors!inner(
+              display_name,
+              legal_name
             )
           `)
           .eq('id', entityId)
@@ -601,6 +637,17 @@ async function handleEntityApproval(
                 .eq('id', submission.investor_id)
                 .single()
 
+              // Fetch counterparty entity if this is an entity subscription
+              let counterpartyEntity = null
+              if (submission.subscription_type === 'entity' && submission.counterparty_entity_id) {
+                const { data: entityData } = await supabase
+                  .from('investor_counterparty')
+                  .select('*')
+                  .eq('id', submission.counterparty_entity_id)
+                  .single()
+                counterpartyEntity = entityData
+              }
+
               const { data: vehicleData } = await supabase
                 .from('vehicles')
                 .select('series_number, name, series_short_title, investment_name, issuer_gp_name, issuer_gp_rcc_number, issuer_rcc_number, issuer_website')
@@ -628,6 +675,39 @@ async function handleEntityApproval(
                 const paymentDeadlineDate = new Date(Date.now() + paymentDeadlineDays * 24 * 60 * 60 * 1000)
                   .toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
 
+                // Determine subscriber info (use entity if entity subscription, otherwise investor)
+                const subscriberName = counterpartyEntity
+                  ? counterpartyEntity.legal_name
+                  : investorData.legal_name
+
+                const subscriberType = counterpartyEntity
+                  ? counterpartyEntity.entity_type.replace('_', ' ').toUpperCase()
+                  : (investorData.type || 'Corporate Entity')
+
+                const subscriberAddress = counterpartyEntity && counterpartyEntity.registered_address
+                  ? [
+                      counterpartyEntity.registered_address.street,
+                      [
+                        counterpartyEntity.registered_address.city,
+                        counterpartyEntity.registered_address.state,
+                        counterpartyEntity.registered_address.postal_code
+                      ].filter(Boolean).join(', '),
+                      counterpartyEntity.registered_address.country
+                    ].filter(Boolean).join(', ')
+                  : (investorData.registered_address || '')
+
+                const subscriberBlock = counterpartyEntity
+                  ? `${counterpartyEntity.legal_name}, a ${counterpartyEntity.entity_type.replace('_', ' ')} with registered office at ${subscriberAddress}`
+                  : `${investorData.legal_name}, ${investorData.type || 'entity'} with registered office at ${investorData.registered_address || ''}`
+
+                const subscriberTitle = counterpartyEntity && counterpartyEntity.representative_title
+                  ? counterpartyEntity.representative_title
+                  : 'Authorized Representative'
+
+                const subscriberRepName = counterpartyEntity && counterpartyEntity.representative_name
+                  ? counterpartyEntity.representative_name
+                  : undefined
+
                 // Build comprehensive subscription pack payload
                 const subscriptionPayload = {
                   // Series & Investment info
@@ -636,12 +716,13 @@ async function handleEntityApproval(
                   series_short_title: vehicleData.series_short_title || '',
                   ultimate_investment: submission.deal.company_name || submission.deal.name,
 
-                  // Subscriber info
-                  subscriber_name: investorData.legal_name,
-                  subscriber_type: investorData.type || 'Corporate Entity',
-                  subscriber_address: investorData.registered_address || '',
-                  subscriber_block: `${investorData.legal_name}, ${investorData.type || 'entity'} with registered office at ${investorData.registered_address || ''}`,
-                  subscriber_title: 'Authorized Representative',
+                  // Subscriber info (entity if entity subscription, otherwise investor)
+                  subscriber_name: subscriberName,
+                  subscriber_type: subscriberType,
+                  subscriber_address: subscriberAddress,
+                  subscriber_block: subscriberBlock,
+                  subscriber_title: subscriberTitle,
+                  subscriber_representative_name: subscriberRepName,
 
                   // Investment branding
                   investment_logo_url: submission.deal.company_logo_url || '',
@@ -739,6 +820,14 @@ async function handleEntityApproval(
                       console.log('📦 n8n response structure:', Object.keys(n8nResponse))
                       console.log('📦 Full n8n response:', JSON.stringify(n8nResponse, null, 2))
 
+                      // Extract data for filename generation
+                      const entityCode = submission.deal?.vehicle?.entity_code || 'UNKNOWN'
+                      const investmentName = submission.deal?.vehicle?.investment_name || 'INVESTMENT'
+                      const investorName = submission.investor?.display_name || submission.investor?.legal_name || 'INVESTOR'
+                      const submittedAt = submission.submitted_at
+
+                      console.log('📝 Filename components:', { entityCode, investmentName, investorName, submittedAt })
+
                       // Check if response contains binary file data
                       let fileBuffer: Buffer
                       let fileName: string
@@ -746,28 +835,40 @@ async function handleEntityApproval(
 
                       if (n8nResponse.raw && typeof n8nResponse.raw === 'string') {
                         // Binary wrapped in { raw: "..." } format (from triggerWorkflow error handling)
-                        fileBuffer = Buffer.from(n8nResponse.raw, 'utf-8')
-                        fileName = `subscription_pack_${submission.id}.docx`
+                        // Use 'latin1' encoding to preserve binary data (1-to-1 byte mapping)
+                        fileBuffer = Buffer.from(n8nResponse.raw, 'latin1')
+                        fileName = generateSubscriptionPackFilename(entityCode, investmentName, investorName, submittedAt)
                         mimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
                         console.log('✅ Received binary data in raw format, buffer size:', fileBuffer.length)
                       } else if (n8nResponse.binary) {
                         // Binary buffer format
                         fileBuffer = Buffer.from(n8nResponse.binary)
-                        fileName = n8nResponse.filename || `subscription_pack_${submission.id}.docx`
+                        fileName = n8nResponse.filename || generateSubscriptionPackFilename(entityCode, investmentName, investorName, submittedAt)
                         mimeType = n8nResponse.mimeType || 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
                       } else if (n8nResponse.data) {
                         // Base64 string format
                         fileBuffer = Buffer.from(n8nResponse.data, 'base64')
-                        fileName = n8nResponse.filename || `subscription_pack_${submission.id}.docx`
+                        fileName = n8nResponse.filename || generateSubscriptionPackFilename(entityCode, investmentName, investorName, submittedAt)
                         mimeType = n8nResponse.mimeType || 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
                       } else if (typeof n8nResponse === 'string') {
                         // Direct string format (n8n returns binary as string)
-                        fileBuffer = Buffer.from(n8nResponse, 'utf-8')
-                        fileName = `subscription_pack_${submission.id}.docx`
+                        // Use 'latin1' encoding to preserve binary data (1-to-1 byte mapping)
+                        fileBuffer = Buffer.from(n8nResponse, 'latin1')
+                        fileName = generateSubscriptionPackFilename(entityCode, investmentName, investorName, submittedAt)
                         mimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
                         console.log('✅ Received binary data as string, buffer size:', fileBuffer.length)
                       } else {
                         throw new Error('No binary data in n8n response')
+                      }
+
+                      // Verify file signature for Word documents (should be PK for ZIP/DOCX)
+                      const signature = fileBuffer.slice(0, 4).toString('hex')
+                      console.log('📄 Document file signature:', signature)
+                      if (fileName.endsWith('.docx') && signature !== '504b0304') {
+                        console.warn('⚠️ Warning: DOCX file signature mismatch. Expected: 504b0304, Got:', signature)
+                        console.warn('⚠️ File may be corrupted. First 20 bytes:', fileBuffer.slice(0, 20).toString('hex'))
+                      } else {
+                        console.log('✅ File signature valid for', fileName)
                       }
 
                       // Upload to Supabase Storage (deal-documents bucket)
@@ -792,7 +893,7 @@ async function handleEntityApproval(
                             subscription_submission_id: submission.id,
                             deal_id: submission.deal_id,
                             type: 'subscription_draft',
-                            name: `Subscription Pack (Draft) - ${investorData.legal_name}`,
+                            name: `Subscription Pack (Draft) - ${investmentName} - ${investorName}`,
                             file_key: fileKey,
                             mime_type: mimeType,
                             file_size_bytes: fileBuffer.length,

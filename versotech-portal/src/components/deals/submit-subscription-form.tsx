@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Card, CardContent } from '@/components/ui/card'
 import { Loader2, CheckCircle2 } from 'lucide-react'
+import { EntitySelector } from '@/components/subscriptions/entity-selector'
 
 interface SubmitSubscriptionFormProps {
   dealId: string
@@ -24,6 +25,13 @@ export function SubmitSubscriptionForm({ dealId, currency, existingSubmission }:
   const [amount, setAmount] = useState('')
   const [bankConfirmation, setBankConfirmation] = useState(false)
   const [notes, setNotes] = useState('')
+  const [entitySelection, setEntitySelection] = useState<{
+    subscription_type: 'personal' | 'entity'
+    counterparty_entity_id?: string | null
+  }>({
+    subscription_type: 'personal',
+    counterparty_entity_id: null
+  })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [feedback, setFeedback] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -47,6 +55,13 @@ export function SubmitSubscriptionForm({ dealId, currency, existingSubmission }:
         return
       }
 
+      // Validate entity selection if entity type is chosen
+      if (entitySelection.subscription_type === 'entity' && !entitySelection.counterparty_entity_id) {
+        setError('Please select an entity or create one to invest through an entity.')
+        setIsSubmitting(false)
+        return
+      }
+
       const response = await fetch(`/api/deals/${dealId}/subscriptions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -56,7 +71,9 @@ export function SubmitSubscriptionForm({ dealId, currency, existingSubmission }:
             currency,
             bank_confirmation: bankConfirmation,
             notes: notes.trim() || null
-          }
+          },
+          subscription_type: entitySelection.subscription_type,
+          counterparty_entity_id: entitySelection.counterparty_entity_id || null
         })
       })
 
@@ -99,6 +116,11 @@ export function SubmitSubscriptionForm({ dealId, currency, existingSubmission }:
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      <EntitySelector
+        value={entitySelection}
+        onChange={setEntitySelection}
+      />
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor={`subscription-amount-${dealId}`}>Subscription Amount ({currency})</Label>

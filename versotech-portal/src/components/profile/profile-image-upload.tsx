@@ -150,7 +150,7 @@ export function ProfileImageUpload({
           type="button"
           onClick={() => fileInputRef.current?.click()}
           disabled={isUploading || isDeleting}
-          className="absolute bottom-0 right-0 p-2 bg-white/20 text-white rounded-full shadow-lg hover:bg-white/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed border border-white/30"
+          className="absolute bottom-0 right-0 p-2 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed border border-blue-700"
         >
           <Camera className="h-4 w-4" />
         </button>
@@ -172,7 +172,6 @@ export function ProfileImageUpload({
           size="sm"
           onClick={() => fileInputRef.current?.click()}
           disabled={isUploading || isDeleting}
-          className="bg-white/10 border-white/20 text-white hover:bg-white/20 hover:text-white"
         >
           {isUploading ? (
             <>
@@ -194,7 +193,7 @@ export function ProfileImageUpload({
             size="sm"
             onClick={handleDelete}
             disabled={isUploading || isDeleting}
-            className="bg-white/10 border-white/20 text-white hover:bg-red-500/20 hover:text-red-400 hover:border-red-500/40"
+            className="hover:bg-red-50 hover:text-red-600 hover:border-red-200"
           >
             {isDeleting ? (
               <>
@@ -211,7 +210,7 @@ export function ProfileImageUpload({
         )}
       </div>
 
-      <p className="text-xs text-white/60 text-center max-w-xs">
+      <p className="text-xs text-gray-600 text-center max-w-xs">
         Recommended: Square image, at least 200×200px
         <br />
         Max size: 2MB • Formats: JPEG, PNG, GIF, WEBP

@@ -2,7 +2,10 @@
 
 import { useMemo, useState } from 'react'
 import { Document, Vehicle } from '@/types/documents'
+import { DocumentReference } from '@/types/document-viewer.types'
 import { DocumentCard } from './document-card'
+import { useDocumentViewer } from '@/hooks/useDocumentViewer'
+import { DocumentViewerFullscreen } from './DocumentViewerFullscreen'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -168,6 +171,7 @@ export function CategorizedDocumentsClient({
   vehicles
 }: CategorizedDocumentsClientProps) {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
+  const documentViewer = useDocumentViewer()
 
   // Filter to investor-facing documents (exclude deal-specific files, but keep NDAs)
   const displayableDocuments = useMemo(() => {
@@ -423,7 +427,11 @@ export function CategorizedDocumentsClient({
 
                 <div className="space-y-4">
                   {group.documents.map((document) => (
-                    <DocumentCard key={document.id} document={document} />
+                    <DocumentCard
+                      key={document.id}
+                      document={document}
+                      onPreview={documentViewer.openPreview}
+                    />
                   ))}
                 </div>
               </CardContent>
@@ -448,6 +456,17 @@ export function CategorizedDocumentsClient({
           </div>
         </CardContent>
       </Card>
+
+      {/* Document Preview - Full Screen */}
+      <DocumentViewerFullscreen
+        isOpen={documentViewer.isOpen}
+        document={documentViewer.document}
+        previewUrl={documentViewer.previewUrl}
+        isLoading={documentViewer.isLoading}
+        error={documentViewer.error}
+        onClose={documentViewer.closePreview}
+        onDownload={documentViewer.downloadDocument}
+      />
     </div>
   )
 }

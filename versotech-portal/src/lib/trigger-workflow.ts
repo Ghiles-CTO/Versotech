@@ -1,6 +1,37 @@
 import { createServiceClient } from '@/lib/supabase/server'
 import crypto from 'crypto'
 
+/**
+ * Extract filename from Content-Disposition header
+ */
+function extractFilenameFromHeaders(headers: Headers): string | undefined {
+  const disposition = headers.get('content-disposition')
+  if (!disposition) return undefined
+
+  const filenameMatch = disposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/)
+  if (filenameMatch && filenameMatch[1]) {
+    return filenameMatch[1].replace(/['"]/g, '')
+  }
+  return undefined
+}
+
+/**
+ * Check if Content-Type indicates binary response
+ */
+function isBinaryContentType(contentType: string): boolean {
+  const binaryTypes = [
+    'application/octet-stream',
+    'application/vnd.openxmlformats-officedocument',
+    'application/msword',
+    'application/pdf',
+    'application/zip',
+    'image/',
+    'video/',
+    'audio/'
+  ]
+  return binaryTypes.some(type => contentType.includes(type))
+}
+
 interface TriggerWorkflowParams {
   workflowKey: string
   payload: Record<string, any>
@@ -105,20 +136,62 @@ export async function triggerWorkflow({
       body: JSON.stringify(n8nPayload)
     })
 
-    const responseText = await n8nResponse.text()
+    // Detect response type and handle accordingly
+    const contentType = n8nResponse.headers.get('content-type') || ''
     let n8nResult: any = {}
-    try {
-      n8nResult = JSON.parse(responseText)
-    } catch {
-      n8nResult = { raw: responseText }
+
+    if (isBinaryContentType(contentType)) {
+      // Binary response - use arrayBuffer to preserve binary data
+      console.log('🔍 Detected binary response, Content-Type:', contentType)
+      const arrayBuffer = await n8nResponse.arrayBuffer()
+      const buffer = Buffer.from(arrayBuffer)
+
+      // Extract filename from headers if available
+      const filename = extractFilenameFromHeaders(n8nResponse.headers)
+
+      // Verify binary integrity (check for common file signatures)
+      const signature = buffer.slice(0, 4).toString('hex')
+      console.log('📄 Binary file signature:', signature, 'size:', buffer.length, 'bytes')
+
+      n8nResult = {
+        binary: buffer,
+        filename: filename,
+        mimeType: contentType,
+        size: buffer.length,
+        signature: signature // Useful for debugging
+      }
+    } else if (contentType.includes('application/json')) {
+      // JSON response
+      const responseText = await n8nResponse.text()
+      try {
+        n8nResult = JSON.parse(responseText)
+      } catch (error) {
+        console.warn('⚠️ Failed to parse JSON response:', error)
+        n8nResult = { raw: responseText }
+      }
+    } else {
+      // Unknown content type - try JSON first, fall back to text
+      const responseText = await n8nResponse.text()
+      try {
+        n8nResult = JSON.parse(responseText)
+      } catch {
+        // If not JSON and not explicitly binary, treat as latin1-encoded binary string
+        // This handles cases where n8n returns binary without proper Content-Type
+        console.log('⚠️ Unknown content type, treating as potential binary string')
+        n8nResult = { raw: responseText }
+      }
     }
 
     if (!n8nResponse.ok) {
+      const errorMessage = n8nResult.raw
+        ? `Failed to trigger n8n: ${n8nResult.raw}`
+        : `Failed to trigger n8n: ${n8nResponse.status} ${n8nResponse.statusText}`
+
       await serviceSupabase
         .from('workflow_runs')
         .update({
           status: 'failed',
-          error_message: `Failed to trigger n8n: ${responseText}`,
+          error_message: errorMessage,
           completed_at: new Date().toISOString()
         })
         .eq('id', workflowRun.id)

@@ -153,6 +153,12 @@ const staffNavItems: SidebarItem[] = [
     description: 'Review and approve commitments'
   },
   {
+    name: 'KYC Review',
+    href: '/versotech/kyc-review',
+    icon: Shield,
+    description: 'Review and approve investor KYC documents'
+  },
+  {
     name: 'Deals',
     href: '/versotech/staff/deals',
     icon: Activity,

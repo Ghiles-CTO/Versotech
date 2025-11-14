@@ -3,6 +3,7 @@ import { Sidebar } from './sidebar'
 import { BrandHeader } from './brand-header'
 import { UserMenu } from './user-menu'
 import { GlobalKeyboardShortcuts } from './global-keyboard-shortcuts'
+import { ThemeProvider } from '@/components/theme-provider'
 import { getProfile } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 
@@ -43,9 +44,11 @@ export async function AppLayout({ children, brand }: AppLayoutProps) {
   console.log('[AppLayout] Access granted for', profile.email, 'to', brand)
 
   const isStaff = brand === 'versotech'
+  const theme = isStaff ? 'staff-dark' : 'light'
 
   return (
-    <div className={`flex h-screen ${isStaff ? 'staff-dark bg-[#0a0a0a]' : 'bg-gradient-to-br from-gray-50 via-blue-50/30 to-indigo-50/20'}`}>
+    <ThemeProvider theme={theme}>
+      <div className={`flex h-screen ${isStaff ? 'staff-dark bg-[#0a0a0a]' : 'bg-gradient-to-br from-gray-50 via-blue-50/30 to-indigo-50/20'}`}>
       {/* Global Keyboard Shortcuts (Cmd+K, Cmd+Shift+S) */}
       <GlobalKeyboardShortcuts brand={brand} role={profile.role} />
 
@@ -70,5 +73,6 @@ export async function AppLayout({ children, brand }: AppLayoutProps) {
         </main>
       </div>
     </div>
+    </ThemeProvider>
   )
 }

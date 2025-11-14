@@ -7,7 +7,9 @@ import { trackDealEvent } from '@/lib/analytics'
 const submissionSchema = z.object({
   investor_id: z.string().uuid().optional(),
   payload: z.record(z.string(), z.any()).optional().default({}),
-  notes: z.string().max(4000).optional().nullable()
+  notes: z.string().max(4000).optional().nullable(),
+  subscription_type: z.enum(['personal', 'entity']).optional(),
+  counterparty_entity_id: z.string().uuid().optional().nullable()
 })
 
 export async function GET(
@@ -140,7 +142,15 @@ export async function POST(
     )
   }
 
-  const { investor_id, payload, notes } = parsed.data
+  const { investor_id, payload, notes, subscription_type, counterparty_entity_id } = parsed.data
+
+  // Validate entity selection
+  if (subscription_type === 'entity' && !counterparty_entity_id) {
+    return NextResponse.json(
+      { error: 'Counterparty entity ID is required when subscription type is "entity"' },
+      { status: 400 }
+    )
+  }
 
   const { data: profile } = await supabase
     .from('profiles')
@@ -178,6 +188,24 @@ export async function POST(
       { error: 'Investor ID is required' },
       { status: 400 }
     )
+  }
+
+  // Validate counterparty entity ownership if provided
+  if (counterparty_entity_id) {
+    const { data: entity, error: entityError } = await serviceSupabase
+      .from('investor_counterparty')
+      .select('id')
+      .eq('id', counterparty_entity_id)
+      .eq('investor_id', resolvedInvestorId)
+      .eq('is_active', true)
+      .maybeSingle()
+
+    if (entityError || !entity) {
+      return NextResponse.json(
+        { error: 'Invalid counterparty entity or entity does not belong to this investor' },
+        { status: 403 }
+      )
+    }
   }
 
   // Check if investor has data room access (granted via NDA signature)
@@ -223,7 +251,9 @@ export async function POST(
       investor_id: resolvedInvestorId,
       payload_json: payload ?? {},
       status: 'pending_review',
-      created_by: user.id
+      created_by: user.id,
+      subscription_type: subscription_type || 'personal',
+      counterparty_entity_id: counterparty_entity_id || null
     })
     .select(
       `

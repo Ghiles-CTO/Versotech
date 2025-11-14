@@ -99,26 +99,26 @@ export function PasswordChangeForm() {
       {met ? (
         <Check className="h-4 w-4 text-green-500" />
       ) : (
-        <X className="h-4 w-4 text-white/40" />
+        <X className="h-4 w-4 text-gray-400" />
       )}
-      <span className={met ? 'text-green-400' : 'text-white/60'}>
+      <span className={met ? 'text-green-600' : 'text-gray-600'}>
         {text}
       </span>
     </div>
   )
 
   return (
-    <Card className="bg-white/5 border-white/10">
+    <Card>
       <CardHeader>
-        <CardTitle className="text-white">Change Password</CardTitle>
-        <CardDescription className="text-white/60">
+        <CardTitle>Change Password</CardTitle>
+        <CardDescription>
           Update your password to keep your account secure
         </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="currentPassword" className="text-white">
+            <Label htmlFor="currentPassword">
               Current Password <span className="text-destructive">*</span>
             </Label>
             <div className="relative">
@@ -130,12 +130,11 @@ export function PasswordChangeForm() {
                 onChange={handleChange}
                 required
                 placeholder="Enter your current password"
-                className="bg-white/10 border-white/20 text-white placeholder:text-white/40"
               />
               <button
                 type="button"
                 onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-white/60 hover:text-white"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
               >
                 {showCurrentPassword ? (
                   <EyeOff className="h-4 w-4" />
@@ -147,7 +146,7 @@ export function PasswordChangeForm() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="newPassword" className="text-white">
+            <Label htmlFor="newPassword">
               New Password <span className="text-destructive">*</span>
             </Label>
             <div className="relative">
@@ -159,12 +158,11 @@ export function PasswordChangeForm() {
                 onChange={handleChange}
                 required
                 placeholder="Enter your new password"
-                className="bg-white/10 border-white/20 text-white placeholder:text-white/40"
               />
               <button
                 type="button"
                 onClick={() => setShowNewPassword(!showNewPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-white/60 hover:text-white"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
               >
                 {showNewPassword ? (
                   <EyeOff className="h-4 w-4" />
@@ -175,8 +173,8 @@ export function PasswordChangeForm() {
             </div>
 
             {formData.newPassword && (
-              <div className="mt-3 space-y-1 p-3 bg-white/5 rounded-md border border-white/10">
-                <p className="text-sm font-medium mb-2 text-white">Password Requirements:</p>
+              <div className="mt-3 space-y-1 p-3 bg-gray-50 rounded-md border border-gray-200">
+                <p className="text-sm font-medium mb-2 text-gray-900">Password Requirements:</p>
                 <PasswordRequirement met={passwordChecks.length} text="At least 8 characters" />
                 <PasswordRequirement met={passwordChecks.uppercase} text="One uppercase letter" />
                 <PasswordRequirement met={passwordChecks.lowercase} text="One lowercase letter" />
@@ -187,7 +185,7 @@ export function PasswordChangeForm() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="confirmPassword" className="text-white">
+            <Label htmlFor="confirmPassword">
               Confirm New Password <span className="text-destructive">*</span>
             </Label>
             <div className="relative">
@@ -199,12 +197,11 @@ export function PasswordChangeForm() {
                 onChange={handleChange}
                 required
                 placeholder="Confirm your new password"
-                className="bg-white/10 border-white/20 text-white placeholder:text-white/40"
               />
               <button
                 type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-white/60 hover:text-white"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
               >
                 {showConfirmPassword ? (
                   <EyeOff className="h-4 w-4" />
@@ -219,7 +216,7 @@ export function PasswordChangeForm() {
                 {passwordsMatch ? (
                   <>
                     <Check className="h-4 w-4 text-green-500" />
-                    <span className="text-green-400">Passwords match</span>
+                    <span className="text-green-600">Passwords match</span>
                   </>
                 ) : (
                   <>
@@ -231,7 +228,7 @@ export function PasswordChangeForm() {
             )}
           </div>
 
-          <div className="pt-4 border-t border-white/10">
+          <div className="pt-4 border-t">
             <Button
               type="submit"
               disabled={

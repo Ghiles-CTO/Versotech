@@ -11,9 +11,12 @@ import {
   ChevronRight,
   ChevronDown,
   Folder,
-  FolderOpen
+  FolderOpen,
+  Eye
 } from 'lucide-react'
 import { DataRoomDocument } from './data-room-documents'
+import { useDocumentViewer } from '@/hooks/useDocumentViewer'
+import { DocumentViewerFullscreen } from '@/components/documents/DocumentViewerFullscreen'
 
 interface DataRoomDocumentsGroupedProps {
   documents: DataRoomDocument[]
@@ -22,6 +25,18 @@ interface DataRoomDocumentsGroupedProps {
 export function DataRoomDocumentsGrouped({ documents }: DataRoomDocumentsGroupedProps) {
   const [downloadingId, setDownloadingId] = useState<string | null>(null)
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set())
+
+  // Document viewer hook
+  const {
+    isOpen,
+    document: previewDocument,
+    previewUrl,
+    isLoading: isLoadingPreview,
+    error: previewError,
+    openPreview,
+    closePreview,
+    downloadDocument
+  } = useDocumentViewer()
 
   // Group documents by folder
   const documentsByFolder = documents.reduce<Record<string, DataRoomDocument[]>>((acc, doc) => {
@@ -44,6 +59,21 @@ export function DataRoomDocumentsGrouped({ documents }: DataRoomDocumentsGrouped
       newExpanded.add(folder)
     }
     setExpandedFolders(newExpanded)
+  }
+
+  const handlePreview = async (doc: DataRoomDocument) => {
+    // External links can't be previewed - open directly
+    if (doc.external_link) {
+      window.open(doc.external_link, '_blank', 'noopener,noreferrer')
+      return
+    }
+
+    // Open preview with deal_id for proper API routing
+    await openPreview({
+      id: doc.id,
+      file_name: doc.file_name,
+      name: doc.file_name,
+    }, doc.deal_id)
   }
 
   const handleDownload = async (doc: DataRoomDocument) => {
@@ -147,27 +177,40 @@ export function DataRoomDocumentsGrouped({ documents }: DataRoomDocumentsGrouped
                         {new Date(doc.created_at).toLocaleDateString()}
                       </span>
                     </div>
-                    <Button
-                      onClick={() => handleDownload(doc)}
-                      disabled={downloadingId === doc.id}
-                      variant="ghost"
-                      size="sm"
-                      className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                    >
-                      {downloadingId === doc.id ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : doc.external_link ? (
-                        <>
-                          <ExternalLink className="h-4 w-4 mr-1.5" />
-                          View
-                        </>
-                      ) : (
-                        <>
-                          <Download className="h-4 w-4 mr-1.5" />
-                          Download
-                        </>
+                    <div className="flex items-center gap-1">
+                      {!doc.external_link && (
+                        <Button
+                          onClick={() => handlePreview(doc)}
+                          variant="ghost"
+                          size="sm"
+                          className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                        >
+                          <Eye className="h-4 w-4 mr-1.5" />
+                          Preview
+                        </Button>
                       )}
-                    </Button>
+                      <Button
+                        onClick={() => handleDownload(doc)}
+                        disabled={downloadingId === doc.id}
+                        variant="ghost"
+                        size="sm"
+                        className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                      >
+                        {downloadingId === doc.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : doc.external_link ? (
+                          <>
+                            <ExternalLink className="h-4 w-4 mr-1.5" />
+                            View
+                          </>
+                        ) : (
+                          <>
+                            <Download className="h-4 w-4 mr-1.5" />
+                            Download
+                          </>
+                        )}
+                      </Button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -175,6 +218,17 @@ export function DataRoomDocumentsGrouped({ documents }: DataRoomDocumentsGrouped
           </div>
         )
       })}
+
+      {/* Document Preview Modal */}
+      <DocumentViewerFullscreen
+        isOpen={isOpen}
+        document={previewDocument}
+        previewUrl={previewUrl}
+        isLoading={isLoadingPreview}
+        error={previewError}
+        onClose={closePreview}
+        onDownload={downloadDocument}
+      />
     </div>
   )
 }

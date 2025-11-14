@@ -99,21 +99,21 @@ export function PreferencesEditor({ onUpdate }: PreferencesEditorProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Notification Settings */}
-      <Card className="bg-white/5 border-white/10">
+      <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
-            <Bell className="h-5 w-5 text-white" />
-            <CardTitle className="text-white">Notification Preferences</CardTitle>
+            <Bell className="h-5 w-5" />
+            <CardTitle>Notification Preferences</CardTitle>
           </div>
-          <CardDescription className="text-white/60">
+          <CardDescription>
             Manage how you receive notifications and updates
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label htmlFor="email_notifications" className="text-white">Email Notifications</Label>
-              <p className="text-sm text-white/60">
+              <Label htmlFor="email_notifications">Email Notifications</Label>
+              <p className="text-sm text-gray-600">
                 Receive notifications via email
               </p>
             </div>
@@ -128,8 +128,8 @@ export function PreferencesEditor({ onUpdate }: PreferencesEditorProps) {
 
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label htmlFor="deal_updates" className="text-white">Deal Updates</Label>
-              <p className="text-sm text-white/60">
+              <Label htmlFor="deal_updates">Deal Updates</Label>
+              <p className="text-sm text-gray-600">
                 Get notified about deal status changes
               </p>
             </div>
@@ -144,8 +144,8 @@ export function PreferencesEditor({ onUpdate }: PreferencesEditorProps) {
 
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label htmlFor="message_notifications" className="text-white">Message Notifications</Label>
-              <p className="text-sm text-white/60">
+              <Label htmlFor="message_notifications">Message Notifications</Label>
+              <p className="text-sm text-gray-600">
                 Get notified about new messages
               </p>
             </div>

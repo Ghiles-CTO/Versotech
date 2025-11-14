@@ -5,8 +5,10 @@ import { ProfileImageUpload } from '@/components/profile/profile-image-upload'
 import { ProfileForm } from '@/components/profile/profile-form'
 import { PasswordChangeForm } from '@/components/profile/password-change-form'
 import { PreferencesEditor } from '@/components/profile/preferences-editor'
+import { KYCDocumentsTab } from '@/components/profile/kyc-documents-tab'
+import { CounterpartyEntitiesTab } from '@/components/profile/counterparty-entities-tab'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { User, Lock, Settings, Briefcase } from 'lucide-react'
+import { User, Lock, Settings, Briefcase, FileText, Building2 } from 'lucide-react'
 
 interface ProfilePageClientProps {
   profile: {
@@ -91,7 +93,7 @@ export function ProfilePageClient({ profile: initialProfile, variant = 'investor
       {/* Right Column - Tabs */}
       <div className="lg:col-span-2">
         <Tabs defaultValue="profile" className="w-full">
-          <TabsList className={isStaff ? "grid w-full grid-cols-3 bg-white/5 border border-white/10" : "grid w-full grid-cols-3"}>
+          <TabsList className={isStaff ? "grid w-full grid-cols-3 bg-white/5 border border-white/10" : "grid w-full grid-cols-5"}>
             <TabsTrigger
               value="profile"
               className={isStaff ? "data-[state=active]:bg-white/10 data-[state=active]:text-white text-white/70" : ""}
@@ -113,6 +115,18 @@ export function ProfilePageClient({ profile: initialProfile, variant = 'investor
               <Settings className="h-4 w-4 mr-2" />
               Preferences
             </TabsTrigger>
+            {!isStaff && (
+              <>
+                <TabsTrigger value="kyc">
+                  <FileText className="h-4 w-4 mr-2" />
+                  KYC Documents
+                </TabsTrigger>
+                <TabsTrigger value="entities">
+                  <Building2 className="h-4 w-4 mr-2" />
+                  Entities
+                </TabsTrigger>
+              </>
+            )}
           </TabsList>
 
           <TabsContent value="profile" className="mt-6">
@@ -131,6 +145,17 @@ export function ProfilePageClient({ profile: initialProfile, variant = 'investor
           <TabsContent value="preferences" className="mt-6">
             <PreferencesEditor />
           </TabsContent>
+
+          {!isStaff && (
+            <>
+              <TabsContent value="kyc" className="mt-6">
+                <KYCDocumentsTab />
+              </TabsContent>
+              <TabsContent value="entities" className="mt-6">
+                <CounterpartyEntitiesTab />
+              </TabsContent>
+            </>
+          )}
         </Tabs>
       </div>
     </div>

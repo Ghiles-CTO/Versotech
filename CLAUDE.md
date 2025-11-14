@@ -23,6 +23,12 @@ npm start                  # Run production build
 npm run lint               # Run ESLint
 ```
 
+**Windows Development Notes**:
+- Use Git Bash or WSL for shell commands
+- Paths use Windows format (`C:\Users\...`) but Git Bash handles POSIX paths
+- Kill dev server on port conflict: `npx kill-port 3000` or `taskkill /F /PID <pid>`
+- Node.js commands work identically across platforms
+
 ### Supabase Database Operations
 ```bash
 # Local development (from project root)
@@ -36,8 +42,27 @@ npx supabase db reset                # Reset local DB to latest migrations
 npx supabase db push                 # Push migrations to remote
 
 # Type generation (regenerate after schema changes)
-npx supabase gen types typescript --project-id ipguxdssecfexudnvtia > versotech-portal/src/types/supabase.ts
+NEXT_PUBLIC_SUPABASE_URL="https://ipguxdssecfexudnvtia.supabase.co" SUPABASE_SERVICE_ROLE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlwZ3V4ZHNzZWNmZXh1ZG52dGlhIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODM2MTgzNywiZXhwIjoyMDczOTM3ODM3fQ.hs1lPI8D8iW5kWOQHRXBAy8JdgmpegzJgWTnIjRz8Qw" npx supabase gen types typescript --project-id ipguxdssecfexudnvtia > versotech-portal/src/types/supabase.ts
+
+# Or use MCP tool directly
+mcp__supabase__generate_typescript_types()
 ```
+
+### MCP Servers
+This project uses Model Context Protocol (MCP) servers configured in `.mcp.json`:
+
+**Supabase MCP** (`mcp__supabase__*`):
+- Database operations, migrations, and type generation
+- Direct connection to project: `ipguxdssecfexudnvtia`
+- Tools: `list_tables`, `execute_sql`, `apply_migration`, `get_logs`, `get_advisors`, `generate_typescript_types`
+
+**shadcn MCP** (`mcp__shadcn__*`):
+- UI component management and registry access
+- Tools: `list_items_in_registries`, `search_items_in_registries`, `view_items_in_registries`, `get_add_command_for_items`
+
+**Playwright MCP** (`mcp__executeautomation-playwright-server__*`):
+- Browser automation for testing and data scraping
+- Tools: `playwright_navigate`, `playwright_screenshot`, `playwright_click`, `playwright_fill`, etc.
 
 ### Testing
 ```bash
@@ -61,13 +86,20 @@ The platform serves two distinct user bases with separate authentication and rou
 
 **VERSO Tech (Staff Portal)** - `/versotech/*`
 - Dashboard: KYC pipeline, request queue, deal flow, system health
-- Deal Management: Investment pipeline from sourcing to closing
+- Deal Management: Investment pipeline from sourcing to closing, data room access management
 - Investor Management: Complete investor database with KYC status
 - Process Center: One-click automation triggers for 9 critical workflows
 - Approvals: Multi-level approval routing for onboarding and allocations
-- Fees & Reconciliation: Management fee calculations and billing
-- Introducers: Deal source tracking and commission management
+- Fees & Reconciliation: Management fee calculations, billing, and invoice tracking
+- Introducers: Deal source tracking, commission management, and fee calculations
 - Audit & Compliance: Immutable audit trails and compliance monitoring
+
+**Recent Features** (as of November 2025):
+- 7-day data room access with extension requests
+- Automatic data room grants upon NDA execution
+- Deal subscription to subscription pack workflow automation
+- Enhanced reconciliation with invoice tracking
+- Commission creation API for introducer fee management
 
 ### Authentication & Authorization
 
@@ -137,18 +169,31 @@ The platform integrates with n8n for workflow automation. Workflow definitions a
 - Inbound: n8n → Platform (update data, upload documents)
 - Configure secrets in `.env.local` (`N8N_OUTBOUND_SECRET`, `N8N_INBOUND_SECRET`)
 
-### API Routes Structure
+### Route Structure
 
-API routes in `versotech-portal/src/app/api/`:
+The Next.js App Router uses route groups for organization:
+
+**Route Groups** (using parentheses - don't affect URL structure):
+- `(public)/` - Public routes (landing page, root redirects)
+- `(investor)/` - Maps to `/versoholdings/*` routes (investor portal)
+- `(staff)/` - Maps to `/versotech/*` routes (staff portal)
+
+**Special Routes**:
+- `auth/` - Auth callback handlers
+- `sign/` - E-signature document viewing and signing
+- `logout/` - Logout handler
+
+**API Routes** (`api/`):
 - `auth/*` - Authentication endpoints (signin, signout, signup)
-- `deals/*` - Deal management, allocations, documents
+- `deals/*` - Deal management, allocations, data room access
 - `investors/*` - Investor CRUD operations
 - `conversations/*` - Messaging endpoints
 - `approvals/*` - Approval workflow actions
 - `documents/*` - Document upload/download/versioning
 - `subscriptions/*` - Subscription management
 - `vehicles/*` - Vehicle CRUD operations
-- `workflows/*` - Workflow trigger endpoints
+- `fees/*` - Fee calculations and billing
+- `data-room-access/*` - Data room access grants and extensions
 - `cron/*` - Scheduled job endpoints (data room expiry, document publishing)
 
 ### Component Architecture
@@ -307,20 +352,44 @@ await supabase.from('documents').insert({
 
 ### Workflow Trigger Pattern
 
+The platform uses `versotech-portal/src/lib/trigger-workflow.ts` for workflow automation:
+
 ```typescript
-// Trigger n8n workflow from API route
-const response = await fetch(process.env.N8N_WEBHOOK_URL, {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-    'X-VERSO-Signature': generateHMAC(payload, process.env.N8N_OUTBOUND_SECRET)
-  },
-  body: JSON.stringify({
-    workflow: 'generate-position-statement',
-    data: { investor_id, as_of_date }
-  })
+import { triggerWorkflow } from '@/lib/trigger-workflow'
+
+// Trigger n8n workflow with automatic HMAC signing
+const result = await triggerWorkflow({
+  workflowKey: 'generate-position-statement',
+  data: {
+    investor_id: 'uuid-here',
+    as_of_date: '2025-01-15'
+  }
 })
+
+if (result.success) {
+  // Workflow triggered successfully
+} else {
+  // Handle error: result.error
+}
 ```
+
+**Available Workflows** (defined in `versotech-portal/src/lib/workflows.ts`):
+1. `generate-position-statement` - Auto-generate investor statements
+2. `process-nda` - NDA generation and DocuSign processing
+3. `shared-drive-notification` - Document update alerts
+4. `inbox-manager` - Auto-route investor communications
+5. `linkedin-leads-scraper` - Prospect identification
+6. `reporting-agent` - Custom report generation
+7. `kyc-aml-processing` - Enhanced due diligence
+8. `capital-call-processing` - Capital call notices
+9. `investor-onboarding` - Multi-step onboarding flow
+
+Each workflow has:
+- `key`: Unique identifier
+- `title`: Display name
+- `category`: documents | compliance | communications | data_processing | multi_step
+- `inputSchema`: Zod-validated input fields
+- `requiredRole`: Optional role restriction
 
 ## Database Query Patterns
 
@@ -423,6 +492,18 @@ WHERE investor_id = $1
 - Check n8n workflow logs for execution errors
 - Test webhooks with curl/Postman before integrating
 - Ensure environment variables are set for secrets
+- Workflow definitions in `versotech-portal/src/lib/workflows.ts`
+- Trigger logic in `versotech-portal/src/lib/trigger-workflow.ts`
+
+### Build Issues
+- Clear `.next` directory: `rm -rf versotech-portal/.next`
+- Check for TypeScript errors: `npm run build` (will fail fast on type errors)
+- Regenerate types after schema changes: `mcp__supabase__generate_typescript_types()`
+- Ensure all environment variables are set (check `.env.local`)
+
+### Port Conflicts (Windows)
+- Check what's using port: `netstat -ano | findstr :3000`
+- Kill process: `taskkill /F /PID <pid>` or `npx kill-port 3000`
 
 ## Production Deployment
 
@@ -466,6 +547,36 @@ WHERE investor_id = $1
 - **Validate business logic** before database operations (e.g., commitment ≤ vehicle capacity)
 - **Use transactions** for multi-table operations (subscriptions + capital calls)
 - **Handle cascade deletes carefully** - prefer RESTRICT over CASCADE for critical foreign keys
+
+## Code Style & Best Practices
+
+This project follows guidelines documented in `AGENTS.md`:
+
+**TypeScript**:
+- Strict mode enforced - export explicit types for shared utilities and API handlers
+- Use `@/` path alias for imports (e.g., `import { Button } from '@/components/ui/button'`)
+
+**Naming Conventions**:
+- App Router folders: kebab-case (`data-room-access/`)
+- React components: PascalCase (`InvestorDashboard.tsx`)
+- Helper modules: camelCase (`triggerWorkflow.ts`)
+- Files with JSX: `.tsx` extension
+
+**Styling**:
+- Tailwind CSS is default (utility-first)
+- Use `*.module.css` only when utilities are insufficient
+- shadcn/ui components provide consistent design system
+
+**Testing** (Vitest + React Testing Library):
+- Test files mirror production structure: `src/app/{area}/page.test.tsx`
+- Cover loading, error, and empty states for UI
+- Global setup in `src/__tests__/setup.ts`
+- MSW handlers in `src/__tests__/mocks`
+
+**Commits**:
+- Imperative sentence-case: `Add data room access extension API`
+- Group related changes (schema + migrations) in same commit
+- Ensure build, lint, and tests pass before pushing
 
 ## Documentation
 

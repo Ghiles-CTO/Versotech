@@ -1,113 +1,100 @@
-import { createClient } from '@/lib/supabase/server'
-import { auditLogger, AuditActions, AuditEntities } from '@/lib/audit'
 import { NextRequest, NextResponse } from 'next/server'
-import crypto from 'crypto'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  try {
-    const supabase = await createClient()
+  const { id: documentId } = await params
 
-    // Authenticate user
+  try {
+    // Get authenticated user
+    const supabase = await createClient()
     const { data: { user }, error: authError } = await supabase.auth.getUser()
+
     if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      )
     }
 
-    const { id: documentId } = await params
+    // Get user profile
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
 
-    // Get document with RLS enforcement (user can only see entitled documents)
-    const { data: document, error: docError } = await supabase
+    if (!profile) {
+      return NextResponse.json(
+        { error: 'Profile not found' },
+        { status: 404 }
+      )
+    }
+
+    // Use service client to fetch document (bypasses RLS for permission check)
+    const serviceSupabase = createServiceClient()
+    const { data: document, error: docError } = await serviceSupabase
       .from('documents')
-      .select(`
-        *,
-        investors:owner_investor_id (legal_name),
-        vehicles:vehicle_id (name, type),
-        created_by_profile:created_by (display_name, email)
-      `)
+      .select('id, name, file_key, mime_type, owner_investor_id')
       .eq('id', documentId)
       .single()
 
     if (docError || !document) {
-      return NextResponse.json({ error: 'Document not found or access denied' }, { status: 404 })
+      return NextResponse.json(
+        { error: 'Document not found' },
+        { status: 404 }
+      )
     }
 
-    // Generate pre-signed URL with short expiry (15 minutes)
-    const expiresIn = 15 * 60 // 15 minutes in seconds
-    const { data: signedUrl, error: urlError } = await supabase.storage
+    // Permission check: Staff can access all documents, investors can only access their own
+    const isStaff = profile.role.startsWith('staff_')
+
+    if (!isStaff) {
+      // Check if investor owns this document
+      const { data: investorUser } = await supabase
+        .from('investor_users')
+        .select('investor_id')
+        .eq('user_id', user.id)
+        .eq('investor_id', document.owner_investor_id)
+        .single()
+
+      if (!investorUser) {
+        return NextResponse.json(
+          { error: 'Access denied - you do not own this document' },
+          { status: 403 }
+        )
+      }
+    }
+
+    // Generate signed URL (expires in 1 hour)
+    const { data: signedUrlData, error: signedUrlError} = await serviceSupabase.storage
       .from(process.env.STORAGE_BUCKET_NAME || 'documents')
-      .createSignedUrl(document.file_key, expiresIn, {
-        download: true,
-        transform: {
-          width: undefined, // Don't transform documents
-          height: undefined,
-          resize: undefined,
-          format: undefined,
-          quality: undefined
-        }
-      })
+      .createSignedUrl(document.file_key, 3600)
 
-    if (urlError || !signedUrl) {
-      console.error('Error creating signed URL:', urlError)
-      return NextResponse.json({ error: 'Failed to generate download link' }, { status: 500 })
+    if (signedUrlError || !signedUrlData) {
+      console.error('Signed URL generation error:', signedUrlError)
+      return NextResponse.json(
+        { error: 'Failed to generate download URL' },
+        { status: 500 }
+      )
     }
 
-    // Get user profile for audit logging
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role, display_name, email')
-      .eq('id', user.id)
-      .single()
-
-    // Log document access for audit trail
-    await auditLogger.log({
-      actor_user_id: user.id,
-      action: AuditActions.DOCUMENT_DOWNLOAD,
-      entity: AuditEntities.DOCUMENTS,
-      entity_id: document.id,
-      metadata: {
-        file_key: document.file_key,
-        document_type: document.type,
-        user_role: profile?.role,
-        access_method: 'pre_signed_url',
-        expiry_minutes: 15,
-        investor_name: document.investors?.legal_name,
-        vehicle_name: document.vehicles?.name
-      }
-    })
-
-    // Add watermark information to the response
-    const watermarkInfo = {
-      downloaded_by: profile?.display_name || user.email,
-      downloaded_at: new Date().toISOString(),
-      expires_at: new Date(Date.now() + (expiresIn * 1000)).toISOString(),
-      document_id: document.id,
-      access_token: crypto.randomBytes(16).toString('hex') // For tracking
-    }
-
+    // Return signed URL with metadata
     return NextResponse.json({
-      download_url: signedUrl.signedUrl,
-      document: {
-        id: document.id,
-        type: document.type,
-        file_key: document.file_key,
-        created_at: document.created_at,
-        created_by: document.created_by_profile?.display_name
-      },
-      watermark: watermarkInfo,
-      expires_in_seconds: expiresIn,
-      instructions: {
-        security_notice: "This document is confidential and intended solely for the authorized recipient. Unauthorized distribution is prohibited.",
-        expiry_notice: `Download link expires in ${expiresIn / 60} minutes for security.`,
-        audit_notice: "All document access is logged for compliance and audit purposes."
-      }
+      success: true,
+      url: signedUrlData.signedUrl,
+      fileName: document.name,
+      mimeType: document.mime_type,
+      expiresAt: new Date(Date.now() + 3600 * 1000).toISOString()
     })
 
   } catch (error) {
     console.error('Document download error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
   }
 }
-

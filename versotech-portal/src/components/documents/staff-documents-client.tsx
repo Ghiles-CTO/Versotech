@@ -37,6 +37,8 @@ import { DocumentUploadDialog } from './document-upload-dialog'
 import { MoveDocumentDialog } from './move-document-dialog'
 import { CreateFolderDialog } from './create-folder-dialog'
 import { toast } from 'sonner'
+import { useDocumentViewer } from '@/hooks/useDocumentViewer'
+import { DocumentViewerFullscreen } from './DocumentViewerFullscreen'
 
 interface Vehicle {
   id: string
@@ -95,6 +97,18 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list')
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set())
+
+  // Document viewer hook
+  const {
+    isOpen: previewOpen,
+    document: previewDocument,
+    previewUrl,
+    isLoading: isLoadingPreview,
+    error: previewError,
+    openPreview,
+    closePreview,
+    downloadDocument: downloadFromPreview
+  } = useDocumentViewer()
 
   useEffect(() => {
     loadFolders()
@@ -293,6 +307,32 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
     } catch (error) {
       console.error('Error publishing document:', error)
       toast.error('Failed to publish document')
+    }
+  }
+
+  const handlePreview = async (doc: Document) => {
+    await openPreview({
+      id: doc.id,
+      file_name: doc.name,
+      name: doc.name,
+      file_size_bytes: doc.file_size_bytes,
+      type: doc.type,
+    })
+  }
+
+  const handleDownload = async (documentId: string) => {
+    try {
+      const response = await fetch(`/api/documents/${documentId}/download`)
+      if (response.ok) {
+        const { download_url } = await response.json()
+        window.open(download_url, '_blank')
+        toast.success('Download started')
+      } else {
+        toast.error('Failed to generate download link')
+      }
+    } catch (error) {
+      console.error('Error downloading document:', error)
+      toast.error('Failed to download document')
     }
   }
 
@@ -563,15 +603,25 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem
+                              onClick={() => handlePreview(doc)}
+                              className="cursor-pointer"
+                            >
+                              <Eye className="h-4 w-4 mr-2" />
+                              Preview
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => handleDownload(doc.id)}
+                              className="cursor-pointer"
+                            >
+                              <Download className="h-4 w-4 mr-2" />
+                              Download
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
                               onClick={() => handleMoveDocument(doc.id, doc.name, doc.folder?.id || null)}
                               className="cursor-pointer"
                             >
                               <FolderInput className="h-4 w-4 mr-2" />
                               Move to Folder
-                            </DropdownMenuItem>
-                            <DropdownMenuItem className="cursor-pointer">
-                              <Download className="h-4 w-4 mr-2" />
-                              Download
                             </DropdownMenuItem>
                             <DropdownMenuItem className="cursor-pointer">
                               <Edit className="h-4 w-4 mr-2" />
@@ -630,6 +680,17 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
         onOpenChange={setCreateFolderDialogOpen}
         parentFolderId={createFolderParentId}
         onSuccess={() => loadFolders()}
+      />
+
+      {/* Document Preview Modal */}
+      <DocumentViewerFullscreen
+        isOpen={previewOpen}
+        document={previewDocument}
+        previewUrl={previewUrl}
+        isLoading={isLoadingPreview}
+        error={previewError}
+        onClose={closePreview}
+        onDownload={downloadFromPreview}
       />
     </div>
   )

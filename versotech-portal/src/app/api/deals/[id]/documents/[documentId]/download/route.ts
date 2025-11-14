@@ -11,6 +11,10 @@ export async function GET(
     const supabase = await createClient()
     const { id: dealId, documentId } = await params
 
+    // Get mode from query parameters (preview or download)
+    const searchParams = request.nextUrl.searchParams
+    const mode = searchParams.get('mode') || 'download' // Default to download for backward compatibility
+
     // Authenticate user
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
@@ -92,7 +96,7 @@ export async function GET(
     const { data: signedUrl, error: urlError } = await supabase.storage
       .from(bucket)
       .createSignedUrl(document.file_key, expiresIn, {
-        download: true
+        download: mode === 'download' // Only force download when mode is explicitly 'download'
       })
 
     if (urlError || !signedUrl) {
@@ -134,8 +138,10 @@ export async function GET(
 
     return NextResponse.json({
       download_url: signedUrl.signedUrl,
+      mode: mode, // Include the mode in response
       document: {
         id: document.id,
+        name: document.file_name,
         file_name: document.file_name,
         file_key: document.file_key,
         folder: document.folder,

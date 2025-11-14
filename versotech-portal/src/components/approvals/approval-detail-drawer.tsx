@@ -364,6 +364,93 @@ export function ApprovalDetailDrawer({
               </Card>
             )}
 
+            {/* Counterparty Entity Information (for entity subscriptions) */}
+            {approval.entity_type === 'deal_subscription' &&
+              approval.entity_metadata?.subscription_type === 'entity' &&
+              approval.entity_metadata?.counterparty_entity && (
+              <Card className="border-blue-500/30 bg-blue-500/10">
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2 text-white">
+                    <Building2 className="h-5 w-5 text-blue-400" />
+                    Subscribing Entity
+                  </CardTitle>
+                  <CardDescription className="text-blue-300">
+                    This subscription is being made through a counterparty entity
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-slate-400">Entity Legal Name</p>
+                      <p className="font-medium text-white">{approval.entity_metadata.counterparty_entity.legal_name}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-slate-400">Entity Type</p>
+                      <Badge variant="outline" className="text-blue-300 border-blue-400/30">
+                        {approval.entity_metadata.counterparty_entity.entity_type.replace('_', ' ').toUpperCase()}
+                      </Badge>
+                    </div>
+                    {approval.entity_metadata.counterparty_entity.jurisdiction && (
+                      <div>
+                        <p className="text-sm text-slate-400">Jurisdiction</p>
+                        <p className="font-medium text-white">{approval.entity_metadata.counterparty_entity.jurisdiction}</p>
+                      </div>
+                    )}
+                    {approval.entity_metadata.counterparty_entity.registration_number && (
+                      <div>
+                        <p className="text-sm text-slate-400">Registration Number</p>
+                        <p className="font-medium text-white">{approval.entity_metadata.counterparty_entity.registration_number}</p>
+                      </div>
+                    )}
+                    {approval.entity_metadata.counterparty_entity.tax_id && (
+                      <div>
+                        <p className="text-sm text-slate-400">Tax ID</p>
+                        <p className="font-mono text-sm text-white">{approval.entity_metadata.counterparty_entity.tax_id}</p>
+                      </div>
+                    )}
+                    {approval.entity_metadata.counterparty_entity.representative_name && (
+                      <div>
+                        <p className="text-sm text-slate-400">Authorized Representative</p>
+                        <p className="font-medium text-white">
+                          {approval.entity_metadata.counterparty_entity.representative_name}
+                          {approval.entity_metadata.counterparty_entity.representative_title && (
+                            <span className="text-slate-400 text-sm ml-1">
+                              ({approval.entity_metadata.counterparty_entity.representative_title})
+                            </span>
+                          )}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                  {approval.entity_metadata.counterparty_entity.registered_address && (
+                    <div>
+                      <p className="text-sm text-slate-400 mb-1">Registered Address</p>
+                      <div className="text-sm text-white">
+                        {approval.entity_metadata.counterparty_entity.registered_address.street && (
+                          <p>{approval.entity_metadata.counterparty_entity.registered_address.street}</p>
+                        )}
+                        <p>
+                          {[
+                            approval.entity_metadata.counterparty_entity.registered_address.city,
+                            approval.entity_metadata.counterparty_entity.registered_address.state,
+                            approval.entity_metadata.counterparty_entity.registered_address.postal_code
+                          ].filter(Boolean).join(', ')}
+                        </p>
+                        {approval.entity_metadata.counterparty_entity.registered_address.country && (
+                          <p>{approval.entity_metadata.counterparty_entity.registered_address.country}</p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  <div className="mt-3 p-3 rounded-lg bg-blue-500/10 border border-blue-500/30">
+                    <p className="text-xs text-blue-300">
+                      <strong>Note:</strong> The investor ({approval.related_investor?.legal_name}) is investing on behalf of this entity. Subscription documents will be prepared in the entity's name.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Request Details */}
             <Card className="border-white/10 bg-white/5">
               <CardHeader>

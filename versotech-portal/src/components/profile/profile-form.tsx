@@ -89,17 +89,17 @@ export function ProfileForm({
   })
 
   return (
-    <Card className="bg-white/5 border-white/10">
+    <Card>
       <CardHeader>
-        <CardTitle className="text-white">Profile Information</CardTitle>
-        <CardDescription className="text-white/60">
+        <CardTitle>Profile Information</CardTitle>
+        <CardDescription>
           Update your personal information and profile details
         </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="display_name" className="text-white">
+            <Label htmlFor="display_name">
               Display Name <span className="text-destructive">*</span>
             </Label>
             <Input
@@ -109,43 +109,40 @@ export function ProfileForm({
               onChange={handleChange}
               required
               placeholder="Enter your display name"
-              className="bg-white/10 border-white/20 text-white placeholder:text-white/40"
             />
-            <p className="text-xs text-white/60">
+            <p className="text-xs text-gray-600">
               This is how your name will appear throughout the portal
             </p>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="email" className="text-white">Email Address</Label>
+            <Label htmlFor="email">Email Address</Label>
             <Input
               id="email"
               type="email"
               value={initialData.email || ''}
               disabled
-              className="bg-white/5 border-white/20 text-white/50"
             />
-            <p className="text-xs text-white/60">
+            <p className="text-xs text-gray-600">
               Email cannot be changed here. Contact support to update your email.
             </p>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="title" className="text-white">Job Title / Position</Label>
+            <Label htmlFor="title">Job Title / Position</Label>
             <Input
               id="title"
               name="title"
               value={formData.title}
               onChange={handleChange}
               placeholder="e.g., Portfolio Manager, Investment Director"
-              className="bg-white/10 border-white/20 text-white placeholder:text-white/40"
             />
           </div>
 
           {showStaffFields && (
             <>
               <div className="space-y-2">
-                <Label htmlFor="phone" className="text-white">Phone Number</Label>
+                <Label htmlFor="phone">Phone Number</Label>
                 <Input
                   id="phone"
                   name="phone"
@@ -153,24 +150,22 @@ export function ProfileForm({
                   value={formData.phone}
                   onChange={handleChange}
                   placeholder="+1 (555) 123-4567"
-                  className="bg-white/10 border-white/20 text-white placeholder:text-white/40"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="office_location" className="text-white">Office Location</Label>
+                <Label htmlFor="office_location">Office Location</Label>
                 <Input
                   id="office_location"
                   name="office_location"
                   value={formData.office_location}
                   onChange={handleChange}
                   placeholder="e.g., London Office, New York HQ"
-                  className="bg-white/10 border-white/20 text-white placeholder:text-white/40"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="bio" className="text-white">Bio / About</Label>
+                <Label htmlFor="bio">Bio / About</Label>
                 <Textarea
                   id="bio"
                   name="bio"
@@ -178,16 +173,16 @@ export function ProfileForm({
                   onChange={handleChange}
                   placeholder="Brief description about yourself, your expertise, and role..."
                   rows={4}
-                  className="resize-none bg-white/10 border-white/20 text-white placeholder:text-white/40"
+                  className="resize-none"
                 />
-                <p className="text-xs text-white/60">
+                <p className="text-xs text-gray-600">
                   {formData.bio.length}/500 characters
                 </p>
               </div>
             </>
           )}
 
-          <div className="pt-4 border-t border-white/10">
+          <div className="pt-4 border-t">
             <Button
               type="submit"
               disabled={isSubmitting || !hasChanges}
@@ -207,7 +202,7 @@ export function ProfileForm({
             </Button>
 
             {hasChanges && !isSubmitting && (
-              <p className="text-xs text-white/60 mt-2">
+              <p className="text-xs text-gray-600 mt-2">
                 You have unsaved changes
               </p>
             )}

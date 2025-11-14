@@ -28,9 +28,11 @@ import {
   X,
   Play,
   CheckCheck,
-  FileCheck
+  FileCheck,
+  Upload
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { toast } from 'sonner'
 import type { Task, TasksByVehicle } from './page'
 
 interface TasksPageClientProps {
@@ -54,6 +56,8 @@ export function TasksPageClient({
   const [generalComplianceTasks, setGeneralComplianceTasks] = useState(initialGeneralComplianceTasks)
   const [selectedTask, setSelectedTask] = useState<Task | null>(null)
   const [isUpdating, setIsUpdating] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const [uploadError, setUploadError] = useState<string | null>(null)
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     onboarding: true,
     staffCreated: true,
@@ -160,10 +164,10 @@ export function TasksPageClient({
   async function cancelTask(taskId: string) {
     setIsUpdating(true)
     const supabase = createClient()
-    
+
     await supabase
       .from('tasks')
-      .update({ 
+      .update({
         status: 'pending',
         started_at: null,
         updated_at: new Date().toISOString()
@@ -173,6 +177,86 @@ export function TasksPageClient({
     setIsUpdating(false)
     setSelectedTask(null)
     await refreshTasks()
+  }
+
+  async function handleFileUpload(file: File, task: Task) {
+    setUploading(true)
+    setUploadError(null)
+
+    try {
+      // Determine document type from task title
+      const documentType = getDocumentTypeFromTask(task)
+
+      if (!documentType) {
+        setUploadError('Unable to determine document type for this task')
+        setUploading(false)
+        return
+      }
+
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('documentType', documentType)
+      formData.append('taskId', task.id)
+
+      const response = await fetch('/api/investors/me/documents/upload', {
+        method: 'POST',
+        body: formData
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Upload failed')
+      }
+
+      const result = await response.json()
+
+      // Show success toast
+      toast.success(
+        result.task_completed
+          ? 'Document uploaded successfully and task completed'
+          : 'Document uploaded successfully and is pending review'
+      )
+
+      // Upload successful - refresh tasks (the task should be auto-completed by the API)
+      await refreshTasks()
+      setSelectedTask(null)
+    } catch (error: any) {
+      console.error('Upload error:', error)
+      setUploadError(error.message || 'Failed to upload document')
+      toast.error(error.message || 'Failed to upload document')
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  function getDocumentTypeFromTask(task: Task): string | null {
+    const title = task.title.toLowerCase()
+
+    if (title.includes('government id') || title.includes('passport') || title.includes('driver')) {
+      return 'government_id'
+    }
+    if (title.includes('proof of address') || title.includes('utility bill')) {
+      return 'proof_of_address'
+    }
+    if (title.includes('accreditation')) {
+      return 'accreditation_letter'
+    }
+    if (title.includes('bank statement')) {
+      return 'bank_statement'
+    }
+    if (title.includes('entity formation') || title.includes('incorporation')) {
+      return 'entity_formation_docs'
+    }
+    if (title.includes('beneficial ownership')) {
+      return 'beneficial_ownership'
+    }
+
+    return null
+  }
+
+  function isDocumentUploadTask(task: Task): boolean {
+    const title = task.title.toLowerCase()
+    return title.includes('upload') || getDocumentTypeFromTask(task) !== null
   }
 
   const getStatusBadge = (status: string) => {
@@ -662,11 +746,59 @@ export function TasksPageClient({
               )}
             </div>
 
+            {/* Document Upload Section */}
+            {selectedTask && isDocumentUploadTask(selectedTask) && selectedTask.status !== 'completed' && selectedTask.status !== 'waived' && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <h4 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                  <Upload className="h-4 w-4 text-blue-600" />
+                  Upload Document
+                </h4>
+                <p className="text-xs text-gray-600 mb-3">
+                  Upload your {getDocumentTypeFromTask(selectedTask)?.replace(/_/g, ' ')} to complete this task automatically.
+                </p>
+
+                <input
+                  type="file"
+                  id="task-document-upload"
+                  className="hidden"
+                  accept=".pdf,.jpg,.jpeg,.png,.heic,.webp"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0]
+                    if (file && selectedTask) {
+                      handleFileUpload(file, selectedTask)
+                    }
+                  }}
+                  disabled={uploading}
+                />
+                <label htmlFor="task-document-upload">
+                  <Button
+                    variant="outline"
+                    className="w-full border-blue-300 hover:bg-blue-100"
+                    disabled={uploading}
+                    asChild
+                  >
+                    <span>
+                      <Upload className="h-4 w-4 mr-2" />
+                      {uploading ? 'Uploading...' : 'Choose File to Upload'}
+                    </span>
+                  </Button>
+                </label>
+
+                {uploadError && (
+                  <p className="text-xs text-red-600 mt-2">{uploadError}</p>
+                )}
+
+                <p className="text-xs text-gray-500 mt-2">
+                  Accepted formats: PDF, JPG, PNG, HEIC, WEBP (Max 10MB)
+                </p>
+              </div>
+            )}
+
             {/* Action Buttons */}
             {selectedTask && selectedTask.status !== 'completed' && selectedTask.status !== 'waived' && (
               <div className="flex items-center gap-3 pt-4 border-t">
                 {selectedTask.status === 'pending' ? (
-                  <Button 
+                  <Button
                     className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
                     onClick={() => startTask(selectedTask.id)}
                     disabled={isUpdating}
@@ -676,7 +808,7 @@ export function TasksPageClient({
                   </Button>
                 ) : (
                   <>
-                    <Button 
+                    <Button
                       variant="outline"
                       className="flex-1 border-gray-200 hover:bg-gray-50"
                       onClick={() => cancelTask(selectedTask.id)}
@@ -685,7 +817,7 @@ export function TasksPageClient({
                       <X className="h-4 w-4 mr-2" />
                       Cancel Task
                     </Button>
-                    <Button 
+                    <Button
                       className="flex-1 bg-green-600 hover:bg-green-700 text-white"
                       onClick={() => completeTask(selectedTask.id)}
                       disabled={isUpdating}

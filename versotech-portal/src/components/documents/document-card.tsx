@@ -3,12 +3,13 @@
 import { Document, DocumentType } from '@/types/documents'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Download, Shield, Clock, Link2, Info, Building2, Folder } from 'lucide-react'
+import { Download, Shield, Clock, Link2, Info, Building2, Folder, Eye } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 
 interface DocumentCardProps {
   document: Document
+  onPreview?: (document: Document) => void
 }
 
 function getDocumentIcon(type: string) {
@@ -90,7 +91,7 @@ function extractMetadataHighlights(metadata?: Document['metadata']) {
   return highlights
 }
 
-export function DocumentCard({ document }: DocumentCardProps) {
+export function DocumentCard({ document, onPreview }: DocumentCardProps) {
   const [isDownloading, setIsDownloading] = useState(false)
 
   const handleDownload = async () => {
@@ -244,6 +245,16 @@ export function DocumentCard({ document }: DocumentCardProps) {
 
         {/* Actions */}
         <div className="flex flex-col gap-2 ml-4">
+          {onPreview && (
+            <Button
+              onClick={() => onPreview(document)}
+              variant="outline"
+              className="border-2 hover:bg-blue-50 hover:border-blue-300 transition-all duration-300"
+            >
+              <Eye className="h-4 w-4 mr-2" />
+              Preview
+            </Button>
+          )}
           <Button
             onClick={handleDownload}
             disabled={isDownloading}
@@ -261,16 +272,6 @@ export function DocumentCard({ document }: DocumentCardProps) {
               </>
             )}
           </Button>
-
-          {/* Future: Preview button */}
-          {/* <Button
-            variant="outline"
-            size="sm"
-            className="border-2 hover:bg-blue-50 hover:border-blue-300 transition-all duration-300"
-          >
-            <Eye className="h-4 w-4 mr-2" />
-            Preview
-          </Button> */}
         </div>
       </div>
     </div>
