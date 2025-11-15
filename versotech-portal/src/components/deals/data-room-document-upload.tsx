@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useDropzone } from 'react-dropzone'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Progress } from '@/components/ui/progress'
-import { Upload, File, X, Loader2 } from 'lucide-react'
+import { Upload, File, X, Loader2, FolderOpen } from 'lucide-react'
 import { toast } from 'sonner'
 
 interface DocumentUploadProps {
@@ -19,26 +19,74 @@ interface DocumentUploadProps {
   trigger: React.ReactNode
 }
 
-const FOLDERS = [
-  'Legal',
-  'KYC',
-  'Reports',
-  'Presentations',
-  'Financial Models',
-  'Misc'
+interface DealFolder {
+  id: string
+  name: string
+  path: string
+  folder_type: string
+}
+
+// Fallback folders if database folders aren't available
+const DEFAULT_FOLDERS = [
+  'Term Sheets',
+  'Data Room',
+  'Subscription Documents',
+  'Legal Documents',
+  'Financial Reports',
+  'Due Diligence'
 ]
 
 export function DataRoomDocumentUpload({ dealId, onUploadComplete, trigger }: DocumentUploadProps) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [files, setFiles] = useState<File[]>([])
-  const [folder, setFolder] = useState('Legal')
+  const [dealFolders, setDealFolders] = useState<DealFolder[]>([])
+  const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null)
+  const [folder, setFolder] = useState('Data Room') // Default folder name for backward compatibility
   const [visibleToInvestors, setVisibleToInvestors] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
   const [uploadMode, setUploadMode] = useState<'file' | 'link'>('file')
   const [externalLink, setExternalLink] = useState('')
   const [linkFileName, setLinkFileName] = useState('')
+  const [loadingFolders, setLoadingFolders] = useState(false)
+
+  // Fetch deal folders when dialog opens
+  useEffect(() => {
+    if (open && dealId) {
+      fetchDealFolders()
+    }
+  }, [open, dealId])
+
+  const fetchDealFolders = async () => {
+    setLoadingFolders(true)
+    try {
+      const response = await fetch(`/api/deals/${dealId}/folders`)
+      if (response.ok) {
+        const data = await response.json()
+        setDealFolders(data.folders || [])
+
+        // Set default folder (prefer Data Room folder)
+        const dataRoomFolder = data.folders?.find((f: DealFolder) =>
+          f.name === 'Data Room' || f.path?.includes('/Data Room')
+        )
+        if (dataRoomFolder) {
+          setSelectedFolderId(dataRoomFolder.id)
+          setFolder('Data Room')
+        } else if (data.folders?.length > 0) {
+          setSelectedFolderId(data.folders[0].id)
+          setFolder(data.folders[0].name)
+        }
+      } else {
+        // If folder fetch fails, folders might not be created yet
+        console.warn('Could not fetch deal folders, using defaults')
+      }
+    } catch (error) {
+      console.error('Error fetching deal folders:', error)
+    } finally {
+      setLoadingFolders(false)
+    }
+  }
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     setFiles(prev => [...prev, ...acceptedFiles])
@@ -83,6 +131,7 @@ export function DataRoomDocumentUpload({ dealId, onUploadComplete, trigger }: Do
             external_link: externalLink,
             file_name: linkFileName,
             folder,
+            folder_id: selectedFolderId, // Include folder_id when available
             visible_to_investors: visibleToInvestors
           })
         })
@@ -104,6 +153,9 @@ export function DataRoomDocumentUpload({ dealId, onUploadComplete, trigger }: Do
           const formData = new FormData()
           formData.append('file', file)
           formData.append('folder', folder)
+          if (selectedFolderId) {
+            formData.append('folder_id', selectedFolderId) // Include folder_id when available
+          }
           formData.append('visible_to_investors', visibleToInvestors.toString())
 
           const response = await fetch(`/api/deals/${dealId}/documents/upload`, {
@@ -267,16 +319,42 @@ export function DataRoomDocumentUpload({ dealId, onUploadComplete, trigger }: Do
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Folder</Label>
-                <Select value={folder} onValueChange={setFolder} disabled={uploading}>
+                <Select
+                  value={selectedFolderId || folder}
+                  onValueChange={(value) => {
+                    // Check if value is a folder ID (UUID) or folder name
+                    const folderObj = dealFolders.find(f => f.id === value)
+                    if (folderObj) {
+                      setSelectedFolderId(folderObj.id)
+                      setFolder(folderObj.name)
+                    } else {
+                      // Fallback to using folder name directly
+                      setSelectedFolderId(null)
+                      setFolder(value)
+                    }
+                  }}
+                  disabled={uploading || loadingFolders}
+                >
                   <SelectTrigger>
-                    <SelectValue />
+                    <SelectValue placeholder={loadingFolders ? "Loading folders..." : "Select folder"} />
                   </SelectTrigger>
                   <SelectContent>
-                    {FOLDERS.map(f => (
-                      <SelectItem key={f} value={f}>
-                        {f}
-                      </SelectItem>
-                    ))}
+                    {dealFolders.length > 0 ? (
+                      dealFolders.map(f => (
+                        <SelectItem key={f.id} value={f.id}>
+                          <div className="flex items-center gap-2">
+                            <FolderOpen className="h-3 w-3" />
+                            <span>{f.name}</span>
+                          </div>
+                        </SelectItem>
+                      ))
+                    ) : (
+                      DEFAULT_FOLDERS.map(f => (
+                        <SelectItem key={f} value={f}>
+                          {f}
+                        </SelectItem>
+                      ))
+                    )}
                   </SelectContent>
                 </Select>
               </div>

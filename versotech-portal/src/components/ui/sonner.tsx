@@ -1,30 +1,21 @@
 "use client"
 
-import { useTheme } from "next-themes"
+import { useTheme } from "@/components/theme-provider"
 import { Toaster as Sonner, ToasterProps } from "sonner"
 
 const Toaster = ({ ...props }: ToasterProps) => {
-  const { theme = "system" } = useTheme()
+  const { theme } = useTheme()
 
   return (
     <Sonner
-      theme="dark"
+      theme={theme === 'staff-dark' ? 'dark' : 'light'}
       className="toaster group"
       toastOptions={{
-        style: {
-          background: '#18181b',
-          color: '#ffffff',
-          border: '1px solid rgba(255, 255, 255, 0.2)',
-        },
         classNames: {
-          toast: 'group toast group-[.toaster]:bg-zinc-900 group-[.toaster]:text-white group-[.toaster]:border-white/20 group-[.toaster]:shadow-lg',
-          description: 'group-[.toast]:text-gray-300',
-          actionButton: 'group-[.toast]:bg-sky-500 group-[.toast]:text-white group-[.toast]:hover:bg-sky-600',
-          cancelButton: 'group-[.toast]:bg-zinc-800 group-[.toast]:text-gray-300 group-[.toast]:hover:bg-zinc-700',
-          success: 'group-[.toast]:text-green-400',
-          error: 'group-[.toast]:text-red-400',
-          info: 'group-[.toast]:text-blue-400',
-          warning: 'group-[.toast]:text-yellow-400',
+          toast: 'bg-background text-foreground border-border shadow-lg',
+          description: 'text-muted-foreground',
+          actionButton: 'bg-primary text-primary-foreground hover:bg-primary/90',
+          cancelButton: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
         },
       }}
       {...props}

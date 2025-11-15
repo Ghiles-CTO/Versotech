@@ -1,14 +1,24 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Card, CardContent } from '@/components/ui/card'
-import { Loader2, CheckCircle2 } from 'lucide-react'
+import { Loader2, CheckCircle2, AlertTriangle, TrendingUp } from 'lucide-react'
 import { EntitySelector } from '@/components/subscriptions/entity-selector'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Progress } from '@/components/ui/progress'
+
+interface DealCapacityInfo {
+  target_raise: number | null
+  min_ticket: number | null
+  max_ticket: number | null
+  total_subscribed: number
+  subscription_count: number
+}
 
 interface SubmitSubscriptionFormProps {
   dealId: string
@@ -35,6 +45,45 @@ export function SubmitSubscriptionForm({ dealId, currency, existingSubmission }:
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [feedback, setFeedback] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [dealCapacity, setDealCapacity] = useState<DealCapacityInfo | null>(null)
+  const [loadingCapacity, setLoadingCapacity] = useState(true)
+
+  // Fetch deal capacity information
+  useEffect(() => {
+    async function fetchDealCapacity() {
+      try {
+        const response = await fetch(`/api/deals/${dealId}/capacity`)
+        if (response.ok) {
+          const data = await response.json()
+          setDealCapacity(data)
+        }
+      } catch (err) {
+        console.error('Failed to fetch deal capacity:', err)
+      } finally {
+        setLoadingCapacity(false)
+      }
+    }
+    fetchDealCapacity()
+  }, [dealId])
+
+  // Calculate subscription metrics
+  const subscriptionPercentage = dealCapacity?.target_raise
+    ? (dealCapacity.total_subscribed / dealCapacity.target_raise) * 100
+    : 0
+  const isOversubscribed = subscriptionPercentage > 100
+  const remainingCapacity = dealCapacity?.target_raise
+    ? Math.max(0, dealCapacity.target_raise - dealCapacity.total_subscribed)
+    : null
+
+  // Format currency amounts
+  const formatAmount = (value: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: currency,
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(value)
+  }
 
   // Only lock form after approval - allow resubmission during pending review to enable corrections
   const isLocked = existingSubmission && existingSubmission.status === 'approved'
@@ -114,64 +163,134 @@ export function SubmitSubscriptionForm({ dealId, currency, existingSubmission }:
     )
   }
 
+  // Validate amount against deal limits (non-blocking)
+  const numericAmount = parseFloat(amount)
+  const amountWarnings = []
+  if (!isNaN(numericAmount) && numericAmount > 0) {
+    if (dealCapacity?.min_ticket && numericAmount < dealCapacity.min_ticket) {
+      amountWarnings.push(`Below minimum investment of ${formatAmount(dealCapacity.min_ticket)}`)
+    }
+    if (dealCapacity?.max_ticket && numericAmount > dealCapacity.max_ticket) {
+      amountWarnings.push(`Above maximum investment of ${formatAmount(dealCapacity.max_ticket)}`)
+    }
+  }
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-5">
+      {/* Deal Capacity Display */}
+      {!loadingCapacity && dealCapacity && dealCapacity.target_raise && (
+        <Card className={isOversubscribed ? "border-orange-200 bg-orange-50" : "border-blue-200 bg-blue-50"}>
+          <CardContent className="pt-4">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-gray-700">Deal Progress</span>
+                <span className="text-sm font-bold text-gray-900">
+                  {subscriptionPercentage.toFixed(1)}% subscribed
+                </span>
+              </div>
+
+              <Progress
+                value={Math.min(subscriptionPercentage, 100)}
+                className={isOversubscribed ? "bg-orange-200" : "bg-blue-200"}
+              />
+
+              <div className="flex justify-between text-xs text-gray-600">
+                <span>{formatAmount(dealCapacity.total_subscribed)} committed</span>
+                <span>Target: {formatAmount(dealCapacity.target_raise)}</span>
+              </div>
+
+              {isOversubscribed && (
+                <Alert className="border-orange-300 bg-orange-100">
+                  <TrendingUp className="h-4 w-4" />
+                  <AlertDescription className="text-xs">
+                    This deal is oversubscribed by {(subscriptionPercentage - 100).toFixed(1)}%.
+                    You can still submit your interest, but allocation is not guaranteed.
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              {dealCapacity.min_ticket && dealCapacity.max_ticket && (
+                <div className="text-xs text-gray-600 pt-1 border-t">
+                  Investment range: {formatAmount(dealCapacity.min_ticket)} - {formatAmount(dealCapacity.max_ticket)}
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <EntitySelector
         value={entitySelection}
         onChange={setEntitySelection}
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor={`subscription-amount-${dealId}`}>Subscription Amount ({currency})</Label>
-          <Input
-            id={`subscription-amount-${dealId}`}
-            type="number"
-            min="0"
-            step="0.01"
-            value={amount}
-            onChange={event => setAmount(event.target.value)}
-            placeholder="e.g. 250000"
-            className="text-black"
+      <div className="space-y-2">
+        <Label htmlFor={`subscription-amount-${dealId}`} className="text-base font-semibold">
+          Subscription Amount ({currency})
+        </Label>
+        <Input
+          id={`subscription-amount-${dealId}`}
+          type="number"
+          min="0"
+          step="0.01"
+          value={amount}
+          onChange={event => setAmount(event.target.value)}
+          placeholder="e.g. 250000"
+          className="text-black text-lg h-12"
+        />
+
+        {/* Amount validation warnings */}
+        {amountWarnings.length > 0 && (
+          <Alert className="mt-2 border-yellow-300 bg-yellow-50">
+            <AlertTriangle className="h-4 w-4 text-yellow-600" />
+            <AlertDescription className="text-xs text-yellow-800">
+              {amountWarnings.join('. ')}. You may still submit, but staff review is required.
+            </AlertDescription>
+          </Alert>
+        )}
+      </div>
+
+      <div className="space-y-2">
+        <Label className="text-base font-semibold">Bank & Compliance</Label>
+        <div className="flex items-start space-x-3 rounded-md border-2 border-gray-300 px-4 py-3 bg-gray-50">
+          <Checkbox
+            id={`bank-confirmation-${dealId}`}
+            checked={bankConfirmation}
+            onCheckedChange={checked => setBankConfirmation(Boolean(checked))}
+            className="mt-0.5"
           />
-        </div>
-        <div className="space-y-2">
-          <Label>Bank & Compliance</Label>
-          <div className="flex items-center space-x-2 rounded-md border border-gray-200 px-3 py-2">
-            <Checkbox
-              id={`bank-confirmation-${dealId}`}
-              checked={bankConfirmation}
-              onCheckedChange={checked => setBankConfirmation(Boolean(checked))}
-            />
-            <Label htmlFor={`bank-confirmation-${dealId}`} className="text-xs text-black font-normal cursor-pointer">
-              I confirm my bank/KYC documentation is ready for the subscription pack.
-            </Label>
-          </div>
+          <Label htmlFor={`bank-confirmation-${dealId}`} className="text-sm text-black font-normal cursor-pointer leading-relaxed">
+            I confirm my bank/KYC documentation is ready for the subscription pack.
+          </Label>
         </div>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor={`subscription-notes-${dealId}`}>Additional Notes (optional)</Label>
+        <Label htmlFor={`subscription-notes-${dealId}`} className="text-base font-semibold">Additional Notes (optional)</Label>
         <Textarea
           id={`subscription-notes-${dealId}`}
           value={notes}
           onChange={event => setNotes(event.target.value)}
-          rows={4}
+          rows={3}
           placeholder="Share wiring preferences, co-investor details, or other information for the VERSO team."
           className="text-black"
         />
       </div>
 
       {error && (
-        <div className="text-sm text-red-600">{error}</div>
+        <div className="text-sm text-red-600 font-medium bg-red-50 p-3 rounded-md border border-red-200">{error}</div>
       )}
       {feedback && (
-        <div className="text-sm text-emerald-600">{feedback}</div>
+        <div className="text-sm text-emerald-600 font-medium bg-emerald-50 p-3 rounded-md border border-emerald-200">{feedback}</div>
       )}
 
-      <Button type="submit" disabled={isSubmitting} variant="outline" className="gap-2 border-2 border-blue-600 text-black hover:bg-blue-50">
-        {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
-        Submit Subscription
+      <Button
+        type="submit"
+        disabled={isSubmitting}
+        className="w-full h-14 text-lg font-bold bg-blue-600 hover:bg-blue-700 text-white gap-2 shadow-md"
+      >
+        {isSubmitting && <Loader2 className="h-5 w-5 animate-spin" />}
+        Submit Subscription Request
       </Button>
     </form>
   )

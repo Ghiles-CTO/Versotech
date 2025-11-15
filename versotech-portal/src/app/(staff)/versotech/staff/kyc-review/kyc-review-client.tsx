@@ -33,22 +33,31 @@ import {
 } from '@/components/ui/table'
 import { toast } from 'sonner'
 import { DocumentViewer } from '@/components/documents/document-viewer'
+import { getDocumentTypeLabel } from '@/constants/kyc-document-types'
 
 interface KYCSubmission {
   id: string
   investor_id: string
+  counterparty_entity_id?: string | null
   document_type: string
+  custom_label?: string | null
   status: 'pending' | 'under_review' | 'approved' | 'rejected' | 'expired'
   submitted_at: string
   reviewed_at?: string
   rejection_reason?: string
-  investor: {
+  investor?: {
     id: string
-    name: string
+    legal_name: string
+    display_name: string
     email: string
     type: string
     kyc_status: string
   }
+  counterparty_entity?: {
+    id: string
+    legal_name: string
+    entity_type: string
+  } | null
   document?: {
     id: string
     name: string
@@ -105,14 +114,21 @@ export function KYCReviewClient() {
       if (documentTypeFilter !== 'all') params.append('document_type', documentTypeFilter)
 
       const response = await fetch(`/api/staff/kyc-submissions?${params.toString()}`)
-      if (!response.ok) throw new Error('Failed to load submissions')
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error('API error response:', errorData)
+        throw new Error(errorData.error || 'Failed to load submissions')
+      }
 
       const data = await response.json()
       setSubmissions(data.submissions || [])
       setStatistics(data.statistics || null)
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error loading submissions:', error)
-      toast.error('Failed to load KYC submissions')
+      toast.error('Failed to load KYC submissions', {
+        description: error.message
+      })
     } finally {
       setLoading(false)
     }
@@ -185,25 +201,21 @@ export function KYCReviewClient() {
     }
   }
 
-  const getDocumentTypeLabel = (type: string) => {
-    const labels: Record<string, string> = {
-      government_id: 'Government ID',
-      proof_of_address: 'Proof of Address',
-      accreditation_letter: 'Accreditation Letter',
-      bank_statement: 'Bank Statement',
-      entity_formation_docs: 'Entity Formation Docs',
-      beneficial_ownership: 'Beneficial Ownership'
-    }
-    return labels[type] || type
-  }
+  // Get unique document types from submissions
+  const uniqueDocumentTypes = Array.from(
+    new Set(submissions.map(sub => sub.document_type))
+  ).sort()
 
   const filteredSubmissions = submissions.filter(sub => {
     if (searchQuery) {
       const query = searchQuery.toLowerCase()
+      const documentTypeLabel = getDocumentTypeLabel(sub.document_type, sub.custom_label).toLowerCase()
       return (
-        sub.investor.name.toLowerCase().includes(query) ||
-        sub.investor.email.toLowerCase().includes(query) ||
-        sub.document_type.toLowerCase().includes(query)
+        sub.investor?.display_name.toLowerCase().includes(query) ||
+        sub.investor?.legal_name.toLowerCase().includes(query) ||
+        sub.investor?.email.toLowerCase().includes(query) ||
+        documentTypeLabel.includes(query) ||
+        (sub.counterparty_entity?.legal_name.toLowerCase().includes(query))
       )
     }
     return true
@@ -212,7 +224,7 @@ export function KYCReviewClient() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     )
   }
@@ -221,7 +233,7 @@ export function KYCReviewClient() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold">KYC Document Review</h1>
+        <h1 className="text-3xl font-bold text-foreground">KYC Document Review</h1>
         <p className="text-muted-foreground mt-1">
           Review and approve investor KYC documents
         </p>
@@ -235,7 +247,7 @@ export function KYCReviewClient() {
               <CardTitle className="text-sm font-medium text-muted-foreground">Total</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{statistics.total}</div>
+              <div className="text-2xl font-bold text-foreground">{statistics.total}</div>
             </CardContent>
           </Card>
           <Card>
@@ -243,7 +255,7 @@ export function KYCReviewClient() {
               <CardTitle className="text-sm font-medium text-muted-foreground">Pending</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-yellow-600">{statistics.pending}</div>
+              <div className="text-2xl font-bold text-amber-500">{statistics.pending}</div>
             </CardContent>
           </Card>
           <Card>
@@ -251,7 +263,7 @@ export function KYCReviewClient() {
               <CardTitle className="text-sm font-medium text-muted-foreground">Under Review</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-blue-600">{statistics.under_review}</div>
+              <div className="text-2xl font-bold text-blue-400">{statistics.under_review}</div>
             </CardContent>
           </Card>
           <Card>
@@ -259,7 +271,7 @@ export function KYCReviewClient() {
               <CardTitle className="text-sm font-medium text-muted-foreground">Approved</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">{statistics.approved}</div>
+              <div className="text-2xl font-bold text-emerald-500">{statistics.approved}</div>
             </CardContent>
           </Card>
           <Card>
@@ -267,7 +279,7 @@ export function KYCReviewClient() {
               <CardTitle className="text-sm font-medium text-muted-foreground">Rejected</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-red-600">{statistics.rejected}</div>
+              <div className="text-2xl font-bold text-rose-500">{statistics.rejected}</div>
             </CardContent>
           </Card>
           <Card>
@@ -275,7 +287,7 @@ export function KYCReviewClient() {
               <CardTitle className="text-sm font-medium text-muted-foreground">Expired</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-gray-600">{statistics.expired}</div>
+              <div className="text-2xl font-bold text-slate-400">{statistics.expired}</div>
             </CardContent>
           </Card>
         </div>
@@ -312,12 +324,11 @@ export function KYCReviewClient() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Types</SelectItem>
-                  <SelectItem value="government_id">Government ID</SelectItem>
-                  <SelectItem value="proof_of_address">Proof of Address</SelectItem>
-                  <SelectItem value="accreditation_letter">Accreditation Letter</SelectItem>
-                  <SelectItem value="bank_statement">Bank Statement</SelectItem>
-                  <SelectItem value="entity_formation_docs">Entity Formation Docs</SelectItem>
-                  <SelectItem value="beneficial_ownership">Beneficial Ownership</SelectItem>
+                  {uniqueDocumentTypes.map(type => (
+                    <SelectItem key={type} value={type}>
+                      {getDocumentTypeLabel(type)}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -367,11 +378,22 @@ export function KYCReviewClient() {
                   <TableRow key={submission.id}>
                     <TableCell>
                       <div>
-                        <div className="font-medium">{submission.investor.name}</div>
-                        <div className="text-sm text-muted-foreground">{submission.investor.email}</div>
+                        <div className="font-medium">
+                          {submission.counterparty_entity ? (
+                            <>
+                              {submission.counterparty_entity.legal_name}
+                              <Badge variant="outline" className="ml-2 text-xs">Entity</Badge>
+                            </>
+                          ) : (
+                            submission.investor?.display_name || submission.investor?.legal_name || 'Unknown'
+                          )}
+                        </div>
+                        <div className="text-sm text-muted-foreground">{submission.investor?.email || ''}</div>
                       </div>
                     </TableCell>
-                    <TableCell>{getDocumentTypeLabel(submission.document_type)}</TableCell>
+                    <TableCell>
+                      {getDocumentTypeLabel(submission.document_type, submission.custom_label)}
+                    </TableCell>
                     <TableCell>
                       {submission.document ? (
                         <div className="flex items-center gap-2">
@@ -423,7 +445,7 @@ export function KYCReviewClient() {
                             <Button
                               variant="outline"
                               size="sm"
-                              className="text-green-600 border-green-600 hover:bg-green-50"
+                              className="text-emerald-500 border-emerald-500 hover:bg-emerald-950 hover:text-emerald-400"
                               onClick={() => openReviewDialog(submission, 'approve')}
                             >
                               <CheckCircle className="w-4 h-4 mr-1" />
@@ -432,7 +454,7 @@ export function KYCReviewClient() {
                             <Button
                               variant="outline"
                               size="sm"
-                              className="text-red-600 border-red-600 hover:bg-red-50"
+                              className="text-rose-500 border-rose-500 hover:bg-rose-950 hover:text-rose-400"
                               onClick={() => openReviewDialog(submission, 'reject')}
                             >
                               <XCircle className="w-4 h-4 mr-1" />
@@ -460,8 +482,11 @@ export function KYCReviewClient() {
             <DialogDescription>
               {selectedSubmission && (
                 <>
-                  {getDocumentTypeLabel(selectedSubmission.document_type)} for{' '}
-                  {selectedSubmission.investor.name}
+                  {getDocumentTypeLabel(selectedSubmission.document_type, selectedSubmission.custom_label)} for{' '}
+                  {selectedSubmission.counterparty_entity
+                    ? `${selectedSubmission.counterparty_entity.legal_name} (Entity of ${selectedSubmission.investor?.display_name || selectedSubmission.investor?.legal_name || 'Unknown'})`
+                    : selectedSubmission.investor?.display_name || selectedSubmission.investor?.legal_name || 'Unknown'
+                  }
                 </>
               )}
             </DialogDescription>
@@ -508,7 +533,7 @@ export function KYCReviewClient() {
             <Button
               onClick={handleReview}
               disabled={reviewing}
-              className={reviewAction === 'approve' ? 'bg-green-600 hover:bg-green-700' : ''}
+              className={reviewAction === 'approve' ? 'bg-emerald-600 hover:bg-emerald-700' : ''}
             >
               {reviewing ? 'Processing...' : reviewAction === 'approve' ? 'Approve' : 'Reject'}
             </Button>

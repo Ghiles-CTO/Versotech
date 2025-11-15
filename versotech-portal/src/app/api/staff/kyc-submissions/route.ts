@@ -34,17 +34,23 @@ export async function GET(request: NextRequest) {
     const investorId = searchParams.get('investor_id')
     const documentType = searchParams.get('document_type')
 
-    // Build query
+    // Build query with proper table aliases
     let query = supabase
       .from('kyc_submissions')
       .select(`
         *,
         investor:investors(
           id,
-          name,
+          legal_name,
+          display_name,
           email,
           type,
           kyc_status
+        ),
+        counterparty_entity:investor_counterparty(
+          id,
+          legal_name,
+          entity_type
         ),
         document:documents(
           id,
@@ -54,7 +60,7 @@ export async function GET(request: NextRequest) {
           mime_type,
           created_at
         ),
-        reviewer:reviewed_by(
+        reviewer:profiles(
           id,
           display_name,
           email

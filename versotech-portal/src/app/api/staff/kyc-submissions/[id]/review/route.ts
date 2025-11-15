@@ -65,7 +65,7 @@ export async function POST(
       .from('kyc_submissions')
       .select(`
         *,
-        investor:investors(id, name, email, kyc_status)
+        investor:investors(id, legal_name, display_name, email, kyc_status)
       `)
       .eq('id', submissionId)
       .single()
@@ -145,7 +145,7 @@ export async function POST(
       details: {
         document_type: submission.document_type,
         investor_id: submission.investor.id,
-        investor_name: submission.investor.name,
+        investor_name: submission.investor.legal_name || submission.investor.display_name,
         rejection_reason: rejection_reason || null,
         notes: notes || null
       }

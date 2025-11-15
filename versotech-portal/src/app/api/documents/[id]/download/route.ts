@@ -68,23 +68,50 @@ export async function GET(
       }
     }
 
+    // Log document details for debugging
+    console.log('Generating signed URL for document:', {
+      id: document.id,
+      name: document.name,
+      file_key: document.file_key,
+      mime_type: document.mime_type,
+      bucket: process.env.STORAGE_BUCKET_NAME || 'documents'
+    })
+
     // Generate signed URL (expires in 1 hour)
     const { data: signedUrlData, error: signedUrlError} = await serviceSupabase.storage
       .from(process.env.STORAGE_BUCKET_NAME || 'documents')
       .createSignedUrl(document.file_key, 3600)
 
     if (signedUrlError || !signedUrlData) {
-      console.error('Signed URL generation error:', signedUrlError)
+      console.error('Signed URL generation error:', {
+        error: signedUrlError,
+        document_id: document.id,
+        file_key: document.file_key,
+        mime_type: document.mime_type
+      })
+
+      // Provide more specific error message
+      const errorMessage = signedUrlError?.message || 'Failed to generate download URL'
+      const isNotFound = errorMessage.includes('not found') || errorMessage.includes('404')
+
       return NextResponse.json(
-        { error: 'Failed to generate download URL' },
-        { status: 500 }
+        {
+          error: isNotFound
+            ? 'Document file not found in storage. It may have been deleted or not uploaded correctly.'
+            : errorMessage,
+          details: {
+            document_id: document.id,
+            file_name: document.name
+          }
+        },
+        { status: isNotFound ? 404 : 500 }
       )
     }
 
     // Return signed URL with metadata
     return NextResponse.json({
       success: true,
-      url: signedUrlData.signedUrl,
+      url: signedUrlData.signedUrl,  // Using 'url' as expected by DocumentViewer component
       fileName: document.name,
       mimeType: document.mime_type,
       expiresAt: new Date(Date.now() + 3600 * 1000).toISOString()

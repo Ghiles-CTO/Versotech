@@ -14,6 +14,7 @@ import {
   LayoutDashboard,
   Building2,
   FileText,
+  FileSignature,
   MessageSquare,
   CheckSquare,
   TrendingUp,
@@ -153,12 +154,6 @@ const staffNavItems: SidebarItem[] = [
     description: 'Review and approve commitments'
   },
   {
-    name: 'KYC Review',
-    href: '/versotech/kyc-review',
-    icon: Shield,
-    description: 'Review and approve investor KYC documents'
-  },
-  {
     name: 'Deals',
     href: '/versotech/staff/deals',
     icon: Activity,
@@ -208,6 +203,13 @@ const staffNavItems: SidebarItem[] = [
     description: 'Document management and e-sign'
   },
   {
+    name: 'VersoSign',
+    href: '/versotech/staff/versosign',
+    icon: FileSignature,
+    description: 'Document signature management',
+    notificationKey: 'signatures'
+  },
+  {
     name: 'Introducers',
     href: '/versotech/staff/introducers',
     icon: HandHeart,
@@ -230,6 +232,12 @@ const staffNavItems: SidebarItem[] = [
     href: '/versotech/staff/audit',
     icon: Shield,
     description: 'Audit logs and compliance'
+  },
+  {
+    name: 'KYC Review',
+    href: '/versotech/staff/kyc-review',
+    icon: UserCheck,
+    description: 'Review and approve investor KYC documents'
   },
   {
     name: 'Admin',

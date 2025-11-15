@@ -1,4 +1,5 @@
 import { Metadata } from 'next'
+import { requireStaffAuth } from '@/lib/auth'
 import { KYCReviewClient } from './kyc-review-client'
 
 export const metadata: Metadata = {
@@ -6,6 +7,12 @@ export const metadata: Metadata = {
   description: 'Review and approve investor KYC documents'
 }
 
-export default function KYCReviewPage() {
-  return <KYCReviewClient />
+export default async function KYCReviewPage() {
+  await requireStaffAuth()
+
+  return (
+    <div className="p-6 space-y-6">
+      <KYCReviewClient />
+    </div>
+  )
 }

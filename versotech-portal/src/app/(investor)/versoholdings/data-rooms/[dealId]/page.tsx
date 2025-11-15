@@ -171,7 +171,7 @@ export default async function DataRoomDetailPage({ params }: PageProps) {
 
   return (
     <AppLayout brand="versoholdings">
-      <div className="p-6 max-w-7xl mx-auto space-y-6">
+      <div className="p-4 max-w-[1600px] mx-auto space-y-4">
         {/* Back button */}
         <Link
           href="/versoholdings/data-rooms"
@@ -258,9 +258,9 @@ export default async function DataRoomDetailPage({ params }: PageProps) {
         </div>
 
         {/* Investment Overview Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Key Terms - 2 columns */}
-          <div className="lg:col-span-2 space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* Left Half - Deal Information */}
+          <div className="space-y-4">
             {/* Deal Summary */}
             {(deal.description || deal.investment_thesis) && (
               <div className="bg-white border-2 border-gray-200 rounded-lg p-6">
@@ -313,35 +313,13 @@ export default async function DataRoomDetailPage({ params }: PageProps) {
                     {deal.deal_type?.replace('_', ' ') || 'Not specified'}
                   </p>
                 </div>
-              </div>
-
-              {/* Funding Progress */}
-              {deal.target_amount && (
-                <div className="mt-6 pt-6 border-t border-gray-200">
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-sm font-medium text-black">Funding Progress</p>
-                    <p className="text-sm text-gray-600">
-                      {formatProgress(deal.raised_amount, deal.target_amount)} Complete
-                    </p>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-3 mb-2">
-                    <div
-                      className="bg-blue-600 h-3 rounded-full transition-all"
-                      style={{
-                        width: formatProgress(deal.raised_amount, deal.target_amount)
-                      }}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-gray-600">
-                      Raised: {formatCurrency(deal.raised_amount, deal.currency || 'USD')}
-                    </span>
-                    <span className="text-black font-medium">
-                      Target: {formatCurrency(deal.target_amount, deal.currency || 'USD')}
-                    </span>
-                  </div>
+                <div>
+                  <p className="text-xs text-gray-600 mb-1">Target Raise</p>
+                  <p className="text-base font-semibold text-black">
+                    {formatCurrency(deal.target_amount, deal.currency || 'USD')}
+                  </p>
                 </div>
-              )}
+              </div>
             </div>
 
             {/* Fee Structure */}
@@ -389,63 +367,25 @@ export default async function DataRoomDetailPage({ params }: PageProps) {
             )}
           </div>
 
-          {/* Right Column - Quick Actions */}
-          <div className="lg:col-span-1 space-y-6">
-            {/* Important Dates */}
-            <div className="bg-white border-2 border-gray-200 rounded-lg p-6">
-              <div className="flex items-center gap-2 text-lg font-semibold text-black mb-4">
-                <Calendar className="h-5 w-5 text-blue-600" />
-                Important Dates
+          {/* Right Half - Subscription Form ONLY */}
+          <div>
+            {/* Subscription Form - PROMINENT */}
+            <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl p-8 shadow-xl h-full">
+              <div className="text-center mb-6">
+                <div className="inline-flex items-center justify-center bg-white rounded-full p-4 mb-4">
+                  <Briefcase className="h-8 w-8 text-blue-600" />
+                </div>
+                <h3 className="text-3xl font-bold text-white mb-3">Submit Subscription</h3>
+                <p className="text-blue-100 text-base">
+                  Ready to invest? Complete your allocation request below.
+                </p>
               </div>
-              <div className="space-y-3">
-                {deal.close_at && (
-                  <div>
-                    <p className="text-xs text-gray-600 mb-1">Deal Closes</p>
-                    <p className="text-sm font-semibold text-black">{formatDate(deal.close_at)}</p>
-                  </div>
-                )}
-                {feeStructure?.interest_confirmation_deadline && (
-                  <div>
-                    <p className="text-xs text-gray-600 mb-1">Interest Deadline</p>
-                    <p className="text-sm font-semibold text-black">
-                      {feeStructure.interest_confirmation_deadline}
-                    </p>
-                  </div>
-                )}
-                {feeStructure?.capital_call_timeline && (
-                  <div>
-                    <p className="text-xs text-gray-600 mb-1">Capital Call Timeline</p>
-                    <p className="text-sm font-semibold text-black">
-                      {feeStructure.capital_call_timeline}
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Quick Checklist */}
-            <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-6">
-              <div className="flex items-center gap-2 text-lg font-semibold text-black mb-4">
-                <Shield className="h-5 w-5 text-blue-600" />
-                Investor Checklist
-              </div>
-              <div className="space-y-2">
-                <div className="flex items-start gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-600 mt-0.5" />
-                  <span className="text-sm text-black">Review all documentation</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-600 mt-0.5" />
-                  <span className="text-sm text-black">Verify investment terms</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-600 mt-0.5" />
-                  <span className="text-sm text-black">Confirm KYC/AML compliance</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-600 mt-0.5" />
-                  <span className="text-sm text-black">Submit subscription request</span>
-                </div>
+              <div className="bg-white rounded-lg p-6">
+                <SubmitSubscriptionForm
+                  dealId={deal.id}
+                  currency={deal.currency ?? 'USD'}
+                  existingSubmission={latestSubmission}
+                />
               </div>
             </div>
           </div>
@@ -464,41 +404,18 @@ export default async function DataRoomDetailPage({ params }: PageProps) {
           </div>
         )}
 
-        {/* Documents and Subscription Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Documents section - takes 2 columns */}
-          <div className="lg:col-span-2">
-            <div className="bg-white border-2 border-gray-200 rounded-lg p-6 space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-lg font-semibold text-black">
-                  <FileText className="h-5 w-5 text-blue-600" />
-                  Documents
-                </div>
-                <Badge variant="outline" className="text-sm">
-                  {docs.length} file{docs.length !== 1 ? 's' : ''}
-                </Badge>
-              </div>
-              <DataRoomDocumentsGrouped documents={docs} />
+        {/* Documents Section - Full Width */}
+        <div className="bg-white border-2 border-gray-200 rounded-lg p-6 space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-xl font-semibold text-black">
+              <FileText className="h-5 w-5 text-blue-600" />
+              Deal Documents
             </div>
+            <Badge variant="outline" className="text-sm">
+              {docs.length} file{docs.length !== 1 ? 's' : ''}
+            </Badge>
           </div>
-
-          {/* Subscription form section - takes 1 column */}
-          <div className="lg:col-span-1">
-            <div className="bg-white border-2 border-gray-200 rounded-lg p-6 space-y-4">
-              <div className="flex items-center gap-2 text-lg font-semibold text-black">
-                <Briefcase className="h-5 w-5 text-blue-600" />
-                Subscription
-              </div>
-              <p className="text-sm text-gray-600">
-                Submit your allocation request after completing due diligence.
-              </p>
-              <SubmitSubscriptionForm
-                dealId={deal.id}
-                currency={deal.currency ?? 'USD'}
-                existingSubmission={latestSubmission}
-              />
-            </div>
-          </div>
+          <DataRoomDocumentsGrouped documents={docs} />
         </div>
       </div>
     </AppLayout>

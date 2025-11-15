@@ -1,0 +1,127 @@
+import { createClient } from '@/lib/supabase/server'
+import { VersoSignPageClient } from './versosign-page-client'
+import { redirect } from 'next/navigation'
+import { getCurrentUser } from '@/lib/auth'
+
+export const dynamic = 'force-dynamic'
+
+export interface SignatureInstructions {
+  type: 'signature' | 'manual_follow_up'
+  action_url?: string
+  signature_request_id?: string
+  document_id?: string
+  signer_role?: string
+  investor_name?: string
+  investor_email?: string
+  action_required?: string
+}
+
+export interface SignatureTask {
+  id: string
+  owner_user_id: string
+  kind: string
+  category: string | null
+  title: string
+  description: string | null
+  instructions: SignatureInstructions | null
+  priority: 'low' | 'medium' | 'high'
+  status: 'pending' | 'in_progress' | 'completed' | 'overdue' | 'waived' | 'blocked'
+  due_at: string | null
+  started_at: string | null
+  completed_at: string | null
+  created_at: string
+  updated_at: string | null
+  related_entity_type: string | null
+  related_entity_id: string | null
+  metadata: {
+    subscription_id?: string
+    document_id?: string
+    investor_id?: string
+    vehicle_id?: string
+    investor_name?: string
+    issue?: string
+  } | null
+}
+
+export interface SignatureGroup {
+  category: 'countersignatures' | 'follow_ups' | 'other'
+  title: string
+  description: string
+  tasks: SignatureTask[]
+}
+
+export default async function StaffSignaturesPage() {
+  const user = await getCurrentUser()
+
+  if (!user || !user.role?.startsWith('staff_')) {
+    redirect('/versotech/login')
+  }
+
+  const supabase = await createClient()
+
+  // Fetch all signature-related tasks for this staff member
+  const { data: tasks } = await supabase
+    .from('tasks')
+    .select('*')
+    .eq('owner_user_id', user.id)
+    .in('kind', ['countersignature', 'subscription_pack_signature', 'other'])
+    .order('priority', { ascending: false })
+    .order('due_at', { ascending: true, nullsFirst: false })
+
+  const allTasks = (tasks as SignatureTask[]) || []
+
+  // Group tasks by type
+  const signatureGroups: SignatureGroup[] = [
+    {
+      category: 'countersignatures',
+      title: 'Pending Countersignatures',
+      description: 'Subscription agreements awaiting your countersignature',
+      tasks: allTasks.filter(t =>
+        t.kind === 'countersignature' &&
+        t.status === 'pending'
+      )
+    },
+    {
+      category: 'follow_ups',
+      title: 'Manual Follow-ups Required',
+      description: 'Investors without platform accounts - manual intervention needed',
+      tasks: allTasks.filter(t =>
+        t.metadata?.issue === 'investor_no_user_account' &&
+        t.status === 'pending'
+      )
+    },
+    {
+      category: 'other',
+      title: 'Completed Signatures',
+      description: 'Recently completed signature tasks',
+      tasks: allTasks.filter(t =>
+        (t.kind === 'countersignature' || t.kind === 'subscription_pack_signature') &&
+        t.status === 'completed'
+      ).slice(0, 10) // Show last 10 completed
+    }
+  ]
+
+  // Get stats for dashboard
+  const stats = {
+    pending: allTasks.filter(t => t.status === 'pending').length,
+    in_progress: allTasks.filter(t => t.status === 'in_progress').length,
+    completed_today: allTasks.filter(t =>
+      t.status === 'completed' &&
+      t.completed_at &&
+      new Date(t.completed_at).toDateString() === new Date().toDateString()
+    ).length,
+    overdue: allTasks.filter(t =>
+      t.status === 'pending' &&
+      t.due_at &&
+      new Date(t.due_at) < new Date()
+    ).length
+  }
+
+  return (
+    <VersoSignPageClient
+      userId={user.id}
+      signatureGroups={signatureGroups}
+      stats={stats}
+    />
+  )
+}

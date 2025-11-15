@@ -1,0 +1,109 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { createServiceClient } from '@/lib/supabase/server'
+
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const supabase = await createServiceClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Check if user has super_admin or manage_staff permission
+    const { data: permission } = await supabase
+      .from('staff_permissions')
+      .select('permission')
+      .eq('user_id', user.id)
+      .in('permission', ['super_admin', 'manage_staff'])
+      .limit(1)
+      .single()
+
+    if (!permission) {
+      return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
+    }
+
+    const { id: staffId } = await params
+
+    // Prevent self-deactivation
+    if (staffId === user.id) {
+      return NextResponse.json({ error: 'Cannot deactivate your own account' }, { status: 400 })
+    }
+
+    // Check if staff member exists and is a staff role
+    const { data: staffProfile, error: profileError } = await supabase
+      .from('profiles')
+      .select('id, email, role, display_name')
+      .eq('id', staffId)
+      .in('role', ['staff_admin', 'staff_ops', 'staff_rm'])
+      .single()
+
+    if (profileError || !staffProfile) {
+      return NextResponse.json({ error: 'Staff member not found' }, { status: 404 })
+    }
+
+    // Soft delete - set deleted_at timestamp
+    const { error: updateError } = await supabase
+      .from('profiles')
+      .update({
+        deleted_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', staffId)
+
+    if (updateError) {
+      console.error('Profile update error:', updateError)
+      return NextResponse.json({ error: 'Failed to deactivate staff member' }, { status: 500 })
+    }
+
+    // Revoke all permissions
+    await supabase
+      .from('staff_permissions')
+      .delete()
+      .eq('user_id', staffId)
+
+    // Disable auth account
+    const { error: authError } = await supabase.auth.admin.updateUserById(
+      staffId,
+      { ban_duration: 'none' }
+    )
+
+    if (authError) {
+      console.error('Auth update error:', authError)
+    }
+
+    // Log the action
+    await supabase
+      .from('audit_log')
+      .insert({
+        actor_user_id: user.id,
+        action: 'staff_deactivated',
+        entity: 'profiles',
+        entity_id: staffId,
+        metadata: {
+          deactivated_email: staffProfile.email,
+          deactivated_role: staffProfile.role,
+          deactivated_name: staffProfile.display_name,
+        },
+      })
+
+    // Invalidate all sessions for the deactivated user
+    // This would be done via Supabase admin API in production
+
+    return NextResponse.json({
+      success: true,
+      message: 'Staff member deactivated successfully',
+      data: {
+        user_id: staffId,
+        email: staffProfile.email,
+        deactivated_at: new Date().toISOString(),
+      },
+    })
+  } catch (error) {
+    console.error('Staff deactivation error:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}

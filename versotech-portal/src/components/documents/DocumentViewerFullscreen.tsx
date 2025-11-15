@@ -156,7 +156,8 @@ export function DocumentViewerFullscreen({
             src={previewUrl}
             className="w-full h-full border-0"
             title="Document Preview"
-            sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
+            // Removed sandbox attribute to prevent Brave browser from blocking
+            // sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
             onError={() => {
               console.error('iframe failed to load preview')
               setIframeError(true)

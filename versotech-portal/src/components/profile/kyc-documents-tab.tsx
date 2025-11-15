@@ -1,20 +1,34 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Upload, CheckCircle, XCircle, Clock, Download, AlertCircle } from 'lucide-react'
+import { Upload, CheckCircle, XCircle, Clock, Download, AlertCircle, Info, Loader2, FileText } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 import { toast } from 'sonner'
+import { KYCUploadDialog } from './kyc-upload-dialog'
+import { getDocumentTypeLabel } from '@/constants/kyc-document-types'
 
 interface KYCSubmission {
   id: string
   document_type: string
-  status: 'pending' | 'under_review' | 'approved' | 'rejected' | 'expired'
+  custom_label?: string | null
+  status: string
   submitted_at: string
-  reviewed_at?: string
-  rejection_reason?: string
+  created_at: string
+  expiry_date?: string | null
+  version: number
+  metadata?: any
+  rejection_reason?: string | null
   document?: {
     id: string
     name: string
@@ -24,248 +38,281 @@ interface KYCSubmission {
     created_at: string
   }
   reviewer?: {
-    display_name: string
-    email: string
-  }
+    display_name?: string
+    email?: string
+  } | null
 }
 
-interface DocumentRequirement {
-  type: string
+interface SuggestedDocument {
+  value: string
   label: string
   description: string
-  required: boolean
-  submission: KYCSubmission | null
 }
 
 export function KYCDocumentsTab() {
-  const [documents, setDocuments] = useState<DocumentRequirement[]>([])
+  const [submissions, setSubmissions] = useState<KYCSubmission[]>([])
+  const [suggestedDocuments, setSuggestedDocuments] = useState<SuggestedDocument[]>([])
   const [loading, setLoading] = useState(true)
-  const [uploading, setUploading] = useState<string | null>(null)
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false)
+  const [downloadingId, setDownloadingId] = useState<string | null>(null)
 
   useEffect(() => {
-    loadDocuments()
+    loadSubmissions()
   }, [])
 
-  const loadDocuments = async () => {
+  const loadSubmissions = async () => {
+    setLoading(true)
     try {
       const response = await fetch('/api/investors/me/kyc-submissions')
-      if (!response.ok) throw new Error('Failed to load documents')
+      if (!response.ok) throw new Error('Failed to load KYC submissions')
 
       const data = await response.json()
-      setDocuments(data.documents || [])
-    } catch (error) {
-      console.error('Error loading documents:', error)
-      toast.error('Failed to load KYC documents')
+      setSubmissions(data.submissions || [])
+      setSuggestedDocuments(data.suggested_documents || [])
+    } catch (error: any) {
+      console.error('Error loading KYC submissions:', error)
+      toast.error('Failed to load KYC documents', {
+        description: error.message
+      })
     } finally {
       setLoading(false)
     }
   }
 
-  const handleFileUpload = async (documentType: string, file: File) => {
-    setUploading(documentType)
-
-    try {
-      const formData = new FormData()
-      formData.append('file', file)
-      formData.append('documentType', documentType)
-
-      const response = await fetch('/api/investors/me/documents/upload', {
-        method: 'POST',
-        body: formData
-      })
-
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || 'Upload failed')
-      }
-
-      toast.success('Document uploaded successfully and is pending review')
-
-      // Reload documents
-      await loadDocuments()
-    } catch (error: any) {
-      console.error('Upload error:', error)
-      toast.error(error.message || 'Failed to upload document')
-    } finally {
-      setUploading(null)
-    }
-  }
-
   const handleDownload = async (documentId: string, fileName: string) => {
+    setDownloadingId(documentId)
     try {
       const response = await fetch(`/api/documents/${documentId}/download`)
 
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to download document')
+        throw new Error('Failed to download document')
       }
 
-      const data = await response.json()
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = fileName
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
 
-      // Open signed URL in new tab to download
-      const link = document.createElement('a')
-      link.href = data.url
-      link.download = fileName
-      link.click()
-
-      toast.success('Document download started')
+      toast.success('Download started')
     } catch (error: any) {
       console.error('Download error:', error)
-      toast.error(error.message || 'Failed to download document')
+      toast.error('Download failed', {
+        description: error.message
+      })
+    } finally {
+      setDownloadingId(null)
     }
   }
 
-  const getStatusBadge = (status?: string) => {
+  const getStatusBadge = (status: string) => {
     switch (status) {
       case 'approved':
-        return <Badge className="bg-green-500"><CheckCircle className="w-3 h-3 mr-1" />Approved</Badge>
-      case 'rejected':
-        return <Badge variant="destructive"><XCircle className="w-3 h-3 mr-1" />Rejected</Badge>
-      case 'under_review':
-        return <Badge variant="secondary"><Clock className="w-3 h-3 mr-1" />Under Review</Badge>
+        return (
+          <Badge variant="default" className="bg-emerald-500/20 text-emerald-700 border-emerald-500/30">
+            <CheckCircle className="mr-1 h-3 w-3" />
+            Approved
+          </Badge>
+        )
       case 'pending':
-        return <Badge variant="secondary"><Clock className="w-3 h-3 mr-1" />Pending</Badge>
+        return (
+          <Badge variant="secondary" className="bg-amber-500/20 text-amber-700 border-amber-500/30">
+            <Clock className="mr-1 h-3 w-3" />
+            Pending Review
+          </Badge>
+        )
+      case 'rejected':
+        return (
+          <Badge variant="destructive" className="bg-rose-500/20 text-rose-700 border-rose-500/30">
+            <XCircle className="mr-1 h-3 w-3" />
+            Rejected
+          </Badge>
+        )
       case 'expired':
-        return <Badge variant="outline"><AlertCircle className="w-3 h-3 mr-1" />Expired</Badge>
+        return (
+          <Badge variant="outline" className="bg-gray-500/20 text-gray-700 border-gray-500/30">
+            <AlertCircle className="mr-1 h-3 w-3" />
+            Expired
+          </Badge>
+        )
       default:
-        return null
+        return <Badge variant="outline">{status}</Badge>
     }
+  }
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    })
+  }
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes < 1024) return bytes + ' B'
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
   }
 
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
       </div>
     )
   }
 
   return (
     <div className="space-y-6">
-      <Alert>
-        <AlertCircle className="h-4 w-4" />
-        <AlertDescription>
-          Please upload the required documents for KYC verification. All documents will be reviewed by our compliance team within 1-2 business days.
-        </AlertDescription>
-      </Alert>
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>KYC Documents</CardTitle>
+              <CardDescription>
+                Upload and manage your Know Your Customer (KYC) verification documents
+              </CardDescription>
+            </div>
+            <Button onClick={() => setUploadDialogOpen(true)}>
+              <Upload className="mr-2 h-4 w-4" />
+              Upload Document
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Alert>
+            <Info className="h-4 w-4" />
+            <AlertDescription className="text-sm">
+              You can upload any KYC document with a custom label. Suggested document types are provided for guidance, but you're not limited to these options.
+            </AlertDescription>
+          </Alert>
 
-      <div className="grid gap-4">
-        {documents.map((doc) => {
-          const submission = doc.submission
-          const isUploading = uploading === doc.type
-          const canUpload = !submission || submission.status === 'rejected'
+          {submissions.length === 0 ? (
+            <div className="text-center py-12 border-2 border-dashed border-gray-300 rounded-lg">
+              <FileText className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+              <p className="text-gray-600 mb-2">No KYC documents uploaded yet</p>
+              <p className="text-sm text-gray-500 mb-4">
+                Upload your identification documents, proof of address, and other KYC materials
+              </p>
+              <Button onClick={() => setUploadDialogOpen(true)} variant="outline">
+                <Upload className="mr-2 h-4 w-4" />
+                Upload First Document
+              </Button>
+            </div>
+          ) : (
+            <div className="border rounded-lg overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Document Type</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Uploaded</TableHead>
+                    <TableHead>Expiry</TableHead>
+                    <TableHead>File</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {submissions.map((submission) => (
+                    <TableRow key={submission.id}>
+                      <TableCell>
+                        <div className="flex flex-col">
+                          <span className="font-medium text-gray-900">
+                            {getDocumentTypeLabel(submission.document_type, submission.custom_label)}
+                          </span>
+                          {submission.version > 1 && (
+                            <span className="text-xs text-gray-500">
+                              Version {submission.version}
+                            </span>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-col gap-2">
+                          {getStatusBadge(submission.status)}
+                          {submission.status === 'rejected' && submission.rejection_reason && (
+                            <p className="text-xs text-rose-600 max-w-xs">
+                              {submission.rejection_reason}
+                            </p>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-gray-600">
+                        {formatDate(submission.created_at)}
+                      </TableCell>
+                      <TableCell className="text-gray-600">
+                        {submission.expiry_date ? formatDate(submission.expiry_date) : '—'}
+                      </TableCell>
+                      <TableCell>
+                        {submission.document && (
+                          <div className="flex flex-col">
+                            <span className="text-sm text-gray-900 truncate max-w-[200px]">
+                              {submission.document.name}
+                            </span>
+                            <span className="text-xs text-gray-500">
+                              {formatFileSize(submission.document.file_size_bytes)}
+                            </span>
+                          </div>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {submission.document && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDownload(submission.document!.id, submission.document!.name)}
+                            disabled={downloadingId === submission.document.id}
+                          >
+                            {downloadingId === submission.document.id ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Download className="h-4 w-4" />
+                            )}
+                          </Button>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
 
-          return (
-            <Card key={doc.type}>
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div>
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      {doc.label}
-                      {doc.required && <span className="text-red-500 text-sm">*</span>}
-                    </CardTitle>
-                    <CardDescription>{doc.description}</CardDescription>
-                  </div>
-                  {submission && getStatusBadge(submission.status)}
-                </div>
-              </CardHeader>
-              <CardContent>
-                {submission ? (
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between p-3 bg-gray-100 border border-gray-200 rounded-lg">
-                      <div className="flex items-center gap-3">
+          {suggestedDocuments.length > 0 && (
+            <div className="mt-6">
+              <h4 className="text-sm font-medium text-gray-700 mb-3">Suggested Documents</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {suggestedDocuments.map((doc) => (
+                  <Card key={doc.value} className="border-gray-200">
+                    <CardContent className="pt-4">
+                      <div className="flex items-start justify-between">
                         <div className="flex-1">
-                          <p className="font-medium text-sm text-gray-900">{submission.document?.name}</p>
-                          <p className="text-xs text-gray-600">
-                            Uploaded {new Date(submission.submitted_at).toLocaleDateString()}
-                          </p>
+                          <p className="font-medium text-sm text-gray-900">{doc.label}</p>
+                          <p className="text-xs text-gray-600 mt-1">{doc.description}</p>
                         </div>
                       </div>
-                      {submission.document && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDownload(submission.document!.id, submission.document!.name)}
-                        >
-                          <Download className="w-4 h-4" />
-                        </Button>
-                      )}
-                    </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+              <p className="text-xs text-gray-500 mt-3">
+                These are common document types, but you can upload any document type with a custom label.
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
-                    {submission.status === 'rejected' && submission.rejection_reason && (
-                      <Alert variant="destructive">
-                        <XCircle className="h-4 w-4" />
-                        <AlertDescription>
-                          <strong>Rejection Reason:</strong> {submission.rejection_reason}
-                        </AlertDescription>
-                      </Alert>
-                    )}
-
-                    {canUpload && (
-                      <div>
-                        <input
-                          type="file"
-                          id={`file-${doc.type}`}
-                          className="hidden"
-                          accept=".pdf,.jpg,.jpeg,.png,.heic,.webp"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0]
-                            if (file) handleFileUpload(doc.type, file)
-                          }}
-                          disabled={isUploading}
-                        />
-                        <label htmlFor={`file-${doc.type}`}>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            disabled={isUploading}
-                            asChild
-                          >
-                            <span>
-                              <Upload className="w-4 h-4 mr-2" />
-                              {isUploading ? 'Uploading...' : 'Re-upload Document'}
-                            </span>
-                          </Button>
-                        </label>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div>
-                    <input
-                      type="file"
-                      id={`file-${doc.type}`}
-                      className="hidden"
-                      accept=".pdf,.jpg,.jpeg,.png,.heic,.webp"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0]
-                        if (file) handleFileUpload(doc.type, file)
-                      }}
-                      disabled={isUploading}
-                    />
-                    <label htmlFor={`file-${doc.type}`}>
-                      <Button
-                        variant="outline"
-                        className="w-full"
-                        disabled={isUploading}
-                        asChild
-                      >
-                        <span>
-                          <Upload className="w-4 h-4 mr-2" />
-                          {isUploading ? 'Uploading...' : 'Upload Document'}
-                        </span>
-                      </Button>
-                    </label>
-                    <p className="text-xs text-gray-600 mt-2">
-                      Accepted formats: PDF, JPG, PNG, HEIC, WEBP (Max 10MB)
-                    </p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          )
-        })}
-      </div>
+      <KYCUploadDialog
+        open={uploadDialogOpen}
+        onOpenChange={setUploadDialogOpen}
+        onUploadSuccess={loadSubmissions}
+        category="both"
+      />
     </div>
   )
 }

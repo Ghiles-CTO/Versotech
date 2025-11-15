@@ -47,8 +47,9 @@ export class DocumentService {
       throw new DocumentError(errorMessage, response.status, data)
     }
 
-    // Validate required fields
-    if (!data.download_url) {
+    // Validate required fields - check for both 'url' and 'download_url' for compatibility
+    const downloadUrl = data.url || data.download_url
+    if (!downloadUrl) {
       throw new DocumentError(
         'No download URL in response',
         500,
@@ -57,13 +58,17 @@ export class DocumentService {
     }
 
     // Validate URL format
-    if (!this.isValidStorageUrl(data.download_url)) {
+    if (!this.isValidStorageUrl(downloadUrl)) {
       throw new DocumentError(
         'Invalid download URL format',
         500,
         data
       )
     }
+
+    // Normalize response to always have both fields for compatibility
+    data.url = downloadUrl
+    data.download_url = downloadUrl
 
     return data as DocumentUrlResponse
   }

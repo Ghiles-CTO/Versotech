@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Building2, Plus, Edit, Trash2, FileText, Upload, CheckCircle, XCircle, Clock } from 'lucide-react'
+import { Building2, Plus, Edit, Trash2, FileText, Upload, CheckCircle, XCircle, Clock, Eye } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/table'
 import { toast } from 'sonner'
 import { EntityFormDialog } from './entity-form-dialog'
+import { EntityDetailDialog } from './entity-detail-dialog'
 
 interface CounterpartyEntity {
   id: string
@@ -48,6 +49,7 @@ export function CounterpartyEntitiesTab() {
   const [entities, setEntities] = useState<CounterpartyEntity[]>([])
   const [loading, setLoading] = useState(true)
   const [formDialogOpen, setFormDialogOpen] = useState(false)
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false)
   const [selectedEntity, setSelectedEntity] = useState<CounterpartyEntity | null>(null)
   const [deleting, setDeleting] = useState<string | null>(null)
 
@@ -78,6 +80,11 @@ export function CounterpartyEntitiesTab() {
   const handleEdit = (entity: CounterpartyEntity) => {
     setSelectedEntity(entity)
     setFormDialogOpen(true)
+  }
+
+  const handleViewDetails = (entity: CounterpartyEntity) => {
+    setSelectedEntity(entity)
+    setDetailDialogOpen(true)
   }
 
   const handleDelete = async (entityId: string) => {
@@ -230,6 +237,13 @@ export function CounterpartyEntitiesTab() {
                         <Button
                           variant="outline"
                           size="sm"
+                          onClick={() => handleViewDetails(entity)}
+                        >
+                          <Eye className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
                           onClick={() => handleEdit(entity)}
                         >
                           <Edit className="w-4 h-4" />
@@ -260,6 +274,16 @@ export function CounterpartyEntitiesTab() {
         }}
         onSuccess={handleFormSuccess}
         entity={selectedEntity}
+      />
+
+      <EntityDetailDialog
+        open={detailDialogOpen}
+        onClose={() => {
+          setDetailDialogOpen(false)
+          setSelectedEntity(null)
+        }}
+        entity={selectedEntity}
+        onUpdate={loadEntities}
       />
     </div>
   )

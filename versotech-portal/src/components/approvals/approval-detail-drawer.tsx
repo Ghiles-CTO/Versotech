@@ -422,6 +422,56 @@ export function ApprovalDetailDrawer({
                       </div>
                     )}
                   </div>
+
+                  {/* Entity KYC Status */}
+                  {approval.entity_metadata.counterparty_entity.kyc_status && (
+                    <div className="col-span-2 mt-2 p-3 rounded-lg bg-slate-500/10 border border-slate-400/30">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm text-slate-400 mb-1">Entity KYC Status</p>
+                          <Badge
+                            variant={
+                              approval.entity_metadata.counterparty_entity.kyc_status === 'approved'
+                                ? 'default'
+                                : approval.entity_metadata.counterparty_entity.kyc_status === 'pending'
+                                ? 'secondary'
+                                : 'destructive'
+                            }
+                            className={
+                              approval.entity_metadata.counterparty_entity.kyc_status === 'approved'
+                                ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+                                : approval.entity_metadata.counterparty_entity.kyc_status === 'pending'
+                                ? 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+                                : 'bg-rose-500/20 text-rose-300 border-rose-500/30'
+                            }
+                          >
+                            {approval.entity_metadata.counterparty_entity.kyc_status.toUpperCase()}
+                          </Badge>
+                        </div>
+                        {approval.entity_metadata.counterparty_entity.kyc_completed_at && (
+                          <div className="text-right">
+                            <p className="text-xs text-slate-400">Completed</p>
+                            <p className="text-sm text-white">
+                              {new Date(approval.entity_metadata.counterparty_entity.kyc_completed_at).toLocaleDateString()}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                      {approval.entity_metadata.counterparty_entity.kyc_expiry_date && (
+                        <div className="mt-2 pt-2 border-t border-slate-400/20">
+                          <p className="text-xs text-slate-400">
+                            Expires: {new Date(approval.entity_metadata.counterparty_entity.kyc_expiry_date).toLocaleDateString()}
+                          </p>
+                        </div>
+                      )}
+                      {approval.entity_metadata.counterparty_entity.kyc_notes && (
+                        <div className="mt-2 pt-2 border-t border-slate-400/20">
+                          <p className="text-xs text-slate-300">{approval.entity_metadata.counterparty_entity.kyc_notes}</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   {approval.entity_metadata.counterparty_entity.registered_address && (
                     <div>
                       <p className="text-sm text-slate-400 mb-1">Registered Address</p>
@@ -481,7 +531,19 @@ export function ApprovalDetailDrawer({
                   </div>
                 </div>
 
-                {approval.entity_metadata?.indicative_amount && (
+                {/* Subscription Amount (only for deal_subscription approvals) */}
+                {approval.entity_type === 'deal_subscription' && approval.entity_metadata?.derived_amount && (
+                  <div>
+                    <p className="text-sm text-slate-400">Subscription Amount</p>
+                    <p className="text-2xl font-bold text-emerald-400">
+                      {approval.entity_metadata.payload?.currency || 'USD'}{' '}
+                      {approval.entity_metadata.derived_amount.toLocaleString()}
+                    </p>
+                  </div>
+                )}
+
+                {/* Fallback for other approval types with indicative_amount */}
+                {approval.entity_type !== 'deal_subscription' && approval.entity_metadata?.indicative_amount && (
                   <div>
                     <p className="text-sm text-slate-400">Indicative Amount</p>
                     <p className="text-2xl font-bold text-emerald-400">

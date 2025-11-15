@@ -233,6 +233,7 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
 
   const handleInitVehicleFolders = async (vehicleId: string) => {
     try {
+      const vehicle = initialVehicles.find(v => v.id === vehicleId)
       const response = await fetch('/api/staff/documents/init-vehicle-folders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -240,7 +241,7 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
       })
 
       if (response.ok) {
-        toast.success('Vehicle folders created successfully')
+        toast.success(`Default folders created for ${vehicle?.name || 'vehicle'}`)
         loadFolders()
       } else {
         toast.error('Failed to create vehicle folders')
@@ -311,12 +312,25 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
   }
 
   const handlePreview = async (doc: Document) => {
+    // Check if document is an Office document that cannot be previewed
+    const fileName = doc.name || ''
+    const fileExt = fileName.split('.').pop()?.toLowerCase() || ''
+    const officeExtensions = ['docx', 'doc', 'xlsx', 'xls', 'pptx', 'ppt', 'odt', 'ods', 'odp']
+
+    if (officeExtensions.includes(fileExt)) {
+      toast.info('Office documents cannot be previewed. Use Download to view.')
+      // Automatically trigger download for convenience
+      handleDownload(doc.id)
+      return
+    }
+
     await openPreview({
       id: doc.id,
       file_name: doc.name,
       name: doc.name,
       file_size_bytes: doc.file_size_bytes,
       type: doc.type,
+      mime_type: doc.mime_type, // Pass mime_type for better validation
     })
   }
 
@@ -324,9 +338,14 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
     try {
       const response = await fetch(`/api/documents/${documentId}/download`)
       if (response.ok) {
-        const { download_url } = await response.json()
-        window.open(download_url, '_blank')
-        toast.success('Download started')
+        const data = await response.json()
+        const downloadUrl = data.url || data.download_url // Support both field names
+        if (downloadUrl) {
+          window.open(downloadUrl, '_blank')
+          toast.success('Download started')
+        } else {
+          toast.error('No download URL in response')
+        }
       } else {
         toast.error('Failed to generate download link')
       }
@@ -435,26 +454,60 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
               </div>
             </CardHeader>
             <CardContent className="pt-0">
-              {/* Vehicle Folder Initialization */}
-              {initialVehicles.length > 0 && (
-                <div className="mb-4 p-3 bg-blue-900/30 border border-blue-700 rounded-lg">
-                  <p className="text-sm font-semibold text-blue-300 mb-2">Initialize Vehicle Folders</p>
-                  <div className="space-y-1">
-                    {initialVehicles.map(vehicle => (
-                      <Button
-                        key={vehicle.id}
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleInitVehicleFolders(vehicle.id)}
-                        className="w-full justify-start text-left hover:bg-blue-800/50 text-blue-200 hover:text-white"
-                      >
-                        <FolderPlus className="h-3 w-3 mr-2" />
-                        {vehicle.name}
-                      </Button>
-                    ))}
+              {/* Vehicle Folder Initialization - Only show vehicles without folders */}
+              {(() => {
+                // Filter vehicles that don't have folders yet
+                const vehiclesWithoutFolders = initialVehicles.filter(vehicle => {
+                  return !folders.some(folder =>
+                    folder.vehicle_id === vehicle.id &&
+                    folder.folder_type === 'vehicle_root'
+                  )
+                })
+
+                if (vehiclesWithoutFolders.length === 0) {
+                  return null // Don't show anything if all vehicles have folders
+                }
+
+                return (
+                  <div className="mb-4 p-3 bg-amber-900/20 border border-amber-600/50 rounded-lg">
+                    <div className="flex items-start gap-2 mb-2">
+                      <svg className="h-4 w-4 text-amber-400 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                      </svg>
+                      <div className="flex-1">
+                        <p className="text-sm font-semibold text-amber-300">Folder Initialization Required</p>
+                        <p className="text-xs text-amber-200/70 mt-1">
+                          {vehiclesWithoutFolders.length} vehicle{vehiclesWithoutFolders.length !== 1 ? 's' : ''} missing folder structure
+                        </p>
+                      </div>
+                    </div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full border-amber-600/50 text-amber-200 hover:bg-amber-900/30 hover:text-amber-100"
+                        >
+                          <FolderPlus className="h-4 w-4 mr-2" />
+                          Initialize Missing Folders
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent className="w-56">
+                        {vehiclesWithoutFolders.map(vehicle => (
+                          <DropdownMenuItem
+                            key={vehicle.id}
+                            onClick={() => handleInitVehicleFolders(vehicle.id)}
+                            className="cursor-pointer"
+                          >
+                            <span className="font-medium">{vehicle.name}</span>
+                            <span className="ml-2 text-xs text-muted-foreground">({vehicle.type})</span>
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
-                </div>
-              )}
+                )
+              })()}
 
               {/* Folder Tree */}
               <FolderTree

@@ -1,7 +1,7 @@
 import { MessagingClient } from '@/components/messaging/staff/messaging-client'
 import { requireAuth } from '@/lib/auth'
 import { createServiceClient } from '@/lib/supabase/server'
-import { normalizeConversation } from '@/lib/messaging'
+import { normalizeConversation } from '@/lib/messaging/supabase'
 
 export const dynamic = 'force-dynamic'
 

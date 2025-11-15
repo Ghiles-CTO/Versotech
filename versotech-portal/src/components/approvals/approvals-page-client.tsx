@@ -567,6 +567,23 @@ export function ApprovalsPageClient({
                                     </div>
                                   )}
                                   {(() => {
+                                    // For deal_subscription approvals, use derived_amount
+                                    if (approval.entity_type === 'deal_subscription') {
+                                      const derivedAmount = approval.entity_metadata?.derived_amount
+                                      if (derivedAmount) {
+                                        const currency = approval.entity_metadata?.payload?.currency || 'USD'
+                                        const numeric = parseFloat(derivedAmount)
+                                        if (!Number.isNaN(numeric)) {
+                                          return (
+                                            <div className="text-xs text-muted-foreground mt-1">
+                                              {currency} {numeric.toLocaleString()}
+                                            </div>
+                                          )
+                                        }
+                                      }
+                                    }
+
+                                    // For other approval types, use indicative_amount or requested_amount
                                     const indicativeAmount = approval.entity_metadata?.indicative_amount
                                     const requestedAmount = approval.entity_metadata?.requested_amount || approval.entity_metadata?.amount
                                     const indicativeCurrency = approval.entity_metadata?.indicative_currency || ''

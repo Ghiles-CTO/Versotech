@@ -60,10 +60,11 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData()
     const file = formData.get('file') as File
     const documentType = formData.get('documentType') as string
+    const customLabel = formData.get('customLabel') as string | null // User-defined label for custom document types
     const expiryDate = formData.get('expiryDate') as string | null
     const notes = formData.get('notes') as string | null
     const taskId = formData.get('taskId') as string | null
-    const entityId = formData.get('entityId') as string | null // NEW: For counterparty entity KYC
+    const entityId = formData.get('entityId') as string | null // For counterparty entity KYC
 
     if (!file) {
       return NextResponse.json(
@@ -79,22 +80,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Validate document type
-    const validTypes = [
-      'government_id',
-      'proof_of_address',
-      'accreditation_letter',
-      'bank_statement',
-      'entity_formation_docs',
-      'beneficial_ownership'
-    ]
-
-    if (!validTypes.includes(documentType)) {
-      return NextResponse.json(
-        { error: 'Invalid document type' },
-        { status: 400 }
-      )
-    }
+    // No validation on document type - users can specify any type
+    // customLabel provides user-friendly display name for custom types
 
     // Validate entity belongs to investor if provided
     if (entityId) {
@@ -218,6 +205,7 @@ export async function POST(request: NextRequest) {
         investor_id: entityId ? null : investorId,
         counterparty_entity_id: entityId || null,
         document_type: documentType,
+        custom_label: customLabel || null, // Store user-defined label
         document_id: document.id,
         status: 'pending',
         version: newVersion,

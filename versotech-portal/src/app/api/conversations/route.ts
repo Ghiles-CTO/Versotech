@@ -9,7 +9,7 @@ import type {
   ConversationVisibility,
   ConversationParticipant,
 } from '@/types/messaging'
-import { normalizeMessage, normalizeConversation } from '@/lib/messaging'
+import { normalizeMessage, normalizeConversation } from '@/lib/messaging/supabase'
 
 type NormalizedConversation = ConversationSummary
 
