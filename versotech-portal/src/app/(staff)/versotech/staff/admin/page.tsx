@@ -11,7 +11,6 @@ import {
   Activity,
   Users,
   DollarSign,
-  TrendingUp,
   Server,
   Shield,
   AlertCircle,
@@ -25,7 +24,6 @@ import {
   Settings,
   Key,
   Mail,
-  Toggle,
 } from 'lucide-react'
 
 // Import components
@@ -155,8 +153,7 @@ export default function SuperAdminDashboard() {
               ${((financialMetrics?.aum?.total || 0) / 1000000).toFixed(1)}M
             </div>
             <p className="text-xs text-muted-foreground">
-              <TrendingUp className="inline h-3 w-3 text-green-500 mr-1" />
-              {financialMetrics?.aum?.change_mtd || 0}% MTD
+              Assets Under Management
             </p>
           </CardContent>
         </Card>
