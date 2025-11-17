@@ -86,3 +86,52 @@ export interface Deal {
   name: string
   status: string
 }
+
+// ============================================
+// Navigation Types (Folder Explorer)
+// ============================================
+
+/**
+ * Folder structure for document organization
+ */
+export interface DocumentFolder {
+  id: string
+  name: string
+  path: string // Full path like "/Vehicle A/Investor Documents/KYC"
+  parent_folder_id: string | null
+  folder_type: 'vehicle_root' | 'category' | 'custom'
+  vehicle_id?: string | null
+  created_by?: string
+  created_at: string
+  updated_at: string
+  // Virtual fields (from counts)
+  subfolder_count?: number
+  document_count?: number
+}
+
+/**
+ * Breadcrumb segment for navigation
+ */
+export interface Breadcrumb {
+  id: string | null // null for root/home
+  name: string
+  path: string
+}
+
+/**
+ * Navigation state for folder explorer
+ */
+export interface NavigationState {
+  currentFolderId: string | null
+  navigationHistory: string[] // Stack for back navigation
+  breadcrumbs: Breadcrumb[]
+}
+
+/**
+ * Folder navigation actions
+ */
+export type NavigationAction =
+  | { type: 'NAVIGATE_TO_FOLDER'; folderId: string | null }
+  | { type: 'NAVIGATE_BACK' }
+  | { type: 'NAVIGATE_TO_ROOT' }
+  | { type: 'UPDATE_BREADCRUMBS'; breadcrumbs: Breadcrumb[] }

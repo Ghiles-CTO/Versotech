@@ -728,6 +728,9 @@ export function SubscriptionDetailClient({
                 capitalCalls={capitalCalls}
                 distributions={distributions}
                 currency={subscription.currency}
+                vehicleId={subscription.vehicle_id}
+                investorId={subscription.investor_id}
+                isStaff={true}
               />
             </CardContent>
           </Card>

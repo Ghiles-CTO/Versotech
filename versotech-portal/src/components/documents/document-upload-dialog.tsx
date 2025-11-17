@@ -11,12 +11,15 @@ import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
+import { DocumentFolder } from '@/types/documents'
+import { UploadDestinationBadge } from './upload/UploadDestinationBanner'
 
 interface DocumentUploadDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   folderId?: string | null
   vehicleId?: string | null
+  currentFolder?: DocumentFolder | null
   onSuccess?: () => void
 }
 
@@ -32,6 +35,7 @@ export function DocumentUploadDialog({
   onOpenChange,
   folderId,
   vehicleId,
+  currentFolder,
   onSuccess
 }: DocumentUploadDialogProps) {
   const [files, setFiles] = useState<FileWithMetadata[]>([])
@@ -165,6 +169,13 @@ export function DocumentUploadDialog({
         <DialogHeader>
           <DialogTitle>Upload Documents</DialogTitle>
         </DialogHeader>
+
+        {/* Upload Destination Indicator */}
+        {currentFolder && (
+          <div className="px-6 py-3 -mx-6 -mt-2 mb-4 bg-slate-50 border-y border-slate-200">
+            <UploadDestinationBadge currentFolder={currentFolder} />
+          </div>
+        )}
 
         <div className="space-y-4">
           {/* Drag and Drop Area */}

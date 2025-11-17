@@ -3,29 +3,63 @@
 import { Document, DocumentType } from '@/types/documents'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Download, Shield, Clock, Link2, Info, Building2, Folder, Eye } from 'lucide-react'
+import {
+  Download,
+  Shield,
+  Clock,
+  Link2,
+  Info,
+  Building2,
+  Folder,
+  Eye,
+  FileText,
+  FileSpreadsheet,
+  FileCheck,
+  Scale,
+  Receipt,
+  Lock,
+  FileSignature,
+  Clipboard,
+  UserCheck,
+  MoreVertical,
+} from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
+import { DOCUMENT_TYPE_COLORS } from '@/lib/design-tokens'
+import { cn } from '@/lib/utils'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 
 interface DocumentCardProps {
   document: Document
   onPreview?: (document: Document) => void
+  variant?: 'default' | 'compact'
+  className?: string
 }
 
+/**
+ * Get professional icon for document type (no emojis)
+ */
 function getDocumentIcon(type: string) {
-  const icons: Record<string, string> = {
-    statement: '📊',
-    report: '📈',
-    legal: '📄',
-    tax: '🧾',
-    nda: '🔒',
-    subscription: '✍️',
-    agreement: '📝',
-    term_sheet: '📋',
-    kyc: '🆔',
-    other: '📁'
+  const iconMap: Record<string, typeof FileText> = {
+    statement: FileSpreadsheet,
+    report: FileCheck,
+    legal: Scale,
+    tax: Receipt,
+    nda: Lock,
+    subscription: FileSignature,
+    agreement: FileSignature,
+    term_sheet: Clipboard,
+    kyc: UserCheck,
+    other: FileText,
   }
-  return icons[type.toLowerCase()] || '📁'
+  const IconComponent = iconMap[type.toLowerCase()] || FileText
+  return IconComponent
 }
 
 function formatFileSize(bytes?: number): string {
@@ -91,8 +125,27 @@ function extractMetadataHighlights(metadata?: Document['metadata']) {
   return highlights
 }
 
-export function DocumentCard({ document, onPreview }: DocumentCardProps) {
+/**
+ * DocumentCard - Professional Document Display Component
+ *
+ * Refined institutional design matching FolderCard aesthetic.
+ * Features:
+ * - Clean iconography (no emojis)
+ * - Muted professional colors
+ * - Subtle hover states
+ * - Context menu actions
+ *
+ * Design: Financial Terminal Elegance
+ */
+export function DocumentCard({
+  document,
+  onPreview,
+  variant = 'default',
+  className,
+}: DocumentCardProps) {
   const [isDownloading, setIsDownloading] = useState(false)
+  const [isHovered, setIsHovered] = useState(false)
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
 
   const handleDownload = async () => {
     setIsDownloading(true)
@@ -113,25 +166,19 @@ export function DocumentCard({ document, onPreview }: DocumentCardProps) {
 
       const { download_url, watermark, expires_in_seconds } = await response.json()
 
-      // Show watermark warning
       if (watermark) {
-        toast.info(
-          `Document will be watermarked with: ${watermark.downloaded_by}`,
-          { duration: 5000 }
-        )
+        toast.info(`Document will be watermarked with: ${watermark.downloaded_by}`, {
+          duration: 5000,
+        })
       }
 
-      // Trigger download
       window.open(download_url, '_blank')
 
-      // Show expiry warning
       toast.success(
         `Download link generated. Expires in ${Math.floor(expires_in_seconds / 60)} minutes`,
         { duration: 5000 }
       )
-
     } catch (error) {
-      console.error('Download error:', error)
       toast.error('Failed to download document. Please try again.')
     } finally {
       setIsDownloading(false)
@@ -142,136 +189,187 @@ export function DocumentCard({ document, onPreview }: DocumentCardProps) {
   const formattedType = formatDocumentType(document.type)
   const investorLabel = document.scope.investor?.legal_name
   const vehicle = document.scope.vehicle
-  const holdingBadgeClasses = vehicle
-    ? 'border-blue-200 bg-blue-50 text-blue-700'
-    : 'border-slate-200 bg-slate-50 text-slate-700'
   const metadataHighlights = extractMetadataHighlights(document.metadata)
   const formattedDate = new Date(document.created_at).toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'short',
-    day: 'numeric'
+    day: 'numeric',
   })
 
-  return (
-    <div className="group relative border-2 border-gray-200 rounded-xl p-6 hover:border-blue-300 hover:shadow-xl transition-all duration-300 bg-white overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-transparent to-purple-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+  // Get document type color scheme
+  const typeKey = document.type as keyof typeof DOCUMENT_TYPE_COLORS
+  const colorScheme = DOCUMENT_TYPE_COLORS[typeKey] || DOCUMENT_TYPE_COLORS.Other
+  const DocIcon = getDocumentIcon(document.type)
 
-      <div className="relative flex items-start justify-between">
-        {/* Document Info */}
-        <div className="flex items-start gap-4 flex-1">
-          {/* Icon */}
-          <div className="w-14 h-14 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-xl flex items-center justify-center text-2xl shadow-sm group-hover:scale-105 transition-transform duration-300">
-            {getDocumentIcon(document.type)}
+  // Compact variant for list view
+  if (variant === 'compact') {
+    return (
+      <button
+        onClick={() => onPreview?.(document)}
+        className={cn(
+          'group flex items-center gap-3 w-full px-3 py-2 rounded-md',
+          'hover:bg-slate-100 transition-colors duration-150',
+          'focus:outline-none focus:ring-2 focus:ring-navy-500 focus:ring-offset-1',
+          className
+        )}
+      >
+        <DocIcon className="w-4 h-4 text-slate-500 flex-shrink-0" strokeWidth={2} />
+        <span className="text-sm font-medium text-slate-900 truncate flex-1 text-left">
+          {document.file_name}
+        </span>
+        <span className="text-xs text-slate-500">{formattedSize}</span>
+      </button>
+    )
+  }
+
+  return (
+    <div
+      className={cn(
+        'group relative bg-white border border-slate-200 rounded-lg',
+        'hover:shadow-md hover:border-slate-300',
+        'transition-all duration-200',
+        'cursor-pointer',
+        className
+      )}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      onClick={() => onPreview?.(document)}
+    >
+      <div className="p-4">
+        <div className="flex items-start gap-3">
+          {/* Document Icon */}
+          <div
+            className={cn(
+              'w-11 h-11 rounded-lg border flex items-center justify-center',
+              'flex-shrink-0 transition-all duration-200',
+              colorScheme.badge
+            )}
+          >
+            <DocIcon className={cn('w-5 h-5', colorScheme.icon)} strokeWidth={2} />
           </div>
 
-          {/* Details */}
+          {/* Document Info */}
           <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-lg text-gray-900 group-hover:text-blue-900 transition-colors mb-1 truncate">
+            {/* File Name */}
+            <h3 className="font-medium text-slate-900 text-sm truncate mb-1">
               {document.file_name}
             </h3>
 
-            {/* Document classification */}
-            <div className="flex flex-wrap items-center gap-2 text-xs font-medium text-gray-600 mb-3">
-              <Badge variant="outline" className="border-2 border-slate-200 bg-slate-50 text-slate-700">
-                {formattedType}
-              </Badge>
-              <Badge
-                variant="outline"
-                className={`flex items-center gap-1 text-xs font-medium border-2 ${holdingBadgeClasses}`}
-              >
-                {vehicle ? <Building2 className="h-3 w-3" /> : <Folder className="h-3 w-3" />}
-                {vehicle ? `Holding: ${vehicle.name}` : 'Holding: None'}
-              </Badge>
-              {vehicle?.type && (
-                <Badge variant="outline" className="border-2 border-blue-100 bg-blue-50 text-blue-700 text-xs">
-                  {vehicle.type}
-                </Badge>
-              )}
-              {investorLabel && (
-                <Badge variant="outline" className="flex items-center gap-1 text-xs font-medium border-2 border-emerald-200 bg-emerald-50 text-emerald-700">
-                  <span className="font-semibold">Entity:</span>
-                  {investorLabel}
+            {/* Type & Size */}
+            <div className="flex items-center gap-2 text-xs text-slate-500 mb-2">
+              <span>{formattedType}</span>
+              <span>•</span>
+              <span>{formattedSize}</span>
+              <span>•</span>
+              <span className="flex items-center gap-1">
+                <Clock className="w-3 h-3" strokeWidth={2} />
+                {formattedDate}
+              </span>
+            </div>
+
+            {/* Badges */}
+            <div className="flex flex-wrap items-center gap-1.5">
+              {vehicle && (
+                <Badge
+                  variant="outline"
+                  className="text-xs border-navy-200 bg-navy-50 text-navy-700"
+                >
+                  <Building2 className="w-3 h-3 mr-1" strokeWidth={2} />
+                  {vehicle.name}
                 </Badge>
               )}
               {document.watermark && (
-                <Badge variant="outline" className="flex items-center gap-1 text-xs font-medium border-2 border-blue-200 bg-blue-50 text-blue-700">
-                  <Shield className="h-3 w-3" />
+                <Badge
+                  variant="outline"
+                  className="text-xs border-slate-200 bg-slate-50 text-slate-700"
+                >
+                  <Shield className="w-3 h-3 mr-1" strokeWidth={2} />
                   Watermarked
                 </Badge>
               )}
             </div>
-
-            <div className="flex flex-wrap items-center gap-4 text-xs text-gray-500 mb-3">
-              <span className="flex items-center gap-1">
-                <Clock className="h-3 w-3" />
-                {formattedDate}
-              </span>
-              <span>{formattedSize}</span>
-            </div>
-
-            {metadataHighlights.length > 0 && (
-              <div className="flex flex-wrap items-center gap-2 mb-3">
-                {metadataHighlights.map(({ label, value }) => (
-                  <Badge
-                    key={`${label}-${value}`}
-                    variant="outline"
-                    className="flex items-center gap-1 text-xs font-medium border-2 border-slate-200 bg-slate-50 text-slate-700"
-                  >
-                    <Info className="h-3 w-3" />
-                    <span className="font-semibold">{label}:</span>
-                    <span>{value}</span>
-                  </Badge>
-                ))}
-              </div>
-            )}
-
-            {/* Created by */}
-            {document.created_by && (
-              <div className="text-xs text-gray-500 flex items-center gap-1">
-                <Link2 className="h-3 w-3" />
-                Uploaded by {document.created_by.display_name}
-              </div>
-            )}
-
-            {/* Watermark notice */}
-            {document.watermark && (
-              <div className="flex items-center gap-1 text-xs text-blue-600 mt-2">
-                <Shield className="h-3 w-3" />
-                <span>Watermarked & tracked</span>
-              </div>
-            )}
           </div>
-        </div>
 
-        {/* Actions */}
-        <div className="flex flex-col gap-2 ml-4">
-          {onPreview && (
-            <Button
-              onClick={() => onPreview(document)}
-              variant="outline"
-              className="border-2 hover:bg-blue-50 hover:border-blue-300 transition-all duration-300"
+          {/* Context Menu */}
+          <DropdownMenu open={isMenuOpen} onOpenChange={setIsMenuOpen}>
+            <DropdownMenuTrigger
+              className={cn(
+                'opacity-0 group-hover:opacity-100 transition-opacity duration-150',
+                'p-1 rounded hover:bg-slate-100',
+                'focus:outline-none focus:ring-2 focus:ring-navy-500',
+                isMenuOpen && 'opacity-100'
+              )}
+              onClick={(e) => e.stopPropagation()}
             >
-              <Eye className="h-4 w-4 mr-2" />
-              Preview
-            </Button>
-          )}
-          <Button
-            onClick={handleDownload}
-            disabled={isDownloading}
-            className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-md hover:shadow-lg transition-all duration-300"
-          >
-            {isDownloading ? (
-              <>
-                <Clock className="h-4 w-4 mr-2 animate-spin" />
-                Generating...
-              </>
-            ) : (
-              <>
-                <Download className="h-4 w-4 mr-2" />
-                Download
-              </>
-            )}
-          </Button>
+              <MoreVertical className="w-4 h-4 text-slate-600" strokeWidth={2} />
+              <span className="sr-only">Document actions</span>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              {onPreview && (
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onPreview(document)
+                  }}
+                >
+                  <Eye className="w-4 h-4 mr-2 text-navy-600" strokeWidth={2} />
+                  <span>Preview</span>
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation()
+                  handleDownload()
+                }}
+                disabled={isDownloading}
+              >
+                {isDownloading ? (
+                  <>
+                    <Clock className="w-4 h-4 mr-2 animate-spin text-slate-600" strokeWidth={2} />
+                    <span>Generating...</span>
+                  </>
+                ) : (
+                  <>
+                    <Download className="w-4 h-4 mr-2 text-slate-600" strokeWidth={2} />
+                    <span>Download</span>
+                  </>
+                )}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </div>
+
+      {/* Hover Indicator (subtle bottom border) */}
+      <div
+        className={cn(
+          'absolute bottom-0 left-0 right-0 h-0.5 bg-navy-600',
+          'transform scale-x-0 group-hover:scale-x-100',
+          'transition-transform duration-200 origin-left',
+          'rounded-b-lg'
+        )}
+      />
+    </div>
+  )
+}
+
+/**
+ * Document Card Skeleton (for loading states)
+ */
+export function DocumentCardSkeleton({ className }: { className?: string }) {
+  return (
+    <div
+      className={cn(
+        'bg-white border border-slate-200 rounded-lg p-4',
+        'animate-pulse',
+        className
+      )}
+    >
+      <div className="flex items-start gap-3">
+        <div className="w-11 h-11 rounded-lg bg-slate-100 flex-shrink-0" />
+        <div className="flex-1 min-w-0">
+          <div className="h-4 bg-slate-100 rounded w-3/4 mb-2" />
+          <div className="h-3 bg-slate-100 rounded w-1/2" />
         </div>
       </div>
     </div>

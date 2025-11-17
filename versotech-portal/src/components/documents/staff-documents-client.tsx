@@ -1,41 +1,28 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useState, useEffect, useMemo } from 'react'
 import {
   Upload,
   FolderPlus,
   RefreshCw,
-  Search,
-  Filter,
-  MoreVertical,
-  Eye,
-  Download,
-  Edit,
-  Trash2,
-  CheckCircle,
-  Clock,
-  FileText,
-  Grid,
-  List as ListIcon,
-  ChevronRight,
-  FolderInput
+  FolderTree as FolderTreeIcon,
+  ArrowLeft
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
-import { FolderTree, FolderNode } from './folder-tree'
+import { FolderBreadcrumbs } from './navigation/FolderBreadcrumbs'
+import { FolderNavigator } from './navigation/FolderNavigator'
+import { FolderTreeDrawer } from './navigation/FolderTreeDrawer'
+import { UploadDestinationBanner } from './upload/UploadDestinationBanner'
 import { DocumentUploadDialog } from './document-upload-dialog'
 import { MoveDocumentDialog } from './move-document-dialog'
 import { CreateFolderDialog } from './create-folder-dialog'
+import { DocumentFolder } from '@/types/documents'
 import { toast } from 'sonner'
 import { useDocumentViewer } from '@/hooks/useDocumentViewer'
 import { DocumentViewerFullscreen } from './DocumentViewerFullscreen'
@@ -46,7 +33,7 @@ interface Vehicle {
   type: string
 }
 
-interface Document {
+interface StaffDocument {
   id: string
   name: string
   type: string
@@ -54,6 +41,7 @@ interface Document {
   file_size_bytes: number
   is_published: boolean
   created_at: string
+  mime_type?: string
   folder?: {
     id: string
     name: string
@@ -78,14 +66,18 @@ interface StaffDocumentsClientProps {
 }
 
 export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocumentsClientProps) {
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  
-  const [folders, setFolders] = useState<FolderNode[]>([])
-  const [documents, setDocuments] = useState<Document[]>([])
-  const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null)
-  const [selectedFolder, setSelectedFolder] = useState<FolderNode | null>(null)
+  // Navigation State
+  const [currentFolderId, setCurrentFolderId] = useState<string | null>(null)
+  const [currentFolder, setCurrentFolder] = useState<DocumentFolder | null>(null)
+  const [navigationHistory, setNavigationHistory] = useState<string[]>([])
+  const [showTreeDrawer, setShowTreeDrawer] = useState(false)
+
+  // Data State
+  const [folders, setFolders] = useState<DocumentFolder[]>([])
+  const [documents, setDocuments] = useState<StaffDocument[]>([])
   const [loading, setLoading] = useState(true)
+
+  // Dialog State
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false)
   const [createFolderDialogOpen, setCreateFolderDialogOpen] = useState(false)
   const [createFolderParentId, setCreateFolderParentId] = useState<string | null>(null)
@@ -93,10 +85,12 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
   const [moveDialogDocId, setMoveDialogDocId] = useState<string | null>(null)
   const [moveDialogDocName, setMoveDialogDocName] = useState<string>('')
   const [moveDialogCurrentFolder, setMoveDialogCurrentFolder] = useState<string | null>(null)
+
+  // UI State
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('list')
-  const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set())
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
+  const [sortBy, setSortBy] = useState<'name' | 'date' | 'type'>('name')
 
   // Document viewer hook
   const {
@@ -110,39 +104,110 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
     downloadDocument: downloadFromPreview
   } = useDocumentViewer()
 
+  // Load data on mount and when filters change
   useEffect(() => {
     loadFolders()
+  }, [])
+
+  useEffect(() => {
     loadDocuments()
-  }, [selectedFolderId, searchQuery, statusFilter])
+  }, [currentFolderId, searchQuery, statusFilter])
+
+  // Navigation Functions (NEW)
+  const navigateToFolder = (folderId: string | null) => {
+    if (currentFolderId !== null && currentFolderId !== folderId) {
+      setNavigationHistory(prev => [...prev, currentFolderId])
+    }
+
+    setCurrentFolderId(folderId)
+
+    const folder = folders.find(f => f.id === folderId)
+    setCurrentFolder(folder || null)
+  }
+
+  const navigateBack = () => {
+    if (navigationHistory.length === 0) return
+
+    const previousId = navigationHistory[navigationHistory.length - 1]
+    setNavigationHistory(prev => prev.slice(0, -1))
+    setCurrentFolderId(previousId)
+
+    const folder = folders.find(f => f.id === previousId)
+    setCurrentFolder(folder || null)
+  }
+
+  // Get subfolders of current location
+  const getSubfolders = useMemo((): DocumentFolder[] => {
+    return folders.filter(f => f.parent_folder_id === (currentFolderId || null))
+  }, [folders, currentFolderId])
+
+  // Get filtered documents
+  const filteredDocuments = useMemo(() => {
+    let result = documents
+
+    // Search filter
+    if (searchQuery) {
+      result = result.filter(doc =>
+        doc.name.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    }
+
+    // Sort
+    result = [...result].sort((a, b) => {
+      if (sortBy === 'name') {
+        return a.name.localeCompare(b.name)
+      } else if (sortBy === 'date') {
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      } else if (sortBy === 'type') {
+        return a.type.localeCompare(b.type)
+      }
+      return 0
+    })
+
+    return result
+  }, [documents, searchQuery, sortBy])
 
   const loadFolders = async () => {
     try {
-      console.log('[StaffDocuments] Loading folders...')
       const response = await fetch('/api/staff/documents/folders?tree=true')
-      console.log('[StaffDocuments] Folders response status:', response.status)
-      console.log('[StaffDocuments] Folders response headers:', Object.fromEntries(response.headers.entries()))
-      
+
       if (response.ok) {
         const data = await response.json()
-        console.log('[StaffDocuments] Folders loaded:', data.folders?.length || 0)
-        setFolders(data.folders || [])
-      } else {
-        const text = await response.text()
-        console.error('[StaffDocuments] Folders load failed. Status:', response.status, 'Response:', text)
-        let errorData: any = { error: 'Unknown error' }
-        try {
-          errorData = JSON.parse(text)
-        } catch (e) {
-          errorData = { error: text || 'Unknown error' }
+        const foldersList = data.folders || []
+
+        // Flatten tree structure to flat array
+        const flattenFolders = (nodes: any[]): DocumentFolder[] => {
+          const result: DocumentFolder[] = []
+          nodes.forEach((node: any) => {
+            result.push({
+              id: node.id,
+              name: node.name,
+              path: node.path,
+              parent_folder_id: node.parent_folder_id,
+              folder_type: node.folder_type,
+              vehicle_id: node.vehicle_id,
+              created_by: node.created_by,
+              created_at: node.created_at,
+              updated_at: node.updated_at,
+              subfolder_count: node.children?.length || 0,
+              document_count: 0,
+            })
+            if (node.children && node.children.length > 0) {
+              result.push(...flattenFolders(node.children))
+            }
+          })
+          return result
         }
-        console.error('[StaffDocuments] Parsed error:', errorData)
+
+        setFolders(flattenFolders(foldersList))
+      } else {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
         const errorMsg = errorData.details || errorData.error || 'Unknown error'
-        const errorCode = errorData.code ? ` (${errorData.code})` : ''
-        toast.error(`Failed to load folders: ${errorMsg}${errorCode}`)
+        toast.error(`Failed to load folders: ${errorMsg}`)
       }
     } catch (error) {
-      console.error('[StaffDocuments] Error loading folders:', error)
-      toast.error('Failed to load folders. Check console for details.')
+      console.error('Error loading folders:', error)
+      toast.error('Failed to load folders')
     }
   }
 
@@ -150,10 +215,10 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
     try {
       setLoading(true)
       const params = new URLSearchParams()
-      
-      if (selectedFolderId) {
+
+      if (currentFolderId) {
         // Get all descendant folder IDs for recursive display
-        const folderIds = getDescendantFolderIds(selectedFolderId)
+        const folderIds = getDescendantFolderIds(currentFolderId)
         folderIds.forEach(id => params.append('folder_ids', id))
         params.append('include_subfolders', 'true')
       }
@@ -164,70 +229,41 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
         params.append('status', statusFilter)
       }
 
-      console.log('[StaffDocuments] Loading documents with params:', params.toString())
       const response = await fetch(`/api/staff/documents?${params.toString()}`)
-      console.log('[StaffDocuments] Documents response status:', response.status)
-      
+
       if (response.ok) {
         const data = await response.json()
-        console.log('[StaffDocuments] Documents loaded:', data.documents?.length || 0)
         setDocuments(data.documents || [])
       } else {
-        const text = await response.text()
-        console.error('[StaffDocuments] Documents load failed. Status:', response.status, 'Response:', text)
-        let errorData: any = { error: 'Unknown error' }
-        try {
-          errorData = JSON.parse(text)
-        } catch (e) {
-          errorData = { error: text || 'Unknown error' }
-        }
-        console.error('[StaffDocuments] Parsed error:', errorData)
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
         const errorMsg = errorData.details || errorData.error || 'Unknown error'
-        const errorCode = errorData.code ? ` (${errorData.code})` : ''
-        toast.error(`Failed to load documents: ${errorMsg}${errorCode}`)
+        toast.error(`Failed to load documents: ${errorMsg}`)
       }
     } catch (error) {
-      console.error('[StaffDocuments] Error loading documents:', error)
-      toast.error('Failed to load documents. Check console for details.')
+      console.error('Error loading documents:', error)
+      toast.error('Failed to load documents')
     } finally {
       setLoading(false)
     }
   }
 
-  const flattenFolders = (nodes: FolderNode[]): FolderNode[] => {
-    const result: FolderNode[] = []
-    nodes.forEach(node => {
-      result.push(node)
-      if (node.children && node.children.length > 0) {
-        result.push(...flattenFolders(node.children))
-      }
-    })
-    return result
-  }
-
   const getDescendantFolderIds = (folderId: string): string[] => {
-    const allFolders = flattenFolders(folders)
     const result = [folderId]
-    
+
     const findChildren = (parentId: string) => {
-      const children = allFolders.filter(f => f.parent_folder_id === parentId)
+      const children = folders.filter(f => f.parent_folder_id === parentId)
       children.forEach(child => {
         result.push(child.id)
         findChildren(child.id)
       })
     }
-    
+
     findChildren(folderId)
     return result
   }
 
-  const handleSelectFolder = (folderId: string | null, folder: FolderNode) => {
-    setSelectedFolderId(folderId)
-    setSelectedFolder(folder)
-  }
-
-  const handleCreateFolder = (parentId: string | null) => {
-    setCreateFolderParentId(parentId)
+  const handleCreateFolder = (parentId: string | null = null) => {
+    setCreateFolderParentId(parentId || currentFolderId)
     setCreateFolderDialogOpen(true)
   }
 
@@ -250,18 +286,6 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
       console.error('Error initializing folders:', error)
       toast.error('Failed to create vehicle folders')
     }
-  }
-
-  const handleToggleFolder = (folderId: string) => {
-    setExpandedFolders(prev => {
-      const next = new Set(prev)
-      if (next.has(folderId)) {
-        next.delete(folderId)
-      } else {
-        next.add(folderId)
-      }
-      return next
-    })
   }
 
   const handleMoveDocument = (documentId: string, documentName: string, currentFolderId: string | null) => {
@@ -311,15 +335,13 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
     }
   }
 
-  const handlePreview = async (doc: Document) => {
-    // Check if document is an Office document that cannot be previewed
+  const handlePreview = async (doc: StaffDocument) => {
     const fileName = doc.name || ''
     const fileExt = fileName.split('.').pop()?.toLowerCase() || ''
     const officeExtensions = ['docx', 'doc', 'xlsx', 'xls', 'pptx', 'ppt', 'odt', 'ods', 'odp']
 
     if (officeExtensions.includes(fileExt)) {
       toast.info('Office documents cannot be previewed. Use Download to view.')
-      // Automatically trigger download for convenience
       handleDownload(doc.id)
       return
     }
@@ -330,7 +352,7 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
       name: doc.name,
       file_size_bytes: doc.file_size_bytes,
       type: doc.type,
-      mime_type: doc.mime_type, // Pass mime_type for better validation
+      mime_type: doc.mime_type,
     })
   }
 
@@ -339,7 +361,7 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
       const response = await fetch(`/api/documents/${documentId}/download`)
       if (response.ok) {
         const data = await response.json()
-        const downloadUrl = data.url || data.download_url // Support both field names
+        const downloadUrl = data.url || data.download_url
         if (downloadUrl) {
           window.open(downloadUrl, '_blank')
           toast.success('Download started')
@@ -355,61 +377,29 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
     }
   }
 
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes'
-    const k = 1024
-    const sizes = ['Bytes', 'KB', 'MB', 'GB']
-    const i = Math.floor(Math.log(bytes) / Math.log(k))
-    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i]
+  const handleRenameFolder = (folderId: string) => {
+    toast.info('Folder renaming not yet implemented')
   }
 
-  const getStatusBadge = (status: string) => {
-    const configs: Record<string, { className: string, icon: any, label: string }> = {
-      draft: { 
-        className: 'bg-gray-700 text-gray-200 border-gray-600', 
-        icon: FileText,
-        label: 'Draft'
-      },
-      pending_approval: { 
-        className: 'bg-amber-900/50 text-amber-300 border-amber-600', 
-        icon: Clock,
-        label: 'Pending Approval'
-      },
-      approved: { 
-        className: 'bg-green-900/50 text-green-300 border-green-600', 
-        icon: CheckCircle,
-        label: 'Approved'
-      },
-      published: { 
-        className: 'bg-blue-900/50 text-blue-300 border-blue-600', 
-        icon: CheckCircle,
-        label: 'Published'
-      },
-      archived: { 
-        className: 'bg-gray-800 text-gray-400 border-gray-600', 
-        icon: FileText,
-        label: 'Archived'
-      }
-    }
+  const handleDeleteFolder = (folderId: string) => {
+    toast.info('Folder deletion not yet implemented')
+  }
 
-    const config = configs[status] || configs.draft
-    const Icon = config.icon
-
-    return (
-      <Badge className={`gap-1 border ${config.className}`}>
-        <Icon className="h-3 w-3" />
-        {config.label}
-      </Badge>
+  // Check for vehicles without folders
+  const vehiclesWithoutFolders = initialVehicles.filter(vehicle => {
+    return !folders.some(folder =>
+      folder.vehicle_id === vehicle.id &&
+      folder.folder_type === 'vehicle_root'
     )
-  }
+  })
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="flex flex-col h-full bg-slate-50">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between px-6 py-4 bg-white border-b border-slate-200">
         <div>
-          <h1 className="text-2xl font-bold text-white">Document Management</h1>
-          <p className="text-gray-300 mt-1">
+          <h1 className="text-2xl font-bold text-slate-900">Document Management</h1>
+          <p className="text-slate-600 mt-1">
             Manage documents with hierarchical folder structure
           </p>
         </div>
@@ -417,303 +407,118 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
           <Button
             variant="outline"
             onClick={() => loadDocuments()}
-            className="border-gray-600 text-gray-200 hover:border-gray-500 hover:bg-gray-800 hover:text-white"
           >
             <RefreshCw className="h-4 w-4 mr-2" />
             Refresh
           </Button>
+        </div>
+      </div>
+
+      {/* Breadcrumbs */}
+      {currentFolder && (
+        <FolderBreadcrumbs
+          currentFolder={currentFolder}
+          onNavigate={navigateToFolder}
+        />
+      )}
+
+      {/* Upload Destination Banner */}
+      {currentFolder && (
+        <UploadDestinationBanner currentFolder={currentFolder} />
+      )}
+
+      {/* Actions Bar */}
+      <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-white">
+        <div className="flex items-center gap-3">
           <Button
-            onClick={() => {
-              console.log('[StaffDocuments] Upload button clicked')
-              setUploadDialogOpen(true)
-            }}
-            className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg"
+            variant="outline"
+            onClick={() => setShowTreeDrawer(true)}
           >
-            <Upload className="h-4 w-4 mr-2" />
+            <FolderTreeIcon className="w-4 h-4 mr-2" />
+            Browse All Folders
+          </Button>
+          {navigationHistory.length > 0 && (
+            <Button variant="ghost" onClick={navigateBack}>
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back
+            </Button>
+          )}
+          {vehiclesWithoutFolders.length > 0 && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="border-amber-200 bg-amber-50 text-amber-900 hover:bg-amber-100">
+                  <FolderPlus className="h-4 w-4 mr-2" />
+                  Initialize Vehicle Folders ({vehiclesWithoutFolders.length})
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                {vehiclesWithoutFolders.map(vehicle => (
+                  <DropdownMenuItem
+                    key={vehicle.id}
+                    onClick={() => handleInitVehicleFolders(vehicle.id)}
+                  >
+                    {vehicle.name} ({vehicle.type})
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+        </div>
+        <div className="flex items-center gap-2">
+          <Button onClick={() => setUploadDialogOpen(true)}>
+            <Upload className="w-4 w-4 mr-2" />
             Upload Documents
+          </Button>
+          <Button variant="outline" onClick={() => handleCreateFolder()}>
+            <FolderPlus className="w-4 h-4 mr-2" />
+            New Folder
           </Button>
         </div>
       </div>
 
-      {/* Main Content - Two Column Layout */}
-      <div className="grid grid-cols-12 gap-6">
-        {/* Left Sidebar - Folder Tree */}
-        <div className="col-span-3">
-          <Card>
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-base text-white">Folders</CardTitle>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleCreateFolder(null)}
-                  className="text-gray-400 hover:text-white hover:bg-gray-700"
-                >
-                  <FolderPlus className="h-4 w-4" />
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent className="pt-0">
-              {/* Vehicle Folder Initialization - Only show vehicles without folders */}
-              {(() => {
-                // Filter vehicles that don't have folders yet
-                const vehiclesWithoutFolders = initialVehicles.filter(vehicle => {
-                  return !folders.some(folder =>
-                    folder.vehicle_id === vehicle.id &&
-                    folder.folder_type === 'vehicle_root'
-                  )
-                })
-
-                if (vehiclesWithoutFolders.length === 0) {
-                  return null // Don't show anything if all vehicles have folders
-                }
-
-                return (
-                  <div className="mb-4 p-3 bg-amber-900/20 border border-amber-600/50 rounded-lg">
-                    <div className="flex items-start gap-2 mb-2">
-                      <svg className="h-4 w-4 text-amber-400 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                      </svg>
-                      <div className="flex-1">
-                        <p className="text-sm font-semibold text-amber-300">Folder Initialization Required</p>
-                        <p className="text-xs text-amber-200/70 mt-1">
-                          {vehiclesWithoutFolders.length} vehicle{vehiclesWithoutFolders.length !== 1 ? 's' : ''} missing folder structure
-                        </p>
-                      </div>
-                    </div>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="w-full border-amber-600/50 text-amber-200 hover:bg-amber-900/30 hover:text-amber-100"
-                        >
-                          <FolderPlus className="h-4 w-4 mr-2" />
-                          Initialize Missing Folders
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent className="w-56">
-                        {vehiclesWithoutFolders.map(vehicle => (
-                          <DropdownMenuItem
-                            key={vehicle.id}
-                            onClick={() => handleInitVehicleFolders(vehicle.id)}
-                            className="cursor-pointer"
-                          >
-                            <span className="font-medium">{vehicle.name}</span>
-                            <span className="ml-2 text-xs text-muted-foreground">({vehicle.type})</span>
-                          </DropdownMenuItem>
-                        ))}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                )
-              })()}
-
-              {/* Folder Tree */}
-              <FolderTree
-                folders={folders}
-                selectedFolderId={selectedFolderId}
-                onSelectFolder={handleSelectFolder}
-                onCreateFolder={handleCreateFolder}
-                expandedFolders={expandedFolders}
-                onToggleFolder={handleToggleFolder}
-              />
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Right Content - Documents */}
-        <div className="col-span-9">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  {selectedFolder && (
-                    <div className="flex items-center gap-2 text-sm text-gray-400 mb-2">
-                      <span>Documents</span>
-                      <ChevronRight className="h-4 w-4" />
-                      <span className="font-medium text-gray-200">{selectedFolder.path}</span>
-                    </div>
-                  )}
-                  <CardTitle className="text-white">
-                    {selectedFolder ? selectedFolder.name : 'All Documents'}
-                  </CardTitle>
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant={viewMode === 'list' ? 'secondary' : 'ghost'}
-                    size="sm"
-                    onClick={() => setViewMode('list')}
-                    className={viewMode === 'list' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-700'}
-                  >
-                    <ListIcon className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
-                    size="sm"
-                    onClick={() => setViewMode('grid')}
-                    className={viewMode === 'grid' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-700'}
-                  >
-                    <Grid className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-
-              {/* Search and Filters */}
-              <div className="flex gap-2 mt-4">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <Input
-                    placeholder="Search documents..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10 bg-gray-800 border-gray-600 text-white placeholder:text-gray-400 focus:border-blue-500 focus:ring-blue-500"
-                  />
-                </div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" className="border-gray-600 text-gray-200 hover:border-blue-500 hover:bg-gray-800 hover:text-white">
-                      <Filter className="h-4 w-4 mr-2" />
-                      {statusFilter === 'all' ? 'All Status' : statusFilter.replace('_', ' ')}
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="bg-white">
-                    <DropdownMenuItem 
-                      onClick={() => setStatusFilter('all')}
-                      className="cursor-pointer hover:bg-gray-100"
-                    >
-                      All Status
-                    </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      onClick={() => setStatusFilter('draft')}
-                      className="cursor-pointer hover:bg-gray-100"
-                    >
-                      Draft
-                    </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      onClick={() => setStatusFilter('pending_approval')}
-                      className="cursor-pointer hover:bg-gray-100"
-                    >
-                      Pending Approval
-                    </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      onClick={() => setStatusFilter('approved')}
-                      className="cursor-pointer hover:bg-gray-100"
-                    >
-                      Approved
-                    </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      onClick={() => setStatusFilter('published')}
-                      className="cursor-pointer hover:bg-gray-100"
-                    >
-                      Published
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            </CardHeader>
-
-            <CardContent>
-              {loading ? (
-                <div className="text-center py-12">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
-                  <p className="text-sm text-gray-400 mt-4">Loading documents...</p>
-                </div>
-              ) : documents.length === 0 ? (
-                <div className="text-center py-12">
-                  <FileText className="h-12 w-12 mx-auto mb-4 text-gray-500" />
-                  <p className="text-sm text-gray-400">No documents found</p>
-                </div>
-              ) : (
-                <div className={viewMode === 'grid' ? 'grid grid-cols-3 gap-4' : 'space-y-2'}>
-                  {documents.map((doc) => (
-                    <div
-                      key={doc.id}
-                      className="flex items-center justify-between p-4 border border-gray-700 rounded-lg hover:border-blue-500 hover:bg-gray-800/50 transition-all hover:shadow-lg"
-                    >
-                      <div className="flex items-center gap-3 flex-1 min-w-0">
-                        <FileText className="h-5 w-5 text-blue-400 flex-shrink-0" />
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium truncate text-white">{doc.name}</p>
-                          <div className="flex items-center gap-2 text-xs text-gray-400 mt-1">
-                            <span className="font-medium">{doc.type}</span>
-                            <span>•</span>
-                            <span>{formatFileSize(doc.file_size_bytes || 0)}</span>
-                            <span>•</span>
-                            <span>{new Date(doc.created_at).toLocaleDateString()}</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        {getStatusBadge(doc.status)}
-                        
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm" className="hover:bg-gray-700 text-gray-300 hover:text-white">
-                              <MoreVertical className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem
-                              onClick={() => handlePreview(doc)}
-                              className="cursor-pointer"
-                            >
-                              <Eye className="h-4 w-4 mr-2" />
-                              Preview
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => handleDownload(doc.id)}
-                              className="cursor-pointer"
-                            >
-                              <Download className="h-4 w-4 mr-2" />
-                              Download
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => handleMoveDocument(doc.id, doc.name, doc.folder?.id || null)}
-                              className="cursor-pointer"
-                            >
-                              <FolderInput className="h-4 w-4 mr-2" />
-                              Move to Folder
-                            </DropdownMenuItem>
-                            <DropdownMenuItem className="cursor-pointer">
-                              <Edit className="h-4 w-4 mr-2" />
-                              Edit Metadata
-                            </DropdownMenuItem>
-                            {!doc.is_published && doc.status === 'approved' && (
-                              <DropdownMenuItem 
-                                onClick={() => handlePublishDocument(doc.id)}
-                                className="cursor-pointer text-green-600 hover:text-green-700 hover:bg-green-50"
-                              >
-                                <CheckCircle className="h-4 w-4 mr-2" />
-                                Publish
-                              </DropdownMenuItem>
-                            )}
-                            <DropdownMenuItem
-                              onClick={() => handleDeleteDocument(doc.id)}
-                              className="cursor-pointer text-red-600 hover:text-red-700 hover:bg-red-50"
-                            >
-                              <Trash2 className="h-4 w-4 mr-2" />
-                              Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+      {/* Main Navigator (Folders + Documents) */}
+      <div className="flex-1 overflow-hidden">
+        <FolderNavigator
+          currentFolderId={currentFolderId}
+          currentFolder={currentFolder}
+          subfolders={getSubfolders}
+          documents={filteredDocuments as any}
+          isLoading={loading}
+          viewMode={viewMode}
+          sortBy={sortBy}
+          searchQuery={searchQuery}
+          onNavigateToFolder={navigateToFolder}
+          onDocumentClick={(docId) => {
+            const doc = documents.find(d => d.id === docId)
+            if (doc) handlePreview(doc)
+          }}
+          onUploadClick={() => setUploadDialogOpen(true)}
+          onCreateFolderClick={() => handleCreateFolder()}
+          onRenameFolder={handleRenameFolder}
+          onDeleteFolder={handleDeleteFolder}
+          onCreateSubfolder={handleCreateFolder}
+          onViewModeChange={setViewMode}
+          onSortChange={setSortBy}
+          onSearchChange={setSearchQuery}
+        />
       </div>
+
+      {/* Tree Drawer (Optional) */}
+      <FolderTreeDrawer
+        open={showTreeDrawer}
+        onOpenChange={setShowTreeDrawer}
+        folders={folders}
+        currentFolderId={currentFolderId}
+        onNavigate={navigateToFolder}
+      />
 
       {/* Upload Dialog */}
       <DocumentUploadDialog
         open={uploadDialogOpen}
         onOpenChange={setUploadDialogOpen}
-        folderId={selectedFolderId}
-        vehicleId={selectedFolder?.vehicle_id || undefined}
+        folderId={currentFolderId}
+        currentFolder={currentFolder}
+        vehicleId={currentFolder?.vehicle_id || undefined}
         onSuccess={() => loadDocuments()}
       />
 
@@ -748,4 +553,3 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
     </div>
   )
 }
-

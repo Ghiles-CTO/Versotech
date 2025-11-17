@@ -1,6 +1,16 @@
 import { createClient } from '@/lib/supabase/server'
 import { auditLogger, AuditActions } from '@/lib/audit'
 import { NextResponse } from 'next/server'
+import { z } from 'zod'
+
+const createCashflowSchema = z.object({
+  investor_id: z.string().uuid(),
+  vehicle_id: z.string().uuid(),
+  type: z.enum(['call', 'distribution']),
+  amount: z.number().min(0),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  ref_id: z.string().uuid().optional()
+})
 
 export async function GET(request: Request) {
   try {
@@ -151,6 +161,156 @@ export async function GET(request: Request) {
         hasMore: formattedCashflows.length === limit
       }
     })
+
+  } catch (error) {
+    console.error('Cashflows API error:', error)
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
+
+export async function POST(request: Request) {
+  try {
+    const supabase = await createClient()
+
+    // Get the authenticated user
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+
+    // Get user profile to check role
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    if (!profile || !['staff_admin', 'staff_ops'].includes(profile.role)) {
+      return NextResponse.json(
+        { error: 'Staff access required' },
+        { status: 403 }
+      )
+    }
+
+    // Parse and validate request body
+    const body = await request.json()
+    const validationResult = createCashflowSchema.safeParse(body)
+
+    if (!validationResult.success) {
+      return NextResponse.json(
+        { error: 'Invalid input', details: validationResult.error.issues },
+        { status: 400 }
+      )
+    }
+
+    const data = validationResult.data
+
+    // Verify investor exists
+    const { data: investor, error: investorError } = await supabase
+      .from('investors')
+      .select('id, name, entity_name')
+      .eq('id', data.investor_id)
+      .single()
+
+    if (investorError || !investor) {
+      return NextResponse.json(
+        { error: 'Investor not found' },
+        { status: 404 }
+      )
+    }
+
+    // Verify vehicle exists
+    const { data: vehicle, error: vehicleError } = await supabase
+      .from('vehicles')
+      .select('id, name')
+      .eq('id', data.vehicle_id)
+      .single()
+
+    if (vehicleError || !vehicle) {
+      return NextResponse.json(
+        { error: 'Vehicle not found' },
+        { status: 404 }
+      )
+    }
+
+    // If ref_id is provided, verify it exists
+    if (data.ref_id) {
+      const refTable = data.type === 'call' ? 'capital_calls' : 'distributions'
+      const { data: refRecord, error: refError } = await supabase
+        .from(refTable)
+        .select('id')
+        .eq('id', data.ref_id)
+        .single()
+
+      if (refError || !refRecord) {
+        return NextResponse.json(
+          { error: `Referenced ${refTable.slice(0, -1)} not found` },
+          { status: 404 }
+        )
+      }
+    }
+
+    // Create cashflow
+    const { data: cashflow, error: insertError } = await supabase
+      .from('cashflows')
+      .insert({
+        investor_id: data.investor_id,
+        vehicle_id: data.vehicle_id,
+        type: data.type,
+        amount: data.amount,
+        date: data.date,
+        ref_id: data.ref_id
+      })
+      .select()
+      .single()
+
+    if (insertError) {
+      console.error('Cashflow creation error:', insertError)
+      return NextResponse.json(
+        { error: 'Failed to create cashflow' },
+        { status: 500 }
+      )
+    }
+
+    // Log audit
+    await auditLogger.log({
+      actor_user_id: user.id,
+      action: AuditActions.CREATE,
+      entity: 'cashflows',
+      entity_id: cashflow.id,
+      metadata: {
+        investor_id: data.investor_id,
+        investor_name: investor.entity_name || investor.name,
+        vehicle_id: data.vehicle_id,
+        vehicle_name: vehicle.name,
+        type: data.type,
+        amount: data.amount,
+        date: data.date,
+        ref_id: data.ref_id
+      }
+    })
+
+    return NextResponse.json({
+      success: true,
+      cashflow: {
+        id: cashflow.id,
+        investorId: cashflow.investor_id,
+        investorName: investor.entity_name || investor.name,
+        vehicleId: cashflow.vehicle_id,
+        vehicleName: vehicle.name,
+        type: cashflow.type,
+        amount: cashflow.amount,
+        date: cashflow.date,
+        refId: cashflow.ref_id
+      }
+    }, { status: 201 })
 
   } catch (error) {
     console.error('Cashflows API error:', error)
