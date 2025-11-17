@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -53,14 +53,14 @@ export function RealtimeStaffDashboard({
   const supabase = createClient()
 
   // Tables to subscribe to for real-time updates
-  const subscribedTables = [
+  const subscribedTables = useMemo(() => [
     'investors',           // For active LPs and KYC status
     'tasks',              // For KYC/NDA/subscription pipeline
     'workflow_runs',      // For workflow execution counts
     'deals',              // For active deals
     'request_tickets',    // For active requests
     'activity_feed'       // For recent activity
-  ]
+  ], [])
 
   // Fetch updated metrics from database
   const fetchMetrics = useCallback(async () => {
@@ -197,7 +197,7 @@ export function RealtimeStaffDashboard({
         supabase.removeChannel(channel)
       })
     }
-  }, [supabase, fetchMetrics])
+  }, [supabase, fetchMetrics, subscribedTables])
 
   // Determine if metrics need refreshing based on update type
   const determineIfRefreshNeeded = (update: RealtimeUpdate): boolean => {

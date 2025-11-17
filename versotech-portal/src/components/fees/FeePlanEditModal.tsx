@@ -4,7 +4,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -62,6 +62,16 @@ export default function FeePlanEditModal({
   const [isActive, setIsActive] = useState(true);
   const [components, setComponents] = useState<FeeComponentForm[]>([]);
 
+  const resetForm = useCallback(() => {
+    setName('');
+    setDescription('');
+    setSelectedDealId(dealId);
+    setIsDefault(false);
+    setIsActive(true);
+    setComponents([]);
+    setError(null);
+  }, [dealId]);
+
   useEffect(() => {
     if (open) {
       loadDeals();
@@ -94,17 +104,7 @@ export default function FeePlanEditModal({
         resetForm();
       }
     }
-  }, [open, feePlan, dealId]);
-
-  const resetForm = () => {
-    setName('');
-    setDescription('');
-    setSelectedDealId(dealId);
-    setIsDefault(false);
-    setIsActive(true);
-    setComponents([]);
-    setError(null);
-  };
+  }, [open, feePlan, dealId, resetForm]);
 
   const loadDeals = async () => {
     try {

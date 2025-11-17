@@ -51,14 +51,7 @@ export function DataRoomDocumentUpload({ dealId, onUploadComplete, trigger }: Do
   const [linkFileName, setLinkFileName] = useState('')
   const [loadingFolders, setLoadingFolders] = useState(false)
 
-  // Fetch deal folders when dialog opens
-  useEffect(() => {
-    if (open && dealId) {
-      fetchDealFolders()
-    }
-  }, [open, dealId])
-
-  const fetchDealFolders = async () => {
+  const fetchDealFolders = useCallback(async () => {
     setLoadingFolders(true)
     try {
       const response = await fetch(`/api/deals/${dealId}/folders`)
@@ -86,7 +79,14 @@ export function DataRoomDocumentUpload({ dealId, onUploadComplete, trigger }: Do
     } finally {
       setLoadingFolders(false)
     }
-  }
+  }, [dealId])
+
+  // Fetch deal folders when dialog opens
+  useEffect(() => {
+    if (open && dealId) {
+      fetchDealFolders()
+    }
+  }, [open, dealId, fetchDealFolders])
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     setFiles(prev => [...prev, ...acceptedFiles])

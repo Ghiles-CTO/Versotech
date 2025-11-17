@@ -111,7 +111,7 @@ export default async function StaffCalendarPage() {
   const { data: dealRows } = await serviceSupabase
     .from('deals')
     .select('id, name, status, close_at, created_at, vehicles ( name )')
-    .in('status', ['open', 'allocation_pending', 'due_diligence'])
+    .in('status', ['open', 'allocation_pending', 'draft'])
     .not('close_at', 'is', null)
     .order('close_at', { ascending: true })
     .limit(30)
@@ -136,7 +136,7 @@ export default async function StaffCalendarPage() {
   const { data: capitalCallRows } = await serviceSupabase
     .from('capital_calls')
     .select('id, name, due_date, status, vehicles ( name )')
-    .in('status', ['draft', 'pending'])
+    .in('status', ['draft', 'pending', 'active'])
     .not('due_date', 'is', null)
     .order('due_date', { ascending: true })
     .limit(30)
@@ -221,7 +221,7 @@ export default async function StaffCalendarPage() {
   // 6. APPROVALS - Pending approvals with SLA tracking
   const { data: approvalRows } = await serviceSupabase
     .from('approvals')
-    .select('id, approval_type, entity_id, created_at, sla_breach_at, requested_by ( display_name )')
+    .select('id, entity_type, action, entity_id, created_at, sla_breach_at, requested_by:profiles!requested_by ( display_name )')
     .eq('status', 'pending')
     .order('sla_breach_at', { ascending: true, nullsFirst: false })
     .limit(30)
@@ -235,9 +235,13 @@ export default async function StaffCalendarPage() {
     const palette = isBreach ? APPROVAL_PALETTE.sla_breach : APPROVAL_PALETTE.pending
     const startDate = new Date(approval.created_at)
 
+    const approvalType = approval.action
+      ? sentenceCase(approval.action)
+      : sentenceCase(approval.entity_type)
+
     calendarEvents.push({
       id: `approval-${approval.id}`,
-      name: `Approval: ${sentenceCase(approval.approval_type)}`,
+      name: `Approval: ${approvalType}`,
       startAt: startDate.toISOString(),
       endAt: breachDate.toISOString(),
       status: palette,
@@ -274,8 +278,8 @@ export default async function StaffCalendarPage() {
   // 8. FEE EVENTS - Fee accrual/payment dates
   const { data: feeRows } = await serviceSupabase
     .from('fee_events')
-    .select('id, fee_type, event_date, amount, vehicles ( name )')
-    .in('status', ['accrued', 'billed'])
+    .select('id, fee_type, event_date, computed_amount, deals ( name ), investors ( legal_name, display_name )')
+    .in('status', ['accrued', 'invoiced'])
     .gte('event_date', new Date(Date.now() - 30 * 86_400_000).toISOString().split('T')[0])
     .order('event_date', { ascending: true })
     .limit(30)
@@ -283,13 +287,27 @@ export default async function StaffCalendarPage() {
   for (const fee of feeRows ?? []) {
     const feeDate = new Date(fee.event_date)
 
+    const dealName = Array.isArray(fee.deals) && fee.deals[0]?.name
+      ? fee.deals[0].name
+      : null
+
+    const investorName = Array.isArray(fee.investors) && fee.investors[0]
+      ? (fee.investors[0].display_name || fee.investors[0].legal_name)
+      : null
+
+    const description = dealName
+      ? `Deal • ${dealName}`
+      : investorName
+      ? `Investor • ${investorName}`
+      : undefined
+
     calendarEvents.push({
       id: `fee-${fee.id}`,
       name: `Fee Event: ${sentenceCase(fee.fee_type)}`,
       startAt: feeDate.toISOString(),
       endAt: feeDate.toISOString(),
       status: FEE_PALETTE.accrued,
-      description: fee.vehicles?.[0]?.name ? `Vehicle • ${fee.vehicles[0].name}` : undefined
+      description
     })
   }
 
@@ -323,7 +341,7 @@ export default async function StaffCalendarPage() {
 
   const { data: dataRoomRows } = await serviceSupabase
     .from('deal_data_room_access')
-    .select('id, expires_at, deals ( name ), users ( display_name )')
+    .select('id, expires_at, deals ( name ), investors ( legal_name, display_name )')
     .is('revoked_at', null)
     .lte('expires_at', thirtyDaysFromNow)
     .order('expires_at', { ascending: true })
@@ -333,15 +351,17 @@ export default async function StaffCalendarPage() {
     const expiryDate = new Date(access.expires_at)
     const startDate = addDays(expiryDate, -3)
 
+    const investorName = Array.isArray(access.investors) && access.investors[0]
+      ? (access.investors[0].display_name || access.investors[0].legal_name)
+      : null
+
     calendarEvents.push({
       id: `dataroom-${access.id}`,
       name: `Data Room Expiry: ${(Array.isArray(access.deals) ? access.deals[0]?.name : null) || 'Deal'}`,
       startAt: startDate.toISOString(),
       endAt: access.expires_at,
       status: DATA_ROOM_PALETTE.expiring,
-      description: Array.isArray(access.users) && access.users[0]?.display_name
-        ? `User • ${access.users[0].display_name}`
-        : undefined
+      description: investorName ? `Investor • ${investorName}` : undefined
     })
   }
 

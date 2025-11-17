@@ -159,7 +159,7 @@ export function RealtimeDashboard({ initialData, investorIds, userId }: Realtime
       supabase.removeChannel(activityChannel)
       supabase.removeChannel(performanceChannel)
     }
-  }, [investorIds, selectedDealId])
+  }, [investorIds, selectedDealId, userId])
 
   // Generate KPI detail data
   const generateKPIDetail = (kpiType: string): KPIDetail => {

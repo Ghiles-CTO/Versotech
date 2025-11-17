@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -58,14 +58,7 @@ export function AddDirectorModalEnhanced({ entityId, open, onClose, onSuccess }:
     notes: ''
   })
 
-  // Fetch directors from registry
-  useEffect(() => {
-    if (open && mode === 'select') {
-      fetchDirectors()
-    }
-  }, [open, mode, searchQuery])
-
-  const fetchDirectors = async () => {
+  const fetchDirectors = useCallback(async () => {
     setSearching(true)
     try {
       const url = searchQuery 
@@ -82,7 +75,14 @@ export function AddDirectorModalEnhanced({ entityId, open, onClose, onSuccess }:
     } finally {
       setSearching(false)
     }
-  }
+  }, [searchQuery])
+
+  // Fetch directors from registry
+  useEffect(() => {
+    if (open && mode === 'select') {
+      fetchDirectors()
+    }
+  }, [open, mode, searchQuery, fetchDirectors])
 
   const handleSelectDirector = (director: Director) => {
     setSelectedDirector(director)

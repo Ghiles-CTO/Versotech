@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
@@ -25,7 +25,7 @@ export function RealTimeInventory({ dealId, initialData, className }: RealTimeIn
   const [isLoading, setIsLoading] = useState(false)
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date())
 
-  const fetchInventoryUpdate = async () => {
+  const fetchInventoryUpdate = useCallback(async () => {
     try {
       setIsLoading(true)
       const response = await fetch(`/api/deals/${dealId}/inventory`, {
@@ -44,13 +44,13 @@ export function RealTimeInventory({ dealId, initialData, className }: RealTimeIn
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [dealId])
 
   // Auto-refresh every 30 seconds
   useEffect(() => {
     const interval = setInterval(fetchInventoryUpdate, 30000)
     return () => clearInterval(interval)
-  }, [dealId])
+  }, [dealId, fetchInventoryUpdate])
 
   const utilizationPercent = parseFloat(inventory.utilization_percent || '0')
   const isLowInventory = inventory.units_available < 1000

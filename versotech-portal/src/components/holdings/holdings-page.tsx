@@ -248,7 +248,7 @@ export function HoldingsPage({ initialData }: HoldingsPageProps) {
     }
 
     loadData()
-  }, [initialData])
+  }, [initialData, fetchPortfolioData, fetchHoldings])
 
   // Handle refresh
   const handleRefresh = async () => {

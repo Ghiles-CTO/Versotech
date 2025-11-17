@@ -98,6 +98,7 @@ export function GanttProvider({
 
   const value = useMemo<GanttContextValue>(
     () => ({ startDate: start, endDate: end, zoom }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [start.getTime(), end.getTime(), zoom]
   )
 

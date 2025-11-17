@@ -4,7 +4,7 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -53,11 +53,7 @@ export default function ScheduleTab() {
   const [loading, setLoading] = useState(true);
   const [daysAhead, setDaysAhead] = useState(60);
 
-  useEffect(() => {
-    fetchSchedules();
-  }, [daysAhead]);
-
-  const fetchSchedules = async () => {
+  const fetchSchedules = useCallback(async () => {
     setLoading(true);
     try {
       const res = await fetch(`/api/staff/fees/schedules?days=${daysAhead}`);
@@ -68,7 +64,11 @@ export default function ScheduleTab() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [daysAhead]);
+
+  useEffect(() => {
+    fetchSchedules();
+  }, [daysAhead, fetchSchedules]);
 
   if (loading) {
     return <div className="text-white">Loading fee schedules...</div>;

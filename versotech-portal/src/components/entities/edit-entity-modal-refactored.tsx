@@ -575,6 +575,7 @@ export function EditEntityModalRefactored({
                     <Label className="text-white mb-2 block">Entity Logo</Label>
                     {logoUrl ? (
                       <div className="flex items-start gap-4">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={logoUrl}
                           alt="Entity logo"

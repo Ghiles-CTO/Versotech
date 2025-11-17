@@ -4,7 +4,7 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -61,17 +61,7 @@ export default function InvoicesTab() {
   const [selectedInvestorId, setSelectedInvestorId] = useState<string | undefined>(undefined);
   const [backfillLoading, setBackfillLoading] = useState(false);
 
-  useEffect(() => {
-    fetchData();
-  }, [filter]);
-
-  const fetchData = async () => {
-    setLoading(true);
-    await Promise.all([fetchInvoices(), fetchFeeEvents()]);
-    setLoading(false);
-  };
-
-  const fetchInvoices = async () => {
+  const fetchInvoices = useCallback(async () => {
     try {
       const url = filter === 'all'
         ? '/api/staff/fees/invoices?limit=100&offset=0'
@@ -82,9 +72,9 @@ export default function InvoicesTab() {
     } catch (error) {
       console.error('Error fetching invoices:', error);
     }
-  };
+  }, [filter]);
 
-  const fetchFeeEvents = async () => {
+  const fetchFeeEvents = useCallback(async () => {
     try {
       const res = await fetch('/api/staff/fees/events?status=accrued&limit=100&offset=0');
       const json = await res.json();
@@ -97,7 +87,17 @@ export default function InvoicesTab() {
     } catch (error) {
       console.error('Error fetching fee events:', error);
     }
-  };
+  }, []);
+
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    await Promise.all([fetchInvoices(), fetchFeeEvents()]);
+    setLoading(false);
+  }, [fetchInvoices, fetchFeeEvents]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const handleSend = async (invoiceId: string) => {
     try {

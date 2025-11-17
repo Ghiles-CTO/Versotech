@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { cache, CacheKeys, CacheTTL } from '@/lib/cache'
 import { usePerformanceMonitoring } from '@/lib/performance-monitor'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -37,11 +37,7 @@ export function DealContextSelector({
   const [showAllDeals, setShowAllDeals] = useState(false)
   const { startOperation, endOperation } = usePerformanceMonitoring('DealContextSelector')
 
-  useEffect(() => {
-    fetchAccessibleDeals()
-  }, [investorIds])
-
-  const fetchAccessibleDeals = async () => {
+  const fetchAccessibleDeals = useCallback(async () => {
     if (!investorIds.length) {
       console.log('No investor IDs provided')
       setLoading(false)
@@ -233,7 +229,11 @@ export function DealContextSelector({
     } finally {
       setLoading(false)
     }
-  }
+  }, [investorIds, startOperation, endOperation])
+
+  useEffect(() => {
+    fetchAccessibleDeals()
+  }, [investorIds, fetchAccessibleDeals])
 
   const getStatusColor = (status: string) => {
     switch (status) {

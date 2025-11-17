@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -49,13 +49,7 @@ export function DataRoomDocumentVersions({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    if (open && documentId) {
-      loadVersions()
-    }
-  }, [open, documentId])
-
-  const loadVersions = async () => {
+  const loadVersions = useCallback(async () => {
     setLoading(true)
     setError(null)
 
@@ -74,7 +68,13 @@ export function DataRoomDocumentVersions({
     } finally {
       setLoading(false)
     }
-  }
+  }, [dealId, documentId])
+
+  useEffect(() => {
+    if (open && documentId) {
+      loadVersions()
+    }
+  }, [open, documentId, loadVersions])
 
   const formatFileSize = (bytes: number | null) => {
     if (!bytes) return '—'

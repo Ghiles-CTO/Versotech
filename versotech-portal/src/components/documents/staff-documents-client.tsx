@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import {
   Upload,
   FolderPlus,
@@ -104,15 +104,6 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
     downloadDocument: downloadFromPreview
   } = useDocumentViewer()
 
-  // Load data on mount and when filters change
-  useEffect(() => {
-    loadFolders()
-  }, [])
-
-  useEffect(() => {
-    loadDocuments()
-  }, [currentFolderId, searchQuery, statusFilter])
-
   // Navigation Functions (NEW)
   const navigateToFolder = (folderId: string | null) => {
     if (currentFolderId !== null && currentFolderId !== folderId) {
@@ -167,7 +158,7 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
     return result
   }, [documents, searchQuery, sortBy])
 
-  const loadFolders = async () => {
+  const loadFolders = useCallback(async () => {
     try {
       const response = await fetch('/api/staff/documents/folders?tree=true')
 
@@ -213,9 +204,24 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
       console.error('Error loading folders:', error)
       toast.error('Failed to load folders')
     }
-  }
+  }, [])
 
-  const loadDocuments = async () => {
+  const getDescendantFolderIds = useCallback((folderId: string): string[] => {
+    const result = [folderId]
+
+    const findChildren = (parentId: string) => {
+      const children = folders.filter(f => f.parent_folder_id === parentId)
+      children.forEach(child => {
+        result.push(child.id)
+        findChildren(child.id)
+      })
+    }
+
+    findChildren(folderId)
+    return result
+  }, [folders])
+
+  const loadDocuments = useCallback(async () => {
     try {
       setLoading(true)
       const params = new URLSearchParams()
@@ -249,9 +255,18 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
     } finally {
       setLoading(false)
     }
-  }
+  }, [currentFolderId, searchQuery, statusFilter, getDescendantFolderIds])
 
-  const getDescendantFolderIds = (folderId: string): string[] => {
+  // Load data on mount and when filters change
+  useEffect(() => {
+    loadFolders()
+  }, [loadFolders])
+
+  useEffect(() => {
+    loadDocuments()
+  }, [loadDocuments])
+
+  const oldGetDescendantFolderIds = (folderId: string): string[] => {
     const result = [folderId]
 
     const findChildren = (parentId: string) => {

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -84,13 +84,7 @@ export function PositionDetailModal({
   const [cashflows, setCashflows] = useState<CashflowRecord[]>([])
   const [documents, setDocuments] = useState<any[]>([])
 
-  useEffect(() => {
-    if (isOpen && holdingId) {
-      fetchPositionDetails()
-    }
-  }, [isOpen, holdingId])
-
-  const fetchPositionDetails = async () => {
+  const fetchPositionDetails = useCallback(async () => {
     setLoading(true)
     setError(null)
 
@@ -210,7 +204,13 @@ export function PositionDetailModal({
     } finally {
       setLoading(false)
     }
-  }
+  }, [holdingId, holdingType])
+
+  useEffect(() => {
+    if (isOpen && holdingId) {
+      fetchPositionDetails()
+    }
+  }, [isOpen, holdingId, fetchPositionDetails])
 
   const formatCurrency = (amount: number) => new Intl.NumberFormat('en-US', {
     style: 'currency',

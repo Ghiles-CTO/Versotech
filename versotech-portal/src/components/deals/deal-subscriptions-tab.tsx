@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -70,11 +70,7 @@ export function DealSubscriptionsTab({ dealId }: DealSubscriptionsTabProps) {
     signed: 'Fully Executed'
   }
 
-  useEffect(() => {
-    fetchSubscriptions()
-  }, [dealId])
-
-  const fetchSubscriptions = async () => {
+  const fetchSubscriptions = useCallback(async () => {
     setLoading(true)
     try {
       const response = await fetch(`/api/deals/${dealId}/subscriptions`)
@@ -93,7 +89,11 @@ export function DealSubscriptionsTab({ dealId }: DealSubscriptionsTabProps) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [dealId])
+
+  useEffect(() => {
+    fetchSubscriptions()
+  }, [dealId, fetchSubscriptions])
 
   const formatAmount = (subscription: SubscriptionWithDocuments) => {
     const amount = subscription.payload_json?.amount || subscription.payload_json?.subscription_amount

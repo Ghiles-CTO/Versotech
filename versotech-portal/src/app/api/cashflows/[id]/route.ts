@@ -62,7 +62,7 @@ export async function PUT(
       .from('cashflows')
       .select(`
         *,
-        investors (id, name, entity_name),
+        investors (id, legal_name, display_name),
         vehicles (id, name)
       `)
       .eq('id', cashflowId)
@@ -117,7 +117,7 @@ export async function PUT(
       entity_id: cashflowId,
       metadata: {
         investor_id: existingCashflow.investor_id,
-        investor_name: existingCashflow.investors?.entity_name || existingCashflow.investors?.name,
+        investor_name: existingCashflow.investors?.display_name || existingCashflow.investors?.legal_name,
         vehicle_id: existingCashflow.vehicle_id,
         vehicle_name: existingCashflow.vehicles?.name,
         previous_values: {
@@ -135,7 +135,7 @@ export async function PUT(
       cashflow: {
         id: updatedCashflow.id,
         investorId: updatedCashflow.investor_id,
-        investorName: existingCashflow.investors?.entity_name || existingCashflow.investors?.name,
+        investorName: existingCashflow.investors?.display_name || existingCashflow.investors?.legal_name,
         vehicleId: updatedCashflow.vehicle_id,
         vehicleName: existingCashflow.vehicles?.name,
         type: updatedCashflow.type,
@@ -191,7 +191,7 @@ export async function DELETE(
       .from('cashflows')
       .select(`
         *,
-        investors (id, name, entity_name),
+        investors (id, legal_name, display_name),
         vehicles (id, name)
       `)
       .eq('id', cashflowId)
@@ -226,7 +226,7 @@ export async function DELETE(
       entity_id: cashflowId,
       metadata: {
         investor_id: existingCashflow.investor_id,
-        investor_name: existingCashflow.investors?.entity_name || existingCashflow.investors?.name,
+        investor_name: existingCashflow.investors?.display_name || existingCashflow.investors?.legal_name,
         vehicle_id: existingCashflow.vehicle_id,
         vehicle_name: existingCashflow.vehicles?.name,
         deleted_data: {

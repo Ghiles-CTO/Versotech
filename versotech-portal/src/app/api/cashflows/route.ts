@@ -34,20 +34,40 @@ export async function GET(request: Request) {
       .eq('id', user.id)
       .single()
 
-    if (!profile || profile.role !== 'investor') {
+    if (!profile) {
       return NextResponse.json(
-        { error: 'Investor access required' },
+        { error: 'Access denied' },
         { status: 403 }
       )
     }
 
-    // Get investor entities linked to this user
-    const { data: investorLinks } = await supabase
-      .from('investor_users')
-      .select('investor_id')
-      .eq('user_id', user.id)
+    // Determine investor IDs based on role
+    let investorIds: string[] = []
 
-    if (!investorLinks || investorLinks.length === 0) {
+    if (profile.role === 'investor') {
+      // Get investor entities linked to this user
+      const { data: investorLinks } = await supabase
+        .from('investor_users')
+        .select('investor_id')
+        .eq('user_id', user.id)
+
+      investorIds = investorLinks?.map(link => link.investor_id) || []
+    } else if (['staff_admin', 'staff_ops', 'staff_rm'].includes(profile.role)) {
+      // Staff can view cashflows for a specific investor or vehicle via query params
+      const investorId = searchParams.get('investor_id')
+
+      if (investorId) {
+        investorIds = [investorId]
+      }
+      // If no investor_id specified, staff will get empty results (intentional)
+    } else {
+      return NextResponse.json(
+        { error: 'Access denied' },
+        { status: 403 }
+      )
+    }
+
+    if (investorIds.length === 0) {
       return NextResponse.json({
         cashflows: [],
         summary: {
@@ -57,8 +77,6 @@ export async function GET(request: Request) {
         }
       })
     }
-
-    const investorIds = investorLinks.map(link => link.investor_id)
 
     // Parse query parameters
     const vehicleId = searchParams.get('vehicle_id')
@@ -215,7 +233,7 @@ export async function POST(request: Request) {
     // Verify investor exists
     const { data: investor, error: investorError } = await supabase
       .from('investors')
-      .select('id, name, entity_name')
+      .select('id, legal_name, display_name')
       .eq('id', data.investor_id)
       .single()
 
@@ -287,7 +305,7 @@ export async function POST(request: Request) {
       entity_id: cashflow.id,
       metadata: {
         investor_id: data.investor_id,
-        investor_name: investor.entity_name || investor.name,
+        investor_name: investor.display_name || investor.legal_name,
         vehicle_id: data.vehicle_id,
         vehicle_name: vehicle.name,
         type: data.type,
@@ -302,7 +320,7 @@ export async function POST(request: Request) {
       cashflow: {
         id: cashflow.id,
         investorId: cashflow.investor_id,
-        investorName: investor.entity_name || investor.name,
+        investorName: investor.display_name || investor.legal_name,
         vehicleId: cashflow.vehicle_id,
         vehicleName: vehicle.name,
         type: cashflow.type,

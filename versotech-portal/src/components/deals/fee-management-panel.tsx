@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -66,11 +66,7 @@ export default function FeeManagementPanel({ dealId, dealName }: FeeManagementPa
   const [computing, setComputing] = useState(false)
   const [generating, setGenerating] = useState(false)
 
-  useEffect(() => {
-    loadFeeData()
-  }, [dealId])
-
-  const loadFeeData = async () => {
+  const loadFeeData = useCallback(async () => {
     try {
       setLoading(true)
       
@@ -102,7 +98,11 @@ export default function FeeManagementPanel({ dealId, dealName }: FeeManagementPa
     } finally {
       setLoading(false)
     }
-  }
+  }, [dealId])
+
+  useEffect(() => {
+    loadFeeData()
+  }, [dealId, loadFeeData])
 
   const computeFeeEvents = async () => {
     try {

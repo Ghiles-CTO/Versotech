@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -87,7 +87,7 @@ export function SubscriptionsTab({ investorId }: { investorId: string }) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const fetchSubscriptions = async () => {
+  const fetchSubscriptions = useCallback(async () => {
     try {
       setLoading(true)
       const res = await fetch(`/api/investors/${investorId}/subscriptions`)
@@ -118,11 +118,11 @@ export function SubscriptionsTab({ investorId }: { investorId: string }) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [investorId])
 
   useEffect(() => {
     fetchSubscriptions()
-  }, [investorId])
+  }, [investorId, fetchSubscriptions])
 
   const formatCurrency = (amount: number, currency: string) => {
     return new Intl.NumberFormat('en-US', {

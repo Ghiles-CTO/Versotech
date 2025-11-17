@@ -4,7 +4,7 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -92,11 +92,7 @@ export default function CommissionsTab() {
   const [filter, setFilter] = useState<'all' | 'accrued' | 'invoiced' | 'paid'>('all');
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchCommissions();
-  }, [filter]);
-
-  const fetchCommissions = async () => {
+  const fetchCommissions = useCallback(async () => {
     setLoading(true);
     try {
       const url = filter === 'all'
@@ -110,7 +106,11 @@ export default function CommissionsTab() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filter]);
+
+  useEffect(() => {
+    fetchCommissions();
+  }, [filter, fetchCommissions]);
 
   const handleMarkInvoiced = async (commissionId: string) => {
     setActionLoading(commissionId);

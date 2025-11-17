@@ -5,7 +5,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -99,34 +99,7 @@ export function GenerateInvoiceModal({ open, onClose, onSuccess, preselectedInve
     }
   }, [open, preselectedInvestorId]);
 
-  // Fetch investors on mount
-  useEffect(() => {
-    if (open) {
-      fetchInvestors();
-    }
-  }, [open]);
-
-  // Fetch subscriptions when investor changes
-  useEffect(() => {
-    if (investorId) {
-      fetchSubscriptions();
-    } else {
-      setSubscriptions([]);
-      setSubscriptionId('');
-    }
-  }, [investorId]);
-
-  // Fetch fee events when investor or subscription changes
-  useEffect(() => {
-    if (investorId && subscriptionId) {
-      fetchFeeEvents();
-    } else if (investorId && !subscriptionId) {
-      // Clear fee events when no subscription selected
-      setFeeEvents([]);
-    }
-  }, [investorId, subscriptionId]);
-
-  const fetchInvestors = async () => {
+  const fetchInvestors = useCallback(async () => {
     try {
       console.log('[GenerateInvoiceModal] Fetching investors...');
       const res = await fetch('/api/investors?limit=1000');
@@ -136,9 +109,16 @@ export function GenerateInvoiceModal({ open, onClose, onSuccess, preselectedInve
     } catch (error) {
       console.error('Error fetching investors:', error);
     }
-  };
+  }, []);
 
-  const fetchSubscriptions = async () => {
+  // Fetch investors on mount
+  useEffect(() => {
+    if (open) {
+      fetchInvestors();
+    }
+  }, [open, fetchInvestors]);
+
+  const fetchSubscriptions = useCallback(async () => {
     if (!investorId) return;
 
     setFetchingSubscriptions(true);
@@ -198,9 +178,9 @@ export function GenerateInvoiceModal({ open, onClose, onSuccess, preselectedInve
     } finally {
       setFetchingSubscriptions(false);
     }
-  };
+  }, [investorId]);
 
-  const fetchFeeEvents = async () => {
+  const fetchFeeEvents = useCallback(async () => {
     if (!investorId || !subscriptionId) {
       console.log('[GenerateInvoiceModal] Missing investor or subscription ID, skipping fetch');
       return;
@@ -252,7 +232,27 @@ export function GenerateInvoiceModal({ open, onClose, onSuccess, preselectedInve
     } finally {
       setFetchingEvents(false);
     }
-  };
+  }, [investorId, subscriptionId]);
+
+  // Fetch subscriptions when investor changes
+  useEffect(() => {
+    if (investorId) {
+      fetchSubscriptions();
+    } else {
+      setSubscriptions([]);
+      setSubscriptionId('');
+    }
+  }, [investorId, fetchSubscriptions]);
+
+  // Fetch fee events when investor or subscription changes
+  useEffect(() => {
+    if (investorId && subscriptionId) {
+      fetchFeeEvents();
+    } else if (investorId && !subscriptionId) {
+      // Clear fee events when no subscription selected
+      setFeeEvents([]);
+    }
+  }, [investorId, subscriptionId, fetchFeeEvents]);
 
   const toggleEventSelection = (eventId: string) => {
     const newSelection = new Set(selectedEventIds);

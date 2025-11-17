@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -132,14 +132,7 @@ export function DirectorModalRefactored({
     }
   })
 
-  // Fetch directors from registry
-  useEffect(() => {
-    if (open && mode === 'create' && createMode === 'select') {
-      fetchDirectors()
-    }
-  }, [open, mode, createMode, searchQuery])
-
-  const fetchDirectors = async () => {
+  const fetchDirectors = useCallback(async () => {
     setSearching(true)
     try {
       const url = searchQuery
@@ -157,7 +150,14 @@ export function DirectorModalRefactored({
     } finally {
       setSearching(false)
     }
-  }
+  }, [searchQuery])
+
+  // Fetch directors from registry
+  useEffect(() => {
+    if (open && mode === 'create' && createMode === 'select') {
+      fetchDirectors()
+    }
+  }, [open, mode, createMode, searchQuery, fetchDirectors])
 
   const handleSelectDirector = (director: Director) => {
     setSelectedDirector(director)

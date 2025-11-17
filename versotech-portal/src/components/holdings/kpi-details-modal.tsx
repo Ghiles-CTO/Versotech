@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -146,13 +146,7 @@ export function KPIDetailsModal({
   const config = KPI_TYPE_CONFIG[kpiType as keyof typeof KPI_TYPE_CONFIG]
   const IconComponent = config?.icon || BarChart3
 
-  useEffect(() => {
-    if (isOpen && kpiType) {
-      fetchKPIDetails()
-    }
-  }, [isOpen, kpiType])
-
-  const fetchKPIDetails = async () => {
+  const fetchKPIDetails = useCallback(async () => {
     setLoading(true)
     setError(null)
 
@@ -178,7 +172,7 @@ export function KPIDetailsModal({
     } catch (err) {
       console.error('Error fetching KPI details:', err)
       setError(err instanceof Error ? err.message : 'Failed to load KPI details')
-      
+
       // Set empty data on error
       setData({
         items: [],
@@ -189,7 +183,13 @@ export function KPIDetailsModal({
     } finally {
       setLoading(false)
     }
-  }
+  }, [kpiType])
+
+  useEffect(() => {
+    if (isOpen && kpiType) {
+      fetchKPIDetails()
+    }
+  }, [isOpen, kpiType, fetchKPIDetails])
 
   const renderDetailItem = (item: KPIDetail) => {
     const { metadata } = item

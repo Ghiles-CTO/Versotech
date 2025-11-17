@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Download, X, Loader2, AlertCircle } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
@@ -25,25 +25,13 @@ export function DocumentViewer({
   const [error, setError] = useState<string | null>(null)
   const [documentUrl, setDocumentUrl] = useState<string | null>(null)
 
-  useEffect(() => {
-    if (open && documentId) {
-      loadDocument()
-    }
-
-    return () => {
-      if (documentUrl) {
-        URL.revokeObjectURL(documentUrl)
-      }
-    }
-  }, [open, documentId])
-
-  const loadDocument = async () => {
+  const loadDocument = useCallback(async () => {
     setLoading(true)
     setError(null)
 
     try {
       const response = await fetch(`/api/documents/${documentId}/download`)
-      
+
       if (!response.ok) {
         const errorData = await response.json()
         throw new Error(errorData.error || 'Failed to load document')
@@ -57,7 +45,20 @@ export function DocumentViewer({
     } finally {
       setLoading(false)
     }
-  }
+  }, [documentId])
+
+  useEffect(() => {
+    if (open && documentId) {
+      loadDocument()
+    }
+
+    return () => {
+      if (documentUrl) {
+        URL.revokeObjectURL(documentUrl)
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, documentId, loadDocument])
 
   const handleDownload = () => {
     if (!documentUrl) return
@@ -120,6 +121,7 @@ export function DocumentViewer({
 
               {isImage && (
                 <div className="flex items-center justify-center p-4">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={documentUrl}
                     alt={documentName}

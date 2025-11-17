@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -60,11 +60,7 @@ export function SubscriptionHealthAlerts() {
   const [loading, setLoading] = useState(true)
   const [showDismissed, setShowDismissed] = useState(false)
 
-  useEffect(() => {
-    fetchAlerts()
-  }, [showDismissed])
-
-  const fetchAlerts = async () => {
+  const fetchAlerts = useCallback(async () => {
     try {
       setLoading(true)
       const response = await fetch(`/api/staff/health-alerts?dismissed=${showDismissed}`)
@@ -80,7 +76,11 @@ export function SubscriptionHealthAlerts() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [showDismissed])
+
+  useEffect(() => {
+    fetchAlerts()
+  }, [showDismissed, fetchAlerts])
 
   const handleDismiss = async (alertId: string) => {
     try {

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -52,7 +52,7 @@ export function EntityKYCDocuments({ entityId, entityName }: EntityKYCDocumentsP
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false)
   const [downloadingId, setDownloadingId] = useState<string | null>(null)
 
-  const fetchSubmissions = async () => {
+  const fetchSubmissions = useCallback(async () => {
     setIsLoading(true)
     try {
       const response = await fetch(`/api/investors/me/counterparty-entities/${entityId}/kyc-submissions`)
@@ -71,11 +71,11 @@ export function EntityKYCDocuments({ entityId, entityName }: EntityKYCDocumentsP
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [entityId])
 
   useEffect(() => {
     fetchSubmissions()
-  }, [entityId])
+  }, [entityId, fetchSubmissions])
 
   const handleDownload = async (documentId: string, fileName: string) => {
     setDownloadingId(documentId)

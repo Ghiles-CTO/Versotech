@@ -8,7 +8,7 @@ import { PreferencesEditor } from '@/components/profile/preferences-editor'
 import { KYCDocumentsTab } from '@/components/profile/kyc-documents-tab'
 import { CounterpartyEntitiesTab } from '@/components/profile/counterparty-entities-tab'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { User, Lock, Settings, Briefcase, FileText, Building2 } from 'lucide-react'
+import { User, Lock, Settings, Briefcase, FileText, Building2, Bell } from 'lucide-react'
 
 interface ProfilePageClientProps {
   profile: {
@@ -112,8 +112,8 @@ export function ProfilePageClient({ profile: initialProfile, variant = 'investor
               value="preferences"
               className={isStaff ? "data-[state=active]:bg-white/10 data-[state=active]:text-white text-white/70" : ""}
             >
-              <Settings className="h-4 w-4 mr-2" />
-              Preferences
+              {isStaff ? <Bell className="h-4 w-4 mr-2" /> : <Settings className="h-4 w-4 mr-2" />}
+              {isStaff ? 'Notifications' : 'Preferences'}
             </TabsTrigger>
             {!isStaff && (
               <>
@@ -143,7 +143,7 @@ export function ProfilePageClient({ profile: initialProfile, variant = 'investor
           </TabsContent>
 
           <TabsContent value="preferences" className="mt-6">
-            <PreferencesEditor />
+            <PreferencesEditor variant={variant} />
           </TabsContent>
 
           {!isStaff && (

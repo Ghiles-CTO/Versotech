@@ -48,7 +48,7 @@ export async function AppLayout({ children, brand }: AppLayoutProps) {
 
   return (
     <ThemeProvider theme={theme}>
-      <div className={`flex h-screen ${isStaff ? 'staff-dark bg-[#0a0a0a]' : 'bg-gradient-to-br from-gray-50 via-blue-50/30 to-indigo-50/20'}`}>
+      <div className={`flex h-screen min-h-screen overflow-hidden ${isStaff ? 'staff-dark bg-[#0a0a0a]' : 'bg-gradient-to-br from-gray-50 via-blue-50/30 to-indigo-50/20'}`}>
       {/* Global Keyboard Shortcuts (Cmd+K, Cmd+Shift+S) */}
       <GlobalKeyboardShortcuts brand={brand} role={profile.role} />
 

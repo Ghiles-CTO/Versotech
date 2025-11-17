@@ -45,6 +45,7 @@ export function RealtimeHoldingsProvider({
   }, [])
 
   // Debounced update handler to prevent excessive updates
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const debouncedUpdate = useCallback(
     debounce((update: RealtimeUpdate) => {
       setLastUpdate(new Date().toISOString())
@@ -99,7 +100,7 @@ export function RealtimeHoldingsProvider({
         }
       }
     }, 2000),
-    [onDataUpdate, enableNotifications]
+    [onDataUpdate, enableNotifications, router]
   )
 
   // Set up realtime subscriptions
