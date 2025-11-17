@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import SignatureCanvas from 'react-signature-canvas'
 import { Button } from '@/components/ui/button'
@@ -31,17 +31,7 @@ export default function SignPage() {
   const [signatureRequest, setSignatureRequest] = useState<SignatureRequest | null>(null)
   const [canvasEmpty, setCanvasEmpty] = useState(true)
 
-  useEffect(() => {
-    if (!token) {
-      setError('Invalid signature token')
-      setLoading(false)
-      return
-    }
-
-    fetchSignatureRequest()
-  }, [token])
-
-  const fetchSignatureRequest = async () => {
+  const fetchSignatureRequest = useCallback(async () => {
     try {
       const response = await fetch(`/api/signature/${token}`)
 
@@ -60,7 +50,17 @@ export default function SignPage() {
       setError('Failed to load signature request')
       setLoading(false)
     }
-  }
+  }, [token])
+
+  useEffect(() => {
+    if (!token) {
+      setError('Invalid signature token')
+      setLoading(false)
+      return
+    }
+
+    fetchSignatureRequest()
+  }, [token, fetchSignatureRequest])
 
   const handleClear = () => {
     sigCanvasRef.current?.clear()

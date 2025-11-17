@@ -51,9 +51,9 @@ export function DocumentViewer({
 
       const data = await response.json()
       setDocumentUrl(data.url)
-    } catch (err: any) {
+    } catch (err) {
       console.error('Document load error:', err)
-      setError(err.message || 'Failed to load document')
+      setError(err instanceof Error ? err.message : 'Failed to load document')
     } finally {
       setLoading(false)
     }

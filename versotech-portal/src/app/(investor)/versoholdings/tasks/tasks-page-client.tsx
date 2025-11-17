@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -64,6 +64,39 @@ export function TasksPageClient({
     compliance: true
   })
 
+  const refreshTasks = useCallback(async () => {
+    const supabase = createClient()
+    const { data: tasks } = await supabase
+      .from('tasks')
+      .select('*')
+      .eq('owner_user_id', userId)
+      .order('priority', { ascending: false })
+      .order('due_at', { ascending: true, nullsFirst: false })
+
+    if (tasks) {
+      const allTasks = tasks as Task[]
+
+      setOnboardingTasks(allTasks.filter(t =>
+        t.category === 'onboarding' && !t.related_entity_id
+      ))
+
+      setStaffCreatedTasks(allTasks.filter(t =>
+        !t.category && !t.related_entity_id
+      ))
+
+      setGeneralComplianceTasks(allTasks.filter(t =>
+        t.category === 'compliance' && !t.related_entity_id
+      ))
+
+      setTasksByVehicle(prev => prev.map(group => ({
+        ...group,
+        tasks: allTasks.filter(t =>
+          t.related_entity_type === 'vehicle' && t.related_entity_id === group.vehicle.id
+        )
+      })))
+    }
+  }, [userId])
+
   useEffect(() => {
     const supabase = createClient()
 
@@ -82,40 +115,7 @@ export function TasksPageClient({
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [userId])
-
-  async function refreshTasks() {
-    const supabase = createClient()
-    const { data: tasks } = await supabase
-      .from('tasks')
-      .select('*')
-      .eq('owner_user_id', userId)
-      .order('priority', { ascending: false })
-      .order('due_at', { ascending: true, nullsFirst: false })
-
-    if (tasks) {
-      const allTasks = tasks as Task[]
-      
-      setOnboardingTasks(allTasks.filter(t => 
-        t.category === 'onboarding' && !t.related_entity_id
-      ))
-
-      setStaffCreatedTasks(allTasks.filter(t => 
-        !t.category && !t.related_entity_id
-      ))
-
-      setGeneralComplianceTasks(allTasks.filter(t => 
-        t.category === 'compliance' && !t.related_entity_id
-      ))
-
-      setTasksByVehicle(prev => prev.map(group => ({
-        ...group,
-        tasks: allTasks.filter(t => 
-          t.related_entity_type === 'vehicle' && t.related_entity_id === group.vehicle.id
-        )
-      })))
-    }
-  }
+  }, [userId, refreshTasks])
 
   const toggleSection = (section: string) => {
     setExpandedSections(prev => ({

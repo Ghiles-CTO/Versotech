@@ -176,9 +176,13 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
         const foldersList = data.folders || []
 
         // Flatten tree structure to flat array
-        const flattenFolders = (nodes: any[]): DocumentFolder[] => {
+        interface FolderTreeNode extends DocumentFolder {
+          children?: FolderTreeNode[]
+        }
+
+        const flattenFolders = (nodes: FolderTreeNode[]): DocumentFolder[] => {
           const result: DocumentFolder[] = []
-          nodes.forEach((node: any) => {
+          nodes.forEach((node: FolderTreeNode) => {
             result.push({
               id: node.id,
               name: node.name,

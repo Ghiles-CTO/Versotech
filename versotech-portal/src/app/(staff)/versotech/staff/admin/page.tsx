@@ -39,27 +39,6 @@ export default function SuperAdminDashboard() {
   const [staffMembers, setStaffMembers] = useState<any[]>([])
   const [refreshing, setRefreshing] = useState(false)
 
-  // Fetch initial data
-  useEffect(() => {
-    fetchDashboardData()
-    // Set up polling for real-time updates
-    const interval = setInterval(fetchSystemMetrics, 30000) // Every 30 seconds
-    return () => clearInterval(interval)
-  }, [])
-
-  const fetchDashboardData = async () => {
-    setLoading(true)
-    try {
-      await Promise.all([
-        fetchSystemMetrics(),
-        fetchFinancialMetrics(),
-        fetchStaffMembers(),
-      ])
-    } finally {
-      setLoading(false)
-    }
-  }
-
   const fetchSystemMetrics = async () => {
     try {
       const response = await fetch('/api/admin/metrics/system')
@@ -95,6 +74,28 @@ export default function SuperAdminDashboard() {
       console.error('Failed to fetch staff members:', error)
     }
   }
+
+  const fetchDashboardData = async () => {
+    setLoading(true)
+    try {
+      await Promise.all([
+        fetchSystemMetrics(),
+        fetchFinancialMetrics(),
+        fetchStaffMembers(),
+      ])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Fetch initial data
+  useEffect(() => {
+    fetchDashboardData()
+    // Set up polling for real-time updates
+    const interval = setInterval(fetchSystemMetrics, 30000) // Every 30 seconds
+    return () => clearInterval(interval)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) // Only run on mount - polling interval handles updates
 
   const handleRefresh = async () => {
     setRefreshing(true)

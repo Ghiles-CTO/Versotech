@@ -37,18 +37,14 @@ export function CreateFolderDialog({
         folder_type: 'custom' as const,
         ...(parentFolderId && { parent_folder_id: parentFolderId })
       }
-      
-      console.log('[CreateFolder] Sending payload:', payload)
-      
+
       const response = await fetch('/api/staff/documents/folders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       })
 
-      console.log('[CreateFolder] Response status:', response.status)
       const responseText = await response.text()
-      console.log('[CreateFolder] Response body:', responseText)
       
       if (response.ok) {
         toast.success('Folder created successfully')
@@ -56,15 +52,20 @@ export function CreateFolderDialog({
         onSuccess?.()
         onOpenChange(false)
       } else {
-        let error: any = {}
+        interface ErrorResponse {
+          error?: string
+          details?: unknown
+        }
+
+        let error: ErrorResponse = {}
         try {
           error = JSON.parse(responseText)
         } catch (e) {
           error = { error: responseText || 'Unknown error' }
         }
         console.error('[CreateFolder] Error response:', error)
-        const errorMsg = error.details 
-          ? `${error.error}: ${JSON.stringify(error.details)}` 
+        const errorMsg = error.details
+          ? `${error.error}: ${JSON.stringify(error.details)}`
           : error.error || 'Failed to create folder'
         toast.error(errorMsg)
       }

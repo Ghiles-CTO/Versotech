@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -38,7 +38,7 @@ export function RealTimeActivityFeed() {
   const [isPaused, setIsPaused] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
 
-  const fetchActivities = async () => {
+  const fetchActivities = useCallback(async () => {
     try {
       setIsLoading(true)
       const response = await fetch('/api/admin/activity-feed')
@@ -52,7 +52,7 @@ export function RealTimeActivityFeed() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [isPaused])
 
   useEffect(() => {
     fetchActivities()
@@ -65,7 +65,7 @@ export function RealTimeActivityFeed() {
     }, 30000)
 
     return () => clearInterval(interval)
-  }, [isPaused])
+  }, [isPaused, fetchActivities])
 
   const getActionIcon = (action: string) => {
     if (action.includes('create') || action.includes('insert')) return CheckCircle

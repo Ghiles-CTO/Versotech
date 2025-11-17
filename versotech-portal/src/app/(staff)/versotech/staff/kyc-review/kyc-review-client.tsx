@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { CheckCircle, XCircle, Clock, AlertCircle, FileText, Download, Eye } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -103,11 +103,7 @@ export function KYCReviewClient() {
     mimeType: string
   } | null>(null)
 
-  useEffect(() => {
-    loadSubmissions()
-  }, [statusFilter, documentTypeFilter])
-
-  const loadSubmissions = async () => {
+  const loadSubmissions = useCallback(async () => {
     try {
       const params = new URLSearchParams()
       if (statusFilter !== 'all') params.append('status', statusFilter)
@@ -132,7 +128,11 @@ export function KYCReviewClient() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [statusFilter, documentTypeFilter])
+
+  useEffect(() => {
+    loadSubmissions()
+  }, [loadSubmissions])
 
   const openReviewDialog = (submission: KYCSubmission, action: 'approve' | 'reject') => {
     setSelectedSubmission(submission)

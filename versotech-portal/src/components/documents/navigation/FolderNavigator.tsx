@@ -13,6 +13,7 @@ import {
 } from 'lucide-react'
 import { DocumentFolder, Document } from '@/types/documents'
 import { FolderCard, FolderCardSkeleton } from './FolderCard'
+import { DocumentCard } from '../document-card'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -197,10 +198,10 @@ export function FolderNavigator({
 
               {/* Documents Second */}
               {documents.map((document) => (
-                <DocumentPreviewCard
+                <DocumentCard
                   key={document.id}
                   document={document}
-                  onClick={() => onDocumentClick(document.id)}
+                  onPreview={() => onDocumentClick(document.id)}
                   variant={viewMode === 'list' ? 'compact' : 'default'}
                 />
               ))}
@@ -254,50 +255,3 @@ function EmptyState({
   )
 }
 
-/**
- * Document Preview Card (Temporary - will be replaced by refined DocumentCard)
- */
-function DocumentPreviewCard({
-  document,
-  onClick,
-  variant = 'default',
-}: {
-  document: Document
-  onClick: () => void
-  variant?: 'default' | 'compact'
-}) {
-  if (variant === 'compact') {
-    return (
-      <button
-        onClick={onClick}
-        className="group flex items-center gap-3 w-full px-3 py-2 rounded-md hover:bg-slate-100 transition-colors"
-      >
-        <FileText className="w-4 h-4 text-slate-500 flex-shrink-0" strokeWidth={2} />
-        <span className="text-sm font-medium text-slate-900 truncate flex-1 text-left">
-          {document.file_name}
-        </span>
-      </button>
-    )
-  }
-
-  return (
-    <div
-      onClick={onClick}
-      className="group bg-white border border-slate-200 rounded-lg p-4 hover:shadow-md hover:border-slate-300 transition-all duration-200 cursor-pointer"
-    >
-      <div className="flex items-start gap-3">
-        <div className="w-11 h-11 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center flex-shrink-0">
-          <FileText className="w-5 h-5 text-slate-600" strokeWidth={2} />
-        </div>
-        <div className="flex-1 min-w-0">
-          <h3 className="font-medium text-slate-900 text-sm truncate mb-1">
-            {document.file_name}
-          </h3>
-          <p className="text-xs text-slate-500">
-            {document.type}
-          </p>
-        </div>
-      </div>
-    </div>
-  )
-}
