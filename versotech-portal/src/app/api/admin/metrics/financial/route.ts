@@ -34,6 +34,7 @@ export async function GET(request: NextRequest) {
       .from('subscriptions')
       .select(`
         id,
+        vehicle_id,
         commitment_amount,
         funded_amount,
         current_nav,
