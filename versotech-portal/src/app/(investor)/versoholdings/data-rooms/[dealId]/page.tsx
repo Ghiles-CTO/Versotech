@@ -23,6 +23,7 @@ import { DataRoomDocumentsGrouped } from '@/components/deals/data-room-documents
 import { DataRoomDocument } from '@/components/deals/data-room-documents'
 import { SubmitSubscriptionForm } from '@/components/deals/submit-subscription-form'
 import { RequestExtensionButton } from '@/components/deals/request-extension-button'
+import { DealFaqSection } from '@/components/deals/deal-faq-section'
 import Link from 'next/link'
 
 export const dynamic = 'force-dynamic'
@@ -417,6 +418,9 @@ export default async function DataRoomDetailPage({ params }: PageProps) {
           </div>
           <DataRoomDocumentsGrouped documents={docs} />
         </div>
+
+        {/* FAQ Section */}
+        <DealFaqSection dealId={dealId} />
       </div>
     </AppLayout>
   )

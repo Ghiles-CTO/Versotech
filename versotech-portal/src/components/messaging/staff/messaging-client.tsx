@@ -214,7 +214,7 @@ export function MessagingClient({ initialConversations, currentUserId }: Messagi
   }
 
   return (
-    <div className="flex h-[calc(100vh-4rem)]">
+    <div className="flex h-[calc(100vh-4rem)] overflow-hidden">
       <ConversationsSidebar
         conversations={conversations}
         filters={filters}

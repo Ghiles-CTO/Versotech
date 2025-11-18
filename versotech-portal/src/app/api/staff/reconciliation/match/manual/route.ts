@@ -317,11 +317,169 @@ export async function POST(req: Request) {
       .eq('invoice_id', invoice_id)
 
     if (invoiceAfter?.status === 'paid') {
+      // Update fee events to paid status
       await supabase
         .from('fee_events')
         .update({ status: 'paid' })
         .eq('invoice_id', invoice_id)
         .in('status', ['accrued', 'invoiced'])
+
+      // Update subscription funded amount when investment commitment is paid
+      // Get fee events for this invoice to find investment commitments
+      const { data: feeEvents } = await supabase
+        .from('fee_events')
+        .select('allocation_id, fee_type, computed_amount')
+        .eq('invoice_id', invoice_id)
+        .eq('fee_type', 'flat') // 'flat' = investment commitment
+
+      if (feeEvents && feeEvents.length > 0) {
+        // Group by subscription (allocation_id)
+        const subscriptionPayments = feeEvents.reduce((acc, event) => {
+          if (event.allocation_id) {
+            acc[event.allocation_id] = (acc[event.allocation_id] || 0) + toNumber(event.computed_amount)
+          }
+          return acc
+        }, {} as Record<string, number>)
+
+        // Update each subscription's funded amount
+        for (const [subscriptionId, paidAmount] of Object.entries(subscriptionPayments)) {
+          // Get current subscription details
+          const { data: subscription } = await supabase
+            .from('subscriptions')
+            .select('commitment, funded_amount, status, investor_id, vehicle_id, num_shares, units, price_per_share, cost_per_share')
+            .eq('id', subscriptionId)
+            .single()
+
+          if (subscription) {
+            // Validate subscription can receive funding
+            const validFundingStatuses = ['pending', 'committed', 'partially_funded', 'active']
+            if (!validFundingStatuses.includes(subscription.status)) {
+              console.warn(`⚠️ Cannot fund subscription ${subscriptionId} with status '${subscription.status}' - skipping`)
+              continue // Skip this subscription
+            }
+
+            const currentFunded = toNumber(subscription.funded_amount)
+            const newFundedAmount = clampCurrency(currentFunded + paidAmount)
+            const commitment = toNumber(subscription.commitment)
+
+            // Determine new status based on funded percentage
+            let newStatus = subscription.status
+            if (commitment > 0) {
+              const fundedPercentage = (newFundedAmount / commitment) * 100
+
+              // Update status based on funding level
+              if (fundedPercentage >= 99.99) {
+                newStatus = 'active' // Fully funded
+              } else if (fundedPercentage > 0) {
+                newStatus = 'partially_funded'
+              }
+            }
+
+            // Update subscription
+            const { error: subUpdateError } = await supabase
+              .from('subscriptions')
+              .update({
+                funded_amount: newFundedAmount,
+                status: newStatus,
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', subscriptionId)
+
+            if (subUpdateError) {
+              console.error(`❌ CRITICAL: Failed to update subscription ${subscriptionId} funded amount:`, subUpdateError)
+              // This is critical - subscription funding tracking will be incorrect
+              throw new Error(`Failed to update subscription funded amount: ${subUpdateError.message}`)
+            }
+
+            console.log(`✅ Updated subscription ${subscriptionId}: funded_amount=${newFundedAmount}, status=${newStatus}`)
+
+            // AUTO-CREATE POSITION when subscription becomes active
+            if (newStatus === 'active' && subscription.status !== 'active') {
+              // Calculate units: prefer num_shares, fallback to units, or calculate from funded_amount / price
+              let positionUnits = subscription.num_shares || subscription.units
+              if (!positionUnits && subscription.price_per_share) {
+                positionUnits = newFundedAmount / toNumber(subscription.price_per_share)
+              } else if (!positionUnits && subscription.cost_per_share) {
+                positionUnits = newFundedAmount / toNumber(subscription.cost_per_share)
+              }
+
+              // Get initial NAV (use price_per_share or cost_per_share as initial valuation)
+              const initialNav = subscription.price_per_share || subscription.cost_per_share
+
+              if (positionUnits && positionUnits > 0) {
+                // Check if position already exists (prevent duplicate creation)
+                const { data: existingPosition } = await supabase
+                  .from('positions')
+                  .select('id')
+                  .eq('investor_id', subscription.investor_id)
+                  .eq('vehicle_id', subscription.vehicle_id)
+                  .single()
+
+                if (!existingPosition) {
+                  // Create new position
+                  const { error: positionError } = await supabase
+                    .from('positions')
+                    .insert({
+                      investor_id: subscription.investor_id,
+                      vehicle_id: subscription.vehicle_id,
+                      units: positionUnits,
+                      cost_basis: newFundedAmount,
+                      last_nav: initialNav,
+                      as_of_date: new Date().toISOString()
+                    })
+
+                  if (positionError) {
+                    console.error(`❌ Failed to create position for subscription ${subscriptionId}:`, positionError)
+                    // Log but don't fail the whole transaction - subscription funding is more critical
+                  } else {
+                    console.log(`✅ Created position for subscription ${subscriptionId}: ${positionUnits} units @ $${initialNav}/unit`)
+
+                    // Audit log for position creation
+                    await auditLogger.log({
+                      actor_user_id: profile.id,
+                      action: AuditActions.CREATE,
+                      entity: 'positions' as any,
+                      entity_id: subscriptionId, // Link to subscription
+                      metadata: {
+                        subscription_id: subscriptionId,
+                        investor_id: subscription.investor_id,
+                        vehicle_id: subscription.vehicle_id,
+                        units: positionUnits,
+                        cost_basis: newFundedAmount,
+                        initial_nav: initialNav,
+                        triggered_by: 'subscription_funding_manual_match'
+                      }
+                    })
+                  }
+                } else {
+                  console.log(`ℹ️ Position already exists for subscription ${subscriptionId} - skipping creation`)
+                }
+              } else {
+                console.warn(`⚠️ Could not determine units for subscription ${subscriptionId} - position not created`)
+              }
+            }
+
+            // Audit log for subscription funding update
+            await auditLogger.log({
+              actor_user_id: profile.id,
+              action: AuditActions.UPDATE,
+              entity: 'subscriptions' as any,
+              entity_id: subscriptionId,
+              metadata: {
+                invoice_id: invoice_id,
+                match_id: createdMatch.id,
+                payment_amount: paidAmount,
+                previous_funded: currentFunded,
+                new_funded: newFundedAmount,
+                previous_status: subscription.status,
+                new_status: newStatus,
+                commitment: commitment,
+                manual_match: true
+              }
+            })
+          }
+        }
+      }
     }
 
     await auditLogger.log({

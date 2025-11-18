@@ -40,6 +40,7 @@ import { DealTermSheetTab } from './deal-term-sheet-tab'
 import { DealInterestTab } from './deal-interest-tab'
 import { DealDataRoomAccessTab } from './deal-data-room-access-tab'
 import { DealSubscriptionsTab } from './deal-subscriptions-tab'
+import { DealFaqTab } from './deal-faq-tab'
 
 const statusColors = {
   draft: 'bg-white/10 text-foreground border border-white/20',
@@ -322,6 +323,7 @@ export function DealDetailClient({
           <TabsTrigger value="fees">Fee Plans</TabsTrigger>
           <TabsTrigger value="subscriptions">Subscriptions</TabsTrigger>
           <TabsTrigger value="documents">Documents</TabsTrigger>
+          <TabsTrigger value="faq">FAQ</TabsTrigger>
           <TabsTrigger value="activity">Activity</TabsTrigger>
         </TabsList>
 
@@ -369,6 +371,10 @@ export function DealDetailClient({
 
         <TabsContent value="documents">
           <DealDocumentsTab dealId={deal.id} documents={documents} />
+        </TabsContent>
+
+        <TabsContent value="faq">
+          <DealFaqTab dealId={deal.id} />
         </TabsContent>
 
         <TabsContent value="activity">

@@ -22,6 +22,8 @@ import { UploadDestinationBanner } from './upload/UploadDestinationBanner'
 import { DocumentUploadDialog } from './document-upload-dialog'
 import { MoveDocumentDialog } from './move-document-dialog'
 import { CreateFolderDialog } from './create-folder-dialog'
+import { RenameFolderDialog } from './rename-folder-dialog'
+import { RenameDocumentDialog } from './rename-document-dialog'
 import { DocumentFolder } from '@/types/documents'
 import { toast } from 'sonner'
 import { useDocumentViewer } from '@/hooks/useDocumentViewer'
@@ -85,6 +87,12 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
   const [moveDialogDocId, setMoveDialogDocId] = useState<string | null>(null)
   const [moveDialogDocName, setMoveDialogDocName] = useState<string>('')
   const [moveDialogCurrentFolder, setMoveDialogCurrentFolder] = useState<string | null>(null)
+  const [renameFolderDialogOpen, setRenameFolderDialogOpen] = useState(false)
+  const [renameFolderId, setRenameFolderId] = useState<string | null>(null)
+  const [renameFolderName, setRenameFolderName] = useState<string>('')
+  const [renameDocumentDialogOpen, setRenameDocumentDialogOpen] = useState(false)
+  const [renameDocumentId, setRenameDocumentId] = useState<string | null>(null)
+  const [renameDocumentName, setRenameDocumentName] = useState<string>('')
 
   // UI State
   const [searchQuery, setSearchQuery] = useState('')
@@ -127,20 +135,40 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
     setCurrentFolder(folder || null)
   }
 
-  // Get subfolders of current location
+  // Get subfolders of current location (with search filtering)
   const getSubfolders = useMemo((): DocumentFolder[] => {
-    return folders.filter(f => f.parent_folder_id === (currentFolderId || null))
-  }, [folders, currentFolderId])
+    let result = folders.filter(f => f.parent_folder_id === (currentFolderId || null))
+
+    // Filter folders by search query
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase()
+      result = result.filter(folder => {
+        const nameMatch = folder.name.toLowerCase().includes(query)
+        const pathMatch = folder.path.toLowerCase().includes(query)
+        return nameMatch || pathMatch
+      })
+    }
+
+    return result
+  }, [folders, currentFolderId, searchQuery])
 
   // Get filtered documents
   const filteredDocuments = useMemo(() => {
     let result = documents
 
-    // Search filter
+    // Search filter - comprehensive search across all relevant fields
     if (searchQuery) {
-      result = result.filter(doc =>
-        doc.name.toLowerCase().includes(searchQuery.toLowerCase())
-      )
+      const query = searchQuery.toLowerCase()
+      result = result.filter(doc => {
+        const nameMatch = doc.name.toLowerCase().includes(query)
+        const vehicleNameMatch = doc.vehicle?.name.toLowerCase().includes(query) || false
+        const folderNameMatch = doc.folder?.name.toLowerCase().includes(query) || false
+        const folderPathMatch = doc.folder?.path.toLowerCase().includes(query) || false
+        const typeMatch = doc.type.toLowerCase().includes(query)
+        const createdByMatch = doc.created_by_profile?.display_name.toLowerCase().includes(query) || false
+
+        return nameMatch || vehicleNameMatch || folderNameMatch || folderPathMatch || typeMatch || createdByMatch
+      })
     }
 
     // Sort
@@ -185,7 +213,7 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
               created_at: node.created_at,
               updated_at: node.updated_at,
               subfolder_count: node.children?.length || 0,
-              document_count: 0,
+              document_count: node.document_count || 0,
             })
             if (node.children && node.children.length > 0) {
               result.push(...flattenFolders(node.children))
@@ -226,7 +254,9 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
       setLoading(true)
       const params = new URLSearchParams()
 
-      if (currentFolderId) {
+      // When searching, search globally across ALL folders
+      // When NOT searching, limit to current folder and descendants
+      if (!searchQuery && currentFolderId) {
         // Get all descendant folder IDs for recursive display
         const folderIds = getDescendantFolderIds(currentFolderId)
         folderIds.forEach(id => params.append('folder_ids', id))
@@ -397,11 +427,49 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
   }
 
   const handleRenameFolder = (folderId: string) => {
-    toast.info('Folder renaming not yet implemented')
+    const folder = folders.find(f => f.id === folderId)
+    if (!folder) return
+
+    setRenameFolderId(folderId)
+    setRenameFolderName(folder.name)
+    setRenameFolderDialogOpen(true)
   }
 
-  const handleDeleteFolder = (folderId: string) => {
-    toast.info('Folder deletion not yet implemented')
+  const handleRenameDocument = (documentId: string) => {
+    const doc = documents.find(d => d.id === documentId)
+    if (!doc) return
+
+    setRenameDocumentId(documentId)
+    setRenameDocumentName(doc.name)
+    setRenameDocumentDialogOpen(true)
+  }
+
+  const handleDeleteFolder = async (folderId: string) => {
+    const folder = folders.find(f => f.id === folderId)
+    if (!folder) return
+
+    if (!confirm(`Are you sure you want to delete "${folder.name}"? This will also delete all documents and subfolders within it.`)) {
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/staff/documents/folders/${folderId}`, {
+        method: 'DELETE'
+      })
+
+      if (response.ok) {
+        toast.success('Folder deleted successfully')
+        loadFolders()
+        loadDocuments()
+      } else {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
+        const errorMsg = errorData.details || errorData.error || 'Unknown error'
+        toast.error(`Failed to delete folder: ${errorMsg}`)
+      }
+    } catch (error) {
+      console.error('Error deleting folder:', error)
+      toast.error('Failed to delete folder')
+    }
   }
 
   // Check for vehicles without folders
@@ -413,12 +481,12 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
   })
 
   return (
-    <div className="flex flex-col h-full bg-slate-50">
+    <div className="flex flex-col h-full bg-[#0a0a0a]">
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 bg-white border-b border-slate-200">
+      <div className="flex items-center justify-between px-6 py-4 bg-black/40 border-b border-white/10">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Document Management</h1>
-          <p className="text-slate-600 mt-1">
+          <h1 className="text-2xl font-bold text-white">Document Management</h1>
+          <p className="text-gray-400 mt-1">
             Manage documents with hierarchical folder structure
           </p>
         </div>
@@ -426,6 +494,7 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
           <Button
             variant="outline"
             onClick={() => loadDocuments()}
+            className="border-white/20 text-white hover:bg-white/10"
           >
             <RefreshCw className="h-4 w-4 mr-2" />
             Refresh
@@ -447,17 +516,18 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
       )}
 
       {/* Actions Bar */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-white">
+      <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-black/40">
         <div className="flex items-center gap-3">
           <Button
             variant="outline"
             onClick={() => setShowTreeDrawer(true)}
+            className="border-white/20 text-white hover:bg-white/10"
           >
             <FolderTreeIcon className="w-4 h-4 mr-2" />
             Browse All Folders
           </Button>
           {navigationHistory.length > 0 && (
-            <Button variant="ghost" onClick={navigateBack}>
+            <Button variant="ghost" onClick={navigateBack} className="text-white hover:bg-white/10">
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back
             </Button>
@@ -465,16 +535,17 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
           {vehiclesWithoutFolders.length > 0 && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="border-amber-200 bg-amber-50 text-amber-900 hover:bg-amber-100">
+                <Button variant="outline" className="border-amber-400/30 bg-amber-500/20 text-amber-200 hover:bg-amber-500/30">
                   <FolderPlus className="h-4 w-4 mr-2" />
                   Initialize Vehicle Folders ({vehiclesWithoutFolders.length})
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent>
+              <DropdownMenuContent className="bg-zinc-900 border-white/10">
                 {vehiclesWithoutFolders.map(vehicle => (
                   <DropdownMenuItem
                     key={vehicle.id}
                     onClick={() => handleInitVehicleFolders(vehicle.id)}
+                    className="text-white focus:bg-white/10 focus:text-white"
                   >
                     {vehicle.name} ({vehicle.type})
                   </DropdownMenuItem>
@@ -484,11 +555,11 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
           )}
         </div>
         <div className="flex items-center gap-2">
-          <Button onClick={() => setUploadDialogOpen(true)}>
+          <Button onClick={() => setUploadDialogOpen(true)} className="bg-blue-600 hover:bg-blue-700 text-white">
             <Upload className="w-4 w-4 mr-2" />
             Upload Documents
           </Button>
-          <Button variant="outline" onClick={() => handleCreateFolder()}>
+          <Button variant="outline" onClick={() => handleCreateFolder()} className="border-white/20 text-white hover:bg-white/10">
             <FolderPlus className="w-4 h-4 mr-2" />
             New Folder
           </Button>
@@ -516,6 +587,8 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
           onRenameFolder={handleRenameFolder}
           onDeleteFolder={handleDeleteFolder}
           onCreateSubfolder={handleCreateFolder}
+          onRenameDocument={handleRenameDocument}
+          onDeleteDocument={handleDeleteDocument}
           onViewModeChange={setViewMode}
           onSortChange={setSortBy}
           onSearchChange={setSearchQuery}
@@ -557,6 +630,24 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
         onOpenChange={setCreateFolderDialogOpen}
         parentFolderId={createFolderParentId}
         onSuccess={() => loadFolders()}
+      />
+
+      {/* Rename Folder Dialog */}
+      <RenameFolderDialog
+        open={renameFolderDialogOpen}
+        onOpenChange={setRenameFolderDialogOpen}
+        folderId={renameFolderId}
+        currentName={renameFolderName}
+        onSuccess={() => loadFolders()}
+      />
+
+      {/* Rename Document Dialog */}
+      <RenameDocumentDialog
+        open={renameDocumentDialogOpen}
+        onOpenChange={setRenameDocumentDialogOpen}
+        documentId={renameDocumentId}
+        currentName={renameDocumentName}
+        onSuccess={() => loadDocuments()}
       />
 
       {/* Document Preview Modal */}

@@ -84,7 +84,8 @@ function buildSelectColumns(includeMessages: boolean) {
         id,
         display_name,
         email,
-        role
+        role,
+        avatar_url
       )
     )
   `
@@ -110,7 +111,8 @@ function buildSelectColumns(includeMessages: boolean) {
         id,
         display_name,
         email,
-        role
+        role,
+        avatar_url
       )
     )
   `
@@ -179,7 +181,7 @@ export async function GET(request: NextRequest) {
 
     const userRole = user.user_metadata?.role || user.role
     const isStaff = ['staff_admin', 'staff_ops', 'staff_rm'].includes(userRole)
-    const client = isStaff ? createServiceClient() : supabase
+    const client = createServiceClient()  // Use service client to fetch all participants (security enforced via application-level filtering at line 210)
 
     const selectColumns = buildSelectColumns(includeMessages)
 

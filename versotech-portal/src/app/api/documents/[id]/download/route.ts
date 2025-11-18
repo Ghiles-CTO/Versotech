@@ -37,7 +37,7 @@ export async function GET(
     const serviceSupabase = createServiceClient()
     const { data: document, error: docError } = await serviceSupabase
       .from('documents')
-      .select('id, name, file_key, mime_type, owner_investor_id')
+      .select('id, name, file_key, mime_type, owner_investor_id, vehicle_id, deal_id')
       .eq('id', documentId)
       .single()
 
@@ -52,17 +52,59 @@ export async function GET(
     const isStaff = profile.role.startsWith('staff_')
 
     if (!isStaff) {
-      // Check if investor owns this document
-      const { data: investorUser } = await supabase
+      // Get investor IDs for this user
+      const { data: investorLinks } = await supabase
         .from('investor_users')
         .select('investor_id')
         .eq('user_id', user.id)
-        .eq('investor_id', document.owner_investor_id)
-        .single()
 
-      if (!investorUser) {
+      const investorIds = investorLinks?.map(link => link.investor_id) || []
+
+      if (investorIds.length === 0) {
         return NextResponse.json(
-          { error: 'Access denied - you do not own this document' },
+          { error: 'Access denied - no investor profile found' },
+          { status: 403 }
+        )
+      }
+
+      let hasAccess = false
+
+      // Check access via owner_investor_id
+      if (document.owner_investor_id && investorIds.includes(document.owner_investor_id)) {
+        hasAccess = true
+      }
+
+      // Check access via vehicle subscription
+      if (!hasAccess && document.vehicle_id) {
+        const { data: subscription } = await supabase
+          .from('subscriptions')
+          .select('id')
+          .eq('vehicle_id', document.vehicle_id)
+          .in('investor_id', investorIds)
+          .maybeSingle()
+
+        if (subscription) {
+          hasAccess = true
+        }
+      }
+
+      // Check access via deal membership
+      if (!hasAccess && document.deal_id) {
+        const { data: dealMember } = await supabase
+          .from('deal_members')
+          .select('id')
+          .eq('deal_id', document.deal_id)
+          .in('investor_id', investorIds)
+          .maybeSingle()
+
+        if (dealMember) {
+          hasAccess = true
+        }
+      }
+
+      if (!hasAccess) {
+        return NextResponse.json(
+          { error: 'Access denied - you do not have access to this document' },
           { status: 403 }
         )
       }

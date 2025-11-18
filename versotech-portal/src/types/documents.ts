@@ -51,6 +51,11 @@ export interface Document {
   scope: DocumentScope
   watermark?: DocumentWatermark
   metadata?: Record<string, unknown>
+  folder?: {
+    id: string
+    name: string
+    path: string
+  }
 }
 
 export interface DocumentFilters {

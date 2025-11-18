@@ -23,6 +23,7 @@ import {
 } from 'lucide-react'
 import { InterestModal } from '@/components/deals/interest-modal'
 import { AskQuestionButton } from '@/components/deals/ask-question-button'
+import { DealFaqSection } from '@/components/deals/deal-faq-section'
 
 export const dynamic = 'force-dynamic'
 
@@ -559,6 +560,11 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
                   )}
                 </CardContent>
               </Card>
+            )}
+
+            {/* FAQ Section - only shown if investor has data room access */}
+            {hasDataRoomAccess && (
+              <DealFaqSection dealId={deal.id} />
             )}
           </div>
 

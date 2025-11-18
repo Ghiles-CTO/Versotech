@@ -22,6 +22,8 @@ import {
   Clipboard,
   UserCheck,
   MoreVertical,
+  Edit,
+  Trash2,
 } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
@@ -38,6 +40,8 @@ import {
 interface DocumentCardProps {
   document: Document
   onPreview?: (document: Document) => void
+  onRename?: (documentId: string) => void
+  onDelete?: (documentId: string) => void
   variant?: 'default' | 'compact'
   className?: string
 }
@@ -140,6 +144,8 @@ function extractMetadataHighlights(metadata?: Document['metadata']) {
 export function DocumentCard({
   document,
   onPreview,
+  onRename,
+  onDelete,
   variant = 'default',
   className,
 }: DocumentCardProps) {
@@ -185,10 +191,13 @@ export function DocumentCard({
     }
   }
 
+  // Handle both file_name and name (for different document types)
+  const displayName = document.file_name || (document as any).name || 'Untitled Document'
+
   const formattedSize = formatFileSize(document.file_size_bytes)
   const formattedType = formatDocumentType(document.type)
-  const investorLabel = document.scope.investor?.legal_name
-  const vehicle = document.scope.vehicle
+  const investorLabel = document.scope?.investor?.legal_name
+  const vehicle = document.scope?.vehicle
   const metadataHighlights = extractMetadataHighlights(document.metadata)
   const formattedDate = new Date(document.created_at).toLocaleDateString('en-US', {
     year: 'numeric',
@@ -207,17 +216,17 @@ export function DocumentCard({
       <button
         onClick={() => onPreview?.(document)}
         className={cn(
-          'group flex items-center gap-3 w-full px-3 py-2 rounded-md',
-          'hover:bg-slate-100 transition-colors duration-150',
-          'focus:outline-none focus:ring-2 focus:ring-navy-500 focus:ring-offset-1',
+          'group flex items-center gap-3 w-full px-4 py-3 rounded-md',
+          'hover:bg-white/10 transition-colors duration-150',
+          'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1',
           className
         )}
       >
-        <DocIcon className="w-4 h-4 text-slate-500 flex-shrink-0" strokeWidth={2} />
-        <span className="text-sm font-medium text-slate-900 truncate flex-1 text-left">
-          {document.file_name}
+        <DocIcon className="w-5 h-5 text-blue-400 flex-shrink-0" strokeWidth={2} />
+        <span className="text-sm font-medium text-white flex-1 text-left break-words line-clamp-1">
+          {displayName}
         </span>
-        <span className="text-xs text-slate-500">{formattedSize}</span>
+        <span className="text-sm text-gray-400 flex-shrink-0">{formattedSize}</span>
       </button>
     )
   }
@@ -225,8 +234,8 @@ export function DocumentCard({
   return (
     <div
       className={cn(
-        'group relative bg-white border border-slate-200 rounded-lg',
-        'hover:shadow-md hover:border-slate-300',
+        'group relative bg-white/5 border border-white/10 rounded-lg',
+        'hover:bg-white/10 hover:border-white/20',
         'transition-all duration-200',
         'cursor-pointer',
         className
@@ -235,34 +244,34 @@ export function DocumentCard({
       onMouseLeave={() => setIsHovered(false)}
       onClick={() => onPreview?.(document)}
     >
-      <div className="p-4">
-        <div className="flex items-start gap-3">
+      <div className="p-5">
+        <div className="flex items-start gap-4">
           {/* Document Icon */}
           <div
             className={cn(
-              'w-11 h-11 rounded-lg border flex items-center justify-center',
+              'w-14 h-14 rounded-lg border border-white/10 flex items-center justify-center',
               'flex-shrink-0 transition-all duration-200',
-              colorScheme.badge
+              'bg-white/5'
             )}
           >
-            <DocIcon className={cn('w-5 h-5', colorScheme.icon)} strokeWidth={2} />
+            <DocIcon className="w-6 h-6 text-blue-400" strokeWidth={2} />
           </div>
 
           {/* Document Info */}
-          <div className="flex-1 min-w-0">
-            {/* File Name */}
-            <h3 className="font-medium text-slate-900 text-sm truncate mb-1">
-              {document.file_name}
+          <div className="flex-1 min-w-0 overflow-hidden">
+            {/* File Name - Allow wrapping for long names */}
+            <h3 className="font-semibold text-white text-sm leading-tight mb-2 break-words line-clamp-2">
+              {displayName}
             </h3>
 
             {/* Type & Size */}
-            <div className="flex items-center gap-2 text-xs text-slate-500 mb-2">
+            <div className="flex items-center gap-2 text-sm text-gray-400 mb-2">
               <span>{formattedType}</span>
               <span>•</span>
               <span>{formattedSize}</span>
               <span>•</span>
               <span className="flex items-center gap-1">
-                <Clock className="w-3 h-3" strokeWidth={2} />
+                <Clock className="w-3.5 h-3.5" strokeWidth={2} />
                 {formattedDate}
               </span>
             </div>
@@ -272,18 +281,27 @@ export function DocumentCard({
               {vehicle && (
                 <Badge
                   variant="outline"
-                  className="text-xs border-navy-200 bg-navy-50 text-navy-700"
+                  className="text-xs border-blue-400/30 bg-blue-500/20 text-blue-200"
                 >
-                  <Building2 className="w-3 h-3 mr-1" strokeWidth={2} />
+                  <Building2 className="w-3.5 h-3.5 mr-1" strokeWidth={2} />
                   {vehicle.name}
+                </Badge>
+              )}
+              {document.folder && (
+                <Badge
+                  variant="outline"
+                  className="text-xs border-purple-400/30 bg-purple-500/20 text-purple-200"
+                >
+                  <Folder className="w-3.5 h-3.5 mr-1" strokeWidth={2} />
+                  {document.folder.path}
                 </Badge>
               )}
               {document.watermark && (
                 <Badge
                   variant="outline"
-                  className="text-xs border-slate-200 bg-slate-50 text-slate-700"
+                  className="text-xs border-emerald-400/30 bg-emerald-500/20 text-emerald-200"
                 >
-                  <Shield className="w-3 h-3 mr-1" strokeWidth={2} />
+                  <Shield className="w-3.5 h-3.5 mr-1" strokeWidth={2} />
                   Watermarked
                 </Badge>
               )}
@@ -295,24 +313,25 @@ export function DocumentCard({
             <DropdownMenuTrigger
               className={cn(
                 'opacity-0 group-hover:opacity-100 transition-opacity duration-150',
-                'p-1 rounded hover:bg-slate-100',
-                'focus:outline-none focus:ring-2 focus:ring-navy-500',
+                'p-1 rounded hover:bg-white/10',
+                'focus:outline-none focus:ring-2 focus:ring-blue-500',
                 isMenuOpen && 'opacity-100'
               )}
               onClick={(e) => e.stopPropagation()}
             >
-              <MoreVertical className="w-4 h-4 text-slate-600" strokeWidth={2} />
+              <MoreVertical className="w-4 h-4 text-gray-400" strokeWidth={2} />
               <span className="sr-only">Document actions</span>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuContent align="end" className="w-48 bg-zinc-900 border-white/10">
               {onPreview && (
                 <DropdownMenuItem
                   onClick={(e) => {
                     e.stopPropagation()
                     onPreview(document)
                   }}
+                  className="text-gray-200 focus:bg-white/10 focus:text-white"
                 >
-                  <Eye className="w-4 h-4 mr-2 text-navy-600" strokeWidth={2} />
+                  <Eye className="w-4 h-4 mr-2 text-blue-400" strokeWidth={2} />
                   <span>Preview</span>
                 </DropdownMenuItem>
               )}
@@ -322,19 +341,47 @@ export function DocumentCard({
                   handleDownload()
                 }}
                 disabled={isDownloading}
+                className="text-gray-200 focus:bg-white/10 focus:text-white"
               >
                 {isDownloading ? (
                   <>
-                    <Clock className="w-4 h-4 mr-2 animate-spin text-slate-600" strokeWidth={2} />
+                    <Clock className="w-4 h-4 mr-2 animate-spin text-gray-400" strokeWidth={2} />
                     <span>Generating...</span>
                   </>
                 ) : (
                   <>
-                    <Download className="w-4 h-4 mr-2 text-slate-600" strokeWidth={2} />
+                    <Download className="w-4 h-4 mr-2 text-gray-400" strokeWidth={2} />
                     <span>Download</span>
                   </>
                 )}
               </DropdownMenuItem>
+              {onRename && (
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onRename(document.id)
+                  }}
+                  className="text-gray-200 focus:bg-white/10 focus:text-white"
+                >
+                  <Edit className="w-4 h-4 mr-2 text-gray-400" strokeWidth={2} />
+                  <span>Rename</span>
+                </DropdownMenuItem>
+              )}
+              {onDelete && (
+                <>
+                  <DropdownMenuSeparator className="bg-white/10" />
+                  <DropdownMenuItem
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onDelete(document.id)
+                    }}
+                    className="text-red-400 focus:text-red-300 focus:bg-red-500/20"
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" strokeWidth={2} />
+                    <span>Delete</span>
+                  </DropdownMenuItem>
+                </>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -343,7 +390,7 @@ export function DocumentCard({
       {/* Hover Indicator (subtle bottom border) */}
       <div
         className={cn(
-          'absolute bottom-0 left-0 right-0 h-0.5 bg-navy-600',
+          'absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500',
           'transform scale-x-0 group-hover:scale-x-100',
           'transition-transform duration-200 origin-left',
           'rounded-b-lg'
@@ -360,16 +407,16 @@ export function DocumentCardSkeleton({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        'bg-white border border-slate-200 rounded-lg p-4',
+        'bg-white/5 border border-white/10 rounded-lg p-4',
         'animate-pulse',
         className
       )}
     >
       <div className="flex items-start gap-3">
-        <div className="w-11 h-11 rounded-lg bg-slate-100 flex-shrink-0" />
+        <div className="w-11 h-11 rounded-lg bg-white/10 flex-shrink-0" />
         <div className="flex-1 min-w-0">
-          <div className="h-4 bg-slate-100 rounded w-3/4 mb-2" />
-          <div className="h-3 bg-slate-100 rounded w-1/2" />
+          <div className="h-4 bg-white/10 rounded w-3/4 mb-2" />
+          <div className="h-3 bg-white/10 rounded w-1/2" />
         </div>
       </div>
     </div>

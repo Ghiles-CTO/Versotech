@@ -1,17 +1,18 @@
+'use client'
+
 import type { ConversationSummary, ConversationMessage } from '@/types/messaging'
 import { useEffect, useMemo, useState, useRef } from 'react'
 import { fetchConversationMessages, markConversationRead, subscribeToConversationUpdates } from '@/lib/messaging'
 import { groupMessages, getInitials, formatRelativeTime, getDateDivider, shouldShowDateDivider } from '@/lib/messaging/utils'
 import { MessageBubble } from '@/components/messaging/shared/message-bubble'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { MessageSkeleton } from '@/components/messaging/message-skeleton'
+import { AutoExpandTextarea } from '@/components/ui/auto-expand-textarea'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Textarea } from '@/components/ui/textarea'
-import { Skeleton } from '@/components/ui/skeleton'
-import { Separator } from '@/components/ui/separator'
 import { cn } from '@/lib/utils'
-import { Send, Paperclip, MoreVertical, Users, Smile, Trash2 } from 'lucide-react'
+import { Send, Paperclip, MoreVertical, Users, Smile, Trash2, MessageSquare } from 'lucide-react'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -218,15 +219,18 @@ export function ConversationView({ conversation, currentUserId, onRead, onError,
   }, [conversation.id])
 
   return (
-    <div className="flex-1 flex flex-col h-full">
+    <div className="flex-1 flex flex-col min-h-0">
       {/* Enhanced Header */}
-      <header className="border-b border-border bg-card px-6 py-4">
+      <header className="relative z-10 border-b border-border bg-card px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             {/* Participant Avatars */}
             <div className="flex -space-x-2">
               {conversation.participants.slice(0, 3).map((participant, idx) => (
                 <Avatar key={participant.id} className="h-9 w-9 border-2 border-background">
+                  {participant.avatarUrl && (
+                    <AvatarImage src={participant.avatarUrl} alt={participant.displayName || participant.email || 'User'} />
+                  )}
                   <AvatarFallback className="text-xs bg-muted text-foreground">
                     {getInitials(participant.displayName || participant.email)}
                   </AvatarFallback>
@@ -286,28 +290,27 @@ export function ConversationView({ conversation, currentUserId, onRead, onError,
         </div>
       </header>
 
-      <ScrollArea className="flex-1 bg-muted/20">
+      <ScrollArea className="flex-1 min-h-0 bg-muted/20">
         <div className="px-4 py-6 md:px-8">
           {isLoading ? (
-            <div className="space-y-4">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="flex gap-3">
-                  <Skeleton className="h-8 w-8 rounded-full" />
-                  <div className="space-y-2 flex-1">
-                    <Skeleton className="h-4 w-24" />
-                    <Skeleton className="h-16 w-3/4 rounded-2xl" />
-                  </div>
-                </div>
-              ))}
-            </div>
+            <MessageSkeleton count={3} />
           ) : messages.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-64 text-center">
-              <div className="rounded-full bg-muted p-6 mb-4">
-                <Send className="h-8 w-8 text-muted-foreground" />
+            <div className="flex flex-col items-center justify-center h-full min-h-[400px] text-center px-4">
+              <div className="relative mb-6">
+                <div className="rounded-full bg-gradient-to-br from-primary/10 to-primary/5 p-8 backdrop-blur-sm border border-primary/10">
+                  <MessageSquare className="h-12 w-12 text-primary/60" />
+                </div>
+                <div className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-primary/20 animate-ping" />
               </div>
-              <h3 className="text-lg font-semibold text-foreground mb-2">No messages yet</h3>
-              <p className="text-sm text-muted-foreground max-w-sm">
-                Start the conversation by sending a message below.
+              <h3 className="text-xl font-semibold text-foreground mb-2">
+                Start the Conversation
+              </h3>
+              <p className="text-sm text-muted-foreground max-w-md leading-relaxed">
+                No messages yet. Break the ice and send the first message to{' '}
+                <span className="font-medium text-foreground">
+                  {conversation.participants.filter(p => p.id !== currentUserId)[0]?.displayName || 'your team'}
+                </span>
+                .
               </p>
             </div>
           ) : (
@@ -340,6 +343,7 @@ export function ConversationView({ conversation, currentUserId, onRead, onError,
                       message={message}
                       senderName={displayName}
                       senderEmail={senderInfo?.email}
+                      senderAvatarUrl={message.sender?.avatarUrl ?? null}
                       isSelf={isSelf}
                       isGroupStart={message.isGroupStart}
                       isGroupEnd={message.isGroupEnd}
@@ -357,7 +361,7 @@ export function ConversationView({ conversation, currentUserId, onRead, onError,
       </ScrollArea>
       
       {/* Enhanced Composer (WhatsApp/Slack style) */}
-      <div className="border-t border-border bg-card px-4 py-3">
+      <div className="relative z-10 border-t border-border bg-card px-6 py-4">
         <div className="flex items-end gap-2">
           {/* Action Buttons */}
           <div className="flex items-center gap-1 shrink-0">
@@ -382,30 +386,21 @@ export function ConversationView({ conversation, currentUserId, onRead, onError,
           </div>
 
           {/* Message Input Container */}
-          <div className="flex-1 relative bg-background rounded-lg border border-border focus-within:border-ring focus-within:ring-1 focus-within:ring-ring transition-all">
-            <Textarea
+          <div className="flex-1 relative">
+            <AutoExpandTextarea
               value={composerMessage}
               onChange={event => setComposerMessage(event.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Type a message…"
               disabled={isSending}
               className={cn(
-                "min-h-[44px] max-h-32 resize-none",
-                "bg-transparent text-foreground border-0",
+                "min-h-[44px] max-h-[200px]",
+                "bg-background text-foreground",
+                "border-border focus-within:border-primary",
                 "placeholder:text-muted-foreground",
-                "focus-visible:ring-0 focus-visible:ring-offset-0",
-                "px-4 py-2.5"
+                "transition-all duration-200",
+                "px-4 py-3"
               )}
-              rows={1}
-              style={{
-                height: 'auto',
-                minHeight: '44px',
-              }}
-              onInput={(e) => {
-                const target = e.target as HTMLTextAreaElement
-                target.style.height = 'auto'
-                target.style.height = Math.min(target.scrollHeight, 128) + 'px'
-              }}
             />
           </div>
 
@@ -415,8 +410,11 @@ export function ConversationView({ conversation, currentUserId, onRead, onError,
             disabled={isSending || !composerMessage.trim()}
             size="icon"
             className={cn(
-              "h-10 w-10 shrink-0 transition-all rounded-full",
-              composerMessage.trim() ? "scale-100" : "scale-95 opacity-50"
+              "h-11 w-11 shrink-0 rounded-full shadow-lg",
+              "transition-all duration-200 ease-out",
+              composerMessage.trim()
+                ? "scale-100 opacity-100 hover:scale-105 hover:shadow-xl active:scale-95"
+                : "scale-90 opacity-50 cursor-not-allowed"
             )}
           >
             {isSending ? (

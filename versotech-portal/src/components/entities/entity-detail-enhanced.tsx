@@ -24,7 +24,8 @@ import {
   ExternalLink,
   RefreshCw,
   Trash2,
-  Eye
+  Eye,
+  TrendingUp
 } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -67,6 +68,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
 import { useConfirmationDialog } from '@/hooks/use-confirmation-dialog'
 import { SubscriptionEditModal } from './subscription-edit-modal'
+import { AddValuationModal } from './add-valuation-modal'
 
 interface Director {
   id: string
@@ -162,6 +164,14 @@ interface Entity {
   website_url: string | null
 }
 
+interface Valuation {
+  id: string
+  vehicle_id: string
+  as_of_date: string
+  nav_total: number | null
+  nav_per_unit: number | null
+}
+
 interface EntityDetailEnhancedProps {
   entity: Entity
   directors: Director[]
@@ -171,6 +181,7 @@ interface EntityDetailEnhancedProps {
   deals: LinkedDeal[]
   events: EntityEvent[]
   investors: EntityInvestorSummary[]
+  valuations: Valuation[]
 }
 
 const entityTypeLabels: Record<string, string> = {
@@ -397,7 +408,8 @@ export function EntityDetailEnhanced({
   flags: initialFlags,
   deals,
   events: initialEvents,
-  investors: initialInvestors
+  investors: initialInvestors,
+  valuations: initialValuations
 }: EntityDetailEnhancedProps) {
   const [activeTab, setActiveTab] = useState('overview')
   const [entity, setEntity] = useState(initialEntity)
@@ -420,6 +432,7 @@ export function EntityDetailEnhanced({
   const [editEntityModalOpen, setEditEntityModalOpen] = useState(false)
   const [deleteEntityDialogOpen, setDeleteEntityDialogOpen] = useState(false)
   const [investors, setInvestors] = useState<EntityInvestorSummary[]>(initialInvestors)
+  const [valuations, setValuations] = useState<Valuation[]>(initialValuations)
   const [investorModalOpen, setInvestorModalOpen] = useState(false)
   const [updatingInvestorId, setUpdatingInvestorId] = useState<string | null>(null)
   const [removingInvestorId, setRemovingInvestorId] = useState<string | null>(null)
@@ -427,6 +440,7 @@ export function EntityDetailEnhanced({
   const [flagModalOpen, setFlagModalOpen] = useState(false)
   const [resolvingFlagId, setResolvingFlagId] = useState<string | null>(null)
   const [flagRefreshLoading, setFlagRefreshLoading] = useState(false)
+  const [valuationModalOpen, setValuationModalOpen] = useState(false)
 
   // Document preview hook (replaces old preview state)
   const documentViewer = useDocumentViewer()
@@ -605,6 +619,20 @@ export function EntityDetailEnhanced({
       toast.error('Unable to reload entity flags.')
     } finally {
       setFlagRefreshLoading(false)
+    }
+  }, [entity.id])
+
+  const refreshValuations = useCallback(async () => {
+    try {
+      const response = await fetch(`/api/staff/vehicles/${entity.id}/valuations`)
+      if (!response.ok) {
+        throw new Error('Failed to load valuations')
+      }
+      const data = await response.json()
+      setValuations((data.valuations || []) as Valuation[])
+    } catch (error) {
+      console.error('Failed to refresh valuations:', error)
+      toast.error('Unable to reload valuations.')
     }
   }, [entity.id])
 
@@ -1230,6 +1258,10 @@ export function EntityDetailEnhanced({
           <TabsTrigger value="activity" className="gap-2">
             <Activity className="h-4 w-4" />
             Activity Log
+          </TabsTrigger>
+          <TabsTrigger value="valuations" className="gap-2">
+            <TrendingUp className="h-4 w-4" />
+            Valuations ({valuations.length})
           </TabsTrigger>
         </TabsList>
 
@@ -2230,6 +2262,94 @@ export function EntityDetailEnhanced({
             </CardContent>
           </Card>
         </TabsContent>
+
+        {/* Valuations Tab */}
+        <TabsContent value="valuations" className="space-y-4">
+          <Card className="border border-white/10 bg-white/5">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle>NAV History</CardTitle>
+                <CardDescription>
+                  Net Asset Value (NAV) entries for this vehicle over time
+                </CardDescription>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setValuationModalOpen(true)}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Valuation
+              </Button>
+            </CardHeader>
+            <CardContent>
+              {valuations.length === 0 ? (
+                <div className="text-center py-8">
+                  <TrendingUp className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
+                  <p className="text-muted-foreground text-sm">
+                    No valuations recorded yet. Add the first valuation to track NAV over time.
+                  </p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-white/10">
+                        <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">
+                          As of Date
+                        </th>
+                        <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground">
+                          Total NAV
+                        </th>
+                        <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground">
+                          NAV per Unit
+                        </th>
+                        <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {valuations.map((valuation) => (
+                        <tr key={valuation.id} className="border-b border-white/5 hover:bg-white/5">
+                          <td className="py-3 px-4 text-sm">
+                            {new Date(valuation.as_of_date).toLocaleDateString()}
+                          </td>
+                          <td className="py-3 px-4 text-sm text-right font-mono">
+                            {valuation.nav_total
+                              ? `$${valuation.nav_total.toLocaleString('en-US', {
+                                  minimumFractionDigits: 2,
+                                  maximumFractionDigits: 2
+                                })}`
+                              : '-'}
+                          </td>
+                          <td className="py-3 px-4 text-sm text-right font-mono">
+                            {valuation.nav_per_unit
+                              ? `$${valuation.nav_per_unit.toLocaleString('en-US', {
+                                  minimumFractionDigits: 2,
+                                  maximumFractionDigits: 6
+                                })}`
+                              : '-'}
+                          </td>
+                          <td className="py-3 px-4 text-right">
+                            <div className="flex justify-end gap-2">
+                              <Button variant="ghost" size="sm">
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button variant="ghost" size="sm">
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
 
       {/* Modals */}
@@ -2274,6 +2394,16 @@ export function EntityDetailEnhanced({
         open={investorModalOpen}
         onClose={() => setInvestorModalOpen(false)}
         onSuccess={handleInvestorAdded}
+      />
+
+      <AddValuationModal
+        vehicleId={entity.id}
+        open={valuationModalOpen}
+        onClose={() => setValuationModalOpen(false)}
+        onSuccess={() => {
+          refreshValuations()
+          toast.success('Valuation added successfully')
+        }}
       />
 
       <EditEntityModalRefactored

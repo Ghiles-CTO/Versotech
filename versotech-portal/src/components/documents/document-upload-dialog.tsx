@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useDropzone } from 'react-dropzone'
-import { Upload, X, FileText, AlertCircle, Loader2, CheckCircle2 } from 'lucide-react'
+import { Upload, X, FileText, AlertCircle, Loader2, CheckCircle2, Folder } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -12,7 +12,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { DocumentFolder } from '@/types/documents'
-import { UploadDestinationBadge } from './upload/UploadDestinationBanner'
 
 interface DocumentUploadDialogProps {
   open: boolean
@@ -43,6 +42,36 @@ export function DocumentUploadDialog({
   const [tags, setTags] = useState('')
   const [description, setDescription] = useState('')
   const [uploading, setUploading] = useState(false)
+  const [selectedFolderId, setSelectedFolderId] = useState<string | null>(folderId || null)
+  const [folders, setFolders] = useState<DocumentFolder[]>([])
+  const [loadingFolders, setLoadingFolders] = useState(false)
+
+  // Fetch available folders
+  useEffect(() => {
+    if (!open) return
+
+    const fetchFolders = async () => {
+      setLoadingFolders(true)
+      try {
+        const response = await fetch('/api/staff/documents/folders')
+        if (response.ok) {
+          const data = await response.json()
+          setFolders(data.folders || [])
+        }
+      } catch (error) {
+        console.error('Error fetching folders:', error)
+      } finally {
+        setLoadingFolders(false)
+      }
+    }
+
+    fetchFolders()
+  }, [open])
+
+  // Reset selected folder when folderId prop changes
+  useEffect(() => {
+    setSelectedFolderId(folderId || null)
+  }, [folderId])
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const newFiles: FileWithMetadata[] = acceptedFiles.map((file, index) => ({
@@ -88,7 +117,7 @@ export function DocumentUploadDialog({
         formData.append('type', documentType)
         formData.append('tags', tags)
         formData.append('description', description)
-        if (folderId) formData.append('folder_id', folderId)
+        if (selectedFolderId) formData.append('folder_id', selectedFolderId)
         if (vehicleId) formData.append('vehicle_id', vehicleId)
 
         // Update file status
@@ -169,13 +198,6 @@ export function DocumentUploadDialog({
         <DialogHeader>
           <DialogTitle>Upload Documents</DialogTitle>
         </DialogHeader>
-
-        {/* Upload Destination Indicator */}
-        {currentFolder && (
-          <div className="px-6 py-3 -mx-6 -mt-2 mb-4 bg-slate-50 border-y border-slate-200">
-            <UploadDestinationBadge currentFolder={currentFolder} />
-          </div>
-        )}
 
         <div className="space-y-4">
           {/* Drag and Drop Area */}
@@ -262,6 +284,55 @@ export function DocumentUploadDialog({
                   <SelectItem value="Tax">Tax</SelectItem>
                   <SelectItem value="Legal">Legal</SelectItem>
                   <SelectItem value="Other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="folder">Destination Folder</Label>
+              <Select
+                value={selectedFolderId || 'root'}
+                onValueChange={(value) => setSelectedFolderId(value === 'root' ? null : value)}
+                disabled={uploading || loadingFolders}
+              >
+                <SelectTrigger id="folder">
+                  <SelectValue>
+                    {loadingFolders ? (
+                      <span className="flex items-center gap-2">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Loading folders...
+                      </span>
+                    ) : selectedFolderId ? (
+                      <span className="flex items-center gap-2">
+                        <Folder className="h-4 w-4" />
+                        {folders.find(f => f.id === selectedFolderId)?.path || 'Unknown folder'}
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-2">
+                        <Folder className="h-4 w-4" />
+                        Root / No Folder
+                      </span>
+                    )}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent className="max-h-[300px]">
+                  <SelectItem value="root">
+                    <span className="flex items-center gap-2">
+                      <Folder className="h-4 w-4" />
+                      Root / No Folder
+                    </span>
+                  </SelectItem>
+                  {folders.map((folder) => {
+                    const depth = (folder.path.match(/\//g) || []).length - 1
+                    return (
+                      <SelectItem key={folder.id} value={folder.id}>
+                        <span className="flex items-center gap-2" style={{ paddingLeft: `${depth * 16}px` }}>
+                          <Folder className="h-4 w-4 flex-shrink-0" />
+                          <span className="truncate">{folder.path}</span>
+                        </span>
+                      </SelectItem>
+                    )
+                  })}
                 </SelectContent>
               </Select>
             </div>

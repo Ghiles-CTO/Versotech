@@ -406,6 +406,81 @@ export async function POST(req: Request) {
 
             console.log(`✅ Updated subscription ${subscriptionId}: funded_amount=${newFundedAmount}, status=${newStatus}`)
 
+            // AUTO-CREATE POSITION when subscription becomes active
+            if (newStatus === 'active' && subscription.status !== 'active') {
+              // Fetch full subscription details to get all fields needed for position
+              const { data: fullSubscription } = await supabase
+                .from('subscriptions')
+                .select('investor_id, vehicle_id, num_shares, units, price_per_share, cost_per_share')
+                .eq('id', subscriptionId)
+                .single()
+
+              if (fullSubscription) {
+                // Calculate units: prefer num_shares, fallback to units, or calculate from funded_amount / price
+                let positionUnits = fullSubscription.num_shares || fullSubscription.units
+                if (!positionUnits && fullSubscription.price_per_share) {
+                  positionUnits = newFundedAmount / toNumber(fullSubscription.price_per_share)
+                } else if (!positionUnits && fullSubscription.cost_per_share) {
+                  positionUnits = newFundedAmount / toNumber(fullSubscription.cost_per_share)
+                }
+
+                // Get initial NAV (use price_per_share or cost_per_share as initial valuation)
+                const initialNav = fullSubscription.price_per_share || fullSubscription.cost_per_share
+
+                if (positionUnits && positionUnits > 0) {
+                  // Check if position already exists (prevent duplicate creation)
+                  const { data: existingPosition } = await supabase
+                    .from('positions')
+                    .select('id')
+                    .eq('investor_id', fullSubscription.investor_id)
+                    .eq('vehicle_id', fullSubscription.vehicle_id)
+                    .single()
+
+                  if (!existingPosition) {
+                    // Create new position
+                    const { error: positionError } = await supabase
+                      .from('positions')
+                      .insert({
+                        investor_id: fullSubscription.investor_id,
+                        vehicle_id: fullSubscription.vehicle_id,
+                        units: positionUnits,
+                        cost_basis: newFundedAmount,
+                        last_nav: initialNav,
+                        as_of_date: new Date().toISOString()
+                      })
+
+                    if (positionError) {
+                      console.error(`❌ Failed to create position for subscription ${subscriptionId}:`, positionError)
+                      // Log but don't fail the whole transaction - subscription funding is more critical
+                    } else {
+                      console.log(`✅ Created position for subscription ${subscriptionId}: ${positionUnits} units @ $${initialNav}/unit`)
+
+                      // Audit log for position creation
+                      await auditLogger.log({
+                        actor_user_id: profile.id,
+                        action: AuditActions.CREATE,
+                        entity: 'positions' as any,
+                        entity_id: subscriptionId, // Link to subscription
+                        metadata: {
+                          subscription_id: subscriptionId,
+                          investor_id: fullSubscription.investor_id,
+                          vehicle_id: fullSubscription.vehicle_id,
+                          units: positionUnits,
+                          cost_basis: newFundedAmount,
+                          initial_nav: initialNav,
+                          triggered_by: 'subscription_funding'
+                        }
+                      })
+                    }
+                  } else {
+                    console.log(`ℹ️ Position already exists for subscription ${subscriptionId} - skipping creation`)
+                  }
+                } else {
+                  console.warn(`⚠️ Could not determine units for subscription ${subscriptionId} - position not created`)
+                }
+              }
+            }
+
             // Audit log for subscription funding update
             await auditLogger.log({
               actor_user_id: profile.id,

@@ -8,6 +8,7 @@ export interface ConversationParticipant {
   displayName: string | null
   email: string | null
   role: string | null
+  avatarUrl: string | null
   participantRole: ParticipantRole
   joinedAt: string
   lastReadAt: string | null
@@ -21,6 +22,7 @@ export interface MessageSender {
   displayName: string | null
   email: string | null
   role: string | null
+  avatarUrl: string | null
 }
 
 export interface ConversationMessage {

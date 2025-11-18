@@ -46,7 +46,7 @@ export async function POST(
     // Get document
     const { data: document, error: docError } = await serviceSupabase
       .from('documents')
-      .select('name, status, is_published')
+      .select('name, type, status, is_published')
       .eq('id', id)
       .single()
 
@@ -65,10 +65,35 @@ export async function POST(
       )
     }
 
-    // Check if document is approved (required for publishing)
-    if (document.status !== 'approved' && !immediate) {
+    // Block draft documents from being published
+    if (document.status === 'draft') {
       return NextResponse.json(
-        { error: 'Only approved documents can be published' },
+        { error: 'Draft documents cannot be published. Please update the status first.' },
+        { status: 400 }
+      )
+    }
+
+    // Check if document is approved (required for publishing)
+    if (document.status !== 'approved' && document.status !== 'signed' && !immediate) {
+      return NextResponse.json(
+        { error: 'Only approved or signed documents can be published' },
+        { status: 400 }
+      )
+    }
+
+    // SIGNED-ONLY VALIDATION: Check if document type requires signatures
+    const REQUIRES_SIGNATURE_TYPES = ['nda', 'subscription', 'agreement', 'term sheet', 'subscription_agreement']
+    const documentType = (document.type || '').toLowerCase().trim()
+    const requiresSignature = REQUIRES_SIGNATURE_TYPES.some(type =>
+      documentType.includes(type)
+    )
+
+    if (requiresSignature && document.status !== 'signed') {
+      return NextResponse.json(
+        {
+          error: 'This document type requires signatures before publishing',
+          details: `Document type "${document.type}" must be fully signed (status: "signed") before it can be published to investors. Current status: "${document.status}"`
+        },
         { status: 400 }
       )
     }

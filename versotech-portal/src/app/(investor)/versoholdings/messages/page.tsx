@@ -25,9 +25,7 @@ export default async function MessagesPage() {
   if (!conversationIds.length) {
     return (
       <AppLayout brand="versoholdings">
-        <div className="h-[calc(100vh-4rem)]">
-          <InvestorMessagingClient currentUserId={profile.id} initialConversations={[]} />
-        </div>
+        <InvestorMessagingClient currentUserId={profile.id} initialConversations={[]} />
       </AppLayout>
     )
   }
@@ -84,9 +82,7 @@ export default async function MessagesPage() {
 
   return (
     <AppLayout brand="versoholdings">
-      <div className="h-[calc(100vh-4rem)]">
-        <InvestorMessagingClient currentUserId={profile.id} initialConversations={conversations} />
-      </div>
+      <InvestorMessagingClient currentUserId={profile.id} initialConversations={conversations} />
     </AppLayout>
   )
 }

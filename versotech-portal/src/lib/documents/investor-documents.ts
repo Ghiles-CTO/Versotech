@@ -143,7 +143,6 @@ export async function loadInvestorDocuments(
       .from('documents')
       .select(BASE_DOCUMENT_SELECT)
       .in('vehicle_id', vehicleIds)
-      .is('deal_id', null)
       .eq('is_published', true)
       .order('created_at', { ascending: false })
 

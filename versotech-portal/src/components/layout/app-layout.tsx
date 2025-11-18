@@ -61,7 +61,7 @@ export async function AppLayout({ children, brand }: AppLayoutProps) {
         <header className={`${isStaff ? 'bg-[#0a0a0a] border-b border-white/10' : 'bg-white/80 backdrop-blur-sm border-b border-gray-200'} px-6 py-4 flex items-center justify-between`}>
           <BrandHeader brand={brand} />
           <div className="flex items-center space-x-4">
-            <UserMenu profile={profile} />
+            <UserMenu profile={profile} brand={brand} />
           </div>
         </header>
 

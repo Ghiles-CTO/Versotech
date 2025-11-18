@@ -20,7 +20,9 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search')
     const type = searchParams.get('type')
     const tags = searchParams.get('tags')?.split(',').filter(Boolean)
-    const limit = parseInt(searchParams.get('limit') || '200')
+    // Use higher limit when searching to ensure client-side filter has enough data
+    const defaultLimit = search ? '1000' : '200'
+    const limit = parseInt(searchParams.get('limit') || defaultLimit)
     const offset = parseInt(searchParams.get('offset') || '0')
     const sortBy = searchParams.get('sort_by') || 'created_at'
     const sortOrder = searchParams.get('sort_order') || 'desc'
@@ -59,9 +61,10 @@ export async function GET(request: NextRequest) {
       query = query.eq('type', type)
     }
 
-    if (search) {
-      query = query.or(`name.ilike.%${search}%,description.ilike.%${search}%,file_key.ilike.%${search}%`)
-    }
+    // Note: Search filtering is handled client-side to enable searching across
+    // joined tables (vehicle name, folder path, etc.) which is not easily
+    // supported by Supabase query builder. Server returns all matching folder
+    // documents and client filters by all fields.
 
     if (tags && tags.length > 0) {
       query = query.contains('tags', tags)

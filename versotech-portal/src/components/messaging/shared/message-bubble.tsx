@@ -1,14 +1,18 @@
+'use client'
+
 import type { ConversationMessage } from '@/types/messaging'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { formatRelativeTime, formatFullTimestamp, getInitials } from '@/lib/messaging/utils'
 import { CheckCheck, Check, Trash2 } from 'lucide-react'
+import { motion } from 'framer-motion'
 
 interface MessageBubbleProps {
   message: ConversationMessage
   senderName: string
   senderEmail?: string | null
+  senderAvatarUrl?: string | null
   isSelf: boolean
   isGroupStart: boolean
   isGroupEnd: boolean
@@ -21,6 +25,7 @@ export function MessageBubble({
   message,
   senderName,
   senderEmail,
+  senderAvatarUrl,
   isSelf,
   isGroupStart,
   isGroupEnd,
@@ -40,9 +45,15 @@ export function MessageBubble({
   }
 
   return (
-    <div 
+    <motion.div
+      initial={{ opacity: 0, y: 10, scale: 0.98 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{
+        duration: 0.25,
+        ease: [0.25, 0.1, 0.25, 1],
+      }}
       className={cn(
-        'flex gap-2 group animate-in fade-in slide-in-from-bottom-1 duration-200',
+        'flex gap-2 group',
         isSelf ? 'flex-row-reverse' : 'flex-row',
         !isGroupStart && 'mt-0.5',
         isGroupStart && 'mt-5'
@@ -51,7 +62,10 @@ export function MessageBubble({
       {/* Avatar */}
       <div className={cn('flex-shrink-0 self-end', !showAvatar && 'w-9')}>
         {showAvatar ? (
-          <Avatar className="h-9 w-9 border-2 border-background shadow-sm">
+          <Avatar className="h-9 w-9 border-2 border-background shadow-sm transition-transform duration-200 group-hover:scale-110">
+            {senderAvatarUrl && (
+              <AvatarImage src={senderAvatarUrl} alt={senderName} />
+            )}
             <AvatarFallback className="text-xs bg-muted text-foreground font-medium">
               {getInitials(senderName)}
             </AvatarFallback>
@@ -83,15 +97,17 @@ export function MessageBubble({
         {/* Message Bubble (WhatsApp style) */}
         <div
           className={cn(
-            'relative px-3 py-2 rounded-lg text-[13px] leading-relaxed transition-all',
-            isSelf 
-              ? 'bg-primary text-primary-foreground shadow-md shadow-primary/10' 
-              : 'bg-card text-foreground border border-border/50 shadow-sm',
+            'relative px-3.5 py-2.5 rounded-lg text-[14px] leading-relaxed',
+            'transition-all duration-200 ease-out',
+            isSelf
+              ? 'bg-primary text-primary-foreground shadow-md shadow-primary/20'
+              : 'bg-card text-foreground border border-border shadow-sm',
             // Rounded corners with tail effect
-            'rounded-tl-lg rounded-tr-lg',
-            isSelf ? 'rounded-bl-lg rounded-br-sm' : 'rounded-bl-sm rounded-br-lg',
-            isGroupStart && (isSelf ? 'rounded-br-lg' : 'rounded-bl-lg'),
-            'group-hover:shadow-lg',
+            'rounded-tl-2xl rounded-tr-2xl',
+            isSelf ? 'rounded-bl-2xl rounded-br-md' : 'rounded-bl-md rounded-br-2xl',
+            isGroupStart && (isSelf ? 'rounded-br-2xl' : 'rounded-bl-2xl'),
+            'group-hover:shadow-xl group-hover:-translate-y-0.5',
+            isSelf ? 'group-hover:shadow-primary/30' : 'group-hover:shadow-lg',
             'max-w-full'
           )}
           title={formatFullTimestamp(message.createdAt)}
@@ -124,7 +140,7 @@ export function MessageBubble({
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   )
 }
 

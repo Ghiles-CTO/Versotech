@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { RefreshCw, Search } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { applyConversationFilters, sortConversations, formatRelativeTime, getInitials, truncateText } from '@/lib/messaging'
@@ -76,28 +76,35 @@ export function InvestorContacts({
               const isActive = conversation.id === activeConversationId
               const staffParticipant = conversation.participants.find(p => (p.role || '').startsWith('staff_'))
               const contactName = staffParticipant?.displayName || staffParticipant?.email || conversation.subject || 'Verso Team'
+              const additionalParticipants = conversation.participants.length > 2 ? ` +${conversation.participants.length - 2}` : ''
               const timestamp = conversation.lastMessageAt || conversation.createdAt
               
               return (
                 <li key={conversation.id}>
                   <button
                     className={cn(
-                      'w-full text-left px-3 py-3 rounded-lg transition-all',
-                      'hover:bg-muted/50',
-                      isActive ? 'bg-muted shadow-sm' : 'bg-transparent'
+                      'w-full text-left px-3 py-3 rounded-lg group',
+                      'transition-all duration-200 ease-out',
+                      'hover:bg-muted/70 hover:shadow-md hover:scale-[1.02]',
+                      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+                      'active:scale-[0.98]',
+                      isActive ? 'bg-muted shadow-sm scale-[1.01]' : 'bg-transparent'
                     )}
                     onClick={() => onSelectConversation(conversation.id)}
                   >
                     <div className="flex items-start gap-3">
                       {/* Avatar */}
                       <div className="relative">
-                        <Avatar className="h-11 w-11">
+                        <Avatar className="h-11 w-11 transition-transform duration-200 group-hover:scale-110">
+                          {staffParticipant?.avatarUrl && (
+                            <AvatarImage src={staffParticipant.avatarUrl} alt={contactName} />
+                          )}
                           <AvatarFallback className="bg-primary/10 text-primary text-sm font-medium">
                             {getInitials(contactName)}
                           </AvatarFallback>
                         </Avatar>
                         {conversation.unreadCount > 0 && (
-                          <div className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-primary flex items-center justify-center">
+                          <div className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-primary flex items-center justify-center shadow-lg animate-pulse">
                             <span className="text-[10px] font-bold text-primary-foreground">
                               {conversation.unreadCount > 9 ? '9+' : conversation.unreadCount}
                             </span>
@@ -113,6 +120,9 @@ export function InvestorContacts({
                             conversation.unreadCount > 0 ? "text-foreground" : "text-foreground"
                           )}>
                             {contactName}
+                            {additionalParticipants && (
+                              <span className="font-normal text-muted-foreground">{additionalParticipants}</span>
+                            )}
                           </span>
                           <span className="text-[10px] text-muted-foreground shrink-0" suppressHydrationWarning>
                             {formatRelativeTime(timestamp)}

@@ -34,6 +34,9 @@ interface EnhancedHolding {
   domicile?: string
   currency: string
   created_at: string
+  logo_url?: string
+  website_url?: string
+  investment_name?: string
   allocation_status?: string | null
   invite_sent_at?: string | null
   position: {
@@ -106,6 +109,11 @@ export function HoldingsPage({ initialData }: HoldingsPageProps) {
   const [investorIds, setInvestorIds] = useState<string[]>([])
   const [activeView, setActiveView] = useState<'grid' | 'list'>('grid')
   // Removed tabs - only show holdings per user request
+
+  // Chart data states
+  const [allocationData, setAllocationData] = useState<any[]>([])
+  const [performanceData, setPerformanceData] = useState<any[]>([])
+  const [cashFlowData, setCashFlowData] = useState<any[]>([])
 
   // Filter and sort state
   const [filters, setFilters] = useState<FiltersState>({
@@ -269,6 +277,101 @@ export function HoldingsPage({ initialData }: HoldingsPageProps) {
       setIsRefreshing(false)
     }
   }
+
+  // Prepare chart data
+  useEffect(() => {
+    const prepareChartData = async () => {
+      if (!portfolioData || !investorIds.length) return
+
+      const supabase = createClient()
+
+      try {
+        // 1. Allocation Chart - from vehicleBreakdown
+        if (portfolioData.vehicleBreakdown && portfolioData.vehicleBreakdown.length > 0) {
+          const totalValue = portfolioData.vehicleBreakdown.reduce((sum: number, v: any) => sum + (v.currentValue || 0), 0)
+          const allocation = portfolioData.vehicleBreakdown.map((v: any) => ({
+            name: v.vehicleName || 'Unknown',
+            value: v.currentValue || 0,
+            percentage: totalValue > 0 ? ((v.currentValue || 0) / totalValue) * 100 : 0
+          }))
+          setAllocationData(allocation)
+        }
+
+        // 2. Performance Chart - fetch valuations
+        const { data: valuations } = await supabase
+          .from('valuations')
+          .select('vehicle_id, nav_total, as_of_date')
+          .in('vehicle_id', holdings.map(h => h.id))
+          .order('as_of_date', { ascending: true })
+          .limit(50)
+
+        if (valuations && valuations.length > 0) {
+          // Group by date and sum NAV
+          const navByDate = valuations.reduce((acc: any, v: any) => {
+            const date = v.as_of_date.split('T')[0]
+            if (!acc[date]) {
+              acc[date] = 0
+            }
+            acc[date] += v.nav_total || 0
+            return acc
+          }, {})
+
+          const performance = Object.entries(navByDate).map(([date, value]: [string, any]) => ({
+            date,
+            value,
+            displayDate: new Date(date).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+          }))
+          setPerformanceData(performance)
+        }
+
+        // 3. Cash Flow Chart - fetch capital calls and distributions
+        const [capitalCallsResult, distributionsResult] = await Promise.all([
+          supabase
+            .from('capital_calls')
+            .select('amount, due_date')
+            .in('investor_id', investorIds)
+            .order('due_date', { ascending: true })
+            .limit(20),
+          supabase
+            .from('distributions')
+            .select('amount, date')
+            .in('investor_id', investorIds)
+            .order('date', { ascending: true })
+            .limit(20)
+        ])
+
+        // Combine and group by period
+        const cashFlowMap: any = {}
+
+        capitalCallsResult.data?.forEach((cc: any) => {
+          const period = new Date(cc.due_date).toISOString().substring(0, 7) // YYYY-MM
+          if (!cashFlowMap[period]) {
+            cashFlowMap[period] = { period, contributions: 0, distributions: 0 }
+          }
+          cashFlowMap[period].contributions += cc.amount || 0
+        })
+
+        distributionsResult.data?.forEach((d: any) => {
+          const period = new Date(d.date).toISOString().substring(0, 7) // YYYY-MM
+          if (!cashFlowMap[period]) {
+            cashFlowMap[period] = { period, contributions: 0, distributions: 0 }
+          }
+          cashFlowMap[period].distributions += d.amount || 0
+        })
+
+        const cashFlow = Object.values(cashFlowMap).map((cf: any) => ({
+          ...cf,
+          displayPeriod: new Date(cf.period + '-01').toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+        }))
+        setCashFlowData(cashFlow)
+
+      } catch (err) {
+        console.error('Chart data preparation error:', err)
+      }
+    }
+
+    prepareChartData()
+  }, [portfolioData, investorIds, holdings])
 
   // Filter holdings
   const filteredHoldings = useMemo(() => {
@@ -457,6 +560,9 @@ export function HoldingsPage({ initialData }: HoldingsPageProps) {
               isLoading={isRefreshing}
               onRefresh={handleRefresh}
               vehicleBreakdown={portfolioData.vehicleBreakdown}
+              allocationData={allocationData}
+              performanceData={performanceData}
+              cashFlowData={cashFlowData}
             />
           )}
 

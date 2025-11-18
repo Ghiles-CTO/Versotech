@@ -95,20 +95,20 @@ export function FolderTreeDrawer({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="left" className="w-[400px] sm:w-[500px] p-0">
+      <SheetContent side="left" className="w-[400px] sm:w-[500px] p-0 bg-zinc-900 border-white/10">
         {/* Header */}
-        <SheetHeader className="px-6 py-4 border-b border-slate-200">
-          <SheetTitle>Browse All Folders</SheetTitle>
-          <SheetDescription>
+        <SheetHeader className="px-6 py-4 border-b border-white/10">
+          <SheetTitle className="text-white">Browse All Folders</SheetTitle>
+          <SheetDescription className="text-gray-400">
             Quick access to any folder in the hierarchy
           </SheetDescription>
         </SheetHeader>
 
         {/* Search */}
-        <div className="px-6 py-4 border-b border-slate-200 bg-slate-50">
+        <div className="px-6 py-4 border-b border-white/10 bg-black/40">
           <div className="relative">
             <Search
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400"
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400"
               strokeWidth={2}
             />
             <Input
@@ -116,12 +116,12 @@ export function FolderTreeDrawer({
               placeholder="Search folders..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 pr-10 h-9 text-sm bg-white border-slate-200 focus:border-navy-500 focus:ring-navy-500"
+              className="pl-10 pr-10 h-9 text-sm bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-blue-500 focus:ring-blue-500"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
               >
                 <X className="w-4 h-4" strokeWidth={2} />
               </button>
@@ -138,8 +138,8 @@ export function FolderTreeDrawer({
               className={cn(
                 'flex items-center gap-2 w-full px-3 py-2 rounded-md text-sm font-medium transition-colors',
                 currentFolderId === null
-                  ? 'bg-navy-100 text-navy-900 border border-navy-200'
-                  : 'text-slate-700 hover:bg-slate-100'
+                  ? 'bg-blue-500/20 text-blue-400 border border-blue-400/30'
+                  : 'text-gray-300 hover:bg-white/10'
               )}
             >
               <Folder className="w-4 h-4 flex-shrink-0" strokeWidth={2} />
@@ -163,7 +163,7 @@ export function FolderTreeDrawer({
 
             {/* Empty State */}
             {filteredTree.length === 0 && (
-              <div className="text-center py-8 text-sm text-slate-500">
+              <div className="text-center py-8 text-sm text-gray-400">
                 {searchQuery ? 'No folders match your search' : 'No folders found'}
               </div>
             )}
@@ -171,9 +171,9 @@ export function FolderTreeDrawer({
         </ScrollArea>
 
         {/* Footer */}
-        <div className="px-6 py-3 border-t border-slate-200 bg-slate-50">
-          <p className="text-xs text-slate-500">
-            <kbd className="px-1.5 py-0.5 bg-white border border-slate-300 rounded text-xs font-mono">
+        <div className="px-6 py-3 border-t border-white/10 bg-black/40">
+          <p className="text-xs text-gray-400">
+            <kbd className="px-1.5 py-0.5 bg-white/5 border border-white/10 rounded text-xs font-mono text-gray-300">
               Cmd+K
             </kbd>{' '}
             to open this drawer
@@ -223,7 +223,7 @@ function FolderTreeNode({
       <div
         className={cn(
           'flex items-center gap-1 rounded-md transition-colors',
-          isCurrent ? 'bg-navy-100 border border-navy-200' : 'hover:bg-slate-100'
+          isCurrent ? 'bg-blue-500/20 border border-blue-400/30' : 'hover:bg-white/10'
         )}
         style={{ paddingLeft: `${level * 16 + 8}px` }}
       >
@@ -231,13 +231,13 @@ function FolderTreeNode({
         {hasChildren ? (
           <button
             onClick={() => onToggle(node.folder.id)}
-            className="p-1 hover:bg-slate-200 rounded transition-colors"
+            className="p-1 hover:bg-white/20 rounded transition-colors"
             aria-label={isExpanded ? 'Collapse folder' : 'Expand folder'}
           >
             {isExpanded ? (
-              <ChevronDown className="w-3.5 h-3.5 text-slate-600" strokeWidth={2} />
+              <ChevronDown className="w-3.5 h-3.5 text-gray-400" strokeWidth={2} />
             ) : (
-              <ChevronRight className="w-3.5 h-3.5 text-slate-600" strokeWidth={2} />
+              <ChevronRight className="w-3.5 h-3.5 text-gray-400" strokeWidth={2} />
             )}
           </button>
         ) : (
@@ -247,29 +247,29 @@ function FolderTreeNode({
         {/* Folder Button */}
         <button
           onClick={() => onNavigate(node.folder.id)}
-          className="flex items-center gap-2 flex-1 py-2 pr-3 text-left text-sm focus:outline-none focus:ring-2 focus:ring-navy-500 focus:ring-offset-1 rounded"
+          className="flex items-center gap-2 flex-1 py-2 pr-3 text-left text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 rounded"
         >
           {isExpanded ? (
             <FolderOpen
-              className={cn('w-4 h-4 flex-shrink-0', colorScheme.icon)}
+              className="w-4 h-4 flex-shrink-0 text-blue-400"
               strokeWidth={2}
             />
           ) : (
             <Folder
-              className={cn('w-4 h-4 flex-shrink-0', colorScheme.icon)}
+              className="w-4 h-4 flex-shrink-0 text-blue-400"
               strokeWidth={2}
             />
           )}
           <span
             className={cn(
               'truncate font-medium',
-              isCurrent ? 'text-navy-900' : 'text-slate-700'
+              isCurrent ? 'text-blue-400' : 'text-gray-300'
             )}
           >
             {node.folder.name}
           </span>
           {node.folder.subfolder_count !== undefined && node.folder.subfolder_count > 0 && (
-            <span className="text-xs text-slate-500">({node.folder.subfolder_count})</span>
+            <span className="text-xs text-gray-500">({node.folder.subfolder_count})</span>
           )}
         </button>
       </div>

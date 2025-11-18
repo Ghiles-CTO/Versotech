@@ -1,6 +1,5 @@
 import { redirect } from 'next/navigation'
 
-import { AppLayout } from '@/components/layout/app-layout'
 import { CalendarSplitView } from '@/components/calendar/calendar-split-view'
 import type { CalendarEvent } from '@/components/calendar/calendar-view'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
@@ -369,21 +368,19 @@ export default async function StaffCalendarPage() {
   calendarEvents.sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime())
 
   return (
-    <AppLayout brand="versotech">
-      <div className="space-y-8 px-6 py-8">
-        <div className="space-y-2">
-          <h1 className="text-3xl font-bold text-white">Staff Calendar</h1>
-          <p className="text-gray-400">
-            View all important deadlines, events, and tasks across the platform
-          </p>
-        </div>
-        <CalendarSplitView
-          calendarEvents={calendarEvents}
-          emptyCalendarMessage="No upcoming events or deadlines scheduled."
-          brand="versotech"
-        />
+    <div className="space-y-8 px-6 py-8">
+      <div className="space-y-2">
+        <h1 className="text-3xl font-bold text-white">Staff Calendar</h1>
+        <p className="text-gray-400">
+          View all important deadlines, events, and tasks across the platform
+        </p>
       </div>
-    </AppLayout>
+      <CalendarSplitView
+        calendarEvents={calendarEvents}
+        emptyCalendarMessage="No upcoming events or deadlines scheduled."
+        brand="versotech"
+      />
+    </div>
   )
 }
 

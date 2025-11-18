@@ -80,6 +80,7 @@ export function normalizeConversation(raw: any): ConversationSummary {
           displayName: profile.display_name || profile.email || null,
           email: profile.email || null,
           role: profile.role || null,
+          avatarUrl: profile.avatar_url ?? null,
           participantRole: participant?.participant_role ?? 'member',
           joinedAt: participant?.joined_at,
           lastReadAt: participant?.last_read_at ?? null,
@@ -216,6 +217,7 @@ export function normalizeMessage(raw: any): ConversationMessage {
       displayName: sender.displayName ?? (sender as any).display_name ?? null,
       email: sender.email ?? null,
       role: sender.role ?? null,
+      avatarUrl: sender.avatarUrl ?? (sender as any).avatar_url ?? null,
     } : null,
     readBy: Array.isArray(raw.read_by) ? raw.read_by : [],
   }

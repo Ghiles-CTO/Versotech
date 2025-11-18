@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { VehicleDocumentsList } from '@/components/holdings/vehicle-documents-list'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
@@ -124,7 +125,7 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
     supabase.from('valuations').select('*').eq('vehicle_id', vehicleId).order('as_of_date', { ascending: false }),
     supabase.from('capital_calls').select('*').eq('vehicle_id', vehicleId).order('due_date', { ascending: false }),
     supabase.from('distributions').select('*').eq('vehicle_id', vehicleId).order('date', { ascending: false }),
-    supabase.from('documents').select('id, type, created_at, created_by').eq('vehicle_id', vehicleId).or(`owner_investor_id.in.(${investorIds.join(',')}),owner_investor_id.is.null`).order('created_at', { ascending: false }),
+    supabase.from('documents').select('id, name, type, file_key, status, is_published, created_at, created_by, vehicle_id, owner_investor_id, deal_id').eq('is_published', true).eq('vehicle_id', vehicleId).order('created_at', { ascending: false }),
     supabase.from('positions').select('*').eq('vehicle_id', vehicleId).in('investor_id', investorIds).maybeSingle(),
     supabase.from('cashflows').select('*').eq('vehicle_id', vehicleId).in('investor_id', investorIds).order('date', { ascending: false })
   ])
@@ -206,11 +207,24 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
             </Link>
             <div>
               <div className="flex items-center gap-4">
-                <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center shadow-sm">
-                  <Building className="h-8 w-8 text-blue-600" />
+                <div className="w-20 h-20 bg-white border-2 border-gray-200 rounded-lg flex items-center justify-center shadow-sm overflow-hidden">
+                  {vehicle.logo_url ? (
+                    <img
+                      src={vehicle.logo_url}
+                      alt={vehicle.investment_name || vehicle.name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <Building className="h-10 w-10 text-gray-400" />
+                  )}
                 </div>
                 <div>
                   <h1 className="text-3xl font-bold text-gray-900">{vehicle.name}</h1>
+                  {vehicle.investment_name && (
+                    <p className="text-lg text-gray-600 mt-1 font-medium">
+                      {vehicle.investment_name}
+                    </p>
+                  )}
                   <div className="flex items-center gap-3 mt-2">
                     <Badge variant="outline" className="capitalize font-medium px-3 py-1">
                       {vehicle.type}
@@ -608,45 +622,7 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
 
           {/* Documents Tab */}
           <TabsContent value="documents" className="space-y-6">
-            <Card className="border-0 shadow-md">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <FileText className="h-5 w-5 text-blue-600" />
-                  Related Documents
-                </CardTitle>
-                <CardDescription>
-                  Documents specific to this investment vehicle
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {documents && documents.length > 0 ? (
-                  <div className="space-y-3">
-                    {documents.map((doc) => (
-                      <div key={doc.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
-                        <div className="flex items-center gap-3">
-                          <FileText className="h-5 w-5 text-gray-400" />
-                          <div>
-                            <div className="font-medium">{doc.type}</div>
-                            <div className="text-sm text-gray-500">
-                              {new Date(doc.created_at).toLocaleDateString()}
-                            </div>
-                          </div>
-                        </div>
-                        <Button variant="outline" size="sm" className="gap-2">
-                          <Download className="h-4 w-4" />
-                          Download
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-gray-500">
-                    <FileText className="h-8 w-8 mx-auto mb-2 text-gray-400" />
-                    <p>No documents available</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            <VehicleDocumentsList documents={documents || []} />
           </TabsContent>
         </Tabs>
       </div>

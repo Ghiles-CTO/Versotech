@@ -601,6 +601,85 @@ Based on funded percentage:
 - `committed` → `partially_funded` (partial payment)
 - `partially_funded` → `active` (≥99.99% funded)
 
+### 10.5 Position Creation (Automatic)
+
+**Trigger**: When subscription status changes to `active` (funded_amount ≥ 99.99% of commitment)
+
+**Location**: `/api/staff/reconciliation/match/accept` (lines 409-482)
+
+**How It Works**:
+
+When an invoice is fully paid via reconciliation and the subscription becomes active, the system automatically creates a position record for the investor:
+
+```typescript
+// AUTO-CREATE POSITION when subscription becomes active
+if (newStatus === 'active' && subscription.status !== 'active') {
+  // Fetch subscription details
+  const { data: fullSubscription } = await supabase
+    .from('subscriptions')
+    .select('investor_id, vehicle_id, num_shares, units, price_per_share, cost_per_share')
+    .eq('id', subscriptionId)
+    .single()
+
+  // Calculate units
+  let positionUnits = fullSubscription.num_shares || fullSubscription.units
+  if (!positionUnits && fullSubscription.price_per_share) {
+    positionUnits = newFundedAmount / fullSubscription.price_per_share
+  }
+
+  // Create position
+  await supabase
+    .from('positions')
+    .insert({
+      investor_id: fullSubscription.investor_id,
+      vehicle_id: fullSubscription.vehicle_id,
+      units: positionUnits,
+      cost_basis: newFundedAmount,
+      last_nav: fullSubscription.price_per_share || fullSubscription.cost_per_share,
+      as_of_date: new Date().toISOString()
+    })
+}
+```
+
+**Position Fields**:
+
+| Field | Source | Description |
+|-------|--------|-------------|
+| `investor_id` | subscription.investor_id | Who owns the position |
+| `vehicle_id` | subscription.vehicle_id | Which fund/vehicle |
+| `units` | 1. subscription.num_shares<br>2. subscription.units<br>3. funded_amount / price_per_share | Number of units/shares owned |
+| `cost_basis` | subscription.funded_amount | Total amount paid |
+| `last_nav` | subscription.price_per_share or cost_per_share | Initial NAV per unit |
+| `as_of_date` | Current date | When position created |
+
+**Position Valuation Updates**:
+
+After position is created, its value is updated via:
+- **Vehicle Valuations**: Staff posts NAV updates at vehicle level (`/api/staff/vehicles/[vehicleId]/valuations`)
+- **Calculation**: `current_value = units × latest_nav_per_unit`
+- **Frequency**: Typically quarterly or on significant events
+
+**UI Status**:
+
+✅ **Backend**: Fully automated via reconciliation API
+🚧 **Coming Soon**:
+- Staff UI to manually create/edit positions
+- Bulk position import
+- Position history and audit trail
+- Manual NAV override capabilities
+
+**Current Behavior**:
+- Positions auto-create on 100% funding only
+- No manual position creation interface
+- Positions viewable in investor portal at `/versoholdings/holdings`
+
+**Why Holdings Show but Position Tab is Empty**:
+
+This occurs when:
+- Subscription exists (status = 'committed' or 'partially_funded')
+- Holdings page shows subscription because `subscription !== null`
+- Position tab shows 0 because position only created when `funded_amount ≥ 99.99%`
+
 ---
 
 ## Stage 11: Portfolio Visibility
@@ -664,8 +743,14 @@ fee_events (allocation_id→subscription_id, fee_type, computed_amount, status)
 invoices (id, total, paid_amount, status)
   ↓
 reconciliation_matches (invoice_id, bank_transaction_id, matched_amount)
+  ↓
+positions (investor_id, vehicle_id, units, cost_basis, last_nav, as_of_date)
 
 -- Supporting tables
+valuations (vehicle_id, nav_total, nav_per_unit, as_of_date)
+capital_calls (vehicle_id, amount, due_date, status)
+distributions (vehicle_id, investor_id, amount, date, type)
+cashflows (investor_id, vehicle_id, type, amount, date)
 deal_data_room_access (deal_id, investor_id, expires_at)
 documents (subscription_id, type, status, file_key)
 tasks (owner_investor_id, kind, status, action_url)
@@ -680,6 +765,9 @@ audit_logs (action, entity_type, entity_id, metadata)
 - `deal.vehicle_id` → Inherits fee structure from vehicle
 - `subscription.deal_id` → Links subscription to originating deal
 - `document.subscription_id` → Links pack to subscription
+- `positions.investor_id + vehicle_id` → Auto-created when subscription becomes active
+- `valuations.vehicle_id` → Updates all positions for that vehicle
+- `distributions.investor_id + vehicle_id` → Links to position for cash flow tracking
 
 ---
 
@@ -714,6 +802,27 @@ audit_logs (action, entity_type, entity_id, metadata)
 ### Fees
 - `POST /api/staff/fees/events/calculate` - Calculate fee events
 - `POST /api/staff/fees/invoices/generate` - Create invoice
+
+### Portfolio & Positions
+- `GET /api/vehicles?related=true` - Get investor holdings (with positions and subscriptions)
+- `GET /api/portfolio` - Get portfolio metrics (NAV, contributions, distributions, IRR)
+- **Note**: Positions auto-created via reconciliation API, no manual creation endpoint yet
+
+### Valuations
+- `GET /api/staff/vehicles/[vehicleId]/valuations` - List valuations
+- `POST /api/staff/vehicles/[vehicleId]/valuations` - Create valuation (updates all positions)
+
+### Distributions
+- `GET /api/distributions` - List distributions (by investor/vehicle)
+- `POST /api/distributions` - Create distribution (API ONLY - no UI yet)
+- `PATCH /api/distributions/[id]` - Update distribution
+- `DELETE /api/distributions/[id]` - Delete distribution
+
+### Capital Calls
+- `GET /api/capital-calls` - List capital calls (by vehicle)
+- `POST /api/capital-calls` - Create capital call (API ONLY - no UI yet)
+- `PATCH /api/capital-calls/[id]` - Update capital call
+- `DELETE /api/capital-calls/[id]` - Delete capital call
 
 ---
 
@@ -813,13 +922,46 @@ Valid status progressions:
 - **Post-signature handler** (NEW)
 - **Funded amount tracking** (NEW)
 - **Deal capacity display** (NEW)
+- **Automatic position creation** (NEW)
 - Fee event auto-creation
 - Invoice and reconciliation
 
 ### ⚠️ Partially Implemented
-- Email delivery for signatures (using tasks instead)
-- PDF conversion before signature (DOCX used as-is)
-- Capital calls and distributions
+
+**Email delivery for signatures**:
+- ✅ Backend: Task-based signature delivery working
+- 🚧 Coming Soon: Direct email integration
+
+**PDF conversion before signature**:
+- ✅ Backend: DOCX used directly (works with DocuSign/Dropbox Sign)
+- 🚧 Coming Soon: Optional PDF conversion pipeline
+
+**Capital Calls**:
+- ✅ Backend: `capital_calls` table exists, API endpoints functional
+- ✅ Staff View: Visible on subscription detail page (`/versotech/staff/subscriptions/[id]`)
+- 🚧 Coming Soon: Staff UI to create/edit capital calls (currently view-only)
+
+**Distributions**:
+- ✅ Backend: `distributions` table exists, full CRUD API available (`/api/distributions`)
+- ✅ Integration: Cash flow charts, DPI/TVPI calculations ready
+- ✅ Staff View: Visible on subscription detail page (when data exists)
+- 🚧 Coming Soon:
+  - Staff UI to create/manage distribution records
+  - Bulk distribution import
+  - Distribution approval workflow
+  - Email notifications to investors on distribution
+  - Distribution tax document generation
+- **Current Workaround**: Insert distribution records via SQL or direct API calls
+
+**Valuations (NAV Updates)**:
+- ✅ Backend: `valuations` table exists, API at `/api/staff/vehicles/[vehicleId]/valuations`
+- ✅ Staff UI: Can create valuations via API
+- 🚧 Coming Soon: Enhanced valuation UI with bulk import and approval workflow
+
+**Capital Calls & Distributions Management Location**:
+- **View**: Staff subscription page (`/versotech/staff/subscriptions/[id]`) displays capital calls, distributions, and cashflows for context
+- **Edit**: Vehicle-level management (API only, UI coming soon)
+- **Note**: Subscription page is read-only view of vehicle-level data
 
 ### ❌ Not Implemented
 - Secondary market trading

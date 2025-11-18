@@ -84,14 +84,15 @@ export async function POST(req: NextRequest) {
       .insert({
         entity_type: 'data_room_access_extension',
         entity_id: access.id,
+        action: 'approve',
         requested_by: user.id,
         related_investor_id: investorLink.investor_id,
         related_deal_id: deal_id,
         status: 'pending',
         priority: 'medium',
-        title: `Data Room Access Extension Request`,
-        description: `Investor requesting 7-day extension for ${deal?.name || 'deal'} data room access`,
+        request_reason: `Investor requesting 7-day extension for ${deal?.name || 'deal'} data room access`,
         entity_metadata: {
+          deal_name: deal?.name,
           current_expires_at: access.expires_at,
           requested_reason: reason || 'No reason provided',
           access_id: access.id

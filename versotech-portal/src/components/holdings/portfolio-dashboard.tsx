@@ -1,33 +1,13 @@
 'use client'
 
-import { useState, useMemo } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Progress } from '@/components/ui/progress'
 import { Separator } from '@/components/ui/separator'
-import { 
-  ChartContainer, 
-  ChartTooltip, 
-  ChartTooltipContent,
-} from '@/components/ui/chart'
-import {
-  AreaChart,
-  Area,
-  BarChart,
-  Bar,
-  LineChart,
-  Line,
-  PieChart,
-  Pie,
-  Cell,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-} from 'recharts'
+import { PortfolioAllocationChart } from './portfolio-allocation-chart'
+import { NAVPerformanceChart } from './nav-performance-chart'
+import { CashFlowChart } from './cash-flow-chart'
 import {
   DollarSign,
   TrendingUp,
@@ -35,9 +15,7 @@ import {
   PiggyBank,
   Target,
   Calculator,
-  BarChart3,
   RefreshCw,
-  Calendar,
   Download,
   Wallet,
   Shield,
@@ -75,6 +53,25 @@ export interface PortfolioSummary {
   lastUpdated: string
 }
 
+interface AllocationData {
+  name: string
+  value: number
+  percentage: number
+}
+
+interface PerformanceDataPoint {
+  date: string
+  value: number
+  displayDate: string
+}
+
+interface CashFlowDataPoint {
+  period: string
+  contributions: number
+  distributions: number
+  displayPeriod: string
+}
+
 interface CleanPortfolioDashboardProps {
   kpis: PortfolioKPIs
   trends?: PortfolioTrends
@@ -84,6 +81,9 @@ interface CleanPortfolioDashboardProps {
   onRefresh?: () => void
   className?: string
   vehicleBreakdown?: any[]
+  allocationData?: AllocationData[]
+  performanceData?: PerformanceDataPoint[]
+  cashFlowData?: CashFlowDataPoint[]
 }
 
 const formatCurrency = (value: number) => {
@@ -156,83 +156,6 @@ function CleanKPICard({
   )
 }
 
-// Generate performance data based on timeframe
-function generatePerformanceData(timeframe: string, kpis: PortfolioKPIs) {
-  const currentDate = new Date()
-  const data = []
-  
-  let periods = 0
-  let dateFormat: Intl.DateTimeFormatOptions = { month: 'short' }
-  
-  switch (timeframe) {
-    case '1M':
-      periods = 30
-      dateFormat = { day: 'numeric' }
-      break
-    case '3M':
-      periods = 12
-      dateFormat = { month: 'short', day: 'numeric' }
-      break
-    case '6M':
-      periods = 24
-      dateFormat = { month: 'short' }
-      break
-    case '1Y':
-      periods = 12
-      dateFormat = { month: 'short' }
-      break
-    case 'ALL':
-      periods = 36
-      dateFormat = { month: 'short', year: '2-digit' }
-      break
-  }
-  
-  // Generate data points
-  for (let i = periods; i >= 0; i--) {
-    const date = new Date(currentDate)
-    
-    if (timeframe === '1M') {
-      date.setDate(date.getDate() - i)
-    } else if (timeframe === '3M') {
-      date.setDate(date.getDate() - (i * 7.5))
-    } else if (timeframe === '6M') {
-      date.setDate(date.getDate() - (i * 7.5))
-    } else if (timeframe === '1Y') {
-      date.setMonth(date.getMonth() - i)
-    } else {
-      date.setMonth(date.getMonth() - i)
-    }
-    
-    // Generate realistic progression
-    const progress = (periods - i) / periods
-    const navBase = kpis.currentNAV * (0.85 + progress * 0.15)
-    const contributedBase = kpis.totalContributed * (0.7 + progress * 0.3)
-    const distributedBase = kpis.totalDistributions * progress
-    
-    // Add some variance
-    const variance = 1 + (Math.random() - 0.5) * 0.05
-    
-    data.push({
-      date: date.toLocaleDateString('en-US', dateFormat),
-      nav: Math.round(navBase * variance),
-      contributed: Math.round(contributedBase),
-      distributed: Math.round(distributedBase)
-    })
-  }
-  
-  // Ensure last data point matches current values
-  if (data.length > 0) {
-    data[data.length - 1] = {
-      ...data[data.length - 1],
-      nav: kpis.currentNAV,
-      contributed: kpis.totalContributed,
-      distributed: kpis.totalDistributions
-    }
-  }
-  
-  return data
-}
-
 export function PortfolioDashboard({
   kpis,
   trends,
@@ -241,37 +164,11 @@ export function PortfolioDashboard({
   isLoading = false,
   onRefresh,
   className,
-  vehicleBreakdown = []
+  vehicleBreakdown = [],
+  allocationData = [],
+  performanceData = [],
+  cashFlowData = []
 }: CleanPortfolioDashboardProps) {
-  const [selectedTimeframe, setSelectedTimeframe] = useState<'1M' | '3M' | '6M' | '1Y' | 'ALL'>('1Y')
-  
-  // Generate performance data based on selected timeframe
-  const performanceData = useMemo(() => 
-    generatePerformanceData(selectedTimeframe, kpis), 
-    [selectedTimeframe, kpis]
-  )
-  
-  const allocationData = vehicleBreakdown.slice(0, 5).map(v => ({
-    name: v.vehicle_name || 'Unknown',
-    value: Math.round(parseFloat(v.current_value) || 0),
-    percentage: Math.round((parseFloat(v.current_value) / kpis.currentNAV) * 100)
-  }))
-
-  const chartConfig = {
-    nav: { label: "NAV", color: "hsl(var(--chart-1))" },
-    contributed: { label: "Contributed", color: "hsl(var(--chart-2))" },
-    distributed: { label: "Distributed", color: "hsl(var(--chart-3))" }
-  }
-
-  // Clean minimal colors
-  const pieColors = [
-    'hsl(var(--chart-1))',
-    'hsl(var(--chart-2))',
-    'hsl(var(--chart-3))',
-    'hsl(var(--chart-4))',
-    'hsl(var(--chart-5))'
-  ]
-
   // Export functionality
   const handleExport = () => {
     // TODO: Implement export functionality
@@ -442,175 +339,15 @@ export function PortfolioDashboard({
       </div>
 
       {/* Charts Section */}
-      <Tabs defaultValue="performance" className="space-y-4">
-        <TabsList className="grid grid-cols-3 w-full max-w-md">
-          <TabsTrigger value="performance">Performance</TabsTrigger>
-          <TabsTrigger value="allocation">Allocation</TabsTrigger>
-          <TabsTrigger value="cashflow">Cash Flow</TabsTrigger>
-        </TabsList>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <NAVPerformanceChart data={performanceData} />
+        <PortfolioAllocationChart data={allocationData} />
+      </div>
 
-        <TabsContent value="performance" className="space-y-4">
-          <Card className="border shadow-sm">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-base">Portfolio Performance</CardTitle>
-                <div className="flex gap-1">
-                  {(['1M', '3M', '6M', '1Y', 'ALL'] as const).map((period) => (
-                    <Button
-                      key={period}
-                      variant={selectedTimeframe === period ? 'secondary' : 'ghost'}
-                      size="sm"
-                      onClick={() => setSelectedTimeframe(period)}
-                      className="h-8 px-3 text-xs"
-                    >
-                      {period}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <ChartContainer config={chartConfig} className="h-[350px]">
-                <LineChart data={performanceData} margin={{ top: 10, right: 10, bottom: 0, left: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" vertical={false} />
-                  <XAxis 
-                    dataKey="date" 
-                    className="text-xs"
-                    tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                    axisLine={{ stroke: 'hsl(var(--border))' }}
-                  />
-                  <YAxis 
-                    className="text-xs"
-                    tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                    axisLine={{ stroke: 'hsl(var(--border))' }}
-                    tickFormatter={(value) => `$${(value / 1000000).toFixed(1)}M`}
-                  />
-                  <ChartTooltip 
-                    content={<ChartTooltipContent />}
-                    formatter={(value) => formatCurrency(Number(value))}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="nav"
-                    stroke="var(--color-nav)"
-                    strokeWidth={2}
-                    dot={false}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="contributed"
-                    stroke="var(--color-contributed)"
-                    strokeWidth={2}
-                    dot={false}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="distributed"
-                    stroke="var(--color-distributed)"
-                    strokeWidth={2}
-                    dot={false}
-                  />
-                </LineChart>
-              </ChartContainer>
-            </CardContent>
-          </Card>
-        </TabsContent>
+      <div className="grid grid-cols-1 gap-4">
+        <CashFlowChart data={cashFlowData} />
+      </div>
 
-        <TabsContent value="allocation" className="space-y-4">
-          <Card className="border shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-base">Portfolio Allocation</CardTitle>
-              <CardDescription>Distribution across vehicles</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="h-[300px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={allocationData}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={60}
-                        outerRadius={100}
-                        paddingAngle={2}
-                        dataKey="value"
-                        label={({ percentage }) => percentage > 5 ? `${percentage}%` : ''}
-                      >
-                        {allocationData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={pieColors[index % pieColors.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip formatter={(value) => formatCurrency(Number(value))} />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-                <div className="space-y-3">
-                  <h4 className="text-sm font-medium">Breakdown</h4>
-                  {allocationData.map((vehicle, index) => (
-                    <div key={vehicle.name} className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div 
-                          className="w-3 h-3 rounded-sm" 
-                          style={{ backgroundColor: pieColors[index % pieColors.length] }}
-                        />
-                        <span className="text-sm">{vehicle.name}</span>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-sm font-medium">{formatCurrency(vehicle.value)}</p>
-                        <p className="text-xs text-muted-foreground">{vehicle.percentage}%</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="cashflow" className="space-y-4">
-          <Card className="border shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-base">Cash Flow Analysis</CardTitle>
-              <CardDescription>Capital calls vs distributions</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[350px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={performanceData.filter((_, i) => i % 2 === 0)}>
-                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" vertical={false} />
-                    <XAxis 
-                      dataKey="date" 
-                      className="text-xs"
-                      tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                      axisLine={{ stroke: 'hsl(var(--border))' }}
-                    />
-                    <YAxis 
-                      className="text-xs"
-                      tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                      axisLine={{ stroke: 'hsl(var(--border))' }}
-                      tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
-                    />
-                    <Tooltip formatter={(value) => formatCurrency(Number(value))} />
-                    <Bar 
-                      dataKey="contributed" 
-                      fill="hsl(var(--chart-2))" 
-                      radius={[4, 4, 0, 0]}
-                      maxBarSize={40}
-                    />
-                    <Bar 
-                      dataKey="distributed" 
-                      fill="hsl(var(--chart-3))" 
-                      radius={[4, 4, 0, 0]}
-                      maxBarSize={40}
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
     </div>
   )
 }

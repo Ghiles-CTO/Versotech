@@ -84,7 +84,7 @@ export function InvestorMessagingClient({ currentUserId, initialConversations }:
   }, [filters])
 
   return (
-    <div className="flex h-full">
+    <div className="flex h-[calc(100vh-4rem)] overflow-hidden">
       <InvestorContacts
         conversations={conversations}
         filters={filters}

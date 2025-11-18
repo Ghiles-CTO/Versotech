@@ -62,7 +62,21 @@ export async function GET(request: NextRequest) {
 
     // If tree structure is requested, build hierarchy
     if (includeTree) {
-      const tree = buildFolderTree(folders || [])
+      // Get document counts for all folders
+      const { data: documentCounts, error: docCountError } = await serviceSupabase
+        .from('documents')
+        .select('id, folder_id')
+        .not('folder_id', 'is', null)
+
+      if (docCountError) {
+        console.error('[API] Document counts query error:', docCountError)
+        return NextResponse.json(
+          { error: 'Failed to fetch document counts', details: docCountError.message },
+          { status: 500 }
+        )
+      }
+
+      const tree = buildFolderTree(folders || [], documentCounts || [])
       return NextResponse.json({ folders: tree, total: folders?.length || 0 })
     }
 
@@ -91,7 +105,6 @@ export async function POST(request: NextRequest) {
 
     // Parse and validate request body
     const body = await request.json()
-    console.log('[API] Create folder request:', body)
     const validation = createFolderSchema.safeParse(body)
     
     if (!validation.success) {
@@ -214,13 +227,24 @@ export async function POST(request: NextRequest) {
 }
 
 // Helper function to build folder tree
-function buildFolderTree(folders: any[]): any[] {
+function buildFolderTree(folders: any[], documentCounts: any[]): any[] {
   const folderMap = new Map()
   const tree: any[] = []
 
-  // Create map of all folders
+  // Count documents per folder
+  const countsByFolder = new Map<string, number>()
+  documentCounts.forEach(doc => {
+    const folderId = doc.folder_id
+    countsByFolder.set(folderId, (countsByFolder.get(folderId) || 0) + 1)
+  })
+
+  // Create map of all folders with document counts
   folders.forEach(folder => {
-    folderMap.set(folder.id, { ...folder, children: [] })
+    folderMap.set(folder.id, {
+      ...folder,
+      children: [],
+      document_count: countsByFolder.get(folder.id) || 0
+    })
   })
 
   // Build tree structure
@@ -237,6 +261,21 @@ function buildFolderTree(folders: any[]): any[] {
       tree.push(node)
     }
   })
+
+  // Recursive function to aggregate document counts from all descendants
+  function aggregateCounts(node: any): number {
+    let total = node.document_count || 0
+    if (node.children && node.children.length > 0) {
+      node.children.forEach((child: any) => {
+        total += aggregateCounts(child)
+      })
+    }
+    node.document_count = total
+    return total
+  }
+
+  // Apply recursive counting to all root nodes
+  tree.forEach(root => aggregateCounts(root))
 
   return tree
 }

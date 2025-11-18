@@ -18,9 +18,11 @@ import { signOut } from '@/lib/auth-client'
 
 interface UserMenuProps {
   profile: Profile
+  brand?: 'versoholdings' | 'versotech'
 }
 
-export function UserMenu({ profile }: UserMenuProps) {
+export function UserMenu({ profile, brand = 'versotech' }: UserMenuProps) {
+  const isStaff = brand === 'versotech'
   const router = useRouter()
   const [isLoggingOut, setIsLoggingOut] = useState(false)
 
@@ -80,16 +82,16 @@ export function UserMenu({ profile }: UserMenuProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="flex items-center gap-2 h-auto px-3 py-2 hover:bg-white/10">
+        <Button variant="ghost" className={`flex items-center gap-2 h-auto px-3 py-2 ${isStaff ? 'hover:bg-white/10' : 'hover:bg-black/5'}`}>
           <Avatar className="h-8 w-8">
             <AvatarImage src={profile.avatar || undefined} alt={profile.displayName} />
-            <AvatarFallback className="bg-white/20 text-white text-xs">
+            <AvatarFallback className={`${isStaff ? 'bg-white/20 text-white' : 'bg-black/10 text-black'} text-xs`}>
               {getInitials(profile.displayName)}
             </AvatarFallback>
           </Avatar>
           <div className="text-left">
-            <div className="font-medium text-sm text-white">{profile.displayName}</div>
-            <div className="text-xs text-white/70">{getRoleDisplay(profile.role)}</div>
+            <div className={`font-medium text-sm ${isStaff ? 'text-white' : 'text-black'}`}>{profile.displayName}</div>
+            <div className={`text-xs ${isStaff ? 'text-white/70' : 'text-black/70'}`}>{getRoleDisplay(profile.role)}</div>
           </div>
         </Button>
       </DropdownMenuTrigger>

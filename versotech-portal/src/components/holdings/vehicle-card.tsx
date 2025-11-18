@@ -34,6 +34,9 @@ interface EnhancedHolding {
   domicile?: string
   currency: string
   created_at: string
+  logo_url?: string
+  website_url?: string
+  investment_name?: string
   allocation_status?: string | null
   invite_sent_at?: string | null
   position: {
@@ -108,7 +111,26 @@ export function VehicleCard({ holding }: { holding: EnhancedHolding }) {
     <Card className="group relative overflow-hidden border shadow-sm hover:shadow-md transition-all duration-200">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
-          <div className="space-y-1">
+          <div className="space-y-2">
+            {/* Investment branding (underlying company/asset) */}
+            {(holding.logo_url || holding.investment_name) && (
+              <div className="flex items-center gap-2">
+                {holding.logo_url && (
+                  <img
+                    src={holding.logo_url}
+                    alt={holding.investment_name || 'Investment'}
+                    className="h-8 w-8 rounded object-contain bg-white/5 p-1"
+                  />
+                )}
+                {holding.investment_name && (
+                  <span className="text-sm font-medium text-muted-foreground">
+                    {holding.investment_name}
+                  </span>
+                )}
+              </div>
+            )}
+
+            {/* Vehicle name and metadata */}
             <CardTitle className="text-lg font-semibold line-clamp-1">{holding.name}</CardTitle>
             <div className="flex items-center gap-2">
               <Badge variant="secondary" className="text-xs">

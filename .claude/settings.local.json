@@ -1,9 +1,7 @@
 {
   "permissions": {
     "allow": [
-      "SlashCommand(/ultra-think Finish the documents page refactor completely. Remaining tasks: Day 5 (visual polish: spacing, hover states, animations + integration testing of all user flows), Day 6 (final code cleanup: console.logs, TODOs, type safety audit + create comprehensive documentation). Analyze what needs to be done and execute everything to production-ready state.)",
-      "Bash(npm run build:*)",
-      "SlashCommand(/ultra-think Create automated batch-fix strategy for 30+ React Hook warnings. Requirements: 1) ZERO data/logic changes, 2) Maximum speed, 3) Pattern: wrap fetch functions with useCallback, add to useEffect deps. Consider: Can I use parallel sub-agents on different file groups? Or single fast script? What's safest approach to ensure no breaking changes while fixing all files quickly?)"
+      "SlashCommand(/ultra-think Analyze the RequestExtensionButton component error. The user clicks \"Request Extension\" in the data room and gets \"Failed to create extension request\". Need to understand: 1) What the button is supposed to do 2) What API endpoint it calls 3) What database operations are involved 4) Why it might be failing. Files to examine: request-extension-button.tsx, the API route it calls, and related database tables for extension requests.)"
     ],
     "deny": [],
     "ask": []
