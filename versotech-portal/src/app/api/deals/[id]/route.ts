@@ -181,6 +181,14 @@ export async function PATCH(
     delete updates.created_at
     delete updates.created_by
 
+    // Convert empty timestamp strings to null
+    const timestampFields = ['open_at', 'close_at']
+    for (const field of timestampFields) {
+      if (updates[field] === '') {
+        updates[field] = null
+      }
+    }
+
     // Update the deal
     const { data: deal, error } = await supabase
       .from('deals')
