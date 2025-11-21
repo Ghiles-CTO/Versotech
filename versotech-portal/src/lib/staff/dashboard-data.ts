@@ -39,10 +39,12 @@ export type StaffDashboardData = {
     fees: Array<{
       date: string
       amount: number
+      type: string
     }>
     subscriptions: Array<{
       date: string
       amount: number
+      status: string
     }>
   }
   errors?: MetricError[]
@@ -397,8 +399,8 @@ export async function getStaffDashboardData(
     },
     recentActivity,
     charts: {
-      fees: aggregatedFees as any,
-      subscriptions: aggregatedSubscriptions as any
+      fees: aggregatedFees.map((fee: any) => ({ ...fee, type: fee.type || 'total' })),
+      subscriptions: aggregatedSubscriptions.map((sub: any) => ({ ...sub, status: sub.status || 'active' }))
     }
   }
 

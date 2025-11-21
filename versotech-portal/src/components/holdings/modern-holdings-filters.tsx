@@ -133,7 +133,9 @@ const domicileOptions = [
   { value: 'other', label: 'Other', flag: '🌍' }
 ]
 
-const sortOptions: { value: SortOption; label: string; icon?: React.ElementType }[] = [
+type IconType = React.ComponentType<{ className?: string }>
+
+const sortOptions: { value: SortOption; label: string; icon?: IconType }[] = [
   { value: 'value_desc', label: 'Highest Value', icon: TrendingUp },
   { value: 'value_asc', label: 'Lowest Value', icon: TrendingDown },
   { value: 'performance_desc', label: 'Best Performance', icon: TrendingUp },

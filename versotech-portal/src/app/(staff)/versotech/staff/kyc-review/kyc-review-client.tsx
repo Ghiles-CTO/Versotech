@@ -45,6 +45,7 @@ interface KYCSubmission {
   submitted_at: string
   reviewed_at?: string
   rejection_reason?: string
+  metadata?: any
   investor?: {
     id: string
     legal_name: string
@@ -102,6 +103,9 @@ export function KYCReviewClient() {
     name: string
     mimeType: string
   } | null>(null)
+
+  // Questionnaire viewer state
+  const [viewingQuestionnaire, setViewingQuestionnaire] = useState<KYCSubmission | null>(null)
 
   const loadSubmissions = useCallback(async () => {
     try {
@@ -359,7 +363,7 @@ export function KYCReviewClient() {
               <TableRow>
                 <TableHead>Investor</TableHead>
                 <TableHead>Document Type</TableHead>
-                <TableHead>File</TableHead>
+                <TableHead>Content</TableHead>
                 <TableHead>Submitted</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Reviewer</TableHead>
@@ -400,8 +404,13 @@ export function KYCReviewClient() {
                           <FileText className="w-4 h-4 text-muted-foreground" />
                           <span className="text-sm">{submission.document.name}</span>
                         </div>
+                      ) : submission.metadata ? (
+                        <div className="flex items-center gap-2">
+                          <FileText className="w-4 h-4 text-blue-500" />
+                          <span className="text-sm text-blue-500 font-medium">Questionnaire Data</span>
+                        </div>
                       ) : (
-                        <span className="text-sm text-muted-foreground">No file</span>
+                        <span className="text-sm text-muted-foreground">No content</span>
                       )}
                     </TableCell>
                     <TableCell>
@@ -436,6 +445,15 @@ export function KYCReviewClient() {
                               name: submission.document!.name,
                               mimeType: submission.document!.mime_type
                             })}
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                        )}
+                        {submission.metadata && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setViewingQuestionnaire(submission)}
                           >
                             <Eye className="w-4 h-4" />
                           </Button>
@@ -551,6 +569,35 @@ export function KYCReviewClient() {
           onClose={() => setViewingDocument(null)}
         />
       )}
+
+      {/* Questionnaire Viewer */}
+      <Dialog open={!!viewingQuestionnaire} onOpenChange={(open) => !open && setViewingQuestionnaire(null)}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Questionnaire Answers</DialogTitle>
+            <DialogDescription>
+              Submitted by {viewingQuestionnaire?.investor?.display_name} on {viewingQuestionnaire && new Date(viewingQuestionnaire.submitted_at).toLocaleDateString()}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-6 py-4">
+            {viewingQuestionnaire?.metadata && Object.entries(viewingQuestionnaire.metadata).map(([key, value]) => (
+              <div key={key} className="space-y-1">
+                <h4 className="text-sm font-medium text-muted-foreground capitalize">
+                  {key.replace(/([A-Z])/g, ' $1').trim()}
+                </h4>
+                <p className="text-sm text-foreground bg-muted p-3 rounded-md">
+                  {String(value)}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          <DialogFooter>
+            <Button onClick={() => setViewingQuestionnaire(null)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

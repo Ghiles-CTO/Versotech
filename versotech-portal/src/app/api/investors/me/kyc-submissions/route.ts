@@ -115,3 +115,53 @@ export async function GET(request: NextRequest) {
     )
   }
 }
+
+export async function POST(request: NextRequest) {
+  try {
+    const supabase = await createClient()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Get investor ID
+    const { data: investorUsers } = await supabase
+      .from('investor_users')
+      .select('investor_id')
+      .eq('user_id', user.id)
+      .single()
+
+    if (!investorUsers) {
+      return NextResponse.json({ error: 'No investor profile found' }, { status: 404 })
+    }
+
+    const body = await request.json()
+    const { document_type, custom_label, metadata, status } = body
+
+    // Insert submission
+    const { data, error } = await supabase
+      .from('kyc_submissions')
+      .insert({
+        investor_id: investorUsers.investor_id,
+        document_type,
+        custom_label,
+        metadata,
+        status: status || 'pending',
+        version: 1
+      })
+      .select()
+      .single()
+
+    if (error) {
+      console.error('Error creating submission:', error)
+      return NextResponse.json({ error: 'Failed to create submission' }, { status: 500 })
+    }
+
+    return NextResponse.json({ success: true, submission: data })
+
+  } catch (error) {
+    console.error('KYC submissions POST error:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}

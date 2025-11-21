@@ -73,7 +73,9 @@ const statusLabels: Record<DashboardTask['status'], string> = {
   blocked: 'Blocked'
 }
 
-const activityIconMap: Record<string, { icon: ElementType; tone: string }> = {
+type IconType = React.ComponentType<{ className?: string }>
+
+const activityIconMap: Record<string, { icon: IconType; tone: string }> = {
   document: { icon: FileText, tone: 'text-indigo-600 bg-indigo-50 border-indigo-100' },
   valuation: { icon: Target, tone: 'text-emerald-600 bg-emerald-50 border-emerald-100' },
   distribution: { icon: ShieldCheck, tone: 'text-emerald-600 bg-emerald-50 border-emerald-100' },
@@ -105,7 +107,7 @@ function formatDueCopy(dueDate: string | null, status: DashboardTask['status']) 
   return `Due ${formatted}`
 }
 
-function getActivityMeta(activity: DashboardActivity) {
+function getActivityMeta(activity: DashboardActivity): { icon: IconType; tone: string } {
   const meta = activityIconMap[activity.activity_type ?? ''] ?? {
     icon: Inbox,
     tone: 'text-slate-500 bg-slate-50 border-slate-100'
@@ -249,14 +251,15 @@ export function InvestorActionCenter({ tasks, tasksTotal, recentActivity }: Inve
             ) : (
               <div className="space-y-4">
                 {recentActivity.slice(0, 5).map((activity) => {
-                  const { icon: Icon, tone } = getActivityMeta(activity)
+                  const meta = getActivityMeta(activity)
+                  const ActivityIcon: IconType = meta.icon
                   const createdAt = new Date(activity.created_at)
                   const timestamp = createdAt.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
 
                   return (
                     <div key={activity.id} className="flex gap-3 group">
-                      <div className={cn('flex h-8 w-8 shrink-0 items-center justify-center rounded-full border shadow-sm transition-transform group-hover:scale-110', tone)}>
-                        <Icon className="h-4 w-4" />
+                      <div className={cn('flex h-8 w-8 shrink-0 items-center justify-center rounded-full border shadow-sm transition-transform group-hover:scale-110', meta.tone)}>
+                        <ActivityIcon className="h-4 w-4" />
                       </div>
                       <div className="min-w-0 flex-1 space-y-0.5">
                         <div className="flex items-start justify-between gap-2">

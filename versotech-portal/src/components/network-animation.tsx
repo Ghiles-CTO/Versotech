@@ -142,7 +142,7 @@ function ParticleNetwork(props: any) {
       </Points>
       <lineSegments>
         <bufferGeometry ref={linesGeometry}>
-           <bufferAttribute attach="attributes-position" count={0} array={new Float32Array(count*count*3)} itemSize={3} />
+           <bufferAttribute attach="attributes-position" args={[new Float32Array(count*count*3), 3]} count={0} />
         </bufferGeometry>
         <lineBasicMaterial color="#334155" transparent opacity={0.15} blending={THREE.AdditiveBlending} />
       </lineSegments>

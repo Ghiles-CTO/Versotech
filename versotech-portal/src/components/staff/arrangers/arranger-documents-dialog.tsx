@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { FileText, Upload, Download, Trash2, CheckCircle2, Circle, Loader2 } from 'lucide-react'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { toast } from 'sonner'
 import type { ArrangersDashboardProps } from './arrangers-dashboard'
 
@@ -44,13 +44,7 @@ export function ArrangerDocumentsDialog({ open, onOpenChange, arranger }: Arrang
   const [uploading, setUploading] = useState(false)
   const fileInputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({})
 
-  useEffect(() => {
-    if (open && arranger?.id) {
-      fetchDocuments()
-    }
-  }, [open, arranger?.id])
-
-  const fetchDocuments = async () => {
+  const fetchDocuments = useCallback(async () => {
     if (!arranger?.id) return
 
     setLoading(true)
@@ -66,7 +60,13 @@ export function ArrangerDocumentsDialog({ open, onOpenChange, arranger }: Arrang
     } finally {
       setLoading(false)
     }
-  }
+  }, [arranger?.id])
+
+  useEffect(() => {
+    if (open && arranger?.id) {
+      fetchDocuments()
+    }
+  }, [open, arranger?.id, fetchDocuments])
 
   const handleUpload = async (file: File, documentType: string) => {
     if (!arranger?.id) return
@@ -154,9 +154,9 @@ export function ArrangerDocumentsDialog({ open, onOpenChange, arranger }: Arrang
     }
   }
 
-  const handleDownload = async (document: Document) => {
+  const handleDownload = async (doc: Document) => {
     try {
-      const response = await fetch(`/api/documents/${document.id}/download`)
+      const response = await fetch(`/api/documents/${doc.id}/download`)
 
       if (!response.ok) {
         throw new Error('Download failed')
@@ -166,7 +166,7 @@ export function ArrangerDocumentsDialog({ open, onOpenChange, arranger }: Arrang
       const url = window.URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = document.file_name || document.name
+      a.download = doc.file_name || doc.name
       document.body.appendChild(a)
       a.click()
       window.URL.revokeObjectURL(url)

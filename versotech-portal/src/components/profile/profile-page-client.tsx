@@ -1,14 +1,19 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { ProfileImageUpload } from '@/components/profile/profile-image-upload'
 import { ProfileForm } from '@/components/profile/profile-form'
 import { PasswordChangeForm } from '@/components/profile/password-change-form'
 import { PreferencesEditor } from '@/components/profile/preferences-editor'
 import { KYCDocumentsTab } from '@/components/profile/kyc-documents-tab'
 import { CounterpartyEntitiesTab } from '@/components/profile/counterparty-entities-tab'
+import { KYCQuestionnaire } from '@/components/kyc/KYCQuestionnaire'
+import { KYCAlert } from '@/components/dashboard/kyc-alert'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { User, Lock, Settings, Briefcase, FileText, Building2, Bell } from 'lucide-react'
+import { User, Lock, Settings, Briefcase, FileText, Building2, Bell, ShieldCheck } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { toast } from 'sonner'
 
 interface ProfilePageClientProps {
   profile: {
@@ -22,6 +27,8 @@ interface ProfilePageClientProps {
     bio: string | null
     role: string
     created_at: string
+    // We might need to fetch this separately if not in the profile object
+    // For now assuming we can get it or pass it
   }
   variant?: 'investor' | 'staff'
 }
@@ -29,6 +36,30 @@ interface ProfilePageClientProps {
 export function ProfilePageClient({ profile: initialProfile, variant = 'investor' }: ProfilePageClientProps) {
   const [profile, setProfile] = useState(initialProfile)
   const isStaff = variant === 'staff'
+  const searchParams = useSearchParams()
+  const defaultTab = searchParams.get('tab') || 'profile'
+
+  // TODO: Fetch real KYC status. For now defaulting to not_started or fetching from API
+  const [kycStatus, setKycStatus] = useState<string>('not_started')
+
+  useEffect(() => {
+    // Fetch KYC status
+    const fetchKycStatus = async () => {
+      try {
+        // This endpoint needs to be verified/created
+        const response = await fetch('/api/investors/me/kyc-status')
+        if (response.ok) {
+          const data = await response.json()
+          setKycStatus(data.status)
+        }
+      } catch (error) {
+        console.error('Error fetching KYC status:', error)
+      }
+    }
+    if (!isStaff) {
+      fetchKycStatus()
+    }
+  }, [isStaff])
 
   const handleAvatarUpdate = (newAvatarUrl: string) => {
     setProfile(prev => ({
@@ -42,6 +73,29 @@ export function ProfilePageClient({ profile: initialProfile, variant = 'investor
       ...prev,
       ...updatedProfile
     }))
+  }
+
+  const handleSubmitApplication = async () => {
+    try {
+      const response = await fetch('/api/investors/me/kyc-status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'pending' })
+      })
+
+      if (response.ok) {
+        setKycStatus('pending')
+        toast.success('KYC Application Submitted', {
+          description: 'Your application is now under review.'
+        })
+      } else {
+        throw new Error('Failed to submit')
+      }
+    } catch (error) {
+      toast.error('Submission Failed', {
+        description: 'Please try again later.'
+      })
+    }
   }
 
   return (
@@ -87,12 +141,18 @@ export function ProfilePageClient({ profile: initialProfile, variant = 'investor
               )}
             </div>
           )}
+
+          {!isStaff && (
+            <div className="mt-6">
+              <KYCAlert status={kycStatus} />
+            </div>
+          )}
         </div>
       </div>
 
       {/* Right Column - Tabs */}
       <div className="lg:col-span-2">
-        <Tabs defaultValue="profile" className="w-full">
+        <Tabs defaultValue={defaultTab} className="w-full">
           <TabsList className={isStaff ? "grid w-full grid-cols-3 bg-white/5 border border-white/10" : "grid w-full grid-cols-5"}>
             <TabsTrigger
               value="profile"
@@ -118,8 +178,8 @@ export function ProfilePageClient({ profile: initialProfile, variant = 'investor
             {!isStaff && (
               <>
                 <TabsTrigger value="kyc">
-                  <FileText className="h-4 w-4 mr-2" />
-                  KYC Documents
+                  <ShieldCheck className="h-4 w-4 mr-2" />
+                  KYC & Onboarding
                 </TabsTrigger>
                 <TabsTrigger value="entities">
                   <Building2 className="h-4 w-4 mr-2" />
@@ -148,8 +208,25 @@ export function ProfilePageClient({ profile: initialProfile, variant = 'investor
 
           {!isStaff && (
             <>
-              <TabsContent value="kyc" className="mt-6">
-                <KYCDocumentsTab />
+              <TabsContent value="kyc" className="mt-6 space-y-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-2xl font-bold tracking-tight">KYC Verification</h2>
+                    <p className="text-muted-foreground">Complete your profile to unlock full access.</p>
+                  </div>
+                  {kycStatus !== 'completed' && kycStatus !== 'pending' && (
+                    <Button onClick={handleSubmitApplication} className="bg-emerald-600 hover:bg-emerald-700">
+                      Submit Application
+                    </Button>
+                  )}
+                </div>
+
+                <KYCQuestionnaire />
+
+                <div className="pt-6 border-t border-white/10">
+                  <h3 className="text-lg font-medium mb-4">Supporting Documents</h3>
+                  <KYCDocumentsTab />
+                </div>
               </TabsContent>
               <TabsContent value="entities" className="mt-6">
                 <CounterpartyEntitiesTab />

@@ -105,6 +105,8 @@ const formatRatio = (value: number, decimals: number = 2) => {
   return `${value.toFixed(decimals)}x`
 }
 
+type IconType = React.ComponentType<{ className?: string }>
+
 // Clean KPI Card Component
 function CleanKPICard({
   title,
@@ -119,7 +121,7 @@ function CleanKPICard({
   value: string | number
   subtitle?: string
   change?: number
-  icon?: React.ElementType
+  icon?: IconType
   trend?: 'up' | 'down' | 'neutral'
   className?: string
 }) {

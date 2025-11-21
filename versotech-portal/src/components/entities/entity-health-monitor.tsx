@@ -34,7 +34,9 @@ interface EntityHealthMonitorProps {
   onAction?: (action: string) => void
 }
 
-const categoryIcons: Record<string, React.ElementType> = {
+type IconType = React.ComponentType<{ className?: string }>
+
+const categoryIcons: Record<string, IconType> = {
   metadata: Info,
   stakeholders: Users,
   directors: User,
@@ -225,7 +227,7 @@ export function EntityHealthMonitor({
       {/* Health Checks by Category */}
       <div className="space-y-3">
         {Object.entries(checksByCategory).map(([category, checks]) => {
-          const Icon = categoryIcons[category] || Info
+          const Icon: IconType = categoryIcons[category] || Info
           const isExpanded = expandedCategories.has(category)
           const categoryPassCount = checks.filter(c => c.status === 'pass').length
           const categoryWarningCount = checks.filter(c => c.status === 'warning').length
