@@ -1055,6 +1055,12 @@ export function EntityDetailEnhanced({
     ]
   }, [entity, stakeholders])
   const logoUrl = entity.logo_url || ''
+  const [imageError, setImageError] = useState(false)
+
+  // Reset image error when entity changes
+  useEffect(() => {
+    setImageError(false)
+  }, [entity.id, entity.logo_url])
 
   return (
     <div className="p-6 space-y-6">
@@ -1118,14 +1124,18 @@ export function EntityDetailEnhanced({
         <div className="flex flex-col items-center md:items-end gap-4 shrink-0">
           <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-5 w-[220px] flex flex-col items-center gap-3 text-sm">
             <div className="h-24 w-24 rounded-xl border border-white/10 bg-black/60 flex items-center justify-center overflow-hidden">
-              {logoUrl ? (
-
+              {logoUrl && !imageError ? (
                 <Image
                   src={logoUrl}
                   alt={`${entity.name} logo`}
                   width={96}
                   height={96}
                   className="h-full w-full object-contain p-2"
+                  unoptimized
+                  onError={() => {
+                    console.error('Failed to load logo:', logoUrl)
+                    setImageError(true)
+                  }}
                 />
               ) : (
                 <Building2 className="h-10 w-10 text-muted-foreground" />
@@ -1134,7 +1144,7 @@ export function EntityDetailEnhanced({
             <div className="text-center space-y-1">
               <p className="text-xs text-muted-foreground uppercase tracking-wide">Branding</p>
               <p className="text-sm font-medium text-foreground">
-                {logoUrl ? 'Logo uploaded' : 'No logo set'}
+                {logoUrl && !imageError ? 'Logo uploaded' : imageError ? 'Logo failed to load' : 'No logo set'}
               </p>
               {formatWebsite(entity.website_url) && (
                 <a
