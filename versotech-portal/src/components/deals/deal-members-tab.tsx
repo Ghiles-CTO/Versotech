@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Plus, Users, Link as LinkIcon } from 'lucide-react'
+import { Plus, Users, Link as LinkIcon, Trash2 } from 'lucide-react'
 import { AddMemberModal } from './add-member-modal'
 import { GenerateInviteLinkModal } from './generate-invite-link-modal'
 
@@ -30,6 +30,28 @@ export function DealMembersTab({ dealId, members: initialMembers }: DealMembersT
       }
     } catch (err) {
       console.error('Failed to refresh members:', err)
+    }
+  }
+
+  const handleRemoveMember = async (userId: string) => {
+    if (!confirm('Are you sure you want to remove this member from the deal?')) {
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/deals/${dealId}/members/${userId}`, {
+        method: 'DELETE'
+      })
+
+      if (response.ok) {
+        await refreshMembers()
+      } else {
+        const data = await response.json()
+        alert(`Failed to remove member: ${data.error || 'Unknown error'}`)
+      }
+    } catch (err) {
+      console.error('Failed to remove member:', err)
+      alert('Failed to remove member. Please try again.')
     }
   }
   const roleColors: Record<string, string> = {
@@ -100,7 +122,13 @@ export function DealMembersTab({ dealId, members: initialMembers }: DealMembersT
                         )}
                       </div>
                     </div>
-                    <Button variant="outline" size="sm" className="text-red-200">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-red-200 hover:bg-red-500/20 hover:border-red-500/50"
+                      onClick={() => handleRemoveMember(member.user_id)}
+                    >
+                      <Trash2 className="h-4 w-4 mr-1" />
                       Remove
                     </Button>
                   </div>
