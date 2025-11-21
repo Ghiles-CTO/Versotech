@@ -33,11 +33,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Logo file is required' }, { status: 400 })
   }
 
-  const bucket =
-    process.env.NEXT_PUBLIC_DEAL_LOGO_BUCKET ||
-    process.env.NEXT_PUBLIC_STORAGE_BUCKET_NAME ||
-    process.env.DOCS_BUCKET ||
-    'documents'
+  const bucket = 'public-assets'
   const timestamp = Date.now()
   const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_')
   const storagePath = `deal-logos/${dealId}/${timestamp}-${sanitizedName}`
