@@ -248,13 +248,13 @@ export function EditEntityModal({ entity, open, onClose, onSuccess }: EditEntity
       const data = await response.json().catch(() => ({}))
 
       if (!response.ok) {
-        throw new Error(data.details || data.error || 'Failed to update vehicle')
+        throw new Error(data.details || data.error || 'Failed to update entity')
       }
 
-      onSuccess(data.vehicle)
+      onSuccess(data.entity)
       onClose()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update vehicle')
+      setError(err instanceof Error ? err.message : 'Failed to update entity')
     } finally {
       setLoading(false)
     }

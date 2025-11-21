@@ -122,7 +122,7 @@ export function EditEntityModalRefactored({
       website_url: entity.website_url || ''
     },
     onSuccess: (data) => {
-      onSuccess(data.vehicle)
+      onSuccess(data.entity)
       onClose()
     }
   })
