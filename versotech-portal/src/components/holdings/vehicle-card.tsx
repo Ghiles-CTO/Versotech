@@ -1,6 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -116,9 +117,11 @@ export function VehicleCard({ holding }: { holding: EnhancedHolding }) {
             {(holding.logo_url || holding.investment_name) && (
               <div className="flex items-center gap-2">
                 {holding.logo_url && (
-                  <img
+                  <Image
                     src={holding.logo_url}
                     alt={holding.investment_name || 'Investment'}
+                    width={32}
+                    height={32}
                     className="h-8 w-8 rounded object-contain bg-white/5 p-1"
                   />
                 )}
@@ -185,7 +188,7 @@ export function VehicleCard({ holding }: { holding: EnhancedHolding }) {
                   }).format(holding.position!.currentValue)}
                 </span>
               </div>
-              
+
               <div className="flex justify-between items-center">
                 <span className="text-sm text-muted-foreground">Unrealized Gain</span>
                 <div className="flex items-center gap-2">
@@ -201,7 +204,7 @@ export function VehicleCard({ holding }: { holding: EnhancedHolding }) {
                       signDisplay: 'always'
                     }).format(holding.position!.unrealizedGain)}
                   </span>
-                  <Badge 
+                  <Badge
                     variant="outline"
                     className="text-xs"
                   >
@@ -290,18 +293,18 @@ export function VehicleCard({ holding }: { holding: EnhancedHolding }) {
         )}
 
         <div className="flex gap-2 pt-2">
-          <Button 
-            variant="outline" 
-            size="sm" 
+          <Button
+            variant="outline"
+            size="sm"
             className="flex-1"
             onClick={handleViewDetails}
           >
             <Eye className="h-4 w-4 mr-2" />
             Details
           </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
+          <Button
+            variant="outline"
+            size="sm"
             className="flex-1"
             onClick={handleViewReports}
           >

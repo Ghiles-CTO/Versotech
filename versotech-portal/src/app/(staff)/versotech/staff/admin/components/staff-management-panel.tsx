@@ -77,22 +77,20 @@ export function StaffManagementPanel({ staffMembers, onStaffUpdate }: StaffManag
 
       if (!response.ok) {
         const error = await response.json()
-        throw new Error(error.error || 'Failed to invite staff')
+        toast.error(error.message || 'Failed to invite staff member')
+      } else {
+        toast.success('Invitation sent successfully')
+        setInviteDialogOpen(false)
+        onStaffUpdate()
+        setInviteFormData({
+          email: '',
+          display_name: '',
+          role: 'staff_ops',
+          title: '',
+        })
       }
-
-      const data = await response.json()
-      toast.success('Staff member invited successfully')
-
-      // Show temporary password in development
-      if (data.data.temporary_password) {
-        toast.info(`Temporary password: ${data.data.temporary_password}`)
-      }
-
-      setInviteDialogOpen(false)
-      setInviteFormData({ email: '', display_name: '', role: 'staff_ops', title: '' })
-      onStaffUpdate()
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to invite staff member')
+    } catch (error) {
+      toast.error('Failed to send invitation')
     } finally {
       setLoading(false)
     }

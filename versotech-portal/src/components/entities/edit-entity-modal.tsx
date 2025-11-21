@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
+import Image from 'next/image'
 import {
   Dialog,
   DialogContent,
@@ -448,8 +449,8 @@ export function EditEntityModal({ entity, open, onClose, onSuccess }: EditEntity
                   <div className="flex items-center gap-4">
                     <div className="h-16 w-16 rounded-lg border border-white/10 bg-white/10 flex items-center justify-center">
                       {logoUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={logoUrl} alt="Entity logo preview" className="h-full w-full rounded object-contain p-1" />
+
+                        <Image src={logoUrl} alt="Entity logo preview" width={64} height={64} className="h-full w-full rounded object-contain p-1" />
                       ) : (
                         <span className="text-xs text-white/60">Upload logo</span>
                       )}

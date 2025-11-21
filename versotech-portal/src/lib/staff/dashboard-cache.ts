@@ -1,189 +1,108 @@
-import { getStaffDashboardData } from './dashboard-data'
+import { unstable_cache } from 'next/cache'
+import { getStaffDashboardData, StaffDashboardData, DateRangeFilter } from './dashboard-data'
 
-export interface CacheEntry<T> {
-  data: T
-  timestamp: number
-  ttl: number
-}
+/**
+ * Production-ready cache using Next.js unstable_cache
+ * Works correctly in serverless environments (Vercel, AWS Lambda, etc.)
+ *
+ * Cache strategy:
+ * - TTL: 5 minutes (300 seconds)
+ * - Tag: 'staff-dashboard' for targeted revalidation
+ * - Revalidation: Can be triggered manually via revalidateTag()
+ */
 
-export interface StaffDashboardData {
-  generatedAt: string
-  kpis: {
-    activeLps: number
-    pendingKyc: number
-    highPriorityKyc: number
-    workflowRunsThisMonth: number
-    complianceRate: number
-  }
-  pipeline: {
-    kycPending: number
-    ndaInProgress: number
-    subscriptionReview: number
-    nextCapitalCall?: {
-      name: string
-      dueDate: string
-    }
-  }
-  processCenter: {
-    activeWorkflows: number
-  }
-  management: {
-    activeDeals: number
-    activeRequests: number
-    complianceRate: number
-    activeInvestors: number
-  }
-  recentActivity: Array<{
-    id: string
-    title: string
-    description: string | null
-    activityType: string | null
-    createdAt: string
-  }>
-  errors?: string[]
-}
+const CACHE_TTL = 300 // 5 minutes in seconds
+const CACHE_TAG = 'staff-dashboard'
 
-// In-memory cache store
-class DashboardCache {
-  private cache: Map<string, CacheEntry<any>> = new Map()
-  private defaultTTL = 5 * 60 * 1000 // 5 minutes in milliseconds
-
-  // Get data from cache if valid
-  get<T>(key: string): T | null {
-    const entry = this.cache.get(key)
-
-    if (!entry) {
-      return null
-    }
-
-    // Check if cache has expired
-    const now = Date.now()
-    if (now - entry.timestamp > entry.ttl) {
-      this.cache.delete(key)
-      return null
-    }
-
-    return entry.data as T
-  }
-
-  // Set data in cache
-  set<T>(key: string, data: T, ttl?: number): void {
-    this.cache.set(key, {
-      data,
-      timestamp: Date.now(),
-      ttl: ttl || this.defaultTTL
-    })
-  }
-
-  // Clear specific cache entry
-  invalidate(key: string): void {
-    this.cache.delete(key)
-  }
-
-  // Clear all cache entries
-  clear(): void {
-    this.cache.clear()
-  }
-
-  // Get cache statistics
-  getStats(): {
-    size: number
-    keys: string[]
-    entries: Array<{ key: string; age: number; ttl: number }>
-  } {
-    const now = Date.now()
-    const entries = Array.from(this.cache.entries()).map(([key, entry]) => ({
-      key,
-      age: now - entry.timestamp,
-      ttl: entry.ttl
-    }))
-
-    return {
-      size: this.cache.size,
-      keys: Array.from(this.cache.keys()),
-      entries
-    }
-  }
-
-  // Clean up expired entries
-  cleanup(): void {
-    const now = Date.now()
-    for (const [key, entry] of this.cache.entries()) {
-      if (now - entry.timestamp > entry.ttl) {
-        this.cache.delete(key)
-      }
-    }
-  }
-}
-
-// Global cache instance
-const dashboardCache = new DashboardCache()
-
-// Run cleanup every minute
-if (typeof setInterval !== 'undefined') {
-  setInterval(() => {
-    dashboardCache.cleanup()
-  }, 60 * 1000)
-}
-
-// Cached version of dashboard data fetcher
+/**
+ * Get cached staff dashboard data with optional date range filtering
+ * @param dateRangeFilter - Optional date range to filter data
+ * @param forceRefresh - If true, bypass cache and fetch fresh data
+ */
 export async function getCachedStaffDashboardData(
+  dateRangeFilter?: DateRangeFilter,
   forceRefresh = false
 ): Promise<StaffDashboardData> {
-  const cacheKey = 'staff-dashboard-data'
-
-  // Check cache first unless force refresh is requested
-  if (!forceRefresh) {
-    const cached = dashboardCache.get<StaffDashboardData>(cacheKey)
-    if (cached) {
-      console.log('[Dashboard Cache] Cache hit')
-      return cached
-    }
+  if (forceRefresh) {
+    console.log('[Dashboard Cache] Force refresh requested, bypassing cache')
+    return await getStaffDashboardData(dateRangeFilter)
   }
 
-  console.log('[Dashboard Cache] Cache miss, fetching fresh data')
+  // Create cache key that includes date range to ensure different ranges are cached separately
+  const cacheKey = dateRangeFilter?.from || dateRangeFilter?.to
+    ? `staff-dashboard-data-${dateRangeFilter.from?.toString()}-${dateRangeFilter.to?.toString()}`
+    : 'staff-dashboard-data-default'
 
-  // Fetch fresh data
-  const data = await fetchStaffDashboardData()
+  // Create a cached version for this specific date range
+  const getCachedDashboardData = unstable_cache(
+    async () => {
+      console.log('[Dashboard Cache] Fetching fresh data from database for range:', dateRangeFilter)
+      return await getStaffDashboardData(dateRangeFilter)
+    },
+    [cacheKey],
+    {
+      revalidate: CACHE_TTL,
+      tags: [CACHE_TAG]
+    }
+  )
 
-  // Store in cache
-  dashboardCache.set(cacheKey, data)
-
-  return data
+  return await getCachedDashboardData()
 }
 
-// Use the original working function from dashboard-data.ts
-async function fetchStaffDashboardData(): Promise<StaffDashboardData> {
-  // Just call the original working function
-  return await getStaffDashboardData()
+/**
+ * Invalidate dashboard cache
+ * Use this when data changes that affect the dashboard
+ *
+ * @example
+ * // After creating a new investor
+ * await createInvestor(data)
+ * await invalidateDashboardCache()
+ */
+export async function invalidateDashboardCache(): Promise<void> {
+  const { revalidateTag } = await import('next/cache')
+  revalidateTag(CACHE_TAG)
+  console.log('[Dashboard Cache] Cache invalidated')
 }
 
-// Cache invalidation hooks for specific events
-export function invalidateDashboardCache(): void {
-  dashboardCache.invalidate('staff-dashboard-data')
-}
-
-// Granular cache invalidation based on table changes
-export function invalidateByTable(tableName: string): void {
-  // For now, invalidate the whole dashboard cache
-  // In future, we could cache individual sections
+/**
+ * Granular cache invalidation based on table changes
+ * Only invalidates if the table affects dashboard data
+ *
+ * @param tableName - The database table that was modified
+ *
+ * @example
+ * // After updating investor data
+ * await updateInvestor(id, data)
+ * await invalidateByTable('investors')
+ */
+export async function invalidateByTable(tableName: string): Promise<void> {
   const tablesAffectingDashboard = [
     'investors',
     'tasks',
     'workflow_runs',
-    'capital_calls',
     'workflows',
     'deals',
     'request_tickets',
-    'activity_feed'
+    'fee_events',
+    'subscriptions'
   ]
 
   if (tablesAffectingDashboard.includes(tableName)) {
-    invalidateDashboardCache()
+    console.log(`[Dashboard Cache] Table ${tableName} modified, invalidating cache`)
+    await invalidateDashboardCache()
   }
 }
 
-// Export cache stats for monitoring
-export function getCacheStats() {
-  return dashboardCache.getStats()
+/**
+ * Get cache configuration for monitoring
+ * Note: With unstable_cache, we don't have access to internal cache stats
+ * This is a limitation of Next.js's cache abstraction
+ */
+export function getCacheConfig() {
+  return {
+    ttl: CACHE_TTL,
+    tag: CACHE_TAG,
+    strategy: 'next-js-unstable-cache',
+    note: 'Using Next.js built-in cache (production-ready for serverless)'
+  }
 }

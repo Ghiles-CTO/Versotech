@@ -18,6 +18,7 @@ export async function GET(request: NextRequest) {
     const vehicle_id = searchParams.get('vehicle_id')
     const entity_id = searchParams.get('entity_id')
     const deal_id = searchParams.get('deal_id')
+    const arranger_entity_id = searchParams.get('arranger_entity_id')
     const from_date = searchParams.get('from_date')
     const to_date = searchParams.get('to_date')
     const search = searchParams.get('search')
@@ -40,13 +41,15 @@ export async function GET(request: NextRequest) {
         vehicle_id,
         entity_id,
         deal_id,
+        arranger_entity_id,
         owner_investor_id,
         folder_id,
         created_by_profile:created_by(display_name, email),
         investors:owner_investor_id(id, legal_name),
         vehicles:vehicle_id(id, name, type),
         entity:entity_id(id, name, type),
-        deals:deal_id(id, name, status)
+        deals:deal_id(id, name, status),
+        arranger_entity:arranger_entity_id(id, legal_name)
       `, { count: 'exact' })
 
     // Apply filters
@@ -54,6 +57,7 @@ export async function GET(request: NextRequest) {
     if (vehicle_id) query = query.eq('vehicle_id', vehicle_id)
     if (entity_id) query = query.eq('entity_id', entity_id)
     if (deal_id) query = query.eq('deal_id', deal_id)
+    if (arranger_entity_id) query = query.eq('arranger_entity_id', arranger_entity_id)
     if (from_date) query = query.gte('created_at', from_date)
     if (to_date) query = query.lte('created_at', to_date)
     if (search) {
@@ -86,6 +90,7 @@ export async function GET(request: NextRequest) {
       if (doc.vehicles) scope.vehicle = doc.vehicles
       if (doc.entity) scope.entity = doc.entity
       if (doc.deals) scope.deal = doc.deals
+      if (doc.arranger_entity) scope.arranger_entity = doc.arranger_entity
 
       return {
         id: doc.id,
@@ -121,8 +126,9 @@ export async function GET(request: NextRequest) {
       filters_applied: {
         type: type || undefined,
         vehicle_id: vehicle_id || undefined,
-          entity_id: entity_id || undefined,
+        entity_id: entity_id || undefined,
         deal_id: deal_id || undefined,
+        arranger_entity_id: arranger_entity_id || undefined,
         date_range: from_date || to_date ? {
           from: from_date || undefined,
           to: to_date || undefined

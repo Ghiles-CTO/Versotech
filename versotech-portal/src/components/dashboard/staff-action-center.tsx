@@ -1,6 +1,6 @@
 'use client'
 
-import { Button } from '@/components/ui/button'
+import React from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
@@ -9,49 +9,35 @@ import {
   ChevronRight,
   Users,
   FileText,
-  Clock,
-  MessageSquare,
   TrendingUp,
   Shield,
-  Database,
   Workflow,
   ClipboardList,
-  AlertTriangle,
   CheckCircle,
   Building2,
   Activity,
   PlayCircle,
   Zap,
   BarChart3,
-  Target,
-  Globe,
-  Calendar,
   Receipt,
   UserCheck,
   FileSearch,
   GitPullRequest,
   DollarSign,
-  UserPlus,
-  BellRing,
   FolderOpen,
   Calculator,
   Building,
-  GanttChart,
   MessageCircle,
   User,
   Settings,
   FileSignature,
-  Search,
   PlusCircle,
   RefreshCw,
   ArrowUpRight,
   Briefcase,
   Bot,
   Send,
-  Download,
-  Upload,
-  Filter,
-  AlertOctagon
+  Upload
 } from 'lucide-react'
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
@@ -74,29 +60,61 @@ interface ActionSection {
   collapsed?: boolean
 }
 
-export function StaffActionCenter({
+const ActionItem = React.memo(({ item }: { item: ActionItem }) => {
+    const ItemIcon = item.icon
+    const content = (
+      <div className={cn(
+        "flex items-center gap-3 px-3 py-2.5 rounded-md group/item",
+        "text-zinc-400 hover:text-zinc-100 hover:bg-white/5",
+        "transition-all duration-200 cursor-pointer",
+        item.variant === 'success' && "hover:text-emerald-400 hover:bg-emerald-950/30",
+        item.variant === 'warning' && "hover:text-amber-400 hover:bg-amber-950/30",
+        item.variant === 'info' && "hover:text-sky-400 hover:bg-sky-950/30"
+      )}>
+        <ItemIcon className="h-4 w-4 opacity-70 group-hover/item:opacity-100" />
+        <span className="text-sm">{item.label}</span>
+        {item.badge && (
+           <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded-full bg-white/10 text-zinc-300">
+              {item.badge}
+           </span>
+        )}
+      </div>
+    )
+
+    if (item.href) {
+      return <Link href={item.href}>{content}</Link>
+    }
+    return <div onClick={item.onClick}>{content}</div>
+})
+ActionItem.displayName = 'ActionItem'
+
+const ActionSection = React.memo(({ section }: { section: ActionSection }) => {
+    const Icon = section.icon
+    return (
+      <div className="bg-[#0a0a0a] p-6 space-y-4 group/section hover:bg-zinc-900/20 transition-colors">
+        <div className="flex items-center gap-2 mb-4">
+           <Icon className="h-4 w-4 text-zinc-500 group-hover/section:text-zinc-300 transition-colors" />
+           <h3 className="text-sm font-medium text-zinc-300 uppercase tracking-wider">{section.title}</h3>
+        </div>
+        <div className="space-y-1">
+          {section.items.map((item) => (
+            <ActionItem key={item.label} item={item} />
+          ))}
+        </div>
+      </div>
+    )
+})
+ActionSection.displayName = 'ActionSection'
+
+export const StaffActionCenter = React.memo(function StaffActionCenter({
   className,
   onWorkflowTrigger
 }: {
   className?: string
   onWorkflowTrigger?: (workflowKey: string) => void
 }) {
-  const [expandedSections, setExpandedSections] = useState<Set<string>>(
-    new Set(['quick', 'operations'])
-  )
-
-  const toggleSection = (title: string) => {
-    setExpandedSections(prev => {
-      const next = new Set(prev)
-      if (next.has(title)) {
-        next.delete(title)
-      } else {
-        next.add(title)
-      }
-      return next
-    })
-  }
-
+  // Removed local state for expanded sections as we are using a grid layout now
+  
   const actionSections: ActionSection[] = [
     {
       title: 'Quick Actions',
@@ -324,168 +342,41 @@ export function StaffActionCenter({
 
   return (
     <Card className={cn(
-      'bg-black/95 backdrop-blur-xl border-white/10 shadow-2xl',
+      'bg-zinc-900/30 backdrop-blur-md border-white/5 shadow-2xl',
       'transition-all duration-300',
       className
     )}>
-      <CardHeader className="pb-4">
+      <CardHeader className="pb-6 border-b border-white/5">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="p-2 rounded-lg bg-gradient-to-br from-sky-500/20 to-purple-500/20 backdrop-blur">
-              <Zap className="h-5 w-5 text-white" />
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-gradient-to-br from-zinc-800 to-zinc-900 border border-white/10 shadow-inner">
+              <Zap className="h-5 w-5 text-amber-400/90" />
             </div>
             <div>
-              <CardTitle className="text-white text-lg font-semibold">
-                Action Center
+              <CardTitle className="text-zinc-100 text-xl font-medium tracking-tight">
+                Operations Center
               </CardTitle>
-              <CardDescription className="text-slate-400 text-xs">
-                Quick access to all portal features
+              <CardDescription className="text-zinc-500 text-xs font-medium uppercase tracking-wider mt-1">
+                Control Panel & Quick Actions
               </CardDescription>
             </div>
           </div>
-          <Badge
-            variant="outline"
-            className="border-emerald-500/30 bg-emerald-500/10 text-emerald-200 text-xs"
-          >
-            <Activity className="mr-1 h-3 w-3" />
-            Live
-          </Badge>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-[10px] font-medium text-emerald-400 uppercase tracking-wide">System Online</span>
+            </div>
+          </div>
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-3 p-5">
-        {actionSections.map((section, sectionIdx) => {
-          const isExpanded = expandedSections.has(section.title)
-          const Icon = section.icon
-
-          return (
-            <div key={section.title} className="space-y-2">
-              {sectionIdx > 0 && (
-                <Separator className="bg-white/5 my-3" />
-              )}
-
-              <button
-                onClick={() => toggleSection(section.title)}
-                className="w-full flex items-center justify-between p-3 rounded-md hover:bg-white/5 transition-colors group"
-              >
-                <div className="flex items-center gap-3">
-                  <Icon className="h-5 w-5 text-slate-400 group-hover:text-slate-200" />
-                  <span className="text-base font-medium text-slate-200 group-hover:text-white">
-                    {section.title}
-                  </span>
-                  <Badge variant="outline" className="ml-2 border-white/10 text-xs text-slate-400">
-                    {section.items.length}
-                  </Badge>
-                </div>
-                <ChevronRight
-                  className={cn(
-                    "h-5 w-5 text-slate-500 transition-transform",
-                    isExpanded && "rotate-90"
-                  )}
-                />
-              </button>
-
-              {isExpanded && (
-                <div className="grid grid-cols-1 gap-2 pl-4 pr-2">
-                  {section.items.map((item) => {
-                    const ItemIcon = item.icon
-                    const content = (
-                      <div
-                        className={cn(
-                          "group relative flex items-center gap-3 p-3 rounded-lg",
-                          "border border-transparent",
-                          "hover:bg-white/10 hover:border-white/20",
-                          "transition-all duration-200 cursor-pointer",
-                          item.disabled && "opacity-50 cursor-not-allowed",
-                          item.variant === 'success' && "hover:border-emerald-500/30 hover:bg-emerald-500/10",
-                          item.variant === 'warning' && "hover:border-amber-500/30 hover:bg-amber-500/10",
-                          item.variant === 'destructive' && "hover:border-red-500/30 hover:bg-red-500/10",
-                          item.variant === 'info' && "hover:border-sky-500/30 hover:bg-sky-500/10"
-                        )}
-                      >
-                        <ItemIcon className={cn(
-                          "h-5 w-5 flex-shrink-0",
-                          item.variant === 'success' ? "text-emerald-400" :
-                          item.variant === 'warning' ? "text-amber-400" :
-                          item.variant === 'destructive' ? "text-red-400" :
-                          item.variant === 'info' ? "text-sky-400" :
-                          "text-slate-400 group-hover:text-slate-200"
-                        )} />
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium text-slate-200 group-hover:text-white">
-                              {item.label}
-                            </span>
-                            {item.badge && (
-                              <Badge
-                                variant="outline"
-                                className={cn(
-                                  "h-5 px-2 text-xs",
-                                  typeof item.badge === 'number'
-                                    ? "bg-red-500/20 border-red-500/30 text-red-200"
-                                    : "bg-sky-500/20 border-sky-500/30 text-sky-200"
-                                )}
-                              >
-                                {item.badge}
-                              </Badge>
-                            )}
-                          </div>
-                          {item.description && (
-                            <span className="text-xs text-slate-500 block mt-0.5">
-                              {item.description}
-                            </span>
-                          )}
-                        </div>
-                        {!item.disabled && (
-                          <ArrowUpRight className="h-4 w-4 text-slate-600 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
-                        )}
-                      </div>
-                    )
-
-                    if (item.href) {
-                      return (
-                        <Link key={item.label} href={item.href}>
-                          {content}
-                        </Link>
-                      )
-                    } else if (item.onClick) {
-                      return (
-                        <div key={item.label} onClick={item.onClick}>
-                          {content}
-                        </div>
-                      )
-                    } else {
-                      return (
-                        <div key={item.label}>
-                          {content}
-                        </div>
-                      )
-                    }
-                  })}
-                </div>
-              )}
-            </div>
-          )
-        })}
-
-        <Separator className="bg-white/5 my-4" />
-
-        <div className="flex items-center justify-between px-3 py-2">
-          <div className="flex items-center gap-2">
-            <div className="h-2.5 w-2.5 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="text-xs text-slate-500">All systems operational</span>
-          </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-8 px-3 text-xs text-slate-400 hover:text-slate-200"
-            onClick={() => window.location.reload()}
-          >
-            <RefreshCw className="h-4 w-4 mr-1.5" />
-            Refresh
-          </Button>
+      <CardContent className="p-0">
+        <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-px bg-white/5">
+          {actionSections.map((section) => (
+            <ActionSection key={section.title} section={section} />
+          ))}
         </div>
       </CardContent>
     </Card>
   )
-}
+})

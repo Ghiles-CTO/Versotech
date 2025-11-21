@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Image from 'next/image'
 import {
   Dialog,
   DialogContent,
@@ -575,10 +576,12 @@ export function EditEntityModalRefactored({
                     <Label className="text-white mb-2 block">Entity Logo</Label>
                     {logoUrl ? (
                       <div className="flex items-start gap-4">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
+
+                        <Image
                           src={logoUrl}
                           alt="Entity logo"
+                          width={96}
+                          height={96}
                           className="w-24 h-24 object-contain bg-white/5 rounded border border-white/10"
                         />
                         <div className="flex flex-col gap-2">

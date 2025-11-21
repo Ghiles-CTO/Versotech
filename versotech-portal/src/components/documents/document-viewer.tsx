@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import Image from 'next/image'
 import { Download, X, Loader2, AlertCircle } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
@@ -121,11 +122,14 @@ export function DocumentViewer({
 
               {isImage && (
                 <div className="flex items-center justify-center p-4">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
+
+                  <Image
                     src={documentUrl}
                     alt={documentName}
-                    className="max-w-full h-auto rounded-lg shadow-lg"
+                    width={0}
+                    height={0}
+                    sizes="100vw"
+                    className="w-full h-auto rounded-lg shadow-lg"
                   />
                 </div>
               )}

@@ -1,594 +1,520 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import React, { useState, useCallback, useMemo } from 'react'
 import { StaffActionCenter } from './staff-action-center'
-import { RealtimeStaffDashboard } from './realtime-staff-dashboard'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { cn } from '@/lib/utils'
 import {
-  Users,
-  FileText,
-  Clock,
-  MessageSquare,
-  TrendingUp,
-  Shield,
-  Database,
-  Workflow,
-  ClipboardList,
-  AlertTriangle,
-  CheckCircle,
-  Building2,
-  Activity,
-  PlayCircle,
-  Zap,
-  BarChart3,
-  Target,
-  Globe,
-  RefreshCw,
-  ChevronLeft,
-  ChevronRight,
-  PanelLeftClose,
-  PanelLeftOpen,
-  Maximize2,
-  Minimize2,
-  Settings,
-  Eye,
-  EyeOff
+    Users,
+    Workflow,
+    Shield,
+    AlertTriangle,
+    CheckCircle,
+    Activity,
+    DollarSign,
+    ArrowUpRight,
+    MoreHorizontal,
+    CalendarRange,
+    Wallet
 } from 'lucide-react'
 import { toast } from 'sonner'
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import {
+    Area,
+    AreaChart,
+    Bar,
+    BarChart,
+    CartesianGrid,
+    ResponsiveContainer,
+    Tooltip,
+    XAxis,
+    YAxis
+} from 'recharts'
+import { format, parseISO } from 'date-fns'
 
-interface DashboardData {
-  generatedAt: string
-  kpis: {
-    activeLps: number
-    pendingKyc: number
-    highPriorityKyc: number
-    workflowRunsThisMonth: number
-    complianceRate: number
-  }
-  pipeline: {
-    kycPending: number
-    ndaInProgress: number
-    subscriptionReview: number
-    nextCapitalCall?: {
-      name: string
-      dueDate: string
-    }
-  }
-  processCenter: {
-    activeWorkflows: number
-  }
-  management: {
-    activeDeals: number
-    activeRequests: number
-    complianceRate: number
-    activeInvestors: number
-  }
-  recentActivity: Array<{
-    id: string
-    title: string
-    description: string | null
-    activityType: string | null
-    createdAt: string
-  }>
-  errors?: string[]
+// --- Types ---
+
+interface MetricError {
+    metric: string
+    message: string
+    code?: string
 }
 
-export function EnhancedStaffDashboard({
-  initialData,
-  className
+interface DashboardData {
+    generatedAt: string
+    kpis: {
+        activeLps: number | null
+        pendingKyc: number | null
+        highPriorityKyc: number | null
+        workflowRunsThisMonth: number | null
+        complianceRate: number | null
+    }
+    processCenter: {
+        activeWorkflows: number | null
+    }
+    management: {
+        activeDeals: number | null
+        activeRequests: number | null
+        complianceRate: number | null
+        activeInvestors: number | null
+    }
+    recentActivity: Array<{
+        id: string
+        title: string
+        description: string | null
+        activityType: 'fee' | 'subscription' | 'investor' | 'other'
+        createdAt: string
+        amount?: number
+        status?: string
+    }>
+    charts: {
+        fees: Array<{
+            date: string
+            amount: number
+            type: string
+        }>
+        subscriptions: Array<{
+            date: string
+            amount: number
+            status: string
+        }>
+    }
+    errors?: MetricError[]
+}
+
+// --- Sub-Components (Memoized) ---
+
+const DashboardHeader = React.memo(({
+    formattedDate
 }: {
-  initialData: DashboardData
-  className?: string
-}) {
-  const router = useRouter()
-  const [isActionCenterOpen, setIsActionCenterOpen] = useState(true)
-  const [isCompactView, setIsCompactView] = useState(false)
-  const [showRealtime, setShowRealtime] = useState(true)
-  const [activeTab, setActiveTab] = useState<'overview' | 'analytics' | 'operations'>('overview')
-
-  // Handle workflow trigger from action center
-  const handleWorkflowTrigger = useCallback((workflowKey: string) => {
-    // Navigate to processes page with workflow pre-selected
-    router.push(`/versotech/staff/processes?workflow=${workflowKey}`)
-    toast.info('Navigating to workflow trigger', {
-      description: `Opening ${workflowKey} workflow`
-    })
-  }, [router])
-
-  // Handle dashboard refresh
-  const handleRefresh = useCallback(() => {
-    window.location.reload()
-  }, [])
-
-  // Handle metrics update from realtime component
-  const handleMetricsUpdate = useCallback((metrics: any) => {
-    console.log('Metrics updated:', metrics)
-  }, [])
-
-  const cardBaseClasses =
-    'bg-[#060608] border border-white/10 shadow-lg shadow-black/20 transition-colors hover:border-white/20'
-
-  const sectionBorderClasses = 'border border-white/10 bg-[#060608]'
-
-  const formattedDate = new Intl.DateTimeFormat('en-GB', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric'
-  }).format(new Date(initialData.generatedAt))
-
-  const kpiCards = [
-    {
-      label: 'Active LPs',
-      value: initialData.kpis.activeLps,
-      helper: initialData.management.activeInvestors > initialData.kpis.activeLps ? 'Includes investors in review' : null,
-      icon: Users,
-      accent: 'text-slate-200'
-    },
-    {
-      label: 'Pending KYC/AML',
-      value: initialData.kpis.pendingKyc,
-      helper:
-        initialData.kpis.highPriorityKyc > 0
-          ? `${initialData.kpis.highPriorityKyc} high priority`
-          : 'All standard priority',
-      icon: AlertTriangle,
-      accent: 'text-amber-300'
-    },
-    {
-      label: 'Workflow Runs (MTD)',
-      value: initialData.kpis.workflowRunsThisMonth,
-      helper: 'Includes all n8n executions',
-      icon: Workflow,
-      accent: 'text-sky-300'
-    },
-    {
-      label: 'Compliance Rate',
-      value: `${initialData.kpis.complianceRate.toFixed(1)}%`,
-      helper: 'Approved investors / total',
-      icon: CheckCircle,
-      accent: 'text-emerald-300'
-    }
-  ]
-
-  const pipelineSections = [
-    {
-      title: 'KYC Processing',
-      description: 'Professional investor verification',
-      count: `${initialData.pipeline.kycPending} pending`,
-      icon: PlayCircle,
-      accent: 'text-sky-200',
-      wrapper: 'border-sky-500/40 bg-sky-500/20'
-    },
-    {
-      title: 'NDA Execution',
-      description: 'DocuSign/Dropbox Sign processing',
-      count: `${initialData.pipeline.ndaInProgress} in progress`,
-      icon: FileText,
-      accent: 'text-emerald-200',
-      wrapper: 'border-emerald-500/40 bg-emerald-500/20'
-    },
-    {
-      title: 'Subscription Processing',
-      description: 'Subscription agreements under review',
-      count: `${initialData.pipeline.subscriptionReview} review`,
-      icon: Building2,
-      accent: 'text-amber-200',
-      wrapper: 'border-amber-500/40 bg-amber-500/20'
-    },
-    {
-      title: 'Capital Calls',
-      description: initialData.pipeline.nextCapitalCall
-        ? `${initialData.pipeline.nextCapitalCall.name}`
-        : 'No upcoming calls scheduled',
-      count: initialData.pipeline.nextCapitalCall
-        ? new Intl.DateTimeFormat('en-GB', {
-            day: '2-digit',
-            month: 'short'
-          }).format(new Date(initialData.pipeline.nextCapitalCall.dueDate))
-        : 'All clear',
-      icon: Clock,
-      accent: 'text-purple-200',
-      wrapper: 'border-purple-500/40 bg-purple-500/20'
-    }
-  ]
-
-  const managementCards = [
-    {
-      title: 'Deal Management',
-      description: 'Manage opportunities & allocations',
-      href: '/versotech/staff/deals',
-      value: initialData.management.activeDeals,
-      icon: Building2,
-      accent: 'text-sky-200'
-    },
-    {
-      title: 'Request Management',
-      description: 'Handle LP requests and SLAs',
-      href: '/versotech/staff/requests',
-      value: initialData.management.activeRequests,
-      icon: ClipboardList,
-      accent: 'text-amber-200'
-    },
-    {
-      title: 'Compliance & Audit',
-      description: 'Monitor regulatory posture',
-      href: '/versotech/staff/audit',
-      value: `${initialData.management.complianceRate.toFixed(1)}%`,
-      icon: Shield,
-      accent: 'text-emerald-200'
-    },
-    {
-      title: 'LP Management',
-      description: 'Investor onboarding & relationships',
-      href: '/versotech/staff/investors',
-      value: initialData.management.activeInvestors,
-      icon: Users,
-      accent: 'text-purple-200'
-    }
-  ]
-
-  return (
-    <div className={cn("bg-[#020204] text-slate-100 min-h-screen", className)}>
-      <div className="flex">
-        {/* Action Center Sidebar */}
-        <div
-          className={cn(
-            "transition-all duration-300 border-r border-white/10",
-            isActionCenterOpen ? "w-80" : "w-0 overflow-hidden"
-          )}
-        >
-          {isActionCenterOpen && (
-            <div className="h-screen sticky top-0 overflow-y-auto">
-              <StaffActionCenter
-                className="h-full rounded-none border-0"
-                onWorkflowTrigger={handleWorkflowTrigger}
-              />
-            </div>
-          )}
+    formattedDate: string
+}) => (
+    <header className="flex items-end justify-between pb-6 border-b border-white/5">
+        <div className="space-y-1">
+             <div className="flex items-center gap-3 mb-2">
+                <Badge variant="outline" className="rounded-full border-emerald-500/30 bg-emerald-500/5 text-emerald-400 px-3 py-0.5 text-[10px] uppercase tracking-widest font-medium">
+                    Financial Operations
+                </Badge>
+                <span className="h-1 w-1 rounded-full bg-zinc-700"></span>
+                <span className="text-xs text-zinc-200 font-mono tracking-wider">{formattedDate}</span>
+             </div>
+             <h1 className="text-3xl font-light text-white tracking-tight">Executive Dashboard</h1>
         </div>
+    </header>
+))
+DashboardHeader.displayName = 'DashboardHeader'
 
-        {/* Main Content */}
-        <div className="flex-1 p-6 space-y-6">
-          {/* Header with Controls */}
-          <div className="flex flex-col gap-4">
-            {initialData.errors && initialData.errors.length > 0 && (
-              <div className="rounded-md border border-amber-500/40 bg-amber-500/10 p-4 text-sm text-amber-100">
-                Some dashboard metrics are unavailable right now.
-              </div>
-            )}
-
-            <div className="border-b border-white/10 pb-6">
-              <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-                <div className="space-y-4">
-                  <div className="flex items-center gap-3">
-                    <Badge variant="outline" className="border-white/20 bg-black/40 text-xs text-slate-200">
-                      <Shield className="mr-1 h-3 w-3" />
-                      BVI FSC Regulated
-                    </Badge>
-                    <Badge variant="outline" className="border-white/20 bg-black/40 text-xs text-slate-200">
-                      <Globe className="mr-1 h-3 w-3" />
-                      GDPR Compliant
-                    </Badge>
-                    <Badge variant="outline" className="border-white/20 bg-black/40 text-xs text-slate-200">
-                      <Activity className="mr-1 h-3 w-3" />
-                      n8n Workflows Active
-                    </Badge>
-                  </div>
-                  <div>
-                    <h1 className="text-3xl font-semibold tracking-tight text-white">VERSO Operations</h1>
-                    <p className="mt-2 max-w-2xl text-sm text-slate-300">
-                      Merchant Banking Operations • Multi-Vehicle Management • BVI/GDPR Compliant
-                    </p>
-                  </div>
-                </div>
-
-                {/* Dashboard Controls */}
-                <div className="flex flex-col gap-3 items-end">
-                  <div className="text-sm text-right text-slate-400">
-                    <p>Operations Dashboard</p>
-                    <p className="text-lg font-semibold text-white">{formattedDate}</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setIsActionCenterOpen(!isActionCenterOpen)}
-                      className="h-8 px-2 border-white/10 text-slate-200 hover:bg-white/10"
-                    >
-                      {isActionCenterOpen ? (
-                        <>
-                          <PanelLeftClose className="h-4 w-4 mr-1" />
-                          Hide Actions
-                        </>
-                      ) : (
-                        <>
-                          <PanelLeftOpen className="h-4 w-4 mr-1" />
-                          Show Actions
-                        </>
-                      )}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setIsCompactView(!isCompactView)}
-                      className="h-8 px-2 border-white/10 text-slate-200 hover:bg-white/10"
-                    >
-                      {isCompactView ? (
-                        <>
-                          <Maximize2 className="h-4 w-4 mr-1" />
-                          Expand
-                        </>
-                      ) : (
-                        <>
-                          <Minimize2 className="h-4 w-4 mr-1" />
-                          Compact
-                        </>
-                      )}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleRefresh}
-                      className="h-8 px-2 border-white/10 text-slate-200 hover:bg-white/10"
-                    >
-                      <RefreshCw className="h-4 w-4 mr-1" />
-                      Refresh
-                    </Button>
-                  </div>
-                </div>
-              </div>
+const KPICard = React.memo(({ kpi, glassCardStyle, labelStyle, valueStyle }: { kpi: any, glassCardStyle: string, labelStyle: string, valueStyle: string }) => {
+    const Icon = kpi.icon
+    return (
+        <div className={glassCardStyle + " p-6 rounded-xl relative overflow-hidden group"}>
+            <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity duration-500 pointer-events-none">
+                <Icon className="w-16 h-16 text-white transform rotate-12 translate-x-4 -translate-y-4" />
             </div>
-          </div>
+            <div className="relative z-10">
+                <div className="flex items-center justify-between mb-4">
+                    <h3 className={labelStyle}>{kpi.label}</h3>
+                    <Icon className={cn("w-4 h-4 opacity-50 transition-opacity group-hover:opacity-100", kpi.accent)} />
+                </div>
+                <div className="flex items-baseline gap-2">
+                    <span className={valueStyle}>{typeof kpi.value === 'number' ? kpi.value.toLocaleString() : kpi.value}</span>
+                    <span className="text-sm text-zinc-200 font-light">{kpi.subValue}</span>
+                </div>
+                <div className="mt-4 flex items-center gap-2 text-xs text-zinc-200">
+                    {kpi.trend === 'up' ? <ArrowUpRight className="w-3 h-3 text-emerald-400" /> : <MoreHorizontal className="w-3 h-3 text-zinc-300" />}
+                    <span className={kpi.trend === 'up' ? "text-emerald-400" : "text-zinc-200"}>{kpi.change}</span>
+                </div>
+            </div>
+        </div>
+    )
+})
+KPICard.displayName = 'KPICard'
 
-          {/* Dashboard Tabs */}
-          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="space-y-4">
-            <TabsList className="bg-black/50 border border-white/10">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="analytics">Analytics</TabsTrigger>
-              <TabsTrigger value="operations">Operations</TabsTrigger>
-            </TabsList>
+const FeesChart = React.memo(({ data, glassCardStyle }: { data: any[], glassCardStyle: string }) => (
+    <Card className={glassCardStyle + " border-0 rounded-2xl"}>
+        <CardHeader className="pb-2 pt-6 px-6">
+            <div className="flex items-center justify-between">
+                <div>
+                    <CardTitle className="text-lg font-light text-white tracking-wide flex items-center gap-2">
+                        Revenue & Fees
+                    </CardTitle>
+                    <CardDescription className="text-zinc-200 text-xs uppercase tracking-wider mt-1">
+                        Transaction Volume (LTM)
+                    </CardDescription>
+                </div>
+                <Badge variant="secondary" className="bg-emerald-900/20 text-emerald-400 border-emerald-900/50 font-mono text-[10px]">LIVE</Badge>
+            </div>
+        </CardHeader>
+        <CardContent className="pl-2 pr-6 pb-6 pt-4">
+            <div className="h-[280px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={data} margin={{ top: 10, right: 10, left: 10, bottom: 10 }}>
+                        <defs>
+                            <linearGradient id="colorFees" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stopColor="#10b981" stopOpacity={0.3} />
+                                <stop offset="95%" stopColor="#10b981" stopOpacity={0.05} />
+                            </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="2 4" stroke="#ffffff08" vertical={false} horizontal={true} />
+                        <XAxis
+                            dataKey="displayDate"
+                            stroke="#d4d4d8"
+                            fontSize={11}
+                            tickLine={false}
+                            axisLine={{ stroke: '#27272a', strokeWidth: 1 }}
+                            dy={8}
+                            height={40}
+                        />
+                        <YAxis
+                            stroke="#d4d4d8"
+                            fontSize={11}
+                            tickLine={false}
+                            axisLine={false}
+                            tickFormatter={(value) => `$${(value/1000).toFixed(0)}k`}
+                            dx={-5}
+                            width={60}
+                        />
+                        <Tooltip
+                            contentStyle={{
+                                backgroundColor: '#18181b',
+                                borderColor: '#3f3f46',
+                                borderRadius: '10px',
+                                padding: '12px 16px',
+                                boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.3)'
+                            }}
+                            itemStyle={{ color: '#10b981', fontSize: '14px', fontWeight: '600', fontFamily: 'system-ui' }}
+                            labelStyle={{ color: '#d4d4d8', fontSize: '12px', marginBottom: '6px', fontWeight: '500' }}
+                            formatter={(value: number) => [`$${value.toLocaleString()}`, 'Fee Revenue']}
+                        />
+                        <Area
+                            type="monotone"
+                            dataKey="amount"
+                            stroke="#10b981"
+                            strokeWidth={2.5}
+                            fillOpacity={1}
+                            fill="url(#colorFees)"
+                            isAnimationActive={false}
+                            dot={{ fill: '#10b981', strokeWidth: 0, r: 3 }}
+                            activeDot={{ r: 5, fill: '#10b981', stroke: '#18181b', strokeWidth: 3 }}
+                        />
+                    </AreaChart>
+                </ResponsiveContainer>
+            </div>
+        </CardContent>
+    </Card>
+))
+FeesChart.displayName = 'FeesChart'
 
-            <TabsContent value="overview" className="space-y-6">
-              {/* Real-time Updates Component */}
-              {showRealtime && (
-                <RealtimeStaffDashboard
-                  initialData={{
-                    activeLps: initialData.kpis.activeLps,
-                    pendingKyc: initialData.kpis.pendingKyc,
-                    workflowRuns: initialData.kpis.workflowRunsThisMonth,
-                    complianceRate: initialData.kpis.complianceRate,
-                    kycPipeline: initialData.pipeline.kycPending,
-                    ndaInProgress: initialData.pipeline.ndaInProgress,
-                    subscriptionReview: initialData.pipeline.subscriptionReview,
-                    activeDeals: initialData.management.activeDeals,
-                    activeRequests: initialData.management.activeRequests,
-                    lastUpdated: initialData.generatedAt
-                  }}
-                  onMetricsUpdate={handleMetricsUpdate}
-                />
-              )}
+const SubscriptionsChart = React.memo(({ data, glassCardStyle }: { data: any[], glassCardStyle: string }) => (
+    <Card className={glassCardStyle + " border-0 rounded-2xl"}>
+        <CardHeader className="pb-2 pt-6 px-6">
+            <div className="flex items-center justify-between">
+                <div>
+                    <CardTitle className="text-lg font-light text-white tracking-wide flex items-center gap-2">
+                        Capital Commitments
+                    </CardTitle>
+                    <CardDescription className="text-zinc-200 text-xs uppercase tracking-wider mt-1">
+                        Subscription Flows (LTM)
+                    </CardDescription>
+                </div>
+                <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-sky-500"></span>
+                        <span className="text-xs text-zinc-200">Committed</span>
+                    </div>
+                </div>
+            </div>
+        </CardHeader>
+        <CardContent className="pl-2 pr-6 pb-6 pt-4">
+            <div className="h-[260px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={data} barSize={28} margin={{ top: 10, right: 10, left: 10, bottom: 10 }}>
+                        <CartesianGrid strokeDasharray="2 4" stroke="#ffffff08" vertical={false} horizontal={true} />
+                        <XAxis
+                            dataKey="displayDate"
+                            stroke="#d4d4d8"
+                            fontSize={11}
+                            tickLine={false}
+                            axisLine={{ stroke: '#27272a', strokeWidth: 1 }}
+                            dy={8}
+                            height={40}
+                        />
+                        <YAxis
+                            stroke="#d4d4d8"
+                            fontSize={11}
+                            tickLine={false}
+                            axisLine={false}
+                            tickFormatter={(value) => `$${(value/1000000).toFixed(1)}M`}
+                            dx={-5}
+                            width={60}
+                        />
+                        <Tooltip
+                            contentStyle={{
+                                backgroundColor: '#18181b',
+                                borderColor: '#3f3f46',
+                                borderRadius: '10px',
+                                padding: '12px 16px',
+                                boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.3)'
+                            }}
+                            cursor={{ fill: '#ffffff08', radius: 4 }}
+                            itemStyle={{ color: '#38bdf8', fontSize: '14px', fontWeight: '600', fontFamily: 'system-ui' }}
+                            labelStyle={{ color: '#d4d4d8', fontSize: '12px', marginBottom: '6px', fontWeight: '500' }}
+                            formatter={(value: number) => [`$${value.toLocaleString()}`, 'Capital']}
+                        />
+                        <Bar
+                            dataKey="amount"
+                            fill="#0ea5e9"
+                            radius={[4, 4, 0, 0]}
+                            isAnimationActive={false}
+                            maxBarSize={50}
+                        />
+                    </BarChart>
+                </ResponsiveContainer>
+            </div>
+        </CardContent>
+    </Card>
+))
+SubscriptionsChart.displayName = 'SubscriptionsChart'
 
-              {/* KPI Cards */}
-              <section className={cn(
-                "grid gap-4",
-                isCompactView ? "grid-cols-2 xl:grid-cols-4" : "grid-cols-1 md:grid-cols-2 xl:grid-cols-4"
-              )}>
-                {kpiCards.map(({ label, value, helper, icon: Icon, accent }) => (
-                  <Card key={label} className={`${cardBaseClasses}`}>
-                    <CardHeader className={cn("flex flex-row items-center justify-between space-y-0", isCompactView ? "pb-1" : "pb-2")}>
-                      <CardTitle className={cn("font-medium text-slate-300", isCompactView ? "text-xs" : "text-sm")}>
-                        {label}
-                      </CardTitle>
-                      <Icon className={cn(accent, isCompactView ? "h-4 w-4" : "h-5 w-5")} />
-                    </CardHeader>
-                    <CardContent className={isCompactView ? "pt-1" : ""}>
-                      <div className={cn("font-semibold text-white", isCompactView ? "text-xl" : "text-3xl")}>
-                        {value}
-                      </div>
-                      {!isCompactView && helper && (
-                        <p className="mt-1 text-xs text-slate-400">{helper}</p>
-                      )}
-                    </CardContent>
-                  </Card>
-                ))}
-              </section>
+const ErrorBanner = React.memo(({ errors }: { errors: MetricError[] }) => {
+    const [isExpanded, setIsExpanded] = useState(false)
 
-              {/* Operations Pipeline */}
-              <Card className={`${sectionBorderClasses}`}>
-                <CardHeader>
-                  <CardTitle className="text-white">Operations Pipeline</CardTitle>
-                  <CardDescription className="text-slate-400">
-                    Real-time view of onboarding, compliance, and capital call activity
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className={cn(
-                    "gap-4",
-                    isCompactView ? "grid grid-cols-2" : "space-y-4"
-                  )}>
-                    {pipelineSections.map(({ title, description, count, icon: Icon, accent, wrapper }) => (
-                      <div
-                        key={title}
-                        className={cn(
-                          "flex items-center justify-between rounded-lg border px-4 backdrop-blur-sm",
-                          wrapper,
-                          isCompactView ? "py-3" : "py-4"
+    return (
+        <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 p-4">
+            <div className="flex items-start justify-between gap-4">
+                <div className="flex items-start gap-3">
+                    <AlertTriangle className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
+                    <div>
+                        <p className="text-sm font-medium text-amber-100">
+                            {errors.length} metric{errors.length > 1 ? 's' : ''} unavailable
+                        </p>
+                        <p className="text-xs text-amber-200/70 mt-1">
+                            Some dashboard metrics failed to load. Click to view details.
+                        </p>
+                        {isExpanded && (
+                            <div className="mt-3 space-y-2">
+                                {errors.map((error, idx) => (
+                                    <div key={idx} className="pl-3 border-l-2 border-amber-500/40">
+                                        <p className="text-xs font-mono text-amber-100">{error.metric}</p>
+                                        <p className="text-xs text-amber-200/60 mt-0.5">{error.message}</p>
+                                    </div>
+                                ))}
+                            </div>
                         )}
-                      >
-                        <div className="flex items-center gap-3">
-                          <Icon className={cn(accent, isCompactView ? "h-4 w-4" : "h-5 w-5")} />
-                          <div>
-                            <p className={cn("font-medium text-white", isCompactView ? "text-sm" : "")}>
-                              {title}
-                            </p>
-                            {!isCompactView && (
-                              <p className="text-xs text-slate-200/80">{description}</p>
-                            )}
-                          </div>
-                        </div>
-                        <Badge variant="secondary" className="bg-black/60 text-slate-100">
-                          {count}
-                        </Badge>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+                    </div>
+                </div>
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setIsExpanded(!isExpanded)}
+                    className="text-amber-300 hover:text-amber-100 hover:bg-amber-500/20"
+                >
+                    {isExpanded ? 'Hide' : 'Details'}
+                </Button>
+            </div>
+        </div>
+    )
+})
+ErrorBanner.displayName = 'ErrorBanner'
 
-              {/* Management Cards */}
-              <section className={cn(
-                "grid gap-4",
-                isCompactView ? "grid-cols-2 xl:grid-cols-4" : "grid-cols-1 md:grid-cols-2 xl:grid-cols-4"
-              )}>
-                {managementCards.map(({ title, description, href, value, icon: Icon, accent }) => (
-                  <Link key={title} href={href} className="block">
-                    <Card className={`${cardBaseClasses} h-full`}>
-                      <CardHeader className={isCompactView ? "pb-2" : ""}>
-                        <CardTitle className={cn(
-                          "flex items-center gap-2 text-white",
-                          isCompactView ? "text-sm" : "text-base"
-                        )}>
-                          <Icon className={cn(accent, isCompactView ? "h-4 w-4" : "h-5 w-5")} />
-                          {title}
-                        </CardTitle>
-                        {!isCompactView && (
-                          <CardDescription className="text-slate-400">{description}</CardDescription>
-                        )}
-                      </CardHeader>
-                      <CardContent>
-                        <div className={cn("font-semibold text-white", isCompactView ? "text-xl" : "text-3xl")}>
-                          {value}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </Link>
-                ))}
-              </section>
-            </TabsContent>
+const LedgerItem = React.memo(({ activity }: { activity: any }) => {
+    const getActivityIcon = (type: string) => {
+        switch (type) {
+            case 'fee': return DollarSign
+            case 'subscription': return Wallet
+            case 'investor': return Users
+            default: return Activity
+        }
+    }
+    const Icon = getActivityIcon(activity.activityType)
+    const isFee = activity.activityType === 'fee'
 
-            <TabsContent value="analytics" className="space-y-6">
-              {/* Analytics Coming Soon */}
-              <Card className={`${sectionBorderClasses}`}>
-                <CardContent className="p-12">
-                  <div className="text-center space-y-4">
-                    <div className="mx-auto w-16 h-16 rounded-full bg-gradient-to-br from-sky-500/20 to-purple-500/20 flex items-center justify-center">
-                      <BarChart3 className="h-8 w-8 text-sky-400" />
+    return (
+        <div className="group relative bg-zinc-900/30 border border-white/5 rounded-lg p-4 hover:bg-zinc-800/50 transition-colors duration-200">
+            <div className="absolute left-0 top-4 bottom-4 w-[2px] bg-zinc-800 group-hover:bg-emerald-500/50 transition-colors rounded-r-full"></div>
+            <div className="flex items-start justify-between gap-4 pl-3">
+                <div className="flex gap-3">
+                    <div className={cn(
+                        "p-2 rounded-md h-fit mt-0.5 transition-colors",
+                        isFee ? "bg-emerald-950/30 text-emerald-400" : "bg-zinc-800/50 text-zinc-200"
+                    )}>
+                        <Icon className="w-4 h-4" />
                     </div>
                     <div>
-                      <h3 className="text-lg font-semibold text-white mb-2">
-                        Analytics & Trends Coming Soon
-                      </h3>
-                      <p className="text-sm text-slate-400 max-w-md mx-auto">
-                        Historical trend charts, conversion analytics, and workflow performance metrics
-                        will be available once historical data tracking is implemented.
-                      </p>
+                        <p className="text-sm font-medium text-zinc-200 leading-tight">{activity.title}</p>
+                        <p className="text-xs text-zinc-200 mt-1 leading-relaxed max-w-[200px]">{activity.description}</p>
+                        <p className="text-[10px] text-zinc-300 font-mono mt-2 uppercase tracking-wider">
+                            {format(parseISO(activity.createdAt), 'HH:mm')} • {activity.status || 'Processed'}
+                        </p>
                     </div>
-                    <div className="pt-4">
-                      <Badge variant="outline" className="border-sky-500/30 bg-sky-500/10 text-sky-200">
-                        Feature in Development
-                      </Badge>
+                </div>
+                {activity.amount && (
+                    <div className="text-right">
+                        <span className={cn(
+                            "text-sm font-mono font-medium block",
+                            isFee ? "text-emerald-400" : "text-zinc-300"
+                        )}>
+                            {isFee ? '+' : ''}${activity.amount.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                        </span>
+                        <span className="text-[10px] text-zinc-300 uppercase">USD</span>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="operations" className="space-y-6">
-              {/* Recent Operations */}
-              <Card className={`${sectionBorderClasses}`}>
-                <CardHeader>
-                  <CardTitle className="text-white">Recent Operations</CardTitle>
-                  <CardDescription className="text-slate-400">
-                    Latest workflow executions and system events
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {initialData.recentActivity.length === 0 ? (
-                      <div className="rounded-md border border-dashed border-white/20 bg-black/30 p-6 text-center text-sm text-slate-400">
-                        No recent operations recorded.
-                      </div>
-                    ) : (
-                      initialData.recentActivity.map((activity) => (
-                        <div
-                          key={activity.id}
-                          className="flex items-center gap-3 rounded-lg border border-white/10 bg-black/30 px-4 py-3"
-                        >
-                          <div className="h-2 w-2 rounded-full bg-emerald-300" />
-                          <div className="flex-1">
-                            <p className="text-sm font-medium text-white">{activity.title}</p>
-                            {activity.description && (
-                              <p className="text-xs text-slate-400">{activity.description}</p>
-                            )}
-                          </div>
-                          <span className="text-xs text-slate-500">
-                            {new Intl.DateTimeFormat('en-GB', {
-                              hour: '2-digit',
-                              minute: '2-digit'
-                            }).format(new Date(activity.createdAt))}
-                          </span>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Process Center */}
-              <Card className={`${sectionBorderClasses}`}>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-white">
-                    <Zap className="h-5 w-5 text-sky-300" />
-                    Process Center
-                  </CardTitle>
-                  <CardDescription className="text-slate-400">
-                    Trigger n8n automation workflows ({initialData.processCenter.activeWorkflows} active)
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {[
-                    { label: 'Positions Statement', icon: BarChart3 },
-                    { label: 'NDA Agent', icon: FileText },
-                    { label: 'Shared-Drive Notification', icon: Database },
-                    { label: 'Inbox Manager', icon: MessageSquare },
-                    { label: 'LinkedIn Leads Scraper', icon: Target },
-                    { label: 'Reporting Agent', icon: TrendingUp }
-                  ].map(({ label, icon: Icon }) => (
-                    <Link key={label} href="/versotech/staff/processes" className="block">
-                      <Button
-                        variant="outline"
-                        className="w-full justify-start border-white/10 bg-black/40 text-slate-200 hover:bg-black/60 hover:text-white"
-                      >
-                        <Icon className="mr-2 h-4 w-4" />
-                        {label}
-                      </Button>
-                    </Link>
-                  ))}
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
-
-          {/* View Toggle Controls */}
-          <div className="flex items-center justify-center gap-4 pt-4 border-t border-white/10">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowRealtime(!showRealtime)}
-              className="text-xs text-slate-400 hover:text-white"
-            >
-              {showRealtime ? <EyeOff className="h-3 w-3 mr-1" /> : <Eye className="h-3 w-3 mr-1" />}
-              {showRealtime ? 'Hide' : 'Show'} Real-time
-            </Button>
-          </div>
+                )}
+            </div>
         </div>
-      </div>
-    </div>
-  )
+    )
+})
+LedgerItem.displayName = 'LedgerItem'
+
+// --- Main Component ---
+
+export function EnhancedStaffDashboard({
+    initialData,
+    className
+}: {
+    initialData: DashboardData
+    className?: string
+}) {
+    const router = useRouter()
+
+    // Memoize handlers
+    const handleWorkflowTrigger = useCallback((workflowKey: string) => {
+        router.push(`/versotech/staff/processes?workflow=${workflowKey}`)
+        toast.info('Initiating Process', {
+            description: `Workflow sequence ${workflowKey} started.`
+        })
+    }, [router])
+
+    // Memoize data processing
+    const formattedDate = useMemo(() => 
+        format(parseISO(initialData.generatedAt), 'dd MMM yyyy').toUpperCase(), 
+        [initialData.generatedAt]
+    )
+
+    const formatChartDate = useCallback((dateStr: string) => {
+        try {
+             return format(parseISO(dateStr), 'MMM dd')
+        } catch (e) {
+            return dateStr
+        }
+    }, [])
+
+    const feesData = useMemo(() => initialData.charts.fees.map(f => ({
+        ...f,
+        displayDate: formatChartDate(f.date)
+    })), [initialData.charts.fees, formatChartDate])
+
+    const subscriptionsData = useMemo(() => initialData.charts.subscriptions.map(s => ({
+        ...s,
+        displayDate: formatChartDate(s.date)
+    })), [initialData.charts.subscriptions, formatChartDate])
+
+    // KPI Data
+    const kpiCards = useMemo(() => [
+        {
+            label: 'Total Active LPs',
+            value: initialData.kpis.activeLps ?? 0,
+            subValue: 'Investors',
+            change: '+2.4%',
+            trend: 'up',
+            icon: Users,
+            accent: 'text-zinc-200'
+        },
+        {
+            label: 'Pending KYC',
+            value: initialData.kpis.pendingKyc ?? 0,
+            subValue: 'Reviews',
+            change: initialData.kpis.highPriorityKyc && initialData.kpis.highPriorityKyc > 0 ? `${initialData.kpis.highPriorityKyc} High Priority` : 'Standard',
+            trend: 'neutral',
+            icon: Shield,
+            accent: 'text-amber-200'
+        },
+        {
+            label: 'Process Executions',
+            value: initialData.kpis.workflowRunsThisMonth ?? 0,
+            subValue: 'Workflows',
+            change: 'MTD',
+            trend: 'up',
+            icon: Workflow,
+            accent: 'text-sky-200'
+        },
+        {
+            label: 'Compliance Index',
+            value: initialData.kpis.complianceRate !== null ? `${initialData.kpis.complianceRate.toFixed(0)}%` : 'N/A',
+            subValue: 'Verified',
+            change: 'Target: 100%',
+            trend: 'neutral',
+            icon: CheckCircle,
+            accent: 'text-emerald-200'
+        }
+    ], [initialData.kpis])
+
+    // Styles
+    const glassCard = "bg-zinc-900/40 backdrop-blur-md border border-white/5 hover:border-white/10 transition-all duration-300 shadow-xl hover:shadow-2xl hover:shadow-black/50"
+    const kpiValueStyle = "text-3xl xl:text-4xl font-light tracking-tight text-white"
+    const kpiLabelStyle = "text-xs font-medium uppercase tracking-widest text-zinc-200 mb-1 group-hover:text-zinc-100 transition-colors"
+
+    return (
+        <div className={cn("bg-[#050505] text-zinc-200 min-h-screen flex flex-col font-sans selection:bg-emerald-500/30", className)}>
+            <div className="flex-1 p-8 xl:p-10 max-w-[1800px] mx-auto w-full space-y-10">
+                
+                <DashboardHeader formattedDate={formattedDate} />
+
+                {/* Error Banner */}
+                {initialData.errors && initialData.errors.length > 0 && (
+                    <ErrorBanner errors={initialData.errors} />
+                )}
+
+                {/* KPI Grid */}
+                <section className="grid gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-4">
+                    {kpiCards.map((kpi) => (
+                        <KPICard 
+                            key={kpi.label} 
+                            kpi={kpi} 
+                            glassCardStyle={glassCard} 
+                            labelStyle={kpiLabelStyle} 
+                            valueStyle={kpiValueStyle} 
+                        />
+                    ))}
+                </section>
+
+                {/* Main Analytics Grid */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div className="lg:col-span-2 space-y-8">
+                        <FeesChart data={feesData} glassCardStyle={glassCard} />
+                        <SubscriptionsChart data={subscriptionsData} glassCardStyle={glassCard} />
+                    </div>
+
+                    {/* Activity Feed */}
+                    <div className="space-y-6">
+                        <div className="flex items-center justify-between px-1">
+                            <h2 className="text-sm font-medium text-zinc-200 uppercase tracking-widest">Ledger</h2>
+                            <CalendarRange className="w-4 h-4 text-zinc-300" />
+                        </div>
+
+                        <div className="space-y-3">
+                             {initialData.recentActivity.length === 0 ? (
+                                <div className="p-8 border border-dashed border-white/10 rounded-lg text-center">
+                                    <p className="text-sm text-zinc-200">No recent transactions recorded.</p>
+                                </div>
+                            ) : (
+                                initialData.recentActivity.map((activity) => (
+                                    <LedgerItem key={activity.id} activity={activity} />
+                                ))
+                            )}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Action Center */}
+                <div className="pt-6 border-t border-white/5">
+                    <StaffActionCenter
+                        className="bg-zinc-900/20 border-white/5"
+                        onWorkflowTrigger={handleWorkflowTrigger}
+                    />
+                </div>
+            </div>
+        </div>
+    )
 }

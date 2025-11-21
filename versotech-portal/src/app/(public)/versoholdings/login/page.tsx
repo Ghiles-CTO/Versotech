@@ -2,27 +2,21 @@
 
 import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { signIn, signUp, signInWithGoogle, AuthError } from '@/lib/auth-client'
 import {
   Loader2,
   Eye,
   EyeOff,
-  User,
-  Lock,
-  Building2,
-  Crown,
-  Briefcase,
-  ArrowRight,
   Shield,
-  Mail,
-  UserPlus
+  ArrowLeft
 } from 'lucide-react'
+import Link from 'next/link'
+import Image from 'next/image'
 
 function InvestorLoginContent() {
   const router = useRouter()
@@ -35,33 +29,17 @@ function InvestorLoginContent() {
   const [isSignUp, setIsSignUp] = useState(false)
   const [message, setMessage] = useState<{ type: 'error' | 'success' | 'info', text: string } | null>(null)
 
-  // Handle URL error parameters
   useEffect(() => {
     const error = searchParams.get('error')
     if (error) {
       let errorMessage = 'Authentication error occurred'
-
       switch (error) {
-        case 'session_expired':
-          errorMessage = 'Your session has expired. Please sign in again.'
-          break
-        case 'profile_not_found':
-          errorMessage = 'User profile not found. Please contact support.'
-          break
-        case 'auth_failed':
-          errorMessage = 'Authentication failed. Please try again.'
-          break
-        case 'profile_creation_failed':
-          errorMessage = 'Failed to create user profile. Please try again.'
-          break
-        default:
-          errorMessage = 'An authentication error occurred. Please try again.'
+        case 'session_expired': errorMessage = 'Your session has expired.'; break
+        case 'profile_not_found': errorMessage = 'User profile not found.'; break
+        case 'auth_failed': errorMessage = 'Authentication failed.'; break
+        default: errorMessage = 'An error occurred.';
       }
-
-      setMessage({
-        type: 'error',
-        text: errorMessage
-      })
+      setMessage({ type: 'error', text: errorMessage })
     }
   }, [searchParams])
 
@@ -73,25 +51,15 @@ function InvestorLoginContent() {
     try {
       if (isSignUp) {
         if (!displayName.trim()) {
-          setMessage({
-            type: 'error',
-            text: 'Please enter your full name'
-          })
+          setMessage({ type: 'error', text: 'Please enter your full name' })
           setIsLoading(false)
           return
         }
-
-        // Sign up new user
         await signUp(email, password, displayName, 'investor')
-        setMessage({
-          type: 'success',
-          text: 'Account created! Please check your email to verify your account.'
-        })
+        setMessage({ type: 'success', text: 'Account created! Please verify email.' })
         setIsSignUp(false)
       } else {
-        // Sign in existing user
         const result = await signIn(email, password, 'investor')
-        
         if (result?.success) {
           if ((result.user as any)?.demo) {
             window.location.href = result.redirect ?? '/versoholdings/dashboard'
@@ -101,17 +69,8 @@ function InvestorLoginContent() {
         }
       }
     } catch (error) {
-      if (error instanceof AuthError) {
-        setMessage({
-          type: 'error',
-          text: error.message
-        })
-      } else {
-        setMessage({
-          type: 'error',
-          text: 'Authentication failed. Please try again.'
-        })
-      }
+      if (error instanceof AuthError) setMessage({ type: 'error', text: error.message })
+      else setMessage({ type: 'error', text: 'Authentication failed.' })
     } finally {
       setIsLoading(false)
     }
@@ -120,20 +79,10 @@ function InvestorLoginContent() {
   const handleGoogleSignIn = async () => {
     try {
       setIsLoading(true)
-      await signInWithGoogle('investor') // Pass portal context
-      // The redirect will be handled by the OAuth flow
+      await signInWithGoogle('investor')
     } catch (error) {
-      if (error instanceof AuthError) {
-        setMessage({
-          type: 'error',
-          text: error.message
-        })
-      } else {
-        setMessage({
-          type: 'error',
-          text: 'Google sign in failed. Please try again.'
-        })
-      }
+      if (error instanceof AuthError) setMessage({ type: 'error', text: error.message })
+      else setMessage({ type: 'error', text: 'Google sign in failed.' })
       setIsLoading(false)
     }
   }
@@ -147,313 +96,142 @@ function InvestorLoginContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-slate-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-12">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-white p-4 font-sans text-slate-900">
+      
+      <Link href="/" className="absolute top-8 left-8 text-sm text-slate-400 hover:text-slate-900 transition-colors flex items-center gap-2 group">
+        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Back to Home
+      </Link>
+
+      <div className="w-full max-w-md space-y-8 animate-in fade-in zoom-in-95 duration-500">
         
-        {/* Login/Sign Up Form */}
-        <div className="space-y-8 lg:pr-8">
-          <div className="text-center space-y-4">
-            <div className="flex items-center justify-center gap-3">
-              <Building2 className="h-12 w-12 text-blue-600" />
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">VERSO Holdings</h1>
-                <p className="text-blue-600 font-medium">Investor Portal</p>
-              </div>
-            </div>
+        <div className="text-center space-y-2">
+          <div className="flex justify-center mb-6">
+             <div className="relative w-48 h-16">
+                <Image 
+                  src="/versoholdings-logo.jpg" 
+                  alt="VERSO Holdings" 
+                  fill
+                  className="object-contain"
+                  priority
+                />
+             </div>
           </div>
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900 sr-only">VERSO Holdings</h1>
+          <p className="text-slate-500">Investor Access Portal</p>
+        </div>
 
-          <Card className="shadow-xl border-0">
-            <CardHeader className="space-y-3 pb-6">
-              <div className="flex items-center gap-2">
-                {isSignUp ? (
-                  <>
-                    <UserPlus className="h-5 w-5 text-blue-600" />
-                    <CardTitle className="text-xl">Create Account</CardTitle>
-                  </>
-                ) : (
-                  <>
-                    <User className="h-5 w-5 text-blue-600" />
-                    <CardTitle className="text-xl">Sign In</CardTitle>
-                  </>
-                )}
+        <Card className="border-slate-100 shadow-2xl shadow-slate-200/50 bg-white">
+          <CardContent className="p-8 space-y-6">
+            
+            {message && (
+              <div className={`p-3 rounded-md text-sm font-medium border ${
+                message.type === 'error' ? 'bg-red-50 border-red-100 text-red-600' : 
+                message.type === 'success' ? 'bg-emerald-50 border-emerald-100 text-emerald-600' :
+                'bg-blue-50 border-blue-100 text-blue-600'
+              }`}>
+                {message.text}
               </div>
-              <CardDescription className="text-base">
-                {isSignUp
-                  ? 'Create your account to access VERSO Holdings investor portal'
-                  : 'Access your investment portfolio and account information'
-                }
-              </CardDescription>
-            </CardHeader>
+            )}
 
-            <CardContent className="space-y-6">
-              {message && (
-                <div className={`p-4 rounded-lg border ${
-                  message.type === 'error'
-                    ? 'bg-red-50 border-red-200 text-red-700'
-                    : message.type === 'success'
-                    ? 'bg-green-50 border-green-200 text-green-700'
-                    : 'bg-blue-50 border-blue-200 text-blue-700'
-                }`}>
-                  {message.text}
+            <Button
+              variant="outline"
+              onClick={handleGoogleSignIn}
+              disabled={isLoading}
+              className="w-full h-12 border-slate-200 hover:bg-slate-50 text-slate-700 font-medium relative"
+            >
+              <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24">
+                <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+              </svg>
+              Continue with Google
+            </Button>
+
+            <div className="relative flex items-center py-2 overflow-hidden">
+              <Separator className="flex-grow border-t border-slate-100" />
+              <span className="flex-shrink-0 px-4 text-xs text-slate-400 uppercase tracking-wide font-medium whitespace-nowrap">Or using email</span>
+              <Separator className="flex-grow border-t border-slate-100" />
+            </div>
+
+            <form onSubmit={handleEmailAuth} className="space-y-4">
+              {isSignUp && (
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-semibold text-slate-500 uppercase">Full Name</Label>
+                  <Input 
+                    type="text" 
+                    placeholder="John Doe" 
+                    className="h-11 bg-slate-50 border-slate-200 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                    value={displayName}
+                    onChange={(e) => setDisplayName(e.target.value)}
+                    required={isSignUp}
+                  />
                 </div>
               )}
-
-              {/* Google Sign In Button */}
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleGoogleSignIn}
-                disabled={isLoading}
-                className="w-full h-11 border-2"
-              >
-                <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
-                  <path
-                    fill="currentColor"
-                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                  />
-                  <path
-                    fill="currentColor"
-                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                  />
-                  <path
-                    fill="currentColor"
-                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                  />
-                  <path
-                    fill="currentColor"
-                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                  />
-                </svg>
-                Continue with Google
-              </Button>
-
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <Separator className="w-full" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-white px-2 text-gray-500">Or continue with email</span>
-                </div>
+              
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold text-slate-500 uppercase">Email Address</Label>
+                <Input 
+                  type="email" 
+                  placeholder="name@example.com" 
+                  className="h-11 bg-slate-50 border-slate-200 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
               </div>
 
-              <form onSubmit={handleEmailAuth} className="space-y-5">
-                {isSignUp && (
-                  <div className="space-y-2">
-                    <Label htmlFor="displayName" className="text-sm font-medium">Full Name</Label>
-                    <Input
-                      id="displayName"
-                      type="text"
-                      placeholder="John Doe"
-                      value={displayName}
-                      onChange={(e) => setDisplayName(e.target.value)}
-                      required={isSignUp}
-                      disabled={isLoading}
-                      className="h-11"
-                    />
-                  </div>
-                )}
-
-                <div className="space-y-2">
-                  <Label htmlFor="email" className="text-sm font-medium">Email Address</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="your.email@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold text-slate-500 uppercase">Password</Label>
+                <div className="relative">
+                  <Input 
+                    type={showPassword ? 'text' : 'password'} 
+                    placeholder="••••••••" 
+                    className="h-11 bg-slate-50 border-slate-200 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all pr-10"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
                     required
-                    disabled={isLoading}
-                    className="h-11"
                   />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="password" className="text-sm font-medium">Password</Label>
-                  <div className="relative">
-                    <Input
-                      id="password"
-                      type={showPassword ? 'text' : 'password'}
-                      placeholder={isSignUp ? "Create a secure password" : "Enter your password"}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                      disabled={isLoading}
-                      className="h-11 pr-10"
-                      minLength={isSignUp ? 6 : undefined}
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="absolute right-0 top-0 h-11 px-3 hover:bg-transparent"
-                      onClick={() => setShowPassword(!showPassword)}
-                    >
-                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </Button>
-                  </div>
-                  {isSignUp && (
-                    <p className="text-xs text-gray-500">Password must be at least 6 characters long</p>
-                  )}
-                </div>
-
-                <Button
-                  type="submit"
-                  disabled={isLoading || !email || !password || (isSignUp && !displayName)}
-                  className="w-full h-11 bg-blue-600 hover:bg-blue-700 text-white font-medium"
-                >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      {isSignUp ? 'Creating Account...' : 'Signing In...'}
-                    </>
-                  ) : (
-                    <>
-                      {isSignUp ? (
-                        <>
-                          <UserPlus className="mr-2 h-4 w-4" />
-                          Create Account
-                        </>
-                      ) : (
-                        <>
-                          <Lock className="mr-2 h-4 w-4" />
-                          Sign In to Portfolio
-                        </>
-                      )}
-                    </>
-                  )}
-                </Button>
-
-                <div className="text-center">
-                  <Button
+                  <button
                     type="button"
-                    variant="ghost"
-                    onClick={switchMode}
-                    disabled={isLoading}
-                    className="text-sm"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-3 text-slate-400 hover:text-slate-600"
                   >
-                    {isSignUp
-                      ? 'Already have an account? Sign in instead'
-                      : "Don't have an account? Create one now"
-                    }
-                  </Button>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
-
-          <div className="text-center space-y-2">
-            <p className="text-sm text-gray-600">VERSO Holdings Investment Platform</p>
-            <div className="flex items-center justify-center gap-4 text-xs text-gray-500">
-              <span className="flex items-center gap-1">
-                <Shield className="h-3 w-3" />
-                Bank-level Security
-              </span>
-              <span>•</span>
-              <span>$800M+ AUM</span>
-              <span>•</span>
-              <span>Since 1958</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Platform Features Panel */}
-        <div className="space-y-6 lg:pl-8">
-          <div className="text-center space-y-2">
-            <h2 className="text-2xl font-bold text-gray-900">Investment Platform</h2>
-            <p className="text-gray-600">Comprehensive portfolio management and investor services</p>
-          </div>
-
-          <div className="space-y-4">
-            <Card className="bg-gradient-to-r from-blue-50 to-blue-100/50 border-blue-200">
-              <CardContent className="p-6">
-                <div className="flex items-start gap-4">
-                  <div className="flex-shrink-0 w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center">
-                    <Building2 className="h-6 w-6 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900 mb-2">Real-Time Portfolio Dashboard</h3>
-                    <p className="text-sm text-gray-600">Track your investments with live performance metrics, DPI, TVPI, and IRR calculations updated in real-time.</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-gradient-to-r from-green-50 to-green-100/50 border-green-200">
-              <CardContent className="p-6">
-                <div className="flex items-start gap-4">
-                  <div className="flex-shrink-0 w-12 h-12 bg-green-600 rounded-lg flex items-center justify-center">
-                    <Shield className="h-6 w-6 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900 mb-2">Secure Authentication</h3>
-                    <p className="text-sm text-gray-600">Bank-level security with multi-factor authentication and Google OAuth integration for secure access.</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-gradient-to-r from-purple-50 to-purple-100/50 border-purple-200">
-              <CardContent className="p-6">
-                <div className="flex items-start gap-4">
-                  <div className="flex-shrink-0 w-12 h-12 bg-purple-600 rounded-lg flex items-center justify-center">
-                    <Mail className="h-6 w-6 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900 mb-2">Integrated Communication</h3>
-                    <p className="text-sm text-gray-600">Direct messaging with your relationship manager, document sharing, and automated notifications.</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <Card className="bg-gradient-to-r from-slate-50 to-gray-50 border-slate-200">
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Crown className="h-5 w-5 text-amber-600" />
-                Platform Features
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="grid grid-cols-2 gap-3 text-sm">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <span>Portfolio Dashboard</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <span>Performance Analytics</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <span>Document Access</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <span>Real-time Messaging</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <span>Report Requests</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <span>Multi-vehicle Support</span>
+                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  </button>
                 </div>
               </div>
-            </CardContent>
-          </Card>
 
-          <div className="text-center">
-            <p className="text-xs text-gray-500 mb-2">Need staff access?</p>
-            <a href="/versotech/login">
-              <Button variant="outline" size="sm">
-                <Briefcase className="mr-2 h-4 w-4" />
-                Staff Portal
+              <Button 
+                type="submit" 
+                disabled={isLoading} 
+                className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-medium shadow-lg shadow-blue-600/20 transition-all"
+              >
+                {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : (isSignUp ? 'Create Account' : 'Sign In')}
               </Button>
-            </a>
-          </div>
+            </form>
+
+            <div className="text-center">
+              <button
+                type="button"
+                onClick={switchMode}
+                className="text-sm text-slate-500 hover:text-blue-600 font-medium transition-colors"
+              >
+                {isSignUp ? 'Already have an account? Sign In' : 'New investor? Create Account'}
+              </button>
+            </div>
+
+          </CardContent>
+        </Card>
+
+        <div className="text-center space-y-2">
+           <div className="flex items-center justify-center gap-2 text-xs text-slate-400">
+              <Shield className="h-3 w-3" />
+              <span>Bank-Level 256-bit Encryption</span>
+           </div>
+           <p className="text-xs text-slate-300">© 2024 VERSO Holdings. All rights reserved.</p>
         </div>
+
       </div>
     </div>
   )
@@ -462,7 +240,7 @@ function InvestorLoginContent() {
 export default function InvestorLogin() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-slate-50 flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
       </div>
     }>

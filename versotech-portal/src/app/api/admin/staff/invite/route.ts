@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { z } from 'zod'
-import { randomBytes } from 'crypto'
 
 // Input validation schema
 const inviteStaffSchema = z.object({
@@ -37,7 +36,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const validatedData = inviteStaffSchema.parse(body)
 
-    // Check if email already exists
+    // Check if email already exists in profiles
     const { data: existingProfile } = await supabase
       .from('profiles')
       .select('id')
@@ -48,25 +47,34 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Email already registered' }, { status: 400 })
     }
 
-    // Generate temporary password
-    const tempPassword = randomBytes(16).toString('hex')
-
-    // Create auth user
-    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-      email: validatedData.email,
-      password: tempPassword,
-      email_confirm: true,
-    })
+    // Send invitation via Supabase Auth
+    const { data: authData, error: authError } = await supabase.auth.admin.inviteUserByEmail(
+      validatedData.email,
+      {
+        data: {
+          display_name: validatedData.display_name,
+          role: validatedData.role,
+          title: validatedData.title,
+        },
+        redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/versotech/login`
+      }
+    )
 
     if (authError) {
-      console.error('Auth creation error:', authError)
+      console.error('Auth invitation error:', authError)
+      return NextResponse.json({ error: 'Failed to invite user' }, { status: 500 })
+    }
+
+    if (!authData.user) {
       return NextResponse.json({ error: 'Failed to create user' }, { status: 500 })
     }
 
     // Create profile
-    const { data: newProfile, error: profileError } = await supabase
+    // Note: Supabase might create the user in auth.users, but we still need to ensure the profile exists in our public.profiles table
+    // The trigger might handle this, but to be safe and ensure all fields are set correctly immediately:
+    const { error: profileError } = await supabase
       .from('profiles')
-      .insert({
+      .upsert({
         id: authData.user.id,
         email: validatedData.email,
         role: validatedData.role,
@@ -75,14 +83,12 @@ export async function POST(request: NextRequest) {
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       })
-      .select()
-      .single()
 
     if (profileError) {
-      // Clean up auth user if profile creation fails
-      await supabase.auth.admin.deleteUser(authData.user.id)
       console.error('Profile creation error:', profileError)
-      return NextResponse.json({ error: 'Failed to create profile' }, { status: 500 })
+      // We don't delete the auth user here because the invite was already sent, 
+      // but we should log this critical error.
+      return NextResponse.json({ error: 'User invited but profile creation failed' }, { status: 500 })
     }
 
     // Grant default permissions based on role
@@ -121,9 +127,6 @@ export async function POST(request: NextRequest) {
         },
       })
 
-    // Send invitation email (would integrate with n8n workflow in production)
-    // For now, return the temporary password (in production, send via secure email)
-
     return NextResponse.json({
       success: true,
       message: 'Staff member invited successfully',
@@ -131,8 +134,6 @@ export async function POST(request: NextRequest) {
         user_id: authData.user.id,
         email: validatedData.email,
         role: validatedData.role,
-        // In production, don't return password - send via secure email
-        temporary_password: process.env.NODE_ENV === 'development' ? tempPassword : undefined,
       },
     })
   } catch (error) {

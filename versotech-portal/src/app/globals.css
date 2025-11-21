@@ -45,6 +45,8 @@
     --sidebar-accent-foreground: hsl(240 5.9% 10%);
     --sidebar-border: hsl(220 13% 91%);
     --sidebar-ring: hsl(217.2 91.2% 59.8%);
+    --gold: 43 74% 66%;
+    --navy: 222.2 47.4% 11.2%;
   }
 
   .dark {
@@ -144,4 +146,22 @@
 
 .no-scrollbar::-webkit-scrollbar {
   display: none;
+}
+
+@layer utilities {
+  .glass-panel {
+    @apply bg-white/95 border border-slate-200 shadow-lg;
+  }
+
+  .glass-card {
+    @apply bg-white/90 border border-slate-200 shadow-sm hover:shadow-md transition-all duration-300;
+  }
+
+  .text-gradient-gold {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-amber-600 to-amber-400;
+  }
+
+  .text-gradient-navy {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-700;
+  }
 }

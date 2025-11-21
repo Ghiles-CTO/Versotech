@@ -1,4 +1,5 @@
 import { AppLayout } from '@/components/layout/app-layout'
+import Image from 'next/image'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -209,9 +210,11 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
               <div className="flex items-center gap-4">
                 <div className="w-20 h-20 bg-white border-2 border-gray-200 rounded-lg flex items-center justify-center shadow-sm overflow-hidden">
                   {vehicle.logo_url ? (
-                    <img
+                    <Image
                       src={vehicle.logo_url}
                       alt={vehicle.investment_name || vehicle.name}
+                      width={80}
+                      height={80}
                       className="w-full h-full object-cover"
                     />
                   ) : (
@@ -238,7 +241,7 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
               </div>
             </div>
           </div>
-          
+
           <div className="flex gap-3">
             <Button variant="outline" className="gap-2">
               <FileText className="h-4 w-4" />
@@ -270,10 +273,9 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
                   {formatCurrency(positionData.currentValue)}
                 </div>
                 {positionData.unrealizedGainPct !== undefined && (
-                  <div className={`flex items-center gap-1 text-sm mt-2 ${
-                    positionData.unrealizedGainPct > 0 ? 'text-green-600' :
+                  <div className={`flex items-center gap-1 text-sm mt-2 ${positionData.unrealizedGainPct > 0 ? 'text-green-600' :
                     positionData.unrealizedGainPct < 0 ? 'text-red-600' : 'text-gray-500'
-                  }`}>
+                    }`}>
                     {positionData.unrealizedGainPct > 0 ? (
                       <TrendingUp className="h-4 w-4" />
                     ) : positionData.unrealizedGainPct < 0 ? (
@@ -323,10 +325,9 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className={`text-3xl font-bold ${
-                  positionData.unrealizedGain > 0 ? 'text-green-600' :
+                <div className={`text-3xl font-bold ${positionData.unrealizedGain > 0 ? 'text-green-600' :
                   positionData.unrealizedGain < 0 ? 'text-red-600' : 'text-gray-900'
-                }`}>
+                  }`}>
                   {positionData.unrealizedGain > 0 ? '+' : ''}
                   {formatCurrency(positionData.unrealizedGain)}
                 </div>
@@ -395,9 +396,8 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
                   <div className="pt-4 border-t">
                     <div className="flex justify-between items-center">
                       <span className="text-gray-600">Subscription Status</span>
-                      <Badge className={`${
-                        subscriptionData.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                      }`}>
+                      <Badge className={`${subscriptionData.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                        }`}>
                         {subscriptionData.status}
                       </Badge>
                     </div>
@@ -428,9 +428,8 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
                       {cashflowData.history.slice(0, 5).map((flow, index) => (
                         <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                           <div className="flex items-center gap-3">
-                            <div className={`w-3 h-3 rounded-full ${
-                              flow.type === 'call' ? 'bg-red-500' : 'bg-green-500'
-                            }`} />
+                            <div className={`w-3 h-3 rounded-full ${flow.type === 'call' ? 'bg-red-500' : 'bg-green-500'
+                              }`} />
                             <div>
                               <div className="font-medium capitalize">{flow.type}</div>
                               <div className="text-sm text-gray-500">
@@ -438,9 +437,8 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
                               </div>
                             </div>
                           </div>
-                          <div className={`font-semibold ${
-                            flow.type === 'call' ? 'text-red-600' : 'text-green-600'
-                          }`}>
+                          <div className={`font-semibold ${flow.type === 'call' ? 'text-red-600' : 'text-green-600'
+                            }`}>
                             {flow.type === 'call' ? '-' : '+'}
                             {formatCurrency(Math.abs(flow.amount))}
                           </div>
@@ -533,9 +531,8 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
                     {cashflowData.history.map((flow, index) => (
                       <div key={index} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
                         <div className="flex items-center gap-4">
-                          <div className={`w-4 h-4 rounded-full ${
-                            flow.type === 'call' ? 'bg-red-500' : 'bg-green-500'
-                          }`} />
+                          <div className={`w-4 h-4 rounded-full ${flow.type === 'call' ? 'bg-red-500' : 'bg-green-500'
+                            }`} />
                           <div>
                             <div className="font-medium">
                               {flow.type === 'call' ? 'Capital Call' : 'Distribution'}
@@ -546,9 +543,8 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
                           </div>
                         </div>
                         <div className="text-right">
-                          <div className={`font-semibold text-lg ${
-                            flow.type === 'call' ? 'text-red-600' : 'text-green-600'
-                          }`}>
+                          <div className={`font-semibold text-lg ${flow.type === 'call' ? 'text-red-600' : 'text-green-600'
+                            }`}>
                             {flow.type === 'call' ? '-' : '+'}
                             {formatCurrency(Math.abs(flow.amount))}
                           </div>

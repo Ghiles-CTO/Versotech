@@ -33,6 +33,7 @@ export async function POST(request: NextRequest) {
     const ownerInvestorId = formData.get('owner_investor_id') as string
     const vehicleId = formData.get('vehicle_id') as string
     const entityId = formData.get('entity_id') as string
+    const arrangerEntityId = formData.get('arranger_entity_id') as string
     const folderId = formData.get('folder_id') as string
     const tags = formData.get('tags') as string
     const isConfidential = formData.get('confidential') === 'true'
@@ -124,6 +125,7 @@ export async function POST(request: NextRequest) {
         owner_investor_id: ownerInvestorId || null,
         vehicle_id: vehicleId || null,
         entity_id: entityId || null,
+        arranger_entity_id: arrangerEntityId || null,
         file_size_bytes: file.size,
         mime_type: file.type,
         current_version: 1,
@@ -176,7 +178,8 @@ export async function POST(request: NextRequest) {
         original_name: file.name,
         confidential: isConfidential,
         owner_investor_id: ownerInvestorId,
-        vehicle_id: vehicleId
+        vehicle_id: vehicleId,
+        arranger_entity_id: arrangerEntityId
       }
     })
 

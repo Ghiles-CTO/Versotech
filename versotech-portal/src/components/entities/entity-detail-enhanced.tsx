@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import Image from 'next/image'
 import Link from 'next/link'
 import {
   ArrowLeft,
@@ -334,7 +335,7 @@ const AcknowledgementNotes = ({ notes }: { notes: string }) => {
               const amountDisplay =
                 amountNumber != null && !Number.isNaN(amountNumber)
                   ? formatCurrencyValue(amountNumber, String(currency)) ??
-                    amountNumber.toLocaleString()
+                  amountNumber.toLocaleString()
                   : null
 
               return (
@@ -447,7 +448,7 @@ export function EntityDetailEnhanced({
 
   const [editingDocument, setEditingDocument] = useState<EntityDocument | null>(null)
   const [editDocumentModalOpen, setEditDocumentModalOpen] = useState(false)
-  const [editingSubscription, setEditingSubscription] = useState<{investorId: string, subscription: any} | null>(null)
+  const [editingSubscription, setEditingSubscription] = useState<{ investorId: string, subscription: any } | null>(null)
   const [subscriptionModalOpen, setSubscriptionModalOpen] = useState(false)
   const [savingSubscription, setSavingSubscription] = useState(false)
   const [editingInvestorId, setEditingInvestorId] = useState<string | null>(null)
@@ -1088,8 +1089,8 @@ export function EntityDetailEnhanced({
                   entity.status === 'LIVE'
                     ? 'bg-emerald-500/20 border-emerald-400/40 text-emerald-100'
                     : entity.status === 'CLOSED'
-                    ? 'bg-red-500/20 border-red-400/40 text-red-100'
-                    : 'bg-amber-500/20 border-amber-400/40 text-amber-100'
+                      ? 'bg-red-500/20 border-red-400/40 text-red-100'
+                      : 'bg-amber-500/20 border-amber-400/40 text-amber-100'
                 }
               >
                 {entity.status}
@@ -1118,10 +1119,12 @@ export function EntityDetailEnhanced({
           <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-5 w-[220px] flex flex-col items-center gap-3 text-sm">
             <div className="h-24 w-24 rounded-xl border border-white/10 bg-black/60 flex items-center justify-center overflow-hidden">
               {logoUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
+
+                <Image
                   src={logoUrl}
                   alt={`${entity.name} logo`}
+                  width={96}
+                  height={96}
                   className="h-full w-full object-contain p-2"
                 />
               ) : (
@@ -1317,8 +1320,8 @@ export function EntityDetailEnhanced({
                       entity.status === 'LIVE'
                         ? 'bg-emerald-500/20 border-emerald-400/40 text-emerald-100'
                         : entity.status === 'CLOSED'
-                        ? 'bg-red-500/20 border-red-400/40 text-red-100'
-                        : 'bg-amber-500/20 border-amber-400/40 text-amber-100'
+                          ? 'bg-red-500/20 border-red-400/40 text-red-100'
+                          : 'bg-amber-500/20 border-amber-400/40 text-amber-100'
                     }
                   >
                     {entity.status}
@@ -1414,9 +1417,9 @@ export function EntityDetailEnhanced({
                       investor.total_commitment ??
                       (hasSubscription
                         ? subscriptionEntries.reduce(
-                            (sum, entry) => sum + (entry.commitment ?? 0),
-                            0
-                          )
+                          (sum, entry) => sum + (entry.commitment ?? 0),
+                          0
+                        )
                         : null)
                     const totalHoldingsAmount =
                       investor.total_holdings_amount ??
@@ -1935,98 +1938,98 @@ export function EntityDetailEnhanced({
                 <Plus className="h-4 w-4" />
                 Add Stakeholder
               </Button>
-          </CardHeader>
-          <CardContent>
-            {stakeholders.length === 0 ? (
-              <div className="text-gray-400 text-sm">
-                No stakeholders recorded yet.
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {stakeholderCategoryConfig.map((category) => {
-                  const group = stakeholderSections[category.key] ?? []
-                  return (
-                    <div key={category.key} className="rounded-lg border border-white/10 bg-white/5 p-4">
-                      <div className="flex items-center justify-between mb-3">
-                        <div>
-                          <p className="text-sm font-semibold text-white">{category.label}</p>
-                          <p className="text-xs text-gray-400">
-                            {group.length === 0
-                              ? 'No relationships recorded yet.'
-                              : `Tracking ${group.length} relationship${group.length === 1 ? '' : 's'}.`}
-                          </p>
+            </CardHeader>
+            <CardContent>
+              {stakeholders.length === 0 ? (
+                <div className="text-gray-400 text-sm">
+                  No stakeholders recorded yet.
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {stakeholderCategoryConfig.map((category) => {
+                    const group = stakeholderSections[category.key] ?? []
+                    return (
+                      <div key={category.key} className="rounded-lg border border-white/10 bg-white/5 p-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <div>
+                            <p className="text-sm font-semibold text-white">{category.label}</p>
+                            <p className="text-xs text-gray-400">
+                              {group.length === 0
+                                ? 'No relationships recorded yet.'
+                                : `Tracking ${group.length} relationship${group.length === 1 ? '' : 's'}.`}
+                            </p>
+                          </div>
+                          <Badge className="bg-white/10 border border-white/10 text-white">
+                            {group.length}
+                          </Badge>
                         </div>
-                        <Badge className="bg-white/10 border border-white/10 text-white">
-                          {group.length}
-                        </Badge>
-                      </div>
 
-                      {group.length > 0 && (
-                        <div className="space-y-3">
-                          {group.map((stakeholder) => (
-                            <div
-                              key={stakeholder.id}
-                              className="rounded-md border border-white/10 bg-black/20 px-4 py-3"
-                            >
-                              <div className="flex items-center justify-between">
-                                <div className="flex-1">
-                                  <p className="font-medium text-white">
-                                    {stakeholder.company_name || stakeholder.contact_person || 'Unnamed'}
-                                  </p>
-                                  <p className="text-xs text-gray-400">
-                                    {stakeholder.contact_person && `Contact: ${stakeholder.contact_person}`}
-                                    {stakeholder.email && ` • ${stakeholder.email}`}
-                                    {stakeholder.phone && ` • ${stakeholder.phone}`}
-                                  </p>
+                        {group.length > 0 && (
+                          <div className="space-y-3">
+                            {group.map((stakeholder) => (
+                              <div
+                                key={stakeholder.id}
+                                className="rounded-md border border-white/10 bg-black/20 px-4 py-3"
+                              >
+                                <div className="flex items-center justify-between">
+                                  <div className="flex-1">
+                                    <p className="font-medium text-white">
+                                      {stakeholder.company_name || stakeholder.contact_person || 'Unnamed'}
+                                    </p>
+                                    <p className="text-xs text-gray-400">
+                                      {stakeholder.contact_person && `Contact: ${stakeholder.contact_person}`}
+                                      {stakeholder.email && ` • ${stakeholder.email}`}
+                                      {stakeholder.phone && ` • ${stakeholder.phone}`}
+                                    </p>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <Badge className="bg-white/10 border border-white/10 text-white">
+                                      {stakeholder.effective_to ? 'Former' : 'Active'}
+                                    </Badge>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-8 px-2 text-white hover:text-emerald-100 hover:bg-white/10"
+                                      onClick={() => handleEditStakeholder(stakeholder)}
+                                    >
+                                      <Edit className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-8 px-2 text-white hover:text-red-400 hover:bg-red-500/10"
+                                      onClick={() =>
+                                        handleDeleteStakeholder(
+                                          stakeholder.id,
+                                          stakeholder.company_name || stakeholder.contact_person || 'stakeholder'
+                                        )
+                                      }
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </div>
                                 </div>
-                                <div className="flex items-center gap-2">
-                                  <Badge className="bg-white/10 border border-white/10 text-white">
-                                    {stakeholder.effective_to ? 'Former' : 'Active'}
-                                  </Badge>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="h-8 px-2 text-white hover:text-emerald-100 hover:bg-white/10"
-                                    onClick={() => handleEditStakeholder(stakeholder)}
-                                  >
-                                    <Edit className="h-4 w-4" />
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="h-8 px-2 text-white hover:text-red-400 hover:bg-red-500/10"
-                                    onClick={() =>
-                                      handleDeleteStakeholder(
-                                        stakeholder.id,
-                                        stakeholder.company_name || stakeholder.contact_person || 'stakeholder'
-                                      )
-                                    }
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                </div>
+                                <p className="text-xs text-gray-400 mt-1">
+                                  Effective {stakeholder.effective_from
+                                    ? new Date(stakeholder.effective_from).toLocaleDateString()
+                                    : 'unknown'}
+                                  {stakeholder.effective_to &&
+                                    ` • Ended ${new Date(stakeholder.effective_to).toLocaleDateString()}`}
+                                </p>
+                                {stakeholder.notes && (
+                                  <p className="text-sm text-gray-400 mt-2">{stakeholder.notes}</p>
+                                )}
                               </div>
-                              <p className="text-xs text-gray-400 mt-1">
-                                Effective {stakeholder.effective_from
-                                  ? new Date(stakeholder.effective_from).toLocaleDateString()
-                                  : 'unknown'}
-                                {stakeholder.effective_to &&
-                                  ` • Ended ${new Date(stakeholder.effective_to).toLocaleDateString()}`}
-                              </p>
-                              {stakeholder.notes && (
-                                <p className="text-sm text-gray-400 mt-2">{stakeholder.notes}</p>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* Directors Tab */}
@@ -2152,8 +2155,8 @@ export function EntityDetailEnhanced({
                         deal.status === 'active'
                           ? 'bg-emerald-500/20 border-emerald-400/40 text-emerald-100'
                           : deal.status === 'closed'
-                          ? 'bg-blue-500/20 border-blue-400/40 text-blue-100'
-                          : 'bg-amber-500/20 border-amber-400/40 text-amber-100'
+                            ? 'bg-blue-500/20 border-blue-400/40 text-blue-100'
+                            : 'bg-amber-500/20 border-amber-400/40 text-amber-100'
                       }>
                         {deal.status}
                       </Badge>
@@ -2318,17 +2321,17 @@ export function EntityDetailEnhanced({
                           <td className="py-3 px-4 text-sm text-right font-mono">
                             {valuation.nav_total
                               ? `$${valuation.nav_total.toLocaleString('en-US', {
-                                  minimumFractionDigits: 2,
-                                  maximumFractionDigits: 2
-                                })}`
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                              })}`
                               : '-'}
                           </td>
                           <td className="py-3 px-4 text-sm text-right font-mono">
                             {valuation.nav_per_unit
                               ? `$${valuation.nav_per_unit.toLocaleString('en-US', {
-                                  minimumFractionDigits: 2,
-                                  maximumFractionDigits: 6
-                                })}`
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 6
+                              })}`
                               : '-'}
                           </td>
                           <td className="py-3 px-4 text-right">
