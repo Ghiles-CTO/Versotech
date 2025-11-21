@@ -170,6 +170,7 @@ export async function POST(
     }
 
     // Create membership
+    // Auto-accept when staff explicitly adds existing users
     const { data: membership, error } = await supabase
       .from('deal_memberships')
       .insert({
@@ -178,7 +179,7 @@ export async function POST(
         investor_id: resolvedInvestorId,
         role: validatedData.role,
         invited_by: user.id,
-        accepted_at: null // Will be set when user accepts
+        accepted_at: new Date().toISOString() // Auto-accept for staff-added members
       })
       .select(`
         *,
