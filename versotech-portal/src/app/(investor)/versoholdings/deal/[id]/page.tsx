@@ -329,6 +329,46 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
               </CardContent>
             </Card>
 
+            {/* Investment Terms (when no fee structure) */}
+            {!feeStructure && (deal.minimum_investment || deal.maximum_investment || deal.target_amount) && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <DollarSign className="h-5 w-5" />
+                    Investment Terms
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {deal.minimum_investment && (
+                      <div>
+                        <p className="text-xs text-gray-500 uppercase tracking-wide">Minimum Ticket</p>
+                        <p className="font-medium text-gray-900">
+                          {formatCurrency(deal.minimum_investment, deal.currency)}
+                        </p>
+                      </div>
+                    )}
+                    {deal.maximum_investment && (
+                      <div>
+                        <p className="text-xs text-gray-500 uppercase tracking-wide">Maximum Ticket</p>
+                        <p className="font-medium text-gray-900">
+                          {formatCurrency(deal.maximum_investment, deal.currency)}
+                        </p>
+                      </div>
+                    )}
+                    {deal.target_amount && (
+                      <div>
+                        <p className="text-xs text-gray-500 uppercase tracking-wide">Target Amount</p>
+                        <p className="font-medium text-gray-900">
+                          {formatCurrency(deal.target_amount, deal.currency)}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Term Sheet */}
             {feeStructure && (
               <Card>

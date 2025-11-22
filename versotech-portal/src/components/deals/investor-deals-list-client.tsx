@@ -800,7 +800,9 @@ export function InvestorDealsListClient({
                       <p className="text-lg font-semibold text-gray-900">
                         {feeStructure?.minimum_ticket
                           ? formatCurrency(feeStructure.minimum_ticket, deal.currency)
-                          : '(Pending)'}
+                          : deal.minimum_investment
+                            ? formatCurrency(deal.minimum_investment, deal.currency)
+                            : '(Pending)'}
                       </p>
                     </div>
                     <div>
@@ -808,7 +810,9 @@ export function InvestorDealsListClient({
                       <p className="text-lg font-semibold text-gray-900">
                         {feeStructure?.maximum_ticket
                           ? formatCurrency(feeStructure.maximum_ticket, deal.currency)
-                          : '(Pending)'}
+                          : deal.maximum_investment
+                            ? formatCurrency(deal.maximum_investment, deal.currency)
+                            : '(Pending)'}
                       </p>
                     </div>
                     <div>
