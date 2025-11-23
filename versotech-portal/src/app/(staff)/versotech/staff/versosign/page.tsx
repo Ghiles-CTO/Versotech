@@ -78,7 +78,7 @@ export default async function StaffSignaturesPage() {
       description: 'Subscription agreements awaiting your countersignature',
       tasks: allTasks.filter(t =>
         t.kind === 'countersignature' &&
-        t.status === 'pending'
+        (t.status === 'pending' || t.status === 'in_progress')
       )
     },
     {

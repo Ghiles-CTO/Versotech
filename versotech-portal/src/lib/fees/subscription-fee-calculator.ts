@@ -250,22 +250,46 @@ export async function createFeeEvents(
   subscriptionId: string,
   investorId: string,
   dealId: string | null,
+  feePlanId: string | null,
   feeEvents: FeeEvent[]
 ): Promise<{ success: boolean; feeEventIds?: string[]; error?: string }> {
   try {
-    const inserts = feeEvents.map((fe) => ({
-      investor_id: investorId,
-      deal_id: dealId,
-      allocation_id: subscriptionId, // Link to subscription
-      fee_type: fe.fee_type,
-      event_date: new Date().toISOString(),
-      base_amount: fe.base_amount,
-      computed_amount: fe.computed_amount,
-      rate_bps: fe.rate_bps,
-      currency: 'USD',
-      status: 'accrued', // Ready to be invoiced
-      notes: fe.description,
-    }));
+    // If we have a fee plan, fetch its components to link properly
+    const componentMap: Record<string, string> = {};
+    if (feePlanId) {
+      const { data: components } = await supabase
+        .from('fee_components')
+        .select('id, kind')
+        .eq('fee_plan_id', feePlanId);
+
+      if (components) {
+        // Map fee_type to component_id
+        components.forEach((comp: any) => {
+          componentMap[comp.kind] = comp.id;
+        });
+      }
+    }
+
+    const inserts = feeEvents.map((fe) => {
+      // Match fee_type to fee_component_id
+      // fee_type 'flat' (commitment) doesn't get a component_id
+      const feeComponentId = fe.fee_type === 'flat' ? null : componentMap[fe.fee_type] || null;
+
+      return {
+        investor_id: investorId,
+        deal_id: dealId,
+        allocation_id: subscriptionId, // Link to subscription
+        fee_component_id: feeComponentId, // NOW PROPERLY LINKED!
+        fee_type: fe.fee_type,
+        event_date: new Date().toISOString(),
+        base_amount: fe.base_amount,
+        computed_amount: fe.computed_amount,
+        rate_bps: fe.rate_bps,
+        currency: 'USD',
+        status: 'accrued', // Ready to be invoiced
+        notes: fe.description,
+      };
+    });
 
     const { data, error } = await supabase
       .from('fee_events')

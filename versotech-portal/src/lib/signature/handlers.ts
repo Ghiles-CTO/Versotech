@@ -500,6 +500,7 @@ export async function handleSubscriptionSignature(
         subscriptionId,
         subscription.investor_id,
         subscription.deal_id || null,
+        subscription.fee_plan_id || null,
         feeCalcResult.feeEvents
       )
 

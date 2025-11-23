@@ -7,8 +7,10 @@ import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { FileText, Upload, Download, CheckCircle, Clock, AlertCircle, Loader2, Send } from 'lucide-react'
+import { FileText, Upload, Download, CheckCircle, Clock, AlertCircle, Loader2, Send, Eye } from 'lucide-react'
 import { toast } from 'sonner'
+import { useDocumentViewer } from '@/hooks/useDocumentViewer'
+import { DocumentViewerFullscreen } from '@/components/documents/DocumentViewerFullscreen'
 
 interface Document {
   id: string
@@ -18,7 +20,7 @@ interface Document {
   file_key: string
   mime_type: string
   file_size_bytes: number
-  status: 'draft' | 'final' | 'pending_signature' | 'signed'
+  status: 'draft' | 'final' | 'published' | 'pending_signature' | 'signed'
   ready_for_signature: boolean
   created_at: string
   created_by_profile?: {
@@ -40,9 +42,22 @@ export function SubscriptionDocumentsTab({ subscriptionId }: SubscriptionDocumen
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
 
+  // Document viewer hook
+  const {
+    isOpen: viewerOpen,
+    document: viewerDocument,
+    previewUrl,
+    isLoading: viewerLoading,
+    error: viewerError,
+    openPreview,
+    closePreview,
+    downloadDocument
+  } = useDocumentViewer()
+
   const statusColors: Record<string, string> = {
     draft: 'bg-purple-500/20 text-purple-200',
     final: 'bg-cyan-500/20 text-cyan-200',
+    published: 'bg-cyan-500/20 text-cyan-200',
     pending_signature: 'bg-amber-500/20 text-amber-200',
     signed: 'bg-emerald-500/20 text-emerald-200'
   }
@@ -50,6 +65,7 @@ export function SubscriptionDocumentsTab({ subscriptionId }: SubscriptionDocumen
   const statusIcons: Record<string, React.ReactNode> = {
     draft: <Clock className="h-4 w-4" />,
     final: <CheckCircle className="h-4 w-4" />,
+    published: <CheckCircle className="h-4 w-4" />,
     pending_signature: <AlertCircle className="h-4 w-4" />,
     signed: <CheckCircle className="h-4 w-4" />
   }
@@ -57,6 +73,7 @@ export function SubscriptionDocumentsTab({ subscriptionId }: SubscriptionDocumen
   const statusLabels: Record<string, string> = {
     draft: 'Draft',
     final: 'Final (Ready)',
+    published: 'Final (Ready)',
     pending_signature: 'Pending Signatures',
     signed: 'Fully Executed'
   }
@@ -195,7 +212,7 @@ export function SubscriptionDocumentsTab({ subscriptionId }: SubscriptionDocumen
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
   }
 
-  const hasFinalDocument = documents.some(doc => doc.status === 'final' || doc.status === 'pending_signature' || doc.status === 'signed')
+  const hasFinalDocument = documents.some(doc => doc.status === 'final' || doc.status === 'published' || doc.status === 'pending_signature' || doc.status === 'signed')
 
   if (loading) {
     return (
@@ -328,6 +345,22 @@ export function SubscriptionDocumentsTab({ subscriptionId }: SubscriptionDocumen
                       variant="outline"
                       size="sm"
                       className="gap-2"
+                      onClick={() => openPreview({
+                        id: document.id,
+                        name: document.name,
+                        file_name: document.name,
+                        mime_type: document.mime_type,
+                        file_size_bytes: document.file_size_bytes,
+                        type: document.type
+                      })}
+                    >
+                      <Eye className="h-4 w-4" />
+                      View
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-2"
                       onClick={() => handleDownload(document)}
                       disabled={downloadingId === document.id}
                     >
@@ -343,7 +376,7 @@ export function SubscriptionDocumentsTab({ subscriptionId }: SubscriptionDocumen
                         </>
                       )}
                     </Button>
-                    {document.status === 'final' && !document.ready_for_signature && (
+                    {(document.status === 'published' || document.status === 'final') && !document.ready_for_signature && (
                       <Button
                         variant="default"
                         size="sm"
@@ -426,6 +459,17 @@ export function SubscriptionDocumentsTab({ subscriptionId }: SubscriptionDocumen
           </div>
         </CardContent>
       </Card>
+
+      {/* Document Viewer Fullscreen */}
+      <DocumentViewerFullscreen
+        isOpen={viewerOpen}
+        document={viewerDocument}
+        previewUrl={previewUrl}
+        isLoading={viewerLoading}
+        error={viewerError}
+        onClose={closePreview}
+        onDownload={downloadDocument}
+      />
     </div>
   )
 }

@@ -39,7 +39,7 @@ export async function POST(
   const serviceSupabase = createServiceClient()
   const { data: subscription } = await serviceSupabase
     .from('subscriptions')
-    .select('*, deal:deals(id)')
+    .select('*, deal:deals(id), vehicle_id, investor_id, deal_id')
     .eq('id', subscriptionId)
     .single()
 
@@ -87,13 +87,13 @@ export async function POST(
       subscription_id: subscriptionId,
       subscription_submission_id: submission?.id || null, // Link to the approved submission
       deal_id: subscription.deal?.id,
-      entity_id: subscriptionId,
+      entity_id: subscription.vehicle_id,
       type: documentType,
       name: file.name,
       file_key: fileKey,
       mime_type: file.type,
       file_size_bytes: file.size,
-      status: 'final',
+      status: 'published',
       current_version: 1,
       ready_for_signature: false,
       created_by: user.id

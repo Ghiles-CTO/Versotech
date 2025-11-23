@@ -222,7 +222,7 @@ export async function PATCH(request: NextRequest) {
           // Get subscription details
           const { data: sub } = await serviceSupabase
             .from('subscriptions')
-            .select('investor_id, vehicle_id')
+            .select('investor_id, vehicle_id, fee_plan_id')
             .eq('id', subId)
             .single()
 
@@ -237,6 +237,7 @@ export async function PATCH(request: NextRequest) {
                 subId,
                 sub.investor_id,
                 null, // subscriptions are linked to vehicles, not deals
+                sub.fee_plan_id || null,
                 calculationResult.feeEvents
               )
 

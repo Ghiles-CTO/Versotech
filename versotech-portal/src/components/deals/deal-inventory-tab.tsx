@@ -15,9 +15,10 @@ interface DealInventoryTabProps {
     reserved_units: number
     allocated_units: number
   }
+  onRefresh?: () => void
 }
 
-export function DealInventoryTab({ dealId, shareLots, inventorySummary }: DealInventoryTabProps) {
+export function DealInventoryTab({ dealId, shareLots, inventorySummary, onRefresh }: DealInventoryTabProps) {
   return (
     <div className="space-y-6">
       {/* Summary Cards */}
@@ -78,7 +79,7 @@ export function DealInventoryTab({ dealId, shareLots, inventorySummary }: DealIn
               </CardTitle>
               <CardDescription>Inventory sources and allocation tracking</CardDescription>
             </div>
-            <AddShareLotModal dealId={dealId} />
+            <AddShareLotModal dealId={dealId} onSuccess={onRefresh} />
           </div>
         </CardHeader>
         <CardContent>

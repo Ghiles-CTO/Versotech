@@ -37,7 +37,7 @@ export async function GET(
     const serviceSupabase = createServiceClient()
     const { data: document, error: docError } = await serviceSupabase
       .from('documents')
-      .select('id, name, file_key, mime_type, owner_investor_id, vehicle_id, deal_id')
+      .select('id, name, file_key, mime_type, type, owner_investor_id, vehicle_id, deal_id')
       .eq('id', documentId)
       .single()
 
@@ -110,18 +110,21 @@ export async function GET(
       }
     }
 
+    // Determine which bucket based on document type
+    const bucket = document.type === 'subscription_draft' ? 'deal-documents' : (process.env.STORAGE_BUCKET_NAME || 'documents')
+
     // Log document details for debugging
     console.log('Generating signed URL for document:', {
       id: document.id,
       name: document.name,
       file_key: document.file_key,
       mime_type: document.mime_type,
-      bucket: process.env.STORAGE_BUCKET_NAME || 'documents'
+      bucket: bucket
     })
 
     // Generate signed URL (expires in 1 hour)
     const { data: signedUrlData, error: signedUrlError} = await serviceSupabase.storage
-      .from(process.env.STORAGE_BUCKET_NAME || 'documents')
+      .from(bucket)
       .createSignedUrl(document.file_key, 3600)
 
     if (signedUrlError || !signedUrlData) {

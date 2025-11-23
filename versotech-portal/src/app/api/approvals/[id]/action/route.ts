@@ -626,6 +626,12 @@ async function handleEntityApproval(
             }
 
             subscriptionId = newSubscription.id
+
+            // Link subscription back to submission for easy lookup
+            await supabase
+              .from('deal_subscription_submissions')
+              .update({ formal_subscription_id: subscriptionId })
+              .eq('id', submission.id)
           }
 
             // AUTO-TRIGGER SUBSCRIPTION PACK WORKFLOW

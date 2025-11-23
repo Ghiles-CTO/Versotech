@@ -1,7 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "SlashCommand(/ultra-think Analyze the RequestExtensionButton component error. The user clicks \"Request Extension\" in the data room and gets \"Failed to create extension request\". Need to understand: 1) What the button is supposed to do 2) What API endpoint it calls 3) What database operations are involved 4) Why it might be failing. Files to examine: request-extension-button.tsx, the API route it calls, and related database tables for extension requests.)"
+      "mcp__supabase__execute_sql",
+      "SlashCommand(/ultra-think Do the problems we just fixed (the `.order('created_at')` query bug in signature/client.ts and the tasks page filter bug in tasks/page.tsx) also apply to the subscription pack signature workflow?)",
+      "mcp__supabase__list_tables"
     ],
     "deny": [],
     "ask": []
@@ -9,7 +11,8 @@
   "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
     "supabase",
-    "shadcn"
+    "shadcn",
+    "executeautomation-playwright-server"
   ],
   "outputStyle": "default"
 }

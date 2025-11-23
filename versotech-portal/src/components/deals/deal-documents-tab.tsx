@@ -13,9 +13,10 @@ import { toast } from 'sonner'
 interface DealDocumentsTabProps {
   dealId: string
   documents: any[]
+  onRefresh?: () => void
 }
 
-export function DealDocumentsTab({ dealId, documents }: DealDocumentsTabProps) {
+export function DealDocumentsTab({ dealId, documents, onRefresh }: DealDocumentsTabProps) {
   const [refreshKey, setRefreshKey] = useState(0)
   const [editingDocument, setEditingDocument] = useState<any | null>(null)
   const [versionHistoryDoc, setVersionHistoryDoc] = useState<string | null>(null)
@@ -33,15 +34,17 @@ export function DealDocumentsTab({ dealId, documents }: DealDocumentsTabProps) {
 
   const handleUploadComplete = () => {
     setRefreshKey(prev => prev + 1)
-    // Trigger page refresh to show new documents
-    window.location.reload()
+    // Trigger callback to refresh parent component
+    if (onRefresh) {
+      onRefresh()
+    }
   }
 
   const handleDownload = async (documentId: string) => {
     setDownloading(documentId)
 
     try {
-      const response = await fetch(`/api/documents/${documentId}/download`)
+      const response = await fetch(`/api/deals/${dealId}/documents/${documentId}/download`)
 
       if (!response.ok) {
         throw new Error('Failed to generate download link')
@@ -78,7 +81,9 @@ export function DealDocumentsTab({ dealId, documents }: DealDocumentsTabProps) {
       }
 
       toast.success('Document deleted successfully')
-      window.location.reload()
+      if (onRefresh) {
+        onRefresh()
+      }
     } catch (error) {
       console.error('Delete error:', error)
       toast.error('Failed to delete document')
@@ -130,9 +135,6 @@ export function DealDocumentsTab({ dealId, documents }: DealDocumentsTabProps) {
                         <span className="font-medium text-foreground">
                           {doc.file_key.split('/').pop()}
                         </span>
-                        <Badge className={docTypeColors[doc.type] || docTypeColors.other}>
-                          {doc.type}
-                        </Badge>
                       </div>
                       <p className="text-sm text-muted-foreground">
                         Uploaded {new Date(doc.created_at).toLocaleDateString()}
@@ -195,7 +197,9 @@ export function DealDocumentsTab({ dealId, documents }: DealDocumentsTabProps) {
           onOpenChange={(open) => !open && setEditingDocument(null)}
           onSaved={() => {
             setEditingDocument(null)
-            window.location.reload()
+            if (onRefresh) {
+              onRefresh()
+            }
           }}
           initialData={{
             file_name: editingDocument.file_name,

@@ -95,7 +95,7 @@ export async function PATCH(
     // Verify subscription exists and belongs to investor
     const { data: existing, error: fetchError } = await supabase
       .from('subscriptions')
-      .select('id, subscription_number, vehicle_id, investor_id, status')
+      .select('id, subscription_number, vehicle_id, investor_id, status, fee_plan_id')
       .eq('id', subscriptionId)
       .eq('investor_id', investorId)
       .single()
@@ -168,6 +168,7 @@ export async function PATCH(
             subscriptionId,
             existing.investor_id,
             null, // subscriptions don't have deal_id, only vehicle_id
+            existing.fee_plan_id || null,
             calculationResult.feeEvents
           )
 
@@ -238,7 +239,7 @@ export async function DELETE(
     // Verify subscription exists and belongs to investor
     const { data: existing, error: fetchError } = await supabase
       .from('subscriptions')
-      .select('id, subscription_number, vehicle_id, investor_id, status')
+      .select('id, subscription_number, vehicle_id, investor_id, status, fee_plan_id')
       .eq('id', subscriptionId)
       .eq('investor_id', investorId)
       .single()

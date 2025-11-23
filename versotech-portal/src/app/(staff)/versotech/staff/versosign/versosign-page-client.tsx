@@ -59,7 +59,8 @@ export function VersoSignPageClient({
     active: boolean
     task: SignatureTask | null
     signatureRequest: SignatureRequestPublicView | null
-  }>({ active: false, task: null, signatureRequest: null })
+    token: string | null
+  }>({ active: false, task: null, signatureRequest: null, token: null })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -93,11 +94,12 @@ export function VersoSignPageClient({
 
       const signatureRequest = await response.json()
 
-      // Enter signing mode
+      // Enter signing mode with token
       setSigningMode({
         active: true,
         task,
-        signatureRequest
+        signatureRequest,
+        token
       })
 
       // Mark task as in progress
@@ -119,12 +121,12 @@ export function VersoSignPageClient({
   }
 
   const handleExitSigningMode = () => {
-    setSigningMode({ active: false, task: null, signatureRequest: null })
+    setSigningMode({ active: false, task: null, signatureRequest: null, token: null })
     setError(null)
   }
 
   const handleSignatureSubmit = async (signatureDataUrl: string) => {
-    if (!signingMode.signatureRequest) return
+    if (!signingMode.signatureRequest || !signingMode.token) return
 
     setIsSubmitting(true)
     setError(null)
@@ -134,7 +136,7 @@ export function VersoSignPageClient({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          token: signingMode.signatureRequest.signing_token,
+          token: signingMode.token,
           signature_data_url: signatureDataUrl
         })
       })
@@ -485,7 +487,7 @@ Action Required: ${task.instructions?.action_required || 'Send signature link to
                           </div>
 
                           <div className="flex gap-2">
-                            {task.status === 'pending' && (
+                            {(task.status === 'pending' || task.status === 'in_progress') && (
                               <>
                                 {task.kind === 'countersignature' && task.instructions?.action_url && (
                                   <Button

@@ -12,9 +12,10 @@ import { useRouter } from 'next/navigation'
 
 interface AddShareLotModalProps {
   dealId: string
+  onSuccess?: () => void
 }
 
-export function AddShareLotModal({ dealId }: AddShareLotModalProps) {
+export function AddShareLotModal({ dealId, onSuccess }: AddShareLotModalProps) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -77,6 +78,12 @@ export function AddShareLotModal({ dealId }: AddShareLotModalProps) {
         notes: ''
       })
       setOpen(false)
+
+      // Trigger callback to refresh parent component
+      if (onSuccess) {
+        onSuccess()
+      }
+
       router.refresh()
     } catch (err: any) {
       setError(err.message)

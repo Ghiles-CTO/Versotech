@@ -124,6 +124,7 @@ export async function POST(request: NextRequest) {
       subscription_id,
       subscription.investor_id,
       subscription.deal_id || null,
+      subscription.fee_plan_id || null,
       feeEvents
     );
 

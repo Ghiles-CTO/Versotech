@@ -791,8 +791,10 @@ export function InvestorDealsListClient({
                       <p className="text-xs uppercase tracking-wide text-gray-500">Allocation</p>
                       <p className="text-lg font-semibold text-gray-900">
                         {feeStructure?.allocation_up_to
-                          ? `${formatCurrency(feeStructure.allocation_up_to, deal.currency)}`
-                          : '(Pending)'}
+                          ? formatCurrency(feeStructure.allocation_up_to, deal.currency)
+                          : deal.target_amount
+                            ? formatCurrency(deal.target_amount, deal.currency)
+                            : '(Pending)'}
                       </p>
                     </div>
                     <div>

@@ -132,10 +132,9 @@ export default async function DealDetailPage({
 
   // Fetch deal-scoped documents
   const { data: documents } = await supabase
-    .from('documents')
+    .from('deal_data_room_documents')
     .select(`
       id,
-      type,
       file_key,
       created_at,
       created_by,

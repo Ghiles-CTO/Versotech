@@ -112,7 +112,8 @@ export async function GET(
       ...submission,
       pack_status: packStatus,
       pack_document_id: packDocumentId,
-      document_count: documents.length
+      document_count: documents.length,
+      subscription_id: submission.formal_subscription_id || null
     }
   })
 

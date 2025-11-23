@@ -89,6 +89,7 @@ export function DealDetailClient({
 }: DealDetailClientProps) {
   const [activeTab, setActiveTab] = useState('overview')
   const [editDialogOpen, setEditDialogOpen] = useState(false)
+  const [shareLots, setShareLots] = useState<any[]>([])
   const [isSaving, setIsSaving] = useState(false)
   const [editFormData, setEditFormData] = useState({
     name: deal?.name || '',
@@ -107,6 +108,31 @@ export function DealDetailClient({
     currency: deal?.currency || 'USD'
   })
   const router = useRouter()
+
+  // Fetch share lots for inventory
+  const fetchShareLots = async () => {
+    try {
+      const response = await fetch(`/api/deals/${deal.id}/inventory`)
+      if (response.ok) {
+        const data = await response.json()
+        setShareLots(data.inventory || [])
+      }
+    } catch (error) {
+      console.error('Failed to fetch share lots:', error)
+    }
+  }
+
+  // Fetch share lots on mount
+  useEffect(() => {
+    if (deal?.id) {
+      fetchShareLots()
+    }
+  }, [deal?.id])
+
+  // Refresh handler for inventory tab
+  const handleInventoryRefresh = () => {
+    fetchShareLots()
+  }
 
   useEffect(() => {
     // Log component mount for debugging
@@ -354,7 +380,7 @@ export function DealDetailClient({
         </TabsContent>
 
         <TabsContent value="inventory">
-          <DealInventoryTab dealId={deal.id} shareLots={[]} inventorySummary={inventorySummary} />
+          <DealInventoryTab dealId={deal.id} shareLots={shareLots} inventorySummary={inventorySummary} onRefresh={handleInventoryRefresh} />
         </TabsContent>
 
         <TabsContent value="members">

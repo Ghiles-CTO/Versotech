@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
     // This excludes the 610 historical subscriptions that are already "done and finished"
     const { data: subscriptions, error: subsError } = await serviceSupabase
       .from('subscriptions')
-      .select('id, subscription_number, investor_id, vehicle_id, created_at')
+      .select('id, subscription_number, investor_id, vehicle_id, fee_plan_id, created_at')
       .eq('status', 'committed')
       .gte('created_at', '2025-10-31T00:00:00Z');
 
@@ -112,6 +112,7 @@ export async function POST(request: NextRequest) {
           sub.id,
           sub.investor_id,
           null, // deal_id - subscriptions are linked to vehicles, not deals
+          sub.fee_plan_id || null,
           calculationResult.feeEvents
         );
 

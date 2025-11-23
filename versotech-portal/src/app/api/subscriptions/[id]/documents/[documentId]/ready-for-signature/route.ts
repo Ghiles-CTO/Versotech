@@ -40,6 +40,14 @@ export async function POST(
     return NextResponse.json({ error: 'Document not found' }, { status: 404 })
   }
 
+  // Validate that document is a PDF (signature system only works with PDFs)
+  if (document.mime_type && !document.mime_type.includes('pdf')) {
+    return NextResponse.json({
+      error: 'Only PDF files can be sent for signature. Please convert the DOCX to PDF first and re-upload.',
+      details: `Current file type: ${document.mime_type}`
+    }, { status: 400 })
+  }
+
   // Get subscription with investor details including user_id from join table
   const { data: subscription } = await serviceSupabase
     .from('subscriptions')
@@ -73,15 +81,17 @@ export async function POST(
   // Create TWO signature requests (investor + staff)
   try {
     // 1. Investor signature request
+    // Note: No workflow_run_id because this is a manually uploaded document, not n8n generated
     const investorSigPayload = {
-      workflow_run_id: documentId, // Use document ID as workflow reference
       investor_id: subscription.investor_id,
       signer_email: subscription.investor.email,
       signer_name: subscription.investor.legal_name || subscription.investor.display_name,
       document_type: 'subscription',
       google_drive_url: urlData.signedUrl, // Use Supabase signed URL
       signer_role: 'investor',
-      signature_position: 'party_a'
+      signature_position: 'party_a',
+      subscription_id: subscriptionId, // Link to subscription instead of workflow
+      document_id: documentId // Link to the actual document
     }
 
     const investorSigResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/signature/request`, {
@@ -99,14 +109,15 @@ export async function POST(
 
     // 2. Staff signature request
     const staffSigPayload = {
-      workflow_run_id: documentId,
       investor_id: subscription.investor_id,
       signer_email: 'cto@versoholdings.com',
       signer_name: 'Julien Machot',
       document_type: 'subscription',
       google_drive_url: urlData.signedUrl,
       signer_role: 'admin',
-      signature_position: 'party_b'
+      signature_position: 'party_b',
+      subscription_id: subscriptionId, // Link to subscription instead of workflow
+      document_id: documentId // Link to the actual document
     }
 
     const staffSigResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/signature/request`, {
@@ -127,224 +138,23 @@ export async function POST(
       .from('documents')
       .update({
         ready_for_signature: true,
-        status: 'pending_signature',
-        signature_workflow_run_id: documentId
+        status: 'pending_signature'
       })
       .eq('id', documentId)
 
-    // Create tasks for both parties to sign the subscription pack
-    // 1. Create task for investor
-    // Get the user_id from the investor_users join table (investors can have multiple users)
-    const investorUserId = subscription.investor?.investor_users?.[0]?.user_id
-
-    let investorTaskResult: any = { data: null, error: null }
-
-    if (!investorUserId) {
-      console.warn('⚠️ No user_id found for investor:', subscription.investor_id)
-
-      // Create an operational task for staff to follow up
-      const opsTaskResult = await serviceSupabase
-        .from('tasks')
-        .insert({
-          owner_user_id: '44965e29-c986-4d2e-84e2-4965ed27bd8f', // Julien Machot (CTO)
-          kind: 'other',
-          category: 'operational',
-          title: 'Manual Signature Follow-up Required',
-          description: `Investor ${subscription.investor?.legal_name || subscription.investor?.display_name} has no user account. Please manually send the signature link or create an account for them.`,
-          priority: 'high',
-          related_entity_type: 'subscription',
-          related_entity_id: subscriptionId,
-          due_at: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days
-          instructions: {
-            type: 'manual_follow_up',
-            investor_email: subscription.investor?.email,
-            signature_url: investorSigData.signing_url,
-            signature_request_id: investorSigData.signature_request_id,
-            document_id: documentId,
-            action_required: 'Send signature link to investor or create platform account'
-          },
-          metadata: {
-            subscription_id: subscriptionId,
-            document_id: documentId,
-            investor_id: subscription.investor_id,
-            issue: 'investor_no_user_account'
-          }
-        })
-        .select()
-        .single()
-
-      if (opsTaskResult.error) {
-        console.error('❌ CRITICAL: Failed to create ops follow-up task for investor without account:', opsTaskResult.error)
-        // This is important - we need to track this
-        throw new Error(`Investor has no user account and ops task creation failed: ${opsTaskResult.error.message}`)
-      }
-
-      console.log('📋 Created ops follow-up task for investor without account:', opsTaskResult.data.id)
-
-      // Create audit log entry for tracking
-      await serviceSupabase.from('audit_logs').insert({
-        action: 'signature_request_no_user',
-        entity_type: 'subscription',
-        entity_id: subscriptionId,
-        metadata: {
-          investor_id: subscription.investor_id,
-          investor_name: subscription.investor?.legal_name || subscription.investor?.display_name,
-          investor_email: subscription.investor?.email,
-          signature_url: investorSigData.signing_url,
-          ops_task_id: opsTaskResult.data.id
-        }
-      })
-
-      // Continue without creating investor task - ops will handle manually
-    } else {
-      investorTaskResult = await serviceSupabase
-        .from('tasks')
-        .insert({
-          owner_user_id: investorUserId,
-          owner_investor_id: subscription.investor_id,
-          kind: 'subscription_pack_signature',
-          category: 'investment_setup',
-          title: 'Sign Subscription Agreement',
-          description: `Please review and sign your subscription agreement for ${subscription.vehicle?.name || 'the investment'}. This finalizes your commitment.`,
-          priority: 'high',
-          related_entity_type: 'subscription',
-          related_entity_id: subscriptionId,
-          due_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days
-          instructions: {
-            type: 'signature',
-            action_url: investorSigData.signing_url,
-            signature_request_id: investorSigData.signature_request_id,
-            document_id: documentId
-          },
-          metadata: {
-            subscription_id: subscriptionId,
-            document_id: documentId,
-            signature_request_id: investorSigData.signature_request_id
-          }
-        })
-        .select()
-        .single()
-
-      if (investorTaskResult.error) {
-        // This is critical - investor won't know to sign without a task
-        console.error('❌ CRITICAL: Failed to create investor signature task:', investorTaskResult.error)
-        throw new Error(`Failed to create signature task: ${investorTaskResult.error.message}`)
-      } else {
-        console.log('✅ Created investor signature task:', investorTaskResult.data.id)
-      }
-    }
-
-    // 2. Create notification for investor about the task (only if they have a user account)
-    if (investorUserId && investorTaskResult.data) {
-      const notificationResult = await serviceSupabase
-        .from('notifications')
-        .insert({
-          user_id: investorUserId,
-          type: 'task_created',
-          title: 'Subscription Agreement Ready for Signature',
-          message: 'Your subscription agreement is ready for signature. Please review and sign within 7 days to complete your investment.',
-          action_url: `/versoholdings/tasks`,
-          metadata: {
-            task_id: investorTaskResult.data.id,
-            subscription_id: subscriptionId,
-            document_id: documentId
-          }
-        })
-
-      if (notificationResult.error) {
-        console.error('Failed to create notification:', notificationResult.error)
-        // Non-critical - continue without notification
-      }
-    }
-
-    // 3. Create task for staff member to countersign
-    console.log('📝 Creating staff signature task')
-
-    // Julien Machot's user ID (CTO)
-    const staffUserId = '44965e29-c986-4d2e-84e2-4965ed27bd8f'
-
-    const staffTaskResult = await serviceSupabase
-      .from('tasks')
-      .insert({
-        owner_user_id: staffUserId,
-        kind: 'countersignature',
-        category: 'investment_setup',
-        title: 'Countersign Subscription Agreement',
-        description: `Please countersign the subscription agreement for ${subscription.investor?.legal_name || subscription.investor?.display_name}. Investment amount: ${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(subscription.commitment || 0)}.`,
-        priority: 'high',
-        related_entity_type: 'subscription',
-        related_entity_id: subscriptionId,
-        due_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days
-        instructions: {
-          type: 'signature',
-          action_url: staffSigData.signing_url,
-          signature_request_id: staffSigData.signature_request_id,
-          document_id: documentId,
-          signer_role: 'admin',
-          investor_name: subscription.investor?.legal_name || subscription.investor?.display_name
-        },
-        metadata: {
-          subscription_id: subscriptionId,
-          document_id: documentId,
-          signature_request_id: staffSigData.signature_request_id,
-          investor_id: subscription.investor_id,
-          vehicle_id: subscription.vehicle?.id
-        }
-      })
-      .select()
-      .single()
-
-    if (staffTaskResult.error) {
-      console.error('⚠️ Failed to create staff signature task:', staffTaskResult.error)
-      // Non-critical - staff can still access via other means
-    } else {
-      console.log('✅ Created staff signature task:', staffTaskResult.data.id)
-
-      // Create notification for staff member
-      const staffNotifResult = await serviceSupabase
-        .from('notifications')
-        .insert({
-          user_id: staffUserId,
-          type: 'task_created',
-          title: 'Subscription Agreement Requires Countersignature',
-          message: `Please countersign the subscription agreement for ${subscription.investor?.legal_name || subscription.investor?.display_name} (${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(subscription.commitment || 0)}).`,
-          action_url: `/versotech/staff/tasks`,
-          metadata: {
-            task_id: staffTaskResult.data.id,
-            subscription_id: subscriptionId,
-            document_id: documentId,
-            investor_name: subscription.investor?.legal_name || subscription.investor?.display_name
-          }
-        })
-
-      if (staffNotifResult.error) {
-        console.error('Failed to create staff notification:', staffNotifResult.error)
-        // Non-critical - continue
-      } else {
-        console.log('✅ Created staff notification')
-      }
-    }
-
-    console.log('📝 Staff signature details:', {
-      signer_email: staffSigPayload.signer_email,
-      signing_url: staffSigData.signing_url,
-      task_id: staffTaskResult.data?.id
-    })
+    // Tasks are created automatically by createSignatureRequest() in signature/client.ts
+    // No need for manual task creation here - it would create duplicates
 
     console.log('✅ Dual signature requests created for subscription pack:', {
       document_id: documentId,
       investor_request: investorSigData.signature_request_id,
-      investor_task_id: investorTaskResult.data?.id,
-      staff_request: staffSigData.signature_request_id,
-      staff_task_id: staffTaskResult.data?.id
+      staff_request: staffSigData.signature_request_id
     })
 
     return NextResponse.json({
       success: true,
       investor_signature_request: investorSigData,
-      staff_signature_request: staffSigData,
-      investor_task_id: investorTaskResult.data?.id,
-      staff_task_id: staffTaskResult.data?.id
+      staff_signature_request: staffSigData
     })
 
   } catch (error) {

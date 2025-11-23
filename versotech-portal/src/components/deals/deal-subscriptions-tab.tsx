@@ -110,10 +110,10 @@ export function DealSubscriptionsTab({ dealId }: DealSubscriptionsTabProps) {
   const handleViewDetails = (subscription: SubscriptionWithDocuments) => {
     // First try to open the formal subscription if it exists
     if ((subscription as any).subscription_id) {
-      window.open(`/versotech/subscriptions/${(subscription as any).subscription_id}`, '_blank')
+      window.open(`/versotech/staff/subscriptions/${(subscription as any).subscription_id}`, '_blank')
     } else if (subscription.pack_document_id) {
-      // Otherwise, if there's a subscription pack, open the document
-      window.open(`/versotech/documents/${subscription.pack_document_id}`, '_blank')
+      // Otherwise, if there's a subscription pack, download it
+      window.open(`/api/documents/${subscription.pack_document_id}/download`, '_blank')
     } else {
       // No converted subscription and no pack yet
       toast.info('This subscription has not been converted to a formal commitment yet, and no subscription pack has been generated.')

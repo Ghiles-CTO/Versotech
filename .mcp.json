@@ -1,8 +1,10 @@
 {
   "mcpServers": {
     "supabase": {
-      "command": "npx",
+      "command": "cmd",
       "args": [
+        "/c",
+        "npx",
         "-y",
         "@supabase/mcp-server-supabase@latest",
         "--project-ref=ipguxdssecfexudnvtia"
@@ -12,15 +14,19 @@
       }
     },
     "shadcn": {
-      "command": "npx",
+      "command": "cmd",
       "args": [
+        "/c",
+        "npx",
         "shadcn@latest",
         "mcp"
       ]
     },
     "executeautomation-playwright-server": {
-      "command": "npx",
+      "command": "cmd",
       "args": [
+        "/c",
+        "npx",
         "-y",
         "@executeautomation/playwright-mcp-server"
       ]

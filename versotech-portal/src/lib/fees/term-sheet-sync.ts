@@ -66,7 +66,7 @@ export async function syncTermSheetToFeePlan(
       frequency: string;
       payment_schedule: string;
       rate_bps?: number;
-      description?: string;
+      notes?: string;
     }> = [];
 
     if (termSheet.subscription_fee_percent !== null && termSheet.subscription_fee_percent !== undefined) {
@@ -76,7 +76,7 @@ export async function syncTermSheetToFeePlan(
         frequency: 'one_time',
         payment_schedule: 'upfront',
         rate_bps: percentToBps(termSheet.subscription_fee_percent)!,
-        description: `${termSheet.subscription_fee_percent}% subscription fee from term sheet`,
+        notes: `${termSheet.subscription_fee_percent}% subscription fee from term sheet`,
       });
     }
 
@@ -87,7 +87,7 @@ export async function syncTermSheetToFeePlan(
         frequency: 'quarterly',
         payment_schedule: 'recurring',
         rate_bps: percentToBps(termSheet.management_fee_percent)!,
-        description: `${termSheet.management_fee_percent}% annual management fee from term sheet`,
+        notes: `${termSheet.management_fee_percent}% annual management fee from term sheet`,
       });
     }
 
@@ -98,7 +98,7 @@ export async function syncTermSheetToFeePlan(
         frequency: 'on_exit',
         payment_schedule: 'on_demand',
         rate_bps: percentToBps(termSheet.carried_interest_percent)!,
-        description: `${termSheet.carried_interest_percent}% carried interest from term sheet`,
+        notes: `${termSheet.carried_interest_percent}% carried interest from term sheet`,
       });
     }
 
@@ -135,11 +135,19 @@ export async function syncTermSheetToFeePlan(
 
       return { success: true, feePlanId: existingPlan.id };
     } else {
+      // Get vehicle_id from deal before creating fee plan
+      const { data: deal } = await supabase
+        .from('deals')
+        .select('vehicle_id')
+        .eq('id', dealId)
+        .single();
+
       // Create new fee plan
       const { data: newPlan, error: planError } = await supabase
         .from('fee_plans')
         .insert({
           deal_id: dealId,
+          vehicle_id: deal?.vehicle_id || null,
           name: 'Standard Fee Plan (from Term Sheet)',
           description: 'Auto-generated from published term sheet',
           is_default: true,
