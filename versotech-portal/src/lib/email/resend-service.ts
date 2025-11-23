@@ -243,3 +243,84 @@ export async function sendSecurityAlertEmail(params: {
     html,
   })
 }
+
+/**
+ * Send signature request email with signing link
+ */
+export async function sendSignatureRequestEmail(params: {
+  email: string
+  signerName: string
+  documentType: string
+  signingUrl: string
+  expiresAt: string
+}): Promise<EmailResult> {
+  const expiryDate = new Date(params.expiresAt)
+  const daysUntilExpiry = Math.ceil((expiryDate.getTime() - Date.now()) / (24 * 60 * 60 * 1000))
+
+  const documentTypeLabels: Record<string, string> = {
+    nda: 'Non-Disclosure Agreement',
+    subscription: 'Subscription Agreement',
+    amendment: 'Amendment',
+    other: 'Document'
+  }
+
+  const documentLabel = documentTypeLabels[params.documentType] || 'Document'
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: #1a1a2e; color: white; padding: 30px; text-align: center; }
+        .content { background: #f4f4f4; padding: 30px; }
+        .button { background: #6366f1; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; display: inline-block; margin: 20px 0; font-weight: 600; }
+        .alert-box { background: #fffbeb; border-left: 4px solid #f59e0b; padding: 15px; margin: 20px 0; }
+        .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>Document Ready for Signature</h1>
+        </div>
+        <div class="content">
+          <h2>Hi ${params.signerName},</h2>
+          <p>Your <strong>${documentLabel}</strong> is ready for your electronic signature.</p>
+
+          <div class="alert-box">
+            <p><strong>⏰ Time Sensitive:</strong> This signature link expires in ${daysUntilExpiry} days (${expiryDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}).</p>
+          </div>
+
+          <p>To review and sign the document, click the button below:</p>
+
+          <a href="${params.signingUrl}" class="button">Review and Sign Document</a>
+
+          <p style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 14px; color: #666;">
+            <strong>What happens next?</strong><br>
+            1. Click the link above to view the document<br>
+            2. Review the content carefully<br>
+            3. Draw or upload your signature<br>
+            4. Submit to complete the signing process
+          </p>
+
+          <p style="font-size: 13px; color: #666; margin-top: 20px;">
+            If you have any questions, please contact VERSO Holdings support.
+          </p>
+        </div>
+        <div class="footer">
+          <p>&copy; ${new Date().getFullYear()} VERSO Holdings. All rights reserved.</p>
+          <p>This is an automated message, please do not reply.</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `
+
+  return sendEmail({
+    to: params.email,
+    subject: `${documentLabel} Ready for Your Signature - VERSO Holdings`,
+    html,
+  })
+}
