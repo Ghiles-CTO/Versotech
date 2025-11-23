@@ -11,6 +11,7 @@ export interface TaskInstructions {
   estimated_time: string
   documents?: string[]
   assigned_by?: string
+  action_url?: string
   wire_details?: {
     amount: string
     percentage: string
@@ -118,9 +119,12 @@ export default async function TasksPage() {
     !t.category && !t.related_entity_id
   )
 
-  // General compliance tasks not tied to a vehicle
-  const generalComplianceTasks = allTasks.filter(t => 
-    t.category === 'compliance' && !t.related_entity_id
+  // General compliance tasks not tied to a vehicle (includes signature tasks and investment setup)
+  const generalComplianceTasks = allTasks.filter(t =>
+    (t.category === 'compliance' || t.category === 'investment_setup') && (
+      !t.related_entity_id ||
+      t.related_entity_type === 'signature_request'
+    )
   )
 
   return (

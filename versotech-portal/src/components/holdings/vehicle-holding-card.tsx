@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { QuickActionsMenu } from '@/components/holdings/quick-actions-menu'
 import { PositionDetailModal } from '@/components/holdings/position-detail-modal'
 import {
@@ -29,6 +30,9 @@ interface EnhancedHolding {
   domicile?: string
   currency: string
   created_at: string
+  logo_url?: string
+  website_url?: string
+  investment_name?: string
   position: {
     units: number
     costBasis: number
@@ -115,18 +119,30 @@ export function VehicleHoldingCard({ holding }: VehicleHoldingCardProps) {
     }
   }
 
+  const initial = (holding.name || 'V').trim().charAt(0).toUpperCase() || 'V'
+
   return (
     <Card className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-2 border-0 shadow-md animate-in fade-in-50 slide-in-from-bottom-4 hover:shadow-blue-200/50">
       <CardHeader className="pb-4 transition-colors duration-300 group-hover:bg-gradient-to-r group-hover:from-blue-50/30 group-hover:to-transparent">
         <div className="flex items-start justify-between">
           <div className="flex-1">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:shadow-md">
-                <Building className="h-4 w-4 text-blue-600 transition-transform duration-300 group-hover:scale-110" />
-              </div>
+            <CardTitle className="flex items-center gap-3 text-lg">
+              <Avatar className="h-10 w-10 border border-slate-100 bg-white shadow-sm">
+                {holding.logo_url ? (
+                  <AvatarImage
+                    src={holding.logo_url}
+                    alt={holding.name}
+                    className="object-contain p-2"
+                  />
+                ) : (
+                  <AvatarFallback className="bg-blue-100 text-blue-600 font-semibold">
+                    {initial}
+                  </AvatarFallback>
+                )}
+              </Avatar>
               <span className="truncate">{holding.name}</span>
             </CardTitle>
-            <CardDescription className="flex items-center gap-2 mt-2">
+            <CardDescription className="flex items-center gap-2 mt-2 ml-13">
               <Badge variant="outline" className={cn("text-xs font-medium", getTypeColor(holding.type))}>
                 {holding.type?.toUpperCase() || 'FUND'}
               </Badge>

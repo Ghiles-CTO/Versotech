@@ -28,6 +28,7 @@ interface VehicleBreakdown {
   vehicleId: string
   vehicleName: string
   vehicleType: string
+  logoUrl?: string | null
   currentValue: number
   costBasis: number
   units: number
@@ -236,9 +237,10 @@ export async function GET(request: Request) {
           
           if (type === 'breakdown' && !queryResult.error && queryResult.data) {
             response.vehicleBreakdown = queryResult.data.map((vehicle: any): VehicleBreakdown => ({
-              vehicleId: vehicle.vehicle_id,
-              vehicleName: vehicle.vehicle_name,
-              vehicleType: vehicle.vehicle_type || 'fund',
+              vehicleId: vehicle.id,
+              vehicleName: vehicle.name,
+              vehicleType: vehicle.type || 'fund',
+              logoUrl: vehicle.logo_url || null,
               currentValue: Math.round(parseFloat(vehicle.current_value) || 0),
               costBasis: Math.round(parseFloat(vehicle.cost_basis) || 0),
               units: parseFloat(vehicle.units) || 0,
@@ -248,7 +250,7 @@ export async function GET(request: Request) {
               contributed: Math.round(parseFloat(vehicle.contributed) || 0),
               distributed: Math.round(parseFloat(vehicle.distributed) || 0),
               navPerUnit: parseFloat(vehicle.nav_per_unit) || 0,
-              lastValuationDate: vehicle.last_valuation_date || null
+              lastValuationDate: vehicle.as_of_date || null
             }))
             console.log(`✅ Vehicle breakdown calculated successfully: ${response.vehicleBreakdown.length} vehicles`)
           } else if (type === 'breakdown') {

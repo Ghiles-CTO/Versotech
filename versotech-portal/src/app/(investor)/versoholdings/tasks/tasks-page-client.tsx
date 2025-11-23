@@ -29,7 +29,8 @@ import {
   Play,
   CheckCheck,
   FileCheck,
-  Upload
+  Upload,
+  ExternalLink
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
@@ -791,6 +792,25 @@ export function TasksPageClient({
                 <p className="text-xs text-gray-500 mt-2">
                   Accepted formats: PDF, JPG, PNG, HEIC, WEBP (Max 10MB)
                 </p>
+              </div>
+            )}
+
+            {/* Signature Action Button */}
+            {selectedTask?.related_entity_type === 'signature_request' && selectedTask?.instructions?.action_url && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                <h4 className="text-sm font-semibold text-gray-900 mb-2">Ready to Sign</h4>
+                <p className="text-xs text-gray-600 mb-3">
+                  Click below to open the signature page and complete your signature.
+                </p>
+                <a
+                  href={selectedTask.instructions.action_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
+                >
+                  Open Signature Page
+                  <ExternalLink className="h-4 w-4" />
+                </a>
               </div>
             )}
 

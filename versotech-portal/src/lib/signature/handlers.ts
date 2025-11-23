@@ -289,21 +289,19 @@ export async function handleSubscriptionSignature(
     signed_pdf_size: signedPdfBytes.length
   })
 
-  // Get subscription ID from workflow run
-  console.log('🔍 [SUBSCRIPTION HANDLER] Fetching workflow run details')
-  const { data: workflowRun } = await supabase
-    .from('workflow_runs')
-    .select('entity_id, entity_type, input_params')
-    .eq('id', signatureRequest.workflow_run_id)
-    .single()
+  // Get document ID - either from document_id field (manual uploads) or workflow_run_id (n8n generated)
+  const documentId = signatureRequest.document_id || signatureRequest.workflow_run_id
 
-  // The workflow_run_id is actually the document ID for subscription packs
-  // We need to get the subscription from the document
-  console.log('🔍 [SUBSCRIPTION HANDLER] Fetching document details')
+  if (!documentId) {
+    console.error('❌ [SUBSCRIPTION HANDLER] No document_id or workflow_run_id found in signature request')
+    throw new Error('Cannot identify document for this signature')
+  }
+
+  console.log('🔍 [SUBSCRIPTION HANDLER] Fetching document details for document_id:', documentId)
   const { data: document } = await supabase
     .from('documents')
     .select('id, subscription_id')
-    .eq('id', signatureRequest.workflow_run_id)
+    .eq('id', documentId)
     .single()
 
   if (!document?.subscription_id) {
@@ -379,14 +377,12 @@ export async function handleSubscriptionSignature(
 
   console.log('✅ [SUBSCRIPTION HANDLER] Signed PDF copied to documents bucket:', docUploadData.path)
 
-  // 2. UPDATE DOCUMENT RECORD STATUS
+  // 2. UPDATE DOCUMENT RECORD WITH SIGNED PDF PATH
   console.log('\n📄 [SUBSCRIPTION HANDLER] Step 2: Updating document record')
   const { error: docUpdateError } = await supabase
     .from('documents')
     .update({
-      status: 'executed',
       file_key: docUploadData.path,
-      executed_at: new Date().toISOString(),
       is_published: true,
       published_at: new Date().toISOString()
     })
@@ -532,7 +528,7 @@ export async function handleSubscriptionSignature(
     .eq('owner_investor_id', subscription.investor_id)
     .eq('kind', 'subscription_pack_signature')
     .eq('related_entity_id', subscriptionId)
-    .eq('status', 'pending')
+    .in('status', ['pending', 'in_progress'])
 
   if (tasks && tasks.length > 0) {
     console.log('📝 [SUBSCRIPTION HANDLER] Found signature task(s) to complete:', tasks.length)
@@ -566,7 +562,7 @@ export async function handleSubscriptionSignature(
     .select('id, owner_user_id')
     .eq('kind', 'countersignature')
     .eq('related_entity_id', subscriptionId)
-    .eq('status', 'pending')
+    .in('status', ['pending', 'in_progress'])
 
   if (staffTasks && staffTasks.length > 0) {
     console.log('📝 [SUBSCRIPTION HANDLER] Found staff signature task(s) to complete:', staffTasks.length)
@@ -602,7 +598,7 @@ export async function handleSubscriptionSignature(
   } else {
     // Notification for investor
     const { error: notifError } = await supabase
-      .from('notifications')
+      .from('investor_notifications')
       .insert({
         user_id: investorUserId,
         type: 'subscription_committed',

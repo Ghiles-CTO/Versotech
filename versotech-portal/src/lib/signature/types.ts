@@ -3,13 +3,13 @@
  */
 
 export type DocumentType = 'nda' | 'subscription' | 'amendment' | 'other'
-export type SignerRole = 'investor' | 'admin'
+export type SignerRole = 'investor' | 'admin' | 'arranger'
 export type SignaturePosition = 'party_a' | 'party_b'
 export type SignatureStatus = 'pending' | 'signed' | 'expired' | 'cancelled'
 
 export interface SignatureRequestRecord {
   id: string
-  workflow_run_id: string
+  workflow_run_id?: string // Optional - only for n8n generated documents
   investor_id: string
   signer_email: string
   signer_name: string
@@ -30,13 +30,15 @@ export interface SignatureRequestRecord {
   email_opened_at?: string
   signer_role: SignerRole
   signature_position: SignaturePosition
+  subscription_id?: string // For manually uploaded subscription packs
+  document_id?: string // For manually uploaded documents
   created_at: string
   updated_at: string
   created_by?: string
 }
 
 export interface CreateSignatureRequestParams {
-  workflow_run_id: string
+  workflow_run_id?: string // Optional - only for n8n generated documents
   investor_id: string
   signer_email: string
   signer_name: string
@@ -45,6 +47,8 @@ export interface CreateSignatureRequestParams {
   google_drive_url?: string
   signer_role: SignerRole
   signature_position: SignaturePosition
+  subscription_id?: string // For manually uploaded subscription packs
+  document_id?: string // For manually uploaded documents
 }
 
 export interface CreateSignatureRequestResult {
