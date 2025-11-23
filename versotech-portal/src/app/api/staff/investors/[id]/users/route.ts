@@ -150,6 +150,10 @@ export async function POST(
       return NextResponse.json({ error: 'Failed to link user to investor' }, { status: 500 })
     }
 
+    // Note: Onboarding tasks are created automatically by database trigger
+    // 'investor_users_create_onboarding_tasks' which fires AFTER INSERT on investor_users table
+    // See: supabase/migrations/20251123000000_fix_onboarding_tasks_automation.sql
+
     // Revalidate the detail page
     revalidatePath(`/versotech/staff/investors/${id}`)
 
