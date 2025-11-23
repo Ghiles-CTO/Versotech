@@ -254,6 +254,15 @@ export async function createFeeEvents(
   feeEvents: FeeEvent[]
 ): Promise<{ success: boolean; feeEventIds?: string[]; error?: string }> {
   try {
+    // Fetch subscription to get currency
+    const { data: subscription } = await supabase
+      .from('subscriptions')
+      .select('currency')
+      .eq('id', subscriptionId)
+      .single();
+
+    const currency = subscription?.currency || 'USD';
+
     // If we have a fee plan, fetch its components to link properly
     const componentMap: Record<string, string> = {};
     if (feePlanId) {
@@ -275,6 +284,14 @@ export async function createFeeEvents(
       // fee_type 'flat' (commitment) doesn't get a component_id
       const feeComponentId = fe.fee_type === 'flat' ? null : componentMap[fe.fee_type] || null;
 
+      // Warn if fee type expected a component but none found
+      if (fe.fee_type !== 'flat' && !feeComponentId && feePlanId) {
+        console.warn(
+          `⚠️ [FEE EVENTS] No component found for fee_type '${fe.fee_type}' in fee plan ${feePlanId}. ` +
+          `Fee event will be created without component link.`
+        );
+      }
+
       return {
         investor_id: investorId,
         deal_id: dealId,
@@ -285,7 +302,7 @@ export async function createFeeEvents(
         base_amount: fe.base_amount,
         computed_amount: fe.computed_amount,
         rate_bps: fe.rate_bps,
-        currency: 'USD',
+        currency: currency, // Use subscription currency
         status: 'accrued', // Ready to be invoiced
         notes: fe.description,
       };

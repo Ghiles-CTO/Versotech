@@ -483,36 +483,47 @@ export async function handleSubscriptionSignature(
   console.log('\n💰 [SUBSCRIPTION HANDLER] Step 4: Creating fee events for committed subscription')
 
   try {
-    // Calculate fee events based on subscription commitment
-    const feeCalcResult = await calculateSubscriptionFeeEvents(supabase, subscriptionId)
+    // IDEMPOTENCY CHECK: Verify fee events don't already exist
+    const { data: existingFeeEvents } = await supabase
+      .from('fee_events')
+      .select('id')
+      .eq('allocation_id', subscriptionId)
+      .limit(1)
 
-    if (!feeCalcResult.success || !feeCalcResult.feeEvents || feeCalcResult.feeEvents.length === 0) {
-      console.warn('⚠️ [SUBSCRIPTION HANDLER] No fee events calculated:', feeCalcResult.error)
+    if (existingFeeEvents && existingFeeEvents.length > 0) {
+      console.log('✅ [SUBSCRIPTION HANDLER] Fee events already exist for this subscription, skipping creation')
     } else {
-      console.log('📊 [SUBSCRIPTION HANDLER] Calculated fee events:', {
-        count: feeCalcResult.feeEvents.length,
-        types: feeCalcResult.feeEvents.map(fe => fe.fee_type).join(', '),
-        total: feeCalcResult.feeEvents.reduce((sum, fe) => sum + fe.computed_amount, 0)
-      })
+      // Calculate fee events based on subscription commitment
+      const feeCalcResult = await calculateSubscriptionFeeEvents(supabase, subscriptionId)
 
-      // Create the fee events in the database
-      const createResult = await createFeeEvents(
-        supabase,
-        subscriptionId,
-        subscription.investor_id,
-        subscription.deal_id || null,
-        subscription.fee_plan_id || null,
-        feeCalcResult.feeEvents
-      )
-
-      if (createResult.success) {
-        console.log('✅ [SUBSCRIPTION HANDLER] Fee events created successfully:', {
-          count: createResult.feeEventIds?.length,
-          ids: createResult.feeEventIds
-        })
+      if (!feeCalcResult.success || !feeCalcResult.feeEvents || feeCalcResult.feeEvents.length === 0) {
+        console.warn('⚠️ [SUBSCRIPTION HANDLER] No fee events calculated:', feeCalcResult.error)
       } else {
-        console.error('❌ [SUBSCRIPTION HANDLER] Failed to create fee events:', createResult.error)
-        // Don't throw - fee event creation failure shouldn't fail signature completion
+        console.log('📊 [SUBSCRIPTION HANDLER] Calculated fee events:', {
+          count: feeCalcResult.feeEvents.length,
+          types: feeCalcResult.feeEvents.map(fe => fe.fee_type).join(', '),
+          total: feeCalcResult.feeEvents.reduce((sum, fe) => sum + fe.computed_amount, 0)
+        })
+
+        // Create the fee events in the database
+        const createResult = await createFeeEvents(
+          supabase,
+          subscriptionId,
+          subscription.investor_id,
+          subscription.deal_id || null,
+          subscription.fee_plan_id || null,
+          feeCalcResult.feeEvents
+        )
+
+        if (createResult.success) {
+          console.log('✅ [SUBSCRIPTION HANDLER] Fee events created successfully:', {
+            count: createResult.feeEventIds?.length,
+            ids: createResult.feeEventIds
+          })
+        } else {
+          console.error('❌ [SUBSCRIPTION HANDLER] Failed to create fee events:', createResult.error)
+          // Don't throw - fee event creation failure shouldn't fail signature completion
+        }
       }
     }
   } catch (feeError) {
