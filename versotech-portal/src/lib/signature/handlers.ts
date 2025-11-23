@@ -318,6 +318,7 @@ export async function handleSubscriptionSignature(
     .from('subscriptions')
     .select(`
       *,
+      fee_plan_id,
       investor:investors(
         id,
         legal_name,

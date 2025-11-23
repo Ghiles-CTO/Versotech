@@ -604,12 +604,22 @@ async function handleEntityApproval(
           let subscriptionId = existingSub?.id
 
           if (!existingSub) {
+            // Fetch deal's default fee plan to auto-link
+            const { data: defaultFeePlan } = await supabase
+              .from('fee_plans')
+              .select('id')
+              .eq('deal_id', submission.deal_id)
+              .eq('is_default', true)
+              .eq('is_active', true)
+              .single()
+
             const { data: newSubscription, error: createSubError } = await supabase
               .from('subscriptions')
               .insert({
                 investor_id: submission.investor_id,
                 vehicle_id: submission.deal.vehicle_id,
                 deal_id: submission.deal_id,
+                fee_plan_id: defaultFeePlan?.id || null,
                 commitment: amount,
                 currency: submission.deal.currency || 'USD',
                 status: 'pending',
