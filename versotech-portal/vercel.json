@@ -7,6 +7,10 @@
     {
       "path": "/api/cron/auto-match-reconciliation",
       "schedule": "0 */6 * * *"
+    },
+    {
+      "path": "/api/cron/cleanup-stale-locks",
+      "schedule": "*/5 * * * *"
     }
   ]
 }

@@ -21,6 +21,17 @@ interface EmailResult {
 const DEFAULT_FROM = process.env.EMAIL_FROM || 'VERSO Tech <noreply@versoholdings.com>'
 const RESEND_API_KEY = process.env.RESEND_API_KEY
 
+// Validate API key at module load time in production
+if (process.env.NODE_ENV === 'production') {
+  if (!RESEND_API_KEY) {
+    console.error('CRITICAL: RESEND_API_KEY not configured in production')
+  } else if (RESEND_API_KEY === 're_your_resend_api_key_here') {
+    throw new Error('RESEND_API_KEY cannot use example value in production. Please set a valid Resend API key.')
+  } else if (RESEND_API_KEY.startsWith('re_test_')) {
+    throw new Error('RESEND_API_KEY cannot use test key in production. Please set a valid production Resend API key.')
+  }
+}
+
 /**
  * Send an email using Resend API
  */
@@ -30,7 +41,16 @@ export async function sendEmail(options: EmailOptions): Promise<EmailResult> {
       console.error('Resend API key not configured')
       return {
         success: false,
-        error: 'Email service not configured',
+        error: 'Email service not configured. Please set RESEND_API_KEY environment variable.',
+      }
+    }
+
+    // Additional runtime check for test keys
+    if (RESEND_API_KEY.startsWith('re_test_')) {
+      console.error('Test API key detected - emails will not be delivered')
+      return {
+        success: false,
+        error: 'Test API key cannot be used for sending real emails.',
       }
     }
 

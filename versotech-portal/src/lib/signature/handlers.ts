@@ -483,16 +483,26 @@ export async function handleSubscriptionSignature(
   console.log('\n💰 [SUBSCRIPTION HANDLER] Step 4: Creating fee events for committed subscription')
 
   try {
-    // IDEMPOTENCY CHECK: Verify fee events don't already exist
+    // IDEMPOTENCY CHECK: Verify fee events don't already exist for this subscription commitment
+    // Check for any fee events that are NOT cancelled/deleted
     const { data: existingFeeEvents } = await supabase
       .from('fee_events')
-      .select('id')
+      .select('id, fee_type, status, computed_amount')
       .eq('allocation_id', subscriptionId)
-      .limit(1)
+      .in('status', ['accrued', 'invoiced', 'paid'])  // Only count active fee events
 
     if (existingFeeEvents && existingFeeEvents.length > 0) {
-      console.log('✅ [SUBSCRIPTION HANDLER] Fee events already exist for this subscription, skipping creation')
+      console.log('✅ [SUBSCRIPTION HANDLER] Active fee events already exist for this subscription, skipping creation:', {
+        count: existingFeeEvents.length,
+        types: existingFeeEvents.map(fe => fe.fee_type).join(', ')
+      })
     } else {
+      // Check if subscription was previously committed
+      if (subscription.committed_at && new Date(subscription.committed_at) < new Date(Date.now() - 60000)) {
+        console.warn('⚠️ [SUBSCRIPTION HANDLER] Subscription was previously committed but has no active fee events')
+        console.warn('⚠️ [SUBSCRIPTION HANDLER] This may indicate deleted or cancelled fee events')
+        console.warn('⚠️ [SUBSCRIPTION HANDLER] Proceeding with fee event creation, but review may be needed')
+      }
       // Calculate fee events based on subscription commitment
       const feeCalcResult = await calculateSubscriptionFeeEvents(supabase, subscriptionId)
 

@@ -81,7 +81,24 @@ export async function triggerWorkflow({
       .digest('hex')
 
     // Generate webhook signature
-    const webhookSecret = process.env.N8N_WEBHOOK_SECRET || process.env.N8N_OUTBOUND_SECRET || 'default-webhook-secret'
+    const webhookSecret = process.env.N8N_WEBHOOK_SECRET || process.env.N8N_OUTBOUND_SECRET
+
+    if (!webhookSecret) {
+      console.error('N8N_WEBHOOK_SECRET not configured')
+      return {
+        success: false,
+        error: 'Webhook authentication not configured. Cannot trigger workflow.'
+      }
+    }
+
+    if (webhookSecret === 'default-webhook-secret' && process.env.NODE_ENV === 'production') {
+      console.error('CRITICAL: N8N_WEBHOOK_SECRET using insecure default value in production')
+      return {
+        success: false,
+        error: 'Webhook authentication misconfigured. Please set a secure N8N_WEBHOOK_SECRET.'
+      }
+    }
+
     const webhookSignature = crypto
       .createHmac('sha256', webhookSecret)
       .update(idempotencyToken)

@@ -428,31 +428,33 @@ export async function POST(req: Request) {
                 const initialNav = fullSubscription.price_per_share || fullSubscription.cost_per_share
 
                 if (positionUnits && positionUnits > 0) {
-                  // Check if position already exists (prevent duplicate creation)
-                  const { data: existingPosition } = await supabase
+                  // NOTE: For maximum safety, database should have unique constraint on (investor_id, vehicle_id)
+                  // Migration: ALTER TABLE positions ADD CONSTRAINT positions_investor_vehicle_unique UNIQUE (investor_id, vehicle_id);
+
+                  // Try to create position with race condition protection
+                  const { data: newPosition, error: positionError } = await supabase
                     .from('positions')
+                    .insert({
+                      investor_id: fullSubscription.investor_id,
+                      vehicle_id: fullSubscription.vehicle_id,
+                      units: positionUnits,
+                      cost_basis: newFundedAmount,
+                      last_nav: initialNav,
+                      as_of_date: new Date().toISOString()
+                    })
                     .select('id')
-                    .eq('investor_id', fullSubscription.investor_id)
-                    .eq('vehicle_id', fullSubscription.vehicle_id)
                     .single()
 
-                  if (!existingPosition) {
-                    // Create new position
-                    const { error: positionError } = await supabase
-                      .from('positions')
-                      .insert({
-                        investor_id: fullSubscription.investor_id,
-                        vehicle_id: fullSubscription.vehicle_id,
-                        units: positionUnits,
-                        cost_basis: newFundedAmount,
-                        last_nav: initialNav,
-                        as_of_date: new Date().toISOString()
-                      })
-
-                    if (positionError) {
+                  if (positionError) {
+                    // Check if error is due to unique constraint violation (position already exists)
+                    if (positionError.code === '23505') {
+                      console.log(`ℹ️ Position already exists for subscription ${subscriptionId} (investor: ${fullSubscription.investor_id}, vehicle: ${fullSubscription.vehicle_id})`)
+                      // This is OK - another process created it first (race condition handled gracefully)
+                    } else {
                       console.error(`❌ Failed to create position for subscription ${subscriptionId}:`, positionError)
                       // Log but don't fail the whole transaction - subscription funding is more critical
-                    } else {
+                    }
+                  } else if (newPosition) {
                       console.log(`✅ Created position for subscription ${subscriptionId}: ${positionUnits} units @ $${initialNav}/unit`)
 
                       // Audit log for position creation
@@ -472,9 +474,6 @@ export async function POST(req: Request) {
                         }
                       })
                     }
-                  } else {
-                    console.log(`ℹ️ Position already exists for subscription ${subscriptionId} - skipping creation`)
-                  }
                 } else {
                   console.warn(`⚠️ Could not determine units for subscription ${subscriptionId} - position not created`)
                 }

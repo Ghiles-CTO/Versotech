@@ -10,7 +10,8 @@ import {
   generateSignatureToken,
   calculateTokenExpiry,
   isTokenExpired,
-  generateSigningUrl
+  generateSigningUrl,
+  getAppUrl
 } from './token'
 import { SignatureStorageManager, downloadPDFFromUrl } from './storage'
 import { embedSignatureInPDF } from './pdf-processor'
@@ -82,6 +83,18 @@ export async function createSignatureRequest(
     }
 
     console.log('✅ [SIGNATURE] Validation passed')
+
+    // Validate app URL is configured BEFORE creating any database records
+    try {
+      getAppUrl()
+      console.log('✅ [SIGNATURE] App URL configured')
+    } catch (error) {
+      console.error('❌ [SIGNATURE] App URL not configured:', error)
+      return {
+        success: false,
+        error: 'Application URL not configured. Cannot generate signing links.'
+      }
+    }
 
     // Generate signing token and expiry
     const signing_token = generateSignatureToken()
@@ -534,6 +547,10 @@ export async function submitSignature(
     ip_address: ipAddress
   })
 
+  // Declare at function scope so catch block can access for lock cleanup
+  let signatureRequest: any = null
+  let lockAcquired = false
+
   try {
     const { token, signature_data_url } = params
 
@@ -547,19 +564,22 @@ export async function submitSignature(
 
     // Fetch signature request
     console.log('🔍 [SIGNATURE] Fetching signature request by token')
-    const { data: signatureRequest, error: fetchError } = await supabase
+    const { data: fetchedRequest, error: fetchError } = await supabase
       .from('signature_requests')
       .select('*')
       .eq('signing_token', token)
       .single()
 
-    if (fetchError || !signatureRequest) {
+    if (fetchError || !fetchedRequest) {
       console.log('❌ [SIGNATURE] Signature request not found:', fetchError)
       return {
         success: false,
         error: 'Signature request not found'
       }
     }
+
+    // Assign to function-scoped variable
+    signatureRequest = fetchedRequest
 
     console.log('✅ [SIGNATURE] Signature request found:', {
       id: signatureRequest.id,
@@ -595,6 +615,52 @@ export async function submitSignature(
 
     console.log('✅ [SIGNATURE] Validation passed - token valid and not yet signed')
 
+    // PROGRESSIVE SIGNING: Acquire workflow-level lock to prevent race conditions
+    let lockAttempts = 0
+    const maxLockAttempts = 20  // Increased from 10 to 20 for better UX
+    const baseRetryDelayMs = 500
+    const maxRetryDelayMs = 3000  // Cap at 3 seconds
+
+    if (signatureRequest.workflow_run_id) {
+      console.log('🔒 [SIGNATURE] Attempting to acquire workflow lock for:', signatureRequest.workflow_run_id)
+
+      while (!lockAcquired && lockAttempts < maxLockAttempts) {
+        lockAttempts++
+
+        // Try to acquire lock by updating a lock field
+        const { data: lockResult, error: lockError } = await supabase
+          .from('workflow_runs')
+          .update({
+            signing_in_progress: true,
+            signing_locked_by: signatureRequest.id,
+            signing_locked_at: new Date().toISOString()
+          })
+          .eq('id', signatureRequest.workflow_run_id)
+          .is('signing_in_progress', null)  // Only acquire if not already locked
+          .select('id')
+          .single()
+
+        if (lockResult && !lockError) {
+          lockAcquired = true
+          console.log(`✅ [SIGNATURE] Workflow lock acquired (attempt ${lockAttempts})`)
+        } else {
+          // Exponential backoff: 500ms, 1000ms, 1500ms, 2000ms, 2500ms, 3000ms, 3000ms...
+          // Total max wait time: ~30 seconds (much better for concurrent signing UX)
+          const delay = Math.min(baseRetryDelayMs * lockAttempts, maxRetryDelayMs)
+          console.log(`⏳ [SIGNATURE] Workflow locked by another signer, waiting ${delay}ms... (attempt ${lockAttempts}/${maxLockAttempts})`)
+          await new Promise(resolve => setTimeout(resolve, delay))
+        }
+      }
+
+      if (!lockAcquired) {
+        console.error('❌ [SIGNATURE] Failed to acquire workflow lock after', maxLockAttempts, 'attempts')
+        return {
+          success: false,
+          error: 'Another party is currently signing this document. Please wait a moment and try again.'
+        }
+      }
+    }
+
     // PROGRESSIVE SIGNING: Check if another signer has already signed
     let pdfBytes: Uint8Array | null = null
     const storage = new SignatureStorageManager(supabase)
@@ -608,6 +674,7 @@ export async function submitSignature(
         .eq('workflow_run_id', signatureRequest.workflow_run_id)
         .neq('id', signatureRequest.id)
         .eq('status', 'signed')
+        .order('created_at', { ascending: true })
 
       // If another party already signed, use their signed PDF as base
       if (otherSignatures && otherSignatures.length > 0) {
@@ -646,6 +713,16 @@ export async function submitSignature(
         })
       } else {
         console.log('❌ [SIGNATURE] No PDF source available')
+
+        // Release lock before returning
+        if (lockAcquired && signatureRequest.workflow_run_id) {
+          await supabase
+            .from('workflow_runs')
+            .update({ signing_in_progress: null, signing_locked_by: null, signing_locked_at: null })
+            .eq('id', signatureRequest.workflow_run_id)
+            .eq('signing_locked_by', signatureRequest.id)
+        }
+
         return {
           success: false,
           error: 'No PDF source available'
@@ -706,6 +783,16 @@ export async function submitSignature(
 
     if (updateError) {
       console.error('❌ [SIGNATURE] Failed to update signature request:', updateError)
+
+      // Release lock before returning
+      if (lockAcquired && signatureRequest.workflow_run_id) {
+        await supabase
+          .from('workflow_runs')
+          .update({ signing_in_progress: null, signing_locked_by: null, signing_locked_at: null })
+          .eq('id', signatureRequest.workflow_run_id)
+          .eq('signing_locked_by', signatureRequest.id)
+      }
+
       return {
         success: false,
         error: 'Failed to update signature status'
@@ -715,6 +802,16 @@ export async function submitSignature(
     // Check if update succeeded (race condition detection)
     if (count === 0) {
       console.error('❌ [SIGNATURE] Race condition: Signature request was already signed')
+
+      // Release lock before returning
+      if (lockAcquired && signatureRequest.workflow_run_id) {
+        await supabase
+          .from('workflow_runs')
+          .update({ signing_in_progress: null, signing_locked_by: null, signing_locked_at: null })
+          .eq('id', signatureRequest.workflow_run_id)
+          .eq('signing_locked_by', signatureRequest.id)
+      }
+
       return {
         success: false,
         error: 'This document has already been signed'
@@ -770,6 +867,20 @@ export async function submitSignature(
       supabase
     )
 
+    // Release workflow lock
+    if (lockAcquired && signatureRequest.workflow_run_id) {
+      console.log('🔓 [SIGNATURE] Releasing workflow lock')
+      await supabase
+        .from('workflow_runs')
+        .update({
+          signing_in_progress: null,
+          signing_locked_by: null,
+          signing_locked_at: null
+        })
+        .eq('id', signatureRequest.workflow_run_id)
+        .eq('signing_locked_by', signatureRequest.id)  // Only release if we own the lock
+    }
+
     console.log('✅ [SIGNATURE] submitSignature() completed successfully\n')
     return {
       success: true,
@@ -778,6 +889,21 @@ export async function submitSignature(
     }
   } catch (error) {
     console.error('Signature submit error:', error)
+
+    // Release workflow lock on error
+    if (lockAcquired && signatureRequest?.workflow_run_id) {
+      console.log('🔓 [SIGNATURE] Releasing workflow lock (error path)')
+      await supabase
+        .from('workflow_runs')
+        .update({
+          signing_in_progress: null,
+          signing_locked_by: null,
+          signing_locked_at: null
+        })
+        .eq('id', signatureRequest.workflow_run_id)
+        .eq('signing_locked_by', signatureRequest.id)
+    }
+
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Internal server error'
@@ -812,6 +938,7 @@ async function checkAndCompleteSignatures(
         .from('signature_requests')
         .select('id, status, signer_role, signed_pdf_path')
         .eq('workflow_run_id', signatureRequest.workflow_run_id)
+        .order('created_at', { ascending: true })
 
       allSignatureRequests = result.data
       fetchAllError = result.error
@@ -824,6 +951,7 @@ async function checkAndCompleteSignatures(
         .from('signature_requests')
         .select('id, status, signer_role, signed_pdf_path')
         .eq('document_id', signatureRequest.document_id)
+        .order('created_at', { ascending: true })
 
       allSignatureRequests = result.data
       fetchAllError = result.error

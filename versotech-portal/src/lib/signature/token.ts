@@ -31,12 +31,41 @@ export function isTokenExpired(expiresAt: string | Date): boolean {
 }
 
 /**
+ * Get the application base URL with fallbacks for different environments
+ */
+export function getAppUrl(): string {
+  // Priority order: NEXT_PUBLIC_APP_URL > VERCEL_URL > NEXT_PUBLIC_SITE_URL
+  if (process.env.NEXT_PUBLIC_APP_URL) {
+    return process.env.NEXT_PUBLIC_APP_URL
+  }
+
+  // Vercel automatically provides VERCEL_URL in production
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`
+  }
+
+  if (process.env.NEXT_PUBLIC_SITE_URL) {
+    return process.env.NEXT_PUBLIC_SITE_URL
+  }
+
+  // Browser fallback (client-side only)
+  if (typeof window !== 'undefined') {
+    return window.location.origin
+  }
+
+  // Server-side: NEVER use localhost in production
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('App URL must be configured in production. Set NEXT_PUBLIC_APP_URL, VERCEL_URL, or NEXT_PUBLIC_SITE_URL environment variable.')
+  }
+
+  // Development fallback only
+  return 'http://localhost:3000'
+}
+
+/**
  * Generate signing URL from token
  */
 export function generateSigningUrl(token: string): string {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL
-  if (!baseUrl) {
-    throw new Error('NEXT_PUBLIC_APP_URL is not configured')
-  }
+  const baseUrl = getAppUrl()
   return `${baseUrl}/sign/${token}`
 }

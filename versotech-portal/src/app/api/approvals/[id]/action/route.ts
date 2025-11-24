@@ -74,7 +74,7 @@ export async function POST(
       )
     }
 
-    // Check if approval is already processed
+    // Check if approval is already processed (preliminary check)
     if (approval.status !== 'pending') {
       return NextResponse.json(
         { error: 'Approval has already been processed' },
@@ -113,10 +113,24 @@ export async function POST(
       updateData.rejection_reason = rejection_reason
     }
 
-    const { error: updateError } = await serviceSupabase
+    // OPTIMISTIC LOCK: Only update if status is still 'pending'
+    // This prevents race conditions where two staff members approve simultaneously
+    const { data: updatedApproval, error: updateError, count } = await serviceSupabase
       .from('approvals')
-      .update(updateData)
+      .update(updateData, { count: 'exact' })
       .eq('id', id)
+      .eq('status', 'pending')  // ← OPTIMISTIC LOCK
+      .select()
+      .single()
+
+    // Check if update succeeded (row was actually updated)
+    if (count === 0 || !updatedApproval) {
+      console.warn(`Approval ${id} was already processed by another user`)
+      return NextResponse.json(
+        { error: 'This approval was already processed by another user. Please refresh the page.' },
+        { status: 409 }  // 409 Conflict
+      )
+    }
 
     if (updateError) {
       console.error('Approval update error:', updateError)
@@ -139,6 +153,61 @@ export async function POST(
       if (!result.success) {
         transactionError = result.error
         transactionSuccess = false
+
+        // ROLLBACK: If entity logic fails, rollback approval to 'pending'
+        console.error(`Entity approval failed for ${approval.entity_type}:`, result.error)
+        console.log('Rolling back approval to pending status...')
+
+        const { error: rollbackError } = await serviceSupabase
+          .from('approvals')
+          .update({
+            status: 'pending',
+            approved_by: null,
+            approved_at: null,
+            resolved_at: null,
+            notes: `Auto-rollback: ${result.error}. Original approver: ${user.id}`,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', id)
+
+        if (rollbackError) {
+          console.error('CRITICAL: Rollback failed:', rollbackError)
+          // Log to audit trail for manual intervention
+          await auditLogger.log({
+            actor_user_id: user.id,
+            action: 'approval_rollback_failed',
+            entity: 'approvals',
+            entity_id: id,
+            metadata: {
+              original_error: result.error,
+              rollback_error: rollbackError.message,
+              severity: 'critical'
+            }
+          })
+
+          // Return critical error - rollback failed
+          return NextResponse.json(
+            {
+              success: false,
+              error: `CRITICAL: Approval failed AND rollback failed. The approval may be in an inconsistent state. Manual intervention required. Contact support immediately with Approval ID: ${id}`,
+              details: {
+                approval_error: result.error,
+                rollback_error: rollbackError.message,
+                approval_id: id
+              }
+            },
+            { status: 500 }
+          )
+        }
+
+        // Rollback succeeded
+        return NextResponse.json(
+          {
+            success: false,
+            error: `Failed to process approval: ${result.error}. The approval has been rolled back to pending status. Please try again or contact support.`
+          },
+          { status: 500 }
+        )
       } else if (result.notificationData) {
         notificationData = result.notificationData
       }
