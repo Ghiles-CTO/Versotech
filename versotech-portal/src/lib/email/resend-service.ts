@@ -26,9 +26,9 @@ if (process.env.NODE_ENV === 'production') {
   if (!RESEND_API_KEY) {
     console.error('CRITICAL: RESEND_API_KEY not configured in production')
   } else if (RESEND_API_KEY === 're_your_resend_api_key_here') {
-    throw new Error('RESEND_API_KEY cannot use example value in production. Please set a valid Resend API key.')
+    console.error('CRITICAL: RESEND_API_KEY cannot use example value in production. Please set a valid Resend API key.')
   } else if (RESEND_API_KEY.startsWith('re_test_')) {
-    throw new Error('RESEND_API_KEY cannot use test key in production. Please set a valid production Resend API key.')
+    console.error('CRITICAL: RESEND_API_KEY cannot use test key in production. Please set a valid production Resend API key.')
   }
 }
 

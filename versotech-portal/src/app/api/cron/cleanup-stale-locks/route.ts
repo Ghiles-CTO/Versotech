@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic'
  * Runs every 5 minutes to detect and release locks that are older than 10 minutes.
  * This prevents workflows from being permanently blocked when a signature process crashes.
  *
- * Vercel Cron Schedule: */5 * * * * (every 5 minutes)
+ * Vercel Cron Schedule: "* /5 * * * *" (every 5 minutes)
  */
 export async function GET(request: NextRequest) {
   // Verify cron authorization

@@ -494,7 +494,7 @@ export async function handleSubscriptionSignature(
     if (existingFeeEvents && existingFeeEvents.length > 0) {
       console.log('✅ [SUBSCRIPTION HANDLER] Active fee events already exist for this subscription, skipping creation:', {
         count: existingFeeEvents.length,
-        types: existingFeeEvents.map(fe => fe.fee_type).join(', ')
+        types: existingFeeEvents.map((fe: any) => fe.fee_type).join(', ')
       })
     } else {
       // Check if subscription was previously committed
