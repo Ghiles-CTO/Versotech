@@ -25,12 +25,20 @@ import { Upload, Loader2, Info } from 'lucide-react'
 import { getSuggestedDocumentTypes } from '@/constants/kyc-document-types'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 
+interface Member {
+  id: string
+  full_name: string
+  role: string
+}
+
 interface KYCUploadDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onUploadSuccess: () => void
   entityId?: string | null // Optional: for entity KYC upload
   category?: 'individual' | 'entity' | 'both' // Filter suggested types
+  members?: Member[] // Optional: list of members to associate document with
+  memberType?: 'investor' | 'counterparty' // Type of member (investor_member or counterparty_entity_member)
 }
 
 export function KYCUploadDialog({
@@ -38,13 +46,16 @@ export function KYCUploadDialog({
   onOpenChange,
   onUploadSuccess,
   entityId = null,
-  category = 'both'
+  category = 'both',
+  members = [],
+  memberType
 }: KYCUploadDialogProps) {
   const [file, setFile] = useState<File | null>(null)
   const [documentType, setDocumentType] = useState<string>('')
   const [customLabel, setCustomLabel] = useState<string>('')
   const [expiryDate, setExpiryDate] = useState<string>('')
   const [notes, setNotes] = useState<string>('')
+  const [selectedMemberId, setSelectedMemberId] = useState<string>('')
   const [isUploading, setIsUploading] = useState(false)
 
   const suggestedTypes = getSuggestedDocumentTypes(category)
@@ -115,6 +126,15 @@ export function KYCUploadDialog({
         formData.append('entityId', entityId)
       }
 
+      // Add member ID based on member type
+      if (selectedMemberId && memberType) {
+        if (memberType === 'investor') {
+          formData.append('investorMemberId', selectedMemberId)
+        } else if (memberType === 'counterparty') {
+          formData.append('counterpartyMemberId', selectedMemberId)
+        }
+      }
+
       const response = await fetch('/api/investors/me/documents/upload', {
         method: 'POST',
         body: formData
@@ -136,6 +156,7 @@ export function KYCUploadDialog({
       setCustomLabel('')
       setExpiryDate('')
       setNotes('')
+      setSelectedMemberId('')
       onOpenChange(false)
       onUploadSuccess()
 
@@ -155,6 +176,7 @@ export function KYCUploadDialog({
     setCustomLabel('')
     setExpiryDate('')
     setNotes('')
+    setSelectedMemberId('')
     onOpenChange(false)
   }
 
@@ -211,6 +233,32 @@ export function KYCUploadDialog({
               />
               <p className="text-xs text-muted-foreground">
                 Enter a name for this document type
+              </p>
+            </div>
+          )}
+
+          {/* Member Selection (if members provided) */}
+          {members.length > 0 && (
+            <div className="space-y-2">
+              <Label htmlFor="member-select">Associate with Member (Optional)</Label>
+              <Select
+                value={selectedMemberId}
+                onValueChange={setSelectedMemberId}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a member..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">No member selected</SelectItem>
+                  {members.map((member) => (
+                    <SelectItem key={member.id} value={member.id}>
+                      {member.full_name} ({member.role})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Associate this document with a specific member for their KYC verification
               </p>
             </div>
           )}

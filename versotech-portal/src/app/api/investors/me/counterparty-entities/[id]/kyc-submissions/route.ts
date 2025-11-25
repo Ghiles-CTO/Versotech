@@ -43,7 +43,7 @@ export async function GET(
       return NextResponse.json({ error: 'Access denied' }, { status: 403 })
     }
 
-    // Fetch KYC submissions for this entity with document details
+    // Fetch KYC submissions for this entity with document and member details
     const { data: submissions, error: submissionsError } = await serviceSupabase
       .from('kyc_submissions')
       .select(`
@@ -55,7 +55,8 @@ export async function GET(
           mime_type,
           file_size_bytes,
           created_at
-        )
+        ),
+        counterparty_member:counterparty_member_id(id, full_name, role)
       `)
       .eq('counterparty_entity_id', entityId)
       .order('submitted_at', { ascending: false })
@@ -68,7 +69,18 @@ export async function GET(
       )
     }
 
-    return NextResponse.json({ submissions: submissions || [] })
+    // Fetch entity members for the upload dialog
+    const { data: members } = await serviceSupabase
+      .from('counterparty_entity_members')
+      .select('id, full_name, role')
+      .eq('counterparty_entity_id', entityId)
+      .eq('is_active', true)
+      .order('full_name')
+
+    return NextResponse.json({
+      submissions: submissions || [],
+      members: members || []
+    })
   } catch (error) {
     console.error('Unexpected error in GET /api/investors/me/counterparty-entities/[id]/kyc-submissions:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

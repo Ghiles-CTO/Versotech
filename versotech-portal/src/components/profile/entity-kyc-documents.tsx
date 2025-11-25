@@ -14,7 +14,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Upload, FileText, Download, Loader2, AlertCircle, CheckCircle2, Clock, Info } from 'lucide-react'
+import { Upload, FileText, Download, Loader2, AlertCircle, CheckCircle2, Clock, Info, User } from 'lucide-react'
 import { KYCUploadDialog } from './kyc-upload-dialog'
 import { getDocumentTypeLabel } from '@/constants/kyc-document-types'
 
@@ -44,10 +44,22 @@ interface KYCSubmission {
     display_name?: string
     email?: string
   } | null
+  counterparty_member?: {
+    id: string
+    full_name: string
+    role: string
+  } | null
+}
+
+interface EntityMember {
+  id: string
+  full_name: string
+  role: string
 }
 
 export function EntityKYCDocuments({ entityId, entityName }: EntityKYCDocumentsProps) {
   const [submissions, setSubmissions] = useState<KYCSubmission[]>([])
+  const [entityMembers, setEntityMembers] = useState<EntityMember[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false)
   const [downloadingId, setDownloadingId] = useState<string | null>(null)
@@ -63,6 +75,7 @@ export function EntityKYCDocuments({ entityId, entityName }: EntityKYCDocumentsP
 
       const data = await response.json()
       setSubmissions(data.submissions || [])
+      setEntityMembers(data.members || [])
     } catch (error: any) {
       console.error('Error fetching entity KYC submissions:', error)
       toast.error('Failed to load KYC documents', {
@@ -204,6 +217,7 @@ export function EntityKYCDocuments({ entityId, entityName }: EntityKYCDocumentsP
               <TableHeader>
                 <TableRow>
                   <TableHead>Document Type</TableHead>
+                  {entityMembers.length > 0 && <TableHead>Member</TableHead>}
                   <TableHead>Status</TableHead>
                   <TableHead>Uploaded</TableHead>
                   <TableHead>Expiry</TableHead>
@@ -226,6 +240,18 @@ export function EntityKYCDocuments({ entityId, entityName }: EntityKYCDocumentsP
                         )}
                       </div>
                     </TableCell>
+                    {entityMembers.length > 0 && (
+                      <TableCell>
+                        {submission.counterparty_member ? (
+                          <div className="flex items-center gap-1.5">
+                            <User className="h-3.5 w-3.5 text-slate-400" />
+                            <span className="text-sm text-slate-300">{submission.counterparty_member.full_name}</span>
+                          </div>
+                        ) : (
+                          <span className="text-sm text-slate-500">—</span>
+                        )}
+                      </TableCell>
+                    )}
                     <TableCell>{getStatusBadge(submission.status)}</TableCell>
                     <TableCell className="text-slate-300">
                       {formatDate(submission.created_at)}
@@ -275,6 +301,8 @@ export function EntityKYCDocuments({ entityId, entityName }: EntityKYCDocumentsP
         onUploadSuccess={fetchSubmissions}
         entityId={entityId}
         category="entity"
+        members={entityMembers}
+        memberType="counterparty"
       />
     </div>
   )

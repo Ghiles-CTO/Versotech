@@ -8,10 +8,12 @@ import { PasswordChangeForm } from '@/components/profile/password-change-form'
 import { PreferencesEditor } from '@/components/profile/preferences-editor'
 import { KYCDocumentsTab } from '@/components/profile/kyc-documents-tab'
 import { CounterpartyEntitiesTab } from '@/components/profile/counterparty-entities-tab'
+import { InvestorMembersTab } from '@/components/profile/investor-members-tab'
+import { InvestorInfoForm } from '@/components/profile/investor-info-form'
 import { KYCQuestionnaire } from '@/components/kyc/KYCQuestionnaire'
 import { KYCAlert } from '@/components/dashboard/kyc-alert'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { User, Lock, Settings, Briefcase, FileText, Building2, Bell, ShieldCheck } from 'lucide-react'
+import { User, Lock, Settings, Briefcase, FileText, Building2, Bell, ShieldCheck, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 
@@ -41,6 +43,7 @@ export function ProfilePageClient({ profile: initialProfile, variant = 'investor
 
   // TODO: Fetch real KYC status. For now defaulting to not_started or fetching from API
   const [kycStatus, setKycStatus] = useState<string>('not_started')
+  const [isEntityInvestor, setIsEntityInvestor] = useState(false)
 
   useEffect(() => {
     // Fetch KYC status
@@ -56,8 +59,23 @@ export function ProfilePageClient({ profile: initialProfile, variant = 'investor
         console.error('Error fetching KYC status:', error)
       }
     }
+
+    // Fetch investor type to determine if entity-type investor
+    const fetchInvestorType = async () => {
+      try {
+        const response = await fetch('/api/investors/me/kyc-submissions')
+        if (response.ok) {
+          const data = await response.json()
+          setIsEntityInvestor(data.is_entity_investor || false)
+        }
+      } catch (error) {
+        console.error('Error fetching investor type:', error)
+      }
+    }
+
     if (!isStaff) {
       fetchKycStatus()
+      fetchInvestorType()
     }
   }, [isStaff])
 
@@ -153,7 +171,7 @@ export function ProfilePageClient({ profile: initialProfile, variant = 'investor
       {/* Right Column - Tabs */}
       <div className="lg:col-span-2">
         <Tabs defaultValue={defaultTab} className="w-full">
-          <TabsList className={isStaff ? "grid w-full grid-cols-3 bg-white/5 border border-white/10" : "grid w-full grid-cols-5"}>
+          <TabsList className={isStaff ? "grid w-full grid-cols-3 bg-white/5 border border-white/10" : `grid w-full ${isEntityInvestor ? 'grid-cols-6' : 'grid-cols-5'}`}>
             <TabsTrigger
               value="profile"
               className={isStaff ? "data-[state=active]:bg-white/10 data-[state=active]:text-white text-white/70" : ""}
@@ -181,6 +199,12 @@ export function ProfilePageClient({ profile: initialProfile, variant = 'investor
                   <ShieldCheck className="h-4 w-4 mr-2" />
                   KYC & Onboarding
                 </TabsTrigger>
+                {isEntityInvestor && (
+                  <TabsTrigger value="members">
+                    <Users className="h-4 w-4 mr-2" />
+                    Members
+                  </TabsTrigger>
+                )}
                 <TabsTrigger value="entities">
                   <Building2 className="h-4 w-4 mr-2" />
                   Entities
@@ -221,13 +245,23 @@ export function ProfilePageClient({ profile: initialProfile, variant = 'investor
                   )}
                 </div>
 
+                {/* Step 1: Contact Information */}
+                <InvestorInfoForm />
+
+                {/* Step 2: Compliance Questionnaire */}
                 <KYCQuestionnaire />
 
+                {/* Step 3: Supporting Documents */}
                 <div className="pt-6 border-t border-white/10">
                   <h3 className="text-lg font-medium mb-4">Supporting Documents</h3>
                   <KYCDocumentsTab />
                 </div>
               </TabsContent>
+              {isEntityInvestor && (
+                <TabsContent value="members" className="mt-6">
+                  <InvestorMembersTab />
+                </TabsContent>
+              )}
               <TabsContent value="entities" className="mt-6">
                 <CounterpartyEntitiesTab />
               </TabsContent>

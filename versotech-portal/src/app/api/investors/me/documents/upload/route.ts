@@ -65,6 +65,8 @@ export async function POST(request: NextRequest) {
     const notes = formData.get('notes') as string | null
     const taskId = formData.get('taskId') as string | null
     const entityId = formData.get('entityId') as string | null // For counterparty entity KYC
+    const investorMemberId = formData.get('investorMemberId') as string | null // For investor member KYC
+    const counterpartyMemberId = formData.get('counterpartyMemberId') as string | null // For counterparty entity member KYC
 
     if (!file) {
       return NextResponse.json(
@@ -96,6 +98,49 @@ export async function POST(request: NextRequest) {
       if (entityError || !entity) {
         return NextResponse.json(
           { error: 'Invalid entity ID or entity does not belong to this investor' },
+          { status: 400 }
+        )
+      }
+    }
+
+    // Validate investor member belongs to this investor if provided
+    if (investorMemberId) {
+      const { data: member, error: memberError } = await serviceSupabase
+        .from('investor_members')
+        .select('id')
+        .eq('id', investorMemberId)
+        .eq('investor_id', investorId)
+        .eq('is_active', true)
+        .single()
+
+      if (memberError || !member) {
+        return NextResponse.json(
+          { error: 'Invalid investor member ID' },
+          { status: 400 }
+        )
+      }
+    }
+
+    // Validate counterparty member belongs to the specified entity if provided
+    if (counterpartyMemberId) {
+      if (!entityId) {
+        return NextResponse.json(
+          { error: 'Entity ID is required when specifying a counterparty member' },
+          { status: 400 }
+        )
+      }
+
+      const { data: member, error: memberError } = await serviceSupabase
+        .from('counterparty_entity_members')
+        .select('id')
+        .eq('id', counterpartyMemberId)
+        .eq('counterparty_entity_id', entityId)
+        .eq('is_active', true)
+        .single()
+
+      if (memberError || !member) {
+        return NextResponse.json(
+          { error: 'Invalid counterparty member ID' },
           { status: 400 }
         )
       }
@@ -204,6 +249,8 @@ export async function POST(request: NextRequest) {
       .insert({
         investor_id: entityId ? null : investorId,
         counterparty_entity_id: entityId || null,
+        investor_member_id: investorMemberId || null,
+        counterparty_member_id: counterpartyMemberId || null,
         document_type: documentType,
         custom_label: customLabel || null, // Store user-defined label
         document_id: document.id,

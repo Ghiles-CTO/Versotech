@@ -12,12 +12,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { EntityKYCDocuments } from './entity-kyc-documents'
+import { EntityMembersTab } from './entity-members-tab'
 import { EntityFormDialog } from './entity-form-dialog'
 import {
   Building2,
   MapPin,
   FileText,
   User,
+  Users,
   Calendar,
   Hash,
   Shield,
@@ -155,8 +157,9 @@ export function EntityDetailDialog({ open, onClose, entity, onUpdate }: EntityDe
           </DialogHeader>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="details">Entity Details</TabsTrigger>
+              <TabsTrigger value="members">Members</TabsTrigger>
               <TabsTrigger value="kyc">KYC Documents</TabsTrigger>
             </TabsList>
 
@@ -271,6 +274,10 @@ export function EntityDetailDialog({ open, onClose, entity, onUpdate }: EntityDe
                     </CardContent>
                   </Card>
                 )}
+              </TabsContent>
+
+              <TabsContent value="members" className="m-0">
+                <EntityMembersTab entityId={entity.id} entityName={entity.legal_name} />
               </TabsContent>
 
               <TabsContent value="kyc" className="m-0">

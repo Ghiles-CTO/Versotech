@@ -50,7 +50,8 @@ export async function GET(request: NextRequest) {
       .select(`
         *,
         document:documents(id, name, file_key, file_size_bytes, mime_type, created_at),
-        reviewer:reviewed_by(display_name, email)
+        reviewer:reviewed_by(display_name, email),
+        investor_member:investor_member_id(id, full_name, role)
       `)
       .in('investor_id', investorIds)
       .is('counterparty_entity_id', null) // Only investor KYC, not entity KYC
@@ -71,7 +72,22 @@ export async function GET(request: NextRequest) {
       .in('id', investorIds)
 
     const hasIndividual = investors?.some(i => i.type === 'individual')
-    const hasCorporate = investors?.some(i => i.type === 'corporate')
+    const hasCorporate = investors?.some(i => i.type === 'corporate' || i.type === 'entity' || i.type === 'institution')
+    const investorType = investors?.[0]?.type || 'individual'
+    const isEntityInvestor = ['corporate', 'entity', 'institution'].includes(investorType)
+
+    // Get investor members if entity-type investor
+    let investorMembers: any[] = []
+    if (isEntityInvestor && investorIds.length > 0) {
+      const { data: members } = await supabase
+        .from('investor_members')
+        .select('id, full_name, role')
+        .eq('investor_id', investorIds[0])
+        .eq('is_active', true)
+        .order('full_name')
+
+      investorMembers = members || []
+    }
 
     // Get suggested documents based on investor type (NOT requirements, just suggestions)
     let suggestedCategory: 'individual' | 'entity' | 'both' = 'both'
@@ -104,6 +120,9 @@ export async function GET(request: NextRequest) {
       submissions: formattedSubmissions,
       grouped_submissions: groupedSubmissions,
       suggested_documents: suggestedDocuments,
+      investor_type: investorType,
+      is_entity_investor: isEntityInvestor,
+      investor_members: investorMembers,
       note: 'Suggested documents are recommendations. You can upload any document type with a custom label.'
     })
 

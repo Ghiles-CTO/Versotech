@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Upload, CheckCircle, XCircle, Clock, Download, AlertCircle, Info, Loader2, FileText } from 'lucide-react'
+import { Upload, CheckCircle, XCircle, Clock, Download, AlertCircle, Info, Loader2, FileText, User } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -41,6 +41,17 @@ interface KYCSubmission {
     display_name?: string
     email?: string
   } | null
+  investor_member?: {
+    id: string
+    full_name: string
+    role: string
+  } | null
+}
+
+interface InvestorMember {
+  id: string
+  full_name: string
+  role: string
 }
 
 interface SuggestedDocument {
@@ -52,6 +63,8 @@ interface SuggestedDocument {
 export function KYCDocumentsTab() {
   const [submissions, setSubmissions] = useState<KYCSubmission[]>([])
   const [suggestedDocuments, setSuggestedDocuments] = useState<SuggestedDocument[]>([])
+  const [investorMembers, setInvestorMembers] = useState<InvestorMember[]>([])
+  const [isEntityInvestor, setIsEntityInvestor] = useState(false)
   const [loading, setLoading] = useState(true)
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false)
   const [downloadingId, setDownloadingId] = useState<string | null>(null)
@@ -69,6 +82,8 @@ export function KYCDocumentsTab() {
       const data = await response.json()
       setSubmissions(data.submissions || [])
       setSuggestedDocuments(data.suggested_documents || [])
+      setInvestorMembers(data.investor_members || [])
+      setIsEntityInvestor(data.is_entity_investor || false)
     } catch (error: any) {
       console.error('Error loading KYC submissions:', error)
       toast.error('Failed to load KYC documents', {
@@ -209,6 +224,7 @@ export function KYCDocumentsTab() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Document Type</TableHead>
+                    {isEntityInvestor && <TableHead>Member</TableHead>}
                     <TableHead>Status</TableHead>
                     <TableHead>Uploaded</TableHead>
                     <TableHead>Expiry</TableHead>
@@ -231,6 +247,18 @@ export function KYCDocumentsTab() {
                           )}
                         </div>
                       </TableCell>
+                      {isEntityInvestor && (
+                        <TableCell>
+                          {submission.investor_member ? (
+                            <div className="flex items-center gap-1.5">
+                              <User className="h-3.5 w-3.5 text-muted-foreground" />
+                              <span className="text-sm">{submission.investor_member.full_name}</span>
+                            </div>
+                          ) : (
+                            <span className="text-sm text-muted-foreground">—</span>
+                          )}
+                        </TableCell>
+                      )}
                       <TableCell>
                         <div className="flex flex-col gap-2">
                           {getStatusBadge(submission.status)}
@@ -311,7 +339,9 @@ export function KYCDocumentsTab() {
         open={uploadDialogOpen}
         onOpenChange={setUploadDialogOpen}
         onUploadSuccess={loadSubmissions}
-        category="both"
+        category={isEntityInvestor ? 'entity' : 'individual'}
+        members={isEntityInvestor ? investorMembers : []}
+        memberType={isEntityInvestor ? 'investor' : undefined}
       />
     </div>
   )
