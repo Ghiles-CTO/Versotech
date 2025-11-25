@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { z } from 'zod'
+import { getAppUrl } from '@/lib/signature/token'
 
 // Input validation schema
 const inviteStaffSchema = z.object({
@@ -48,7 +49,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Send invitation via Supabase Auth
-    const { data: authData, error: authError } = await supabase.auth.admin.inviteUserByEmail(
+    const { data: authData, error: authError} = await supabase.auth.admin.inviteUserByEmail(
       validatedData.email,
       {
         data: {
@@ -56,7 +57,7 @@ export async function POST(request: NextRequest) {
           role: validatedData.role,
           title: validatedData.title,
         },
-        redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/versotech/login`
+        redirectTo: `${getAppUrl()}/versotech/login`
       }
     )
 

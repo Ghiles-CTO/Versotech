@@ -53,21 +53,23 @@ const resolveDefaultRole = (
   metadataRole: string | null,
   email: string | null
 ): string | null => {
-  if (metadataRole && isStaffRole(metadataRole)) {
-    return metadataRole
-  }
+  // SECURITY: Never trust metadataRole for staff roles
+  // Staff roles should ONLY come from:
+  // 1. Admin-created profiles (invitation flow)
+  // 2. Company email domain validation
 
   if (portal === 'staff') {
+    // For staff portal: require company email domain
+    // Non-company emails must have pre-existing profile from admin invitation
     if (isStaffEmail(email)) {
       return 'staff_ops'
     }
+    // DENY - non-company email trying to access staff portal
+    // They must have a pre-existing profile created by admin invitation
     return null
   }
 
-  if (metadataRole === 'investor') {
-    return 'investor'
-  }
-
+  // For investor portal: always default to investor
   return 'investor'
 }
 
@@ -86,14 +88,59 @@ export async function POST(request: NextRequest) {
 
     const supabase = await createClient()
 
+    // Clear any existing session first to prevent conflicts
+    // This is critical for fixing "Invalid Refresh Token" errors on re-login
+    try {
+      await supabase.auth.signOut({ scope: 'local' })
+    } catch (signOutError) {
+      console.warn('[signin] Pre-signin signOut warning (non-fatal):', signOutError)
+      // Non-fatal, continue with sign-in
+    }
+
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password
     })
 
     if (error) {
-      console.error('Supabase sign-in error:', error)
-      return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 })
+      console.error('[signin] Supabase sign-in error:', {
+        message: error.message,
+        status: error.status,
+        name: error.name
+      })
+
+      // Provide specific error messages based on error type
+      if (error.message?.toLowerCase().includes('invalid login credentials')) {
+        return NextResponse.json({
+          error: 'Invalid email or password. Please check your credentials and try again.'
+        }, { status: 401 })
+      }
+
+      if (error.message?.toLowerCase().includes('email not confirmed')) {
+        return NextResponse.json({
+          error: 'Please confirm your email address before signing in.'
+        }, { status: 403 })
+      }
+
+      if (error.message?.toLowerCase().includes('refresh') ||
+          error.message?.toLowerCase().includes('session')) {
+        return NextResponse.json({
+          error: 'Session conflict detected. Please try again.'
+        }, { status: 409 })
+      }
+
+      if (error.message?.toLowerCase().includes('rate limit') ||
+          error.message?.toLowerCase().includes('too many')) {
+        return NextResponse.json({
+          error: 'Too many login attempts. Please wait a moment and try again.'
+        }, { status: 429 })
+      }
+
+      // Generic error for unknown cases
+      return NextResponse.json({
+        error: 'Authentication failed. Please try again or contact support if the problem persists.',
+        debug: process.env.NODE_ENV === 'development' ? error.message : undefined
+      }, { status: 401 })
     }
 
     if (!data.user) {

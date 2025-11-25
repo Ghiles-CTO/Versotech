@@ -2,6 +2,7 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { getAuthenticatedUser, isStaffUser } from '@/lib/api-auth'
 import { NextResponse } from 'next/server'
 import { revalidatePath } from 'next/cache'
+import { getAppUrl } from '@/lib/signature/token'
 
 /**
  * POST /api/staff/investors/[id]/users
@@ -101,7 +102,7 @@ export async function POST(
                 display_name: email.split('@')[0],
                 role: 'investor'
               },
-              redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/versoholdings/dashboard`
+              redirectTo: `${getAppUrl()}/versoholdings/dashboard`
             }
           )
 

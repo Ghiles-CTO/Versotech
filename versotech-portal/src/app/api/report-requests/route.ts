@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server'
 import type { CreateReportRequest, CreateReportResponse } from '@/types/reports'
 import { REPORT_TYPES, DUPLICATE_DETECTION_WINDOW, DEFAULT_PAGE_SIZE } from '@/lib/reports/constants'
 import { validateReportRequest } from '@/lib/reports/validation'
+import { getAppUrl } from '@/lib/signature/token'
 
 export async function GET(request: Request) {
   try {
@@ -200,7 +201,7 @@ export async function POST(request: Request) {
 
     try {
       const triggerResponse = await fetch(
-        `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/workflows/${workflowKey}/trigger`,
+        `${getAppUrl()}/api/workflows/${workflowKey}/trigger`,
         {
           method: 'POST',
           headers: {

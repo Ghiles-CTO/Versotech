@@ -81,11 +81,12 @@ function AuthCallbackContent() {
 
         profile = profileData
 
-        // If profile doesn&apos;t exist (trigger failed), create it via API
+        // If profile doesn't exist (trigger failed), create it via API
         if (!profile) {
           console.log('[auth-callback] Profile not found, creating it...')
 
-          const metadataRole = data.user.user_metadata?.role || 'investor'
+          // SECURITY: Role is NOT sent to API - it's derived server-side
+          // based on email domain or admin-created profile
           const metadataDisplayName = data.user.user_metadata?.display_name ||
                                        data.user.user_metadata?.full_name ||
                                        data.user.email?.split('@')[0] ||
@@ -97,18 +98,27 @@ function AuthCallbackContent() {
             body: JSON.stringify({
               userId: data.user.id,
               email: data.user.email,
-              displayName: metadataDisplayName,
-              role: metadataRole
+              displayName: metadataDisplayName
+              // SECURITY: Role removed - derived server-side only
             })
           })
 
           if (!createResponse.ok) {
+            const errorData = await createResponse.json().catch(() => ({}))
+            console.error('[auth-callback] Profile creation failed:', errorData)
             setStatus('error')
             setMessage('Failed to create profile. Please contact support.')
             return
           }
 
-          profile = { role: metadataRole, display_name: metadataDisplayName }
+          // Fetch the newly created profile to get server-assigned role
+          const { data: newProfile } = await supabase
+            .from('profiles')
+            .select('role, display_name')
+            .eq('id', data.user.id)
+            .single()
+
+          profile = newProfile || { role: 'investor', display_name: metadataDisplayName }
         }
 
         console.log('[auth-callback] Profile ready:', profile)

@@ -58,6 +58,7 @@ export async function POST(request: NextRequest) {
       .from('signature_requests')
       .select('*')
       .eq('workflow_run_id', workflow_run_id)
+      .order('created_at', { ascending: true })
 
     const allSigned = signatures?.every(sig => sig.status === 'signed')
 

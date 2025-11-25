@@ -1,6 +1,6 @@
 'use client'
 
-import { createClient } from '@/lib/supabase/client'
+import { createClient, resetClient } from '@/lib/supabase/client'
 import { sessionManager } from '@/lib/session-manager'
 import type { User, Session } from '@supabase/supabase-js'
 
@@ -94,6 +94,17 @@ export const signUp = async (email: string, password: string, displayName: strin
 // Sign in with email and password
 export const signIn = async (email: string, password: string, portal: 'investor' | 'staff' = 'investor') => {
   try {
+    // CRITICAL FIX: Clear all auth data before attempting sign-in
+    // This prevents "Invalid Refresh Token" and session conflict errors
+    console.log('[auth-client] Clearing all auth data before sign-in...')
+    sessionManager.clearAllAuthData()
+
+    // Reset the Supabase client singleton to get fresh instance
+    resetClient()
+
+    // Small delay to ensure storage clearing completes
+    await new Promise(resolve => setTimeout(resolve, 100))
+
     const response = await fetch('/api/auth/signin', {
       method: 'POST',
       headers: {
@@ -138,10 +149,17 @@ export const signInWithGoogle = async (portalType: 'staff' | 'investor' = 'inves
   const supabase = createClient()
 
   try {
-    // Get the application URL with fallback for development
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 
-                   (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000')
-    
+    // Get the application URL - should always work in browser context
+    let appUrl = process.env.NEXT_PUBLIC_APP_URL
+
+    if (!appUrl && typeof window !== 'undefined') {
+      appUrl = window.location.origin
+    }
+
+    if (!appUrl) {
+      throw new AuthError('Application URL not configured. Cannot perform OAuth authentication.')
+    }
+
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
@@ -179,6 +197,8 @@ export const signOut = async () => {
   } finally {
     if (typeof window !== 'undefined') {
       sessionManager.forceSignOut()
+      // Reset the Supabase client singleton after sign-out
+      resetClient()
     }
   }
 

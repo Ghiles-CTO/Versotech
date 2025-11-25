@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { getAppUrl } from '@/lib/signature/token'
 
 export async function POST(request: NextRequest) {
   try {
@@ -15,18 +16,15 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
 
-    // Determine role based on portal and email domain
-    let role = 'investor'
     const emailDomain = email.toLowerCase().split('@')[1]
-    
-    if (portalContext === 'staff') {
-      // For staff portal, require versotech domain or assign staff_ops role
-      if (emailDomain === 'versotech.com' || emailDomain === 'verso.com') {
-        role = 'staff_admin'
-      } else {
-        // Allow other domains but assign staff_ops role
-        role = 'staff_ops'
-      }
+    const COMPANY_DOMAINS = ['versotech.com', 'verso.com']
+
+    // Block non-company email signups for staff portal
+    // Staff with non-company emails must be invited by admin
+    if (portalContext === 'staff' && !COMPANY_DOMAINS.includes(emailDomain)) {
+      return NextResponse.json({
+        error: 'Staff registration requires an invitation or a company email (@versotech.com, @verso.com). Please contact your administrator.'
+      }, { status: 403 })
     }
 
     const supabase = await createClient()
@@ -45,22 +43,23 @@ export async function POST(request: NextRequest) {
     }
 
     // Create the user
+    // SECURITY: Role is NOT stored in user_metadata - it will be derived server-side
+    // during signin/callback based on email domain or admin-created profile
     console.log('[signup] Creating user with metadata:', {
       email,
       displayName,
-      role,
       portal: portalContext
     })
-    
+
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: {
-          display_name: displayName,
-          role: role
+          display_name: displayName
+          // SECURITY: Role removed from metadata - derived server-side only
         },
-        emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/callback?portal=${portalContext}&next=${portalContext === 'staff' ? '/versotech/staff' : '/versoholdings/dashboard'}`
+        emailRedirectTo: `${getAppUrl()}/auth/callback?portal=${portalContext}&next=${portalContext === 'staff' ? '/versotech/staff' : '/versoholdings/dashboard'}`
       }
     })
 

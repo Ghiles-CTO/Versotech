@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import crypto from 'crypto'
 import { getAuthenticatedUser, isStaffUser } from '@/lib/api-auth'
+import { getAppUrl } from '@/lib/signature/token'
 
 const createInviteLinkSchema = z.object({
   role: z.enum([
@@ -150,8 +151,7 @@ export async function POST(
       .single()
 
     // Construct invite URL (raw token only returned once)
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
-    const inviteUrl = `${baseUrl}/invite/${rawToken}`
+    const inviteUrl = `${getAppUrl()}/invite/${rawToken}`
 
     // Audit log
     await auditLogger.log({

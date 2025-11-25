@@ -1,56 +1,59 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { signUp, signIn, AuthError } from '@/lib/auth-client'
-import { 
-  Loader2, 
-  Eye, 
-  EyeOff, 
-  Shield, 
-  Lock, 
+import { Separator } from '@/components/ui/separator'
+import { signIn, signInWithGoogle, AuthError } from '@/lib/auth-client'
+import {
+  Loader2,
+  Eye,
+  EyeOff,
+  Shield,
+  Lock,
   ArrowLeft
 } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
 
-export default function StaffLogin() {
+function StaffLoginContent() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [displayName, setDisplayName] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-  const [isSignUp, setIsSignUp] = useState(false)
-  const [message, setMessage] = useState<{ type: 'error' | 'success', text: string } | null>(null)
+  const [message, setMessage] = useState<{ type: 'error' | 'success' | 'info', text: string } | null>(null)
 
-  const handleAuth = async (e: React.FormEvent) => {
+  useEffect(() => {
+    const error = searchParams.get('error')
+    if (error) {
+      let errorMessage = 'Authentication error occurred'
+      switch (error) {
+        case 'session_expired': errorMessage = 'Your session has expired.'; break
+        case 'profile_not_found': errorMessage = 'User profile not found.'; break
+        case 'auth_failed': errorMessage = 'Authentication failed.'; break
+        default: errorMessage = 'An error occurred.';
+      }
+      setMessage({ type: 'error', text: errorMessage })
+    }
+  }, [searchParams])
+
+  const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
     setMessage(null)
 
     try {
-      if (isSignUp) {
-        if (!displayName.trim()) {
-          setMessage({ type: 'error', text: 'Please enter your full name' })
-          setIsLoading(false)
-          return
-        }
-        await signUp(email, password, displayName, 'staff')
-        setMessage({ type: 'success', text: 'Account created! Please verify email.' })
-        setIsSignUp(false)
-      } else {
-        const result = await signIn(email, password, 'staff')
-        if (result?.success) {
-          if ((result.user as any)?.demo) {
-            window.location.href = result.redirect ?? '/versotech/staff'
-          } else {
-            router.replace(result.redirect ?? '/versotech/staff')
-          }
+      const result = await signIn(email, password, 'staff')
+      if (result?.success) {
+        if ((result.user as any)?.demo) {
+          window.location.href = result.redirect ?? '/versotech/staff'
+        } else {
+          router.replace(result.redirect ?? '/versotech/staff')
         }
       }
     } catch (error) {
@@ -61,12 +64,15 @@ export default function StaffLogin() {
     }
   }
 
-  const switchMode = () => {
-    setIsSignUp(!isSignUp)
-    setMessage(null)
-    setEmail('')
-    setPassword('')
-    setDisplayName('')
+  const handleGoogleSignIn = async () => {
+    try {
+      setIsLoading(true)
+      await signInWithGoogle('staff')
+    } catch (error) {
+      if (error instanceof AuthError) setMessage({ type: 'error', text: error.message })
+      else setMessage({ type: 'error', text: 'Google sign in failed.' })
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -96,7 +102,7 @@ export default function StaffLogin() {
 
         <Card className="bg-zinc-900/50 border-white/5 backdrop-blur-sm shadow-2xl shadow-black">
           <CardContent className="p-8 space-y-6">
-            
+
             <div className="flex items-center justify-center gap-2 text-emerald-500/80 bg-emerald-500/5 py-2 rounded-md border border-emerald-500/10">
                 <Shield className="w-4 h-4" />
                 <span className="text-xs font-mono uppercase tracking-wider">Secure Connection Established</span>
@@ -104,33 +110,41 @@ export default function StaffLogin() {
 
             {message && (
               <div className={`p-3 rounded-md text-sm font-medium border ${
-                message.type === 'error' ? 'bg-red-900/20 border-red-900/50 text-red-400' : 
-                'bg-emerald-900/20 border-emerald-900/50 text-emerald-400'
+                message.type === 'error' ? 'bg-red-900/20 border-red-900/50 text-red-400' :
+                message.type === 'success' ? 'bg-emerald-900/20 border-emerald-900/50 text-emerald-400' :
+                'bg-blue-900/20 border-blue-900/50 text-blue-400'
               }`}>
                 {message.text}
               </div>
             )}
 
-            <form onSubmit={handleAuth} className="space-y-5">
-              {isSignUp && (
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold text-zinc-500 uppercase">Full Name</Label>
-                  <Input 
-                    type="text" 
-                    placeholder="OPERATOR NAME" 
-                    className="h-11 bg-black/50 border-white/10 text-white placeholder:text-zinc-700 focus:border-white/30 focus:ring-0 transition-all font-mono"
-                    value={displayName}
-                    onChange={(e) => setDisplayName(e.target.value)}
-                    required={isSignUp}
-                  />
-                </div>
-              )}
-              
+            <Button
+              variant="outline"
+              onClick={handleGoogleSignIn}
+              disabled={isLoading}
+              className="w-full h-12 bg-white/5 border-white/10 hover:bg-white/10 text-white font-medium relative"
+            >
+              <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24">
+                <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+              </svg>
+              Continue with Google
+            </Button>
+
+            <div className="relative flex items-center py-2 overflow-hidden">
+              <Separator className="flex-grow border-t border-white/10" />
+              <span className="flex-shrink-0 px-4 text-xs text-zinc-500 uppercase tracking-wide font-medium whitespace-nowrap">Or using credentials</span>
+              <Separator className="flex-grow border-t border-white/10" />
+            </div>
+
+            <form onSubmit={handleEmailAuth} className="space-y-5">
               <div className="space-y-1.5">
                 <Label className="text-xs font-semibold text-zinc-500 uppercase">System ID / Email</Label>
-                <Input 
-                  type="email" 
-                  placeholder="staff@versotech.com" 
+                <Input
+                  type="email"
+                  placeholder="staff@versotech.com"
                   className="h-11 bg-black/50 border-white/10 text-white placeholder:text-zinc-700 focus:border-white/30 focus:ring-0 transition-all font-mono"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -141,9 +155,9 @@ export default function StaffLogin() {
               <div className="space-y-1.5">
                 <Label className="text-xs font-semibold text-zinc-500 uppercase">Passkey</Label>
                 <div className="relative">
-                  <Input 
-                    type={showPassword ? 'text' : 'password'} 
-                    placeholder="••••••••" 
+                  <Input
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="••••••••"
                     className="h-11 bg-black/50 border-white/10 text-white placeholder:text-zinc-700 focus:border-white/30 focus:ring-0 transition-all font-mono pr-10"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -159,28 +173,22 @@ export default function StaffLogin() {
                 </div>
               </div>
 
-              <Button 
-                type="submit" 
-                disabled={isLoading} 
+              <Button
+                type="submit"
+                disabled={isLoading}
                 className="w-full h-12 bg-white hover:bg-zinc-200 text-black font-medium tracking-wide transition-all mt-4"
               >
                 {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : (
                     <span className="flex items-center gap-2">
-                        <Lock className="w-4 h-4" /> {isSignUp ? 'INITIALIZE ACCOUNT' : 'ACCESS TERMINAL'}
+                        <Lock className="w-4 h-4" /> ACCESS TERMINAL
                     </span>
                 )}
               </Button>
             </form>
 
-            <div className="text-center pt-2">
-              <button
-                type="button"
-                onClick={switchMode}
-                className="text-xs text-zinc-600 hover:text-zinc-400 transition-colors uppercase tracking-wider"
-              >
-                {isSignUp ? '>> Return to Login' : '>> Register New Operator'}
-              </button>
-            </div>
+            <p className="text-center text-xs text-zinc-600 pt-2">
+              Staff access requires invitation or @versotech.com email
+            </p>
 
           </CardContent>
         </Card>
@@ -191,5 +199,17 @@ export default function StaffLogin() {
 
       </div>
     </div>
+  )
+}
+
+export default function StaffLogin() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#050505] flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-white" />
+      </div>
+    }>
+      <StaffLoginContent />
+    </Suspense>
   )
 }

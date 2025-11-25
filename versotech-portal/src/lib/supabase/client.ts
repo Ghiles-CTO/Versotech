@@ -39,7 +39,9 @@ export const createClient = () => {
     auth: {
       persistSession: true,
       detectSessionInUrl: true,
-      autoRefreshToken: true,
+      // CRITICAL: Disabled to prevent dual-refresh conflict with middleware
+      // Middleware handles all token refresh to avoid "Refresh Token Already Used" errors
+      autoRefreshToken: false,
       storageKey: 'supabase.auth.token',
       // Prevent multiple refresh attempts
       flowType: 'pkce',
@@ -47,4 +49,39 @@ export const createClient = () => {
   })
 
   return client
+}
+
+/**
+ * Reset the Supabase client singleton
+ *
+ * This should be called when authentication definitively fails and the client
+ * needs to be recreated with fresh state. Common scenarios:
+ * - Refresh token has expired and cannot be renewed
+ * - Session conflicts detected
+ * - Before re-authentication after failed login attempts
+ *
+ * After calling this, the next call to createClient() will create a new instance.
+ */
+export const resetClient = () => {
+  if (client) {
+    console.info('[supabase-client] Resetting client singleton due to auth failure')
+    client = null
+  }
+}
+
+/**
+ * Check if the current client has a valid session
+ * Returns true if there's an active session, false otherwise
+ */
+export const hasActiveSession = async (): Promise<boolean> => {
+  if (!client) {
+    return false
+  }
+
+  try {
+    const { data: { session } } = await client.auth.getSession()
+    return session !== null
+  } catch {
+    return false
+  }
 }

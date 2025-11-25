@@ -58,6 +58,63 @@ class SessionManager {
   }
 
   /**
+   * Clear all auth-related cookies
+   * Cookies need to be cleared with exact path and domain to work properly
+   */
+  private clearAuthCookies(): void {
+    if (typeof document === 'undefined') {
+      return
+    }
+
+    // Get all cookies
+    const cookies = document.cookie.split(';')
+    const authCookieNames: string[] = []
+
+    // Find all auth-related cookies
+    cookies.forEach(cookie => {
+      const cookieName = cookie.split('=')[0].trim()
+      if (AUTH_KEY_HINTS.some(hint => cookieName.includes(hint))) {
+        authCookieNames.push(cookieName)
+      }
+    })
+
+    // Clear each auth cookie with multiple path/domain combinations
+    authCookieNames.forEach(name => {
+      // Try various path combinations
+      const paths = ['/', '/versoholdings', '/versotech']
+      const domains = [window.location.hostname, `.${window.location.hostname}`, '']
+
+      paths.forEach(path => {
+        domains.forEach(domain => {
+          const domainStr = domain ? `domain=${domain};` : ''
+          document.cookie = `${name}=; ${domainStr}path=${path}; expires=Thu, 01 Jan 1970 00:00:00 GMT; max-age=0`
+        })
+      })
+    })
+
+    console.info('[auth-session] Cleared auth cookies:', authCookieNames)
+  }
+
+  /**
+   * Clear all auth data - localStorage, sessionStorage, and cookies
+   * This is the most comprehensive cleanup and should be used before re-authentication
+   */
+  clearAllAuthData(): void {
+    if (typeof window === 'undefined') {
+      return
+    }
+
+    console.info('[auth-session] Clearing ALL auth data (storage + cookies)')
+
+    // Clear storage
+    removeAuthKeys(window.localStorage)
+    removeAuthKeys(window.sessionStorage)
+
+    // Clear cookies
+    this.clearAuthCookies()
+  }
+
+  /**
    * Force sign out by clearing all auth-related storage
    * Used during logout to ensure clean state
    */
@@ -66,10 +123,10 @@ class SessionManager {
       return
     }
 
-    console.info('[auth-session] Clearing local auth state')
+    console.info('[auth-session] Force sign out - clearing all auth state')
 
-    removeAuthKeys(window.localStorage)
-    removeAuthKeys(window.sessionStorage)
+    // Clear all local auth data
+    this.clearAllAuthData()
 
     // Call logout API to clear server-side session
     void fetch('/api/auth/logout', {

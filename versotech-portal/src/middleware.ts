@@ -92,21 +92,103 @@ export async function middleware(request: NextRequest) {
     const isPublicRoute = publicRoutes.includes(pathname) || pathname.startsWith('/sign/')
     const isLoginRoute = pathname === '/versoholdings/login' || pathname === '/versotech/login'
 
-    // SECURE: Use getUser() which validates against Supabase Auth server
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    // Step 1: Get session from cookies (no network call)
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession()
 
-    // Handle refresh token errors specifically
-    if (userError) {
-      const isRefreshTokenError =
-        userError.message?.includes('refresh') ||
-        userError.message?.includes('Invalid Refresh Token')
+    let user = null
+    let authError = null
 
-      if (isRefreshTokenError) {
-        console.log('[auth] Refresh token error detected, clearing session:', userError.message)
-        // Clear the invalid session
-        await supabase.auth.signOut({ scope: 'local' })
+    // Step 2: If session exists, validate and refresh if needed
+    if (session) {
+      // Check if access token is expired or about to expire
+      const expiresAt = session.expires_at ? session.expires_at * 1000 : 0
+      const now = Date.now()
+      const isExpired = expiresAt <= now
+      const isExpiringSoon = expiresAt <= now + 300000 // Within 5 minutes (industry standard)
 
-        // Clear cookies
+      if (isExpired || isExpiringSoon) {
+        console.log('[middleware] Token expired or expiring soon, attempting refresh...', {
+          expiresAt: new Date(expiresAt).toISOString(),
+          now: new Date(now).toISOString(),
+        })
+
+        // Attempt to refresh the session with retry logic for transient failures
+        let refreshAttempts = 0
+        let refreshedSession = null
+        let refreshError = null
+
+        while (refreshAttempts < 3) {
+          const { data, error } = await supabase.auth.refreshSession()
+
+          if (!error && data.session) {
+            refreshedSession = data.session
+            console.log('[middleware] Token refreshed successfully',
+              refreshAttempts > 0 ? `(after ${refreshAttempts + 1} attempts)` : '')
+            break
+          }
+
+          refreshError = error
+          refreshAttempts++
+
+          // Don't retry on permanent errors
+          if (error?.message?.includes('Invalid Refresh Token') ||
+              error?.message?.includes('already been used')) {
+            console.warn('[middleware] Permanent refresh error, not retrying:', error.message)
+            break
+          }
+
+          if (refreshAttempts < 3) {
+            console.warn(`[middleware] Token refresh attempt ${refreshAttempts} failed, retrying...`, error?.message)
+            // Exponential backoff: 100ms, 200ms, 400ms
+            await new Promise(resolve => setTimeout(resolve, 100 * Math.pow(2, refreshAttempts - 1)))
+          }
+        }
+
+        if (refreshError) {
+          console.warn('[middleware] Token refresh failed after retries:', refreshError.message)
+          // TODO: Add monitoring/alerting here for production
+          // Example: Sentry.captureException(refreshError, { tags: { type: 'token_refresh_failure' } })
+          authError = refreshError
+        } else if (refreshedSession) {
+          user = refreshedSession.user
+        }
+      } else {
+        // Session is still valid, use it
+        user = session.user
+      }
+    } else if (sessionError) {
+      console.warn('[middleware] Session retrieval error:', sessionError.message)
+      authError = sessionError
+    }
+
+    // Step 3: If we still don't have a user but had a session, try getUser as final validation
+    if (!user && session && !authError) {
+      const { data: { user: validatedUser }, error: userError } = await supabase.auth.getUser()
+
+      if (userError) {
+        console.warn('[middleware] User validation failed:', userError.message)
+        authError = userError
+      } else {
+        user = validatedUser
+      }
+    }
+
+    // Step 4: Handle authentication failure
+    const isRefreshTokenError = authError && (
+      authError.message?.includes('refresh') ||
+      authError.message?.includes('Invalid Refresh Token') ||
+      authError.message?.includes('already been used')
+    )
+
+    if (isRefreshTokenError && authError) {
+      console.log('[middleware] Refresh token error detected, clearing session:', authError.message)
+      // TODO: Add monitoring/alerting here for production - this should be RARE with the fixes
+      // Example: Sentry.captureException(authError, { tags: { type: 'refresh_token_already_used' } })
+      // Clear the invalid session
+      await supabase.auth.signOut({ scope: 'local' })
+
+      // Only redirect if not already on a public route
+      if (!isPublicRoute) {
         const response = NextResponse.redirect(
           new URL(
             pathname.startsWith('/versotech')
@@ -123,7 +205,7 @@ export async function middleware(request: NextRequest) {
       }
     }
 
-    if (userError || !user) {
+    if (authError || !user) {
       if (isPublicRoute) {
         const response = NextResponse.next({
           request,
@@ -139,7 +221,7 @@ export async function middleware(request: NextRequest) {
         return response
       }
 
-      console.log('[auth] Authentication failed:', userError?.message || 'No user found')
+      console.log('[auth] Authentication failed:', authError?.message || 'No user found')
 
       // Check if there's a portal context in the URL to redirect appropriately
       const portalParam = request.nextUrl.searchParams.get('portal')
@@ -184,18 +266,37 @@ export async function middleware(request: NextRequest) {
       .eq('id', user.id)
       .single()
 
-    // If profile doesn't exist, sign out and redirect to login with error
-    // Profile should be created during signup or OAuth callback
+    // Handle profile fetch errors - distinguish between permanent and transient failures
     if (profileError || !profile) {
-      console.error('[auth] Profile not found for authenticated user:', { userId: user.id, error: profileError })
-      await supabase.auth.signOut()
-      
-      // Determine which portal to redirect to
-      const loginUrl = pathname.startsWith('/versotech') 
-        ? '/versotech/login?error=profile_not_found'
-        : '/versoholdings/login?error=profile_not_found'
-      
-      return NextResponse.redirect(new URL(loginUrl, request.url))
+      // PGRST116 = Profile record not found (permanent error - user needs to be signed out)
+      if (profileError?.code === 'PGRST116' || !profile) {
+        console.error('[auth] Profile not found for authenticated user (permanent error):', {
+          userId: user.id,
+          error: profileError
+        })
+        await supabase.auth.signOut()
+
+        // Determine which portal to redirect to
+        const loginUrl = pathname.startsWith('/versotech')
+          ? '/versotech/login?error=profile_not_found'
+          : '/versoholdings/login?error=profile_not_found'
+
+        return NextResponse.redirect(new URL(loginUrl, request.url))
+      } else {
+        // Transient database error (connection timeout, etc.) - return 500, don't sign out
+        console.error('[auth] Transient database error fetching profile:', {
+          userId: user.id,
+          error: profileError,
+          errorCode: profileError?.code
+        })
+        // TODO: Add monitoring/alerting here for production
+        // Example: Sentry.captureException(profileError, { tags: { type: 'profile_fetch_failure' } })
+
+        return NextResponse.json(
+          { error: 'Database error. Please try again.' },
+          { status: 500 }
+        )
+      }
     }
 
     const effectiveProfile = profile

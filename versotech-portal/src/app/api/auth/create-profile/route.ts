@@ -1,14 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 
+// Company domains that are allowed to self-register as staff
+const COMPANY_DOMAINS = ['versotech.com', 'verso.com']
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { userId, email, displayName, role } = body
+    // SECURITY: Role is NOT accepted from client - always derived server-side
+    const { userId, email, displayName } = body
 
-    if (!userId || !email || !displayName || !role) {
+    if (!userId || !email || !displayName) {
       return NextResponse.json({
-        error: 'Missing required fields'
+        error: 'Missing required fields (userId, email, displayName)'
       }, { status: 400 })
     }
 
@@ -22,25 +26,49 @@ export async function POST(request: NextRequest) {
       }, { status: 401 })
     }
 
-    // Use service client to create profile (bypasses RLS)
+    // Use service client to bypass RLS
     const serviceSupabase = createServiceClient()
 
-    console.log('[create-profile] Creating profile:', {
+    // SECURITY: Check if profile was pre-created by admin invitation
+    // If so, use the admin-assigned role
+    const { data: existingProfile } = await serviceSupabase
+      .from('profiles')
+      .select('role, display_name')
+      .eq('email', email.toLowerCase())
+      .maybeSingle()
+
+    let role = 'investor'
+
+    if (existingProfile?.role) {
+      // Admin already created profile with assigned role (invitation flow)
+      role = existingProfile.role
+      console.log('[create-profile] Using admin-assigned role from existing profile:', role)
+    } else {
+      // Derive role from email domain
+      const emailDomain = email.toLowerCase().split('@')[1]
+      if (COMPANY_DOMAINS.includes(emailDomain)) {
+        role = 'staff_ops'
+        console.log('[create-profile] Company email detected, assigning staff_ops role')
+      }
+    }
+
+    console.log('[create-profile] Creating/updating profile:', {
       userId,
       email,
       displayName,
       role
     })
 
+    // Use upsert to handle both new profiles and updating existing invited profiles
     const { data: profile, error: createError } = await serviceSupabase
       .from('profiles')
-      .insert({
+      .upsert({
         id: userId,
-        email: email,
+        email: email.toLowerCase(),
         role: role,
         display_name: displayName,
         created_at: new Date().toISOString()
-      })
+      }, { onConflict: 'id' })
       .select()
       .single()
 
