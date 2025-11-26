@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
 
     const { invoice_id, invoice_number, supabase_url, gdrive_url, email_sent, metadata } = validation.data;
 
-    // Fetch invoice with investor details
+    // Fetch invoice with investor and deal details (for vehicle_id)
     const { data: invoice, error: invoiceError } = await supabase
       .from('invoices')
       .select(`
@@ -82,6 +82,10 @@ export async function POST(request: NextRequest) {
           legal_name,
           email,
           user_id
+        ),
+        deal:deals (
+          id,
+          vehicle_id
         )
       `)
       .eq('id', invoice_id)
@@ -98,6 +102,7 @@ export async function POST(request: NextRequest) {
       .insert({
         investor_id: invoice.investor_id,
         deal_id: invoice.deal_id,
+        vehicle_id: invoice.deal?.vehicle_id || null,
         type: 'invoice',
         category: 'invoices',
         file_key: supabase_url,

@@ -80,6 +80,18 @@ export async function POST(
     return NextResponse.json({ error: 'Failed to upload file' }, { status: 500 })
   }
 
+  // Look up the Subscription Documents folder for this vehicle
+  let subscriptionFolderId: string | null = null
+  if (subscription.vehicle_id) {
+    const { data: subFolder } = await serviceSupabase
+      .from('document_folders')
+      .select('id')
+      .eq('vehicle_id', subscription.vehicle_id)
+      .eq('name', 'Subscription Documents')
+      .single()
+    subscriptionFolderId = subFolder?.id || null
+  }
+
   // Create document record
   const { data: document, error: dbError } = await serviceSupabase
     .from('documents')
@@ -87,7 +99,8 @@ export async function POST(
       subscription_id: subscriptionId,
       subscription_submission_id: submission?.id || null, // Link to the approved submission
       deal_id: subscription.deal?.id,
-      entity_id: subscription.vehicle_id,
+      vehicle_id: subscription.vehicle_id,
+      folder_id: subscriptionFolderId,
       type: documentType,
       name: file.name,
       file_key: fileKey,

@@ -970,6 +970,18 @@ async function handleEntityApproval(
                       } else {
                         console.log('✅ Subscription pack uploaded to storage:', fileKey)
 
+                        // Look up the Subscription Documents folder for this vehicle
+                        let subscriptionFolderId: string | null = null
+                        if (submission.deal.vehicle_id) {
+                          const { data: subFolder } = await supabase
+                            .from('document_folders')
+                            .select('id')
+                            .eq('vehicle_id', submission.deal.vehicle_id)
+                            .eq('name', 'Subscription Documents')
+                            .single()
+                          subscriptionFolderId = subFolder?.id || null
+                        }
+
                         // Create document record linked to both submission and subscription
                         const { data: docRecord, error: docError } = await supabase
                           .from('documents')
@@ -977,6 +989,8 @@ async function handleEntityApproval(
                             subscription_id: subscriptionId,
                             subscription_submission_id: submission.id,
                             deal_id: submission.deal_id,
+                            vehicle_id: submission.deal.vehicle_id,
+                            folder_id: subscriptionFolderId,
                             type: 'subscription_draft',
                             name: `Subscription Pack (Draft) - ${investmentName} - ${investorName}`,
                             file_key: fileKey,

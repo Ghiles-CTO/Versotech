@@ -71,6 +71,37 @@ export async function handleNDASignature(
     investor_id: dealInterest.investor_id
   })
 
+  // Get deal info (including vehicle_id for document association)
+  console.log('🔍 [NDA HANDLER] Fetching deal information for vehicle association')
+  const { data: deal } = await supabase
+    .from('deals')
+    .select('id, name, vehicle_id')
+    .eq('id', dealInterest.deal_id)
+    .single()
+
+  console.log('✅ [NDA HANDLER] Deal information retrieved:', {
+    deal_id: deal?.id,
+    deal_name: deal?.name,
+    vehicle_id: deal?.vehicle_id
+  })
+
+  // Look up the NDAs folder for this vehicle
+  let ndaFolderId: string | null = null
+  if (deal?.vehicle_id) {
+    const { data: ndaFolder } = await supabase
+      .from('document_folders')
+      .select('id')
+      .eq('vehicle_id', deal.vehicle_id)
+      .eq('name', 'NDAs')
+      .single()
+
+    ndaFolderId = ndaFolder?.id || null
+    console.log('📁 [NDA HANDLER] NDAs folder lookup:', {
+      vehicle_id: deal.vehicle_id,
+      folder_id: ndaFolderId
+    })
+  }
+
   // 1. COPY SIGNED PDF TO DOCUMENTS BUCKET
   console.log('\n📦 [NDA HANDLER] Step 1: Copying signed PDF to documents bucket')
   console.log('📥 [NDA HANDLER] Downloading from signatures bucket:', signedPdfPath)
@@ -121,6 +152,8 @@ export async function handleNDASignature(
     .insert({
       owner_investor_id: dealInterest.investor_id,
       deal_id: dealInterest.deal_id,
+      vehicle_id: deal?.vehicle_id || null,
+      folder_id: ndaFolderId,
       type: 'nda',
       file_key: docUploadData.path,
       name: `NDA - Signed.pdf`,
@@ -152,18 +185,7 @@ export async function handleNDASignature(
   // Now that NDA is fully executed, grant investor access to deal's data room
   console.log('\n🔓 [NDA HANDLER] Step 3: Granting automatic data room access')
   try {
-    // Get deal info
-    console.log('🔍 [NDA HANDLER] Fetching deal information for access grant')
-    const { data: deal } = await supabase
-      .from('deals')
-      .select('id, name')
-      .eq('id', dealInterest.deal_id)
-      .single()
-
-    console.log('✅ [NDA HANDLER] Deal information retrieved:', {
-      deal_id: deal?.id,
-      deal_name: deal?.name
-    })
+    // deal info already fetched earlier for vehicle_id association
 
     // Check if access already exists
     console.log('🔍 [NDA HANDLER] Checking for existing data room access')
