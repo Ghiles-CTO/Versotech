@@ -69,6 +69,24 @@ export async function POST(
     return NextResponse.json({ error: 'Subscription not found' }, { status: 404 })
   }
 
+  // Check for existing signature requests to prevent duplicates
+  const { data: existingRequests } = await serviceSupabase
+    .from('signature_requests')
+    .select('id, signer_role, status')
+    .eq('document_id', documentId)
+    .in('status', ['pending', 'signed'])
+
+  if (existingRequests && existingRequests.length > 0) {
+    const pendingCount = existingRequests.filter(r => r.status === 'pending').length
+    const signedCount = existingRequests.filter(r => r.status === 'signed').length
+
+    return NextResponse.json({
+      error: 'Signature requests already exist for this document',
+      details: `Found ${pendingCount} pending and ${signedCount} signed signature request(s). Cannot create duplicates.`,
+      existing_requests: existingRequests.map(r => ({ id: r.id, role: r.signer_role, status: r.status }))
+    }, { status: 409 }) // 409 Conflict
+  }
+
   // Get signed URL for document
   const { data: urlData } = await serviceSupabase.storage
     .from('deal-documents')

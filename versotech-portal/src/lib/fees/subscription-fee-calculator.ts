@@ -104,14 +104,20 @@ export async function calculateSubscriptionFeeEvents(
     }
 
     // 1. Subscription Fee
-    if (fees.subscription_fee_percent || fees.subscription_fee_amount) {
+    // Note: Check for != null to properly handle explicit 0 values (0 means "no fee")
+    if (fees.subscription_fee_percent != null || fees.subscription_fee_amount != null) {
       const baseAmount = subscription.commitment || 0;
       const { frequency, payment_schedule } = getFrequencyInfo('subscription');
+
+      // Use explicit amount if provided (even if 0), otherwise calculate from percent
+      const computedAmount = fees.subscription_fee_amount != null
+        ? fees.subscription_fee_amount
+        : (baseAmount * (fees.subscription_fee_percent || 0) / 100);
 
       feeEvents.push({
         fee_type: 'subscription',
         base_amount: baseAmount,
-        computed_amount: fees.subscription_fee_amount || (baseAmount * (fees.subscription_fee_percent || 0) / 100),
+        computed_amount: computedAmount,
         rate_bps: fees.subscription_fee_percent ? Math.round(fees.subscription_fee_percent * 100) : null,
         frequency,
         payment_schedule,
@@ -120,17 +126,23 @@ export async function calculateSubscriptionFeeEvents(
     }
 
     // 2. Management Fee
-    if (fees.management_fee_percent || fees.management_fee_amount) {
+    // Note: Check for != null to properly handle explicit 0 values (0 means "no fee")
+    if (fees.management_fee_percent != null || fees.management_fee_amount != null) {
       const baseAmount = subscription.commitment || 0;
       const { frequency, payment_schedule } = getFrequencyInfo('management');
 
       // Use subscription's frequency if specified, otherwise use fee plan
       const finalFrequency = fees.management_fee_frequency || frequency;
 
+      // Use explicit amount if provided (even if 0), otherwise calculate from percent
+      const computedAmount = fees.management_fee_amount != null
+        ? fees.management_fee_amount
+        : (baseAmount * (fees.management_fee_percent || 0) / 100);
+
       feeEvents.push({
         fee_type: 'management',
         base_amount: baseAmount,
-        computed_amount: fees.management_fee_amount || (baseAmount * (fees.management_fee_percent || 0) / 100),
+        computed_amount: computedAmount,
         rate_bps: fees.management_fee_percent ? Math.round(fees.management_fee_percent * 100) : null,
         frequency: finalFrequency as any,
         payment_schedule,
@@ -139,14 +151,20 @@ export async function calculateSubscriptionFeeEvents(
     }
 
     // 3. BD Fee (Broker-Dealer)
-    if (fees.bd_fee_percent || fees.bd_fee_amount) {
+    // Note: Check for != null to properly handle explicit 0 values (0 means "no fee")
+    if (fees.bd_fee_percent != null || fees.bd_fee_amount != null) {
       const baseAmount = subscription.commitment || 0;
       const { frequency, payment_schedule } = getFrequencyInfo('bd_fee');
+
+      // Use explicit amount if provided (even if 0), otherwise calculate from percent
+      const computedAmount = fees.bd_fee_amount != null
+        ? fees.bd_fee_amount
+        : (baseAmount * (fees.bd_fee_percent || 0) / 100);
 
       feeEvents.push({
         fee_type: 'bd_fee',
         base_amount: baseAmount,
-        computed_amount: fees.bd_fee_amount || (baseAmount * (fees.bd_fee_percent || 0) / 100),
+        computed_amount: computedAmount,
         rate_bps: fees.bd_fee_percent ? Math.round(fees.bd_fee_percent * 100) : null,
         frequency,
         payment_schedule,
