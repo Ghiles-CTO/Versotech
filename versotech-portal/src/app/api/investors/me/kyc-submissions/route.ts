@@ -5,16 +5,17 @@ import { z } from 'zod'
 
 // Allowed document types for KYC submissions
 const ALLOWED_DOCUMENT_TYPES = [
-  'questionnaire',
-  'passport',
-  'national_id',
-  'drivers_license',
+  // Entity documents
+  'nda_ndnc',
+  'incorporation_certificate',
+  'memo_articles',
+  'register_members',
+  'register_directors',
+  'bank_confirmation',
+  // Individual / member documents
+  'passport_id',
   'utility_bill',
-  'bank_statement',
-  'proof_of_address',
-  'tax_return',
-  'w9',
-  'w8ben',
+  // Other
   'other'
 ] as const
 

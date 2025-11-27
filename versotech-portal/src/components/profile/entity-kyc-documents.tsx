@@ -187,8 +187,8 @@ export function EntityKYCDocuments({ entityId, entityName }: EntityKYCDocumentsP
       <Alert>
         <Info className="h-4 w-4" />
         <AlertDescription className="text-sm">
-          Upload KYC documents for this entity such as formation documents, beneficial ownership information, tax certificates, etc.
-          You can upload any document type with a custom label.
+          Required: NDA/NDNC, Incorporation Certificate, Memo &amp; Articles, Register of Members, Register of Directors, Bank Confirmation.
+          For each member/director: ID/Passport and Utility Bill (less than 3 months old).
         </AlertDescription>
       </Alert>
 
@@ -202,7 +202,7 @@ export function EntityKYCDocuments({ entityId, entityName }: EntityKYCDocumentsP
             <FileText className="h-12 w-12 text-slate-600 mb-4" />
             <p className="text-slate-400 mb-2">No KYC documents uploaded yet</p>
             <p className="text-sm text-slate-500 mb-4">
-              Upload entity formation documents, beneficial ownership info, and other KYC documents
+              Upload entity documents and ID/Utility Bill for each member/director
             </p>
             <Button onClick={() => setIsUploadDialogOpen(true)}>
               <Upload className="mr-2 h-4 w-4" />

@@ -184,11 +184,11 @@ export function KYCUploadDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>
-            Upload KYC Document{entityId ? ' for Entity' : ''}
-          </DialogTitle>
+          <DialogTitle>Upload KYC Document</DialogTitle>
           <DialogDescription>
-            Upload a KYC document. You can choose from suggested types or create a custom type.
+            {category === 'entity'
+              ? 'Upload entity documents or member identification (ID/Passport, Utility Bill)'
+              : 'Upload your identification documents (ID/Passport, Utility Bill)'}
           </DialogDescription>
         </DialogHeader>
 
@@ -240,16 +240,16 @@ export function KYCUploadDialog({
           {/* Member Selection (if members provided) */}
           {members.length > 0 && (
             <div className="space-y-2">
-              <Label htmlFor="member-select">Associate with Member (Optional)</Label>
+              <Label htmlFor="member-select">Member / Director</Label>
               <Select
                 value={selectedMemberId}
                 onValueChange={setSelectedMemberId}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select a member..." />
+                  <SelectValue placeholder="Select member or director..." />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">No member selected</SelectItem>
+                  <SelectItem value="">Entity-level document</SelectItem>
                   {members.map((member) => (
                     <SelectItem key={member.id} value={member.id}>
                       {member.full_name} ({member.role})
@@ -258,7 +258,7 @@ export function KYCUploadDialog({
                 </SelectContent>
               </Select>
               <p className="text-xs text-muted-foreground">
-                Associate this document with a specific member for their KYC verification
+                For ID/Passport or Utility Bill, select the member. For entity documents, leave as &quot;Entity-level document&quot;.
               </p>
             </div>
           )}

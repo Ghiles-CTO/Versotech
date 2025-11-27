@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Building2, Plus, Edit, Trash2, FileText, Upload, CheckCircle, XCircle, Clock, Eye } from 'lucide-react'
+import { Building2, Plus, Edit, Trash2, FileText, Upload, CheckCircle, XCircle, Clock, Eye, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -176,7 +176,7 @@ export function CounterpartyEntitiesTab() {
             <div>
               <CardTitle>Counterparty Entities</CardTitle>
               <CardDescription>
-                Manage legal entities you invest through (trusts, LLCs, partnerships, etc.)
+                Manage legal entities you invest through (trusts, LLCs, partnerships, etc.). Click "Members & KYC" to add members and upload KYC documents.
               </CardDescription>
             </div>
             <Button onClick={handleCreate}>
@@ -235,11 +235,12 @@ export function CounterpartyEntitiesTab() {
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
                         <Button
-                          variant="outline"
+                          variant="default"
                           size="sm"
                           onClick={() => handleViewDetails(entity)}
                         >
-                          <Eye className="w-4 h-4" />
+                          <Users className="w-4 h-4 mr-1" />
+                          Members & KYC
                         </Button>
                         <Button
                           variant="outline"

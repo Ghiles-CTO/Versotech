@@ -189,7 +189,7 @@ export function KYCDocumentsTab() {
             <div>
               <CardTitle>KYC Documents</CardTitle>
               <CardDescription>
-                Upload and manage your Know Your Customer (KYC) verification documents
+                Upload your required KYC verification documents
               </CardDescription>
             </div>
             <Button onClick={() => setUploadDialogOpen(true)}>
@@ -202,7 +202,9 @@ export function KYCDocumentsTab() {
           <Alert>
             <Info className="h-4 w-4" />
             <AlertDescription className="text-sm">
-              You can upload any KYC document with a custom label. Suggested document types are provided for guidance, but you're not limited to these options.
+              {isEntityInvestor
+                ? 'Required: Entity documents (NDA, Incorporation Certificate, Memo & Articles, Registers, Bank Confirmation) + ID and Utility Bill for each member/director.'
+                : 'Required: ID/Passport and Utility Bill (less than 3 months old).'}
             </AlertDescription>
           </Alert>
 
@@ -211,7 +213,9 @@ export function KYCDocumentsTab() {
               <FileText className="h-12 w-12 mx-auto text-gray-400 mb-4" />
               <p className="text-gray-600 mb-2">No KYC documents uploaded yet</p>
               <p className="text-sm text-gray-500 mb-4">
-                Upload your identification documents, proof of address, and other KYC materials
+                {isEntityInvestor
+                  ? 'Upload your entity documents and ID/Utility Bill for each member'
+                  : 'Upload your ID/Passport and Utility Bill'}
               </p>
               <Button onClick={() => setUploadDialogOpen(true)} variant="outline">
                 <Upload className="mr-2 h-4 w-4" />
@@ -312,7 +316,7 @@ export function KYCDocumentsTab() {
 
           {suggestedDocuments.length > 0 && (
             <div className="mt-6">
-              <h4 className="text-sm font-medium text-gray-700 mb-3">Suggested Documents</h4>
+              <h4 className="text-sm font-medium text-gray-700 mb-3">Required Documents</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {suggestedDocuments.map((doc) => (
                   <Card key={doc.value} className="border-gray-200">
@@ -327,9 +331,6 @@ export function KYCDocumentsTab() {
                   </Card>
                 ))}
               </div>
-              <p className="text-xs text-gray-500 mt-3">
-                These are common document types, but you can upload any document type with a custom label.
-              </p>
             </div>
           )}
         </CardContent>
