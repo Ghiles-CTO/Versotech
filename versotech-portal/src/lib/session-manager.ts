@@ -7,7 +7,7 @@
  * Supabase handles session persistence and expiration automatically.
  */
 
-const AUTH_KEY_HINTS = ['supabase', 'sb-', 'auth']
+const AUTH_KEY_HINTS = ['supabase', 'sb-', 'auth', 'supabase.auth.token']
 
 const removeAuthKeys = (storage: Storage) => {
   const keysToRemove = new Set<string>()

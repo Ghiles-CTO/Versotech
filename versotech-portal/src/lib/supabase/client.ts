@@ -42,8 +42,8 @@ export const createClient = () => {
       // CRITICAL: Disabled to prevent dual-refresh conflict with middleware
       // Middleware handles all token refresh to avoid "Refresh Token Already Used" errors
       autoRefreshToken: false,
-      storageKey: 'supabase.auth.token',
-      // Prevent multiple refresh attempts
+      // Use default storage key to match middleware cookie expectations
+      // Previously used 'supabase.auth.token' which caused mismatch with middleware
       flowType: 'pkce',
     },
   })
