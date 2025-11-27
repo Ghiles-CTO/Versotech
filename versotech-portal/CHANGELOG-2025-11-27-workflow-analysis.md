@@ -361,7 +361,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 
 ---
 
-## 14. FILES IN THIS CHANGE
+## 14. FILES IN THIS CHANGE (Initial Commit e0335c3)
 
 ```
 Modified:
@@ -370,6 +370,107 @@ Modified:
 
 Migration Added:
   supabase/migrations/20251127113033_cleanup_duplicate_signature_requests_and_add_constraint.sql
+```
+
+---
+
+## 15. GAP ANALYSIS AND ADDITIONAL FIXES
+
+After critical analysis of the initial fixes, three gaps were identified and addressed:
+
+### GAP #1: NDA Workflows Not Protected by Database Constraint (FIXED)
+
+**Problem**: The initial database constraint only protected `document_id`-based requests:
+```sql
+CREATE UNIQUE INDEX signature_requests_document_signer_unique_idx
+ON signature_requests (document_id, signer_role)
+WHERE document_id IS NOT NULL ...
+```
+
+NDA workflows use `workflow_run_id` instead of `document_id`, so they were NOT protected.
+
+**Fix Applied**: Added second partial unique index:
+```sql
+CREATE UNIQUE INDEX signature_requests_workflow_signer_unique_idx
+ON signature_requests (workflow_run_id, signer_role)
+WHERE workflow_run_id IS NOT NULL
+  AND status NOT IN ('cancelled', 'expired');
+```
+
+**Migration**: `add_workflow_signer_unique_constraint`
+
+---
+
+### GAP #2: createSignatureRequest() Had No Duplicate Check (FIXED)
+
+**Problem**: The low-level function that creates ALL signature requests had no duplicate prevention. The check added to `ready-for-signature` endpoint only protected ONE of THREE code paths.
+
+**Code Paths Creating Signature Requests**:
+1. `/api/subscriptions/.../ready-for-signature` - Subscription packs
+2. `/api/approvals/[id]/action` - NDA workflows
+3. `/api/signature/request` - Direct API calls
+
+**Fix Applied**: Added duplicate check at line ~99 in `src/lib/signature/client.ts`:
+```typescript
+// DUPLICATE PREVENTION: Check for existing signature request before any operations
+if (params.workflow_run_id) {
+  const { data: existingWorkflow } = await supabase
+    .from('signature_requests')
+    .select('id, status')
+    .eq('workflow_run_id', params.workflow_run_id)
+    .eq('signer_role', signer_role)
+    .in('status', ['pending', 'signed'])
+    .limit(1)
+
+  if (existingWorkflow && existingWorkflow.length > 0) {
+    return { success: false, error: `A signature request already exists...` }
+  }
+}
+
+if (params.document_id) {
+  // Similar check for document_id...
+}
+```
+
+This now protects ALL code paths at the function level.
+
+---
+
+### GAP #3: Tasks Page Filter Bug Fix (DOCUMENTED)
+
+**Problem**: Subscription signature tasks were not appearing in investor portal because the filter excluded tasks with `related_entity_id`.
+
+**Fix** (already in codebase, now documented): Updated `tasks/page.tsx` lines 124-130:
+```typescript
+const generalComplianceTasks = allTasks.filter(t =>
+  (t.category === 'compliance' || t.category === 'investment_setup') && (
+    !t.related_entity_id ||
+    t.related_entity_type === 'signature_request' ||
+    t.related_entity_type === 'subscription'  // ← ADDED
+  )
+)
+```
+
+---
+
+## 16. DEFENSE-IN-DEPTH COVERAGE MATRIX
+
+| Creation Path | App Check | DB Constraint | Risk After Fixes |
+|---------------|-----------|---------------|------------------|
+| Subscription Packs (`ready-for-signature`) | ✅ Endpoint + Function | ✅ document_id | **NONE** |
+| NDAs (`approvals/action`) | ✅ Function | ✅ workflow_run_id | **NONE** |
+| Direct API (`/api/signature/request`) | ✅ Function | ✅ Both | **NONE** |
+
+---
+
+## 17. FILES IN GAP FIX CHANGES
+
+```
+Modified:
+  src/lib/signature/client.ts  - Added duplicate check in createSignatureRequest()
+
+Migration Added:
+  add_workflow_signer_unique_constraint.sql  - Partial unique index on (workflow_run_id, signer_role)
 ```
 
 ---

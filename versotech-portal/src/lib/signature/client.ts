@@ -96,6 +96,50 @@ export async function createSignatureRequest(
       }
     }
 
+    // DUPLICATE PREVENTION: Check for existing signature request before any operations
+    // This protects ALL code paths that create signature requests (ready-for-signature, NDA approvals, direct API)
+    console.log('🔍 [SIGNATURE] Checking for duplicate signature requests...')
+
+    if (params.workflow_run_id) {
+      // For n8n workflows: check (workflow_run_id, signer_role) pair
+      const { data: existingWorkflow } = await supabase
+        .from('signature_requests')
+        .select('id, status')
+        .eq('workflow_run_id', params.workflow_run_id)
+        .eq('signer_role', signer_role)
+        .in('status', ['pending', 'signed'])
+        .limit(1)
+
+      if (existingWorkflow && existingWorkflow.length > 0) {
+        console.warn(`⚠️ [SIGNATURE] Duplicate prevention: Found existing ${signer_role} signature request for workflow ${params.workflow_run_id}`)
+        return {
+          success: false,
+          error: `A signature request already exists for ${signer_role} on this workflow (status: ${existingWorkflow[0].status})`
+        }
+      }
+    }
+
+    if (params.document_id) {
+      // For manual uploads: check (document_id, signer_role) pair
+      const { data: existingDocument } = await supabase
+        .from('signature_requests')
+        .select('id, status')
+        .eq('document_id', params.document_id)
+        .eq('signer_role', signer_role)
+        .in('status', ['pending', 'signed'])
+        .limit(1)
+
+      if (existingDocument && existingDocument.length > 0) {
+        console.warn(`⚠️ [SIGNATURE] Duplicate prevention: Found existing ${signer_role} signature request for document ${params.document_id}`)
+        return {
+          success: false,
+          error: `A signature request already exists for ${signer_role} on this document (status: ${existingDocument[0].status})`
+        }
+      }
+    }
+
+    console.log('✅ [SIGNATURE] No duplicate signature requests found')
+
     // Generate signing token and expiry
     const signing_token = generateSignatureToken()
     const token_expires_at = calculateTokenExpiry()
