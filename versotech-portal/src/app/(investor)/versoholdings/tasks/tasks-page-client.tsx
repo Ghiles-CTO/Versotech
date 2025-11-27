@@ -38,6 +38,7 @@ import type { Task, TasksByVehicle } from './page'
 
 interface TasksPageClientProps {
   userId: string
+  investorIds?: string[] // BUG FIX 2.4: Add investorIds to match server query
   tasksByVehicle: TasksByVehicle[]
   onboardingTasks: Task[]
   staffCreatedTasks: Task[]
@@ -46,6 +47,7 @@ interface TasksPageClientProps {
 
 export function TasksPageClient({
   userId,
+  investorIds = [], // BUG FIX 2.4: Add investorIds
   tasksByVehicle: initialTasksByVehicle,
   onboardingTasks: initialOnboardingTasks,
   staffCreatedTasks: initialStaffCreatedTasks,
@@ -65,14 +67,29 @@ export function TasksPageClient({
     compliance: true
   })
 
+  // BUG FIX 2.4 & 2.5: Match server-side query logic with proper filters and all 3 orders
   const refreshTasks = useCallback(async () => {
     const supabase = createClient()
-    const { data: tasks } = await supabase
+
+    // Build query to match server-side logic (page.tsx)
+    let tasksQuery = supabase
       .from('tasks')
       .select('*')
-      .eq('owner_user_id', userId)
+
+    // BUG FIX 2.4: Include owner_investor_id in OR filter (matching server)
+    if (investorIds.length > 0) {
+      tasksQuery = tasksQuery.or(
+        `owner_user_id.eq.${userId},owner_investor_id.in.(${investorIds.join(',')})`
+      )
+    } else {
+      tasksQuery = tasksQuery.eq('owner_user_id', userId)
+    }
+
+    // BUG FIX 2.5: Add all 3 orders to match server-side query
+    const { data: tasks } = await tasksQuery
       .order('priority', { ascending: false })
       .order('due_at', { ascending: true, nullsFirst: false })
+      .order('created_at', { ascending: true })
 
     if (tasks) {
       const allTasks = tasks as Task[]
@@ -85,8 +102,13 @@ export function TasksPageClient({
         !t.category && !t.related_entity_id
       ))
 
+      // BUG FIX 3.4: Include investment_setup in general compliance tasks (matching server)
       setGeneralComplianceTasks(allTasks.filter(t =>
-        t.category === 'compliance' && !t.related_entity_id
+        (t.category === 'compliance' || t.category === 'investment_setup') && (
+          !t.related_entity_id ||
+          t.related_entity_type === 'signature_request' ||
+          t.related_entity_type === 'subscription'
+        )
       ))
 
       setTasksByVehicle(prev => prev.map(group => ({
@@ -96,7 +118,7 @@ export function TasksPageClient({
         )
       })))
     }
-  }, [userId])
+  }, [userId, investorIds])
 
   useEffect(() => {
     const supabase = createClient()

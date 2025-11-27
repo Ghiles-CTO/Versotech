@@ -1,5 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { z } from 'zod'
+
+// Allowed document types for KYC submissions
+const ALLOWED_DOCUMENT_TYPES = [
+  'questionnaire',
+  'passport',
+  'national_id',
+  'drivers_license',
+  'utility_bill',
+  'bank_statement',
+  'proof_of_address',
+  'tax_return',
+  'w9',
+  'w8ben',
+  'other'
+] as const
+
+// Investors can only set draft or pending status
+const ALLOWED_INVESTOR_STATUSES = ['draft', 'pending'] as const
+
+// Schema for PATCH body validation
+const updateSubmissionSchema = z.object({
+  document_type: z.enum(ALLOWED_DOCUMENT_TYPES).optional(),
+  custom_label: z.string()
+    .max(200, 'Custom label must be less than 200 characters')
+    .regex(/^[^<>]*$/, 'Custom label cannot contain HTML tags')
+    .optional()
+    .nullable(),
+  metadata: z.record(z.string(), z.unknown()).optional().nullable(),
+  status: z.enum(ALLOWED_INVESTOR_STATUSES).optional(),
+  expected_status: z.string().optional() // For optimistic locking
+})
 
 export async function GET(
   request: NextRequest,
@@ -87,7 +119,7 @@ export async function PATCH(
       return NextResponse.json({ error: 'Submission not found' }, { status: 404 })
     }
 
-    // Only allow updating draft or pending submissions
+    // Only allow updating draft, pending, or rejected submissions
     if (!['draft', 'pending', 'rejected'].includes(existingSubmission.status)) {
       return NextResponse.json(
         { error: 'Cannot update submission in this status' },
@@ -96,9 +128,26 @@ export async function PATCH(
     }
 
     const body = await request.json()
-    const { document_type, custom_label, metadata, status } = body
 
-    // Build update object
+    // Validate input
+    const validation = updateSubmissionSchema.safeParse(body)
+    if (!validation.success) {
+      return NextResponse.json({
+        error: validation.error.issues[0]?.message || 'Invalid input'
+      }, { status: 400 })
+    }
+
+    const { document_type, custom_label, metadata, status, expected_status } = validation.data
+
+    // Optimistic locking - if expected_status provided, check it matches
+    if (expected_status && existingSubmission.status !== expected_status) {
+      return NextResponse.json({
+        error: 'Submission was modified by another request. Please refresh and try again.',
+        code: 'CONFLICT'
+      }, { status: 409 })
+    }
+
+    // Build update object with validated data
     const updateData: Record<string, any> = {
       updated_at: new Date().toISOString()
     }
@@ -106,18 +155,20 @@ export async function PATCH(
     if (document_type !== undefined) updateData.document_type = document_type
     if (custom_label !== undefined) updateData.custom_label = custom_label
     if (metadata !== undefined) updateData.metadata = metadata
-    if (status !== undefined) {
-      // Investors can only set draft or pending status
-      if (['draft', 'pending'].includes(status)) {
-        updateData.status = status
-      }
-    }
+    if (status !== undefined) updateData.status = status
 
-    // Update the submission
-    const { data: submission, error: updateError } = await supabase
+    // Update the submission with optimistic locking check
+    let query = supabase
       .from('kyc_submissions')
       .update(updateData)
       .eq('id', id)
+
+    // Add status check for optimistic locking
+    if (expected_status) {
+      query = query.eq('status', expected_status)
+    }
+
+    const { data: submission, error: updateError } = await query
       .select()
       .single()
 

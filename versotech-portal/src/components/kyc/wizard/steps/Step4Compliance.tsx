@@ -65,9 +65,9 @@ function YesNoField({
                         'px-4 py-2 rounded-lg border cursor-pointer transition-all capitalize',
                         field.value === value
                           ? value === 'yes'
-                            ? 'border-amber-500 bg-amber-500/10 text-amber-500'
-                            : 'border-emerald-500 bg-emerald-500/10 text-emerald-500'
-                          : 'border-slate-700 hover:border-slate-600'
+                            ? 'border-amber-500 bg-amber-50 text-amber-600'
+                            : 'border-emerald-500 bg-emerald-50 text-emerald-600'
+                          : 'border-gray-200 hover:border-gray-300 bg-white'
                       )}
                     >
                       <RadioGroupItem value={value} className="sr-only" />
@@ -87,7 +87,7 @@ function YesNoField({
           control={control}
           name={detailsName}
           render={({ field }) => (
-            <FormItem className="pl-4 border-l-2 border-slate-700">
+            <FormItem className="pl-4 border-l-2 border-gray-200">
               <FormLabel>{detailsLabel || 'Please provide details'}</FormLabel>
               <FormControl>
                 <Textarea

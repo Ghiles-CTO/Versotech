@@ -117,7 +117,7 @@ export function Step10ReviewSign() {
       </div>
 
       {/* Summary Section */}
-      <div className="bg-slate-800/50 p-6 rounded-lg space-y-6">
+      <div className="bg-gray-50 p-6 rounded-lg space-y-6 border border-gray-200">
         <h3 className="font-semibold text-lg flex items-center gap-2">
           <FileText className="h-5 w-5" />
           Application Summary
@@ -186,10 +186,10 @@ export function Step10ReviewSign() {
                   render={({ field }) => (
                     <FormItem
                       className={cn(
-                        'p-4 rounded-lg border-2 transition-all',
+                        'p-4 rounded-lg border-2 transition-all bg-white',
                         field.value
-                          ? 'border-emerald-500/50 bg-emerald-500/5'
-                          : 'border-slate-700 hover:border-slate-600'
+                          ? 'border-emerald-500/50 bg-emerald-50'
+                          : 'border-gray-200 hover:border-gray-300'
                       )}
                     >
                       <div className="flex items-start gap-4">
@@ -281,9 +281,9 @@ export function Step10ReviewSign() {
 
             {/* Signature Preview */}
             {watchedValues.signatureName && (
-              <div className="p-4 bg-white/5 rounded-lg border border-slate-700">
+              <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
                 <p className="text-xs text-muted-foreground mb-2">Signature Preview</p>
-                <p className="font-serif text-2xl italic text-emerald-400">
+                <p className="font-serif text-2xl italic text-emerald-600">
                   {watchedValues.signatureName}
                 </p>
               </div>

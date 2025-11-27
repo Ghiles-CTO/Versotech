@@ -1,6 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getSuggestedDocumentTypes, getDocumentTypeLabel } from '@/constants/kyc-document-types'
+import { z } from 'zod'
+
+// Allowed document types for KYC submissions
+const ALLOWED_DOCUMENT_TYPES = [
+  'questionnaire',
+  'passport',
+  'national_id',
+  'drivers_license',
+  'utility_bill',
+  'bank_statement',
+  'proof_of_address',
+  'tax_return',
+  'w9',
+  'w8ben',
+  'other'
+] as const
+
+// Investors can only set draft or pending status - not approved/rejected
+const ALLOWED_INVESTOR_STATUSES = ['draft', 'pending'] as const
+
+// Schema for POST body validation
+const createSubmissionSchema = z.object({
+  document_type: z.enum(ALLOWED_DOCUMENT_TYPES, { message: 'Invalid document type' }),
+  custom_label: z.string()
+    .max(200, 'Custom label must be less than 200 characters')
+    .regex(/^[^<>]*$/, 'Custom label cannot contain HTML tags')
+    .optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
+  status: z.enum(ALLOWED_INVESTOR_STATUSES).optional().default('pending'),
+  investor_member_id: z.string().uuid().optional()
+})
 
 export async function GET(request: NextRequest) {
   try {
@@ -156,17 +187,27 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { document_type, custom_label, metadata, status } = body
 
-    // Insert submission
+    // Validate input to prevent security issues
+    const validation = createSubmissionSchema.safeParse(body)
+    if (!validation.success) {
+      return NextResponse.json({
+        error: validation.error.issues[0]?.message || 'Invalid input'
+      }, { status: 400 })
+    }
+
+    const { document_type, custom_label, metadata, status, investor_member_id } = validation.data
+
+    // Insert submission with validated data
     const { data, error } = await supabase
       .from('kyc_submissions')
       .insert({
         investor_id: investorUsers.investor_id,
         document_type,
-        custom_label,
-        metadata,
-        status: status || 'pending',
+        custom_label: custom_label || null,
+        metadata: metadata || null,
+        status,
+        investor_member_id: investor_member_id || null,
         version: 1
       })
       .select()

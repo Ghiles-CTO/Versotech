@@ -130,7 +130,7 @@ export function Step9WaiverRisk() {
       </div>
 
       {/* Progress indicator */}
-      <div className="bg-slate-800/50 p-4 rounded-lg space-y-2">
+      <div className="bg-gray-50 p-4 rounded-lg space-y-2 border border-gray-200">
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">Acknowledgment Progress</span>
           <span className="font-medium">
@@ -161,10 +161,10 @@ export function Step9WaiverRisk() {
                 render={({ field }) => (
                   <FormItem
                     className={cn(
-                      'p-4 rounded-lg border-2 transition-all',
+                      'p-4 rounded-lg border-2 transition-all bg-white',
                       field.value
-                        ? 'border-emerald-500/50 bg-emerald-500/5'
-                        : 'border-slate-700 hover:border-slate-600'
+                        ? 'border-emerald-500/50 bg-emerald-50'
+                        : 'border-gray-200 hover:border-gray-300'
                     )}
                   >
                     <div className="flex items-start gap-4">
@@ -180,7 +180,7 @@ export function Step9WaiverRisk() {
                           <Icon
                             className={cn(
                               'h-4 w-4',
-                              field.value ? 'text-emerald-500' : 'text-slate-400'
+                              field.value ? 'text-emerald-500' : 'text-gray-400'
                             )}
                           />
                           <span className="text-xs text-muted-foreground mr-2">

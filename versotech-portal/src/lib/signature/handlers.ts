@@ -407,7 +407,10 @@ export async function handleSubscriptionSignature(
     .update({
       file_key: docUploadData.path,
       is_published: true,
-      published_at: new Date().toISOString()
+      published_at: new Date().toISOString(),
+      status: 'published',
+      vehicle_id: subscription.vehicle_id,
+      owner_investor_id: subscription.investor_id
     })
     .eq('id', document.id)
 
@@ -416,7 +419,7 @@ export async function handleSubscriptionSignature(
     throw docUpdateError
   }
 
-  console.log('✅ [SUBSCRIPTION HANDLER] Document record updated to executed status')
+  console.log('✅ [SUBSCRIPTION HANDLER] Document record updated to executed status with vehicle_id:', subscription.vehicle_id)
 
   // 3. UPDATE SUBSCRIPTION STATUS TO 'COMMITTED'
   // This will automatically trigger fee event creation due to existing logic

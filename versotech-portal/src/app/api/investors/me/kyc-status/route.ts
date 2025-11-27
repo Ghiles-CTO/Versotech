@@ -1,5 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { z } from 'zod'
+
+// Investors can only set these statuses - final statuses require staff action
+const ALLOWED_INVESTOR_STATUSES = ['not_started', 'in_progress', 'submitted'] as const
+const kycStatusSchema = z.object({
+  status: z.enum(ALLOWED_INVESTOR_STATUSES, {
+    message: 'Invalid status. Allowed: not_started, in_progress, submitted'
+  })
+})
 
 export async function GET(request: NextRequest) {
     try {
@@ -52,11 +61,17 @@ export async function POST(request: NextRequest) {
         }
 
         const body = await request.json()
-        const { status } = body
 
-        if (!status) {
-            return NextResponse.json({ error: 'Status is required' }, { status: 400 })
+        // Validate input - investors cannot set final statuses like 'approved', 'rejected', 'expired'
+        const validation = kycStatusSchema.safeParse(body)
+        if (!validation.success) {
+            const errorMessage = validation.error.issues[0]?.message || 'Invalid status'
+            return NextResponse.json({
+                error: errorMessage
+            }, { status: 400 })
         }
+
+        const { status } = validation.data
 
         // Update investor status
         const { error } = await supabase

@@ -90,23 +90,39 @@ export function WizardProvider({
 
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const isDirtyRef = useRef(false)
+  const isSavingRef = useRef(false) // Ref for immediate saving state check
+  const saveProgressRef = useRef<(() => Promise<void>) | undefined>(undefined) // Ref to latest saveProgress
 
   // Calculate visible steps based on US Person status
   const visibleSteps = getVisibleSteps(state.formData)
   const totalVisibleSteps = visibleSteps.length
-  const currentStepIndex = visibleSteps.indexOf(state.currentStep)
-  const progress = Math.round(((currentStepIndex + 1) / totalVisibleSteps) * 100)
-  const currentStepConfig = STEP_CONFIG[state.currentStep - 1]
+  const rawCurrentStepIndex = visibleSteps.indexOf(state.currentStep)
+
+  // BUG FIX 2.3: Handle currentStepIndex = -1 (step became hidden)
+  const currentStepIndex = rawCurrentStepIndex === -1 ? 0 : rawCurrentStepIndex
+  const safeCurrentStep = rawCurrentStepIndex === -1 ? visibleSteps[0] : state.currentStep
+
+  // Auto-navigate when current step becomes hidden (e.g., US Person changes from 'yes' to 'no')
+  useEffect(() => {
+    if (rawCurrentStepIndex === -1 && visibleSteps.length > 0) {
+      // Find nearest valid step (prefer staying on same or earlier step)
+      const nearestStep = visibleSteps.find(s => s >= state.currentStep) || visibleSteps[visibleSteps.length - 1]
+      setState(prev => ({ ...prev, currentStep: nearestStep }))
+    }
+  }, [rawCurrentStepIndex, visibleSteps, state.currentStep])
+
+  const progress = Math.max(0, Math.round(((currentStepIndex + 1) / totalVisibleSteps) * 100))
+  const currentStepConfig = STEP_CONFIG[safeCurrentStep - 1]
   const isFirstStep = currentStepIndex === 0
   const isLastStep = currentStepIndex === totalVisibleSteps - 1
   const canGoNext = !isLastStep
   const canGoBack = !isFirstStep
 
-  // Auto-save every 30 seconds when dirty
+  // BUG FIX 2.1: Auto-save with proper closure handling using ref
   useEffect(() => {
-    if (isDirtyRef.current) {
+    if (isDirtyRef.current && saveProgressRef.current) {
       autoSaveTimeoutRef.current = setTimeout(() => {
-        saveProgress()
+        saveProgressRef.current?.()
       }, 30000)
     }
 
@@ -166,10 +182,12 @@ export function WizardProvider({
     }
   }, [state.currentStep, state.formData])
 
-  // Save progress
+  // Save progress - BUG FIX 3.1: Use ref for immediate isSaving check
   const saveProgress = useCallback(async () => {
-    if (state.isSaving) return
+    // Use ref for immediate check to prevent race conditions
+    if (isSavingRef.current) return
 
+    isSavingRef.current = true
     setState(prev => ({ ...prev, isSaving: true }))
 
     try {
@@ -219,18 +237,27 @@ export function WizardProvider({
     } catch (error) {
       console.error('Failed to save progress:', error)
       setState(prev => ({ ...prev, isSaving: false }))
-      toast.error('Failed to save progress')
+      toast.error('Failed to save progress. Your changes may not be saved.')
+    } finally {
+      isSavingRef.current = false
     }
-  }, [state.formData, state.completedSteps, state.submissionId, state.isSaving])
+  }, [state.formData, state.completedSteps, state.submissionId])
 
-  // Go to specific step
+  // Keep saveProgressRef updated with latest saveProgress
+  useEffect(() => {
+    saveProgressRef.current = saveProgress
+  }, [saveProgress])
+
+  // Go to specific step - BUG FIX 4.1: Add feedback when step blocked
   const goToStep = useCallback((step: number) => {
     if (visibleSteps.includes(step)) {
       setState(prev => ({ ...prev, currentStep: step }))
+    } else {
+      toast.error('This step is not available')
     }
   }, [visibleSteps])
 
-  // Next step
+  // Next step - BUG FIX 2.2: Use functional setState to avoid race conditions
   const nextStep = useCallback(async (): Promise<boolean> => {
     // Validate current step
     const isValid = await validateCurrentStep()
@@ -239,30 +266,35 @@ export function WizardProvider({
       return false
     }
 
-    // Mark current step as completed
+    // Mark current step as completed and move to next in single state update
+    // to avoid race condition between separate setState calls
+    const currentVisibleSteps = getVisibleSteps(state.formData)
+    const currentIdx = currentVisibleSteps.indexOf(state.currentStep)
+
     setState(prev => {
       const newCompleted = new Set(prev.completedSteps)
       newCompleted.add(prev.currentStep)
+
+      // Calculate next step from current state
+      const latestVisibleSteps = getVisibleSteps(prev.formData)
+      const latestIdx = latestVisibleSteps.indexOf(prev.currentStep)
+      const nextIdx = latestIdx + 1
+      const nextStep = nextIdx < latestVisibleSteps.length
+        ? latestVisibleSteps[nextIdx]
+        : prev.currentStep
+
       return {
         ...prev,
         completedSteps: newCompleted,
+        currentStep: nextStep,
       }
     })
 
-    // Save progress
+    // Save progress after state update
     await saveProgress()
 
-    // Move to next visible step
-    const nextIndex = currentStepIndex + 1
-    if (nextIndex < visibleSteps.length) {
-      setState(prev => ({
-        ...prev,
-        currentStep: visibleSteps[nextIndex],
-      }))
-    }
-
     return true
-  }, [validateCurrentStep, saveProgress, currentStepIndex, visibleSteps])
+  }, [validateCurrentStep, saveProgress, state.formData, state.currentStep])
 
   // Previous step
   const previousStep = useCallback(() => {
@@ -274,10 +306,13 @@ export function WizardProvider({
     }
   }, [currentStepIndex, visibleSteps])
 
-  // Submit questionnaire
+  // Submit questionnaire - BUG FIX 1.3: Filter hidden steps data
   const submitQuestionnaire = useCallback(async (): Promise<boolean> => {
-    // Validate all steps
-    for (const step of visibleSteps) {
+    // Get current visible steps
+    const currentVisibleSteps = getVisibleSteps(state.formData)
+
+    // Validate all visible steps
+    for (const step of currentVisibleSteps) {
       const stepKey = `step${step}` as keyof KYCQuestionnaireData
       const stepData = state.formData[stepKey]
       const schema = getStepSchema(step)
@@ -296,11 +331,21 @@ export function WizardProvider({
     setState(prev => ({ ...prev, isSaving: true }))
 
     try {
+      // BUG FIX 1.3: Only include data for visible steps (security fix)
+      // This prevents leaking US Person step data when user later changes answer to 'no'
+      const filteredFormData: Record<string, unknown> = {}
+      for (const step of currentVisibleSteps) {
+        const stepKey = `step${step}` as keyof KYCQuestionnaireData
+        if (state.formData[stepKey]) {
+          filteredFormData[stepKey] = state.formData[stepKey]
+        }
+      }
+
       const payload = {
         document_type: 'questionnaire',
         custom_label: 'KYC Compliance Questionnaire',
         metadata: {
-          ...state.formData,
+          ...filteredFormData,
           lastCompletedStep: 10,
           wizardVersion: '2.0',
           submittedAt: new Date().toISOString(),
@@ -343,7 +388,7 @@ export function WizardProvider({
       toast.error('Failed to submit questionnaire')
       return false
     }
-  }, [state.formData, state.submissionId, visibleSteps, goToStep, onComplete])
+  }, [state.formData, state.submissionId, goToStep, onComplete])
 
   const value: WizardContextValue = {
     // Convenience accessors

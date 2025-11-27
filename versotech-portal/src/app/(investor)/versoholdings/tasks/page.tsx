@@ -133,6 +133,7 @@ export default async function TasksPage() {
     <AppLayout brand="versoholdings">
       <TasksPageClient
         userId={user.id}
+        investorIds={investorIds}
         tasksByVehicle={tasksByVehicle}
         onboardingTasks={onboardingTasks}
         staffCreatedTasks={staffCreatedTasks}

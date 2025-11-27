@@ -48,9 +48,12 @@ export const wellInformedBasisOptions = [
   { value: 'advised', label: 'Advised by regulated advisor' },
 ] as const
 
+// BUG FIX 3.5: Use proper enum array for wellInformedBasis
+const wellInformedBasisValues = ['net_worth', 'professional', 'institutional', 'experience', 'advised'] as const
+
 export const step3Schema = z.object({
   isWellInformed: z.enum(['yes', 'no', 'unsure']),
-  wellInformedBasis: z.array(z.string()).optional(),
+  wellInformedBasis: z.array(z.enum(wellInformedBasisValues)).optional(),
   wellInformedEvidence: z.string().optional(),
 })
 
@@ -319,8 +322,25 @@ export function getVisibleSteps(formData: Partial<KYCQuestionnaireData>): number
   return [1, 2, 3, 4, 8, 9, 10]
 }
 
+// BUG FIX 2.7: Compute signature date at runtime, not module load time
+function getTodayDate(): string {
+  return new Date().toISOString().split('T')[0]
+}
+
 // Get default values for each step
 export function getStepDefaults(stepNumber: number): Record<string, unknown> {
+  // BUG FIX 2.7: Step 10 defaults are computed dynamically for signatureDate
+  if (stepNumber === 10) {
+    return {
+      certifiesAccuracy: false,
+      certifiesNoOmissions: false,
+      agreesToUpdates: false,
+      consentToProcessing: false,
+      signatureName: '',
+      signatureDate: getTodayDate(), // Computed at call time, not module load
+    }
+  }
+
   const defaults: Record<number, Record<string, unknown>> = {
     1: {
       fullName: '',
@@ -412,14 +432,6 @@ export function getStepDefaults(stepNumber: number): Record<string, unknown> {
       acknowledgesFees: false,
       hasReadOfferingDocs: false,
       hasSoughtIndependentAdvice: false,
-    },
-    10: {
-      certifiesAccuracy: false,
-      certifiesNoOmissions: false,
-      agreesToUpdates: false,
-      consentToProcessing: false,
-      signatureName: '',
-      signatureDate: new Date().toISOString().split('T')[0],
     },
   }
   return defaults[stepNumber] || {}

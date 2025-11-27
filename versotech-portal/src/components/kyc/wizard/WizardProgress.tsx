@@ -40,7 +40,7 @@ export function WizardProgress() {
         </div>
 
         {/* Animated Progress Bar */}
-        <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
+        <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
           <div
             className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full transition-all duration-500 ease-out"
             style={{ width: `${progress}%` }}
@@ -72,8 +72,8 @@ export function WizardProgress() {
                 className={cn(
                   'w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300',
                   isCompleted && 'bg-emerald-500 text-white',
-                  isCurrent && !isCompleted && 'bg-emerald-500/20 border-2 border-emerald-500 text-emerald-500',
-                  !isCompleted && !isCurrent && 'bg-slate-800 text-slate-500',
+                  isCurrent && !isCompleted && 'bg-emerald-100 border-2 border-emerald-500 text-emerald-600',
+                  !isCompleted && !isCurrent && 'bg-gray-100 text-gray-500 border border-gray-200',
                   isAccessible && !isCurrent && 'group-hover:scale-110'
                 )}
               >
@@ -88,7 +88,7 @@ export function WizardProgress() {
               <span
                 className={cn(
                   'hidden md:block text-[10px] mt-1 text-center max-w-[60px] truncate transition-colors',
-                  isCurrent ? 'text-emerald-500 font-medium' : 'text-slate-500'
+                  isCurrent ? 'text-emerald-600 font-medium' : 'text-gray-500'
                 )}
               >
                 {config.title}

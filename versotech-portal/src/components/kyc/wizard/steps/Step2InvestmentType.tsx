@@ -78,8 +78,8 @@ export function Step2InvestmentType() {
                         className={cn(
                           'flex items-center gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all',
                           field.value === option.value
-                            ? 'border-emerald-500 bg-emerald-500/10'
-                            : 'border-slate-700 hover:border-slate-600'
+                            ? 'border-emerald-500 bg-emerald-50'
+                            : 'border-gray-200 hover:border-gray-300 bg-white'
                         )}
                       >
                         <RadioGroupItem value={option.value} className="sr-only" />
@@ -88,7 +88,7 @@ export function Step2InvestmentType() {
                             'p-2 rounded-lg',
                             field.value === option.value
                               ? 'bg-emerald-500 text-white'
-                              : 'bg-slate-800 text-slate-400'
+                              : 'bg-gray-100 text-gray-500'
                           )}
                         >
                           {icons[option.value]}

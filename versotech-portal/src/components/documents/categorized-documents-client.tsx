@@ -1,20 +1,14 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { Document, Vehicle } from '@/types/documents'
-import { DocumentReference } from '@/types/document-viewer.types'
+import { Document, Vehicle, DocumentFilters } from '@/types/documents'
 import { DocumentCard } from './document-card'
+import { DocumentFiltersComponent } from './document-filters'
 import { useDocumentViewer } from '@/hooks/useDocumentViewer'
 import { DocumentViewerFullscreen } from './DocumentViewerFullscreen'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger
-} from '@/components/ui/accordion'
 import {
   ArrowLeft,
   BarChart3,
@@ -42,7 +36,7 @@ const DOCUMENT_CATEGORIES = {
     icon: FileCheck,
     color: 'blue',
     description: 'Signed commitments, limited partnership agreements, side letters, amendment documents',
-    types: ['Subscription', 'Agreement', 'subscription', 'agreement']
+    types: ['Subscription', 'Agreement', 'subscription', 'agreement', 'subscription_pack']
   },
   kyc: {
     id: 'kyc',
@@ -171,12 +165,51 @@ export function CategorizedDocumentsClient({
   vehicles
 }: CategorizedDocumentsClientProps) {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
+  const [filters, setFilters] = useState<DocumentFilters>({})
   const documentViewer = useDocumentViewer()
 
-  // Filter to investor-facing documents (exclude deal-specific files, but keep NDAs)
+  // Filter to investor-facing documents (exclude deal-specific files, but keep NDAs and subscription packs)
+  // Also apply user-selected filters
   const displayableDocuments = useMemo(() => {
-    return initialDocuments.filter(doc => !doc.scope.deal || doc.type === 'nda')
-  }, [initialDocuments])
+    let docs = initialDocuments.filter(doc =>
+      !doc.scope.deal ||
+      doc.type === 'nda' ||
+      doc.type === 'subscription_pack' ||
+      doc.type === 'subscription'
+    )
+
+    // Apply vehicle/holding filter
+    if (filters.vehicle_id) {
+      docs = docs.filter(doc => doc.scope.vehicle?.id === filters.vehicle_id)
+    }
+
+    // Apply type filter
+    if (filters.type) {
+      docs = docs.filter(doc =>
+        doc.type.toLowerCase() === filters.type?.toLowerCase()
+      )
+    }
+
+    // Apply search filter
+    if (filters.search) {
+      const search = filters.search.toLowerCase()
+      docs = docs.filter(doc =>
+        doc.file_name?.toLowerCase().includes(search) ||
+        (doc as any).name?.toLowerCase().includes(search)
+      )
+    }
+
+    return docs
+  }, [initialDocuments, filters])
+
+  // Calculate type counts for filter badges
+  const typeCounts = useMemo(() => {
+    const counts: Record<string, number> = {}
+    displayableDocuments.forEach(doc => {
+      counts[doc.type] = (counts[doc.type] || 0) + 1
+    })
+    return counts
+  }, [displayableDocuments])
 
   const categorizedDocuments = useMemo(() => {
     const base: CategorizedDocuments = {}
@@ -231,6 +264,15 @@ export function CategorizedDocumentsClient({
             </div>
           </div>
         </div>
+
+        {/* Filters */}
+        <DocumentFiltersComponent
+          vehicles={vehicles}
+          deals={[]}
+          typeCounts={typeCounts}
+          appliedFilters={filters}
+          onChange={setFilters}
+        />
 
         {/* Category Folders */}
         <div className="space-y-4">

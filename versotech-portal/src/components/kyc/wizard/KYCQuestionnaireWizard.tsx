@@ -131,7 +131,7 @@ function WizardContent({ onComplete }: { onComplete?: () => void }) {
       )}
 
       {/* Step Content */}
-      <Card className="border-slate-700 bg-slate-900/50">
+      <Card className="border-gray-200 bg-white shadow-sm">
         <CardContent className="pt-6">
           <div className="min-h-[400px]">{stepComponents[currentStep]}</div>
         </CardContent>
