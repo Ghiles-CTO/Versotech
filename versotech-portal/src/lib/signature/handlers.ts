@@ -300,7 +300,7 @@ export async function handleNDASignature(
       investor_id: dealInterest.investor_id
     })
     // Don't fail the signature submission if access grant fails
-    throw accessError
+    // Error is logged above - continue without throwing
   }
 }
 

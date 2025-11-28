@@ -744,12 +744,17 @@ async function handleEntityApproval(
                 .select('*')
                 .eq('deal_id', submission.deal_id)
                 .eq('status', 'published')
-                .single()
+                .maybeSingle()
 
               if (investorData && vehicleData && feeStructure && user) {
                 // Calculate subscription details
-                const pricePerShare = parseFloat(feeStructure.price_per_share_text?.replace(/[^\d.]/g, '') || '0')
-                const certificatesCount = pricePerShare > 0 ? Math.floor(amount / pricePerShare) : 0
+                // Default to $1.00 per share if price_per_share_text is missing (makes certificate count = subscription amount)
+                const parsedPrice = parseFloat(feeStructure.price_per_share_text?.replace(/[^\d.]/g, '') || '0')
+                const pricePerShare = parsedPrice > 0 ? parsedPrice : 1.00
+                if (!feeStructure.price_per_share_text || parsedPrice <= 0) {
+                  console.warn('⚠️ [SUBSCRIPTION PACK] Missing price_per_share_text for deal:', submission.deal_id, '- defaulting to $1.00')
+                }
+                const certificatesCount = Math.floor(amount / pricePerShare)
                 const subscriptionFeeRate = feeStructure.subscription_fee_percent || 0
                 const subscriptionFeeAmount = amount * subscriptionFeeRate
                 const totalSubscriptionPrice = amount + subscriptionFeeAmount
@@ -766,7 +771,7 @@ async function handleEntityApproval(
                   : investorData.legal_name
 
                 const subscriberType = counterpartyEntity
-                  ? counterpartyEntity.entity_type.replace('_', ' ').toUpperCase()
+                  ? counterpartyEntity.entity_type.replace(/_/g, ' ').toUpperCase()
                   : (investorData.type || 'Corporate Entity')
 
                 const subscriberAddress = counterpartyEntity && counterpartyEntity.registered_address
@@ -782,16 +787,30 @@ async function handleEntityApproval(
                   : (investorData.registered_address || '')
 
                 const subscriberBlock = counterpartyEntity
-                  ? `${counterpartyEntity.legal_name}, a ${counterpartyEntity.entity_type.replace('_', ' ')} with registered office at ${subscriberAddress}`
+                  ? `${counterpartyEntity.legal_name}, a ${counterpartyEntity.entity_type.replace(/_/g, ' ')} with registered office at ${subscriberAddress}`
                   : `${investorData.legal_name}, ${investorData.type || 'entity'} with registered office at ${investorData.registered_address || ''}`
+
+                // Warn about incomplete address data (helps identify data quality issues)
+                if (counterpartyEntity) {
+                  const addr = counterpartyEntity.registered_address
+                  if (!addr || !addr.street || !addr.country) {
+                    console.warn('⚠️ [SUBSCRIPTION PACK] Entity has incomplete address:', {
+                      entity: counterpartyEntity.legal_name,
+                      missing: [!addr?.street && 'street', !addr?.country && 'country'].filter(Boolean)
+                    })
+                  }
+                } else if (!investorData.registered_address) {
+                  console.warn('⚠️ [SUBSCRIPTION PACK] Investor missing registered_address:', investorData.legal_name)
+                }
 
                 const subscriberTitle = counterpartyEntity && counterpartyEntity.representative_title
                   ? counterpartyEntity.representative_title
                   : 'Authorized Representative'
 
-                const subscriberRepName = counterpartyEntity && counterpartyEntity.representative_name
-                  ? counterpartyEntity.representative_name
-                  : undefined
+                // Representative name: prefer entity rep, fallback to entity name, then investor name
+                const subscriberRepName = counterpartyEntity?.representative_name
+                  || counterpartyEntity?.legal_name
+                  || investorData.legal_name
 
                 // Build comprehensive subscription pack payload
                 const subscriptionPayload = {
