@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { X, Download, Loader2, AlertCircle, FileText } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { formatFileSize } from '@/lib/utils'
@@ -16,6 +16,29 @@ interface DocumentViewerFullscreenProps {
   onDownload: () => void
 }
 
+/**
+ * Check if a file is a PDF based on filename or URL
+ */
+function isPdfFile(fileName?: string | null, url?: string | null): boolean {
+  if (fileName?.toLowerCase().endsWith('.pdf')) return true
+  if (url?.toLowerCase().includes('.pdf')) return true
+  // Supabase signed URLs have the file path in them
+  if (url?.includes('deal-documents') && url?.includes('.pdf')) return true
+  return false
+}
+
+/**
+ * Append PDF viewer parameters to URL to fix browser rendering issues
+ * - navpanes=0: Hide thumbnail sidebar (fixes Brave issue)
+ * - view=FitH: Fit to width for better viewing
+ * - pagemode=none: Don't show bookmarks/thumbnails
+ */
+function getPdfViewerUrl(url: string): string {
+  // Don't add hash if URL already has one
+  if (url.includes('#')) return url
+  return `${url}#navpanes=0&view=FitH&pagemode=none`
+}
+
 export function DocumentViewerFullscreen({
   isOpen,
   document,
@@ -26,6 +49,16 @@ export function DocumentViewerFullscreen({
   onDownload,
 }: DocumentViewerFullscreenProps) {
   const [iframeError, setIframeError] = useState(false)
+
+  // Compute the final iframe URL with PDF parameters if needed
+  const iframeSrc = useMemo(() => {
+    if (!previewUrl) return null
+    const fileName = document?.file_name || document?.name
+    if (isPdfFile(fileName, previewUrl)) {
+      return getPdfViewerUrl(previewUrl)
+    }
+    return previewUrl
+  }, [previewUrl, document])
 
   // Handle ESC key to close
   useEffect(() => {
@@ -151,9 +184,9 @@ export function DocumentViewerFullscreen({
           </div>
         )}
 
-        {previewUrl && !isLoading && !error && !iframeError && (
+        {iframeSrc && !isLoading && !error && !iframeError && (
           <iframe
-            src={previewUrl}
+            src={iframeSrc}
             className="w-full h-full border-0"
             title="Document Preview"
             // Removed sandbox attribute to prevent Brave browser from blocking
