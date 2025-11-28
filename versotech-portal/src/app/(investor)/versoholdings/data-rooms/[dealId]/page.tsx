@@ -94,13 +94,15 @@ export default async function DataRoomDetailPage({ params }: PageProps) {
   const investorIds = investorLinks.map(link => link.investor_id)
   const primaryInvestorId = investorIds[0]
 
-  // Check access
+  // Check access (must not be revoked AND must not be expired)
+  const now = new Date().toISOString()
   const { data: accessData } = await serviceSupabase
     .from('deal_data_room_access')
     .select('*')
     .eq('deal_id', dealId)
     .in('investor_id', investorIds)
     .is('revoked_at', null)
+    .or(`expires_at.is.null,expires_at.gt.${now}`)
     .single()
 
   if (!accessData) {

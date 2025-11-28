@@ -90,11 +90,13 @@ export default async function DataRoomsPage() {
   const investorIds = investorLinks.map(link => link.investor_id)
   const primaryInvestorId = investorIds[0]
 
+  const now = new Date().toISOString()
   const { data: accessData } = await serviceSupabase
     .from('deal_data_room_access')
     .select('id, deal_id, investor_id, granted_at, expires_at, auto_granted, notes, revoked_at')
     .in('investor_id', investorIds)
     .is('revoked_at', null)
+    .or(`expires_at.is.null,expires_at.gt.${now}`)
     .order('granted_at', { ascending: false })
 
   const activeAccess: AccessRecord[] = (accessData ?? []) as AccessRecord[]

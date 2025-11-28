@@ -11,6 +11,14 @@
     {
       "path": "/api/cron/cleanup-stale-locks",
       "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/data-room-expiry",
+      "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/cron/data-room-expiry-warnings",
+      "schedule": "0 9 * * *"
     }
   ]
 }
