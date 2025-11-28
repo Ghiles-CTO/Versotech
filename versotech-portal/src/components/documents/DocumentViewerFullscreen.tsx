@@ -141,56 +141,60 @@ export function DocumentViewerFullscreen({
         </div>
       </div>
 
-      {/* Main viewport */}
-      <div className="h-[calc(100vh-4rem)] bg-gray-900 flex items-center justify-center">
-        {isLoading && (
-          <div className="flex flex-col items-center gap-4 text-white">
-            <Loader2 className="h-12 w-12 animate-spin" />
-            <p className="text-lg">Loading document...</p>
+      {/* Main viewport - no flex centering for iframe to fill properly */}
+      <div className="h-[calc(100vh-4rem)] bg-gray-900">
+        {/* Loading/error states need centering */}
+        {(isLoading || error || iframeError) && (
+          <div className="w-full h-full flex items-center justify-center">
+            {isLoading && (
+              <div className="flex flex-col items-center gap-4 text-white">
+                <Loader2 className="h-12 w-12 animate-spin" />
+                <p className="text-lg">Loading document...</p>
+              </div>
+            )}
+
+            {error && !isLoading && (
+              <div className="flex flex-col items-center gap-4 text-white max-w-md mx-auto px-4">
+                <AlertCircle className="h-16 w-16 text-red-400" />
+                <h3 className="text-xl font-semibold">Failed to Load Preview</h3>
+                <p className="text-gray-300 text-center">{error}</p>
+                <Button
+                  onClick={onDownload}
+                  variant="secondary"
+                  className="gap-2 mt-4"
+                >
+                  <Download className="h-4 w-4" />
+                  Download Instead
+                </Button>
+              </div>
+            )}
+
+            {iframeError && !isLoading && !error && (
+              <div className="flex flex-col items-center gap-4 text-white max-w-md mx-auto px-4">
+                <AlertCircle className="h-16 w-16 text-red-400" />
+                <h3 className="text-xl font-semibold">Preview Unavailable</h3>
+                <p className="text-gray-300 text-center">
+                  This document cannot be previewed in your browser.
+                </p>
+                <Button
+                  onClick={onDownload}
+                  variant="secondary"
+                  className="gap-2 mt-4"
+                >
+                  <Download className="h-4 w-4" />
+                  Download to View
+                </Button>
+              </div>
+            )}
           </div>
         )}
 
-        {error && !isLoading && (
-          <div className="flex flex-col items-center gap-4 text-white max-w-md mx-auto px-4">
-            <AlertCircle className="h-16 w-16 text-red-400" />
-            <h3 className="text-xl font-semibold">Failed to Load Preview</h3>
-            <p className="text-gray-300 text-center">{error}</p>
-            <Button
-              onClick={onDownload}
-              variant="secondary"
-              className="gap-2 mt-4"
-            >
-              <Download className="h-4 w-4" />
-              Download Instead
-            </Button>
-          </div>
-        )}
-
-        {iframeError && !isLoading && !error && (
-          <div className="flex flex-col items-center gap-4 text-white max-w-md mx-auto px-4">
-            <AlertCircle className="h-16 w-16 text-red-400" />
-            <h3 className="text-xl font-semibold">Preview Unavailable</h3>
-            <p className="text-gray-300 text-center">
-              This document cannot be previewed in your browser.
-            </p>
-            <Button
-              onClick={onDownload}
-              variant="secondary"
-              className="gap-2 mt-4"
-            >
-              <Download className="h-4 w-4" />
-              Download to View
-            </Button>
-          </div>
-        )}
-
+        {/* Iframe fills the entire viewport when ready */}
         {iframeSrc && !isLoading && !error && !iframeError && (
           <iframe
             src={iframeSrc}
             className="w-full h-full border-0"
             title="Document Preview"
-            // Removed sandbox attribute to prevent Brave browser from blocking
-            // sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
             onError={() => {
               console.error('iframe failed to load preview')
               setIframeError(true)

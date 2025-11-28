@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -89,6 +89,12 @@ export function ApprovalsPageClient({
   const [counts, setCounts] = useState(initialCounts)
   const [isLoading, setIsLoading] = useState(false)
 
+  // Track initial mount to prevent API call from overwriting server data
+  // The server passes initialApprovals with correct data for the preferred view,
+  // but the useEffect below fires before localStorage view is loaded, causing
+  // a race condition where pending-only data overwrites the complete dataset
+  const [isInitialMount, setIsInitialMount] = useState(true)
+
   // Filter state
   const [filters, setFilters] = useState<FilterState>({
     entity_types: [],
@@ -120,6 +126,16 @@ export function ApprovalsPageClient({
   // View state
   const [currentView, setCurrentView] = useState<ViewType>('table')
 
+  // Filter approvals based on current view
+  // Kanban shows all statuses, other views show only pending
+  const visibleApprovals = useMemo(() => {
+    if (currentView === 'kanban') {
+      return approvals
+    }
+    // Table, List, Database views only show pending items
+    return approvals.filter(a => a.status === 'pending')
+  }, [approvals, currentView])
+
   // Load view preference from localStorage
   useEffect(() => {
     const savedView = localStorage.getItem('approvals-view-preference')
@@ -133,13 +149,29 @@ export function ApprovalsPageClient({
     localStorage.setItem('approvals-view-preference', currentView)
   }, [currentView])
 
+  // Reset pagination when view changes to avoid offset issues
+  // (e.g., switching from table view page 3 to Kanban which may have fewer items)
+  useEffect(() => {
+    setPagination(prev => ({ ...prev, page: 1 }))
+  }, [currentView])
+
   // Refresh data
   const refreshData = useCallback(async () => {
     setIsLoading(true)
     try {
       // Build query params from filters
       const params = new URLSearchParams()
-      params.append('status', 'pending')
+
+      // When Kanban view is active, fetch all statuses (with 30-day limit for historical)
+      if (currentView === 'kanban') {
+        params.append('status', 'pending,approved,rejected')
+        const thirtyDaysAgo = new Date()
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+        params.append('decided_after', thirtyDaysAgo.toISOString())
+      } else {
+        params.append('status', 'pending')
+      }
+
       params.append('limit', pagination.limit.toString())
       params.append('offset', ((pagination.page - 1) * pagination.limit).toString())
 
@@ -172,7 +204,7 @@ export function ApprovalsPageClient({
     } finally {
       setIsLoading(false)
     }
-  }, [filters, pagination.page, pagination.limit, initialStats, initialCounts])
+  }, [filters, pagination.page, pagination.limit, currentView, initialStats, initialCounts])
 
   // Handle approve button click
   const handleApproveClick = (approval: Approval) => {
@@ -240,11 +272,18 @@ export function ApprovalsPageClient({
     }
   }
 
-  // Refresh when filters or pagination change
+  // Refresh when filters, pagination, or view change
   useEffect(() => {
+    // Skip initial mount - we already have correct server data from initialApprovals
+    // This prevents the race condition where the table-view API call overwrites
+    // the complete dataset before localStorage view preference loads
+    if (isInitialMount) {
+      setIsInitialMount(false)
+      return
+    }
     refreshData()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters.entity_types, filters.priorities, filters.assigned_to_me, filters.overdue_only, pagination.page])
+  }, [filters.entity_types, filters.priorities, filters.assigned_to_me, filters.overdue_only, pagination.page, currentView])
 
   // Bulk selection handlers
   const toggleSelection = (id: string) => {
@@ -260,10 +299,10 @@ export function ApprovalsPageClient({
   }
 
   const toggleSelectAll = () => {
-    if (selectedIds.size === approvals.length && approvals.length > 0) {
+    if (selectedIds.size === visibleApprovals.length && visibleApprovals.length > 0) {
       setSelectedIds(new Set())
     } else {
-      setSelectedIds(new Set(approvals.map(a => a.id)))
+      setSelectedIds(new Set(visibleApprovals.map(a => a.id)))
     }
   }
 
@@ -311,15 +350,15 @@ export function ApprovalsPageClient({
   // Export to CSV handler
   const handleExport = () => {
     try {
-      if (!approvals || approvals.length === 0) {
+      if (!visibleApprovals || visibleApprovals.length === 0) {
         toast.error('No data to export')
         return
       }
-      
+
       const timestamp = new Date().toISOString().split('T')[0]
       const filename = `approvals-export-${timestamp}.csv`
-      exportApprovalsToCSV(approvals, filename)
-      toast.success(`Exported ${approvals.length} approvals to CSV`)
+      exportApprovalsToCSV(visibleApprovals, filename)
+      toast.success(`Exported ${visibleApprovals.length} approvals to CSV`)
     } catch (error) {
       console.error('Export error:', error)
       toast.error('Failed to export data')
@@ -462,7 +501,7 @@ export function ApprovalsPageClient({
                     variant="outline"
                     size="sm"
                     onClick={handleExport}
-                    disabled={!approvals || approvals.length === 0}
+                    disabled={!visibleApprovals || visibleApprovals.length === 0}
                   >
                     <Download className="h-4 w-4 mr-2" />
                     Export
@@ -489,7 +528,7 @@ export function ApprovalsPageClient({
                   />
                 </div>
                 <Badge variant="secondary" className="text-sm">
-                  {approvals.length} approval{approvals.length !== 1 ? 's' : ''}
+                  {visibleApprovals.length} approval{visibleApprovals.length !== 1 ? 's' : ''}
                 </Badge>
               </div>
             </div>
@@ -504,7 +543,7 @@ export function ApprovalsPageClient({
                       <TableRow>
                         <TableHead className="w-12">
                           <Checkbox
-                            checked={selectedIds.size === approvals.length && approvals.length > 0}
+                            checked={selectedIds.size === visibleApprovals.length && visibleApprovals.length > 0}
                             onCheckedChange={toggleSelectAll}
                             aria-label="Select all"
                           />
@@ -518,8 +557,8 @@ export function ApprovalsPageClient({
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {approvals && approvals.length > 0 ? (
-                        approvals.map((approval) => {
+                      {visibleApprovals && visibleApprovals.length > 0 ? (
+                        visibleApprovals.map((approval) => {
                           const slaStatus = calculateSLAStatus(approval.sla_breach_at)
 
                           return (
@@ -645,24 +684,31 @@ export function ApprovalsPageClient({
                               </TableCell>
 
                               <TableCell onClick={(e) => e.stopPropagation()}>
-                                <div className="flex gap-2">
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => handleApproveClick(approval)}
-                                    className="text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-950"
-                                  >
-                                    <CheckCircle2 className="h-4 w-4" />
-                                  </Button>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => handleRejectClick(approval)}
-                                    className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950"
-                                  >
-                                    <XCircle className="h-4 w-4" />
-                                  </Button>
-                                </div>
+                                {/* Only show action buttons for pending approvals */}
+                                {approval.status === 'pending' ? (
+                                  <div className="flex gap-2">
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => handleApproveClick(approval)}
+                                      className="text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-950"
+                                    >
+                                      <CheckCircle2 className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => handleRejectClick(approval)}
+                                      className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950"
+                                    >
+                                      <XCircle className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                ) : (
+                                  <Badge variant="secondary" className="text-xs">
+                                    {approval.status}
+                                  </Badge>
+                                )}
                               </TableCell>
                             </TableRow>
                           )
@@ -681,8 +727,8 @@ export function ApprovalsPageClient({
                 {/* Pagination */}
                 <div className="flex items-center justify-between mt-4">
                   <p className="text-sm text-muted-foreground">
-                    Showing {approvals.length > 0 ? ((pagination.page - 1) * pagination.limit) + 1 : 0}-
-                    {Math.min(pagination.page * pagination.limit, Math.max(pagination.total, approvals.length))} of {Math.max(pagination.total, approvals.length)} approvals
+                    Showing {visibleApprovals.length > 0 ? ((pagination.page - 1) * pagination.limit) + 1 : 0}-
+                    {Math.min(pagination.page * pagination.limit, Math.max(pagination.total, visibleApprovals.length))} of {Math.max(pagination.total, visibleApprovals.length)} approvals
                   </p>
                   <div className="flex gap-2">
                     <Button
@@ -712,7 +758,7 @@ export function ApprovalsPageClient({
             {/* Kanban View */}
             {currentView === 'kanban' && (
               <ApprovalsKanbanView
-                approvals={approvals}
+                approvals={visibleApprovals}
                 onApprovalClick={handleApprovalClick}
               />
             )}
@@ -720,7 +766,7 @@ export function ApprovalsPageClient({
             {/* List View */}
             {currentView === 'list' && (
               <ApprovalsListView
-                approvals={approvals}
+                approvals={visibleApprovals}
                 onApprovalClick={handleApprovalClick}
                 onApprove={handleDrawerApprove}
                 onReject={handleDrawerReject}
@@ -730,7 +776,7 @@ export function ApprovalsPageClient({
             {/* Database/Grid View */}
             {currentView === 'database' && (
               <ApprovalsDatabaseView
-                approvals={approvals}
+                approvals={visibleApprovals}
                 onApprovalClick={handleApprovalClick}
               />
             )}
