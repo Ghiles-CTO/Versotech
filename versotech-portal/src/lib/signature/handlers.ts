@@ -263,6 +263,24 @@ export async function handleNDASignature(
       console.log('✅ [NDA HANDLER] Audit log entry created successfully')
     }
 
+    // Log NDA completion event for analytics KPIs
+    try {
+      await supabase.from('deal_activity_events').insert({
+        deal_id: dealInterest.deal_id,
+        investor_id: dealInterest.investor_id,
+        event_type: 'nda_completed',
+        payload: {
+          signature_request_id: signatureRequest.id,
+          workflow_run_id: signatureRequest.workflow_run_id,
+          document_id: document.id
+        }
+      })
+      console.log('✅ [NDA HANDLER] Analytics event logged: nda_completed')
+    } catch (eventError) {
+      console.error('❌ [NDA HANDLER] Failed to log analytics event:', eventError)
+      // Non-blocking - don't fail NDA completion if analytics fails
+    }
+
     console.log('\n🎉 [NDA HANDLER] handleNDASignature() completed successfully')
     console.log('📊 [NDA HANDLER] Final summary:', {
       signature_request_id: signatureRequest.id,
@@ -690,6 +708,31 @@ export async function handleSubscriptionSignature(
   })
 
   console.log('✅ [SUBSCRIPTION HANDLER] Audit log entry created')
+
+  // Log subscription completion event for analytics KPIs
+  if (subscription.deal_id) {
+    try {
+      await supabase.from('deal_activity_events').insert({
+        deal_id: subscription.deal_id,
+        investor_id: subscription.investor_id,
+        event_type: 'subscription_completed',
+        payload: {
+          subscription_id: subscriptionId,
+          signature_request_id: signatureRequest.id,
+          commitment: subscription.commitment,
+          currency: subscription.currency,
+          document_id: document.id,
+          vehicle_id: subscription.vehicle_id
+        }
+      })
+      console.log('✅ [SUBSCRIPTION HANDLER] Analytics event logged: subscription_completed')
+    } catch (eventError) {
+      console.error('❌ [SUBSCRIPTION HANDLER] Failed to log analytics event:', eventError)
+      // Non-blocking - don't fail subscription completion if analytics fails
+    }
+  } else {
+    console.warn('⚠️ [SUBSCRIPTION HANDLER] Skipping analytics event - no deal_id on subscription')
+  }
 
   console.log('\n🎉 [SUBSCRIPTION HANDLER] handleSubscriptionSignature() completed successfully')
   console.log('📊 [SUBSCRIPTION HANDLER] Final summary:', {
