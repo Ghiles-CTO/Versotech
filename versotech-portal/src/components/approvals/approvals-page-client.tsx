@@ -170,8 +170,13 @@ export function ApprovalsPageClient({
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
       params.append('decided_after', thirtyDaysAgo.toISOString())
 
-      params.append('limit', pagination.limit.toString())
-      params.append('offset', ((pagination.page - 1) * pagination.limit).toString())
+      // Kanban view needs ALL items without pagination to show complete board
+      // Other views (table, list, database) use standard pagination
+      const effectiveLimit = currentView === 'kanban' ? 500 : pagination.limit
+      params.append('limit', effectiveLimit.toString())
+      if (currentView !== 'kanban') {
+        params.append('offset', ((pagination.page - 1) * pagination.limit).toString())
+      }
 
       if (filters.entity_types.length > 0) {
         params.append('entity_types', filters.entity_types.join(','))
@@ -202,7 +207,7 @@ export function ApprovalsPageClient({
     } finally {
       setIsLoading(false)
     }
-  }, [filters, pagination.page, pagination.limit, initialStats, initialCounts])
+  }, [filters, pagination.page, pagination.limit, initialStats, initialCounts, currentView])
 
   // Handle approve button click
   const handleApproveClick = (approval: Approval) => {
