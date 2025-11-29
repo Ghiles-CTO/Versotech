@@ -72,11 +72,13 @@ export function MoveDocumentDialog({
 
     try {
       setMoving(true)
+      // Convert "__root__" placeholder to null for the API
+      const folderId = selectedFolderId === '__root__' ? null : selectedFolderId || null
       const response = await fetch(`/api/staff/documents/${documentId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          folder_id: selectedFolderId || null
+          folder_id: folderId
         })
       })
 

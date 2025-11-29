@@ -40,6 +40,15 @@ export async function POST(
       return NextResponse.json({ error: 'No file provided' }, { status: 400 })
     }
 
+    // Validate file size (50MB max)
+    // Note: Deal data room intentionally accepts ALL file types (JSON, CSV, ZIP, etc.)
+    const maxSize = 50 * 1024 * 1024
+    if (file.size > maxSize) {
+      return NextResponse.json({
+        error: 'File size too large. Maximum size is 50MB'
+      }, { status: 400 })
+    }
+
     // Generate unique file key
     const timestamp = Date.now()
     const sanitizedFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_')

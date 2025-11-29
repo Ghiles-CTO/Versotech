@@ -109,6 +109,11 @@ export function DocumentUploadDialog({
 
     setUploading(true)
 
+    // Track results during the loop (not relying on React state)
+    let successCount = 0
+    let failedCount = 0
+    const totalFiles = files.length
+
     try {
       // Upload files one by one for better progress tracking
       for (const file of files) {
@@ -139,6 +144,7 @@ export function DocumentUploadDialog({
           setFiles(prev => prev.map(f =>
             f.id === file.id ? { ...f, status: 'success' as const, progress: 100 } : f
           ))
+          successCount++
 
         } catch (error) {
           // Mark as error
@@ -147,22 +153,17 @@ export function DocumentUploadDialog({
               ? { ...f, status: 'error' as const, error: 'Upload failed' }
               : f
           ))
+          failedCount++
           console.error(`Error uploading ${file.name}:`, error)
         }
       }
 
-      // Check if all succeeded
-      const allSuccess = files.every(f => {
-        const updatedFile = files.find(uf => uf.id === f.id)
-        return updatedFile?.status === 'success'
-      })
-
-      if (allSuccess) {
-        toast.success(`Successfully uploaded ${files.length} file(s)`)
+      // Check results using tracked counts (not stale React state)
+      if (failedCount === 0) {
+        toast.success(`Successfully uploaded ${totalFiles} file(s)`)
         onSuccess?.()
         handleClose()
       } else {
-        const failedCount = files.filter(f => f.status === 'error').length
         toast.error(`${failedCount} file(s) failed to upload`)
       }
 
