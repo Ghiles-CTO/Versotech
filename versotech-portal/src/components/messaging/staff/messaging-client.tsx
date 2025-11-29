@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useMemo, useState, useEffect } from 'react'
+import { useCallback, useMemo, useRef, useState, useEffect } from 'react'
 import type { ConversationSummary, ConversationFilters } from '@/types/messaging'
 import { fetchConversationsClient, markConversationRead } from '@/lib/messaging'
 import { ConversationsSidebar } from './sidebar'
@@ -32,6 +32,10 @@ export function MessagingClient({ initialConversations, currentUserId }: Messagi
   const [staffDirectory, setStaffDirectory] = useState<StaffDirectoryEntry[]>([])
   const [investorDirectory, setInvestorDirectory] = useState<InvestorDirectoryEntry[]>([])
   const [isCreatingConversation, setIsCreatingConversation] = useState(false)
+
+  // Ref to track active conversation without recreating subscriptions
+  const activeConversationIdRef = useRef(activeConversationId)
+  activeConversationIdRef.current = activeConversationId
 
   console.log('[MessagingClient] Initial conversations:', initialConversations.length)
   console.log('[MessagingClient] Current conversations state:', conversations.length)
@@ -73,27 +77,47 @@ export function MessagingClient({ initialConversations, currentUserId }: Messagi
 
   const handleSelectConversation = useCallback((conversationId: string) => {
     setActiveConversationId(conversationId)
+    // Optimistically update local state to clear unread badge immediately
+    setConversations(prev => prev.map(conv =>
+      conv.id === conversationId ? { ...conv, unreadCount: 0 } : conv
+    ))
     markConversationRead(conversationId).catch(console.error)
   }, [])
 
-  // Global realtime subscription for new conversations only
+  // Global realtime subscription for conversations and messages
   useEffect(() => {
     console.log('[Staff Messages] Setting up realtime subscription')
-    
+
     const channel = supabase
       .channel('staff_conversations_all')
-      .on('postgres_changes', { 
-        event: 'INSERT', 
-        schema: 'public', 
-        table: 'conversations' 
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'conversations'
       }, () => {
         console.log('[Realtime] New conversation created, refreshing list')
-        // Only refresh when a NEW conversation is created
         void fetchConversationsClient({ ...filters, includeMessages: true, limit: 50 })
           .then(({ conversations: data }) => {
             setConversations(data)
           })
           .catch(console.error)
+      })
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'messages'
+      }, (payload) => {
+        // Refresh conversation list when new messages arrive in non-active conversations
+        // This updates preview text, timestamps, and unread counts
+        const messageConvId = (payload.new as { conversation_id?: string })?.conversation_id
+        if (messageConvId && messageConvId !== activeConversationIdRef.current) {
+          console.log('[Realtime] New message in background conversation, refreshing list')
+          void fetchConversationsClient({ ...filters, includeMessages: true, limit: 50 })
+            .then(({ conversations: data }) => {
+              setConversations(data)
+            })
+            .catch(console.error)
+        }
       })
       .subscribe((status) => {
         console.log('[Realtime] Subscription status:', status)

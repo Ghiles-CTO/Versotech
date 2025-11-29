@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { MessageCircle, Loader2 } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 
 interface AskQuestionButtonProps {
@@ -22,20 +21,14 @@ export function AskQuestionButton({ dealId, dealName, className }: AskQuestionBu
     setError(null)
 
     try {
-      const supabase = createClient()
-
-      // Get Super Admin user IDs
-      const { data: adminProfiles, error: adminError } = await supabase
-        .from('profiles')
-        .select('id, display_name')
-        .eq('role', 'staff_admin')
-        .limit(1)
-
-      if (adminError || !adminProfiles || adminProfiles.length === 0) {
-        throw new Error('Unable to find support team member')
+      // Get default support staff via API (bypasses RLS - investors can't see staff profiles)
+      const staffResponse = await fetch('/api/support/default-staff')
+      if (!staffResponse.ok) {
+        const staffError = await staffResponse.json().catch(() => ({}))
+        throw new Error(staffError.error || 'Unable to find support team member')
       }
 
-      const adminId = adminProfiles[0].id
+      const { staff_id: adminId } = await staffResponse.json()
 
       // Create conversation
       const response = await fetch('/api/conversations', {

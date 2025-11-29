@@ -222,6 +222,7 @@ export async function GET(request: NextRequest) {
 
     // Parse query parameters
     const status = searchParams.get('status') || 'pending'
+    const statuses = status.split(',').filter(Boolean)
     const entityType = searchParams.get('entity_type')
     const entityTypes = searchParams.get('entity_types')?.split(',').filter(Boolean) || []
     const assignedTo = searchParams.get('assigned_to')
@@ -230,6 +231,7 @@ export async function GET(request: NextRequest) {
     const relatedDealId = searchParams.get('related_deal_id')
     const relatedInvestorId = searchParams.get('related_investor_id')
     const overdueOnly = searchParams.get('overdue_only') === 'true'
+    const decidedAfter = searchParams.get('decided_after') // For limiting historical approved/rejected
     const limit = parseInt(searchParams.get('limit') || '50', 10)
     const offset = parseInt(searchParams.get('offset') || '0', 10)
 
@@ -270,7 +272,20 @@ export async function GET(request: NextRequest) {
           type
         )
       `)
-      .eq('status', status)
+
+    // Support multiple statuses: status=pending,approved,rejected
+    if (statuses.length > 1 && decidedAfter) {
+      // Kanban view: Pending (all) OR (approved/rejected with resolved_at >= 30 days)
+      query = query.or(
+        `status.eq.pending,and(status.in.(approved,rejected),resolved_at.gte.${decidedAfter})`
+      )
+    } else if (statuses.length > 1) {
+      // Multiple statuses without date filter
+      query = query.in('status', statuses)
+    } else {
+      // Single status (default: pending)
+      query = query.eq('status', statuses[0])
+    }
 
     // Apply filters
     if (entityType) {
@@ -304,7 +319,17 @@ export async function GET(request: NextRequest) {
     let countQuery = serviceSupabase
       .from('approvals')
       .select('*', { count: 'exact', head: true })
-      .eq('status', status)
+
+    // Apply same multi-status logic to count query
+    if (statuses.length > 1 && decidedAfter) {
+      countQuery = countQuery.or(
+        `status.eq.pending,and(status.in.(approved,rejected),resolved_at.gte.${decidedAfter})`
+      )
+    } else if (statuses.length > 1) {
+      countQuery = countQuery.in('status', statuses)
+    } else {
+      countQuery = countQuery.eq('status', statuses[0])
+    }
     
     // Apply same filters to count query
     if (entityType) countQuery = countQuery.eq('entity_type', entityType)

@@ -17,7 +17,11 @@ async function fetchApprovalData(): Promise<{
     // Use service client to bypass RLS for staff users
     const supabase = createServiceClient()
 
-    // Fetch approvals with comprehensive joins
+    // Calculate 30-day cutoff for historical approved/rejected items
+    const thirtyDaysAgo = new Date()
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+
+    // Fetch all statuses for Kanban view support (pending + recent approved/rejected)
     const { data: approvals, error: approvalsError } = await supabase
       .from('approvals')
       .select(`
@@ -54,7 +58,8 @@ async function fetchApprovalData(): Promise<{
           type
         )
       `)
-      .eq('status', 'pending')
+      // Kanban view: Pending (all) OR (approved/rejected with resolved_at >= 30 days)
+      .or(`status.eq.pending,and(status.in.(approved,rejected),resolved_at.gte.${thirtyDaysAgo.toISOString()})`)
       .order('sla_breach_at', { ascending: true, nullsFirst: false })
       .order('created_at', { ascending: false })
 
@@ -63,7 +68,7 @@ async function fetchApprovalData(): Promise<{
       return getEmptyData()
     }
 
-    console.log(`[Approvals] Fetched ${approvals?.length || 0} pending approvals`)
+    console.log(`[Approvals] Fetched ${approvals?.length || 0} approvals (pending + recent approved/rejected)`)
 
     // Get statistics using RPC function
     const { data: statsData, error: statsError } = await supabase

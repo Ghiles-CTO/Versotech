@@ -682,6 +682,15 @@ async function handleEntityApproval(
               .eq('is_active', true)
               .single()
 
+            // Fetch fee structure BEFORE creating subscription to copy fee fields
+            // This ensures the subscription record has the correct fee percentages for fee event calculation
+            const { data: feeStructureForSub } = await supabase
+              .from('deal_fee_structures')
+              .select('subscription_fee_percent, management_fee_percent, carried_interest_percent')
+              .eq('deal_id', submission.deal_id)
+              .eq('status', 'published')
+              .maybeSingle()
+
             const { data: newSubscription, error: createSubError } = await supabase
               .from('subscriptions')
               .insert({
@@ -694,7 +703,11 @@ async function handleEntityApproval(
                 status: 'pending',
                 subscription_date: new Date().toISOString(),
                 effective_date: submission.effective_date || new Date().toISOString(),
-                acknowledgement_notes: `Approved from submission ${submission.id}. Awaiting subscription pack signature.`
+                acknowledgement_notes: `Approved from submission ${submission.id}. Awaiting subscription pack signature.`,
+                // Copy fee fields from deal_fee_structures for fee event calculation
+                subscription_fee_percent: feeStructureForSub?.subscription_fee_percent ?? null,
+                management_fee_percent: feeStructureForSub?.management_fee_percent ?? null,
+                performance_fee_tier1_percent: feeStructureForSub?.carried_interest_percent ?? null,
               })
               .select()
               .single()
