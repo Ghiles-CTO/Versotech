@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { CheckCircle, XCircle, Clock, AlertCircle, FileText, Download, Eye } from 'lucide-react'
+import { CheckCircle, XCircle, Clock, AlertCircle, FileText, Download, Eye, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -33,6 +33,7 @@ import {
 } from '@/components/ui/table'
 import { toast } from 'sonner'
 import { DocumentViewer } from '@/components/documents/document-viewer'
+import { QuestionnaireViewer } from '@/components/kyc/questionnaire-viewer'
 import { getDocumentTypeLabel } from '@/constants/kyc-document-types'
 
 interface KYCSubmission {
@@ -81,13 +82,25 @@ interface Statistics {
   expired: number
 }
 
+interface Pagination {
+  page: number
+  pageSize: number
+  totalCount: number
+  totalPages: number
+  hasNextPage: boolean
+  hasPrevPage: boolean
+}
+
 export function KYCReviewClient() {
   const [submissions, setSubmissions] = useState<KYCSubmission[]>([])
   const [statistics, setStatistics] = useState<Statistics | null>(null)
+  const [pagination, setPagination] = useState<Pagination | null>(null)
   const [loading, setLoading] = useState(true)
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [documentTypeFilter, setDocumentTypeFilter] = useState<string>('all')
   const [searchQuery, setSearchQuery] = useState('')
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(25)
 
   // Review dialog state
   const [reviewDialogOpen, setReviewDialogOpen] = useState(false)
@@ -112,6 +125,8 @@ export function KYCReviewClient() {
       const params = new URLSearchParams()
       if (statusFilter !== 'all') params.append('status', statusFilter)
       if (documentTypeFilter !== 'all') params.append('document_type', documentTypeFilter)
+      params.append('page', String(page))
+      params.append('pageSize', String(pageSize))
 
       const response = await fetch(`/api/staff/kyc-submissions?${params.toString()}`)
 
@@ -124,6 +139,7 @@ export function KYCReviewClient() {
       const data = await response.json()
       setSubmissions(data.submissions || [])
       setStatistics(data.statistics || null)
+      setPagination(data.pagination || null)
     } catch (error: any) {
       console.error('Error loading submissions:', error)
       toast.error('Failed to load KYC submissions', {
@@ -132,6 +148,11 @@ export function KYCReviewClient() {
     } finally {
       setLoading(false)
     }
+  }, [statusFilter, documentTypeFilter, page, pageSize])
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setPage(1)
   }, [statusFilter, documentTypeFilter])
 
   useEffect(() => {
@@ -487,6 +508,79 @@ export function KYCReviewClient() {
               )}
             </TableBody>
           </Table>
+
+          {/* Pagination Controls */}
+          {pagination && pagination.totalPages > 1 && (
+            <div className="flex items-center justify-between px-2 py-4 border-t">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <span>
+                  Showing {((pagination.page - 1) * pagination.pageSize) + 1} to{' '}
+                  {Math.min(pagination.page * pagination.pageSize, pagination.totalCount)} of{' '}
+                  {pagination.totalCount} submissions
+                </span>
+                <Select
+                  value={String(pageSize)}
+                  onValueChange={(value) => {
+                    setPageSize(Number(value))
+                    setPage(1)
+                  }}
+                >
+                  <SelectTrigger className="h-8 w-[70px]">
+                    <SelectValue placeholder={pageSize} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="10">10</SelectItem>
+                    <SelectItem value="25">25</SelectItem>
+                    <SelectItem value="50">50</SelectItem>
+                    <SelectItem value="100">100</SelectItem>
+                  </SelectContent>
+                </Select>
+                <span>per page</span>
+              </div>
+
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => setPage(1)}
+                  disabled={!pagination.hasPrevPage}
+                >
+                  <ChevronsLeft className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => setPage(page - 1)}
+                  disabled={!pagination.hasPrevPage}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <span className="flex items-center gap-1 px-2 text-sm">
+                  Page {pagination.page} of {pagination.totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => setPage(page + 1)}
+                  disabled={!pagination.hasNextPage}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => setPage(pagination.totalPages)}
+                  disabled={!pagination.hasNextPage}
+                >
+                  <ChevronsRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -571,33 +665,15 @@ export function KYCReviewClient() {
       )}
 
       {/* Questionnaire Viewer */}
-      <Dialog open={!!viewingQuestionnaire} onOpenChange={(open) => !open && setViewingQuestionnaire(null)}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Questionnaire Answers</DialogTitle>
-            <DialogDescription>
-              Submitted by {viewingQuestionnaire?.investor?.display_name} on {viewingQuestionnaire && new Date(viewingQuestionnaire.submitted_at).toLocaleDateString()}
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-6 py-4">
-            {viewingQuestionnaire?.metadata && Object.entries(viewingQuestionnaire.metadata).map(([key, value]) => (
-              <div key={key} className="space-y-1">
-                <h4 className="text-sm font-medium text-muted-foreground capitalize">
-                  {key.replace(/([A-Z])/g, ' $1').trim()}
-                </h4>
-                <p className="text-sm text-foreground bg-muted p-3 rounded-md">
-                  {String(value)}
-                </p>
-              </div>
-            ))}
-          </div>
-
-          <DialogFooter>
-            <Button onClick={() => setViewingQuestionnaire(null)}>Close</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {viewingQuestionnaire && (
+        <QuestionnaireViewer
+          open={!!viewingQuestionnaire}
+          onClose={() => setViewingQuestionnaire(null)}
+          investorName={viewingQuestionnaire.investor?.display_name || viewingQuestionnaire.investor?.legal_name || 'Unknown'}
+          submittedAt={viewingQuestionnaire.submitted_at}
+          metadata={viewingQuestionnaire.metadata || {}}
+        />
+      )}
     </div>
   )
 }

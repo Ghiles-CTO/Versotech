@@ -28,13 +28,19 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Get query parameters for filtering
+    // Get query parameters for filtering and pagination
     const { searchParams } = new URL(request.url)
     const status = searchParams.get('status')
     const investorId = searchParams.get('investor_id')
     const documentType = searchParams.get('document_type')
+    const page = parseInt(searchParams.get('page') || '1')
+    const pageSize = parseInt(searchParams.get('pageSize') || '25')
 
-    // Build query with proper table aliases
+    // Calculate range for pagination
+    const from = (page - 1) * pageSize
+    const to = from + pageSize - 1
+
+    // Build query with proper table aliases and get count
     let query = supabase
       .from('kyc_submissions')
       .select(`
@@ -65,8 +71,9 @@ export async function GET(request: NextRequest) {
           display_name,
           email
         )
-      `)
+      `, { count: 'exact' })
       .order('submitted_at', { ascending: false })
+      .range(from, to)
 
     // Apply filters
     if (status) {
@@ -79,7 +86,7 @@ export async function GET(request: NextRequest) {
       query = query.eq('document_type', documentType)
     }
 
-    const { data: submissions, error: submissionsError } = await query
+    const { data: submissions, count, error: submissionsError } = await query
 
     if (submissionsError) {
       console.error('Error fetching submissions:', submissionsError)
@@ -89,24 +96,44 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Get submission statistics
-    const { data: stats } = await supabase
+    // Get submission statistics using aggregation (more efficient)
+    const { data: statsData } = await supabase
       .from('kyc_submissions')
       .select('status')
 
-    const statistics = {
-      total: stats?.length || 0,
-      pending: stats?.filter(s => s.status === 'pending').length || 0,
-      under_review: stats?.filter(s => s.status === 'under_review').length || 0,
-      approved: stats?.filter(s => s.status === 'approved').length || 0,
-      rejected: stats?.filter(s => s.status === 'rejected').length || 0,
-      expired: stats?.filter(s => s.status === 'expired').length || 0
+    // Count by status in memory (Supabase doesn't have built-in GROUP BY in JS client)
+    const statusCounts: Record<string, number> = {}
+    if (statsData) {
+      for (const row of statsData) {
+        statusCounts[row.status] = (statusCounts[row.status] || 0) + 1
+      }
     }
+
+    const statistics = {
+      total: statsData?.length || 0,
+      pending: statusCounts['pending'] || 0,
+      under_review: statusCounts['under_review'] || 0,
+      approved: statusCounts['approved'] || 0,
+      rejected: statusCounts['rejected'] || 0,
+      expired: statusCounts['expired'] || 0
+    }
+
+    // Calculate pagination info
+    const totalCount = count || 0
+    const totalPages = Math.ceil(totalCount / pageSize)
 
     return NextResponse.json({
       success: true,
       submissions: submissions || [],
-      statistics
+      statistics,
+      pagination: {
+        page,
+        pageSize,
+        totalCount,
+        totalPages,
+        hasNextPage: page < totalPages,
+        hasPrevPage: page > 1
+      }
     })
 
   } catch (error) {
