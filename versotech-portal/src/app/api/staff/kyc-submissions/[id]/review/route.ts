@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { createInvestorNotification, getInvestorPrimaryUserId } from '@/lib/notifications'
 
 interface ReviewBody {
   action: 'approve' | 'reject'
@@ -151,8 +152,44 @@ export async function POST(
       }
     })
 
-    // TODO: Send notification to investor
-    // This would integrate with messaging system or email notifications
+    // Send notification to investor
+    try {
+      const investorUserId = await getInvestorPrimaryUserId(submission.investor.id)
+      if (investorUserId) {
+        const investorName = submission.investor.display_name || submission.investor.legal_name || 'Investor'
+
+        if (action === 'approve') {
+          await createInvestorNotification({
+            userId: investorUserId,
+            investorId: submission.investor.id,
+            title: 'KYC Documents Approved',
+            message: 'Your KYC documents have been reviewed and approved. Thank you for completing your verification.',
+            link: '/versoholdings/documents',
+            type: 'kyc_status',
+            extraMetadata: {
+              submission_id: submissionId,
+              document_type: submission.document_type
+            }
+          })
+        } else {
+          await createInvestorNotification({
+            userId: investorUserId,
+            investorId: submission.investor.id,
+            title: 'KYC Submission Requires Attention',
+            message: `Your ${submission.document_type.replace(/_/g, ' ')} submission requires attention. Please review and resubmit.`,
+            link: '/versoholdings/documents',
+            type: 'kyc_status',
+            extraMetadata: {
+              submission_id: submissionId,
+              document_type: submission.document_type,
+              rejection_reason: rejection_reason
+            }
+          })
+        }
+      }
+    } catch (notificationError) {
+      console.error('[kyc-review] Failed to send notification:', notificationError)
+    }
 
     return NextResponse.json({
       success: true,
@@ -188,19 +225,24 @@ async function checkAndUpdateInvestorKYCStatus(
 
     if (!investor) return
 
-    // Define required document types
+    // Define required document types (must match kyc-document-types.ts)
     const baseRequiredDocs = [
-      'government_id',
-      'proof_of_address',
-      'accreditation_letter'
+      'passport_id',
+      'utility_bill'
     ]
 
     const entityRequiredDocs = [
-      'entity_formation_docs',
-      'beneficial_ownership'
+      'nda_ndnc',
+      'incorporation_certificate',
+      'memo_articles',
+      'register_members',
+      'register_directors',
+      'bank_confirmation'
     ]
 
-    const requiredDocs = investor.type === 'corporate'
+    // Entity and institution investors need entity docs
+    const isEntityType = investor.type === 'entity' || investor.type === 'institution'
+    const requiredDocs = isEntityType
       ? [...baseRequiredDocs, ...entityRequiredDocs]
       : baseRequiredDocs
 
@@ -225,7 +267,7 @@ async function checkAndUpdateInvestorKYCStatus(
         .from('investors')
         .update({
           kyc_status: 'approved',
-          kyc_approved_at: new Date().toISOString()
+          kyc_completed_at: new Date().toISOString()
         })
         .eq('id', investorId)
     }
@@ -247,13 +289,20 @@ async function autoCompleteRelatedTasks(
 ) {
   try {
     // Find tasks related to this document type for this investor
-    const taskTitlePatterns = {
-      government_id: 'Upload Government ID',
-      proof_of_address: 'Upload Proof of Address',
-      accreditation_letter: 'Upload Accreditation Letter',
-      bank_statement: 'Upload Bank Statement',
-      entity_formation_docs: 'Upload Entity Formation Documents',
-      beneficial_ownership: 'Upload Beneficial Ownership Information'
+    // Task titles must match how tasks are created in the system
+    const taskTitlePatterns: Record<string, string> = {
+      // Individual documents
+      passport_id: 'Upload ID',
+      utility_bill: 'Upload Utility Bill',
+      // Entity documents
+      nda_ndnc: 'Upload NDA',
+      incorporation_certificate: 'Upload Incorporation',
+      memo_articles: 'Upload Memo',
+      register_members: 'Upload Register of Members',
+      register_directors: 'Upload Register of Directors',
+      bank_confirmation: 'Upload Bank Confirmation',
+      // Catch-all for other types
+      other: 'Upload Document'
     }
 
     const taskTitle = taskTitlePatterns[documentType as keyof typeof taskTitlePatterns]

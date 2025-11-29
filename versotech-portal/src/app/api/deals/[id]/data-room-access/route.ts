@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { auditLogger, AuditActions, AuditEntities } from '@/lib/audit'
+import { createInvestorNotification, getInvestorPrimaryUserId } from '@/lib/notifications'
 
 const createOrUpdateAccessSchema = z.object({
   investor_id: z.string().uuid(),
@@ -190,6 +191,37 @@ export async function POST(
       auto_granted
     }
   })
+
+  // Send notification to investor about data room access
+  try {
+    const investorUserId = await getInvestorPrimaryUserId(investor_id)
+    if (investorUserId) {
+      // Get deal name for notification
+      const { data: deal } = await serviceSupabase
+        .from('deals')
+        .select('name')
+        .eq('id', dealId)
+        .single()
+
+      const dealName = deal?.name || 'a deal'
+
+      await createInvestorNotification({
+        userId: investorUserId,
+        investorId: investor_id,
+        title: 'Data Room Access Granted',
+        message: `You have been granted access to the data room for ${dealName}. Review the deal documents now.`,
+        link: `/versoholdings/deals/${dealId}`,
+        type: 'deal_access',
+        extraMetadata: {
+          deal_id: dealId,
+          access_id: accessRecord.id,
+          expires_at: accessRecord.expires_at
+        }
+      })
+    }
+  } catch (notificationError) {
+    console.error('[data-room-access] Failed to send notification:', notificationError)
+  }
 
   return NextResponse.json({
     success: true,

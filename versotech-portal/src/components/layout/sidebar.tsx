@@ -52,6 +52,9 @@ interface NotificationCounts {
   requests: number
   approvals: number
   notifications: number
+  signatures: number
+  reconciliation: number
+  fees: number
   totalUnread: number
 }
 
@@ -196,6 +199,7 @@ const staffNavItems: SidebarItem[] = [
     name: 'VersoSign',
     href: '/versotech/staff/versosign',
     icon: FileSignature,
+    notificationKey: 'signatures',
     description: 'E-signatures'
   },
   {
@@ -214,12 +218,14 @@ const staffNavItems: SidebarItem[] = [
     name: 'Fees',
     href: '/versotech/staff/fees',
     icon: Calculator,
+    notificationKey: 'fees',
     description: 'Billing'
   },
   {
     name: 'Reconciliation',
     href: '/versotech/staff/reconciliation',
     icon: CreditCard,
+    notificationKey: 'reconciliation',
     description: 'Payments'
   },
   {

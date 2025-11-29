@@ -19,6 +19,18 @@
     {
       "path": "/api/cron/data-room-expiry-warnings",
       "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/cron/fees/generate-scheduled",
+      "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/cron/publish-documents",
+      "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/cron/unpublish-documents",
+      "schedule": "0 * * * *"
     }
   ]
 }

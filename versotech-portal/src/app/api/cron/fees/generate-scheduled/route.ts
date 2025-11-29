@@ -6,13 +6,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
 
-export async function POST(request: NextRequest) {
+export const dynamic = 'force-dynamic'
+
+async function handleCronRequest(request: NextRequest) {
+  // Verify cron authorization
+  const authHeader = request.headers.get('authorization')
+  const cronSecret = process.env.CRON_SECRET || process.env.VERCEL_CRON_SECRET
+
+  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   try {
-    // Verify cron secret (if configured)
-    const authHeader = request.headers.get('authorization');
-    if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
 
     const supabase = createServiceClient();
     const today = new Date().toISOString().split('T')[0];
@@ -136,4 +141,13 @@ export async function POST(request: NextRequest) {
     console.error('Error in generate-scheduled cron:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
+}
+
+// Vercel cron uses GET requests
+export async function GET(request: NextRequest) {
+  return handleCronRequest(request)
+}
+
+export async function POST(request: NextRequest) {
+  return handleCronRequest(request)
 }

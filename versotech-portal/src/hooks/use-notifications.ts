@@ -10,6 +10,9 @@ interface NotificationCounts {
   requests: number
   approvals: number
   notifications: number
+  signatures: number
+  reconciliation: number
+  fees: number
   totalUnread: number
 }
 
@@ -20,6 +23,9 @@ const INITIAL_COUNTS: NotificationCounts = {
   requests: 0,
   approvals: 0,
   notifications: 0,
+  signatures: 0,
+  reconciliation: 0,
+  fees: 0,
   totalUnread: 0
 }
 

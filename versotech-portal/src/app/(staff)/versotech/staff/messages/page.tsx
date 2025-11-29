@@ -28,7 +28,8 @@ export default async function StaffMessages() {
           id,
           display_name,
           email,
-          role
+          role,
+          avatar_url
         )
       ),
       messages (
@@ -47,7 +48,8 @@ export default async function StaffMessages() {
           id,
           display_name,
           email,
-          role
+          role,
+          avatar_url
         )
       )
     `)

@@ -1,7 +1,8 @@
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { auditLogger, AuditActions } from '@/lib/audit'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
+import { createInvestorNotification } from '@/lib/notifications'
 
 const createCapitalCallSchema = z.object({
   vehicle_id: z.string().uuid(),
@@ -102,6 +103,59 @@ export async function POST(request: Request) {
         status: data.status
       }
     })
+
+    // Notify investors if capital call is not a draft
+    if (data.status !== 'draft') {
+      try {
+        const serviceSupabase = createServiceClient()
+
+        // Get all investors subscribed to this vehicle
+        const { data: subscriptions } = await serviceSupabase
+          .from('subscriptions')
+          .select(`
+            investor_id,
+            investor_users:investor_id (
+              user_id
+            )
+          `)
+          .eq('vehicle_id', data.vehicle_id)
+          .not('investor_id', 'is', null)
+
+        if (subscriptions && subscriptions.length > 0) {
+          const dueDate = new Date(data.due_date).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          })
+
+          // Create notifications for each investor
+          for (const subscription of subscriptions) {
+            const investorUsers = subscription.investor_users as any[]
+            const userId = investorUsers?.[0]?.user_id
+
+            if (userId) {
+              await createInvestorNotification({
+                userId,
+                investorId: subscription.investor_id,
+                title: 'Capital Call Issued',
+                message: `A capital call for ${vehicle.name} has been issued. Amount: ${data.call_pct}% of commitment. Due: ${dueDate}.`,
+                link: '/versoholdings/tasks',
+                type: 'capital_call',
+                extraMetadata: {
+                  capital_call_id: capitalCall.id,
+                  vehicle_id: data.vehicle_id,
+                  vehicle_name: vehicle.name,
+                  call_pct: data.call_pct,
+                  due_date: data.due_date
+                }
+              })
+            }
+          }
+        }
+      } catch (notificationError) {
+        console.error('[capital-calls] Failed to send notifications:', notificationError)
+      }
+    }
 
     return NextResponse.json({
       success: true,

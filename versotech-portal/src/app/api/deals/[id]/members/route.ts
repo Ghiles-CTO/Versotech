@@ -3,6 +3,7 @@ import { auditLogger, AuditActions } from '@/lib/audit'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { getAuthenticatedUser, isStaffUser } from '@/lib/api-auth'
+import { createInvestorNotification } from '@/lib/notifications'
 
 const addMemberSchema = z.object({
   user_id: z.string().uuid().optional(),
@@ -203,7 +204,35 @@ export async function POST(
       )
     }
 
-    // TODO: Send notification email if send_notification is true
+    // Send notification if requested
+    if (validatedData.send_notification && resolvedUserId) {
+      try {
+        // Get deal name for notification
+        const { data: deal } = await supabase
+          .from('deals')
+          .select('name')
+          .eq('id', dealId)
+          .single()
+
+        const dealName = deal?.name || 'a deal'
+
+        await createInvestorNotification({
+          userId: resolvedUserId,
+          investorId: resolvedInvestorId ?? undefined,
+          title: 'Deal Invitation',
+          message: `You've been invited to view ${dealName}. Review the deal details and data room.`,
+          link: `/versoholdings/deals/${dealId}`,
+          type: 'deal_invite',
+          extraMetadata: {
+            deal_id: dealId,
+            role: validatedData.role,
+            invited_by: user.id
+          }
+        })
+      } catch (notificationError) {
+        console.error('[deal-members] Failed to send notification:', notificationError)
+      }
+    }
 
     // Audit log
     await auditLogger.log({

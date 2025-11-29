@@ -183,9 +183,18 @@ export async function GET() {
 
     let requestCount = 0
     let approvalCount = 0
+    let signaturesCount = 0
+    let reconciliationCount = 0
+    let feesCount = 0
 
     if (userRole.startsWith('staff_')) {
-      const [requestsResult, approvalsResult] = await Promise.all([
+      const [
+        requestsResult,
+        approvalsResult,
+        signaturesResult,
+        reconciliationResult,
+        feesResult
+      ] = await Promise.all([
         serviceSupabase
           .from('request_tickets')
           .select('id', { count: 'exact', head: true })
@@ -193,7 +202,24 @@ export async function GET() {
         serviceSupabase
           .from('approvals')
           .select('id', { count: 'exact', head: true })
-          .in('status', APPROVAL_STATUSES)
+          .in('status', APPROVAL_STATUSES),
+        // Signatures: pending signature tasks (countersignature + subscription_pack_signature)
+        // Note: VersoSign uses the tasks table, not signature_requests (which doesn't exist)
+        serviceSupabase
+          .from('tasks')
+          .select('id', { count: 'exact', head: true })
+          .in('kind', ['countersignature', 'subscription_pack_signature'])
+          .in('status', ['pending', 'in_progress']),
+        // Reconciliation: unmatched bank transactions
+        serviceSupabase
+          .from('bank_transactions')
+          .select('id', { count: 'exact', head: true })
+          .eq('status', 'unmatched'),
+        // Fees: overdue invoices
+        serviceSupabase
+          .from('invoices')
+          .select('id', { count: 'exact', head: true })
+          .eq('status', 'overdue')
       ])
 
       if (requestsResult.error) {
@@ -206,6 +232,24 @@ export async function GET() {
         console.error('[notifications/counts] Approval count error:', approvalsResult.error)
       } else {
         approvalCount = approvalsResult.count ?? 0
+      }
+
+      if (signaturesResult.error) {
+        console.error('[notifications/counts] Signatures count error:', signaturesResult.error)
+      } else {
+        signaturesCount = signaturesResult.count ?? 0
+      }
+
+      if (reconciliationResult.error) {
+        console.error('[notifications/counts] Reconciliation count error:', reconciliationResult.error)
+      } else {
+        reconciliationCount = reconciliationResult.count ?? 0
+      }
+
+      if (feesResult.error) {
+        console.error('[notifications/counts] Fees count error:', feesResult.error)
+      } else {
+        feesCount = feesResult.count ?? 0
       }
     }
 
@@ -222,6 +266,9 @@ export async function GET() {
         requests: requestCount,
         approvals: approvalCount,
         notifications: notificationCount,
+        signatures: signaturesCount,
+        reconciliation: reconciliationCount,
+        fees: feesCount,
         totalUnread
       },
       meta: {

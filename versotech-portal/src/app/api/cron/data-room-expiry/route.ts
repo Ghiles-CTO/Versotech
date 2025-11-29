@@ -114,7 +114,7 @@ export async function GET(request: NextRequest) {
             user_id: ownerUserId,
             investor_id: access.investor_id,
             title: 'Data room access expired',
-            message: `Your access to the data room for ${(access.deals as any)?.[0]?.name || 'the deal'} has expired. Contact the VERSO team if you need an extension.`,
+            message: `Your access to the data room for ${(access.deals as any)?.name || 'the deal'} has expired. Contact the VERSO team if you need an extension.`,
             link: `/versoholdings/data-rooms`,
             metadata: {
               type: 'data_room_expired',

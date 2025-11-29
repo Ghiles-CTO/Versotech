@@ -32,7 +32,8 @@ export async function GET(
           id,
           display_name,
           email,
-          role
+          role,
+          avatar_url
         )
       `)
       .eq('conversation_id', conversationId)
@@ -108,7 +109,8 @@ export async function POST(
           id,
           display_name,
           email,
-          role
+          role,
+          avatar_url
         )
       `)
       .single()
