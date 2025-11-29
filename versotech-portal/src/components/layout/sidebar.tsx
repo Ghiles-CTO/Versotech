@@ -361,7 +361,12 @@ export function Sidebar({ brand, userProfile }: SidebarProps) {
       {/* Navigation */}
       <div className="flex-1 overflow-y-auto scrollbar-hide px-3 py-2 space-y-1">
         {filteredNavItems.map((item) => {
-          const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`)
+          // Special case: dashboard paths that are base paths (e.g., /versotech/staff)
+          // should only match exactly, not all sub-paths
+          const isDashboard = item.name === 'Dashboard'
+          const isActive = isDashboard
+            ? pathname === item.href
+            : pathname === item.href || pathname.startsWith(`${item.href}/`)
           const Icon = item.icon
           const badgeCount = item.notificationKey && !notificationsLoading ? counts[item.notificationKey] : item.badge
 
