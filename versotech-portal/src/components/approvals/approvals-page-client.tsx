@@ -162,15 +162,13 @@ export function ApprovalsPageClient({
       // Build query params from filters
       const params = new URLSearchParams()
 
-      // When Kanban view is active, fetch all statuses (with 30-day limit for historical)
-      if (currentView === 'kanban') {
-        params.append('status', 'pending,approved,rejected')
-        const thirtyDaysAgo = new Date()
-        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
-        params.append('decided_after', thirtyDaysAgo.toISOString())
-      } else {
-        params.append('status', 'pending')
-      }
+      // ALWAYS fetch all statuses to ensure data consistency across views
+      // The visibleApprovals memo handles filtering for non-kanban views
+      // This prevents data loss when user applies filter in table then switches to kanban
+      params.append('status', 'pending,approved,rejected')
+      const thirtyDaysAgo = new Date()
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+      params.append('decided_after', thirtyDaysAgo.toISOString())
 
       params.append('limit', pagination.limit.toString())
       params.append('offset', ((pagination.page - 1) * pagination.limit).toString())
@@ -204,7 +202,7 @@ export function ApprovalsPageClient({
     } finally {
       setIsLoading(false)
     }
-  }, [filters, pagination.page, pagination.limit, currentView, initialStats, initialCounts])
+  }, [filters, pagination.page, pagination.limit, initialStats, initialCounts])
 
   // Handle approve button click
   const handleApproveClick = (approval: Approval) => {
@@ -272,18 +270,19 @@ export function ApprovalsPageClient({
     }
   }
 
-  // Refresh when filters, pagination, or view change
+  // Refresh when filters or pagination change
+  // Note: currentView is intentionally NOT included - server provides complete data
+  // for all views, so we don't need to refetch when switching views. User can
+  // manually refresh if needed via the Refresh button.
   useEffect(() => {
     // Skip initial mount - we already have correct server data from initialApprovals
-    // This prevents the race condition where the table-view API call overwrites
-    // the complete dataset before localStorage view preference loads
     if (isInitialMount) {
       setIsInitialMount(false)
       return
     }
     refreshData()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters.entity_types, filters.priorities, filters.assigned_to_me, filters.overdue_only, pagination.page, currentView])
+  }, [filters.entity_types, filters.priorities, filters.assigned_to_me, filters.overdue_only, pagination.page])
 
   // Bulk selection handlers
   const toggleSelection = (id: string) => {
