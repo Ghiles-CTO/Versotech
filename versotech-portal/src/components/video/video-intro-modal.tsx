@@ -66,7 +66,7 @@ export function VideoIntroModal({ open, videoUrl, onComplete }: VideoIntroModalP
   return (
     <Dialog open={open} onOpenChange={() => {}}>
       <DialogContent
-        className="max-w-[95vw] w-[1600px] max-h-[95vh] p-0 overflow-hidden bg-slate-900 border-slate-700"
+        className="!max-w-[95vw] !w-[1600px] max-h-[95vh] p-0 overflow-hidden bg-slate-900 border-slate-700"
         showCloseButton={false}
         onPointerDownOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={(e) => e.preventDefault()}
