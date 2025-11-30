@@ -24,7 +24,6 @@ export function VideoIntroModal({ open, videoUrl, onComplete }: VideoIntroModalP
   const [hasError, setHasError] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  // Reset state when modal opens
   useEffect(() => {
     if (open) {
       setVideoEnded(false)
@@ -32,25 +31,6 @@ export function VideoIntroModal({ open, videoUrl, onComplete }: VideoIntroModalP
       setHasError(false)
     }
   }, [open])
-
-  const handleVideoEnded = () => {
-    setVideoEnded(true)
-  }
-
-  const handleVideoLoaded = () => {
-    setIsLoading(false)
-  }
-
-  const handleVideoError = () => {
-    setIsLoading(false)
-    setHasError(true)
-  }
-
-  const handleRetry = () => {
-    setHasError(false)
-    setIsLoading(true)
-    videoRef.current?.load()
-  }
 
   const handleContinue = async () => {
     setIsSubmitting(true)
@@ -66,7 +46,7 @@ export function VideoIntroModal({ open, videoUrl, onComplete }: VideoIntroModalP
   return (
     <Dialog open={open} onOpenChange={() => {}}>
       <DialogContent
-        className="!max-w-[95vw] !w-[1600px] !h-[90vh] p-0 overflow-hidden bg-slate-900 border-slate-700"
+        className="!max-w-[95vw] !w-[1600px] !h-[90vh] !max-h-[90vh] p-0 overflow-hidden bg-slate-900 border-slate-700"
         showCloseButton={false}
         onPointerDownOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={(e) => e.preventDefault()}
@@ -81,22 +61,22 @@ export function VideoIntroModal({ open, videoUrl, onComplete }: VideoIntroModalP
             </DialogDescription>
           </DialogHeader>
 
-          {/* Video Container - fills available space */}
-          <div className="relative flex-1 min-h-0">
+          {/* Video Container - overflow-hidden and absolute video */}
+          <div className="relative flex-1 min-h-0 overflow-hidden">
             {isLoading && (
-              <div className="absolute inset-0 flex items-center justify-center bg-slate-900">
+              <div className="absolute inset-0 flex items-center justify-center bg-slate-900 z-10">
                 <Loader2 className="h-12 w-12 animate-spin text-white" />
               </div>
             )}
 
             {hasError ? (
-              <div className="absolute inset-0 flex items-center justify-center bg-slate-900 text-white">
+              <div className="absolute inset-0 flex items-center justify-center bg-slate-900 text-white z-10">
                 <div className="text-center p-8">
                   <p className="text-lg font-medium mb-2">Unable to load video</p>
                   <p className="text-sm text-slate-400 mb-4">
                     Please check your connection and try again.
                   </p>
-                  <Button variant="outline" onClick={handleRetry}>
+                  <Button variant="outline" onClick={() => { setHasError(false); setIsLoading(true); videoRef.current?.load() }}>
                     Retry
                   </Button>
                 </div>
@@ -104,11 +84,11 @@ export function VideoIntroModal({ open, videoUrl, onComplete }: VideoIntroModalP
             ) : (
               <video
                 ref={videoRef}
-                className="w-full h-full object-contain bg-slate-900"
+                className="absolute inset-0 w-full h-full object-contain bg-slate-900"
                 src={videoUrl}
-                onEnded={handleVideoEnded}
-                onLoadedData={handleVideoLoaded}
-                onError={handleVideoError}
+                onEnded={() => setVideoEnded(true)}
+                onLoadedData={() => setIsLoading(false)}
+                onError={() => { setIsLoading(false); setHasError(true) }}
                 autoPlay
                 playsInline
                 controls
@@ -118,6 +98,7 @@ export function VideoIntroModal({ open, videoUrl, onComplete }: VideoIntroModalP
             )}
           </div>
 
+          {/* Footer - ALWAYS visible */}
           <div className="p-6 pt-4 border-t border-slate-700 bg-slate-900 flex justify-end shrink-0">
             <Button
               size="lg"
