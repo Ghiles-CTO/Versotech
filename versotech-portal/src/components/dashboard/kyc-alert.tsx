@@ -14,10 +14,10 @@ export function KYCAlert({ status }: KYCAlertProps) {
 
     if (status === 'pending') {
         return (
-            <Alert className="border-amber-500/30 bg-amber-500/10 text-amber-200 mb-6">
-                <Clock className="h-4 w-4 text-amber-400" />
-                <AlertTitle className="text-amber-400">KYC Verification Pending</AlertTitle>
-                <AlertDescription>
+            <Alert className="border-amber-500/50 bg-amber-500/20 mb-6">
+                <Clock className="h-4 w-4 text-amber-500" />
+                <AlertTitle className="text-amber-500 font-semibold">KYC Verification Pending</AlertTitle>
+                <AlertDescription className="text-white/90">
                     Your KYC application is currently under review by our compliance team. We will notify you once the review is complete.
                 </AlertDescription>
             </Alert>

@@ -139,6 +139,12 @@ const staffNavItems: SidebarItem[] = [
     description: 'Overview'
   },
   {
+    name: 'Calendar',
+    href: '/versotech/staff/calendar',
+    icon: Calendar,
+    description: 'Schedule'
+  },
+  {
     name: 'Messages',
     href: '/versotech/staff/messages',
     icon: MessageSquare,
