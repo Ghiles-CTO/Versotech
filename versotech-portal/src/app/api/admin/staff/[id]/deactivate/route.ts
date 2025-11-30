@@ -1,17 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServiceClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const supabase = await createServiceClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    // Use regular client for authentication (reads cookies)
+    const authSupabase = await createClient()
+    const { data: { user } } = await authSupabase.auth.getUser()
 
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+
+    // Use service client for admin operations
+    const supabase = createServiceClient()
 
     // Check if user has super_admin or manage_staff permission
     const { data: permission } = await supabase
