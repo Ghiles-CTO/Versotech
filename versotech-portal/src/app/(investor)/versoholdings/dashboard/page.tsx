@@ -27,6 +27,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { VideoIntroWrapper } from './video-intro-wrapper'
 
 export const dynamic = 'force-dynamic'
 
@@ -602,6 +603,19 @@ export default async function InvestorDashboard() {
     getActionCenterData(user?.id ?? null, investorIds)
   ])
 
+  // Check if user has seen intro video
+  let showIntroVideo = false
+  if (user) {
+    const supabase = await createClient()
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('has_seen_intro_video')
+      .eq('id', user.id)
+      .single()
+    showIntroVideo = profile?.has_seen_intro_video === false
+  }
+  const videoUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/public-assets/videos/intro-video.mp4`
+
   const summaryTiles = [
     {
       label: 'Open opportunities',
@@ -623,7 +637,8 @@ export default async function InvestorDashboard() {
   const upcomingHighlights = buildUpcomingHighlights(featuredDeals, actionCenter.tasks)
 
   return (
-    <AppLayout brand="versoholdings">
+    <VideoIntroWrapper showIntroVideo={showIntroVideo} videoUrl={videoUrl}>
+      <AppLayout brand="versoholdings">
       <div className="space-y-12 px-6 pb-16 pt-10">
         <section className="rounded-3xl border border-slate-200/80 bg-white p-8 shadow-sm">
           <div className="grid gap-8 lg:grid-cols-[1.9fr,1fr]">
@@ -736,6 +751,7 @@ export default async function InvestorDashboard() {
 
         <VersoServicesCard />
       </div>
-    </AppLayout>
+      </AppLayout>
+    </VideoIntroWrapper>
   )
 }
