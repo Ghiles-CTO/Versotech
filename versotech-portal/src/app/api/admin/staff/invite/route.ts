@@ -9,6 +9,7 @@ const inviteStaffSchema = z.object({
   role: z.enum(['staff_admin', 'staff_ops', 'staff_rm']),
   display_name: z.string().min(2, 'Display name must be at least 2 characters'),
   title: z.string().optional(),
+  is_super_admin: z.boolean().optional().default(false),
 })
 
 export async function POST(request: NextRequest) {
@@ -105,7 +106,12 @@ export async function POST(request: NextRequest) {
       staff_rm: ['manage_investors', 'view_financials'],
     }
 
-    const permissions = defaultPermissions[validatedData.role]
+    const permissions = [...defaultPermissions[validatedData.role]]
+
+    // Add super_admin permission if requested
+    if (validatedData.is_super_admin) {
+      permissions.push('super_admin')
+    }
 
     if (permissions.length > 0) {
       await supabase
@@ -132,6 +138,7 @@ export async function POST(request: NextRequest) {
           email: validatedData.email,
           role: validatedData.role,
           display_name: validatedData.display_name,
+          is_super_admin: validatedData.is_super_admin,
         },
         timestamp: new Date().toISOString()
       })

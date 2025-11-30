@@ -13,6 +13,7 @@ export interface AuthUser {
   role: UserRole
   title?: string
   created_at: string
+  permissions?: string[]
 }
 
 // Alias for backward compatibility
@@ -82,6 +83,19 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
       return null
     }
 
+    // Fetch permissions for staff users
+    let permissions: string[] = []
+    const isStaffRole = ['staff_admin', 'staff_ops', 'staff_rm'].includes(profile.role)
+
+    if (isStaffRole) {
+      const { data: permissionsData } = await supabase
+        .from('staff_permissions')
+        .select('permission')
+        .eq('user_id', user.id)
+
+      permissions = permissionsData?.map(p => p.permission) || []
+    }
+
     return {
       id: profile.id,
       email: profile.email,
@@ -89,7 +103,8 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
       avatar: profile.avatar_url,
       role: profile.role as UserRole,
       title: profile.title,
-      created_at: profile.created_at
+      created_at: profile.created_at,
+      permissions
     }
   } catch (error) {
     console.error('Error getting current user:', error)

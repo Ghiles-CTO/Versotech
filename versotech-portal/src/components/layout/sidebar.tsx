@@ -43,6 +43,7 @@ interface SidebarItem {
   badge?: string | number
   description?: string
   notificationKey?: keyof NotificationCounts
+  requiredPermission?: string
 }
 
 interface NotificationCounts {
@@ -66,6 +67,7 @@ interface SidebarProps {
     role: string
     title?: string
     id?: string
+    permissions?: string[]
   }
 }
 
@@ -244,7 +246,8 @@ const staffNavItems: SidebarItem[] = [
     name: 'Admin',
     href: '/versotech/staff/admin',
     icon: Database,
-    description: 'System settings'
+    description: 'System settings',
+    requiredPermission: 'super_admin'
   }
 ]
 
@@ -257,8 +260,14 @@ export function Sidebar({ brand, userProfile }: SidebarProps) {
   // Fetch real notification counts
   const { counts, loading: notificationsLoading } = useNotifications(userProfile.role, userProfile.id)
 
-  const navItems = brand === 'versoholdings' ? investorNavItems : staffNavItems
+  const baseNavItems = brand === 'versoholdings' ? investorNavItems : staffNavItems
   const isDark = brand === 'versotech'
+
+  // Filter nav items based on required permissions
+  const navItems = baseNavItems.filter(item => {
+    if (!item.requiredPermission) return true
+    return userProfile.permissions?.includes(item.requiredPermission)
+  })
 
   // Handle sign out
   const handleSignOut = async (e: React.MouseEvent) => {

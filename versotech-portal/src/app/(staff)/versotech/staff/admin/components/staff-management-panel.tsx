@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/table'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   Select,
   SelectContent,
@@ -63,6 +64,7 @@ export function StaffManagementPanel({ staffMembers, onStaffUpdate }: StaffManag
     display_name: '',
     role: 'staff_ops',
     title: '',
+    is_super_admin: false,
   })
   const [loading, setLoading] = useState(false)
 
@@ -87,6 +89,7 @@ export function StaffManagementPanel({ staffMembers, onStaffUpdate }: StaffManag
           display_name: '',
           role: 'staff_ops',
           title: '',
+          is_super_admin: false,
         })
       }
     } catch (error) {
@@ -352,6 +355,27 @@ export function StaffManagementPanel({ staffMembers, onStaffUpdate }: StaffManag
                 value={inviteFormData.title}
                 onChange={(e) => setInviteFormData({ ...inviteFormData, title: e.target.value })}
               />
+            </div>
+            <div className="flex items-center space-x-2 pt-2 border-t">
+              <Checkbox
+                id="is_super_admin"
+                checked={inviteFormData.is_super_admin}
+                onCheckedChange={(checked) =>
+                  setInviteFormData({ ...inviteFormData, is_super_admin: checked === true })
+                }
+              />
+              <div className="grid gap-1.5 leading-none">
+                <Label
+                  htmlFor="is_super_admin"
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex items-center gap-2"
+                >
+                  <Shield className="h-4 w-4 text-amber-500" />
+                  Grant Super Admin Access
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  Super admins have full access to system settings and can manage all staff.
+                </p>
+              </div>
             </div>
           </div>
           <DialogFooter>
