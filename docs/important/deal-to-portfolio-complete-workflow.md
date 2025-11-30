@@ -24,10 +24,11 @@ This document provides a comprehensive technical and business logic overview of 
 10. [Stage 9: Fee Event Management](#stage-9-fee-event-management)
 11. [Stage 10: Invoice & Reconciliation](#stage-10-invoice--reconciliation)
 12. [Stage 11: Portfolio Visibility](#stage-11-portfolio-visibility)
-13. [Database Architecture](#database-architecture)
-14. [API Endpoints Reference](#api-endpoints-reference)
-15. [Business Rules & Validations](#business-rules--validations)
-16. [Automation & Triggers](#automation--triggers)
+13. [Stage 12: Supporting Systems](#stage-12-supporting-systems)
+14. [Database Architecture](#database-architecture)
+15. [API Endpoints Reference](#api-endpoints-reference)
+16. [Business Rules & Validations](#business-rules--validations)
+17. [Automation & Triggers](#automation--triggers)
 
 ---
 
@@ -111,6 +112,16 @@ Deal documents uploaded to `deal-documents` bucket:
 - Due diligence materials
 
 **Visibility**: Documents marked `visible_to_investors = false` until NDA signed
+
+### 1.4 Storage Buckets
+
+The platform uses three storage buckets:
+
+| Bucket | Purpose |
+|--------|---------|
+| `documents` | Final published documents (NDAs, signed subscriptions) |
+| `deal-documents` | Deal data room and working documents |
+| `signatures` | Temporary unsigned/signed PDFs during signing process |
 
 ---
 
@@ -356,6 +367,39 @@ INSERT INTO subscriptions (
 )
 ```
 
+### 6.4 Fee Field Inheritance
+
+When creating the subscription, the system copies fee fields from the deal's published term sheet.
+
+**Location**: `/api/approvals/[id]/action/route.ts` (lines 685-711)
+
+```typescript
+// Fetch fee structure BEFORE creating subscription
+const { data: feeStructureForSub } = await supabase
+  .from('deal_fee_structures')
+  .select('subscription_fee_percent, management_fee_percent, carried_interest_percent')
+  .eq('deal_id', submission.deal_id)
+  .eq('status', 'published')
+  .maybeSingle()
+
+// Copy fields to subscription
+{
+  subscription_fee_percent: feeStructureForSub?.subscription_fee_percent ?? null,
+  management_fee_percent: feeStructureForSub?.management_fee_percent ?? null,
+  performance_fee_tier1_percent: feeStructureForSub?.carried_interest_percent ?? null,
+}
+```
+
+**Field Mapping**:
+
+| deal_fee_structures | subscriptions |
+|---------------------|---------------|
+| subscription_fee_percent | subscription_fee_percent |
+| management_fee_percent | management_fee_percent |
+| carried_interest_percent | performance_fee_tier1_percent |
+
+This ensures fee events are correctly calculated when the subscription is signed.
+
 ---
 
 ## Stage 7: Subscription Pack Generation
@@ -467,6 +511,26 @@ When both parties sign:
 5. **Triggers Fee Events** (automatic):
    - Status change to 'committed' triggers fee event creation
 
+### 8.4 Progressive Signing & Race Condition Prevention
+
+**Location**: `/lib/signature/client.ts` (lines 662-706)
+
+The system uses workflow-level locking to prevent race conditions during multi-party signing:
+
+1. **Lock Acquisition**: Before processing signature, acquires `workflow_runs.signing_in_progress = true`
+2. **Exponential Backoff**: If locked, retries with 500ms → 3000ms delays (20 max attempts)
+3. **PDF Layering**: Second signer's signature overlays first signer's signed PDF
+4. **Lock Release**: Always releases lock, even on error
+
+**Idempotent Duplicate Prevention**:
+- Checks for existing (workflow_run_id, signer_role) pair before creating signature request
+- Prevents accidental re-triggering of signatures
+
+**Fallback for Investors Without Accounts**:
+- If investor has no user_id, creates staff task to manually send signing link
+- Assigned to first staff_admin user
+- Prevents orphaned signature requests
+
 ---
 
 ## Stage 9: Fee Event Management
@@ -519,7 +583,27 @@ if (updates.status === 'committed' && existing.status !== 'committed') {
    - FINRA fee (regulatory)
    - Spread fee (markup)
 
-### 9.3 Fee Event Status Flow
+### 9.3 Fee Field Override Logic
+
+**Location**: `/lib/fees/subscription-fee-calculator.ts`
+
+The system prioritizes explicit amounts over percentage calculations:
+
+**Priority Order**:
+1. `subscription_fee_amount` (if not null) → Use explicit amount
+2. `subscription_fee_percent` (if not null) → Calculate: commitment × percent
+3. Fee plan component → Fall back to default
+
+**Null vs Zero Handling**:
+- `null` = Use percentage calculation
+- `0` = Zero fee (intentional)
+
+**Tiered Performance Fees**:
+- `performance_fee_tier1_percent` + `performance_fee_tier1_threshold`
+- `performance_fee_tier2_percent` + `performance_fee_tier2_threshold`
+- Highest applicable tier wins (not cumulative)
+
+### 9.4 Fee Event Status Flow
 
 ```
 accrued (created)
@@ -722,6 +806,65 @@ For each subscription shows:
 
 ---
 
+## Stage 12: Supporting Systems
+
+### 12.1 Task Management
+
+**Location**: `/app/(investor)/versoholdings/tasks/`, `/api/tasks/`
+
+**Task Statuses**: `pending`, `in_progress`, `completed`, `overdue`, `waived`, `blocked`
+
+**Task Categories**:
+
+| Category | Examples |
+|----------|----------|
+| onboarding | Initial KYC, accreditation verification |
+| compliance | KYC renewals, signature requests, document reviews |
+| investment_setup | Capital call responses |
+
+**Task Instructions Include**:
+- Steps to complete
+- Estimated time
+- Wire details (for capital calls)
+- Action URLs
+- Referenced documents
+
+### 12.2 Messaging System
+
+**Location**: `/lib/messaging/`, `/components/messaging/`
+
+**Conversation Types**:
+- `dm` - Direct message (investor ↔ RM)
+- `group` - Multi-party discussions
+- `deal_room` - Deal-specific conversations
+- `broadcast` - Announcements
+
+**Message Features**:
+- Read receipts (`last_read_at`, readBy array)
+- Unread counts via RPC function
+- Reply-to support
+- Message pinning/muting
+
+**Support Routing**: `/api/support/default-staff` assigns default staff for investor questions
+
+### 12.3 Notification Types
+
+| Type | Trigger |
+|------|---------|
+| `kyc_status` | KYC approval/rejection |
+| `deal_invite` | Deal invitations |
+| `deal_access` | Data room access granted |
+| `data_room_expiry_warning` | 3 days before expiry |
+| `data_room_expired` | Access revoked |
+| `document` | Document uploads/changes |
+| `task` | Task assignments |
+| `capital_call` | Capital call notices |
+| `approval` | Approval routing |
+| `subscription_committed` | Subscription executed |
+| `nda_complete` | NDA signed by both parties |
+
+---
+
 ## Database Architecture
 
 ### Core Tables
@@ -901,10 +1044,15 @@ Valid status progressions:
 
 ### Cron Jobs
 
-- Data room expiry warnings (daily)
-- Data room access revocation (daily)
-- Document publishing (as scheduled)
-- Fee accrual calculations (monthly)
+| Endpoint | Frequency | Purpose |
+|----------|-----------|---------|
+| `/cron/data-room-expiry` | Daily | Revoke expired access, update doc visibility |
+| `/cron/data-room-expiry-warnings` | Daily | Send 3-day warning notifications |
+| `/cron/publish-documents` | Scheduled | Publish scheduled documents |
+| `/cron/unpublish-documents` | Scheduled | Auto-expire documents |
+| `/cron/auto-match-reconciliation` | Daily | Auto-match reconciliation records |
+| `/cron/cleanup-stale-locks` | Daily | Clean up process locks |
+| `/cron/fees/generate-scheduled` | Monthly | Generate scheduled fees |
 
 ---
 
@@ -1005,6 +1153,6 @@ The system is designed to scale with VERSO's growth while maintaining security, 
 
 ---
 
-*Document Version: 1.0*
-*Last Updated: November 2025*
+*Document Version: 1.1*
+*Last Updated: November 30, 2025*
 *Author: VERSO Tech Team*
