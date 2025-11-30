@@ -15,12 +15,16 @@ function AuthCallbackContent() {
     const handleCallback = async () => {
       const code = searchParams.get('code')
       const errorParam = searchParams.get('error')
+      const errorDescription = searchParams.get('error_description')
       const portalContext = searchParams.get('portal') ?? 'investor'
 
+      const supabase = createClient()
+
+      // Handle explicit errors in URL
       if (errorParam) {
-        console.error('[auth-callback] Error in URL:', errorParam)
+        console.error('[auth-callback] Error in URL:', errorParam, errorDescription)
         setStatus('error')
-        setMessage('Authentication failed. Please try again.')
+        setMessage(errorDescription || 'Authentication failed. Please try again.')
         setTimeout(() => {
           const loginUrl = portalContext === 'staff' ? '/versotech/login' : '/versoholdings/login'
           router.push(`${loginUrl}?error=auth_failed`)
@@ -28,22 +32,16 @@ function AuthCallbackContent() {
         return
       }
 
-      if (!code) {
-        console.error('[auth-callback] No code provided')
-        setStatus('error')
-        setMessage('Invalid verification link.')
-        setTimeout(() => {
-          const loginUrl = portalContext === 'staff' ? '/versotech/login' : '/versoholdings/login'
-          router.push(`${loginUrl}?error=auth_failed`)
-        }, 2000)
-        return
-      }
+      // IMPORTANT: Supabase invite links use IMPLICIT flow (no code)
+      // The session is already established via cookies when user lands here
+      // First, check if user is already authenticated
+      const { data: { user: existingUser } } = await supabase.auth.getUser()
 
-      try {
-        const supabase = createClient()
-        console.log('[auth-callback] Exchanging code for session for portal:', portalContext)
-        
-        // Exchange the code for a session (this handles PKCE automatically)
+      let user = existingUser
+
+      // If no existing session but we have a code, try PKCE exchange
+      if (!user && code) {
+        console.log('[auth-callback] No existing session, exchanging code for session...')
         const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
 
         if (exchangeError) {
@@ -57,26 +55,31 @@ function AuthCallbackContent() {
           return
         }
 
-        if (!data?.user) {
-          console.error('[auth-callback] No user data after exchange')
-          setStatus('error')
-          setMessage('Email verification failed. Please try signing up again.')
-          setTimeout(() => {
-            const loginUrl = portalContext === 'staff' ? '/versotech/login' : '/versoholdings/login'
-            router.push(`${loginUrl}?error=auth_failed`)
-          }, 3000)
-          return
-        }
+        user = data?.user ?? null
+      }
 
-        console.log('[auth-callback] Email verified successfully:', data.user.email)
-        console.log('[auth-callback] User metadata:', data.user.user_metadata)
+      // If still no user, show error
+      if (!user) {
+        console.error('[auth-callback] No authenticated user found')
+        setStatus('error')
+        setMessage('Verification failed. The link may have expired or already been used.')
+        setTimeout(() => {
+          const loginUrl = portalContext === 'staff' ? '/versotech/login' : '/versoholdings/login'
+          router.push(`${loginUrl}?error=auth_failed`)
+        }, 3000)
+        return
+      }
 
-        // Check if profile exists (should be created by trigger)
+      console.log('[auth-callback] User authenticated:', user.email)
+      console.log('[auth-callback] User metadata:', user.user_metadata)
+
+      try {
+        // Check if profile exists (should be created by trigger or invite API)
         let profile: any
-        const { data: profileData, error: profileError } = await supabase
+        const { data: profileData } = await supabase
           .from('profiles')
           .select('role, display_name')
-          .eq('id', data.user.id)
+          .eq('id', user.id)
           .maybeSingle()
 
         profile = profileData
@@ -87,17 +90,17 @@ function AuthCallbackContent() {
 
           // SECURITY: Role is NOT sent to API - it's derived server-side
           // based on email domain or admin-created profile
-          const metadataDisplayName = data.user.user_metadata?.display_name ||
-                                       data.user.user_metadata?.full_name ||
-                                       data.user.email?.split('@')[0] ||
+          const metadataDisplayName = user.user_metadata?.display_name ||
+                                       user.user_metadata?.full_name ||
+                                       user.email?.split('@')[0] ||
                                        'User'
 
           const createResponse = await fetch('/api/auth/create-profile', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              userId: data.user.id,
-              email: data.user.email,
+              userId: user.id,
+              email: user.email,
               displayName: metadataDisplayName
               // SECURITY: Role removed - derived server-side only
             })
@@ -115,7 +118,7 @@ function AuthCallbackContent() {
           const { data: newProfile } = await supabase
             .from('profiles')
             .select('role, display_name')
-            .eq('id', data.user.id)
+            .eq('id', user.id)
             .single()
 
           profile = newProfile || { role: 'investor', display_name: metadataDisplayName }
