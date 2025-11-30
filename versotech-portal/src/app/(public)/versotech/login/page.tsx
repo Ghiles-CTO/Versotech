@@ -30,6 +30,8 @@ function StaffLoginContent() {
 
   useEffect(() => {
     const error = searchParams.get('error')
+    const messageParam = searchParams.get('message')
+
     if (error) {
       let errorMessage = 'Authentication error occurred'
       switch (error) {
@@ -39,6 +41,8 @@ function StaffLoginContent() {
         default: errorMessage = 'An error occurred.';
       }
       setMessage({ type: 'error', text: errorMessage })
+    } else if (messageParam === 'password_set') {
+      setMessage({ type: 'success', text: 'Passkey set successfully! Please log in with your new credentials.' })
     }
   }, [searchParams])
 

@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to create user' }, { status: 500 })
     }
 
-    // Create profile
+    // Create profile (password_set = false until they set a password)
     // Note: Supabase might create the user in auth.users, but we still need to ensure the profile exists in our public.profiles table
     // The trigger might handle this, but to be safe and ensure all fields are set correctly immediately:
     const { error: profileError } = await supabase
@@ -86,6 +86,7 @@ export async function POST(request: NextRequest) {
         role: validatedData.role,
         display_name: validatedData.display_name,
         title: validatedData.title,
+        password_set: false,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       })

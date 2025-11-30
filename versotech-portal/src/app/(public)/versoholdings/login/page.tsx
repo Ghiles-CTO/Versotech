@@ -31,6 +31,8 @@ function InvestorLoginContent() {
 
   useEffect(() => {
     const error = searchParams.get('error')
+    const messageParam = searchParams.get('message')
+
     if (error) {
       let errorMessage = 'Authentication error occurred'
       switch (error) {
@@ -40,6 +42,8 @@ function InvestorLoginContent() {
         default: errorMessage = 'An error occurred.';
       }
       setMessage({ type: 'error', text: errorMessage })
+    } else if (messageParam === 'password_set') {
+      setMessage({ type: 'success', text: 'Password set successfully! Please log in with your new password.' })
     }
   }, [searchParams])
 

@@ -56,10 +56,10 @@ function AuthCallbackContent() {
 
     try {
       // Check if profile exists (should be created by trigger or invite API)
-      let profile: { role: string; display_name: string } | null = null
+      let profile: { role: string; display_name: string; password_set: boolean | null } | null = null
       const { data: profileData } = await supabase
         .from('profiles')
-        .select('role, display_name')
+        .select('role, display_name, password_set')
         .eq('id', user.id)
         .maybeSingle()
 
@@ -95,17 +95,33 @@ function AuthCallbackContent() {
         // Fetch the newly created profile to get server-assigned role
         const { data: newProfile } = await supabase
           .from('profiles')
-          .select('role, display_name')
+          .select('role, display_name, password_set')
           .eq('id', user.id)
           .single()
 
-        profile = newProfile || { role: 'investor', display_name: metadataDisplayName }
+        profile = newProfile || { role: 'investor', display_name: metadataDisplayName, password_set: false }
       }
 
       console.log('[auth-callback] Profile ready:', profile)
 
-      // Redirect to appropriate portal based on role
+      // Determine if user is staff
       const isStaff = ['staff_admin', 'staff_ops', 'staff_rm'].includes(profile.role)
+
+      // Check if password needs to be set (for invited users)
+      if (profile.password_set === false) {
+        console.log('[auth-callback] Password not set, redirecting to set-password page...')
+        const setPasswordUrl = isStaff ? '/versotech/set-password' : '/versoholdings/set-password'
+
+        setStatus('success')
+        setMessage('Please set your password to continue...')
+
+        setTimeout(() => {
+          window.location.href = setPasswordUrl
+        }, 1500)
+        return
+      }
+
+      // Redirect to appropriate portal based on role
       const redirectUrl = isStaff ? '/versotech/staff' : '/versoholdings/dashboard'
 
       console.log('[auth-callback] Redirecting to:', redirectUrl, 'for role:', profile.role)

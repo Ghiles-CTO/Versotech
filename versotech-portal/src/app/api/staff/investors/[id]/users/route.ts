@@ -118,14 +118,15 @@ export async function POST(
 
           targetUserId = inviteData.user.id
 
-          // Create profile for the invited user
+          // Create profile for the invited user (password_set = false until they set a password)
           await supabase
             .from('profiles')
             .insert({
               id: targetUserId,
               email: email.toLowerCase(),
               display_name: email.split('@')[0],
-              role: 'investor'
+              role: 'investor',
+              password_set: false
             })
             .single()
         } catch (inviteErr) {
