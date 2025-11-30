@@ -2,9 +2,32 @@
 
 import { useEffect, useState, Suspense, useCallback, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+import { createBrowserClient } from '@supabase/ssr'
 import { Loader2, CheckCircle, XCircle } from 'lucide-react'
-import type { User } from '@supabase/supabase-js'
+import type { User, SupabaseClient } from '@supabase/supabase-js'
+
+/**
+ * Create a special Supabase client for auth callback that handles IMPLICIT flow.
+ *
+ * WHY THIS IS NEEDED:
+ * - The main app client uses flowType: 'pkce' for security
+ * - BUT Supabase inviteUserByEmail() uses IMPLICIT flow (tokens in hash fragment)
+ * - PKCE clients IGNORE hash fragments (#access_token=...)
+ * - So we need an IMPLICIT client specifically for processing invite magic links
+ */
+function createImplicitFlowClient(): SupabaseClient {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+
+  return createBrowserClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      persistSession: true,
+      detectSessionInUrl: true,  // CRITICAL: Detect hash fragment tokens
+      autoRefreshToken: true,
+      flowType: 'implicit',      // CRITICAL: Process hash fragments from invite links
+    },
+  })
+}
 
 function AuthCallbackContent() {
   const router = useRouter()
@@ -12,6 +35,7 @@ function AuthCallbackContent() {
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading')
   const [message, setMessage] = useState('Verifying your email...')
   const processedRef = useRef(false)
+  const supabaseRef = useRef<SupabaseClient | null>(null)
 
   const portalContext = searchParams.get('portal') ?? 'investor'
   const errorParam = searchParams.get('error')
@@ -27,7 +51,8 @@ function AuthCallbackContent() {
     console.log('[auth-callback] User authenticated:', user.email)
     console.log('[auth-callback] User metadata:', user.user_metadata)
 
-    const supabase = createClient()
+    // Use the implicit flow client for database operations too
+    const supabase = supabaseRef.current || createImplicitFlowClient()
 
     try {
       // Check if profile exists (should be created by trigger or invite API)
@@ -112,17 +137,29 @@ function AuthCallbackContent() {
       return
     }
 
-    const supabase = createClient()
+    // Create an IMPLICIT flow client that can process hash fragment tokens
+    // This is CRITICAL for invite magic links to work
+    const supabase = createImplicitFlowClient()
+    supabaseRef.current = supabase
+
+    console.log('[auth-callback] Created implicit flow client')
+    console.log('[auth-callback] Current URL hash:', window.location.hash ? 'Present (tokens in hash)' : 'Empty')
+    console.log('[auth-callback] Code param:', code ? 'Present (PKCE flow)' : 'Empty')
 
     // Set up auth state change listener FIRST
-    // This catches the session when Supabase processes hash fragment tokens
+    // The implicit flow client will automatically process hash fragments
+    // and fire SIGNED_IN event when tokens are detected
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('[auth-callback] Auth state changed:', event)
+        console.log('[auth-callback] Auth state changed:', event, session?.user?.email)
 
         if (event === 'SIGNED_IN' && session?.user) {
           handleAuthenticatedUser(session.user)
         } else if (event === 'TOKEN_REFRESHED' && session?.user) {
+          handleAuthenticatedUser(session.user)
+        } else if (event === 'INITIAL_SESSION' && session?.user) {
+          // This fires when client initializes and finds a session
+          console.log('[auth-callback] Initial session detected')
           handleAuthenticatedUser(session.user)
         }
       }
@@ -161,14 +198,30 @@ function AuthCallbackContent() {
         }
       }
 
+      // Check for hash fragment (implicit flow from invite links)
+      if (window.location.hash && window.location.hash.includes('access_token')) {
+        console.log('[auth-callback] Hash fragment detected, waiting for client to process...')
+        // The implicit flow client should auto-process this and fire SIGNED_IN
+        // Give it a moment
+        await new Promise(resolve => setTimeout(resolve, 500))
+
+        // Check again after processing
+        const { data: { user: hashUser } } = await supabase.auth.getUser()
+        if (hashUser) {
+          console.log('[auth-callback] User found after hash processing')
+          handleAuthenticatedUser(hashUser)
+          return
+        }
+      }
+
       // No immediate session - wait for onAuthStateChange to fire
-      // Give Supabase time to process hash fragment (implicit flow)
       console.log('[auth-callback] Waiting for auth state change...')
 
       // Set a timeout to show error if no auth event fires
       setTimeout(() => {
         if (!processedRef.current) {
           console.error('[auth-callback] Timeout - no authenticated user found')
+          console.error('[auth-callback] Hash was:', window.location.hash ? 'Present' : 'Empty')
           setStatus('error')
           setMessage('Verification failed. The link may have expired or already been used.')
           setTimeout(() => {
@@ -180,7 +233,7 @@ function AuthCallbackContent() {
     }
 
     // Small delay to let Supabase client initialize and process hash
-    setTimeout(checkAuth, 100)
+    setTimeout(checkAuth, 200)
 
     return () => {
       subscription.unsubscribe()
