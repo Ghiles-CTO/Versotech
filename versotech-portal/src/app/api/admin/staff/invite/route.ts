@@ -113,19 +113,21 @@ export async function POST(request: NextRequest) {
         )
     }
 
-    // Log the action in audit_log
+    // Log the action in audit_logs
     await supabase
-      .from('audit_log')
+      .from('audit_logs')
       .insert({
-        actor_user_id: user.id,
+        event_type: 'authorization',
+        actor_id: user.id,
         action: 'staff_invited',
-        entity: 'profiles',
+        entity_type: 'profiles',
         entity_id: authData.user.id,
-        metadata: {
+        action_details: {
           email: validatedData.email,
           role: validatedData.role,
           display_name: validatedData.display_name,
         },
+        timestamp: new Date().toISOString()
       })
 
     return NextResponse.json({

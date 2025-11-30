@@ -1,8 +1,28 @@
-import { createServiceClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { NextResponse, NextRequest } from 'next/server'
 
 export async function GET(request: NextRequest) {
   try {
+    // Auth check first - prevent unauthenticated access
+    const authSupabase = await createClient()
+    const { data: { user } } = await authSupabase.auth.getUser()
+
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Staff role check - only staff can access investor list
+    const { data: profile } = await authSupabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    if (!profile?.role?.startsWith('staff_')) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
+    // Use service client for the actual query (bypasses RLS for full access)
     const supabase = createServiceClient()
 
     // Get query parameters

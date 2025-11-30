@@ -246,18 +246,20 @@ export async function handleNDASignature(
       console.log('\n📝 [NDA HANDLER] Step 4: Creating audit log entry')
       console.log('💾 [NDA HANDLER] Logging data room access grant to audit_logs')
       await supabase.from('audit_logs').insert({
+        event_type: 'deal',
         action: 'grant_data_room_access',
         entity_type: 'deal_data_room_access',
         entity_id: newAccess.id,
         actor_id: null, // System-generated
-        description: `Automatically granted data room access upon NDA execution`,
-        metadata: {
+        action_details: {
+          description: 'Automatically granted data room access upon NDA execution',
           deal_id: dealInterest.deal_id,
           investor_id: dealInterest.investor_id,
           nda_document_id: document.id,
           workflow_run_id: signatureRequest.workflow_run_id,
           auto_granted: true
-        }
+        },
+        timestamp: new Date().toISOString()
       })
 
       console.log('✅ [NDA HANDLER] Audit log entry created successfully')
@@ -690,12 +692,13 @@ export async function handleSubscriptionSignature(
   // 7. CREATE AUDIT LOG ENTRY
   console.log('\n📝 [SUBSCRIPTION HANDLER] Step 7: Creating audit log entry')
   await supabase.from('audit_logs').insert({
+    event_type: 'subscription',
     action: 'subscription_committed',
     entity_type: 'subscription',
     entity_id: subscriptionId,
     actor_id: null, // System-generated
-    description: `Subscription agreement fully executed and status changed to committed`,
-    metadata: {
+    action_details: {
+      description: 'Subscription agreement fully executed and status changed to committed',
       subscription_id: subscriptionId,
       investor_id: subscription.investor_id,
       vehicle_id: subscription.vehicle_id,
@@ -704,7 +707,8 @@ export async function handleSubscriptionSignature(
       workflow_run_id: signatureRequest.workflow_run_id,
       previous_status: previousStatus,
       new_status: 'committed'
-    }
+    },
+    timestamp: new Date().toISOString()
   })
 
   console.log('✅ [SUBSCRIPTION HANDLER] Audit log entry created')

@@ -139,17 +139,19 @@ export async function POST(
 
     // Create audit log
     await serviceSupabase.from('audit_logs').insert({
+      event_type: 'compliance',
       actor_id: user.id,
       action: action === 'approve' ? 'kyc_document_approved' : 'kyc_document_rejected',
       entity_type: 'kyc_submission',
       entity_id: submissionId,
-      details: {
+      action_details: {
         document_type: submission.document_type,
         investor_id: submission.investor.id,
         investor_name: submission.investor.legal_name || submission.investor.display_name,
         rejection_reason: rejection_reason || null,
         notes: notes || null
-      }
+      },
+      timestamp: new Date().toISOString()
     })
 
     // Send notification to investor

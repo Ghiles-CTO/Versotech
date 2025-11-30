@@ -65,10 +65,10 @@ export async function PATCH(
       .delete()
       .eq('user_id', staffId)
 
-    // Disable auth account
+    // Ban auth account (876000h = 100 years)
     const { error: authError } = await supabase.auth.admin.updateUserById(
       staffId,
-      { ban_duration: 'none' }
+      { ban_duration: '876000h' }
     )
 
     if (authError) {
@@ -77,17 +77,19 @@ export async function PATCH(
 
     // Log the action
     await supabase
-      .from('audit_log')
+      .from('audit_logs')
       .insert({
-        actor_user_id: user.id,
+        event_type: 'authorization',
+        actor_id: user.id,
         action: 'staff_deactivated',
-        entity: 'profiles',
+        entity_type: 'profiles',
         entity_id: staffId,
-        metadata: {
+        action_details: {
           deactivated_email: staffProfile.email,
           deactivated_role: staffProfile.role,
           deactivated_name: staffProfile.display_name,
         },
+        timestamp: new Date().toISOString()
       })
 
     // Invalidate all sessions for the deactivated user

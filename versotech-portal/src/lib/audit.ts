@@ -1,5 +1,4 @@
 import { createClient } from './supabase/server'
-import crypto from 'crypto'
 
 export interface AuditLogEntry {
   actor_user_id?: string
@@ -11,7 +10,6 @@ export interface AuditLogEntry {
 
 class AuditLogger {
   private static instance: AuditLogger
-  private lastHash: string | null = null
 
   static getInstance(): AuditLogger {
     if (!AuditLogger.instance) {
@@ -20,51 +18,20 @@ class AuditLogger {
     return AuditLogger.instance
   }
 
-  private async getLastHash(): Promise<string | null> {
-    try {
-      const supabase = await createClient()
-      const { data } = await supabase
-        .from('audit_log')
-        .select('hash')
-        .order('ts', { ascending: false })
-        .limit(1)
-        .single()
-
-      return data?.hash || null
-    } catch {
-      return null
-    }
-  }
-
-  private generateHash(entry: AuditLogEntry, prevHash: string | null, timestamp: string): string {
-    const hashInput = `${entry.actor_user_id || 'system'}:${entry.action}:${entry.entity}:${entry.entity_id || ''}:${timestamp}:${prevHash || ''}`
-    return crypto.createHash('sha256').update(hashInput).digest('hex')
-  }
-
   async log(entry: AuditLogEntry): Promise<void> {
     try {
       const supabase = await createClient()
-      
-      // Get the last hash for chain integrity
-      if (!this.lastHash) {
-        this.lastHash = await this.getLastHash()
-      }
 
-      const timestamp = new Date().toISOString()
-      const hash = this.generateHash(entry, this.lastHash, timestamp)
-
-      await supabase.from('audit_log').insert({
-        actor_user_id: entry.actor_user_id || null,
+      // Insert into audit_logs with correct column names
+      await supabase.from('audit_logs').insert({
+        event_type: 'system',
+        actor_id: entry.actor_user_id || null,
         action: entry.action,
-        entity: entry.entity,
+        entity_type: entry.entity,
         entity_id: entry.entity_id || null,
-        ts: timestamp,
-        hash,
-        prev_hash: this.lastHash
+        action_details: entry.metadata || null,
+        timestamp: new Date().toISOString()
       })
-
-      // Update our local cache of the last hash
-      this.lastHash = hash
 
     } catch (error) {
       console.error('Audit logging failed:', error)

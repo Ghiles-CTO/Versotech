@@ -61,18 +61,18 @@ export async function GET(
 
     // Build query
     let query = supabase
-      .from('audit_log')
+      .from('audit_logs')
       .select('*', { count: 'exact' })
-      .eq('actor_user_id', staffId)
-      .order('created_at', { ascending: false })
+      .eq('actor_id', staffId)
+      .order('timestamp', { ascending: false })
       .range(queryParams.offset, queryParams.offset + queryParams.limit - 1)
 
     if (queryParams.from_date) {
-      query = query.gte('created_at', queryParams.from_date)
+      query = query.gte('timestamp', queryParams.from_date)
     }
 
     if (queryParams.to_date) {
-      query = query.lte('created_at', queryParams.to_date)
+      query = query.lte('timestamp', queryParams.to_date)
     }
 
     if (queryParams.action_type) {
@@ -103,7 +103,7 @@ export async function GET(
       const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
 
       activities.forEach(activity => {
-        const activityDate = new Date(activity.created_at)
+        const activityDate = new Date(activity.timestamp)
         if (activityDate >= today) stats.actions_today++
         if (activityDate >= weekAgo) stats.actions_this_week++
         if (activityDate >= monthAgo) stats.actions_this_month++
@@ -120,7 +120,7 @@ export async function GET(
         stats.most_common_action = sortedActions[0][0]
       }
 
-      stats.last_activity = activities[0].created_at
+      stats.last_activity = activities[0].timestamp
     }
 
     return NextResponse.json({

@@ -12,8 +12,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const userRole = user.user_metadata?.role || user.role
-    const isStaff = ['staff_admin', 'staff_ops', 'staff_rm'].includes(userRole)
+    // Query profiles table for authoritative role (don't use stale user_metadata)
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    const isStaff = profile?.role && ['staff_admin', 'staff_ops', 'staff_rm'].includes(profile.role)
     if (!isStaff) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }

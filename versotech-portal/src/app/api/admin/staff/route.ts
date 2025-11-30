@@ -56,10 +56,10 @@ export async function GET(request: NextRequest) {
       (staffMembers || []).map(async (staff) => {
         // Get last activity
         const { data: lastActivity } = await supabase
-          .from('audit_log')
-          .select('created_at, action')
-          .eq('actor_user_id', staff.id)
-          .order('created_at', { ascending: false })
+          .from('audit_logs')
+          .select('timestamp, action')
+          .eq('actor_id', staff.id)
+          .order('timestamp', { ascending: false })
           .limit(1)
           .single()
 
@@ -78,7 +78,7 @@ export async function GET(request: NextRequest) {
           status: staff.deleted_at ? 'inactive' : 'active',
           permissions,
           is_super_admin: permissions.includes('super_admin'),
-          last_activity: lastActivity?.created_at || null,
+          last_activity: lastActivity?.timestamp || null,
           last_action: lastActivity?.action || null,
           recent_login_count: recentLogins?.filter(l => l.success).length || 0,
           recent_failed_logins: recentLogins?.filter(l => !l.success).length || 0,

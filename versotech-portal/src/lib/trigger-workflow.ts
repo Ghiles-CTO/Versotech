@@ -227,16 +227,18 @@ export async function triggerWorkflow({
       .eq('id', workflowRun.id)
 
     // Create audit log
-    await serviceSupabase.from('audit_log').insert({
-      actor_user_id: user.id,
+    await serviceSupabase.from('audit_logs').insert({
+      event_type: 'workflow',
+      actor_id: user.id,
       action: 'workflow_triggered',
-      entity: 'workflow_runs',
+      entity_type: 'workflow_runs',
       entity_id: workflowRun.id,
-      metadata: {
+      action_details: {
         workflow_key: workflow.key,
         payload,
         entity_type: workflowRun.entity_type
-      }
+      },
+      timestamp: new Date().toISOString()
     })
 
     return {

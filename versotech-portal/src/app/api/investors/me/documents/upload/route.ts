@@ -294,15 +294,17 @@ export async function POST(request: NextRequest) {
 
     // Create audit log
     await serviceSupabase.from('audit_logs').insert({
+      event_type: 'compliance',
       actor_id: user.id,
       action: 'kyc_document_uploaded',
       entity_type: 'kyc_submission',
       entity_id: submission.id,
-      details: {
+      action_details: {
         document_type: documentType,
         file_name: file.name,
         file_size: file.size
-      }
+      },
+      timestamp: new Date().toISOString()
     })
 
     // Auto-complete related task if taskId provided

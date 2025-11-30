@@ -150,15 +150,22 @@ export function TasksPageClient({
   async function startTask(taskId: string) {
     setIsUpdating(true)
     const supabase = createClient()
-    
-    await supabase
+
+    const { error } = await supabase
       .from('tasks')
-      .update({ 
+      .update({
         status: 'in_progress',
         started_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       })
       .eq('id', taskId)
+
+    if (error) {
+      console.error('Failed to start task:', error)
+      toast.error('Failed to start task. Please try again.')
+      setIsUpdating(false)
+      return
+    }
 
     setIsUpdating(false)
     await refreshTasks()
@@ -168,10 +175,10 @@ export function TasksPageClient({
   async function completeTask(taskId: string) {
     setIsUpdating(true)
     const supabase = createClient()
-    
-    await supabase
+
+    const { error } = await supabase
       .from('tasks')
-      .update({ 
+      .update({
         status: 'completed',
         completed_at: new Date().toISOString(),
         completed_by: userId,
@@ -179,6 +186,14 @@ export function TasksPageClient({
       })
       .eq('id', taskId)
 
+    if (error) {
+      console.error('Failed to complete task:', error)
+      toast.error('Failed to complete task. Please try again.')
+      setIsUpdating(false)
+      return
+    }
+
+    toast.success('Task completed successfully')
     setIsUpdating(false)
     setSelectedTask(null)
     await refreshTasks()
@@ -188,7 +203,7 @@ export function TasksPageClient({
     setIsUpdating(true)
     const supabase = createClient()
 
-    await supabase
+    const { error } = await supabase
       .from('tasks')
       .update({
         status: 'pending',
@@ -196,6 +211,13 @@ export function TasksPageClient({
         updated_at: new Date().toISOString()
       })
       .eq('id', taskId)
+
+    if (error) {
+      console.error('Failed to cancel task:', error)
+      toast.error('Failed to cancel task. Please try again.')
+      setIsUpdating(false)
+      return
+    }
 
     setIsUpdating(false)
     setSelectedTask(null)

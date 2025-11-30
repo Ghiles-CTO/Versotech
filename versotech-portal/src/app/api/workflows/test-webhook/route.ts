@@ -71,17 +71,19 @@ export async function POST(request: NextRequest) {
     console.log('[Test Webhook] Duration:', duration, 'ms')
 
     // Log the test in audit log
-    await supabase.from('audit_log').insert({
-      actor_user_id: user.id,
+    await supabase.from('audit_logs').insert({
+      event_type: 'workflow',
+      actor_id: user.id,
       action: 'webhook_test',
-      entity: 'workflows',
-      entity_id: webhook_url,
-      metadata: {
+      entity_type: 'workflows',
+      entity_name: webhook_url,
+      action_details: {
         webhook_url,
         status: n8nResponse.status,
         duration_ms: duration,
         response: responseData
-      }
+      },
+      timestamp: new Date().toISOString()
     })
 
     return NextResponse.json({

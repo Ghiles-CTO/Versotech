@@ -89,17 +89,19 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    await supabase.from('audit_log').insert({
-      actor_user_id: workflowRun.triggered_by,
+    await supabase.from('audit_logs').insert({
+      event_type: 'workflow',
+      actor_id: workflowRun.triggered_by,
       action: 'workflow_completed',
-      entity: 'workflow_runs',
+      entity_type: 'workflow_runs',
       entity_id: workflow_run_id,
-      metadata: {
+      action_details: {
         status,
         error_message,
         result_doc_id,
         created_task_ids
-      }
+      },
+      timestamp: new Date().toISOString()
     })
 
     return NextResponse.json({ success: true })

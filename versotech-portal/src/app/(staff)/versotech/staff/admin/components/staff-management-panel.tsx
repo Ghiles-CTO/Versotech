@@ -77,7 +77,7 @@ export function StaffManagementPanel({ staffMembers, onStaffUpdate }: StaffManag
 
       if (!response.ok) {
         const error = await response.json()
-        toast.error(error.message || 'Failed to invite staff member')
+        toast.error(error.error || 'Failed to invite staff member')
       } else {
         toast.success('Invitation sent successfully')
         setInviteDialogOpen(false)
