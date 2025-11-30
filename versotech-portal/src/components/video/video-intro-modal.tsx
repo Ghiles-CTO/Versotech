@@ -66,17 +66,17 @@ export function VideoIntroModal({ open, videoUrl, onComplete }: VideoIntroModalP
   return (
     <Dialog open={open} onOpenChange={() => {}}>
       <DialogContent
-        className="max-w-[90vw] w-[1280px] max-h-[90vh] p-0 overflow-hidden"
+        className="max-w-[95vw] w-[1600px] max-h-[95vh] p-0 overflow-hidden bg-slate-900 border-slate-700"
         showCloseButton={false}
         onPointerDownOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={(e) => e.preventDefault()}
       >
         <div className="flex flex-col">
-          <DialogHeader className="p-6 pb-4 border-b">
-            <DialogTitle className="text-xl font-semibold text-slate-900">
+          <DialogHeader className="p-6 pb-4 border-b border-slate-700 bg-slate-900">
+            <DialogTitle className="text-xl font-semibold text-white">
               Welcome to VERSO
             </DialogTitle>
-            <DialogDescription className="text-sm text-slate-600">
+            <DialogDescription className="text-sm text-slate-300">
               Please watch this short introduction to get started with the platform.
             </DialogDescription>
           </DialogHeader>
@@ -118,7 +118,7 @@ export function VideoIntroModal({ open, videoUrl, onComplete }: VideoIntroModalP
             )}
           </div>
 
-          <div className="p-6 pt-4 border-t flex justify-end">
+          <div className="p-6 pt-4 border-t border-slate-700 bg-slate-900 flex justify-end">
             <Button
               size="lg"
               disabled={!videoEnded || isSubmitting}
