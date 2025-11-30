@@ -216,12 +216,36 @@ function AuthCallbackContent() {
 
       // Check for hash fragment (implicit flow from invite links)
       if (window.location.hash && window.location.hash.includes('access_token')) {
-        console.log('[auth-callback] Hash fragment detected, waiting for client to process...')
-        // The implicit flow client should auto-process this and fire SIGNED_IN
-        // Give it a moment
-        await new Promise(resolve => setTimeout(resolve, 500))
+        console.log('[auth-callback] Hash fragment detected, manually extracting tokens...')
 
-        // Check again after processing
+        // Parse hash fragment to extract tokens
+        const hashParams = new URLSearchParams(window.location.hash.substring(1))
+        const accessToken = hashParams.get('access_token')
+        const refreshToken = hashParams.get('refresh_token')
+
+        console.log('[auth-callback] Tokens extracted:', {
+          hasAccessToken: !!accessToken,
+          hasRefreshToken: !!refreshToken
+        })
+
+        if (accessToken && refreshToken) {
+          // Manually set the session using the tokens from hash
+          const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken
+          })
+
+          if (sessionError) {
+            console.error('[auth-callback] Failed to set session:', sessionError)
+          } else if (sessionData?.user) {
+            console.log('[auth-callback] Session set successfully for:', sessionData.user.email)
+            handleAuthenticatedUser(sessionData.user)
+            return
+          }
+        }
+
+        // Fallback: try getUser after a delay
+        await new Promise(resolve => setTimeout(resolve, 500))
         const { data: { user: hashUser } } = await supabase.auth.getUser()
         if (hashUser) {
           console.log('[auth-callback] User found after hash processing')
