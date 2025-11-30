@@ -686,10 +686,74 @@ async function handleEntityApproval(
             // This ensures the subscription record has the correct fee percentages for fee event calculation
             const { data: feeStructureForSub } = await supabase
               .from('deal_fee_structures')
-              .select('subscription_fee_percent, management_fee_percent, carried_interest_percent')
+              .select('subscription_fee_percent, management_fee_percent, carried_interest_percent, price_per_share_text, payment_deadline_days')
               .eq('deal_id', submission.deal_id)
               .eq('status', 'published')
               .maybeSingle()
+
+            // Get latest valuation for fallback price_per_share
+            const { data: latestValuation } = await supabase
+              .from('valuations')
+              .select('nav_per_unit')
+              .eq('vehicle_id', submission.deal.vehicle_id)
+              .order('as_of_date', { ascending: false })
+              .limit(1)
+              .maybeSingle()
+
+            // Get fee components for management_fee_frequency and performance threshold
+            let managementFeeFrequency: string | null = null
+            let performanceFeeThreshold: number | null = null
+            if (defaultFeePlan?.id) {
+              const { data: feeComponents } = await supabase
+                .from('fee_components')
+                .select('kind, frequency, hurdle_rate_bps')
+                .eq('fee_plan_id', defaultFeePlan.id)
+                .in('kind', ['management', 'performance'])
+
+              if (feeComponents) {
+                const mgmtComponent = feeComponents.find((c: { kind: string; frequency?: string | null; hurdle_rate_bps?: number | null }) => c.kind === 'management')
+                const perfComponent = feeComponents.find((c: { kind: string; frequency?: string | null; hurdle_rate_bps?: number | null }) => c.kind === 'performance')
+                managementFeeFrequency = mgmtComponent?.frequency || null
+                // Convert hurdle_rate_bps (basis points) to percentage
+                performanceFeeThreshold = perfComponent?.hurdle_rate_bps
+                  ? perfComponent.hurdle_rate_bps / 100
+                  : null
+              }
+            }
+
+            // Check for introduction (introducer linking)
+            const { data: introduction } = await supabase
+              .from('introductions')
+              .select('id, introducer_id')
+              .eq('prospect_investor_id', submission.investor_id)
+              .eq('deal_id', submission.deal_id)
+              .in('status', ['allocated', 'joined'])
+              .maybeSingle()
+
+            // Calculate price_per_share: parse from fee structure, fallback to valuation
+            let pricePerShare: number | null = null
+            if (feeStructureForSub?.price_per_share_text) {
+              const parsed = parseFloat(feeStructureForSub.price_per_share_text.replace(/[^\d.]/g, ''))
+              if (!isNaN(parsed) && parsed > 0) {
+                pricePerShare = parsed
+              }
+            }
+            if (pricePerShare === null && latestValuation?.nav_per_unit) {
+              pricePerShare = latestValuation.nav_per_unit
+            }
+
+            // Calculate num_shares (draft - staff can adjust later)
+            const numShares = pricePerShare ? Math.floor(amount / pricePerShare) : null
+
+            // Pre-calculate subscription fee amount for fee events consistency
+            const subscriptionFeeAmount = feeStructureForSub?.subscription_fee_percent
+              ? amount * feeStructureForSub.subscription_fee_percent
+              : null
+
+            // Calculate funding deadline
+            const fundingDueAt = feeStructureForSub?.payment_deadline_days
+              ? new Date(Date.now() + feeStructureForSub.payment_deadline_days * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+              : null
 
             const { data: newSubscription, error: createSubError } = await supabase
               .from('subscriptions')
@@ -708,6 +772,16 @@ async function handleEntityApproval(
                 subscription_fee_percent: feeStructureForSub?.subscription_fee_percent ?? null,
                 management_fee_percent: feeStructureForSub?.management_fee_percent ?? null,
                 performance_fee_tier1_percent: feeStructureForSub?.carried_interest_percent ?? null,
+                // NEW: Populate additional fields for complete subscription record
+                opportunity_name: submission.deal.vehicle?.investment_name || submission.deal.name,
+                price_per_share: pricePerShare,
+                num_shares: numShares,
+                subscription_fee_amount: subscriptionFeeAmount,
+                management_fee_frequency: managementFeeFrequency,
+                performance_fee_tier1_threshold: performanceFeeThreshold,
+                funding_due_at: fundingDueAt,
+                introducer_id: introduction?.introducer_id || null,
+                introduction_id: introduction?.id || null,
               })
               .select()
               .single()

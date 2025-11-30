@@ -482,6 +482,7 @@ export async function handleSubscriptionSignature(
     .update({
       status: 'committed',
       committed_at: new Date().toISOString(),
+      contract_date: new Date().toISOString().split('T')[0], // Set contract date when signed
       signed_doc_id: document.id,
       acknowledgement_notes: 'Subscription agreement fully executed by both parties.'
     })
