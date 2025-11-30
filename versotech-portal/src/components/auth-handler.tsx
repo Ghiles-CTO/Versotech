@@ -11,6 +11,19 @@ export function AuthHandler() {
 
   useEffect(() => {
     const handleAuthCallback = async () => {
+      // CRITICAL: Detect hash fragments from implicit flow (invite magic links)
+      // Supabase inviteUserByEmail() uses implicit flow which passes tokens in hash fragment
+      // If we detect hash fragment with access_token, redirect to /auth/callback to process it
+      if (typeof window !== 'undefined' && window.location.hash) {
+        const hash = window.location.hash
+        if (hash.includes('access_token') || hash.includes('type=invite')) {
+          console.log('[AuthHandler] Detected hash fragment from implicit flow, redirecting to callback...')
+          // Redirect to /auth/callback with the hash fragment preserved
+          window.location.href = '/auth/callback' + hash
+          return
+        }
+      }
+
       const code = searchParams.get('code')
       const error = searchParams.get('error')
 
