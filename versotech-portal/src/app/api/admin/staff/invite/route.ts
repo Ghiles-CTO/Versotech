@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServiceClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { z } from 'zod'
 import { getAppUrl } from '@/lib/signature/token'
 
@@ -13,13 +13,16 @@ const inviteStaffSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
-    // Get the super admin user
-    const supabase = await createServiceClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    // Use regular client for authentication (reads cookies)
+    const authSupabase = await createClient()
+    const { data: { user } } = await authSupabase.auth.getUser()
 
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+
+    // Use service client for admin operations (bypasses RLS)
+    const supabase = createServiceClient()
 
     // Check if user has super_admin permission
     const { data: permission } = await supabase
@@ -57,7 +60,9 @@ export async function POST(request: NextRequest) {
           role: validatedData.role,
           title: validatedData.title,
         },
-        redirectTo: `${getAppUrl()}/versotech/login`
+        // IMPORTANT: Must redirect to /auth/callback for PKCE code exchange
+        // The callback will then redirect to staff portal based on user role
+        redirectTo: `${getAppUrl()}/auth/callback?portal=staff`
       }
     )
 

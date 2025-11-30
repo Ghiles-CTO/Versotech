@@ -102,7 +102,9 @@ export async function POST(
                 display_name: email.split('@')[0],
                 role: 'investor'
               },
-              redirectTo: `${getAppUrl()}/versoholdings/dashboard`
+              // IMPORTANT: Must redirect to /auth/callback for PKCE code exchange
+              // The callback will then redirect to dashboard based on user role
+              redirectTo: `${getAppUrl()}/auth/callback?portal=investor`
             }
           )
 
