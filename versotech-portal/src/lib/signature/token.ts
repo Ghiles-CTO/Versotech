@@ -32,34 +32,32 @@ export function isTokenExpired(expiresAt: string | Date): boolean {
 
 /**
  * Get the application base URL with fallbacks for different environments
+ * Always returns URL WITHOUT trailing slash to prevent double-slash issues
  */
 export function getAppUrl(): string {
+  let url: string
+
   // Priority order: NEXT_PUBLIC_APP_URL > VERCEL_URL > NEXT_PUBLIC_SITE_URL
   if (process.env.NEXT_PUBLIC_APP_URL) {
-    return process.env.NEXT_PUBLIC_APP_URL
-  }
-
-  // Vercel automatically provides VERCEL_URL in production
-  if (process.env.VERCEL_URL) {
-    return `https://${process.env.VERCEL_URL}`
-  }
-
-  if (process.env.NEXT_PUBLIC_SITE_URL) {
-    return process.env.NEXT_PUBLIC_SITE_URL
-  }
-
-  // Browser fallback (client-side only)
-  if (typeof window !== 'undefined') {
-    return window.location.origin
-  }
-
-  // Server-side: NEVER use localhost in production
-  if (process.env.NODE_ENV === 'production') {
+    url = process.env.NEXT_PUBLIC_APP_URL
+  } else if (process.env.VERCEL_URL) {
+    // Vercel automatically provides VERCEL_URL in production
+    url = `https://${process.env.VERCEL_URL}`
+  } else if (process.env.NEXT_PUBLIC_SITE_URL) {
+    url = process.env.NEXT_PUBLIC_SITE_URL
+  } else if (typeof window !== 'undefined') {
+    // Browser fallback (client-side only)
+    url = window.location.origin
+  } else if (process.env.NODE_ENV === 'production') {
+    // Server-side: NEVER use localhost in production
     throw new Error('App URL must be configured in production. Set NEXT_PUBLIC_APP_URL, VERCEL_URL, or NEXT_PUBLIC_SITE_URL environment variable.')
+  } else {
+    // Development fallback only
+    url = 'http://localhost:3000'
   }
 
-  // Development fallback only
-  return 'http://localhost:3000'
+  // Remove trailing slash to prevent double-slash issues (e.g., https://app.com//path)
+  return url.replace(/\/+$/, '')
 }
 
 /**
