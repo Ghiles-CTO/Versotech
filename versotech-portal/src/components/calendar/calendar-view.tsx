@@ -103,7 +103,7 @@ export function CalendarView({ title, description, events, emptyMessage, brand =
             {emptyMessage || 'No scheduled activity yet. Upcoming items will appear here automatically.'}
           </div>
         ) : (
-          <CalendarProvider defaultSelectedDate={parsedEvents[0]?.startAt}>
+          <CalendarProvider defaultDate={new Date()} defaultSelectedDate={new Date()}>
             <CalendarSurface
               startYear={startYear}
               endYear={endYear}

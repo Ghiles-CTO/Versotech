@@ -135,9 +135,14 @@ export function StaffManagementPanel({ staffMembers, onStaffUpdate }: StaffManag
   }
 
   const getStatusBadge = (status: string) => {
-    return status === 'active'
-      ? <Badge variant="default">Active</Badge>
-      : <Badge variant="secondary">Inactive</Badge>
+    switch (status) {
+      case 'active':
+        return <Badge variant="default">Active</Badge>
+      case 'invited':
+        return <Badge variant="outline" className="border-yellow-500 text-yellow-600">Invited</Badge>
+      default:
+        return <Badge variant="secondary">Inactive</Badge>
+    }
   }
 
   return (

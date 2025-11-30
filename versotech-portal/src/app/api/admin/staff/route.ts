@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
         last_login_at,
         created_at,
         updated_at,
-        deleted_at
+        password_set
       `)
       .in('role', ['staff_admin', 'staff_ops', 'staff_rm'])
       .order('created_at', { ascending: false })
@@ -79,7 +79,7 @@ export async function GET(request: NextRequest) {
 
         return {
           ...staff,
-          status: staff.deleted_at ? 'inactive' : 'active',
+          status: staff.password_set === false ? 'invited' : 'active',
           permissions,
           is_super_admin: permissions.includes('super_admin'),
           last_activity: lastActivity?.timestamp || null,
@@ -94,7 +94,7 @@ export async function GET(request: NextRequest) {
     const stats = {
       total_staff: staffWithStats.length,
       active_staff: staffWithStats.filter(s => s.status === 'active').length,
-      inactive_staff: staffWithStats.filter(s => s.status === 'inactive').length,
+      invited_staff: staffWithStats.filter(s => s.status === 'invited').length,
       super_admins: staffWithStats.filter(s => s.is_super_admin).length,
       by_role: {
         staff_admin: staffWithStats.filter(s => s.role === 'staff_admin').length,

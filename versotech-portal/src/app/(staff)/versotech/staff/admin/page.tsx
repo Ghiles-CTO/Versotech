@@ -186,7 +186,7 @@ export default function SuperAdminDashboard() {
               {staffMembers.length}
             </div>
             <p className="text-xs text-muted-foreground">
-              {staffMembers.filter(s => s.status === 'active').length} active
+              {staffMembers.filter(s => s.status === 'active').length} active, {staffMembers.filter(s => s.status === 'invited').length} invited
             </p>
           </CardContent>
         </Card>

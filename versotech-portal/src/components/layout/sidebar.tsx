@@ -139,12 +139,6 @@ const staffNavItems: SidebarItem[] = [
     description: 'Overview'
   },
   {
-    name: 'Calendar',
-    href: '/versotech/staff/calendar',
-    icon: Calendar,
-    description: 'Schedule'
-  },
-  {
     name: 'Messages',
     href: '/versotech/staff/messages',
     icon: MessageSquare,
@@ -233,6 +227,12 @@ const staffNavItems: SidebarItem[] = [
     icon: CreditCard,
     notificationKey: 'reconciliation',
     description: 'Payments'
+  },
+  {
+    name: 'Calendar',
+    href: '/versotech/staff/calendar',
+    icon: Calendar,
+    description: 'Schedule'
   },
   {
     name: 'Audit',
