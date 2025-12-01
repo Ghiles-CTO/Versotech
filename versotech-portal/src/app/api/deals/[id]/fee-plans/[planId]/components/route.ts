@@ -16,7 +16,7 @@ const createFeeComponentSchema = z.object({
   flat_amount: z.number().positive().optional(),
   frequency: z.enum(['one_time', 'annual', 'quarterly', 'monthly', 'on_exit']).default('one_time'),
   hurdle_rate_bps: z.number().int().min(0).optional(),
-  high_watermark: z.boolean().optional(),
+  has_high_water_mark: z.boolean().optional(),
   notes: z.string().optional()
 }).refine(
   (data) => {
@@ -82,7 +82,7 @@ export async function POST(
         flat_amount: validatedData.flat_amount,
         frequency: validatedData.frequency,
         hurdle_rate_bps: validatedData.hurdle_rate_bps,
-        high_watermark: validatedData.high_watermark,
+        has_high_water_mark: validatedData.has_high_water_mark,
         notes: validatedData.notes
       })
       .select()
