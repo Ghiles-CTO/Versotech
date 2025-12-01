@@ -173,6 +173,12 @@ const staffNavItems: SidebarItem[] = [
     description: 'Investor relations'
   },
   {
+    name: 'KYC Review',
+    href: '/versotech/staff/kyc-review',
+    icon: UserCheck,
+    description: 'KYC compliance review'
+  },
+  {
     name: 'Subscriptions',
     href: '/versotech/staff/subscriptions',
     icon: FileText,
