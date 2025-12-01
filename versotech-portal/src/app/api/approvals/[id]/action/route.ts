@@ -746,8 +746,11 @@ async function handleEntityApproval(
             const numShares = pricePerShare ? Math.floor(amount / pricePerShare) : null
 
             // Pre-calculate subscription fee amount for fee events consistency
-            const subscriptionFeeAmount = feeStructureForSub?.subscription_fee_percent
-              ? amount * feeStructureForSub.subscription_fee_percent
+            // Normalize percent: if > 1, it's whole number format (2 = 2%), convert to decimal
+            const feePercent = feeStructureForSub?.subscription_fee_percent || 0
+            const normalizedPercent = feePercent > 1 ? feePercent / 100 : feePercent
+            const subscriptionFeeAmount = normalizedPercent > 0
+              ? amount * normalizedPercent
               : null
 
             // Calculate funding deadline
