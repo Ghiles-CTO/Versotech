@@ -5,18 +5,24 @@ import { z } from 'zod'
 import { getAuthenticatedUser, isStaffUser } from '@/lib/api-auth'
 
 const createFeeComponentSchema = z.object({
-  kind: z.enum(['subscription', 'management', 'performance', 'spread_markup', 'flat', 'other']),
+  kind: z.enum(['subscription', 'management', 'performance', 'spread_markup', 'flat', 'other', 'bd_fee', 'finra_fee']),
   calc_method: z.enum([
     'percent_of_investment',
     'percent_per_annum',
     'percent_of_profit',
-    'per_unit_spread'
+    'per_unit_spread',
+    'fixed',
+    'percent_of_commitment',
+    'percent_of_nav',
+    'fixed_amount'
   ]).optional(),
   rate_bps: z.number().int().min(0).max(100000).optional(), // Max 1000%
   flat_amount: z.number().positive().optional(),
-  frequency: z.enum(['one_time', 'annual', 'quarterly', 'monthly', 'on_exit']).default('one_time'),
+  frequency: z.enum(['one_time', 'annual', 'quarterly', 'monthly', 'on_exit', 'on_event']).default('one_time'),
   hurdle_rate_bps: z.number().int().min(0).optional(),
   has_high_water_mark: z.boolean().optional(),
+  has_catchup: z.boolean().optional(),
+  catchup_rate_bps: z.number().int().min(0).optional(),
   notes: z.string().optional()
 }).refine(
   (data) => {
@@ -82,7 +88,9 @@ export async function POST(
         flat_amount: validatedData.flat_amount,
         frequency: validatedData.frequency,
         hurdle_rate_bps: validatedData.hurdle_rate_bps,
-        has_high_water_mark: validatedData.has_high_water_mark,
+        has_high_water_mark: validatedData.has_high_water_mark ?? false,
+        has_catchup: validatedData.has_catchup ?? false,
+        catchup_rate_bps: validatedData.catchup_rate_bps,
         notes: validatedData.notes
       })
       .select()
