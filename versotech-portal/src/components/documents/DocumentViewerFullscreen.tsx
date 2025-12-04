@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useMemo } from 'react'
+import { createPortal } from 'react-dom'
 import { X, Download, Loader2, AlertCircle, FileText } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { formatFileSize } from '@/lib/utils'
@@ -49,6 +50,13 @@ export function DocumentViewerFullscreen({
   onDownload,
 }: DocumentViewerFullscreenProps) {
   const [iframeError, setIframeError] = useState(false)
+  const [mounted, setMounted] = useState(false)
+
+  // Track mount state for portal rendering
+  useEffect(() => {
+    setMounted(true)
+    return () => setMounted(false)
+  }, [])
 
   // Compute the final iframe URL with PDF parameters if needed
   const iframeSrc = useMemo(() => {
@@ -93,10 +101,12 @@ export function DocumentViewerFullscreen({
     setIframeError(false)
   }, [previewUrl])
 
-  if (!isOpen) return null
+  // Don't render until mounted (for portal) or if not open
+  if (!isOpen || !mounted) return null
 
-  return (
-    <div className="fixed inset-0 z-50 bg-black/95">
+  // Use portal to render at body level, escaping backdrop-blur containing blocks
+  const modalContent = (
+    <div className="fixed inset-0 z-[9999] bg-black/95 overflow-hidden">
       {/* Toolbar */}
       <div className="h-16 bg-white border-b shadow-md flex items-center justify-between px-6">
         <div className="flex items-center gap-4 flex-1 min-w-0">
@@ -141,7 +151,7 @@ export function DocumentViewerFullscreen({
         </div>
       </div>
 
-      {/* Main viewport - no flex centering for iframe to fill properly */}
+      {/* Main viewport */}
       <div className="h-[calc(100vh-4rem)] bg-gray-900">
         {/* Loading/error states need centering */}
         {(isLoading || error || iframeError) && (
@@ -204,7 +214,7 @@ export function DocumentViewerFullscreen({
       </div>
 
       {/* Footer hint */}
-      {isOpen && !isLoading && !error && (
+      {!isLoading && !error && (
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/60 text-sm bg-black/50 px-4 py-2 rounded-full">
           Press <kbd className="px-2 py-1 bg-white/10 rounded mx-1">ESC</kbd> to close
           or <kbd className="px-2 py-1 bg-white/10 rounded mx-1">Ctrl+D</kbd> to download
@@ -212,4 +222,9 @@ export function DocumentViewerFullscreen({
       )}
     </div>
   )
+
+  // Render portal to document.body to escape backdrop-blur containing blocks
+  const portalTarget = typeof window !== 'undefined' ? window.document.body : null
+  if (!portalTarget) return null
+  return createPortal(modalContent, portalTarget)
 }
