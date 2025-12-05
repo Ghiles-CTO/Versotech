@@ -478,6 +478,51 @@ export const processWorkflows: WorkflowDefinition[] = [
         helperText: 'Include Private Placement Memorandum'
       }
     }
+  },
+  {
+    key: 'generate-investment-certificate',
+    title: 'Investment Certificate',
+    description: 'Generate official investment certificates for fully funded subscriptions',
+    detailedDescription: 'Generate a professional investment certificate for investors who have fully funded their subscription. The certificate includes investment details, shares/units held, and is watermarked for security. Automatically triggered when subscriptions reach fully funded status.',
+    icon: 'Award',
+    category: 'documents',
+    triggerType: 'both',
+    requiredRole: 'staff_ops',
+    inputSchema: {
+      subscription_id: {
+        label: 'Subscription',
+        type: 'text',
+        placeholder: 'Subscription ID',
+        required: true,
+        helperText: 'The subscription to generate a certificate for'
+      },
+      investor_id: {
+        label: 'Investor',
+        type: 'investor_select',
+        placeholder: 'Select investor',
+        required: true,
+        helperText: 'The investor receiving the certificate'
+      },
+      vehicle_id: {
+        label: 'Vehicle',
+        type: 'vehicle_select',
+        placeholder: 'Select vehicle',
+        required: true,
+        helperText: 'The fund or vehicle for the certificate'
+      },
+      certificate_date: {
+        label: 'Certificate Date',
+        type: 'date',
+        required: true,
+        helperText: 'The date to display on the certificate'
+      },
+      include_watermark: {
+        label: 'Include Watermark',
+        type: 'checkbox',
+        defaultValue: true,
+        helperText: 'Add security watermark to the certificate'
+      }
+    }
   }
 ]
 

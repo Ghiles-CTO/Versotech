@@ -1,14 +1,15 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
+import { getCurrentUser } from '@/lib/auth'
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
-    const supabase = await createServiceClient()
-    const { data: { user } } = await supabase.auth.getUser()
-
+    const user = await getCurrentUser()
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+
+    const supabase = createServiceClient()
 
     // Check permissions
     const { data: permission } = await supabase
@@ -35,15 +36,17 @@ export async function GET(request: NextRequest) {
       .select(`
         id,
         vehicle_id,
-        commitment_amount,
+        commitment,
         funded_amount,
         current_nav,
         outstanding_amount,
+        spread_fee_amount,
+        subscription_fee_amount,
         management_fee_amount,
         status,
         created_at
       `)
-      .eq('status', 'active')
+      .in('status', ['active', 'committed', 'funded'])
 
     // Get vehicle data
     const { data: vehicles } = await supabase
@@ -93,12 +96,17 @@ export async function GET(request: NextRequest) {
       `)
       .gte('distribution_date', startOfYear.toISOString())
 
-    // Calculate financial metrics
-    const totalAUM = subscriptions?.reduce((sum, sub) => sum + (sub.current_nav || 0), 0) || 0
-    const totalCommitments = subscriptions?.reduce((sum, sub) => sum + (sub.commitment_amount || 0), 0) || 0
+    // Calculate financial metrics from REAL subscription data
+    const totalAUM = subscriptions?.reduce((sum, sub) => sum + (sub.current_nav || sub.commitment || 0), 0) || 0
+    const totalCommitments = subscriptions?.reduce((sum, sub) => sum + (sub.commitment || 0), 0) || 0
     const totalFunded = subscriptions?.reduce((sum, sub) => sum + (sub.funded_amount || 0), 0) || 0
     const totalOutstanding = subscriptions?.reduce((sum, sub) => sum + (sub.outstanding_amount || 0), 0) || 0
+
+    // Fee revenue - SPREAD FEES are VERSO's PRIMARY REVENUE SOURCE!
+    const totalSpreadFees = subscriptions?.reduce((sum, sub) => sum + (sub.spread_fee_amount || 0), 0) || 0
+    const totalSubscriptionFees = subscriptions?.reduce((sum, sub) => sum + (sub.subscription_fee_amount || 0), 0) || 0
     const totalManagementFees = subscriptions?.reduce((sum, sub) => sum + (sub.management_fee_amount || 0), 0) || 0
+    const totalFeeRevenue = totalSpreadFees + totalSubscriptionFees + totalManagementFees
 
     // Invoice metrics
     const pendingInvoices = invoices?.filter(inv => inv.status === 'pending' || inv.status === 'sent') || []
@@ -136,8 +144,8 @@ export async function GET(request: NextRequest) {
       // Assets Under Management
       aum: {
         total: totalAUM,
-        change_mtd: 2.3, // % change - would calculate from historical data
-        change_ytd: 8.7,
+        change_mtd: null, // Would require historical snapshots to calculate
+        change_ytd: null, // Would require historical snapshots to calculate
         breakdown_by_vehicle: vehicles?.map(v => ({
           vehicle_name: v.name,
           vehicle_type: v.type,
@@ -155,11 +163,15 @@ export async function GET(request: NextRequest) {
         funding_rate: totalCommitments > 0 ? ((totalFunded / totalCommitments) * 100).toFixed(2) : 0,
       },
 
-      // Revenue & Fees
+      // Revenue & Fees (REAL VERSO REVENUE from subscriptions)
       revenue: {
-        management_fees_total: totalManagementFees,
-        revenue_mtd: paidInvoicesThisMonth.reduce((sum, inv) => sum + (inv.paid_amount || 0), 0),
-        revenue_ytd: paidInvoicesThisYear.reduce((sum, inv) => sum + (inv.paid_amount || 0), 0),
+        total_fee_revenue: totalFeeRevenue,
+        spread_fees: totalSpreadFees, // PRIMARY REVENUE SOURCE
+        subscription_fees: totalSubscriptionFees,
+        management_fees: totalManagementFees,
+        // Invoice-based revenue tracking
+        invoiced_revenue_mtd: paidInvoicesThisMonth.reduce((sum, inv) => sum + (inv.paid_amount || 0), 0),
+        invoiced_revenue_ytd: paidInvoicesThisYear.reduce((sum, inv) => sum + (inv.paid_amount || 0), 0),
         pending_invoices: {
           count: pendingInvoices.length,
           amount: pendingInvoices.reduce((sum, inv) => sum + (inv.amount || 0), 0),
@@ -210,20 +222,25 @@ export async function GET(request: NextRequest) {
         ).length || 0,
       },
 
-      // Performance Metrics
+      // Performance Metrics - calculated from actual data
       performance: {
-        irr_ytd: 12.4, // Would calculate from actual returns
-        multiple: 1.24, // Would calculate from actual returns
-        dpi: 0.32, // Distributions to Paid-In capital
-        tvpi: 1.56, // Total Value to Paid-In capital
+        // DPI = Total Distributions / Total Paid-In Capital
+        dpi: totalFunded > 0 ? Number((totalDistributionsYTD / totalFunded).toFixed(4)) : null,
+        // TVPI = (NAV + Distributions) / Paid-In Capital
+        tvpi: totalFunded > 0 ? Number(((totalAUM + totalDistributionsYTD) / totalFunded).toFixed(4)) : null,
+        // IRR and Multiple require cash flow timing data - not available without historical tracking
+        irr_ytd: null,
+        multiple: null,
       },
 
       // Summary
       summary: {
         total_portfolio_value: totalAUM + totalOutstanding,
         net_asset_value: totalAUM,
+        total_commitment: totalCommitments,
+        total_funded: totalFunded,
+        total_fee_revenue: totalFeeRevenue,
         total_distributions_ytd: totalDistributionsYTD,
-        total_revenue_ytd: paidInvoicesThisYear.reduce((sum, inv) => sum + (inv.paid_amount || 0), 0),
         last_updated: now.toISOString(),
       },
     }

@@ -35,6 +35,7 @@ export async function POST(
     const file = formData.get('file') as File
     const folder = formData.get('folder') as string || 'Misc'
     const visibleToInvestors = formData.get('visible_to_investors') === 'true'
+    const isFeatured = formData.get('is_featured') === 'true'
 
     if (!file) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 })
@@ -83,6 +84,7 @@ export async function POST(
         file_key: fileKey,
         file_name: file.name,
         visible_to_investors: visibleToInvestors,
+        is_featured: isFeatured,
         file_size_bytes: file.size,
         mime_type: file.type,
         version: 1,

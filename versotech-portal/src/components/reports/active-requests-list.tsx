@@ -32,7 +32,7 @@ export function ActiveRequestsList({ requests, onDownload }: ActiveRequestsListP
   const renderRequest = (request: RequestTicketWithRelations) => {
     const categoryConfig = REQUEST_CATEGORIES[request.category]
     const overdueStatus = isOverdue(request.due_date)
-    const canDownload = request.result_doc_id && request.documents
+    const canDownload = request.result_doc_id && (request.status === 'ready' || request.status === 'closed')
 
     return (
       <div

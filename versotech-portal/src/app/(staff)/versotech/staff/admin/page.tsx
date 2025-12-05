@@ -1,55 +1,32 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Skeleton } from '@/components/ui/skeleton'
-import {
-  Activity,
-  Users,
-  DollarSign,
-  Server,
-  Shield,
-  AlertCircle,
-  CheckCircle,
-  Clock,
-  Database,
-  Zap,
-  UserPlus,
-  UserX,
-  RefreshCw,
-  Settings,
-  Key,
-  Mail,
-} from 'lucide-react'
+import { RefreshCw, Users, Zap, Activity, Settings, Download, Shield } from 'lucide-react'
 
 // Import components
-import { SystemHealthMetrics } from './components/system-health-metrics'
+import { CollapsibleSection } from './components/collapsible-section'
 import { FinancialOverview } from './components/financial-overview'
 import { StaffManagementPanel } from './components/staff-management-panel'
 import { RealTimeActivityFeed } from './components/real-time-activity-feed'
+import { UserAccountManagement } from './components/user-account-management'
+import { DataExportPanel } from './components/data-export-panel'
+import { WorkflowMonitoring } from './components/workflow-monitoring'
+import { ComplianceAlertsPanel } from './components/compliance-alerts-panel'
+// Admin-only chart components
+import { AdminKpiCards } from './components/admin-kpi-cards'
+import { StaffActivityChart } from './components/staff-activity-chart'
+import { ApprovalQueueChart } from './components/approval-queue-chart'
+import { WorkflowTrendChart } from './components/workflow-trend-chart'
+import { ComplianceForecastChart } from './components/compliance-forecast-chart'
 
 export default function SuperAdminDashboard() {
   const [loading, setLoading] = useState(true)
-  const [systemMetrics, setSystemMetrics] = useState<any>(null)
+  const [refreshing, setRefreshing] = useState(false)
   const [financialMetrics, setFinancialMetrics] = useState<any>(null)
   const [staffMembers, setStaffMembers] = useState<any[]>([])
-  const [refreshing, setRefreshing] = useState(false)
-
-  const fetchSystemMetrics = async () => {
-    try {
-      const response = await fetch('/api/admin/metrics/system')
-      if (response.ok) {
-        const data = await response.json()
-        setSystemMetrics(data.data)
-      }
-    } catch (error) {
-      console.error('Failed to fetch system metrics:', error)
-    }
-  }
+  const [adminMetrics, setAdminMetrics] = useState<any>(null)
 
   const fetchFinancialMetrics = async () => {
     try {
@@ -68,269 +45,182 @@ export default function SuperAdminDashboard() {
       const response = await fetch('/api/admin/staff')
       if (response.ok) {
         const data = await response.json()
-        setStaffMembers(data.data.staff_members)
+        setStaffMembers(data.data?.staff_members || [])
       }
     } catch (error) {
       console.error('Failed to fetch staff members:', error)
     }
   }
 
-  const fetchDashboardData = async () => {
+  const fetchAdminMetrics = async () => {
+    try {
+      const response = await fetch('/api/admin/metrics/dashboard')
+      if (response.ok) {
+        const data = await response.json()
+        setAdminMetrics(data.data?.adminMetrics || null)
+      }
+    } catch (error) {
+      console.error('Failed to fetch admin metrics:', error)
+    }
+  }
+
+  const fetchAllData = async () => {
     setLoading(true)
     try {
       await Promise.all([
-        fetchSystemMetrics(),
         fetchFinancialMetrics(),
         fetchStaffMembers(),
+        fetchAdminMetrics(),
       ])
     } finally {
       setLoading(false)
     }
   }
 
-  // Fetch initial data
   useEffect(() => {
-    fetchDashboardData()
+    fetchAllData()
     // Set up polling for real-time updates
-    const interval = setInterval(fetchSystemMetrics, 30000) // Every 30 seconds
+    const interval = setInterval(() => {
+      fetchFinancialMetrics()
+      fetchStaffMembers()
+      fetchAdminMetrics()
+    }, 30000)
     return () => clearInterval(interval)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []) // Only run on mount - polling interval handles updates
+  }, [])
 
   const handleRefresh = async () => {
     setRefreshing(true)
-    await fetchDashboardData()
+    await fetchAllData()
     setRefreshing(false)
   }
 
   if (loading) {
     return (
-      <div className="container mx-auto py-8 space-y-6">
-        <Skeleton className="h-12 w-64" />
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {[...Array(4)].map((_, i) => (
-            <Skeleton key={i} className="h-32" />
-          ))}
+      <div className="min-h-screen bg-zinc-950 text-white">
+        <div className="container mx-auto py-8 space-y-6">
+          <div className="h-12 w-64 bg-zinc-800 rounded animate-pulse" />
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="h-64 bg-zinc-800 rounded-xl animate-pulse" />
+            <div className="h-64 bg-zinc-800 rounded-xl animate-pulse" />
+          </div>
         </div>
-        <Skeleton className="h-96" />
       </div>
     )
   }
 
   return (
-    <div className="container mx-auto py-8 space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold">Super Admin Dashboard</h1>
-          <p className="text-muted-foreground">Complete operational visibility and control</p>
+    <div className="min-h-screen bg-zinc-950 text-white">
+      <div className="container mx-auto py-8 space-y-8">
+        {/* Header */}
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold text-white">Super Admin Dashboard</h1>
+            <p className="text-zinc-400">Complete operational visibility and control</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <Button
+              onClick={handleRefresh}
+              disabled={refreshing}
+              variant="outline"
+              className="border-zinc-700 text-zinc-300 hover:text-white hover:bg-zinc-800"
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+              Refresh
+            </Button>
+          </div>
         </div>
-        <Button onClick={handleRefresh} disabled={refreshing}>
-          <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
-          Refresh
-        </Button>
-      </div>
 
-      {/* System Health Alert */}
-      {systemMetrics?.health_score?.value < 90 && (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            System health is degraded ({systemMetrics.health_score.value}%). Check error logs and performance metrics.
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {/* Key Metrics Overview */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {/* AUM Card */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total AUM</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              ${((financialMetrics?.aum?.total || 0) / 1000000).toFixed(1)}M
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Assets Under Management
-            </p>
-          </CardContent>
-        </Card>
-
-        {/* Active Users Card */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Sessions</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {systemMetrics?.active_sessions?.current || 0}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Peak: {systemMetrics?.active_sessions?.peak_24h || 0}
-            </p>
-          </CardContent>
-        </Card>
-
-        {/* Staff Members Card */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Staff Members</CardTitle>
-            <UserPlus className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {staffMembers.length}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {staffMembers.filter(s => s.status === 'active').length} active, {staffMembers.filter(s => s.status === 'invited').length} invited
-            </p>
-          </CardContent>
-        </Card>
-
-        {/* Workflow Executions Card */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Workflows (24h)</CardTitle>
-            <Zap className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {systemMetrics?.workflow_executions?.total_24h || 0}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {systemMetrics?.workflow_executions?.success_rate || 0}% success rate
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Main Dashboard Tabs */}
-      <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList className="grid grid-cols-4 w-full">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="staff">Staff Management</TabsTrigger>
-          <TabsTrigger value="monitoring">Monitoring</TabsTrigger>
-          <TabsTrigger value="activity">Activity Feed</TabsTrigger>
-        </TabsList>
-
-        {/* Overview Tab */}
-        <TabsContent value="overview" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
-            <SystemHealthMetrics metrics={systemMetrics} />
-            <FinancialOverview metrics={financialMetrics} />
-          </div>
-
-          {/* Quick Stats */}
-          <div className="grid gap-4 md:grid-cols-3">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Staff Overview</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-sm">Total Staff:</span>
-                  <span className="font-semibold">{staffMembers.length}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm">Active:</span>
-                  <span className="font-semibold">
-                    {staffMembers.filter(s => s.status === 'active').length}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm">Super Admins:</span>
-                  <span className="font-semibold">
-                    {staffMembers.filter(s => s.is_super_admin).length}
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Workflow Performance</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-sm">Executions (24h):</span>
-                  <span className="font-semibold">
-                    {systemMetrics?.workflow_executions?.total_24h || 0}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm">Success Rate:</span>
-                  <Badge variant={
-                    Number(systemMetrics?.workflow_executions?.success_rate) > 90
-                      ? 'default'
-                      : 'destructive'
-                  }>
-                    {systemMetrics?.workflow_executions?.success_rate || 0}%
-                  </Badge>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm">Failed:</span>
-                  <span className="font-semibold text-red-500">
-                    {systemMetrics?.workflow_executions?.failed || 0}
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Database Health</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-sm">Connections:</span>
-                  <span className="font-semibold">
-                    {systemMetrics?.database_connections?.active || 0}/
-                    {systemMetrics?.database_connections?.max_connections || 100}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm">Utilization:</span>
-                  <Badge variant={
-                    Number(systemMetrics?.database_connections?.utilization) < 50
-                      ? 'default'
-                      : 'destructive'
-                  }>
-                    {systemMetrics?.database_connections?.utilization || 0}%
-                  </Badge>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm">Response Time:</span>
-                  <span className="font-semibold">
-                    {systemMetrics?.api_response_time?.current || 0}ms
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        {/* Staff Management Tab */}
-        <TabsContent value="staff">
-          <StaffManagementPanel
-            staffMembers={staffMembers}
-            onStaffUpdate={fetchStaffMembers}
+        {/* Admin KPI Cards */}
+        {adminMetrics && (
+          <AdminKpiCards
+            security={adminMetrics.security}
+            complianceForecast={adminMetrics.complianceForecast}
           />
-        </TabsContent>
+        )}
 
-        {/* Monitoring Tab */}
-        <TabsContent value="monitoring">
-          <SystemHealthMetrics metrics={systemMetrics} detailed={true} />
-        </TabsContent>
+        {/* Admin-Only Charts Grid */}
+        <div className="grid grid-cols-2 gap-4">
+          <StaffActivityChart data={adminMetrics?.staffActivity || []} />
+          <ApprovalQueueChart data={adminMetrics?.approvalQueue || { under_1_day: 0, days_1_to_3: 0, days_3_to_7: 0, over_7_days: 0, total: 0 }} />
+          <WorkflowTrendChart data={adminMetrics?.workflowTrend || []} />
+          <ComplianceForecastChart data={adminMetrics?.complianceForecast || { next_7_days: 0, next_30_days: 0, next_90_days: 0, total: 0 }} />
+        </div>
 
-        {/* Activity Feed Tab */}
-        <TabsContent value="activity">
-          <RealTimeActivityFeed />
-        </TabsContent>
-      </Tabs>
+        {/* Financial Overview */}
+        <div className="rounded-xl border border-white/10 bg-zinc-900/50 p-1">
+          <FinancialOverview metrics={financialMetrics} />
+        </div>
+
+        {/* Collapsible Sections */}
+        <div className="space-y-4">
+          {/* Compliance Alerts */}
+          <CollapsibleSection
+            title="Compliance & KYC Alerts"
+            icon={<Shield className="h-5 w-5" />}
+            defaultOpen={false}
+          >
+            <ComplianceAlertsPanel />
+          </CollapsibleSection>
+
+          {/* Staff Management */}
+          <CollapsibleSection
+            title="Staff Management"
+            icon={<Users className="h-5 w-5" />}
+            defaultOpen={false}
+            badge={
+              <Badge variant="outline" className="border-zinc-600 text-zinc-400 text-xs">
+                {staffMembers.length} Members
+              </Badge>
+            }
+          >
+            <StaffManagementPanel staffMembers={staffMembers} onStaffUpdate={fetchStaffMembers} />
+          </CollapsibleSection>
+
+          {/* Activity Feed */}
+          <CollapsibleSection
+            title="Real-Time Activity Feed"
+            icon={<Activity className="h-5 w-5" />}
+            defaultOpen={false}
+          >
+            <RealTimeActivityFeed />
+          </CollapsibleSection>
+
+          {/* Workflow Monitoring */}
+          <CollapsibleSection
+            title="Workflow Monitoring"
+            icon={<Zap className="h-5 w-5" />}
+            defaultOpen={false}
+          >
+            <WorkflowMonitoring />
+          </CollapsibleSection>
+
+          {/* User Account Management */}
+          <CollapsibleSection
+            title="User Account Management"
+            icon={<Settings className="h-5 w-5" />}
+            defaultOpen={false}
+          >
+            <UserAccountManagement />
+          </CollapsibleSection>
+
+          {/* Data Export */}
+          <CollapsibleSection
+            title="Data Export"
+            icon={<Download className="h-5 w-5" />}
+            defaultOpen={false}
+          >
+            <DataExportPanel />
+          </CollapsibleSection>
+        </div>
+
+        {/* Footer */}
+        <div className="text-center py-6 border-t border-zinc-800">
+          <p className="text-sm text-zinc-500">
+            VERSO Holdings Super Admin Dashboard • Last updated:{' '}
+            {new Date().toLocaleString()}
+          </p>
+        </div>
+      </div>
     </div>
   )
 }

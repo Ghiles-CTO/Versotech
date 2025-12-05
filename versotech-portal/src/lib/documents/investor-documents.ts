@@ -25,7 +25,7 @@ interface RawDocument {
   owner_investor_id: string | null
   created_by_profile: { display_name: string; email: string } | null
   investors: { id: string; legal_name: string } | null
-  vehicles: { id: string; name: string; type: string } | null
+  vehicles: { id: string; name: string; type: string; investment_name: string | null; logo_url: string | null } | null
   deals: { id: string; name: string; status: string | null } | null
   folder: {
     id: string
@@ -55,7 +55,7 @@ const BASE_DOCUMENT_SELECT = `
   folder_id,
   created_by_profile:created_by(display_name, email),
   investors:owner_investor_id(id, legal_name),
-  vehicles:vehicle_id(id, name, type),
+  vehicles:vehicle_id(id, name, type, investment_name, logo_url),
   deals:deal_id(id, name, status),
   folder:document_folders(id, name, path, folder_type)
 `
@@ -74,7 +74,7 @@ export async function loadInvestorDocuments(
   // (committed = signed but not yet funded, partially_funded = some capital called)
   const { data: subscriptionData } = await supabase
     .from('subscriptions')
-    .select('vehicle_id, vehicles!inner(id, name, type)')
+    .select('vehicle_id, vehicles!inner(id, name, type, investment_name, logo_url)')
     .in('investor_id', investorIds)
     .in('status', ['active', 'committed', 'partially_funded'])
 
@@ -99,7 +99,9 @@ export async function loadInvestorDocuments(
         scope.vehicle = {
           id: doc.vehicles.id,
           name: doc.vehicles.name,
-          type: doc.vehicles.type
+          type: doc.vehicles.type,
+          investment_name: doc.vehicles.investment_name ?? undefined,
+          logo_url: doc.vehicles.logo_url ?? undefined
         }
       }
       if (doc.deals) {

@@ -5,7 +5,22 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Search, Filter, X } from 'lucide-react'
+import {
+  Search,
+  Filter,
+  X,
+  BarChart3,
+  FileBarChart,
+  Receipt,
+  Scale,
+  Lock,
+  PenTool,
+  FileCheck,
+  ClipboardList,
+  UserCheck,
+  Folder,
+  LucideIcon
+} from 'lucide-react'
 import { useState } from 'react'
 import {
   Select,
@@ -62,17 +77,17 @@ export function DocumentFiltersComponent({
     dealId !== ALL_DEALS_VALUE
   )
 
-  const documentTypes = [
-    { value: DocumentType.STATEMENT, label: 'Position Statements', emoji: '📊' },
-    { value: DocumentType.REPORT, label: 'Reports', emoji: '📈' },
-    { value: DocumentType.TAX, label: 'Tax Documents', emoji: '🧾' },
-    { value: DocumentType.LEGAL, label: 'Legal', emoji: '📄' },
-    { value: DocumentType.NDA, label: 'NDAs', emoji: '🔒' },
-    { value: DocumentType.SUBSCRIPTION, label: 'Subscriptions', emoji: '✍️' },
-    { value: DocumentType.AGREEMENT, label: 'Agreements', emoji: '📝' },
-    { value: DocumentType.TERM_SHEET, label: 'Term Sheets', emoji: '📋' },
-    { value: DocumentType.KYC, label: 'KYC', emoji: '🆔' },
-    { value: DocumentType.OTHER, label: 'Other', emoji: '📁' }
+  const documentTypes: { value: DocumentType; label: string; icon: LucideIcon }[] = [
+    { value: DocumentType.STATEMENT, label: 'Statements', icon: BarChart3 },
+    { value: DocumentType.REPORT, label: 'Reports', icon: FileBarChart },
+    { value: DocumentType.TAX, label: 'Tax', icon: Receipt },
+    { value: DocumentType.LEGAL, label: 'Legal', icon: Scale },
+    { value: DocumentType.NDA, label: 'NDAs', icon: Lock },
+    { value: DocumentType.SUBSCRIPTION, label: 'Subscriptions', icon: PenTool },
+    { value: DocumentType.AGREEMENT, label: 'Agreements', icon: FileCheck },
+    { value: DocumentType.TERM_SHEET, label: 'Term Sheets', icon: ClipboardList },
+    { value: DocumentType.KYC, label: 'KYC', icon: UserCheck },
+    { value: DocumentType.OTHER, label: 'Other', icon: Folder }
   ]
 
   return (
@@ -102,7 +117,7 @@ export function DocumentFiltersComponent({
                 })
               }}
             >
-              <span className="mr-2">{docType.emoji}</span>
+              <docType.icon className="h-4 w-4 mr-1.5" />
               {docType.label}
               {count > 0 && (
                 <span className="ml-2 text-xs opacity-75">({count})</span>

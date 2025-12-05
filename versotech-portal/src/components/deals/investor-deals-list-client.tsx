@@ -32,6 +32,7 @@ import {
   SlidersHorizontal
 } from 'lucide-react'
 import { InterestModal } from '@/components/deals/interest-modal'
+import { SubscribeNowDialog } from '@/components/deals/subscribe-now-dialog'
 
 type Nullable<T> = T | null
 
@@ -890,6 +891,20 @@ export function InvestorDealsListClient({
                         </Button>
                       </Link>
 
+                      {!isClosed && (
+                        <SubscribeNowDialog
+                          dealId={deal.id}
+                          dealName={deal.name}
+                          currency={deal.currency}
+                          existingSubmission={subscription}
+                        >
+                          <Button className="gap-2 bg-emerald-600 hover:bg-emerald-700">
+                            Subscribe Now
+                            <ArrowUpRight className="h-4 w-4" />
+                          </Button>
+                        </SubscribeNowDialog>
+                      )}
+
                       <InterestModal
                         dealId={deal.id}
                         dealName={deal.name}
@@ -898,8 +913,8 @@ export function InvestorDealsListClient({
                         defaultAmount={indicativeAmount}
                         isClosed={isClosed}
                       >
-                        <Button className="gap-2" variant={isClosed ? 'secondary' : 'default'}>
-                          {isClosed ? "Notify Me About Similar" : "I'm interested"}
+                        <Button className="gap-2" variant={isClosed ? 'secondary' : 'outline'}>
+                          {isClosed ? "Notify Me About Similar" : "Request data room access"}
                           <ArrowUpRight className="h-4 w-4" />
                         </Button>
                       </InterestModal>

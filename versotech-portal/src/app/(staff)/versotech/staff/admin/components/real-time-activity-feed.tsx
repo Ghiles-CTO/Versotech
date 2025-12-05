@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -21,22 +21,26 @@ import {
 
 interface AuditLog {
   id: string
-  created_at: string
-  user_id: string
+  timestamp: string
+  actor_id: string
+  actor_name: string
   action: string
   entity_type: string
   entity_id: string
-  old_values: any
-  new_values: any
-  profiles: {
-    display_name: string
-  }
+  before_value: any
+  after_value: any
 }
 
 export function RealTimeActivityFeed() {
   const [activities, setActivities] = useState<AuditLog[]>([])
   const [isPaused, setIsPaused] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
+  const isPausedRef = useRef(isPaused)
+
+  // Keep ref in sync with state
+  useEffect(() => {
+    isPausedRef.current = isPaused
+  }, [isPaused])
 
   const fetchActivities = useCallback(async () => {
     try {
@@ -44,7 +48,7 @@ export function RealTimeActivityFeed() {
       const response = await fetch('/api/admin/activity-feed')
       const data = await response.json()
 
-      if (data.success && !isPaused) {
+      if (data.success && !isPausedRef.current) {
         setActivities(data.data)
       }
     } catch (error) {
@@ -52,20 +56,20 @@ export function RealTimeActivityFeed() {
     } finally {
       setIsLoading(false)
     }
-  }, [isPaused])
+  }, [])
 
   useEffect(() => {
     fetchActivities()
 
     // Refresh every 30 seconds if not paused
     const interval = setInterval(() => {
-      if (!isPaused) {
+      if (!isPausedRef.current) {
         fetchActivities()
       }
     }, 30000)
 
     return () => clearInterval(interval)
-  }, [isPaused, fetchActivities])
+  }, [fetchActivities])
 
   const getActionIcon = (action: string) => {
     if (action.includes('create') || action.includes('insert')) return CheckCircle
@@ -153,7 +157,7 @@ export function RealTimeActivityFeed() {
                       <div className="flex items-start justify-between">
                         <div>
                           <p className="text-sm">
-                            <span className="font-medium">{activity.profiles.display_name}</span>
+                            <span className="font-medium">{activity.actor_name || 'System'}</span>
                             <span className="text-muted-foreground mx-1">•</span>
                             <span className="text-muted-foreground">
                               {activity.action.replace(/_/g, ' ')}
@@ -164,7 +168,7 @@ export function RealTimeActivityFeed() {
                           </p>
                         </div>
                         <span className="text-xs text-muted-foreground">
-                          {formatTimestamp(activity.created_at)}
+                          {formatTimestamp(activity.timestamp)}
                         </span>
                       </div>
                     </div>

@@ -75,7 +75,8 @@ export function CustomRequestModal({ open, onOpenChange, onSubmit, vehicles = []
       onOpenChange(false)
       toast.success('Request submitted successfully')
     } catch (error) {
-      toast.error('Failed to submit request')
+      // Error already handled by parent onSubmit
+      console.error('Submit failed:', error)
     } finally {
       setSubmitting(false)
     }
@@ -90,7 +91,7 @@ export function CustomRequestModal({ open, onOpenChange, onSubmit, vehicles = []
             Submit Custom Request
           </DialogTitle>
           <DialogDescription>
-            Need something specific? Send a request to the team at <strong>biz@realest.com</strong>
+            Need something specific? Send a request to the VERSO team and we'll get back to you shortly.
           </DialogDescription>
         </DialogHeader>
 

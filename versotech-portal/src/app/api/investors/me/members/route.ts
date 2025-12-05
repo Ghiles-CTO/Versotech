@@ -53,7 +53,7 @@ export async function GET(request: Request) {
       .from('investors')
       .select('id, type, display_name')
       .in('id', investorIds)
-      .in('type', ['entity', 'institution'])
+      .in('type', ['entity', 'institutional'])
 
     if (investorsError) {
       console.error('Error fetching investors:', investorsError)
@@ -129,7 +129,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Investor not found' }, { status: 404 })
     }
 
-    if (!['entity', 'institution'].includes(investor.type || '')) {
+    if (!['entity', 'institutional'].includes(investor.type || '')) {
       return NextResponse.json({
         error: 'Members can only be added to entity-type investors'
       }, { status: 400 })

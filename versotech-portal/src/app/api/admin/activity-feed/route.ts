@@ -1,14 +1,15 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
+import { getCurrentUser } from '@/lib/auth'
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
-    const supabase = await createServiceClient()
-    const { data: { user } } = await supabase.auth.getUser()
-
+    const user = await getCurrentUser()
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+
+    const supabase = createServiceClient()
 
     // Check if user has super_admin permission
     const { data: permission } = await supabase
@@ -22,23 +23,21 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
     }
 
-    // Get recent activity from audit_log (last 100 events)
+    // Get recent activity from audit_logs (last 100 events)
     const { data: activities, error } = await supabase
       .from('audit_logs')
       .select(`
         id,
-        created_at,
-        user_id,
+        timestamp,
+        actor_id,
+        actor_name,
         action,
         entity_type,
         entity_id,
-        old_values,
-        new_values,
-        profiles!audit_logs_user_id_fkey (
-          display_name
-        )
+        before_value,
+        after_value
       `)
-      .order('created_at', { ascending: false })
+      .order('timestamp', { ascending: false })
       .limit(100)
 
     if (error) {

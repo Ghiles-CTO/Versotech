@@ -13,6 +13,7 @@ export interface DataRoomDocument {
   file_name: string | null
   created_at: string
   external_link: string | null
+  is_featured?: boolean
 }
 
 interface DataRoomDocumentsProps {

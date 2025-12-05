@@ -54,7 +54,7 @@ export function WizardProgress() {
           const config = STEP_CONFIG[stepNum - 1]
           const isCompleted = state.completedSteps.has(stepNum)
           const isCurrent = stepNum === state.currentStep
-          const isAccessible = isCompleted || index <= currentStepIndex
+          const isAccessible = isCompleted || index <= currentStepIndex + 1
 
           return (
             <button

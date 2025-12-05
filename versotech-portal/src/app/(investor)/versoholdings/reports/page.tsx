@@ -4,7 +4,7 @@ import { AppLayout } from '@/components/layout/app-layout'
 import { ReportsPageClient } from '@/components/reports/reports-page-client'
 import { getProfile } from '@/lib/auth'
 import { loadInvestorDocuments } from '@/lib/documents/investor-documents'
-import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/server'
 
 export const dynamic = 'force-dynamic'
 
@@ -14,7 +14,7 @@ export default async function ReportsPage({
   searchParams: Promise<{ view?: string }>
 }) {
   const params = await searchParams
-  const initialView = params?.view === 'documents' ? 'documents' : 'reports'
+  const initialView = params?.view === 'documents' ? 'documents' : 'requests'
 
   const profile = await getProfile()
 
@@ -22,7 +22,6 @@ export default async function ReportsPage({
     redirect('/versoholdings/login')
   }
 
-  const supabase = await createClient()
   const serviceSupabase = createServiceClient()
 
   const { data: investorLinks } = await serviceSupabase
@@ -32,18 +31,7 @@ export default async function ReportsPage({
 
   const investorIds = investorLinks?.map(link => link.investor_id) ?? []
 
-  const [reportsResult, requestsResult, documentsData] = await Promise.all([
-    serviceSupabase
-      .from('report_requests')
-      .select(`
-        *,
-        investor:investors(legal_name),
-        result_doc:documents!report_requests_result_doc_id_fkey(*)
-      `)
-      .eq('investor_id', profile.id)
-      .order('created_at', { ascending: false })
-      .limit(20),
-
+  const [requestsResult, documentsData] = await Promise.all([
     serviceSupabase
       .from('request_tickets')
       .select(`
@@ -55,18 +43,16 @@ export default async function ReportsPage({
       `)
       .eq('investor_id', profile.id)
       .order('created_at', { ascending: false })
-      .limit(20),
+      .limit(100),
 
     loadInvestorDocuments(serviceSupabase, investorIds)
   ])
 
-  const reports = reportsResult.data || []
   const requests = requestsResult.data || []
 
   return (
     <AppLayout brand="versoholdings">
       <ReportsPageClient
-        initialReports={reports}
         initialRequests={requests}
         initialDocuments={documentsData.documents as any}
         folders={documentsData.folders}

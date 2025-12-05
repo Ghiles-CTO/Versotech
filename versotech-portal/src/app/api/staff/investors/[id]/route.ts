@@ -144,6 +144,32 @@ export async function PATCH(
       }
     }
 
+    // Check if type is being changed to non-entity type while members exist
+    if (type !== undefined && !['entity', 'institutional'].includes(type)) {
+      // Get current investor to check if type is changing from entity
+      const { data: currentInvestor } = await supabase
+        .from('investors')
+        .select('type')
+        .eq('id', id)
+        .single()
+
+      if (currentInvestor && ['entity', 'institutional'].includes(currentInvestor.type || '')) {
+        // Check if investor has members
+        const { data: members } = await supabase
+          .from('investor_members')
+          .select('id')
+          .eq('investor_id', id)
+          .eq('is_active', true)
+          .limit(1)
+
+        if (members && members.length > 0) {
+          return NextResponse.json({
+            error: 'Cannot change to non-entity type while members exist. Please remove members first.'
+          }, { status: 400 })
+        }
+      }
+    }
+
     // Build update object (only include fields that were provided)
     const updateData: any = {}
     if (legal_name !== undefined) updateData.legal_name = legal_name

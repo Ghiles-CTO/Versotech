@@ -20,6 +20,8 @@ export interface DocumentScope {
     id: string
     name: string
     type: string
+    investment_name?: string
+    logo_url?: string
   }
   deal?: {
     id: string
@@ -84,6 +86,8 @@ export interface Vehicle {
   id: string
   name: string
   type: string
+  investment_name?: string
+  logo_url?: string
 }
 
 export interface Deal {

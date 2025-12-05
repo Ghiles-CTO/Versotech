@@ -32,7 +32,7 @@ export async function POST(
     }
 
     const body = await request.json()
-    const { external_link, file_name, folder, visible_to_investors } = body
+    const { external_link, file_name, folder, visible_to_investors, is_featured } = body
 
     // Validate required fields
     if (!external_link || !file_name) {
@@ -62,6 +62,7 @@ export async function POST(
         file_name: file_name,
         folder: folder || 'Misc',
         visible_to_investors: visible_to_investors || false,
+        is_featured: is_featured || false,
         file_key: null, // No file uploaded for external links
         created_by: user.id,
         created_at: new Date().toISOString()

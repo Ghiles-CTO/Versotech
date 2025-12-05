@@ -44,6 +44,7 @@ export function DataRoomDocumentUpload({ dealId, onUploadComplete, trigger }: Do
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null)
   const [folder, setFolder] = useState('Data Room') // Default folder name for backward compatibility
   const [visibleToInvestors, setVisibleToInvestors] = useState(false)
+  const [isFeatured, setIsFeatured] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
   const [uploadMode, setUploadMode] = useState<'file' | 'link'>('file')
@@ -132,7 +133,8 @@ export function DataRoomDocumentUpload({ dealId, onUploadComplete, trigger }: Do
             file_name: linkFileName,
             folder,
             folder_id: selectedFolderId, // Include folder_id when available
-            visible_to_investors: visibleToInvestors
+            visible_to_investors: visibleToInvestors,
+            is_featured: isFeatured
           })
         })
 
@@ -157,6 +159,7 @@ export function DataRoomDocumentUpload({ dealId, onUploadComplete, trigger }: Do
             formData.append('folder_id', selectedFolderId) // Include folder_id when available
           }
           formData.append('visible_to_investors', visibleToInvestors.toString())
+          formData.append('is_featured', isFeatured.toString())
 
           const response = await fetch(`/api/deals/${dealId}/documents/upload`, {
             method: 'POST',
@@ -180,6 +183,7 @@ export function DataRoomDocumentUpload({ dealId, onUploadComplete, trigger }: Do
       setFiles([])
       setFolder('Legal')
       setVisibleToInvestors(false)
+      setIsFeatured(false)
       setExternalLink('')
       setLinkFileName('')
       setOpen(false)
@@ -316,7 +320,7 @@ export function DataRoomDocumentUpload({ dealId, onUploadComplete, trigger }: Do
             )}
 
             {/* Settings */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-4">
               <div className="space-y-2">
                 <Label>Folder</Label>
                 <Select
@@ -359,9 +363,8 @@ export function DataRoomDocumentUpload({ dealId, onUploadComplete, trigger }: Do
                 </Select>
               </div>
 
-              <div className="space-y-2">
-                <Label>Visibility</Label>
-                <div className="flex items-center space-x-2 h-10">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex items-center space-x-2">
                   <Checkbox
                     id="visible"
                     checked={visibleToInvestors}
@@ -373,6 +376,20 @@ export function DataRoomDocumentUpload({ dealId, onUploadComplete, trigger }: Do
                     className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                   >
                     Visible to investors
+                  </label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="featured"
+                    checked={isFeatured}
+                    onCheckedChange={(checked) => setIsFeatured(checked as boolean)}
+                    disabled={uploading}
+                  />
+                  <label
+                    htmlFor="featured"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Featured document
                   </label>
                 </div>
               </div>

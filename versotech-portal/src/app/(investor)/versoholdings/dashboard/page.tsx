@@ -9,7 +9,8 @@ import {
   Layers,
   MapPin,
   MessageSquare,
-  Target
+  Target,
+  User as UserIcon
 } from 'lucide-react'
 
 import { AppLayout } from '@/components/layout/app-layout'
@@ -34,6 +35,11 @@ export const dynamic = 'force-dynamic'
 interface DashboardContext {
   user: User | null
   investorIds: string[]
+  profile: {
+    displayName: string | null
+    avatarUrl: string | null
+    hasSeenIntroVideo: boolean
+  } | null
 }
 
 interface PortfolioVehicle {
@@ -87,25 +93,40 @@ async function getDashboardContext(): Promise<DashboardContext> {
   if (!user) {
     return {
       user: null,
-      investorIds: []
+      investorIds: [],
+      profile: null
     }
   }
 
   const serviceSupabase = createServiceClient()
-  const { data: investorLinks, error: investorError } = await serviceSupabase
-    .from('investor_users')
-    .select('investor_id')
-    .eq('user_id', user.id)
 
-  if (investorError) {
-    console.error('[Investor Dashboard] Investor link error:', investorError.message)
+  // Fetch investor links and profile in parallel for performance
+  const [investorLinksRes, profileRes] = await Promise.all([
+    serviceSupabase
+      .from('investor_users')
+      .select('investor_id')
+      .eq('user_id', user.id),
+    serviceSupabase
+      .from('profiles')
+      .select('display_name, avatar_url, has_seen_intro_video')
+      .eq('id', user.id)
+      .single()
+  ])
+
+  if (investorLinksRes.error) {
+    console.error('[Investor Dashboard] Investor link error:', investorLinksRes.error.message)
   }
 
-  const investorIds = investorLinks?.map(link => link.investor_id) ?? []
+  const investorIds = investorLinksRes.data?.map(link => link.investor_id) ?? []
 
   return {
     user,
-    investorIds
+    investorIds,
+    profile: profileRes.data ? {
+      displayName: profileRes.data.display_name,
+      avatarUrl: profileRes.data.avatar_url,
+      hasSeenIntroVideo: profileRes.data.has_seen_intro_video ?? true
+    } : null
   }
 }
 
@@ -596,24 +617,15 @@ function buildUpcomingHighlights(deals: FeaturedDeal[], tasks: DashboardTask[]):
 }
 
 export default async function InvestorDashboard() {
-  const { user, investorIds } = await getDashboardContext()
+  const { user, investorIds, profile } = await getDashboardContext()
   const [portfolioData, featuredDeals, actionCenter] = await Promise.all([
     getPortfolioData(investorIds),
     getFeaturedDeals(user?.id ?? null),
     getActionCenterData(user?.id ?? null, investorIds)
   ])
 
-  // Check if user has seen intro video
-  let showIntroVideo = false
-  if (user) {
-    const supabase = await createClient()
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('has_seen_intro_video')
-      .eq('id', user.id)
-      .single()
-    showIntroVideo = profile?.has_seen_intro_video === false
-  }
+  // Check if user has seen intro video (already fetched in getDashboardContext)
+  const showIntroVideo = profile ? !profile.hasSeenIntroVideo : false
   const videoUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/public-assets/videos/intro-video.mp4`
 
   const summaryTiles = [
@@ -645,23 +657,31 @@ export default async function InvestorDashboard() {
             <div className="space-y-6">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-white border border-slate-200 shadow-sm overflow-hidden">
-                    <Image
-                      src="/verso-logo.jpg"
-                      alt="VERSO Logo"
-                      width={48}
-                      height={48}
-                      className="object-contain w-full h-full"
-                      priority
-                    />
+                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-slate-100 to-slate-200 border border-slate-200 shadow-sm overflow-hidden">
+                    {profile?.avatarUrl ? (
+                      <Image
+                        src={profile.avatarUrl}
+                        alt={profile.displayName || 'Investor'}
+                        width={64}
+                        height={64}
+                        className="object-cover w-full h-full"
+                        priority
+                      />
+                    ) : (
+                      <UserIcon className="h-8 w-8 text-slate-400" />
+                    )}
                   </div>
                   <div className="space-y-1">
                     <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-                      Investor overview
+                      Investor portal
                     </p>
-                    <h1 className="text-3xl font-semibold text-slate-900">VERSO</h1>
+                    <h1 className="text-3xl font-semibold text-slate-900">
+                      {profile?.displayName
+                        ? `Welcome, ${profile.displayName.split(' ')[0]}`
+                        : 'Welcome'}
+                    </h1>
                     <p className="text-sm text-slate-600">
-                      Merchant Banking Group • Since 1958 • $800M+ AUM
+                      VERSO Holdings • Merchant Banking Group • Since 1958
                     </p>
                   </div>
                 </div>

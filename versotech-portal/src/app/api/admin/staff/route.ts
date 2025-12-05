@@ -58,21 +58,22 @@ export async function GET(request: NextRequest) {
     // Get activity stats for each staff member
     const staffWithStats = await Promise.all(
       (staffMembers || []).map(async (staff) => {
-        // Get last activity
+        // Get last activity from audit_logs (correct column: created_at, not timestamp)
         const { data: lastActivity } = await supabase
           .from('audit_logs')
-          .select('timestamp, action')
+          .select('created_at, action')
           .eq('actor_id', staff.id)
-          .order('timestamp', { ascending: false })
+          .order('created_at', { ascending: false })
           .limit(1)
           .single()
 
-        // Get login attempts in last 24 hours
+        // Get failed login attempts from audit_logs (no login_attempts table exists)
         const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
-        const { data: recentLogins } = await supabase
-          .from('login_attempts')
-          .select('success')
-          .eq('email', staff.email)
+        const { data: failedLogins } = await supabase
+          .from('audit_logs')
+          .select('id')
+          .eq('actor_id', staff.id)
+          .eq('action', 'login_failed')
           .gte('created_at', twentyFourHoursAgo)
 
         const permissions = allPermissions?.filter(p => p.user_id === staff.id).map(p => p.permission) || []
@@ -82,10 +83,10 @@ export async function GET(request: NextRequest) {
           status: staff.password_set === false ? 'invited' : 'active',
           permissions,
           is_super_admin: permissions.includes('super_admin'),
-          last_activity: lastActivity?.timestamp || null,
+          last_activity: lastActivity?.created_at || null,
           last_action: lastActivity?.action || null,
-          recent_login_count: recentLogins?.filter(l => l.success).length || 0,
-          recent_failed_logins: recentLogins?.filter(l => !l.success).length || 0,
+          recent_login_count: 0, // Would need to track successful logins in audit_logs
+          recent_failed_logins: failedLogins?.length || 0,
         }
       })
     )

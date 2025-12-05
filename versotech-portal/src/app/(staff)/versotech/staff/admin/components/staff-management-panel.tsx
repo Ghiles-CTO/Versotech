@@ -59,6 +59,8 @@ export function StaffManagementPanel({ staffMembers, onStaffUpdate }: StaffManag
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false)
   const [selectedStaff, setSelectedStaff] = useState<any>(null)
   const [activityDialogOpen, setActivityDialogOpen] = useState(false)
+  const [activityData, setActivityData] = useState<any>(null)
+  const [activityLoading, setActivityLoading] = useState(false)
   const [inviteFormData, setInviteFormData] = useState({
     email: '',
     display_name: '',
@@ -122,6 +124,21 @@ export function StaffManagementPanel({ staffMembers, onStaffUpdate }: StaffManag
   const handleViewActivity = async (staff: any) => {
     setSelectedStaff(staff)
     setActivityDialogOpen(true)
+    setActivityLoading(true)
+    setActivityData(null)
+    try {
+      const response = await fetch(`/api/admin/staff/${staff.id}/activity?limit=50`)
+      if (response.ok) {
+        const result = await response.json()
+        setActivityData(result.data)
+      } else {
+        toast.error('Failed to load activity data')
+      }
+    } catch (error) {
+      toast.error('Failed to load activity data')
+    } finally {
+      setActivityLoading(false)
+    }
   }
 
   const getRoleBadge = (role: string) => {
@@ -251,10 +268,6 @@ export function StaffManagementPanel({ staffMembers, onStaffUpdate }: StaffManag
                           <DropdownMenuItem onClick={() => handleViewActivity(staff)}>
                             <Activity className="h-4 w-4 mr-2" />
                             View Activity
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            <Shield className="h-4 w-4 mr-2" />
-                            Manage Permissions
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
@@ -391,7 +404,7 @@ export function StaffManagementPanel({ staffMembers, onStaffUpdate }: StaffManag
 
       {/* Activity Dialog */}
       <Dialog open={activityDialogOpen} onOpenChange={setActivityDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
           <DialogHeader>
             <DialogTitle>
               Activity Log - {selectedStaff?.display_name || selectedStaff?.email}
@@ -400,10 +413,60 @@ export function StaffManagementPanel({ staffMembers, onStaffUpdate }: StaffManag
               Recent activity and login history for this staff member.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
-            <p className="text-sm text-muted-foreground">
-              Activity tracking will show detailed logs once implemented.
-            </p>
+          <div className="flex-1 overflow-y-auto space-y-4">
+            {activityLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Clock className="h-6 w-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : activityData ? (
+              <>
+                {/* Activity Stats */}
+                {activityData.statistics && (
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="text-center p-3 rounded-lg bg-muted">
+                      <p className="text-2xl font-bold">{activityData.statistics.actions_today || 0}</p>
+                      <p className="text-xs text-muted-foreground">Today</p>
+                    </div>
+                    <div className="text-center p-3 rounded-lg bg-muted">
+                      <p className="text-2xl font-bold">{activityData.statistics.actions_this_week || 0}</p>
+                      <p className="text-xs text-muted-foreground">This Week</p>
+                    </div>
+                    <div className="text-center p-3 rounded-lg bg-muted">
+                      <p className="text-2xl font-bold">{activityData.statistics.actions_this_month || 0}</p>
+                      <p className="text-xs text-muted-foreground">This Month</p>
+                    </div>
+                  </div>
+                )}
+                {/* Activity List */}
+                {activityData.activities && activityData.activities.length > 0 ? (
+                  <div className="border rounded-lg divide-y">
+                    {activityData.activities.map((activity: any) => (
+                      <div key={activity.id} className="p-3 text-sm">
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium">{activity.action?.replace(/_/g, ' ')}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {new Date(activity.timestamp).toLocaleString()}
+                          </span>
+                        </div>
+                        {activity.entity_type && (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {activity.entity_type} {activity.entity_id ? `(${activity.entity_id.slice(0, 8)}...)` : ''}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    No activity recorded for this staff member.
+                  </p>
+                )}
+              </>
+            ) : (
+              <p className="text-sm text-muted-foreground text-center py-4">
+                Failed to load activity data.
+              </p>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setActivityDialogOpen(false)}>

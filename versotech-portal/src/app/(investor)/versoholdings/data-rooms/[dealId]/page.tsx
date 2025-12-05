@@ -153,7 +153,7 @@ export default async function DataRoomDetailPage({ params }: PageProps) {
   // Get documents
   const { data: documents } = await serviceSupabase
     .from('deal_data_room_documents')
-    .select('id, deal_id, folder, file_key, file_name, created_at, external_link')
+    .select('id, deal_id, folder, file_key, file_name, created_at, external_link, is_featured')
     .eq('deal_id', dealId)
     .eq('visible_to_investors', true)
     .order('folder', { ascending: true })
@@ -260,11 +260,38 @@ export default async function DataRoomDetailPage({ params }: PageProps) {
           </div>
         </div>
 
-        {/* Investment Overview Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {/* Left Half - Deal Information */}
+        {/* Main Content - Two Column Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+          {/* Left Column - Documents & Information */}
           <div className="space-y-4">
-            {/* Deal Summary */}
+            {/* 1. Deal Documents - PRIMARY CONTENT AT TOP */}
+            <div className="bg-white border-2 border-gray-200 rounded-lg p-6 space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-xl font-semibold text-black">
+                  <FileText className="h-5 w-5 text-blue-600" />
+                  Deal Documents
+                </div>
+                <Badge variant="outline" className="text-sm">
+                  {docs.length} file{docs.length !== 1 ? 's' : ''}
+                </Badge>
+              </div>
+              <DataRoomDocumentsGrouped documents={docs} />
+            </div>
+
+            {/* 2. Notes section if present */}
+            {accessData.notes && (
+              <div className="bg-amber-50 border-2 border-amber-200 rounded-lg p-4">
+                <div className="flex items-start gap-2">
+                  <AlertCircle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium text-amber-900 mb-1">Important Notes from VERSO Team</p>
+                    <p className="text-sm text-amber-800">{accessData.notes}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 3. Investment Overview */}
             {(deal.description || deal.investment_thesis) && (
               <div className="bg-white border-2 border-gray-200 rounded-lg p-6">
                 <div className="flex items-center gap-2 text-lg font-semibold text-black mb-4">
@@ -283,7 +310,7 @@ export default async function DataRoomDetailPage({ params }: PageProps) {
               </div>
             )}
 
-            {/* Investment Terms */}
+            {/* 4. Investment Terms */}
             <div className="bg-white border-2 border-gray-200 rounded-lg p-6">
               <div className="flex items-center gap-2 text-lg font-semibold text-black mb-4">
                 <DollarSign className="h-5 w-5 text-blue-600" />
@@ -325,7 +352,7 @@ export default async function DataRoomDetailPage({ params }: PageProps) {
               </div>
             </div>
 
-            {/* Fee Structure */}
+            {/* 5. Fee Structure */}
             {feeStructure && (
               <div className="bg-white border-2 border-gray-200 rounded-lg p-6">
                 <div className="flex items-center gap-2 text-lg font-semibold text-black mb-4">
@@ -368,12 +395,15 @@ export default async function DataRoomDetailPage({ params }: PageProps) {
                 </div>
               </div>
             )}
+
+            {/* 6. FAQ Section */}
+            <DealFaqSection dealId={dealId} />
           </div>
 
-          {/* Right Half - Subscription Form ONLY */}
-          <div>
+          {/* Right Column - Subscription Form (Sticky) */}
+          <div className="lg:sticky lg:top-4">
             {/* Subscription Form - PROMINENT */}
-            <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl p-8 shadow-xl h-full">
+            <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl p-8 shadow-xl">
               <div className="text-center mb-6">
                 <div className="inline-flex items-center justify-center bg-white rounded-full p-4 mb-4">
                   <Briefcase className="h-8 w-8 text-blue-600" />
@@ -393,36 +423,6 @@ export default async function DataRoomDetailPage({ params }: PageProps) {
             </div>
           </div>
         </div>
-
-        {/* Notes section if present */}
-        {accessData.notes && (
-          <div className="bg-amber-50 border-2 border-amber-200 rounded-lg p-4">
-            <div className="flex items-start gap-2">
-              <AlertCircle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="text-sm font-medium text-amber-900 mb-1">Important Notes from VERSO Team</p>
-                <p className="text-sm text-amber-800">{accessData.notes}</p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Documents Section - Full Width */}
-        <div className="bg-white border-2 border-gray-200 rounded-lg p-6 space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-xl font-semibold text-black">
-              <FileText className="h-5 w-5 text-blue-600" />
-              Deal Documents
-            </div>
-            <Badge variant="outline" className="text-sm">
-              {docs.length} file{docs.length !== 1 ? 's' : ''}
-            </Badge>
-          </div>
-          <DataRoomDocumentsGrouped documents={docs} />
-        </div>
-
-        {/* FAQ Section */}
-        <DealFaqSection dealId={dealId} />
       </div>
     </AppLayout>
   )
