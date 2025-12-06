@@ -10,6 +10,7 @@ import Image from 'next/image'
 import {
   Building2,
   ArrowLeft,
+  ArrowRight,
   Calendar,
   DollarSign,
   FileText,
@@ -18,10 +19,12 @@ import {
   Download,
   ShieldCheck,
   Sparkles,
+  Bell,
   CheckCircle2,
   Clock
 } from 'lucide-react'
 import { InterestModal } from '@/components/deals/interest-modal'
+import { SubscribeNowDialog } from '@/components/deals/subscribe-now-dialog'
 import { AskQuestionButton } from '@/components/deals/ask-question-button'
 import { DealFaqSection } from '@/components/deals/deal-faq-section'
 
@@ -616,19 +619,52 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
                 <CardTitle className="text-lg">Take Action</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <InterestModal
-                  dealId={deal.id}
-                  dealName={deal.name}
-                  currency={deal.currency}
-                  investorId={investorId}
-                  defaultAmount={interest?.indicative_amount}
-                  isClosed={isClosed}
-                >
-                  <Button className="w-full gap-2" variant={isClosed ? 'secondary' : 'default'}>
-                    <Sparkles className="h-4 w-4" />
-                    {isClosed ? "Notify Me About Similar" : interest ? "Update Interest" : "I'm interested"}
-                  </Button>
-                </InterestModal>
+                {!isClosed ? (
+                  <>
+                    {/* Subscribe Now - Primary CTA for open deals */}
+                    <SubscribeNowDialog
+                      dealId={deal.id}
+                      dealName={deal.name}
+                      currency={deal.currency}
+                      existingSubmission={subscription}
+                    >
+                      <Button className="w-full gap-2 bg-emerald-600 hover:bg-emerald-700 text-white">
+                        <ArrowRight className="h-4 w-4" />
+                        Subscribe Now
+                      </Button>
+                    </SubscribeNowDialog>
+
+                    {/* Request Data Room Access */}
+                    <InterestModal
+                      dealId={deal.id}
+                      dealName={deal.name}
+                      currency={deal.currency}
+                      investorId={investorId}
+                      defaultAmount={interest?.indicative_amount}
+                      isClosed={false}
+                    >
+                      <Button variant="outline" className="w-full gap-2">
+                        <FileText className="h-4 w-4" />
+                        Request data room access
+                      </Button>
+                    </InterestModal>
+                  </>
+                ) : (
+                  /* Notify Me About Similar - for closed deals */
+                  <InterestModal
+                    dealId={deal.id}
+                    dealName={deal.name}
+                    currency={deal.currency}
+                    investorId={investorId}
+                    defaultAmount={interest?.indicative_amount}
+                    isClosed={true}
+                  >
+                    <Button variant="secondary" className="w-full gap-2">
+                      <Bell className="h-4 w-4" />
+                      Notify Me About Similar
+                    </Button>
+                  </InterestModal>
+                )}
 
                 {hasDataRoomAccess && (
                   <Link href="/versoholdings/data-rooms">

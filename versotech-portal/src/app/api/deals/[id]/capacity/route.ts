@@ -39,10 +39,10 @@ export async function GET(
       .single()
 
     // Calculate total from BOTH sources without double-counting:
-    // 1. Get ALL subscriptions (converted submissions)
+    // 1. Get ALL subscriptions (formal commitments)
     const { data: subscriptions } = await supabase
       .from('subscriptions')
-      .select('id, commitment, status, created_from_submission_id')
+      .select('id, commitment, status')
       .eq('deal_id', dealId)
       .in('status', ['pending', 'committed', 'partially_funded', 'active'])
 
@@ -50,20 +50,19 @@ export async function GET(
       return sum + (sub.commitment || 0)
     }, 0) || 0
 
-    // 2. Get approved submissions that haven't been converted to subscriptions
+    // 2. Get approved submissions - include formal_subscription_id to detect converted ones
+    // The relationship is: deal_subscription_submissions.formal_subscription_id -> subscriptions.id
+    // If formal_subscription_id IS NOT NULL, the submission has been converted to a formal subscription
     const { data: submissions } = await supabase
       .from('deal_subscription_submissions')
-      .select('id, payload_json')
+      .select('id, payload_json, formal_subscription_id')
       .eq('deal_id', dealId)
       .eq('status', 'approved')
 
     // Filter out submissions that have been converted to subscriptions
-    const convertedSubmissionIds = new Set(
-      subscriptions?.map(s => s.created_from_submission_id).filter(Boolean) || []
-    )
-
+    // A submission is converted when formal_subscription_id is set
     const unconvertedSubmissions = submissions?.filter(
-      sub => !convertedSubmissionIds.has(sub.id)
+      sub => !sub.formal_subscription_id
     ) || []
 
     const totalFromUnconvertedSubmissions = unconvertedSubmissions.reduce((sum, sub) => {

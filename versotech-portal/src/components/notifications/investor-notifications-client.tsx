@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Loader2, Check } from 'lucide-react'
+import { toast } from 'sonner'
 
 interface Notification {
   id: string
@@ -29,6 +30,7 @@ export default function InvestorNotificationsClient() {
       setNotifications(data.notifications ?? [])
     } catch (error) {
       console.error(error)
+      toast.error('Failed to load notifications')
     } finally {
       setLoading(false)
     }
@@ -53,6 +55,7 @@ export default function InvestorNotificationsClient() {
       fetchNotifications()
     } catch (error) {
       console.error(error)
+      toast.error('Failed to mark notifications as read')
     } finally {
       setMarking(false)
     }

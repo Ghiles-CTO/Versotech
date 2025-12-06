@@ -3,7 +3,8 @@
     "allow": [
       "mcp__supabase__execute_sql",
       "SlashCommand(/ultra-think Do the problems we just fixed (the `.order('created_at')` query bug in signature/client.ts and the tasks page filter bug in tasks/page.tsx) also apply to the subscription pack signature workflow?)",
-      "mcp__supabase__list_tables"
+      "mcp__supabase__list_tables",
+      "Bash(git add:*)"
     ],
     "deny": [],
     "ask": []

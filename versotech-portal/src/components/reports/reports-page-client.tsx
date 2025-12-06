@@ -126,7 +126,7 @@ export function ReportsPageClient({
 
   async function submitCustomRequest(data: CreateCustomRequest) {
     try {
-      const response = await fetch('/api/custom-requests', {
+      const response = await fetch('/api/requests', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)

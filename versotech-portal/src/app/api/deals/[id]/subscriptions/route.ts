@@ -209,32 +209,8 @@ export async function POST(
     }
   }
 
-  // Check if investor has data room access (granted via NDA signature)
-  const { data: dataRoomAccess } = await serviceSupabase
-    .from('deal_data_room_access')
-    .select('id, expires_at, revoked_at')
-    .eq('deal_id', dealId)
-    .eq('investor_id', resolvedInvestorId)
-    .is('revoked_at', null)
-    .maybeSingle()
-
-  if (!dataRoomAccess && !isStaff) {
-    return NextResponse.json(
-      { error: 'You must have active data room access to submit a subscription' },
-      { status: 403 }
-    )
-  }
-
-  // Check if access has expired
-  if (dataRoomAccess && dataRoomAccess.expires_at) {
-    const expiryDate = new Date(dataRoomAccess.expires_at)
-    if (expiryDate < new Date() && !isStaff) {
-      return NextResponse.json(
-        { error: 'Your data room access has expired. Please request an extension.' },
-        { status: 403 }
-      )
-    }
-  }
+  // Note: Data room access check removed - investors can now subscribe directly
+  // without requiring data room access first (per client request Dec 2025)
 
   // Auto-cancel any existing pending submissions before creating new one
   // This prevents duplicate pending submissions and maintains clean workflow state

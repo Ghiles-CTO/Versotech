@@ -31,19 +31,22 @@ export default async function ReportsPage({
 
   const investorIds = investorLinks?.map(link => link.investor_id) ?? []
 
+  // If user has no linked investors, skip the request tickets query
   const [requestsResult, documentsData] = await Promise.all([
-    serviceSupabase
-      .from('request_tickets')
-      .select(`
-        *,
-        investor:investors(legal_name),
-        created_by_profile:profiles!request_tickets_created_by_fkey(display_name, avatar),
-        assigned_to_profile:profiles!request_tickets_assigned_to_fkey(display_name, avatar),
-        result_doc:documents(*)
-      `)
-      .eq('investor_id', profile.id)
-      .order('created_at', { ascending: false })
-      .limit(100),
+    investorIds.length > 0
+      ? serviceSupabase
+          .from('request_tickets')
+          .select(`
+            *,
+            investor:investors(id, legal_name),
+            created_by_profile:profiles!request_tickets_created_by_fkey(id, display_name, email),
+            assigned_to_profile:profiles!request_tickets_assigned_to_fkey(id, display_name, email),
+            result_doc:documents(id, file_key, type, created_at)
+          `)
+          .in('investor_id', investorIds)
+          .order('created_at', { ascending: false })
+          .limit(100)
+      : Promise.resolve({ data: [], error: null }),
 
     loadInvestorDocuments(serviceSupabase, investorIds)
   ])

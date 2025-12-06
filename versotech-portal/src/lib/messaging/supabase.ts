@@ -139,8 +139,8 @@ export function subscribeToConversationUpdates(
   }
 ) {
   const supabase = createClient()
+
   
-  console.log('[Realtime] Subscribing to conversation:', conversationId)
 
   const channel = supabase
     .channel(`conversation-${conversationId}`)
@@ -153,7 +153,6 @@ export function subscribeToConversationUpdates(
         filter: `conversation_id=eq.${conversationId}`,
       },
       (payload) => {
-        console.log('[Realtime] Message received for conversation:', conversationId, payload.new)
         if (payload.eventType === 'INSERT') {
           callbacks.onMessage?.(normalizeMessage(payload.new))
         }
@@ -169,16 +168,12 @@ export function subscribeToConversationUpdates(
         filter: `conversation_id=eq.${conversationId}`,
       },
       (payload) => {
-        console.log('[Realtime] Participants changed for conversation:', conversationId)
         callbacks.onUpdate?.()
       }
     )
-    .subscribe((status) => {
-      console.log('[Realtime] Channel status for', conversationId, ':', status)
-    })
+    .subscribe()
 
   return () => {
-    console.log('[Realtime] Unsubscribing from conversation:', conversationId)
     supabase.removeChannel(channel)
   }
 }

@@ -1,0 +1,836 @@
+// VERSO Holdings Database ERD
+// 92 Tables | 250 Foreign Key Relationships
+// Render at: https://dbdiagram.io
+
+//===========================================
+// TABLE GROUPS (Visual Organization)
+//===========================================
+
+TableGroup core_entities {
+  profiles
+  investors
+  investor_users
+  investor_members
+  investor_counterparty
+  counterparty_entity_members
+  arranger_entities
+  vehicles
+  deals
+}
+
+TableGroup subscriptions_investments {
+  subscriptions
+  positions
+  entity_investors
+  valuations
+  cashflows
+  performance_snapshots
+  allocations
+}
+
+TableGroup deal_pipeline {
+  deal_memberships
+  deal_data_room_access
+  deal_data_room_documents
+  investor_deal_interest
+  deal_subscription_submissions
+  deal_fee_structures
+  deal_faqs
+  deal_activity_events
+  investor_deal_holdings
+  investor_interest_signals
+  invite_links
+}
+
+TableGroup documents_signatures {
+  documents
+  document_folders
+  document_versions
+  document_approvals
+  document_publishing_schedule
+  signature_requests
+  esign_envelopes
+}
+
+TableGroup fees_billing {
+  fee_plans
+  fee_components
+  fee_events
+  fee_schedules
+  invoices
+  invoice_lines
+  payments
+  investor_terms
+  term_sheets
+}
+
+TableGroup banking_reconciliation {
+  bank_transactions
+  reconciliation_matches
+  reconciliations
+  suggested_matches
+  import_batches
+}
+
+TableGroup capital_operations {
+  capital_calls
+  capital_call_items
+  distributions
+  distribution_items
+}
+
+TableGroup workflows_approvals {
+  workflows
+  workflow_runs
+  workflow_run_logs
+  approvals
+  approval_history
+  automation_webhook_events
+}
+
+TableGroup tasks_requests {
+  tasks
+  task_actions
+  task_dependencies
+  task_templates
+  request_tickets
+  report_requests
+}
+
+TableGroup messaging {
+  conversations
+  conversation_participants
+  messages
+  message_reads
+  investor_notifications
+}
+
+TableGroup introducers_commissions {
+  introducers
+  introductions
+  introducer_commissions
+}
+
+TableGroup kyc_compliance {
+  kyc_submissions
+  compliance_alerts
+}
+
+TableGroup audit_activity {
+  audit_logs
+  audit_report_templates
+  activity_feed
+}
+
+TableGroup entity_management {
+  entity_directors
+  entity_events
+  entity_flags
+  entity_folders
+  entity_stakeholders
+  director_registry
+}
+
+TableGroup share_inventory {
+  share_sources
+  share_lots
+}
+
+TableGroup staff_settings {
+  staff_permissions
+  staff_filter_views
+  dashboard_preferences
+}
+
+TableGroup data_imports {
+  subscription_fingerprints
+  subscription_import_results
+  subscription_workbook_runs
+  system_metrics
+}
+
+//===========================================
+// CORE ENTITIES
+//===========================================
+
+Table profiles {
+  id uuid [pk]
+  // User accounts - investors and staff
+}
+
+Table investors {
+  id uuid [pk]
+  created_by uuid [ref: > profiles.id]
+  kyc_approved_by uuid [ref: > profiles.id]
+  primary_rm uuid [ref: > profiles.id]
+  secondary_rm uuid [ref: > profiles.id]
+}
+
+Table investor_users {
+  investor_id uuid [ref: > investors.id]
+  user_id uuid [ref: > profiles.id]
+}
+
+Table investor_members {
+  id uuid [pk]
+  investor_id uuid [ref: > investors.id]
+  created_by uuid [ref: > profiles.id]
+  kyc_approved_by uuid [ref: > profiles.id]
+}
+
+Table investor_counterparty {
+  id uuid [pk]
+  investor_id uuid [ref: > investors.id]
+  created_by uuid [ref: > profiles.id]
+}
+
+Table counterparty_entity_members {
+  id uuid [pk]
+  counterparty_entity_id uuid [ref: > investor_counterparty.id]
+  created_by uuid [ref: > profiles.id]
+  kyc_approved_by uuid [ref: > profiles.id]
+}
+
+Table arranger_entities {
+  id uuid [pk]
+  created_by uuid [ref: > profiles.id]
+  kyc_approved_by uuid [ref: > profiles.id]
+  updated_by uuid [ref: > profiles.id]
+}
+
+Table vehicles {
+  id uuid [pk]
+  arranger_entity_id uuid [ref: > arranger_entities.id]
+}
+
+Table deals {
+  id uuid [pk]
+  vehicle_id uuid [ref: > vehicles.id]
+  arranger_entity_id uuid [ref: > arranger_entities.id]
+  created_by uuid [ref: > profiles.id]
+}
+
+//===========================================
+// SUBSCRIPTIONS & INVESTMENTS
+//===========================================
+
+Table subscriptions {
+  id uuid [pk]
+  investor_id uuid [ref: > investors.id]
+  vehicle_id uuid [ref: > vehicles.id]
+  deal_id uuid [ref: > deals.id]
+  fee_plan_id uuid [ref: > fee_plans.id]
+  introducer_id uuid [ref: > introducers.id]
+  introduction_id uuid [ref: > introductions.id]
+}
+
+Table positions {
+  id uuid [pk]
+  investor_id uuid [ref: > investors.id]
+  vehicle_id uuid [ref: > vehicles.id]
+}
+
+Table entity_investors {
+  id uuid [pk]
+  investor_id uuid [ref: > investors.id]
+  vehicle_id uuid [ref: > vehicles.id]
+  created_by uuid [ref: > profiles.id]
+}
+
+Table valuations {
+  id uuid [pk]
+  vehicle_id uuid [ref: > vehicles.id]
+}
+
+Table cashflows {
+  id uuid [pk]
+  investor_id uuid [ref: > investors.id]
+  vehicle_id uuid [ref: > vehicles.id]
+}
+
+Table performance_snapshots {
+  id uuid [pk]
+  investor_id uuid [ref: > investors.id]
+  vehicle_id uuid [ref: > vehicles.id]
+}
+
+Table allocations {
+  id uuid [pk]
+  deal_id uuid [ref: > deals.id]
+  investor_id uuid [ref: > investors.id]
+  approved_by uuid [ref: > profiles.id]
+}
+
+//===========================================
+// DEAL PIPELINE
+//===========================================
+
+Table deal_memberships {
+  id uuid [pk]
+  deal_id uuid [ref: > deals.id]
+  investor_id uuid [ref: > investors.id]
+  user_id uuid [ref: > profiles.id]
+  invited_by uuid [ref: > profiles.id]
+}
+
+Table deal_data_room_access {
+  id uuid [pk]
+  deal_id uuid [ref: > deals.id]
+  investor_id uuid [ref: > investors.id]
+  granted_by uuid [ref: > profiles.id]
+  revoked_by uuid [ref: > profiles.id]
+}
+
+Table deal_data_room_documents {
+  id uuid [pk]
+  deal_id uuid [ref: > deals.id]
+  created_by uuid [ref: > profiles.id]
+  replaced_by_id uuid [ref: > deal_data_room_documents.id]
+}
+
+Table investor_deal_interest {
+  id uuid [pk]
+  deal_id uuid [ref: > deals.id]
+  investor_id uuid [ref: > investors.id]
+  approval_id uuid [ref: > approvals.id]
+  created_by uuid [ref: > profiles.id]
+}
+
+Table deal_subscription_submissions {
+  id uuid [pk]
+  deal_id uuid [ref: > deals.id]
+  investor_id uuid [ref: > investors.id]
+  formal_subscription_id uuid [ref: > subscriptions.id]
+  approval_id uuid [ref: > approvals.id]
+  counterparty_entity_id uuid [ref: > investor_counterparty.id]
+  created_by uuid [ref: > profiles.id]
+  approved_by uuid [ref: > profiles.id]
+  decided_by uuid [ref: > profiles.id]
+  rejected_by uuid [ref: > profiles.id]
+}
+
+Table deal_fee_structures {
+  id uuid [pk]
+  deal_id uuid [ref: > deals.id]
+  created_by uuid [ref: > profiles.id]
+}
+
+Table deal_faqs {
+  id uuid [pk]
+  deal_id uuid [ref: > deals.id]
+  created_by uuid [ref: > profiles.id]
+  updated_by uuid [ref: > profiles.id]
+}
+
+Table deal_activity_events {
+  id uuid [pk]
+  deal_id uuid [ref: > deals.id]
+  investor_id uuid [ref: > investors.id]
+}
+
+Table investor_deal_holdings {
+  id uuid [pk]
+  deal_id uuid [ref: > deals.id]
+  investor_id uuid [ref: > investors.id]
+  subscription_submission_id uuid [ref: > deal_subscription_submissions.id]
+  approval_id uuid [ref: > approvals.id]
+}
+
+Table investor_interest_signals {
+  id uuid [pk]
+  deal_id uuid [ref: > deals.id]
+  investor_id uuid [ref: > investors.id]
+  created_by uuid [ref: > profiles.id]
+}
+
+Table invite_links {
+  id uuid [pk]
+  deal_id uuid [ref: > deals.id]
+  created_by uuid [ref: > profiles.id]
+}
+
+//===========================================
+// DOCUMENTS & SIGNATURES
+//===========================================
+
+Table documents {
+  id uuid [pk]
+  owner_investor_id uuid [ref: > investors.id]
+  owner_user_id uuid [ref: > profiles.id]
+  created_by uuid [ref: > profiles.id]
+  vehicle_id uuid [ref: > vehicles.id]
+  entity_id uuid [ref: > vehicles.id]
+  deal_id uuid [ref: > deals.id]
+  subscription_id uuid [ref: > subscriptions.id]
+  arranger_entity_id uuid [ref: > arranger_entities.id]
+  folder_id uuid [ref: > document_folders.id]
+  signature_workflow_run_id uuid [ref: > workflow_runs.id]
+  subscription_submission_id uuid [ref: > deal_subscription_submissions.id]
+}
+
+Table document_folders {
+  id uuid [pk]
+  vehicle_id uuid [ref: > vehicles.id]
+  parent_folder_id uuid [ref: > document_folders.id]
+  created_by uuid [ref: > profiles.id]
+}
+
+Table document_versions {
+  id uuid [pk]
+  document_id uuid [ref: > documents.id]
+  created_by uuid [ref: > profiles.id]
+}
+
+Table document_approvals {
+  id uuid [pk]
+  document_id uuid [ref: > documents.id]
+  requested_by uuid [ref: > profiles.id]
+  reviewed_by uuid [ref: > profiles.id]
+}
+
+Table document_publishing_schedule {
+  id uuid [pk]
+  document_id uuid [ref: > documents.id]
+  created_by uuid [ref: > profiles.id]
+}
+
+Table signature_requests {
+  id uuid [pk]
+  document_id uuid [ref: > documents.id]
+  investor_id uuid [ref: > investors.id]
+  subscription_id uuid [ref: > subscriptions.id]
+  workflow_run_id uuid [ref: > workflow_runs.id]
+  created_by uuid [ref: > profiles.id]
+}
+
+Table esign_envelopes {
+  id uuid [pk]
+}
+
+//===========================================
+// FEES & BILLING
+//===========================================
+
+Table fee_plans {
+  id uuid [pk]
+  deal_id uuid [ref: > deals.id]
+  vehicle_id uuid [ref: > vehicles.id]
+  created_by uuid [ref: > profiles.id]
+}
+
+Table fee_components {
+  id uuid [pk]
+  fee_plan_id uuid [ref: > fee_plans.id]
+  next_tier_component_id uuid [ref: > fee_components.id]
+}
+
+Table fee_events {
+  id uuid [pk]
+  fee_component_id uuid [ref: > fee_components.id]
+  deal_id uuid [ref: > deals.id]
+  investor_id uuid [ref: > investors.id]
+  invoice_id uuid [ref: > invoices.id]
+  payment_id uuid [ref: > payments.id]
+}
+
+Table fee_schedules {
+  id uuid [pk]
+  allocation_id uuid [ref: > subscriptions.id]
+  fee_component_id uuid [ref: > fee_components.id]
+  deal_id uuid [ref: > deals.id]
+  investor_id uuid [ref: > investors.id]
+  created_by uuid [ref: > profiles.id]
+}
+
+Table invoices {
+  id uuid [pk]
+  investor_id uuid [ref: > investors.id]
+  deal_id uuid [ref: > deals.id]
+  doc_id uuid [ref: > documents.id]
+  reminder_task_id uuid [ref: > tasks.id]
+  created_by uuid [ref: > profiles.id]
+}
+
+Table invoice_lines {
+  id uuid [pk]
+  invoice_id uuid [ref: > invoices.id]
+  fee_event_id uuid [ref: > fee_events.id]
+}
+
+Table payments {
+  id uuid [pk]
+  investor_id uuid [ref: > investors.id]
+  invoice_id uuid [ref: > invoices.id]
+}
+
+Table investor_terms {
+  id uuid [pk]
+  investor_id uuid [ref: > investors.id]
+  deal_id uuid [ref: > deals.id]
+  vehicle_id uuid [ref: > vehicles.id]
+  base_fee_plan_id uuid [ref: > fee_plans.id]
+  selected_fee_plan_id uuid [ref: > fee_plans.id]
+  created_by uuid [ref: > profiles.id]
+  approved_by uuid [ref: > profiles.id]
+}
+
+Table term_sheets {
+  id uuid [pk]
+  investor_id uuid [ref: > investors.id]
+  deal_id uuid [ref: > deals.id]
+  fee_plan_id uuid [ref: > fee_plans.id]
+  doc_id uuid [ref: > documents.id]
+  supersedes_id uuid [ref: > term_sheets.id]
+  created_by uuid [ref: > profiles.id]
+}
+
+//===========================================
+// BANKING & RECONCILIATION
+//===========================================
+
+Table bank_transactions {
+  id uuid [pk]
+  matched_subscription_id uuid [ref: > subscriptions.id]
+  resolved_by uuid [ref: > profiles.id]
+}
+
+Table reconciliation_matches {
+  id uuid [pk]
+  bank_transaction_id uuid [ref: > bank_transactions.id]
+  invoice_id uuid [ref: > invoices.id]
+  approved_by uuid [ref: > profiles.id]
+}
+
+Table reconciliations {
+  id uuid [pk]
+  bank_transaction_id uuid [ref: > bank_transactions.id]
+  invoice_id uuid [ref: > invoices.id]
+  matched_by uuid [ref: > profiles.id]
+}
+
+Table suggested_matches {
+  id uuid [pk]
+  bank_transaction_id uuid [ref: > bank_transactions.id]
+  invoice_id uuid [ref: > invoices.id]
+  subscription_id uuid [ref: > subscriptions.id]
+}
+
+Table import_batches {
+  id uuid [pk]
+  imported_by uuid [ref: > profiles.id]
+}
+
+//===========================================
+// CAPITAL OPERATIONS
+//===========================================
+
+Table capital_calls {
+  id uuid [pk]
+  vehicle_id uuid [ref: > vehicles.id]
+}
+
+Table capital_call_items {
+  id uuid [pk]
+  capital_call_id uuid [ref: > capital_calls.id]
+  investor_id uuid [ref: > investors.id]
+  subscription_id uuid [ref: > subscriptions.id]
+}
+
+Table distributions {
+  id uuid [pk]
+  vehicle_id uuid [ref: > vehicles.id]
+}
+
+Table distribution_items {
+  id uuid [pk]
+  distribution_id uuid [ref: > distributions.id]
+  investor_id uuid [ref: > investors.id]
+  subscription_id uuid [ref: > subscriptions.id]
+}
+
+//===========================================
+// WORKFLOWS & APPROVALS
+//===========================================
+
+Table workflows {
+  id uuid [pk]
+}
+
+Table workflow_runs {
+  id uuid [pk]
+  workflow_id uuid [ref: > workflows.id]
+  triggered_by uuid [ref: > profiles.id]
+  signing_locked_by uuid [ref: > signature_requests.id]
+}
+
+Table workflow_run_logs {
+  id uuid [pk]
+  workflow_run_id uuid [ref: > workflow_runs.id]
+}
+
+Table approvals {
+  id uuid [pk]
+  related_deal_id uuid [ref: > deals.id]
+  related_investor_id uuid [ref: > investors.id]
+  requested_by uuid [ref: > profiles.id]
+  assigned_to uuid [ref: > profiles.id]
+  approved_by uuid [ref: > profiles.id]
+  secondary_approved_by uuid [ref: > profiles.id]
+}
+
+Table approval_history {
+  id uuid [pk]
+  approval_id uuid [ref: > approvals.id]
+  actor_id uuid [ref: > profiles.id]
+}
+
+Table automation_webhook_events {
+  id uuid [pk]
+  related_deal_id uuid [ref: > deals.id]
+  related_investor_id uuid [ref: > investors.id]
+}
+
+//===========================================
+// TASKS & REQUESTS
+//===========================================
+
+Table tasks {
+  id uuid [pk]
+  owner_investor_id uuid [ref: > investors.id]
+  owner_user_id uuid [ref: > profiles.id]
+  completed_by uuid [ref: > profiles.id]
+}
+
+Table task_actions {
+  id uuid [pk]
+  task_id uuid [ref: > tasks.id]
+}
+
+Table task_dependencies {
+  id uuid [pk]
+  task_id uuid [ref: > tasks.id]
+  depends_on_task_id uuid [ref: > tasks.id]
+}
+
+Table task_templates {
+  id uuid [pk]
+}
+
+Table request_tickets {
+  id uuid [pk]
+  investor_id uuid [ref: > investors.id]
+  deal_id uuid [ref: > deals.id]
+  result_doc_id uuid [ref: > documents.id]
+  created_by uuid [ref: > profiles.id]
+  assigned_to uuid [ref: > profiles.id]
+}
+
+Table report_requests {
+  id uuid [pk]
+  investor_id uuid [ref: > investors.id]
+  vehicle_id uuid [ref: > vehicles.id]
+  result_doc_id uuid [ref: > documents.id]
+  created_by uuid [ref: > profiles.id]
+}
+
+//===========================================
+// MESSAGING
+//===========================================
+
+Table conversations {
+  id uuid [pk]
+  deal_id uuid [ref: > deals.id]
+  created_by uuid [ref: > profiles.id]
+}
+
+Table conversation_participants {
+  id uuid [pk]
+  conversation_id uuid [ref: > conversations.id]
+  user_id uuid [ref: > profiles.id]
+}
+
+Table messages {
+  id uuid [pk]
+  conversation_id uuid [ref: > conversations.id]
+  sender_id uuid [ref: > profiles.id]
+  reply_to_message_id uuid [ref: > messages.id]
+}
+
+Table message_reads {
+  id uuid [pk]
+  message_id uuid [ref: > messages.id]
+  user_id uuid [ref: > profiles.id]
+}
+
+Table investor_notifications {
+  id uuid [pk]
+  investor_id uuid [ref: > investors.id]
+  user_id uuid [ref: > profiles.id]
+}
+
+//===========================================
+// INTRODUCERS & COMMISSIONS
+//===========================================
+
+Table introducers {
+  id uuid [pk]
+  user_id uuid [ref: > profiles.id]
+  created_by uuid [ref: > profiles.id]
+  agreement_doc_id uuid [ref: > documents.id]
+}
+
+Table introductions {
+  id uuid [pk]
+  introducer_id uuid [ref: > introducers.id]
+  prospect_investor_id uuid [ref: > investors.id]
+  deal_id uuid [ref: > deals.id]
+  created_by uuid [ref: > profiles.id]
+}
+
+Table introducer_commissions {
+  id uuid [pk]
+  introducer_id uuid [ref: > introducers.id]
+  introduction_id uuid [ref: > introductions.id]
+  investor_id uuid [ref: > investors.id]
+  deal_id uuid [ref: > deals.id]
+  approved_by uuid [ref: > profiles.id]
+}
+
+//===========================================
+// KYC & COMPLIANCE
+//===========================================
+
+Table kyc_submissions {
+  id uuid [pk]
+  investor_id uuid [ref: > investors.id]
+  investor_member_id uuid [ref: > investor_members.id]
+  counterparty_entity_id uuid [ref: > investor_counterparty.id]
+  counterparty_member_id uuid [ref: > counterparty_entity_members.id]
+  document_id uuid [ref: > documents.id]
+  previous_submission_id uuid [ref: > kyc_submissions.id]
+  reviewed_by uuid [ref: > profiles.id]
+}
+
+Table compliance_alerts {
+  id uuid [pk]
+  assigned_to uuid [ref: > profiles.id]
+  resolved_by uuid [ref: > profiles.id]
+}
+
+//===========================================
+// AUDIT & ACTIVITY
+//===========================================
+
+Table audit_logs {
+  id uuid [pk]
+  actor_id uuid [ref: > profiles.id]
+  compliance_reviewer_id uuid [ref: > profiles.id]
+}
+
+Table audit_report_templates {
+  id uuid [pk]
+  created_by uuid [ref: > profiles.id]
+}
+
+Table activity_feed {
+  id uuid [pk]
+  investor_id uuid [ref: > investors.id]
+  created_by uuid [ref: > profiles.id]
+}
+
+//===========================================
+// ENTITY MANAGEMENT
+//===========================================
+
+Table entity_directors {
+  id uuid [pk]
+  vehicle_id uuid [ref: > vehicles.id]
+}
+
+Table entity_events {
+  id uuid [pk]
+  vehicle_id uuid [ref: > vehicles.id]
+  changed_by uuid [ref: > profiles.id]
+}
+
+Table entity_flags {
+  id uuid [pk]
+  vehicle_id uuid [ref: > vehicles.id]
+  resolved_by uuid [ref: > profiles.id]
+}
+
+Table entity_folders {
+  id uuid [pk]
+  vehicle_id uuid [ref: > vehicles.id]
+  parent_folder_id uuid [ref: > entity_folders.id]
+}
+
+Table entity_stakeholders {
+  id uuid [pk]
+  vehicle_id uuid [ref: > vehicles.id]
+}
+
+Table director_registry {
+  id uuid [pk]
+  created_by uuid [ref: > profiles.id]
+}
+
+//===========================================
+// SHARE INVENTORY
+//===========================================
+
+Table share_sources {
+  id uuid [pk]
+  contract_doc_id uuid [ref: > documents.id]
+}
+
+Table share_lots {
+  id uuid [pk]
+  deal_id uuid [ref: > deals.id]
+  source_id uuid [ref: > share_sources.id]
+}
+
+//===========================================
+// STAFF & SETTINGS
+//===========================================
+
+Table staff_permissions {
+  id uuid [pk]
+  user_id uuid [ref: > profiles.id]
+  granted_by uuid [ref: > profiles.id]
+}
+
+Table staff_filter_views {
+  id uuid [pk]
+  user_id uuid [ref: > profiles.id]
+}
+
+Table dashboard_preferences {
+  id uuid [pk]
+  user_id uuid [ref: > profiles.id]
+}
+
+//===========================================
+// DATA IMPORTS
+//===========================================
+
+Table subscription_fingerprints {
+  id uuid [pk]
+  subscription_id uuid [ref: > subscriptions.id]
+}
+
+Table subscription_import_results {
+  id uuid [pk]
+  subscription_id uuid [ref: > subscriptions.id]
+  entity_investor_id uuid [ref: > entity_investors.id]
+  investor_deal_holding_id uuid [ref: > investor_deal_holdings.id]
+  run_id uuid [ref: > subscription_workbook_runs.id]
+}
+
+Table subscription_workbook_runs {
+  id uuid [pk]
+}
+
+Table system_metrics {
+  id uuid [pk]
+}

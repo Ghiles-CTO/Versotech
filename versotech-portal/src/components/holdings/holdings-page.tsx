@@ -324,39 +324,27 @@ export function HoldingsPage({ initialData }: HoldingsPageProps) {
           setPerformanceData(performance)
         }
 
-        // 3. Cash Flow Chart - fetch capital calls and distributions
-        const [capitalCallsResult, distributionsResult] = await Promise.all([
-          supabase
-            .from('capital_calls')
-            .select('amount, due_date')
-            .in('investor_id', investorIds)
-            .order('due_date', { ascending: true })
-            .limit(20),
-          supabase
-            .from('distributions')
-            .select('amount, date')
-            .in('investor_id', investorIds)
-            .order('date', { ascending: true })
-            .limit(20)
-        ])
+        // 3. Cash Flow Chart - fetch from cashflows table (has investor_id)
+        const { data: cashflowsData } = await supabase
+          .from('cashflows')
+          .select('type, amount, date')
+          .in('investor_id', investorIds)
+          .order('date', { ascending: true })
+          .limit(100)
 
-        // Combine and group by period
+        // Group by period
         const cashFlowMap: any = {}
 
-        capitalCallsResult.data?.forEach((cc: any) => {
-          const period = new Date(cc.due_date).toISOString().substring(0, 7) // YYYY-MM
+        cashflowsData?.forEach((cf: any) => {
+          const period = new Date(cf.date).toISOString().substring(0, 7) // YYYY-MM
           if (!cashFlowMap[period]) {
             cashFlowMap[period] = { period, contributions: 0, distributions: 0 }
           }
-          cashFlowMap[period].contributions += cc.amount || 0
-        })
-
-        distributionsResult.data?.forEach((d: any) => {
-          const period = new Date(d.date).toISOString().substring(0, 7) // YYYY-MM
-          if (!cashFlowMap[period]) {
-            cashFlowMap[period] = { period, contributions: 0, distributions: 0 }
+          if (cf.type === 'call') {
+            cashFlowMap[period].contributions += cf.amount || 0
+          } else if (cf.type === 'distribution') {
+            cashFlowMap[period].distributions += cf.amount || 0
           }
-          cashFlowMap[period].distributions += d.amount || 0
         })
 
         const cashFlow = Object.values(cashFlowMap).map((cf: any) => ({

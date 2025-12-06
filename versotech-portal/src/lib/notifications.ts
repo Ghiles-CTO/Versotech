@@ -2,7 +2,7 @@ import { createServiceClient } from '@/lib/supabase/server'
 
 /**
  * Notification types for categorizing investor notifications.
- * Stored inside the metadata.type field.
+ * Currently unused but kept for future extensibility.
  */
 export type NotificationType =
   | 'kyc_status'
@@ -44,8 +44,7 @@ export interface CreateNotificationParams {
  *   title: 'KYC Approved',
  *   message: 'Your KYC documents have been approved.',
  *   link: '/versoholdings/documents',
- *   type: 'kyc_status',
- *   extraMetadata: { submission_id: 'sub-uuid' }
+ *   type: 'kyc_status'
  * })
  */
 export async function createInvestorNotification(params: CreateNotificationParams): Promise<void> {
@@ -56,11 +55,7 @@ export async function createInvestorNotification(params: CreateNotificationParam
     investor_id: params.investorId ?? null,
     title: params.title,
     message: params.message,
-    link: params.link ?? null,
-    metadata: {
-      type: params.type,
-      ...params.extraMetadata
-    }
+    link: params.link ?? null
   })
 
   if (error) {

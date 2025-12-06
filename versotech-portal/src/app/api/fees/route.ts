@@ -54,61 +54,70 @@ export async function GET(request: Request) {
     const vehicleId = searchParams.get('vehicle_id')
     const dealId = searchParams.get('deal_id')
 
+    // Build vehicle fees query - only filter by vehicle_id if provided
+    let vehicleFeesQuery = supabase
+      .from('fee_events')
+      .select(`
+        *,
+        fee_components (
+          id,
+          kind,
+          calc_method,
+          rate_bps,
+          frequency,
+          fee_plans (
+            name,
+            description
+          )
+        ),
+        vehicles (
+          id,
+          name,
+          type
+        )
+      `)
+      .in('investor_id', investorIds)
+      .not('vehicle_id', 'is', null)
+      .order('event_date', { ascending: false })
+
+    if (vehicleId) {
+      vehicleFeesQuery = vehicleFeesQuery.eq('vehicle_id', vehicleId)
+    }
+
+    // Build deal fees query - only filter by deal_id if provided
+    let dealFeesQuery = supabase
+      .from('fee_events')
+      .select(`
+        *,
+        fee_components (
+          id,
+          kind,
+          calc_method,
+          rate_bps,
+          frequency,
+          fee_plans (
+            name,
+            description
+          )
+        ),
+        deals (
+          id,
+          name,
+          deal_type
+        )
+      `)
+      .in('investor_id', investorIds)
+      .not('deal_id', 'is', null)
+      .order('event_date', { ascending: false })
+
+    if (dealId) {
+      dealFeesQuery = dealFeesQuery.eq('deal_id', dealId)
+    }
+
     // Get fee events - try both vehicle-based and deal-based fees
     const [vehicleFeesResponse, dealFeesResponse] = await Promise.allSettled([
-      // Vehicle-based fees (traditional subscription/management fees)
-      supabase
-        .from('fee_events')
-        .select(`
-          *,
-          fee_components (
-            id,
-            kind,
-            calc_method,
-            rate_bps,
-            frequency,
-            fee_plans (
-              name,
-              description
-            )
-          ),
-          vehicles (
-            id,
-            name,
-            type
-          )
-        `)
-        .in('investor_id', investorIds)
-        .not('vehicle_id', 'is', null)
-        .eq('vehicle_id', vehicleId || null)
-        .order('event_date', { ascending: false }),
-
-      // Deal-based fees (spread, allocation fees)
-      supabase
-        .from('fee_events')
-        .select(`
-          *,
-          fee_components (
-            id,
-            kind,
-            calc_method,
-            rate_bps,
-            frequency,
-            fee_plans (
-              name,
-              description
-            )
-          ),
-          deals (
-            id,
-            name,
-            deal_type
-          )
-        `)
-        .in('investor_id', investorIds)
-        .not('deal_id', 'is', null)
-        .eq('deal_id', dealId || null)
-        .order('event_date', { ascending: false })
+      vehicleFeesQuery,
+      dealFeesQuery
     ])
 
     const vehicleFees = vehicleFeesResponse.status === 'fulfilled' ? vehicleFeesResponse.value.data || [] : []

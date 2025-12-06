@@ -1528,4 +1528,626 @@ Two helper views exist for complex queries:
 
 ---
 
+## Part 5: Glossary of Business Terms
+
+Understanding these terms is essential for working with VERSO Holdings data:
+
+### Investment Structures
+
+| Term | Definition |
+|------|------------|
+| **SPV** | Special Purpose Vehicle - A legal entity created for a single investment or transaction, isolating risk from the parent company |
+| **Fund** | A pooled investment vehicle that aggregates capital from multiple investors to invest in a portfolio of assets |
+| **Securitization** | The process of pooling financial assets and issuing securities backed by those assets |
+| **Vehicle** | Generic term for any investment structure (fund, SPV, note, etc.) that holds investor capital |
+| **Commitment** | The total amount an investor has agreed to invest in a vehicle (may not all be called at once) |
+| **Funded Amount** | The portion of an investor's commitment that has actually been called and paid |
+
+### Performance Metrics
+
+| Term | Definition |
+|------|------------|
+| **NAV** | Net Asset Value - The current market value of an investment, calculated as assets minus liabilities |
+| **DPI** | Distributions to Paid-In - Total distributions divided by total contributed capital (how much cash returned) |
+| **TVPI** | Total Value to Paid-In - (NAV + Distributions) / Contributed Capital (overall multiple) |
+| **IRR** | Internal Rate of Return - Annualized return accounting for timing of cash flows |
+| **Gross IRR** | IRR before fees are deducted |
+| **Net IRR** | IRR after all fees (management, performance, etc.) are deducted |
+
+### Fee Types
+
+| Term | Definition |
+|------|------------|
+| **Management Fee** | Annual fee charged on committed or invested capital (typically 1-2% per year) |
+| **Performance Fee (Carry)** | Share of profits above a hurdle rate (typically 20% of profits) |
+| **Subscription Fee** | One-time fee charged when investor subscribes (typically 1-3%) |
+| **Spread Markup** | Difference between buy and sell price in secondary transactions |
+| **BD Fee** | Business Development fee paid to introducers/referrers |
+| **Hurdle Rate** | Minimum return threshold before performance fees apply |
+| **High Water Mark** | Previous peak NAV that must be exceeded before performance fees apply |
+| **Basis Points (bps)** | One hundredth of a percent (100 bps = 1%) |
+
+### Transaction Types
+
+| Term | Definition |
+|------|------------|
+| **Capital Call** | Request for investors to fund a portion of their commitment |
+| **Distribution** | Return of capital or profits to investors |
+| **Secondary** | Purchase of existing shares from current shareholders (vs. buying new shares from company) |
+| **Primary** | Investment directly into a company through new share issuance |
+| **Allocation** | Confirmed amount an investor will receive in a deal |
+| **Reservation** | Temporary hold on shares before formal allocation |
+
+### Compliance & Legal
+
+| Term | Definition |
+|------|------------|
+| **KYC** | Know Your Customer - Identity verification and background checks required by regulations |
+| **AML** | Anti-Money Laundering - Regulations to prevent illicit fund flows |
+| **Accredited Investor** | Investor meeting wealth/income thresholds to invest in private offerings |
+| **Professional Investor** | Regulatory classification for sophisticated institutional investors |
+| **NDA** | Non-Disclosure Agreement - Required before accessing deal data room |
+| **Subscription Agreement** | Legal contract between investor and vehicle documenting investment terms |
+
+### Roles
+
+| Term | Definition |
+|------|------------|
+| **RM (Relationship Manager)** | Staff member responsible for investor relationships |
+| **Arranger** | Regulated entity that structures and manages investment vehicles |
+| **Introducer** | External party who refers investors to deals (earns commission) |
+| **Beneficial Owner** | Individual who ultimately owns/controls an entity investor |
+
+---
+
+## Part 6: Complete Enum Reference
+
+All valid status values and their meanings:
+
+### User & Access Enums
+
+#### `user_role`
+| Value | Description |
+|-------|-------------|
+| `investor` | Investor portal access only |
+| `staff_admin` | Full staff portal access, can manage users |
+| `staff_ops` | Operations team, manages deals and documents |
+| `staff_rm` | Relationship managers, investor-focused staff |
+
+#### `deal_member_role`
+| Value | Description |
+|-------|-------------|
+| `investor` | Primary investor in the deal |
+| `co_investor` | Additional investor (spouse's separate account, etc.) |
+| `spouse` | Spouse of primary investor (for joint accounts) |
+| `advisor` | Financial advisor to the investor |
+| `lawyer` | Legal counsel for the investor |
+| `banker` | Private banker managing investor relationship |
+| `introducer` | Referral source (earns commission) |
+| `viewer` | Read-only access to deal information |
+| `verso_staff` | VERSO team member managing the deal |
+
+### Deal & Investment Enums
+
+#### `deal_status_enum`
+```
+draft → open → allocation_pending → closed
+                                 ↘ cancelled
+```
+| Value | Description |
+|-------|-------------|
+| `draft` | Deal being prepared, not visible to investors |
+| `open` | Accepting expressions of interest and subscriptions |
+| `allocation_pending` | Closed to new interest, finalizing allocations |
+| `closed` | Deal complete, subscriptions processed |
+| `cancelled` | Deal terminated (didn't proceed) |
+
+#### `deal_type_enum`
+| Value | Description |
+|-------|-------------|
+| `equity_secondary` | Buying existing shares from shareholders |
+| `equity_primary` | Buying new shares directly from company |
+| `credit_trade_finance` | Debt/lending-based investments |
+| `other` | Alternative investment types |
+
+#### `allocation_status_enum`
+```
+pending_review → approved → settled
+             ↘ rejected
+```
+| Value | Description |
+|-------|-------------|
+| `pending_review` | Awaiting staff approval |
+| `approved` | Allocation confirmed |
+| `rejected` | Allocation declined |
+| `settled` | Funds received, shares allocated |
+
+#### `vehicle_type`
+| Value | Description |
+|-------|-------------|
+| `fund` | Pooled investment fund |
+| `spv` | Special Purpose Vehicle (single asset) |
+| `securitization` | Asset-backed structure |
+| `note` | Debt instrument |
+| `real_estate` | Property investment vehicle |
+| `private_equity` | PE fund structure |
+| `venture_capital` | VC fund structure |
+| `other` | Other vehicle types |
+
+#### `entity_status`
+| Value | Description |
+|-------|-------------|
+| `LIVE` | Active, operational vehicle |
+| `CLOSED` | Vehicle wound down or liquidated |
+| `TBD` | Status to be determined |
+
+### Fee & Billing Enums
+
+#### `fee_component_kind_enum`
+| Value | Description |
+|-------|-------------|
+| `subscription` | One-time entry fee |
+| `management` | Ongoing annual fee |
+| `performance` | Profit share (carry) |
+| `spread_markup` | Secondary transaction spread |
+| `flat` | Fixed amount fee |
+| `bd_fee` | Business development/referral fee |
+| `finra_fee` | Regulatory filing fee |
+| `other` | Other fee types |
+
+#### `fee_calc_method_enum`
+| Value | Description |
+|-------|-------------|
+| `percent_of_investment` | % of amount invested |
+| `percent_per_annum` | Annual % (prorated) |
+| `percent_of_profit` | % of gains above hurdle |
+| `per_unit_spread` | Fixed $ per share traded |
+| `fixed` | Fixed dollar amount |
+| `percent_of_commitment` | % of total commitment |
+| `percent_of_nav` | % of current NAV |
+| `fixed_amount` | Same as fixed |
+
+#### `fee_frequency_enum`
+| Value | Description |
+|-------|-------------|
+| `one_time` | Charged once (subscription) |
+| `annual` | Once per year |
+| `quarterly` | Four times per year |
+| `monthly` | Twelve times per year |
+| `on_exit` | When investment liquidates |
+| `on_event` | On specific trigger |
+
+#### `fee_event_status_enum`
+```
+accrued → invoiced → paid
+                  ↘ disputed → paid/cancelled
+       ↘ waived
+       ↘ voided
+```
+| Value | Description |
+|-------|-------------|
+| `accrued` | Fee calculated, not yet billed |
+| `invoiced` | Invoice sent to investor |
+| `paid` | Payment received |
+| `waived` | Fee forgiven |
+| `voided` | Fee calculation reversed |
+| `disputed` | Investor contests fee |
+| `cancelled` | Fee cancelled |
+
+#### `invoice_status_enum`
+```
+draft → sent → paid
+            ↘ partially_paid → paid
+            ↘ overdue → paid
+            ↘ disputed → paid/cancelled
+            ↘ cancelled
+```
+| Value | Description |
+|-------|-------------|
+| `draft` | Invoice being prepared |
+| `sent` | Invoice delivered to investor |
+| `paid` | Fully paid |
+| `partially_paid` | Some payment received |
+| `overdue` | Past due date |
+| `disputed` | Payment contested |
+| `cancelled` | Invoice voided |
+
+### Document & Workflow Enums
+
+#### `folder_type`
+| Value | Description |
+|-------|-------------|
+| `kyc` | KYC verification documents |
+| `legal` | Legal agreements |
+| `redemption_closure` | Exit documentation |
+| `financial_statements` | Financials |
+| `tax_documents` | Tax forms (K-1s, etc.) |
+| `board_minutes` | Board meeting records |
+| `investor_agreements` | Subscription docs |
+| `compliance` | Regulatory filings |
+| `correspondence` | Communications |
+| `other` | Miscellaneous |
+
+#### `flag_type` (Compliance Alerts)
+| Value | Description |
+|-------|-------------|
+| `compliance_issue` | Regulatory problem |
+| `missing_documents` | Required docs absent |
+| `expiring_documents` | Docs near expiry |
+| `reporting_due` | Report deadline approaching |
+| `approval_required` | Needs staff approval |
+| `action_required` | Investor action needed |
+| `information_needed` | Missing information |
+| `review_required` | Needs review |
+
+#### `flag_severity`
+| Value | Description |
+|-------|-------------|
+| `critical` | Immediate attention required |
+| `warning` | Should address soon |
+| `info` | Informational only |
+| `success` | Positive status |
+
+### Messaging Enums
+
+#### `conversation_type_enum`
+| Value | Description |
+|-------|-------------|
+| `dm` | Direct message (1:1) |
+| `group` | Multi-party conversation |
+| `deal_room` | Deal-specific discussion |
+| `broadcast` | Announcement (one-to-many) |
+
+#### `message_type_enum`
+| Value | Description |
+|-------|-------------|
+| `text` | Regular text message |
+| `system` | System-generated message |
+| `file` | File attachment |
+
+### Request & Task Enums
+
+#### `request_status_enum`
+```
+open → assigned → in_progress → ready → closed
+                            ↘ awaiting_info → in_progress
+                                           ↘ cancelled
+```
+| Value | Description |
+|-------|-------------|
+| `open` | New request |
+| `assigned` | Staff member assigned |
+| `in_progress` | Being worked on |
+| `awaiting_info` | Waiting for investor input |
+| `ready` | Completed, awaiting delivery |
+| `closed` | Request fulfilled |
+| `cancelled` | Request cancelled |
+
+#### `request_priority_enum`
+| Value | Description |
+|-------|-------------|
+| `low` | Can wait |
+| `normal` | Standard priority |
+| `high` | Should expedite |
+| `urgent` | Immediate attention |
+
+---
+
+## Part 7: State Machine Diagrams
+
+### Deal Lifecycle State Machine
+
+```
+                              ┌──────────────┐
+                              │    DRAFT     │
+                              │  (Internal)  │
+                              └──────┬───────┘
+                                     │ Staff publishes
+                                     ▼
+                              ┌──────────────┐
+           ┌─────────────────►│    OPEN      │◄────────────────┐
+           │                  │ (Accepting)  │                 │
+           │                  └──────┬───────┘                 │
+           │                         │                         │
+           │    ┌────────────────────┼────────────────────┐    │
+           │    ▼                    ▼                    ▼    │
+    ┌──────────────┐    ┌──────────────────┐    ┌─────────────────┐
+    │  INTEREST    │    │   NDA SIGNED     │    │  SUBSCRIPTION   │
+    │  EXPRESSED   │───►│  (Data Room)     │───►│   SUBMITTED     │
+    └──────────────┘    └──────────────────┘    └────────┬────────┘
+                                                         │
+                                                         ▼
+                                                ┌──────────────────┐
+                                                │ ALLOCATION       │
+                                                │ PENDING          │
+                                                └────────┬─────────┘
+                                                         │
+                           ┌─────────────────────────────┼─────────────────────────────┐
+                           ▼                             ▼                             ▼
+                    ┌──────────────┐             ┌──────────────┐              ┌──────────────┐
+                    │  CANCELLED   │             │   CLOSED     │              │   FUNDED     │
+                    │              │             │ (Complete)   │              │              │
+                    └──────────────┘             └──────────────┘              └──────────────┘
+```
+
+### Investor Subscription Flow
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────────────┐
+│                              INVESTOR SUBSCRIPTION FLOW                                   │
+├─────────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                          │
+│   ┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐         │
+│   │ Express  │───►│ Sign     │───►│ Access   │───►│ Submit   │───►│ Approval │         │
+│   │ Interest │    │ NDA      │    │ Data Room│    │ Subscrip │    │ Review   │         │
+│   └──────────┘    └──────────┘    └──────────┘    └──────────┘    └────┬─────┘         │
+│        │               │               │               │               │               │
+│        ▼               ▼               ▼               ▼               ▼               │
+│   ┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐         │
+│   │ investor_│    │signature_│    │deal_data_│    │deal_sub_ │    │approvals │         │
+│   │ deal_    │    │ requests │    │ room_    │    │ script_  │    │          │         │
+│   │ interest │    │          │    │ access   │    │ submiss. │    │          │         │
+│   └──────────┘    └──────────┘    └──────────┘    └──────────┘    └────┬─────┘         │
+│                                                                        │               │
+│                                        ┌───────────────────────────────┘               │
+│                                        ▼                                               │
+│                                   ┌──────────┐    ┌──────────┐    ┌──────────┐         │
+│                                   │ Sign     │───►│ Fund     │───►│ Active   │         │
+│                                   │ Docs     │    │ Capital  │    │ Position │         │
+│                                   └──────────┘    └──────────┘    └──────────┘         │
+│                                        │               │               │               │
+│                                        ▼               ▼               ▼               │
+│                                   ┌──────────┐    ┌──────────┐    ┌──────────┐         │
+│                                   │signature_│    │bank_     │    │subscript │         │
+│                                   │ requests │    │ transact │    │ ions     │         │
+│                                   │          │    │ ions     │    │ (active) │         │
+│                                   └──────────┘    └──────────┘    └──────────┘         │
+│                                                                                          │
+└─────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+### KYC Verification State Machine
+
+```
+                         ┌──────────────────┐
+                         │     PENDING      │
+                         │  (Initial State) │
+                         └────────┬─────────┘
+                                  │ Investor submits documents
+                                  ▼
+                         ┌──────────────────┐
+           ┌─────────────│   UNDER_REVIEW   │─────────────┐
+           │             │  (Staff Review)  │             │
+           │             └────────┬─────────┘             │
+           │                      │                       │
+           ▼                      ▼                       ▼
+   ┌──────────────┐      ┌──────────────┐       ┌──────────────┐
+   │   REJECTED   │      │   APPROVED   │       │ NEEDS_MORE_  │
+   │              │      │              │       │    INFO      │
+   └──────────────┘      └──────┬───────┘       └──────┬───────┘
+           │                    │                      │
+           │                    │ (Time passes)        │ Investor provides
+           │                    ▼                      │
+           │             ┌──────────────┐              │
+           │             │   EXPIRED    │◄─────────────┘
+           │             │ (Needs Renew)│              │
+           │             └──────────────┘              │
+           │                    │                      │
+           └────────────────────┴──────────────────────┘
+                                │
+                                ▼
+                        (Back to PENDING)
+```
+
+### Fee Lifecycle State Machine
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           FEE EVENT LIFECYCLE                                │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│                           ┌──────────────┐                                   │
+│                           │   ACCRUED    │ ◄─── Fee calculated               │
+│                           └──────┬───────┘                                   │
+│                                  │                                           │
+│             ┌────────────────────┼────────────────────┐                      │
+│             ▼                    ▼                    ▼                      │
+│      ┌──────────────┐    ┌──────────────┐    ┌──────────────┐                │
+│      │    WAIVED    │    │   INVOICED   │    │    VOIDED    │                │
+│      │   (Forgiven) │    │   (Billed)   │    │  (Reversed)  │                │
+│      └──────────────┘    └──────┬───────┘    └──────────────┘                │
+│                                 │                                            │
+│                    ┌────────────┼────────────┐                               │
+│                    ▼            ▼            ▼                               │
+│             ┌──────────┐ ┌──────────┐ ┌──────────┐                           │
+│             │   PAID   │ │ DISPUTED │ │CANCELLED │                           │
+│             │          │ │          │ │          │                           │
+│             └──────────┘ └────┬─────┘ └──────────┘                           │
+│                               │                                              │
+│                    ┌──────────┴──────────┐                                   │
+│                    ▼                     ▼                                   │
+│             ┌──────────┐          ┌──────────┐                               │
+│             │   PAID   │          │CANCELLED │                               │
+│             │(Resolved)│          │(Forgiven)│                               │
+│             └──────────┘          └──────────┘                               │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Part 8: Empty Tables Explanation
+
+24 tables currently have no data. Here's why:
+
+### Future Features (Ready to Use)
+| Table | Purpose | Status |
+|-------|---------|--------|
+| `allocations` | Final deal allocations | Feature partially implemented, using deal_subscription_submissions |
+| `invite_links` | Shareable deal invitations | Feature ready, not yet used |
+| `document_approvals` | Document publishing workflow | Feature implemented, no docs pending |
+| `document_publishing_schedule` | Scheduled document publishing | Feature ready for use |
+| `reconciliations` | Payment reconciliation sessions | Using reconciliation_matches directly |
+| `suggested_matches` | AI-suggested payment matches | Auto-match feature not enabled |
+| `import_batches` | Bank statement import tracking | Manual imports, not batch |
+| `payments` | Payment records | Using bank_transactions directly |
+| `entity_folders` | Entity-specific document organization | Using document_folders instead |
+| `counterparty_entity_members` | Counterparty KYC members | No counterparty entities active |
+| `entity_stakeholders` | External service providers | Feature ready, not populated |
+| `entity_flags` | Compliance flags on vehicles | Feature ready, not populated |
+| `esign_envelopes` | DocuSign envelope tracking | Using signature_requests instead |
+| `investor_notifications` | Push/email notifications | Feature in development |
+| `activity_feed` | User activity timeline | Feature in development |
+| `workflow_run_logs` | Detailed workflow step logs | Basic logging via workflow_runs |
+| `automation_webhook_events` | Inbound webhook audit | Feature ready, not enabled |
+| `task_actions` | Actions within tasks | Using tasks directly |
+| `task_dependencies` | Task prerequisites | Sequential tasks not needed |
+| `subscription_import_results` | Batch import tracking | Manual data entry |
+| `dashboard_preferences` | User dashboard customization | Default layout used |
+| `staff_filter_views` | Saved filter combinations | Users don't save filters |
+| `investor_deal_holdings` | Alternative holdings tracking | Using subscriptions + positions |
+| `fee_schedules` | Scheduled fee generation | Manual fee creation |
+
+---
+
+## Part 9: Complete Column Reference for Key Tables
+
+### Enhanced Table: `counterparty_entity_members` (28 columns)
+
+For entity investors that invest through holding structures (trusts, LLCs), this tracks the members of those structures.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| id | uuid | Primary key |
+| counterparty_entity_id | uuid | FK to investor_counterparty |
+| full_name | text | Member's legal name |
+| role | text | director, trustee, partner, etc. |
+| role_title | text | Specific title |
+| email | text | Contact email |
+| phone | text | Contact phone |
+| residential_street | text | Address line 1 |
+| residential_city | text | City |
+| residential_state | text | State/Province |
+| residential_postal_code | text | Postal code |
+| residential_country | text | Country |
+| nationality | text | Citizenship |
+| id_type | text | passport, drivers_license, etc. |
+| id_number | text | ID document number |
+| id_expiry_date | date | ID expiration |
+| ownership_percentage | numeric(5,2) | % ownership if shareholder |
+| is_beneficial_owner | boolean | Owns >25% |
+| kyc_status | text | pending, approved, rejected |
+| kyc_approved_at | timestamp | When KYC approved |
+| kyc_approved_by | uuid | FK to profiles |
+| kyc_expiry_date | date | When KYC expires |
+| is_active | boolean | Currently active member |
+| effective_from | date | When role started |
+| effective_to | date | When role ended (null if active) |
+| created_at | timestamp | Record creation |
+| updated_at | timestamp | Last update |
+| created_by | uuid | FK to profiles |
+
+### Enhanced Table: `capital_call_items` (14 columns)
+
+Individual investor amounts for each capital call.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| id | uuid | Primary key |
+| capital_call_id | uuid | FK to capital_calls |
+| subscription_id | uuid | FK to subscriptions |
+| investor_id | uuid | FK to investors |
+| called_amount | numeric(15,2) | Amount due from investor |
+| paid_amount | numeric(15,2) | Amount paid so far |
+| balance_due | numeric(15,2) | Remaining balance |
+| due_date | date | Payment deadline |
+| paid_date | date | When fully paid |
+| status | text | pending, partial, paid, overdue |
+| bank_transaction_ids | uuid[] | Matched bank transactions |
+| notes | text | Internal notes |
+| created_at | timestamp | Record creation |
+| updated_at | timestamp | Last update |
+
+### Enhanced Table: `distribution_items` (14 columns)
+
+Individual investor amounts for each distribution.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| id | uuid | Primary key |
+| distribution_id | uuid | FK to distributions |
+| subscription_id | uuid | FK to subscriptions |
+| investor_id | uuid | FK to investors |
+| distribution_amount | numeric(15,2) | Amount to distribute |
+| sent_amount | numeric(15,2) | Amount sent so far |
+| balance_pending | numeric(15,2) | Remaining to send |
+| sent_date | date | When wire sent |
+| wire_reference | text | Bank wire reference |
+| confirmed_date | date | When investor confirmed receipt |
+| status | text | pending, sent, confirmed |
+| notes | text | Internal notes |
+| created_at | timestamp | Record creation |
+| updated_at | timestamp | Last update |
+
+### Enhanced Table: `share_lots` (11 columns)
+
+Inventory of available shares for secondary deals. Prevents overselling.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| id | uuid | Primary key |
+| deal_id | uuid | FK to deals |
+| source_id | uuid | FK to share_sources (where acquired) |
+| units_total | numeric(28,8) | Original units acquired |
+| unit_cost | numeric(18,6) | Cost per unit |
+| currency | text | Currency (default USD) |
+| acquired_at | date | When shares acquired |
+| lockup_until | date | Transfer restriction end date |
+| units_remaining | numeric(28,8) | Units not yet allocated |
+| status | text | available, held, exhausted |
+| created_at | timestamp | Record creation |
+
+**Business Logic:**
+- `units_remaining = units_total - (allocated + reserved)`
+- System prevents `units_remaining` going negative
+- `lockup_until` prevents allocation before restriction lifts
+
+### Enhanced Table: `workflow_run_logs` (8 columns)
+
+Detailed step-by-step execution logs for n8n workflows.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| id | uuid | Primary key |
+| workflow_run_id | uuid | FK to workflow_runs |
+| step_name | text | Name of workflow step |
+| step_status | text | started, completed, failed |
+| log_level | text | info, warn, error |
+| message | text | Log message |
+| metadata | jsonb | Additional step data |
+| created_at | timestamp | When logged |
+
+### Enhanced Table: `entity_flags` (14 columns)
+
+Compliance and operational flags on investment vehicles.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| id | uuid | Primary key |
+| vehicle_id | uuid | FK to vehicles |
+| flag_type | enum | compliance_issue, missing_documents, expiring_documents, etc. |
+| severity | enum | critical, warning, info, success |
+| title | text | Short flag title |
+| description | text | Detailed description |
+| is_resolved | boolean | Whether flag addressed |
+| resolved_at | timestamp | When resolved |
+| resolved_by | uuid | FK to profiles (who resolved) |
+| resolution_notes | text | How it was resolved |
+| due_date | date | When flag must be addressed |
+| status | text | open, in_progress, resolved |
+| created_at | timestamp | When flag created |
+| updated_at | timestamp | Last update |
+
+---
+
 *Document generated from verified database schema and codebase analysis. All table counts and relationships confirmed via direct SQL queries against production database.*

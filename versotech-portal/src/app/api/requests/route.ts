@@ -7,7 +7,8 @@ import type {
   RequestTicketListResponse,
 } from '@/types/reports'
 import { validateCustomRequest, sanitizeCustomRequestData } from '@/lib/reports/validation'
-import { DEFAULT_PAGE_SIZE } from '@/lib/reports/constants'
+import { DEFAULT_PAGE_SIZE, SLA_BY_PRIORITY } from '@/lib/reports/constants'
+import type { RequestPriority } from '@/types/reports'
 
 /**
  * GET /api/requests
@@ -148,7 +149,12 @@ export async function POST(request: Request) {
 
     const investorId = investorLinks[0].investor_id
 
-    // Create request ticket (due_date will be auto-set by database trigger)
+    // Calculate due_date based on priority SLA
+    const priority: RequestPriority = sanitized.priority || 'normal'
+    const slaDuration = SLA_BY_PRIORITY[priority]
+    const dueDate = new Date(Date.now() + slaDuration).toISOString()
+
+    // Create request ticket with calculated due_date
     const { data: ticket, error: createError } = await supabase
       .from('request_tickets')
       .insert({
@@ -157,9 +163,10 @@ export async function POST(request: Request) {
         category: sanitized.category,
         subject: sanitized.subject,
         details: sanitized.details || null,
-        priority: sanitized.priority || 'normal',
+        priority: priority,
         status: 'open',
-        deal_id: sanitized.dealId || null
+        deal_id: sanitized.dealId || null,
+        due_date: dueDate
       })
       .select(`
         *,

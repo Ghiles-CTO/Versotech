@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { Loader2, HelpCircle } from 'lucide-react'
+import { toast } from 'sonner'
 
 interface FAQ {
   id: string
@@ -18,10 +19,16 @@ export function DealFaqSection({ dealId }: { dealId: string }) {
   const fetchFaqs = useCallback(async () => {
     try {
       const res = await fetch(`/api/deals/${dealId}/faqs`)
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`)
+      }
       const data = await res.json()
       setFaqs(data.faqs || [])
     } catch (error) {
       console.error('Error fetching FAQs:', error)
+      toast.error('Failed to load FAQs', {
+        description: 'Please try refreshing the page.'
+      })
     } finally {
       setLoading(false)
     }

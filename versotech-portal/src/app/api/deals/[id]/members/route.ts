@@ -127,6 +127,18 @@ export async function POST(
         }
 
         resolvedUserId = userByEmail.id
+
+        // Auto-populate investor_id if user has an investor profile
+        // This ensures investor portal access works correctly even when staff adds by email
+        const { data: investorLink } = await supabase
+          .from('investor_users')
+          .select('investor_id')
+          .eq('user_id', resolvedUserId)
+          .maybeSingle()
+
+        if (investorLink) {
+          resolvedInvestorId = investorLink.investor_id
+        }
       } else if (validatedData.investor_id) {
         // Find primary user for investor
         const { data: investorUser } = await supabase
