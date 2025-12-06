@@ -299,6 +299,9 @@ async function getActionCenterData(userId: string | null, investorIds: string[])
     }
   }
 
+  // Priority order: high first, then medium, then low
+  const priorityOrder: Record<string, number> = { high: 0, medium: 1, low: 2 }
+
   try {
     const supabase = createServiceClient()
     let query = supabase
@@ -314,7 +317,6 @@ async function getActionCenterData(userId: string | null, investorIds: string[])
     }
 
     const { data, count, error } = await query
-      .order('priority', { ascending: false })
       .order('due_at', { ascending: true, nullsFirst: false })
       .limit(12)
 
@@ -326,9 +328,21 @@ async function getActionCenterData(userId: string | null, investorIds: string[])
       }
     }
 
+    // Sort by priority (high → medium → low), then by due_at
+    const sortedTasks = (data ?? []).sort((a, b) => {
+      const pA = priorityOrder[a.priority] ?? 99
+      const pB = priorityOrder[b.priority] ?? 99
+      if (pA !== pB) return pA - pB
+      // Secondary sort: due_at ascending, nulls last
+      if (!a.due_at && !b.due_at) return 0
+      if (!a.due_at) return 1
+      if (!b.due_at) return -1
+      return new Date(a.due_at).getTime() - new Date(b.due_at).getTime()
+    })
+
     return {
-      tasks: (data ?? []) as DashboardTask[],
-      tasksTotal: count ?? (data?.length ?? 0)
+      tasks: sortedTasks as DashboardTask[],
+      tasksTotal: count ?? sortedTasks.length
     }
   } catch (error) {
     console.error('[Investor Dashboard] Action center exception:', error)

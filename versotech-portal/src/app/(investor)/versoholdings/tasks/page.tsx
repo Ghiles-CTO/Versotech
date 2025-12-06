@@ -96,11 +96,24 @@ export default async function TasksPage() {
   }
 
   const { data: tasks } = await tasksQuery
-    .order('priority', { ascending: false })
     .order('due_at', { ascending: true, nullsFirst: false })
     .order('created_at', { ascending: true })
 
-  const allTasks = (tasks as Task[]) || []
+  // Sort by priority (high → medium → low), then by due_at, then by created_at
+  const priorityOrder: Record<string, number> = { high: 0, medium: 1, low: 2 }
+  const allTasks = ((tasks as Task[]) || []).sort((a, b) => {
+    const pA = priorityOrder[a.priority] ?? 99
+    const pB = priorityOrder[b.priority] ?? 99
+    if (pA !== pB) return pA - pB
+    // Secondary: due_at ascending, nulls last
+    if (a.due_at !== b.due_at) {
+      if (!a.due_at) return 1
+      if (!b.due_at) return -1
+      return new Date(a.due_at).getTime() - new Date(b.due_at).getTime()
+    }
+    // Tertiary: created_at ascending
+    return new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+  })
 
   // Group tasks by vehicle
   const tasksByVehicle: TasksByVehicle[] = userVehicles.map(vehicle => ({

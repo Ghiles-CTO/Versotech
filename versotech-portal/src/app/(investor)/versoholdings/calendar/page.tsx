@@ -54,10 +54,21 @@ export default async function InvestorCalendarPage() {
     tasksQuery = tasksQuery.eq('owner_user_id', user.id)
   }
 
-  const { data: taskRows } = await tasksQuery
-    .order('priority', { ascending: false })
+  const { data: taskRowsRaw } = await tasksQuery
     .order('due_at', { ascending: true, nullsFirst: false })
     .limit(20)
+
+  // Sort by priority (high → medium → low), then by due_at
+  const priorityOrder: Record<string, number> = { high: 0, medium: 1, low: 2 }
+  const taskRows = (taskRowsRaw ?? []).sort((a, b) => {
+    const pA = priorityOrder[a.priority] ?? 99
+    const pB = priorityOrder[b.priority] ?? 99
+    if (pA !== pB) return pA - pB
+    if (!a.due_at && !b.due_at) return 0
+    if (!a.due_at) return 1
+    if (!b.due_at) return -1
+    return new Date(a.due_at).getTime() - new Date(b.due_at).getTime()
+  })
 
   const { data: dealRows } = await serviceSupabase
     .from('deals')
