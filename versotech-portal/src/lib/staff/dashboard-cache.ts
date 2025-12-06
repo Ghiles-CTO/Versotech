@@ -1,8 +1,8 @@
-import { unstable_cache } from 'next/cache'
+import { unstable_cache as cache } from 'next/cache'
 import { getStaffDashboardData, StaffDashboardData, DateRangeFilter } from './dashboard-data'
 
 /**
- * Production-ready cache using Next.js unstable_cache
+ * Production-ready cache using Next.js cache API
  * Works correctly in serverless environments (Vercel, AWS Lambda, etc.)
  *
  * Cache strategy:
@@ -34,7 +34,7 @@ export async function getCachedStaffDashboardData(
     : 'staff-dashboard-data-default'
 
   // Create a cached version for this specific date range
-  const getCachedDashboardData = unstable_cache(
+  const getCachedDashboardData = cache(
     async () => {
       console.log('[Dashboard Cache] Fetching fresh data from database for range:', dateRangeFilter)
       return await getStaffDashboardData(dateRangeFilter)
@@ -60,7 +60,9 @@ export async function getCachedStaffDashboardData(
  */
 export async function invalidateDashboardCache(): Promise<void> {
   const { revalidateTag } = await import('next/cache')
-  revalidateTag(CACHE_TAG)
+  // Next.js 16 requires cacheLife profile as second argument
+  // Using { expire: 0 } for immediate cache expiration (not stale-while-revalidate)
+  revalidateTag(CACHE_TAG, { expire: 0 })
   console.log('[Dashboard Cache] Cache invalidated')
 }
 
@@ -95,14 +97,14 @@ export async function invalidateByTable(tableName: string): Promise<void> {
 
 /**
  * Get cache configuration for monitoring
- * Note: With unstable_cache, we don't have access to internal cache stats
+ * Note: With Next.js cache, we don't have access to internal cache stats
  * This is a limitation of Next.js's cache abstraction
  */
 export function getCacheConfig() {
   return {
     ttl: CACHE_TTL,
     tag: CACHE_TAG,
-    strategy: 'next-js-unstable-cache',
+    strategy: 'next-js-cache',
     note: 'Using Next.js built-in cache (production-ready for serverless)'
   }
 }
