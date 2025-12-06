@@ -98,7 +98,21 @@ export async function POST(request: NextRequest) {
     }
 
     const payload = await request.json().catch(() => ({}))
-    const parsed = createInvestorSchema.parse(payload)
+
+    // Convert empty strings to null before validation
+    // Form sends '' for empty fields, but Zod expects null for optional fields with format validators
+    const preprocessed = {
+      ...payload,
+      display_name: payload.display_name?.trim() || null,
+      email: payload.email?.trim() || null,
+      phone: payload.phone?.trim() || null,
+      country: payload.country?.trim() || null,
+      country_of_incorporation: payload.country_of_incorporation?.trim() || null,
+      tax_residency: payload.tax_residency?.trim() || null,
+      primary_rm: payload.primary_rm?.trim() || null,
+    }
+
+    const parsed = createInvestorSchema.parse(preprocessed)
 
     const serviceClient = createServiceClient()
     const legalName = parsed.legal_name.trim()
