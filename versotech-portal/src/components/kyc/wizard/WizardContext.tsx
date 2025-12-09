@@ -173,7 +173,8 @@ export function WizardProvider({
       }))
       return { valid: true, errors: [] }
     } catch (error: any) {
-      const messages = error.errors?.map((e: any) => e.message) || ['Validation failed']
+      // Zod uses 'issues' not 'errors' for validation errors
+      const messages = error.issues?.map((e: any) => e.message) || ['Validation failed']
       setState(prev => ({
         ...prev,
         errors: { ...prev.errors, [state.currentStep]: messages },
