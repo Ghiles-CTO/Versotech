@@ -126,8 +126,8 @@ export function KYCUploadDialog({
         formData.append('entityId', entityId)
       }
 
-      // Add member ID based on member type
-      if (selectedMemberId && memberType) {
+      // Add member ID based on member type (skip if "entity-level" selected)
+      if (selectedMemberId && selectedMemberId !== 'entity-level' && memberType) {
         if (memberType === 'investor') {
           formData.append('investorMemberId', selectedMemberId)
         } else if (memberType === 'counterparty') {
@@ -249,7 +249,7 @@ export function KYCUploadDialog({
                   <SelectValue placeholder="Select member or director..." />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Entity-level document</SelectItem>
+                  <SelectItem value="entity-level">Entity-level document</SelectItem>
                   {members.map((member) => (
                     <SelectItem key={member.id} value={member.id}>
                       {member.full_name} ({member.role})
