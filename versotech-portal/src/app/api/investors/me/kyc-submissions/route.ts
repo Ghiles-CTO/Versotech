@@ -5,6 +5,8 @@ import { z } from 'zod'
 
 // Allowed document types for KYC submissions
 const ALLOWED_DOCUMENT_TYPES = [
+  // Questionnaire
+  'questionnaire',
   // Entity documents
   'nda_ndnc',
   'incorporation_certificate',
