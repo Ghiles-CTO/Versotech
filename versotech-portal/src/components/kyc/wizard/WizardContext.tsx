@@ -49,7 +49,7 @@ interface WizardContextValue {
   nextStep: () => Promise<boolean>
   previousStep: () => void
   updateStepData: <K extends keyof KYCQuestionnaireData>(stepKey: K, data: KYCQuestionnaireData[K]) => void
-  validateCurrentStep: () => Promise<boolean>
+  validateCurrentStep: () => Promise<{ valid: boolean; errors: string[] }>
   saveProgress: () => Promise<void>
   submitQuestionnaire: () => Promise<boolean>
   getStepData: <K extends keyof KYCQuestionnaireData>(stepKey: K) => KYCQuestionnaireData[K] | undefined
@@ -157,13 +157,13 @@ export function WizardProvider({
     }))
   }, [])
 
-  // Validate current step
-  const validateCurrentStep = useCallback(async (): Promise<boolean> => {
+  // Validate current step - returns { valid, errors } for better error messaging
+  const validateCurrentStep = useCallback(async (): Promise<{ valid: boolean; errors: string[] }> => {
     const stepKey = `step${state.currentStep}` as keyof KYCQuestionnaireData
     const stepData = state.formData[stepKey]
     const schema = getStepSchema(state.currentStep)
 
-    if (!schema) return true
+    if (!schema) return { valid: true, errors: [] }
 
     try {
       await schema.parseAsync(stepData || getStepDefaults(state.currentStep))
@@ -171,14 +171,14 @@ export function WizardProvider({
         ...prev,
         errors: { ...prev.errors, [state.currentStep]: [] },
       }))
-      return true
+      return { valid: true, errors: [] }
     } catch (error: any) {
       const messages = error.errors?.map((e: any) => e.message) || ['Validation failed']
       setState(prev => ({
         ...prev,
         errors: { ...prev.errors, [state.currentStep]: messages },
       }))
-      return false
+      return { valid: false, errors: messages }
     }
   }, [state.currentStep, state.formData])
 
@@ -260,9 +260,13 @@ export function WizardProvider({
   // Next step - BUG FIX 2.2: Use functional setState to avoid race conditions
   const nextStep = useCallback(async (): Promise<boolean> => {
     // Validate current step
-    const isValid = await validateCurrentStep()
-    if (!isValid) {
-      toast.error('Please complete all required fields')
+    const { valid, errors } = await validateCurrentStep()
+    if (!valid) {
+      // Show specific error messages instead of generic message
+      const errorSummary = errors.slice(0, 3).join(', ') + (errors.length > 3 ? ` (+${errors.length - 3} more)` : '')
+      toast.error('Please complete all required fields', {
+        description: errorSummary
+      })
       return false
     }
 
