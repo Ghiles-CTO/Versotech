@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { CheckCircle, XCircle, Clock, AlertCircle, FileText, Download, Eye, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react'
+import { CheckCircle, XCircle, Clock, AlertCircle, FileText, Download, Eye, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ExternalLink, User } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -24,6 +24,12 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
+import {
   Table,
   TableBody,
   TableCell,
@@ -40,12 +46,15 @@ interface KYCSubmission {
   id: string
   investor_id: string
   counterparty_entity_id?: string | null
+  investor_member_id?: string | null
   document_type: string
   custom_label?: string | null
   status: 'pending' | 'under_review' | 'approved' | 'rejected' | 'expired'
   submitted_at: string
   reviewed_at?: string
   rejection_reason?: string
+  version?: number
+  previous_submission_id?: string | null
   metadata?: any
   investor?: {
     id: string
@@ -59,6 +68,12 @@ interface KYCSubmission {
     id: string
     legal_name: string
     entity_type: string
+  } | null
+  investor_member?: {
+    id: string
+    full_name: string
+    role: string
+    role_title?: string
   } | null
   document?: {
     id: string
@@ -98,6 +113,7 @@ export function KYCReviewClient() {
   const [loading, setLoading] = useState(true)
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [documentTypeFilter, setDocumentTypeFilter] = useState<string>('all')
+  const [investorFilter, setInvestorFilter] = useState<string>('all')
   const [searchQuery, setSearchQuery] = useState('')
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(25)
@@ -125,6 +141,7 @@ export function KYCReviewClient() {
       const params = new URLSearchParams()
       if (statusFilter !== 'all') params.append('status', statusFilter)
       if (documentTypeFilter !== 'all') params.append('document_type', documentTypeFilter)
+      if (investorFilter !== 'all') params.append('investor_id', investorFilter)
       params.append('page', String(page))
       params.append('pageSize', String(pageSize))
 
@@ -148,12 +165,12 @@ export function KYCReviewClient() {
     } finally {
       setLoading(false)
     }
-  }, [statusFilter, documentTypeFilter, page, pageSize])
+  }, [statusFilter, documentTypeFilter, investorFilter, page, pageSize])
 
   // Reset to page 1 when filters change
   useEffect(() => {
     setPage(1)
-  }, [statusFilter, documentTypeFilter])
+  }, [statusFilter, documentTypeFilter, investorFilter])
 
   useEffect(() => {
     loadSubmissions()
@@ -230,6 +247,15 @@ export function KYCReviewClient() {
   const uniqueDocumentTypes = Array.from(
     new Set(submissions.map(sub => sub.document_type))
   ).sort()
+
+  // Get unique investors from submissions
+  const uniqueInvestors = Array.from(
+    new Map(
+      submissions
+        .filter(sub => sub.investor)
+        .map(sub => [sub.investor!.id, sub.investor!])
+    ).values()
+  ).sort((a, b) => (a.display_name || a.legal_name).localeCompare(b.display_name || b.legal_name))
 
   const filteredSubmissions = submissions.filter(sub => {
     if (searchQuery) {
@@ -324,7 +350,7 @@ export function KYCReviewClient() {
           <CardTitle>Filters</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <div>
               <Label htmlFor="status-filter">Status</Label>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -352,6 +378,22 @@ export function KYCReviewClient() {
                   {uniqueDocumentTypes.map(type => (
                     <SelectItem key={type} value={type}>
                       {getDocumentTypeLabel(type)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="investor-filter">Investor</Label>
+              <Select value={investorFilter} onValueChange={setInvestorFilter}>
+                <SelectTrigger id="investor-filter">
+                  <SelectValue placeholder="All investors" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Investors</SelectItem>
+                  {uniqueInvestors.map(investor => (
+                    <SelectItem key={investor.id} value={investor.id}>
+                      {investor.display_name || investor.legal_name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -403,21 +445,72 @@ export function KYCReviewClient() {
                   <TableRow key={submission.id}>
                     <TableCell>
                       <div>
-                        <div className="font-medium">
+                        <div className="font-medium flex items-center gap-1">
                           {submission.counterparty_entity ? (
                             <>
                               {submission.counterparty_entity.legal_name}
                               <Badge variant="outline" className="ml-2 text-xs">Entity</Badge>
                             </>
                           ) : (
-                            submission.investor?.display_name || submission.investor?.legal_name || 'Unknown'
+                            <>
+                              {submission.investor?.display_name || submission.investor?.legal_name || 'Unknown'}
+                              {submission.investor?.id && (
+                                <a
+                                  href={`/versotech/staff/investors/${submission.investor.id}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="ml-1 text-muted-foreground hover:text-foreground transition-colors"
+                                  title="View investor profile"
+                                >
+                                  <ExternalLink className="w-3 h-3" />
+                                </a>
+                              )}
+                            </>
                           )}
                         </div>
-                        <div className="text-sm text-muted-foreground">{submission.investor?.email || ''}</div>
+                        <div className="text-sm text-muted-foreground flex items-center gap-1 flex-wrap">
+                          {submission.investor?.email || ''}
+                          {submission.investor?.type && ['entity', 'corporate', 'institution'].includes(submission.investor.type) && (
+                            <Badge variant="secondary" className="text-xs">{submission.investor.type}</Badge>
+                          )}
+                          {submission.investor?.kyc_status && (
+                            <Badge
+                              variant="outline"
+                              className={`text-xs ${
+                                submission.investor.kyc_status === 'approved'
+                                  ? 'border-emerald-500 text-emerald-500'
+                                  : submission.investor.kyc_status === 'pending'
+                                    ? 'border-amber-500 text-amber-500'
+                                    : submission.investor.kyc_status === 'rejected'
+                                      ? 'border-rose-500 text-rose-500'
+                                      : 'border-muted-foreground text-muted-foreground'
+                              }`}
+                            >
+                              KYC: {submission.investor.kyc_status}
+                            </Badge>
+                          )}
+                        </div>
                       </div>
                     </TableCell>
                     <TableCell>
-                      {getDocumentTypeLabel(submission.document_type, submission.custom_label)}
+                      <div>
+                        <div className="font-medium">
+                          {getDocumentTypeLabel(submission.document_type, submission.custom_label)}
+                        </div>
+                        {submission.investor_member && (
+                          <div className="text-xs text-muted-foreground mt-0.5">
+                            <Badge variant="outline" className="text-xs font-normal">
+                              {submission.investor_member.full_name}
+                              {submission.investor_member.role_title && ` (${submission.investor_member.role_title})`}
+                            </Badge>
+                          </div>
+                        )}
+                        {submission.version && submission.version > 1 && (
+                          <div className="text-xs text-amber-500 mt-0.5">
+                            v{submission.version}
+                          </div>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell>
                       {submission.document ? (
@@ -442,7 +535,25 @@ export function KYCReviewClient() {
                         {new Date(submission.submitted_at).toLocaleTimeString()}
                       </div>
                     </TableCell>
-                    <TableCell>{getStatusBadge(submission.status)}</TableCell>
+                    <TableCell>
+                      <div>
+                        {getStatusBadge(submission.status)}
+                        {submission.status === 'rejected' && submission.rejection_reason && (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className="text-xs text-rose-400 mt-1 max-w-[200px] truncate cursor-help">
+                                  {submission.rejection_reason}
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent className="max-w-[300px]">
+                                <p className="text-sm">{submission.rejection_reason}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        )}
+                      </div>
+                    </TableCell>
                     <TableCell>
                       {submission.reviewer ? (
                         <div className="text-sm">

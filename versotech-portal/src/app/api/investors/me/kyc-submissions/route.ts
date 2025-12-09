@@ -4,6 +4,7 @@ import { getSuggestedDocumentTypes, getDocumentTypeLabel } from '@/constants/kyc
 import { z } from 'zod'
 
 // Allowed document types for KYC submissions
+// Synced with SUGGESTED_KYC_DOCUMENT_TYPES in /constants/kyc-document-types.ts
 const ALLOWED_DOCUMENT_TYPES = [
   // Questionnaire
   'questionnaire',
@@ -14,9 +15,17 @@ const ALLOWED_DOCUMENT_TYPES = [
   'register_members',
   'register_directors',
   'bank_confirmation',
+  'trust_deed',
+  'financial_statements',
+  'beneficial_ownership',
   // Individual / member documents
   'passport_id',
   'utility_bill',
+  'accreditation_letter',
+  // Tax documents
+  'tax_w8_ben',
+  'tax_w9',
+  'source_of_funds',
   // Other
   'other'
 ] as const
@@ -201,7 +210,36 @@ export async function POST(request: NextRequest) {
 
     const { document_type, custom_label, metadata, status, investor_member_id } = validation.data
 
-    // Insert submission with validated data
+    // Check for existing submissions of this document type for versioning
+    // For member-specific docs, check by member_id too
+    let previousSubmission: any = null
+    let newVersion = 1
+
+    // Build query for previous submissions
+    let previousQuery = supabase
+      .from('kyc_submissions')
+      .select('id, version')
+      .eq('investor_id', investorUsers.investor_id)
+      .eq('document_type', document_type)
+      .is('counterparty_entity_id', null) // Only investor KYC
+      .order('version', { ascending: false })
+      .limit(1)
+
+    // For member-specific documents, filter by member
+    if (investor_member_id) {
+      previousQuery = previousQuery.eq('investor_member_id', investor_member_id)
+    } else {
+      previousQuery = previousQuery.is('investor_member_id', null)
+    }
+
+    const { data: previousSubmissions } = await previousQuery
+
+    if (previousSubmissions && previousSubmissions.length > 0) {
+      previousSubmission = previousSubmissions[0]
+      newVersion = (previousSubmission.version || 1) + 1
+    }
+
+    // Insert submission with versioning support
     const { data, error } = await supabase
       .from('kyc_submissions')
       .insert({
@@ -211,7 +249,8 @@ export async function POST(request: NextRequest) {
         metadata: metadata || null,
         status,
         investor_member_id: investor_member_id || null,
-        version: 1
+        version: newVersion,
+        previous_submission_id: previousSubmission?.id || null
       })
       .select()
       .single()
@@ -221,7 +260,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to create submission' }, { status: 500 })
     }
 
-    return NextResponse.json({ success: true, submission: data })
+    return NextResponse.json({
+      success: true,
+      submission: data,
+      is_new_version: newVersion > 1,
+      version: newVersion
+    })
 
   } catch (error) {
     console.error('KYC submissions POST error:', error)

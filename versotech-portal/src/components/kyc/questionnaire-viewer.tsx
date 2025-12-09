@@ -12,7 +12,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import {
   User,
   Briefcase,
@@ -265,8 +264,8 @@ export function QuestionnaireViewer({
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <DialogContent className="max-w-3xl max-h-[85vh] flex flex-col">
-        <DialogHeader>
+      <DialogContent className="max-w-3xl max-h-[85vh] flex flex-col overflow-hidden">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5" />
             KYC Questionnaire Responses
@@ -281,7 +280,8 @@ export function QuestionnaireViewer({
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 -mx-6 px-6">
+        {/* Scrollable content area with explicit height and overflow */}
+        <div className="flex-1 min-h-0 -mx-6 px-6 overflow-y-auto">
           <div className="space-y-6 py-4">
             {visibleSteps.map((stepKey) => {
               const stepInfo = getStepInfo(stepKey)
@@ -363,11 +363,11 @@ export function QuestionnaireViewer({
               )
             })}
           </div>
-        </ScrollArea>
+        </div>
 
-        <Separator />
+        <Separator className="flex-shrink-0" />
 
-        <DialogFooter className="pt-4">
+        <DialogFooter className="pt-4 flex-shrink-0">
           <Button onClick={onClose}>Close</Button>
         </DialogFooter>
       </DialogContent>

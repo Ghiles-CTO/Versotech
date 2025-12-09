@@ -58,6 +58,12 @@ export async function GET(request: NextRequest) {
           legal_name,
           entity_type
         ),
+        investor_member:investor_members(
+          id,
+          full_name,
+          role,
+          role_title
+        ),
         document:documents(
           id,
           name,

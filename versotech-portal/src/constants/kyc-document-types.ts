@@ -17,6 +17,13 @@ export interface KYCDocumentTypeInfo {
  * Individual documents: Required for individuals, directors, shareholders, and members
  */
 export const SUGGESTED_KYC_DOCUMENT_TYPES: Record<string, KYCDocumentTypeInfo> = {
+  // ===== QUESTIONNAIRE =====
+  questionnaire: {
+    label: 'KYC Questionnaire',
+    description: 'Investor questionnaire responses',
+    category: 'both',
+  },
+
   // ===== ENTITY DOCUMENTS =====
   nda_ndnc: {
     label: 'NDA / NDNC',
@@ -48,6 +55,21 @@ export const SUGGESTED_KYC_DOCUMENT_TYPES: Record<string, KYCDocumentTypeInfo> =
     description: 'Confirmation of bank name and jurisdiction for wire transfers',
     category: 'entity',
   },
+  trust_deed: {
+    label: 'Trust Deed',
+    description: 'Trust Deed or Declaration of Trust',
+    category: 'entity',
+  },
+  financial_statements: {
+    label: 'Financial Statements',
+    description: 'Audited Financial Statements',
+    category: 'entity',
+  },
+  beneficial_ownership: {
+    label: 'Beneficial Ownership',
+    description: 'Beneficial Ownership Declaration',
+    category: 'entity',
+  },
 
   // ===== INDIVIDUAL / MEMBER DOCUMENTS =====
   // Category 'both' because entity investors also need these for their members/directors
@@ -59,6 +81,28 @@ export const SUGGESTED_KYC_DOCUMENT_TYPES: Record<string, KYCDocumentTypeInfo> =
   utility_bill: {
     label: 'Utility Bill',
     description: 'Recent utility bill (less than 3 months old)',
+    category: 'both',
+  },
+  accreditation_letter: {
+    label: 'Accreditation Letter',
+    description: 'Accredited Investor verification letter',
+    category: 'individual',
+  },
+
+  // ===== TAX DOCUMENTS =====
+  tax_w8_ben: {
+    label: 'W-8BEN / W-8BEN-E',
+    description: 'IRS form for foreign persons/entities',
+    category: 'both',
+  },
+  tax_w9: {
+    label: 'W-9',
+    description: 'IRS form for US persons',
+    category: 'individual',
+  },
+  source_of_funds: {
+    label: 'Source of Funds',
+    description: 'Source of Funds Declaration',
     category: 'both',
   },
 

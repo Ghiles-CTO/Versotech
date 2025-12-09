@@ -247,7 +247,7 @@ export async function POST(request: NextRequest) {
     const { data: submission, error: submissionError } = await serviceSupabase
       .from('kyc_submissions')
       .insert({
-        investor_id: investorId,
+        investor_id: investorId,  // Always set - counterparty entities belong to an investor
         counterparty_entity_id: entityId || null,
         investor_member_id: investorMemberId || null,
         counterparty_member_id: counterpartyMemberId || null,

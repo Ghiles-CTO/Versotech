@@ -212,6 +212,14 @@ export async function POST(
 
 /**
  * Check if all required KYC documents are approved and update investor status
+ *
+ * For individual investors:
+ * - Requires: questionnaire, passport_id, utility_bill
+ *
+ * For entity investors:
+ * - Entity-level docs: questionnaire, nda_ndnc, incorporation_certificate, memo_articles,
+ *   register_members, register_directors, bank_confirmation
+ * - Per-member docs: Each active member needs passport_id AND utility_bill
  */
 async function checkAndUpdateInvestorKYCStatus(
   supabase: any,
@@ -227,44 +235,93 @@ async function checkAndUpdateInvestorKYCStatus(
 
     if (!investor) return
 
-    // Define required document types (must match kyc-document-types.ts)
-    const baseRequiredDocs = [
-      'passport_id',
-      'utility_bill'
-    ]
+    const isEntityType = ['entity', 'institution', 'corporate'].includes(investor.type)
 
-    const entityRequiredDocs = [
-      'nda_ndnc',
-      'incorporation_certificate',
-      'memo_articles',
-      'register_members',
-      'register_directors',
-      'bank_confirmation'
-    ]
-
-    // Entity and institution investors need entity docs
-    const isEntityType = investor.type === 'entity' || investor.type === 'institution'
-    const requiredDocs = isEntityType
-      ? [...baseRequiredDocs, ...entityRequiredDocs]
-      : baseRequiredDocs
-
-    // Get all submissions for this investor
+    // Get all investor KYC submissions (exclude counterparty entity submissions)
     const { data: submissions } = await supabase
       .from('kyc_submissions')
-      .select('document_type, status')
+      .select('document_type, status, investor_member_id')
       .eq('investor_id', investorId)
+      .is('counterparty_entity_id', null) // Only main investor KYC
 
     if (!submissions) return
 
-    // Check if all required documents are approved
-    const allApproved = requiredDocs.every(docType => {
-      return submissions.some(
-        (sub: any) => sub.document_type === docType && sub.status === 'approved'
+    // Helper to check if a document type is approved
+    const isDocApproved = (docType: string, memberId?: string | null) => {
+      return submissions.some((sub: any) =>
+        sub.document_type === docType &&
+        sub.status === 'approved' &&
+        (memberId === undefined || sub.investor_member_id === memberId)
       )
-    })
+    }
 
-    // Update investor KYC status if all approved
-    if (allApproved && investor.kyc_status !== 'approved') {
+    // 1. Check questionnaire is approved (required for all investors)
+    const questionnaireApproved = isDocApproved('questionnaire')
+    if (!questionnaireApproved) {
+      console.log(`[KYC Status] Investor ${investorId}: Questionnaire not approved`)
+      return
+    }
+
+    if (isEntityType) {
+      // Entity investor: Check entity-level docs + per-member docs
+
+      // Entity-level required documents
+      const entityDocs = [
+        'nda_ndnc',
+        'incorporation_certificate',
+        'memo_articles',
+        'register_members',
+        'register_directors',
+        'bank_confirmation'
+      ]
+
+      // Check all entity-level docs are approved (no member association)
+      const entityDocsApproved = entityDocs.every(docType =>
+        isDocApproved(docType, null)
+      )
+
+      if (!entityDocsApproved) {
+        console.log(`[KYC Status] Investor ${investorId}: Entity documents not all approved`)
+        return
+      }
+
+      // Get all active members for this entity investor
+      const { data: members } = await supabase
+        .from('investor_members')
+        .select('id, full_name')
+        .eq('investor_id', investorId)
+        .eq('is_active', true)
+
+      if (members && members.length > 0) {
+        // Each member needs passport_id AND utility_bill approved
+        const memberDocTypes = ['passport_id', 'utility_bill']
+
+        for (const member of members) {
+          for (const docType of memberDocTypes) {
+            const hasDoc = isDocApproved(docType, member.id)
+            if (!hasDoc) {
+              console.log(`[KYC Status] Investor ${investorId}: Member ${member.full_name} missing approved ${docType}`)
+              return
+            }
+          }
+        }
+      }
+    } else {
+      // Individual investor: Check individual-level docs
+      const individualDocs = ['passport_id', 'utility_bill']
+
+      const individualDocsApproved = individualDocs.every(docType =>
+        isDocApproved(docType, null)
+      )
+
+      if (!individualDocsApproved) {
+        console.log(`[KYC Status] Investor ${investorId}: Individual documents not all approved`)
+        return
+      }
+    }
+
+    // All checks passed - update investor KYC status if not already approved
+    if (investor.kyc_status !== 'approved') {
       await supabase
         .from('investors')
         .update({
@@ -272,6 +329,8 @@ async function checkAndUpdateInvestorKYCStatus(
           kyc_completed_at: new Date().toISOString()
         })
         .eq('id', investorId)
+
+      console.log(`[KYC Status] Investor ${investorId}: KYC status updated to approved`)
     }
 
   } catch (error) {
