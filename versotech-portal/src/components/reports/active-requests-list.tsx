@@ -62,7 +62,7 @@ export function ActiveRequestsList({ requests, onDownload }: ActiveRequestsListP
               {categoryConfig?.label || request.category}
             </Badge>
             <span>•</span>
-            <span>{formatDistanceToNow(new Date(request.created_at), { addSuffix: true })}</span>
+            <span>{request.created_at ? formatDistanceToNow(new Date(request.created_at), { addSuffix: true }) : 'Unknown'}</span>
 
             {/* Due date / Overdue warning */}
             {request.status !== 'closed' && request.status !== 'ready' && (

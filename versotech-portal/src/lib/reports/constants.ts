@@ -330,16 +330,20 @@ export function getSLAHours(priority: RequestPriority): number {
 /**
  * Check if request is overdue
  */
-export function isOverdue(dueDate: string | Date): boolean {
+export function isOverdue(dueDate: string | Date | null | undefined): boolean {
+  if (!dueDate) return false
   const due = typeof dueDate === 'string' ? new Date(dueDate) : dueDate
+  if (isNaN(due.getTime())) return false
   return due < new Date(Date.now() - OVERDUE_GRACE_PERIOD)
 }
 
 /**
  * Format time remaining until due date
  */
-export function formatTimeRemaining(dueDate: string | Date): string {
+export function formatTimeRemaining(dueDate: string | Date | null | undefined): string {
+  if (!dueDate) return 'No due date'
   const due = typeof dueDate === 'string' ? new Date(dueDate) : dueDate
+  if (isNaN(due.getTime())) return 'No due date'
   const now = new Date()
   const diff = due.getTime() - now.getTime()
 
