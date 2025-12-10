@@ -178,10 +178,17 @@ async function getPortfolioData(investorIds: string[]): Promise<PortfolioData> {
         .in('subscriptions.investor_id', investorIds)
         .eq('subscriptions.status', 'active'),
       supabase
-        .from('activity_feed')
-        .select('*')
+        .from('deal_activity_events')
+        .select(`
+          id,
+          event_type,
+          payload,
+          occurred_at,
+          deal_id,
+          deals:deal_id(name)
+        `)
         .in('investor_id', investorIds)
-        .order('created_at', { ascending: false })
+        .order('occurred_at', { ascending: false })
         .limit(10)
     ])
 
@@ -190,7 +197,34 @@ async function getPortfolioData(investorIds: string[]): Promise<PortfolioData> {
     const cashflows = cashflowsRes.data ?? []
     const latestPerformance = performanceRes.data ?? []
     const vehicles = (vehiclesRes.data ?? []) as PortfolioVehicle[]
-    const recentActivity = (activityRes.data ?? []) as DashboardActivity[]
+
+    // Map event types to user-friendly display
+    const eventTypeMap: Record<string, { title: string; activity_type: string }> = {
+      im_interested: { title: 'Expressed Interest', activity_type: 'deal' },
+      nda_completed: { title: 'NDA Signed', activity_type: 'document' },
+      data_room_submit: { title: 'Allocation Submitted', activity_type: 'allocation' },
+      subscription_completed: { title: 'Subscription Completed', activity_type: 'deal' },
+      data_room_granted: { title: 'Data Room Access', activity_type: 'document' },
+      closed_deal_interest: { title: 'Interest Registered', activity_type: 'deal' },
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const recentActivity: DashboardActivity[] = (activityRes.data ?? []).map((event: any) => {
+      const mapping = eventTypeMap[event.event_type] || { title: event.event_type, activity_type: 'deal' }
+      // deals comes back as object from single FK join
+      const dealName = event.deals?.name || 'Deal'
+      const amount = (event.payload?.commitment || event.payload?.indicative_amount) as number | undefined
+
+      return {
+        id: event.id,
+        title: mapping.title,
+        description: amount ? `${dealName} - $${amount.toLocaleString()}` : dealName,
+        activity_type: mapping.activity_type,
+        created_at: event.occurred_at,
+        importance: 'normal',
+        read_status: null
+      }
+    })
 
     const totalContributed = cashflows
       .filter(cf => cf.type === 'call')

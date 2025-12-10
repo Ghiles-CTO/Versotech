@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { CheckCircle, XCircle, Clock, AlertCircle, FileText, Download, Eye, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ExternalLink, User } from 'lucide-react'
+import { CheckCircle, XCircle, Clock, AlertCircle, FileText, Download, Eye, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ExternalLink, User, ClipboardList, Calendar } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -38,9 +38,11 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { toast } from 'sonner'
-import { DocumentViewer } from '@/components/documents/document-viewer'
+import { DocumentViewerFullscreen } from '@/components/documents/DocumentViewerFullscreen'
+import { useDocumentViewer } from '@/hooks/useDocumentViewer'
 import { QuestionnaireViewer } from '@/components/kyc/questionnaire-viewer'
 import { getDocumentTypeLabel } from '@/constants/kyc-document-types'
+import { formatFileSize } from '@/lib/utils'
 
 interface KYCSubmission {
   id: string
@@ -49,7 +51,7 @@ interface KYCSubmission {
   investor_member_id?: string | null
   document_type: string
   custom_label?: string | null
-  status: 'pending' | 'under_review' | 'approved' | 'rejected' | 'expired'
+  status: 'draft' | 'pending' | 'under_review' | 'approved' | 'rejected' | 'expired'
   submitted_at: string
   reviewed_at?: string
   rejection_reason?: string
@@ -90,6 +92,7 @@ interface KYCSubmission {
 
 interface Statistics {
   total: number
+  draft: number
   pending: number
   under_review: number
   approved: number
@@ -126,15 +129,34 @@ export function KYCReviewClient() {
   const [reviewNotes, setReviewNotes] = useState('')
   const [reviewing, setReviewing] = useState(false)
 
-  // Document viewer state
-  const [viewingDocument, setViewingDocument] = useState<{
-    id: string
-    name: string
-    mimeType: string
-  } | null>(null)
+  // Document viewer hook (fullscreen)
+  const {
+    isOpen: previewOpen,
+    document: previewDocument,
+    previewUrl,
+    isLoading: isLoadingPreview,
+    error: previewError,
+    openPreview,
+    closePreview,
+    downloadDocument: downloadFromPreview
+  } = useDocumentViewer()
 
   // Questionnaire viewer state
   const [viewingQuestionnaire, setViewingQuestionnaire] = useState<KYCSubmission | null>(null)
+
+  // Handle document preview
+  const handlePreview = (submission: KYCSubmission) => {
+    if (!submission.document) return
+
+    // Open fullscreen preview
+    openPreview({
+      id: submission.document.id,
+      file_name: submission.document.name,
+      name: submission.document.name,
+      mime_type: submission.document.mime_type,
+      file_size_bytes: submission.document.file_size_bytes,
+    })
+  }
 
   const loadSubmissions = useCallback(async () => {
     try {
@@ -235,7 +257,9 @@ export function KYCReviewClient() {
       case 'under_review':
         return <Badge variant="secondary"><Clock className="w-3 h-3 mr-1" />Under Review</Badge>
       case 'pending':
-        return <Badge variant="secondary"><Clock className="w-3 h-3 mr-1" />Pending</Badge>
+        return <Badge className="bg-amber-500"><Clock className="w-3 h-3 mr-1" />Pending</Badge>
+      case 'draft':
+        return <Badge variant="outline" className="border-slate-400 text-slate-400"><Clock className="w-3 h-3 mr-1" />Draft</Badge>
       case 'expired':
         return <Badge variant="outline"><AlertCircle className="w-3 h-3 mr-1" />Expired</Badge>
       default:
@@ -292,13 +316,21 @@ export function KYCReviewClient() {
 
       {/* Statistics Cards */}
       {statistics && (
-        <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
+        <div className="grid gap-4 md:grid-cols-4 lg:grid-cols-7">
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">Total</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-foreground">{statistics.total}</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">Draft</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-slate-500">{statistics.draft}</div>
             </CardContent>
           </Card>
           <Card>
@@ -359,6 +391,7 @@ export function KYCReviewClient() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="draft">Draft</SelectItem>
                   <SelectItem value="pending">Pending</SelectItem>
                   <SelectItem value="under_review">Under Review</SelectItem>
                   <SelectItem value="approved">Approved</SelectItem>
@@ -514,14 +547,19 @@ export function KYCReviewClient() {
                     </TableCell>
                     <TableCell>
                       {submission.document ? (
-                        <div className="flex items-center gap-2">
-                          <FileText className="w-4 h-4 text-muted-foreground" />
-                          <span className="text-sm">{submission.document.name}</span>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <FileText className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                            <span className="text-sm truncate max-w-[200px]">{submission.document.name}</span>
+                          </div>
+                          <div className="text-xs text-muted-foreground ml-6">
+                            {formatFileSize(submission.document.file_size_bytes)}
+                          </div>
                         </div>
-                      ) : submission.metadata ? (
+                      ) : submission.metadata && submission.document_type === 'questionnaire' ? (
                         <div className="flex items-center gap-2">
-                          <FileText className="w-4 h-4 text-blue-500" />
-                          <span className="text-sm text-blue-500 font-medium">Questionnaire Data</span>
+                          <ClipboardList className="w-4 h-4 text-blue-500" />
+                          <span className="text-sm text-blue-500 font-medium">Questionnaire Responses</span>
                         </div>
                       ) : (
                         <span className="text-sm text-muted-foreground">No content</span>
@@ -569,26 +607,40 @@ export function KYCReviewClient() {
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
                         {submission.document && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setViewingDocument({
-                              id: submission.document!.id,
-                              name: submission.document!.name,
-                              mimeType: submission.document!.mime_type
-                            })}
-                          >
-                            <Eye className="w-4 h-4" />
-                          </Button>
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handlePreview(submission)}
+                                >
+                                  <FileText className="w-4 h-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>View Document</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
                         )}
-                        {submission.metadata && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setViewingQuestionnaire(submission)}
-                          >
-                            <Eye className="w-4 h-4" />
-                          </Button>
+                        {submission.metadata && submission.document_type === 'questionnaire' && (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => setViewingQuestionnaire(submission)}
+                                >
+                                  <ClipboardList className="w-4 h-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>View Questionnaire Answers</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
                         )}
                         {['pending', 'under_review'].includes(submission.status) && (
                           <>
@@ -764,16 +816,16 @@ export function KYCReviewClient() {
         </DialogContent>
       </Dialog>
 
-      {/* Document Viewer */}
-      {viewingDocument && (
-        <DocumentViewer
-          documentId={viewingDocument.id}
-          documentName={viewingDocument.name}
-          mimeType={viewingDocument.mimeType}
-          open={!!viewingDocument}
-          onClose={() => setViewingDocument(null)}
-        />
-      )}
+      {/* Fullscreen Document Viewer */}
+      <DocumentViewerFullscreen
+        isOpen={previewOpen}
+        document={previewDocument}
+        previewUrl={previewUrl}
+        isLoading={isLoadingPreview}
+        error={previewError}
+        onClose={closePreview}
+        onDownload={downloadFromPreview}
+      />
 
       {/* Questionnaire Viewer */}
       {viewingQuestionnaire && (

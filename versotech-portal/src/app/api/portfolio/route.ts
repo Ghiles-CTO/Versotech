@@ -239,7 +239,7 @@ export async function GET(request: Request) {
             response.vehicleBreakdown = queryResult.data.map((vehicle: any): VehicleBreakdown => ({
               vehicleId: vehicle.id,
               vehicleName: vehicle.name,
-              vehicleType: vehicle.type || 'fund',
+              vehicleType: vehicle.vehicle_type || 'fund',
               logoUrl: vehicle.logo_url || null,
               currentValue: Math.round(parseFloat(vehicle.current_value) || 0),
               costBasis: Math.round(parseFloat(vehicle.cost_basis) || 0),

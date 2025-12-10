@@ -140,6 +140,13 @@ export function KYCDocumentsTab() {
             Pending Review
           </Badge>
         )
+      case 'draft':
+        return (
+          <Badge variant="outline" className="bg-slate-500/10 text-slate-600 border-slate-500/30">
+            <Clock className="mr-1 h-3 w-3" />
+            Draft (Not Submitted)
+          </Badge>
+        )
       case 'rejected':
         return (
           <Badge variant="destructive" className="bg-rose-500/20 text-rose-700 border-rose-500/30">
@@ -152,6 +159,13 @@ export function KYCDocumentsTab() {
           <Badge variant="outline" className="bg-gray-500/20 text-gray-700 border-gray-500/30">
             <AlertCircle className="mr-1 h-3 w-3" />
             Expired
+          </Badge>
+        )
+      case 'under_review':
+        return (
+          <Badge variant="secondary" className="bg-blue-500/20 text-blue-700 border-blue-500/30">
+            <Clock className="mr-1 h-3 w-3" />
+            Under Review
           </Badge>
         )
       default:

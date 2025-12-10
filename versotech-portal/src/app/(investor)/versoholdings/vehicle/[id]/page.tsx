@@ -14,16 +14,13 @@ import {
   TrendingUp,
   TrendingDown,
   Calendar,
-  FileText,
-  Download,
   DollarSign,
   Layers,
-  MessageSquare,
   BarChart3,
   Clock,
-  Users,
   Target,
-  Info
+  Info,
+  Receipt
 } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
@@ -42,6 +39,21 @@ interface Subscription {
   currency: string
   status: string
   signedDate: string
+}
+
+interface FeeStructure {
+  subscriptionFeePercent: number | null
+  subscriptionFeeAmount: number | null
+  spreadFeeAmount: number | null
+  bdFeePercent: number | null
+  bdFeeAmount: number | null
+  finraFeeAmount: number | null
+  managementFeePercent: number | null
+  managementFeeAmount: number | null
+  managementFeeFrequency: string | null
+  performanceFeePercent: number | null
+  performanceFeeThreshold: number | null
+  totalUpfrontFees: number
 }
 
 interface CashflowData {
@@ -157,6 +169,33 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
     signedDate: subscription.created_at
   }
 
+  // Process fee structure data
+  // Use percent if set, otherwise use flat amount (never both)
+  const subscriptionFee = subscription.subscription_fee_percent && subscription.commitment
+    ? (subscription.subscription_fee_percent / 100) * subscription.commitment
+    : (subscription.subscription_fee_amount || 0)
+
+  const totalUpfrontFees =
+    subscriptionFee +
+    (subscription.spread_fee_amount || 0) +
+    (subscription.bd_fee_amount || 0) +
+    (subscription.finra_fee_amount || 0)
+
+  const feeStructure: FeeStructure = {
+    subscriptionFeePercent: subscription.subscription_fee_percent,
+    subscriptionFeeAmount: subscription.subscription_fee_amount,
+    spreadFeeAmount: subscription.spread_fee_amount,
+    bdFeePercent: subscription.bd_fee_percent,
+    bdFeeAmount: subscription.bd_fee_amount,
+    finraFeeAmount: subscription.finra_fee_amount,
+    managementFeePercent: subscription.management_fee_percent,
+    managementFeeAmount: subscription.management_fee_amount,
+    managementFeeFrequency: subscription.management_fee_frequency,
+    performanceFeePercent: subscription.performance_fee_tier1_percent,
+    performanceFeeThreshold: subscription.performance_fee_tier1_threshold,
+    totalUpfrontFees: Math.round(totalUpfrontFees)
+  }
+
   // Process cashflow data
   let cashflowData: CashflowData | null = null
   if (cashflows) {
@@ -242,20 +281,6 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
             </div>
           </div>
 
-          <div className="flex gap-3">
-            <Button variant="outline" className="gap-2">
-              <FileText className="h-4 w-4" />
-              Position Statement
-            </Button>
-            <Button variant="outline" className="gap-2">
-              <Download className="h-4 w-4" />
-              Documents
-            </Button>
-            <Button variant="outline" className="gap-2">
-              <MessageSquare className="h-4 w-4" />
-              Message
-            </Button>
-          </div>
         </div>
 
         {/* Key Performance Metrics */}
@@ -454,6 +479,124 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
                 </CardContent>
               </Card>
             </div>
+
+            {/* Fee Structure */}
+            {(feeStructure.subscriptionFeePercent ||
+              feeStructure.subscriptionFeeAmount ||
+              feeStructure.spreadFeeAmount ||
+              feeStructure.managementFeePercent ||
+              feeStructure.performanceFeePercent) && (
+              <Card className="border-0 shadow-md">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Receipt className="h-5 w-5 text-blue-600" />
+                    Fee Structure
+                  </CardTitle>
+                  <CardDescription>
+                    Fees applicable to your investment in this vehicle
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Upfront Fees */}
+                    <div className="space-y-3">
+                      <h4 className="font-semibold text-gray-900 text-sm uppercase tracking-wide">Upfront Fees</h4>
+
+                      {(feeStructure.subscriptionFeePercent || feeStructure.subscriptionFeeAmount) && (
+                        <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                          <span className="text-gray-600">Subscription Fee</span>
+                          <span className="font-semibold">
+                            {feeStructure.subscriptionFeePercent
+                              ? `${feeStructure.subscriptionFeePercent}%`
+                              : feeStructure.subscriptionFeeAmount
+                                ? formatCurrency(feeStructure.subscriptionFeeAmount)
+                                : '—'
+                            }
+                            {feeStructure.subscriptionFeePercent && subscriptionData.commitment && (
+                              <span className="text-gray-500 text-sm ml-1">
+                                ({formatCurrency((feeStructure.subscriptionFeePercent / 100) * subscriptionData.commitment)})
+                              </span>
+                            )}
+                          </span>
+                        </div>
+                      )}
+
+                      {feeStructure.spreadFeeAmount && feeStructure.spreadFeeAmount > 0 && (
+                        <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                          <span className="text-gray-600">Spread Fee</span>
+                          <span className="font-semibold">{formatCurrency(feeStructure.spreadFeeAmount)}</span>
+                        </div>
+                      )}
+
+                      {feeStructure.bdFeeAmount && feeStructure.bdFeeAmount > 0 && (
+                        <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                          <span className="text-gray-600">BD Fee</span>
+                          <span className="font-semibold">{formatCurrency(feeStructure.bdFeeAmount)}</span>
+                        </div>
+                      )}
+
+                      {feeStructure.finraFeeAmount && feeStructure.finraFeeAmount > 0 && (
+                        <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                          <span className="text-gray-600">FINRA Fee</span>
+                          <span className="font-semibold">{formatCurrency(feeStructure.finraFeeAmount)}</span>
+                        </div>
+                      )}
+
+                      {feeStructure.totalUpfrontFees > 0 && (
+                        <div className="flex justify-between items-center py-3 bg-gray-50 rounded-lg px-3 mt-2">
+                          <span className="font-semibold text-gray-900">Total Upfront Fees</span>
+                          <span className="font-bold text-lg text-blue-600">{formatCurrency(feeStructure.totalUpfrontFees)}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Ongoing Fees */}
+                    <div className="space-y-3">
+                      <h4 className="font-semibold text-gray-900 text-sm uppercase tracking-wide">Ongoing Fees</h4>
+
+                      {(feeStructure.managementFeePercent || feeStructure.managementFeeAmount) && (
+                        <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                          <span className="text-gray-600">Management Fee</span>
+                          <span className="font-semibold">
+                            {feeStructure.managementFeePercent
+                              ? `${feeStructure.managementFeePercent}%`
+                              : feeStructure.managementFeeAmount
+                                ? formatCurrency(feeStructure.managementFeeAmount)
+                                : '—'
+                            }
+                            {feeStructure.managementFeeFrequency && (
+                              <span className="text-gray-500 text-sm ml-1">
+                                ({feeStructure.managementFeeFrequency.replace(/_/g, ' ')})
+                              </span>
+                            )}
+                          </span>
+                        </div>
+                      )}
+
+                      {feeStructure.performanceFeePercent && (
+                        <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                          <span className="text-gray-600">Performance Fee (Carry)</span>
+                          <span className="font-semibold">
+                            {feeStructure.performanceFeePercent}%
+                            {feeStructure.performanceFeeThreshold && (
+                              <span className="text-gray-500 text-sm ml-1">
+                                (above {feeStructure.performanceFeeThreshold}% hurdle)
+                              </span>
+                            )}
+                          </span>
+                        </div>
+                      )}
+
+                      {!feeStructure.managementFeePercent && !feeStructure.managementFeeAmount && !feeStructure.performanceFeePercent && (
+                        <div className="text-center py-6 text-gray-500">
+                          <p>No ongoing fees recorded</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
 
           {/* Position Tab */}

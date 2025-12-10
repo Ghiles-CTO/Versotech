@@ -1,18 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Building2, Plus, Edit, Trash2, FileText, Upload, CheckCircle, XCircle, Clock, Eye, Users } from 'lucide-react'
+import { Building2, Plus, Edit, Trash2, CheckCircle, XCircle, Clock, Users, Loader2, MapPin, Calendar, Hash, FileText, User } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
 import { toast } from 'sonner'
 import { EntityFormDialog } from './entity-form-dialog'
 import { EntityDetailDialog } from './entity-detail-dialog'
@@ -120,7 +112,7 @@ export function CounterpartyEntitiesTab() {
     await loadEntities()
   }
 
-  const getEntityTypeBadge = (type: string) => {
+  const getEntityTypeLabel = (type: string) => {
     const typeLabels: Record<string, string> = {
       trust: 'Trust',
       llc: 'LLC',
@@ -132,27 +124,49 @@ export function CounterpartyEntitiesTab() {
       corporation: 'Corporation',
       other: 'Other'
     }
-
-    return <Badge variant="outline">{typeLabels[type] || type}</Badge>
+    return typeLabels[type] || type
   }
 
   const getKYCStatusBadge = (status?: string) => {
     switch (status) {
       case 'approved':
-        return <Badge className="bg-green-500"><CheckCircle className="w-3 h-3 mr-1" />Approved</Badge>
+        return (
+          <Badge className="bg-emerald-500/15 text-emerald-700 border-emerald-500/30 px-3 py-1">
+            <CheckCircle className="w-3.5 h-3.5 mr-1.5" />
+            Verified
+          </Badge>
+        )
       case 'pending':
-        return <Badge className="bg-yellow-500"><Clock className="w-3 h-3 mr-1" />Pending</Badge>
+        return (
+          <Badge className="bg-amber-500/15 text-amber-700 border-amber-500/30 px-3 py-1">
+            <Clock className="w-3.5 h-3.5 mr-1.5" />
+            Pending Review
+          </Badge>
+        )
       case 'rejected':
-        return <Badge className="bg-red-500"><XCircle className="w-3 h-3 mr-1" />Rejected</Badge>
+        return (
+          <Badge className="bg-rose-500/15 text-rose-700 border-rose-500/30 px-3 py-1">
+            <XCircle className="w-3.5 h-3.5 mr-1.5" />
+            Rejected
+          </Badge>
+        )
       case 'expired':
-        return <Badge variant="outline" className="text-orange-500">Expired</Badge>
+        return (
+          <Badge variant="outline" className="text-orange-600 border-orange-400 px-3 py-1">
+            Expired
+          </Badge>
+        )
       default:
-        return <Badge variant="outline">Not Submitted</Badge>
+        return (
+          <Badge variant="outline" className="text-slate-500 border-slate-300 px-3 py-1">
+            Not Submitted
+          </Badge>
+        )
     }
   }
 
   const formatDate = (dateString?: string) => {
-    if (!dateString) return 'N/A'
+    if (!dateString) return '—'
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
@@ -160,112 +174,222 @@ export function CounterpartyEntitiesTab() {
     })
   }
 
+  const formatAddress = (address?: CounterpartyEntity['registered_address']) => {
+    if (!address) return null
+    const parts = [
+      address.street,
+      address.city,
+      address.state,
+      address.postal_code,
+      address.country
+    ].filter(Boolean)
+    return parts.length > 0 ? parts.join(', ') : null
+  }
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="text-muted-foreground">Loading entities...</div>
+      <div className="flex items-center justify-center py-16">
+        <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
       </div>
     )
   }
 
   return (
     <div className="space-y-6">
+      {/* Header Section */}
       <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>Counterparty Entities</CardTitle>
-              <CardDescription>
-                Manage legal entities you invest through (trusts, LLCs, partnerships, etc.). Click "Members & KYC" to add members and upload KYC documents.
-              </CardDescription>
+        <CardHeader className="pb-4">
+          <div className="flex items-start justify-between gap-4">
+            <div className="space-y-1">
+              <CardTitle className="text-xl">Counterparty Entities</CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Manage legal entities you invest through (trusts, LLCs, partnerships, etc.)
+              </p>
             </div>
-            <Button onClick={handleCreate}>
+            <Button onClick={handleCreate} className="bg-emerald-600 hover:bg-emerald-700">
               <Plus className="w-4 h-4 mr-2" />
               Add Entity
             </Button>
           </div>
         </CardHeader>
-        <CardContent>
-          {entities.length === 0 ? (
-            <div className="text-center py-12">
-              <Building2 className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-              <p className="text-muted-foreground mb-4">
-                No entities added yet. Add an entity to invest through a legal entity.
+      </Card>
+
+      {/* Entities List */}
+      {entities.length === 0 ? (
+        <Card>
+          <CardContent className="py-16">
+            <div className="text-center">
+              <Building2 className="w-12 h-12 mx-auto text-slate-400 mb-4" />
+              <p className="text-slate-600 font-medium text-lg mb-2">No entities added yet</p>
+              <p className="text-sm text-slate-500 mb-6 max-w-md mx-auto">
+                Add a legal entity to invest through trusts, LLCs, or partnerships.
               </p>
-              <Button onClick={handleCreate} variant="outline">
+              <Button onClick={handleCreate} variant="outline" size="lg">
                 <Plus className="w-4 h-4 mr-2" />
                 Add Your First Entity
               </Button>
             </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Legal Name</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Jurisdiction</TableHead>
-                  <TableHead>KYC Status</TableHead>
-                  <TableHead>Representative</TableHead>
-                  <TableHead>Created</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {entities.map((entity) => (
-                  <TableRow key={entity.id}>
-                    <TableCell className="font-medium">{entity.legal_name}</TableCell>
-                    <TableCell>{getEntityTypeBadge(entity.entity_type)}</TableCell>
-                    <TableCell>{entity.jurisdiction || 'N/A'}</TableCell>
-                    <TableCell>{getKYCStatusBadge(entity.kyc_status)}</TableCell>
-                    <TableCell>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-6">
+          {entities.map((entity) => (
+            <Card key={entity.id} className="overflow-hidden">
+              {/* Card Header with Name, Type, and Actions */}
+              <CardHeader className="bg-slate-50/80 border-b pb-4">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 rounded-lg bg-slate-900 flex items-center justify-center flex-shrink-0">
+                      <Building2 className="w-6 h-6 text-white" />
+                    </div>
+                    <div className="space-y-1">
+                      <h3 className="text-xl font-semibold text-slate-900">
+                        {entity.legal_name}
+                      </h3>
+                      <div className="flex items-center gap-3">
+                        <Badge variant="outline" className="font-medium px-3 py-1">
+                          {getEntityTypeLabel(entity.entity_type)}
+                        </Badge>
+                        {getKYCStatusBadge(entity.kyc_status)}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="default"
+                      size="sm"
+                      onClick={() => handleViewDetails(entity)}
+                      className="h-9 bg-slate-900 hover:bg-slate-800"
+                    >
+                      <Users className="w-4 h-4 mr-2" />
+                      Members & KYC
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleEdit(entity)}
+                      className="h-9"
+                    >
+                      <Edit className="w-4 h-4 mr-2" />
+                      Edit
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDelete(entity.id)}
+                      disabled={deleting === entity.id}
+                      className="h-9 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-300"
+                    >
+                      {deleting === entity.id ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Trash2 className="w-4 h-4" />
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </CardHeader>
+
+              {/* Card Content with All Data */}
+              <CardContent className="pt-6 pb-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-6">
+                  {/* Jurisdiction */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-2 text-sm font-medium text-slate-500">
+                      <MapPin className="w-4 h-4" />
+                      Jurisdiction
+                    </div>
+                    <p className="text-base text-slate-900 pl-6">
+                      {entity.jurisdiction || <span className="text-slate-400">Not specified</span>}
+                    </p>
+                  </div>
+
+                  {/* Registration Number */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-2 text-sm font-medium text-slate-500">
+                      <Hash className="w-4 h-4" />
+                      Registration Number
+                    </div>
+                    <p className="text-base text-slate-900 font-mono pl-6">
+                      {entity.registration_number || <span className="text-slate-400 font-sans">Not specified</span>}
+                    </p>
+                  </div>
+
+                  {/* Tax ID */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-2 text-sm font-medium text-slate-500">
+                      <FileText className="w-4 h-4" />
+                      Tax ID
+                    </div>
+                    <p className="text-base text-slate-900 font-mono pl-6">
+                      {entity.tax_id || <span className="text-slate-400 font-sans">Not specified</span>}
+                    </p>
+                  </div>
+
+                  {/* Formation Date */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-2 text-sm font-medium text-slate-500">
+                      <Calendar className="w-4 h-4" />
+                      Formation Date
+                    </div>
+                    <p className="text-base text-slate-900 pl-6">
+                      {formatDate(entity.formation_date) !== '—' ? formatDate(entity.formation_date) : <span className="text-slate-400">Not specified</span>}
+                    </p>
+                  </div>
+
+                  {/* Representative */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-2 text-sm font-medium text-slate-500">
+                      <User className="w-4 h-4" />
+                      Authorized Representative
+                    </div>
+                    <div className="pl-6">
                       {entity.representative_name ? (
                         <div>
-                          <div className="font-medium">{entity.representative_name}</div>
+                          <p className="text-base text-slate-900 font-medium">
+                            {entity.representative_name}
+                          </p>
                           {entity.representative_title && (
-                            <div className="text-sm text-muted-foreground">
+                            <p className="text-sm text-slate-500">
                               {entity.representative_title}
-                            </div>
+                            </p>
                           )}
                         </div>
                       ) : (
-                        'N/A'
+                        <p className="text-slate-400">Not specified</p>
                       )}
-                    </TableCell>
-                    <TableCell>{formatDate(entity.created_at)}</TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <Button
-                          variant="default"
-                          size="sm"
-                          onClick={() => handleViewDetails(entity)}
-                        >
-                          <Users className="w-4 h-4 mr-1" />
-                          Members & KYC
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleEdit(entity)}
-                        >
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDelete(entity.id)}
-                          disabled={deleting === entity.id}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+                    </div>
+                  </div>
+
+                  {/* Address */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-2 text-sm font-medium text-slate-500">
+                      <MapPin className="w-4 h-4" />
+                      Registered Address
+                    </div>
+                    <p className="text-base text-slate-900 pl-6">
+                      {formatAddress(entity.registered_address) || <span className="text-slate-400">Not specified</span>}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Notes Section - if present */}
+                {entity.notes && (
+                  <div className="mt-6 pt-6 border-t">
+                    <div className="flex items-center gap-2 text-sm font-medium text-slate-500 mb-2">
+                      <FileText className="w-4 h-4" />
+                      Notes
+                    </div>
+                    <p className="text-base text-slate-700 pl-6 whitespace-pre-wrap">
+                      {entity.notes}
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
 
       <EntityFormDialog
         open={formDialogOpen}

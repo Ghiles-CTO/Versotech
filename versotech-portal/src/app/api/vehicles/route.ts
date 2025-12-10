@@ -195,8 +195,75 @@ export async function GET(request: Request) {
       v.position !== null || v.subscription !== null
     )
 
+    // Fetch documents for each holding (NDA, Subscription Pack, Certificate)
+    // Documents are linked via subscription_id OR (owner_investor_id + vehicle_id)
+    const vehicleIds = filteredVehicles.map((v: any) => v.id)
+    const subscriptionIds = filteredVehicles
+      .filter((v: any) => v.subscription)
+      .map((v: any) => {
+        // Get the subscription ID from the original vehicle data
+        const vehicle = vehicles?.find((veh: any) => veh.id === v.id)
+        const investorSubs = (vehicle?.subscriptions || []).filter((s: any) =>
+          investorIds.includes(s.investor_id)
+        )
+        return investorSubs[0]?.id
+      })
+      .filter(Boolean)
+
+    // Fetch documents
+    const { data: documents } = await serviceSupabase
+      .from('documents')
+      .select('id, name, type, file_key, subscription_id, owner_investor_id, vehicle_id, created_at')
+      .or(`subscription_id.in.(${subscriptionIds.join(',')}),and(owner_investor_id.in.(${investorIds.join(',')}),vehicle_id.in.(${vehicleIds.join(',')}))`)
+      .in('type', ['nda', 'subscription_pack', 'subscription_draft', 'certificate'])
+      .order('created_at', { ascending: false })
+
+    // Map documents to vehicles
+    const vehiclesWithDocs = filteredVehicles.map((v: any) => {
+      // Find documents for this vehicle
+      const vehicleDocs = (documents || []).filter((doc: any) => {
+        // Match by subscription_id
+        if (doc.subscription_id && subscriptionIds.includes(doc.subscription_id)) {
+          const vehicle = vehicles?.find((veh: any) => veh.id === v.id)
+          const investorSubs = (vehicle?.subscriptions || []).filter((s: any) =>
+            investorIds.includes(s.investor_id)
+          )
+          return investorSubs.some((s: any) => s.id === doc.subscription_id)
+        }
+        // Match by owner_investor_id + vehicle_id (for NDAs)
+        if (doc.owner_investor_id && doc.vehicle_id === v.id) {
+          return investorIds.includes(doc.owner_investor_id)
+        }
+        return false
+      })
+
+      // Group documents by type (take most recent of each type)
+      const docsByType: Record<string, any> = {}
+      vehicleDocs.forEach((doc: any) => {
+        const docType = doc.type === 'subscription_draft' ? 'subscription_pack' : doc.type
+        if (!docsByType[docType]) {
+          docsByType[docType] = {
+            id: doc.id,
+            name: doc.name,
+            type: docType,
+            file_key: doc.file_key,
+            created_at: doc.created_at
+          }
+        }
+      })
+
+      return {
+        ...v,
+        documents: {
+          nda: docsByType['nda'] || null,
+          subscription_pack: docsByType['subscription_pack'] || null,
+          certificate: docsByType['certificate'] || null
+        }
+      }
+    })
+
     return NextResponse.json({
-      vehicles: filteredVehicles
+      vehicles: vehiclesWithDocs
     })
 
   } catch (error) {

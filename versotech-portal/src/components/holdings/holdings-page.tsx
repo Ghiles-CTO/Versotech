@@ -20,9 +20,7 @@ import {
   AlertCircle,
   RefreshCw,
   Target,
-  PieChart,
-  LayoutGrid,
-  List
+  PieChart
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -107,8 +105,7 @@ export function HoldingsPage({ initialData }: HoldingsPageProps) {
   const [error, setError] = useState<string | null>(null)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [investorIds, setInvestorIds] = useState<string[]>([])
-  const [activeView, setActiveView] = useState<'grid' | 'list'>('grid')
-  // Removed tabs - only show holdings per user request
+  // Removed view toggle - only grid view per user request
 
   // Chart data states
   const [allocationData, setAllocationData] = useState<any[]>([])
@@ -416,9 +413,48 @@ export function HoldingsPage({ initialData }: HoldingsPageProps) {
     }
 
     if (filters.domicile !== 'all') {
-      filtered = filtered.filter(h => 
+      filtered = filtered.filter(h =>
         (h.domicile?.toLowerCase() || 'other') === filters.domicile
       )
+    }
+
+    // Vintage filter
+    if (filters.vintage !== 'all') {
+      const now = new Date()
+      filtered = filtered.filter(h => {
+        const created = new Date(h.created_at)
+        const yearsOld = (now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24 * 365)
+        switch (filters.vintage) {
+          case 'recent':
+            return yearsOld < 2
+          case 'mature':
+            return yearsOld >= 2 && yearsOld <= 5
+          case 'legacy':
+            return yearsOld > 5
+          default:
+            return true
+        }
+      })
+    }
+
+    // Value range filter
+    if (filters.minValue !== undefined || filters.maxValue !== undefined) {
+      filtered = filtered.filter(h => {
+        const value = h.position?.currentValue || 0
+        const min = filters.minValue ?? 0
+        const max = filters.maxValue ?? Infinity
+        return value >= min && value <= max
+      })
+    }
+
+    // Return range filter
+    if (filters.minReturn !== undefined || filters.maxReturn !== undefined) {
+      filtered = filtered.filter(h => {
+        const returnPct = h.position?.unrealizedGainPct || 0
+        const min = filters.minReturn ?? -Infinity
+        const max = filters.maxReturn ?? Infinity
+        return returnPct >= min && returnPct <= max
+      })
     }
 
     // Apply sorting
@@ -436,6 +472,14 @@ export function HoldingsPage({ initialData }: HoldingsPageProps) {
           return (a.position?.unrealizedGainPct || 0) - (b.position?.unrealizedGainPct || 0)
         case 'performance_desc':
           return (b.position?.unrealizedGainPct || 0) - (a.position?.unrealizedGainPct || 0)
+        case 'commitment_asc':
+          return (a.subscription?.commitment || 0) - (b.subscription?.commitment || 0)
+        case 'commitment_desc':
+          return (b.subscription?.commitment || 0) - (a.subscription?.commitment || 0)
+        case 'date_asc':
+          return new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        case 'date_desc':
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
         default:
           return 0
       }
@@ -465,10 +509,59 @@ export function HoldingsPage({ initialData }: HoldingsPageProps) {
   }
 
   // Handle export
-  const handleExport = () => {
-    // TODO: Implement export functionality
-    console.log('Export portfolio data')
-  }
+  const handleExport = useCallback(() => {
+    if (filteredHoldings.length === 0) return
+
+    // CSV headers
+    const headers = [
+      'Name',
+      'Type',
+      'Domicile',
+      'Status',
+      'Currency',
+      'Current Value',
+      'Cost Basis',
+      'Unrealized Gain',
+      'Unrealized Gain %',
+      'Units',
+      'Commitment',
+      'Created Date'
+    ]
+
+    // CSV rows
+    const rows = filteredHoldings.map(h => [
+      h.name,
+      h.type.replace(/_/g, ' '),
+      h.domicile || '',
+      deriveHoldingStatus(h),
+      h.currency,
+      h.position?.currentValue?.toFixed(2) || '0',
+      h.position?.costBasis?.toFixed(2) || '0',
+      h.position?.unrealizedGain?.toFixed(2) || '0',
+      h.position?.unrealizedGainPct?.toFixed(2) || '0',
+      h.position?.units?.toString() || '0',
+      h.subscription?.commitment?.toFixed(2) || '0',
+      new Date(h.created_at).toLocaleDateString()
+    ])
+
+    // Build CSV content
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+    ].join('\n')
+
+    // Create and download file
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const link = document.createElement('a')
+    const url = URL.createObjectURL(blob)
+    link.setAttribute('href', url)
+    link.setAttribute('download', `portfolio-holdings-${new Date().toISOString().split('T')[0]}.csv`)
+    link.style.visibility = 'hidden'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+  }, [filteredHoldings])
 
   // Loading state
   if (isLoading) {
@@ -547,6 +640,7 @@ export function HoldingsPage({ initialData }: HoldingsPageProps) {
               asOfDate={portfolioData.asOfDate}
               isLoading={isRefreshing}
               onRefresh={handleRefresh}
+              onExport={handleExport}
               vehicleBreakdown={portfolioData.vehicleBreakdown}
               allocationData={allocationData}
               performanceData={performanceData}
@@ -556,30 +650,12 @@ export function HoldingsPage({ initialData }: HoldingsPageProps) {
 
           {/* Holdings Section */}
           <div className="space-y-4">
-            {/* View Toggle */}
-            <div className="flex justify-between items-center">
-              <div>
-                <h2 className="text-xl font-semibold">Your Holdings</h2>
-                <p className="text-sm text-muted-foreground">
-                  {filteredHoldings.length} total holdings
-                </p>
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  variant={activeView === 'grid' ? 'secondary' : 'outline'}
-                  size="sm"
-                  onClick={() => setActiveView('grid')}
-                >
-                  <LayoutGrid className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant={activeView === 'list' ? 'secondary' : 'outline'}
-                  size="sm"
-                  onClick={() => setActiveView('list')}
-                >
-                  <List className="h-4 w-4" />
-                </Button>
-              </div>
+            {/* Section Header */}
+            <div>
+              <h2 className="text-xl font-semibold">Your Holdings</h2>
+              <p className="text-sm text-muted-foreground">
+                {filteredHoldings.length} total holdings
+              </p>
             </div>
 
             {/* Filters */}
@@ -617,12 +693,7 @@ export function HoldingsPage({ initialData }: HoldingsPageProps) {
                 </CardContent>
               </Card>
             ) : (
-              <div className={cn(
-                "grid gap-4",
-                activeView === 'grid' 
-                  ? "grid-cols-1 md:grid-cols-2 xl:grid-cols-3" 
-                  : "grid-cols-1"
-              )}>
+              <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
                 {filteredHoldings.map((holding) => (
                   <VehicleCard key={holding.id} holding={holding} />
                 ))}

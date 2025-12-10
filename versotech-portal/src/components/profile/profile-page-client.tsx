@@ -93,28 +93,6 @@ export function ProfilePageClient({ profile: initialProfile, variant = 'investor
     }))
   }
 
-  const handleSubmitApplication = async () => {
-    try {
-      const response = await fetch('/api/investors/me/kyc-status', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'pending' })
-      })
-
-      if (response.ok) {
-        setKycStatus('pending')
-        toast.success('KYC Application Submitted', {
-          description: 'Your application is now under review.'
-        })
-      } else {
-        throw new Error('Failed to submit')
-      }
-    } catch (error) {
-      toast.error('Submission Failed', {
-        description: 'Please try again later.'
-      })
-    }
-  }
 
   return (
     <div className="grid gap-6 lg:grid-cols-3">
@@ -233,28 +211,22 @@ export function ProfilePageClient({ profile: initialProfile, variant = 'investor
           {!isStaff && (
             <>
               <TabsContent value="kyc" className="mt-6 space-y-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h2 className="text-2xl font-bold tracking-tight">KYC Verification</h2>
-                    <p className="text-muted-foreground">Complete your profile to unlock full access.</p>
-                  </div>
-                  {kycStatus !== 'completed' && kycStatus !== 'pending' && (
-                    <Button onClick={handleSubmitApplication} className="bg-emerald-600 hover:bg-emerald-700">
-                      Submit Application
-                    </Button>
-                  )}
+                <div>
+                  <h2 className="text-2xl font-bold tracking-tight">KYC Verification</h2>
+                  <p className="text-muted-foreground">Complete your profile to unlock full access.</p>
                 </div>
 
-                {/* Step 1: Contact Information */}
-                <InvestorInfoForm />
+                {/* Step 1: KYC Documents */}
+                <KYCDocumentsTab />
 
-                {/* Step 2: Compliance Questionnaire */}
-                <KYCQuestionnaire />
-
-                {/* Step 3: Supporting Documents */}
+                {/* Step 2: Contact Information */}
                 <div className="pt-6 border-t border-white/10">
-                  <h3 className="text-lg font-medium mb-4">Supporting Documents</h3>
-                  <KYCDocumentsTab />
+                  <InvestorInfoForm />
+                </div>
+
+                {/* Step 3: Compliance Questionnaire */}
+                <div className="pt-6 border-t border-white/10">
+                  <KYCQuestionnaire />
                 </div>
               </TabsContent>
               {isEntityInvestor && (

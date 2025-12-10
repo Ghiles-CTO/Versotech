@@ -159,8 +159,14 @@ export function ModernHoldingsFilters({
   className
 }: ModernHoldingsFiltersProps) {
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
-  const [valueRange, setValueRange] = useState<[number, number]>([0, 10000000])
-  const [returnRange, setReturnRange] = useState<[number, number]>([-50, 100])
+  const [valueRange, setValueRange] = useState<[number, number]>([
+    filters.minValue ?? 0,
+    filters.maxValue ?? 10000000
+  ])
+  const [returnRange, setReturnRange] = useState<[number, number]>([
+    filters.minReturn ?? -50,
+    filters.maxReturn ?? 100
+  ])
 
   const handleFilterChange = (key: keyof FiltersState, value: any) => {
     onFiltersChange({ ...filters, [key]: value })
@@ -198,16 +204,12 @@ export function ModernHoldingsFilters({
           {/* Type Filter */}
           <Select value={filters.type} onValueChange={(value) => handleFilterChange('type', value)}>
             <SelectTrigger className="w-[160px]">
-              <Building2 className="h-4 w-4 mr-2" />
               <SelectValue placeholder="Vehicle Type" />
             </SelectTrigger>
             <SelectContent>
               {typeOptions.map(option => (
                 <SelectItem key={option.value} value={option.value}>
-                  <div className="flex items-center">
-                    <option.icon className="h-4 w-4 mr-2" />
-                    {option.label}
-                  </div>
+                  {option.label}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -216,16 +218,12 @@ export function ModernHoldingsFilters({
           {/* Performance Filter */}
           <Select value={filters.performance} onValueChange={(value) => handleFilterChange('performance', value)}>
             <SelectTrigger className="w-[160px]">
-              <BarChart3 className="h-4 w-4 mr-2" />
               <SelectValue placeholder="Performance" />
             </SelectTrigger>
             <SelectContent>
               {performanceOptions.map(option => (
                 <SelectItem key={option.value} value={option.value}>
-                  <div className="flex items-center">
-                    {option.icon && <option.icon className={cn("h-4 w-4 mr-2", option.color === 'green' && 'text-green-600', option.color === 'red' && 'text-red-600')} />}
-                    {option.label}
-                  </div>
+                  {option.label}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -234,16 +232,12 @@ export function ModernHoldingsFilters({
           {/* Size Filter */}
           <Select value={filters.size} onValueChange={(value) => handleFilterChange('size', value)}>
             <SelectTrigger className="w-[140px]">
-              <DollarSign className="h-4 w-4 mr-2" />
               <SelectValue placeholder="Size" />
             </SelectTrigger>
             <SelectContent>
               {sizeOptions.map(option => (
                 <SelectItem key={option.value} value={option.value}>
-                  <div className="flex items-center">
-                    {option.icon && <option.icon className="h-4 w-4 mr-2" />}
-                    {option.label}
-                  </div>
+                  {option.label}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -333,16 +327,12 @@ export function ModernHoldingsFilters({
               <Label className="text-sm font-medium">Vintage</Label>
               <Select value={filters.vintage} onValueChange={(value) => handleFilterChange('vintage', value)}>
                 <SelectTrigger>
-                  <Calendar className="h-4 w-4 mr-2" />
                   <SelectValue placeholder="Select vintage" />
                 </SelectTrigger>
                 <SelectContent>
                   {vintageOptions.map(option => (
                     <SelectItem key={option.value} value={option.value}>
-                      <div className="flex items-center">
-                        {option.icon && <option.icon className="h-4 w-4 mr-2" />}
-                        {option.label}
-                      </div>
+                      {option.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -354,16 +344,13 @@ export function ModernHoldingsFilters({
               <Label className="text-sm font-medium">Domicile</Label>
               <Select value={filters.domicile} onValueChange={(value) => handleFilterChange('domicile', value)}>
                 <SelectTrigger>
-                  <Globe className="h-4 w-4 mr-2" />
                   <SelectValue placeholder="Select location" />
                 </SelectTrigger>
                 <SelectContent>
                   {domicileOptions.map(option => (
                     <SelectItem key={option.value} value={option.value}>
-                      <div className="flex items-center">
-                        <span className="mr-2">{option.flag}</span>
-                        {option.label}
-                      </div>
+                      <span className="mr-2">{option.flag}</span>
+                      {option.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -382,7 +369,17 @@ export function ModernHoldingsFilters({
               </div>
               <Slider
                 value={valueRange}
-                onValueChange={(value) => setValueRange(value as [number, number])}
+                onValueChange={(value) => {
+                  const newRange = value as [number, number]
+                  setValueRange(newRange)
+                  // Only apply filter if not at default bounds
+                  const isDefault = newRange[0] === 0 && newRange[1] === 10000000
+                  onFiltersChange({
+                    ...filters,
+                    minValue: isDefault ? undefined : newRange[0],
+                    maxValue: isDefault ? undefined : newRange[1]
+                  })
+                }}
                 max={10000000}
                 step={100000}
                 className="w-full"
@@ -398,7 +395,17 @@ export function ModernHoldingsFilters({
               </div>
               <Slider
                 value={returnRange}
-                onValueChange={(value) => setReturnRange(value as [number, number])}
+                onValueChange={(value) => {
+                  const newRange = value as [number, number]
+                  setReturnRange(newRange)
+                  // Only apply filter if not at default bounds
+                  const isDefault = newRange[0] === -50 && newRange[1] === 100
+                  onFiltersChange({
+                    ...filters,
+                    minReturn: isDefault ? undefined : newRange[0],
+                    maxReturn: isDefault ? undefined : newRange[1]
+                  })
+                }}
                 min={-50}
                 max={100}
                 step={5}

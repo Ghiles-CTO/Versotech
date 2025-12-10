@@ -78,10 +78,8 @@ export async function GET(request: NextRequest) {
           email
         )
       `, { count: 'exact' })
-      .order('submitted_at', { ascending: false })
-      .range(from, to)
 
-    // Apply filters
+    // Apply filters BEFORE pagination
     if (status) {
       query = query.eq('status', status)
     }
@@ -91,6 +89,11 @@ export async function GET(request: NextRequest) {
     if (documentType) {
       query = query.eq('document_type', documentType)
     }
+
+    // Apply ordering and pagination AFTER filters
+    query = query
+      .order('submitted_at', { ascending: false })
+      .range(from, to)
 
     const { data: submissions, count, error: submissionsError } = await query
 
@@ -117,6 +120,7 @@ export async function GET(request: NextRequest) {
 
     const statistics = {
       total: statsData?.length || 0,
+      draft: statusCounts['draft'] || 0,
       pending: statusCounts['pending'] || 0,
       under_review: statusCounts['under_review'] || 0,
       approved: statusCounts['approved'] || 0,

@@ -79,6 +79,7 @@ interface CleanPortfolioDashboardProps {
   asOfDate: string
   isLoading?: boolean
   onRefresh?: () => void
+  onExport?: () => void
   className?: string
   vehicleBreakdown?: any[]
   allocationData?: AllocationData[]
@@ -165,17 +166,13 @@ export function PortfolioDashboard({
   asOfDate,
   isLoading = false,
   onRefresh,
+  onExport,
   className,
   vehicleBreakdown = [],
   allocationData = [],
   performanceData = [],
   cashFlowData = []
 }: CleanPortfolioDashboardProps) {
-  // Export functionality
-  const handleExport = () => {
-    // TODO: Implement export functionality
-    console.log('Export portfolio data')
-  }
 
   return (
     <div className={cn("space-y-6", className)}>
@@ -200,10 +197,11 @@ export function PortfolioDashboard({
           >
             <RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")} />
           </Button>
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             size="sm"
-            onClick={handleExport}
+            onClick={onExport}
+            disabled={!onExport}
           >
             <Download className="h-4 w-4" />
           </Button>

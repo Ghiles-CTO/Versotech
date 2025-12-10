@@ -91,6 +91,7 @@ export function WizardProvider({
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const isDirtyRef = useRef(false)
   const isSavingRef = useRef(false) // Ref for immediate saving state check
+  const isSubmittedRef = useRef(false) // Ref to prevent auto-save after final submission
   const saveProgressRef = useRef<(() => Promise<void>) | undefined>(undefined) // Ref to latest saveProgress
 
   // Calculate visible steps based on US Person status
@@ -187,6 +188,10 @@ export function WizardProvider({
   const saveProgress = useCallback(async () => {
     // Use ref for immediate check to prevent race conditions
     if (isSavingRef.current) return
+
+    // BUG FIX: Prevent auto-save from running after final submission
+    // This prevents overwriting 'pending' status back to 'draft'
+    if (isSubmittedRef.current) return
 
     isSavingRef.current = true
     setState(prev => ({ ...prev, isSaving: true }))
@@ -313,11 +318,20 @@ export function WizardProvider({
 
   // Submit questionnaire - BUG FIX 1.3: Filter hidden steps data
   const submitQuestionnaire = useCallback(async (): Promise<boolean> => {
+    // BUG FIX: Clear auto-save timer and mark as submitted to prevent race condition
+    // that could overwrite 'pending' status back to 'draft'
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current)
+      autoSaveTimeoutRef.current = null
+    }
+
     // Get current visible steps
     const currentVisibleSteps = getVisibleSteps(state.formData)
 
     // Validate all visible steps
-    for (const step of currentVisibleSteps) {
+    for (let i = 0; i < currentVisibleSteps.length; i++) {
+      const step = currentVisibleSteps[i]
+      const userFacingStepNumber = i + 1 // What the user sees (1-7 for non-US, 1-10 for US)
       const stepKey = `step${step}` as keyof KYCQuestionnaireData
       const stepData = state.formData[stepKey]
       const schema = getStepSchema(step)
@@ -325,8 +339,14 @@ export function WizardProvider({
       if (schema) {
         try {
           await schema.parseAsync(stepData || getStepDefaults(step))
-        } catch (error) {
-          toast.error(`Please complete Step ${step}: ${STEP_CONFIG[step - 1].title}`)
+        } catch (error: any) {
+          // Extract specific validation errors from Zod
+          const errorMessages = error.issues?.map((e: any) => e.message) || []
+          const errorSummary = errorMessages.slice(0, 3).join(', ') + (errorMessages.length > 3 ? ` (+${errorMessages.length - 3} more)` : '')
+
+          toast.error(`Please complete Step ${userFacingStepNumber}: ${STEP_CONFIG[step - 1].title}`, {
+            description: errorSummary || 'Please fill in all required fields'
+          })
           goToStep(step)
           return false
         }
@@ -377,6 +397,9 @@ export function WizardProvider({
       if (!response.ok) {
         throw new Error('Failed to submit questionnaire')
       }
+
+      // Mark as submitted to prevent any future auto-saves
+      isSubmittedRef.current = true
 
       setState(prev => ({
         ...prev,

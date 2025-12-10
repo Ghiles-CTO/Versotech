@@ -51,7 +51,12 @@ function WizardContent({ onComplete }: { onComplete?: () => void }) {
     setSubmitError(null)
 
     try {
-      await submitQuestionnaire()
+      const success = await submitQuestionnaire()
+      if (!success) {
+        // submitQuestionnaire already shows toast with specific error
+        // Just don't show success screen - keep user on the form
+        return
+      }
       setSubmitSuccess(true)
       onComplete?.()
     } catch (error) {

@@ -103,13 +103,13 @@ export default async function InvestorHoldings() {
             const currentValue = units * parseFloat(navPerUnit)
             
             return {
-              vehicle_id: vehicle.id,
-              vehicle_name: vehicle.name,
-              vehicle_type: vehicle.type,
-              current_value: currentValue.toFixed(2),
+              vehicleId: vehicle.id,
+              vehicleName: vehicle.name,
+              vehicleType: vehicle.type,
+              currentValue: currentValue,
               units: units,
-              cost_basis: parseFloat(position.cost_basis || 0),
-              nav_per_unit: navPerUnit
+              costBasis: parseFloat(position.cost_basis || 0),
+              navPerUnit: navPerUnit
             }
           })
         }
