@@ -277,7 +277,24 @@ WHERE deal_id = ?
 
 **Location**: `/components/deals/submit-subscription-form.tsx`
 
-#### Deal Capacity Display (NEW)
+#### Form Locking Behavior (UPDATED Dec 2025)
+The submission form uses status-based locking to prevent duplicate submissions:
+
+| Existing Submission Status | Form State | Behavior |
+|---------------------------|------------|----------|
+| `pending_review` | **Locked** | Shows "Under review" message - prevents duplicate pending submissions |
+| `approved` | **Unlocked** | Allows follow-on investments (additional amounts, different entities) |
+| `rejected` | **Unlocked** | Allows resubmission with corrected details |
+| `cancelled` | **Unlocked** | Allows new submission |
+| None | **Unlocked** | Normal submission flow |
+
+**Key Design Decisions**:
+- Form only locks during `pending_review` to prevent duplicate submissions while staff reviews
+- After approval, investors can submit additional subscriptions (follow-on investments)
+- Multiple subscriptions per investor per deal are supported (personal + entity, or increasing commitment)
+- Auto-cancel logic handles the backend (cancels old pending submissions when new one created)
+
+#### Deal Capacity Display
 Shows real-time subscription status:
 - Progress bar with % subscribed
 - Target raise vs. current subscriptions
@@ -301,9 +318,10 @@ Shows real-time subscription status:
 **API**: `/api/deals/[id]/subscriptions`
 
 Checks (blocking):
-- ✅ Data room access exists
-- ✅ Access not expired
+- ✅ User authentication
+- ✅ Investor profile exists
 - ✅ Entity ownership (if entity subscription)
+- ~~Data room access~~ (removed Dec 2025 - investors can subscribe directly)
 
 Warnings (non-blocking):
 - ⚠️ Below minimum ticket
@@ -323,7 +341,17 @@ INSERT INTO deal_subscription_submissions (
 )
 ```
 
-Auto-cancels previous pending submissions for same deal/investor.
+**Auto-Cancel Behavior**:
+- Before creating new submission, cancels ALL existing `pending_review` submissions for same investor/deal
+- This prevents duplicate pending submissions regardless of subscription_type
+- Approved/rejected submissions are NOT cancelled - they remain in history
+- Enables "amendment" if investor resubmits (old cancelled, new pending)
+
+**Multiple Subscriptions Support**:
+- Investor can have multiple approved subscriptions per deal
+- Use cases: personal + entity, follow-on investments, increasing commitment
+- Each approval creates separate record in `subscriptions` table
+- `investor_deal_holdings` table maintains consolidated summary (UPSERT)
 
 ---
 
@@ -1071,6 +1099,8 @@ Valid status progressions:
 - **Funded amount tracking** (NEW)
 - **Deal capacity display** (NEW)
 - **Automatic position creation** (NEW)
+- **Follow-on subscriptions** (UPDATED Dec 2025) - Investors can submit additional subscriptions after approval
+- **Direct subscription** (UPDATED Dec 2025) - Data room access no longer required
 - Fee event auto-creation
 - Invoice and reconciliation
 
@@ -1153,6 +1183,6 @@ The system is designed to scale with VERSO's growth while maintaining security, 
 
 ---
 
-*Document Version: 1.1*
-*Last Updated: November 30, 2025*
+*Document Version: 1.2*
+*Last Updated: December 10, 2025*
 *Author: VERSO Tech Team*

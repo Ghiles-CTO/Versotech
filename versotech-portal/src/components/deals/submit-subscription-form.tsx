@@ -85,8 +85,9 @@ export function SubmitSubscriptionForm({ dealId, currency, existingSubmission }:
     }).format(value)
   }
 
-  // Only lock form after approval - allow resubmission during pending review to enable corrections
-  const isLocked = existingSubmission && existingSubmission.status === 'approved'
+  // Only lock form during pending review to prevent duplicate submissions
+  // Allow new submissions after approval/rejection (follow-on investments, entity changes)
+  const isLocked = existingSubmission && existingSubmission.status === 'pending_review'
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
@@ -148,15 +149,15 @@ export function SubmitSubscriptionForm({ dealId, currency, existingSubmission }:
       : 'Recently'
 
     return (
-      <Card className="border border-gray-200 bg-gray-50">
+      <Card className="border border-amber-200 bg-amber-50">
         <CardContent className="py-4 text-sm text-gray-600 space-y-2">
-          <div className="flex items-center gap-2 text-gray-700">
-            <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-            Submission {existingSubmission?.status.replace('_', ' ')}
+          <div className="flex items-center gap-2 text-amber-700">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Subscription under review
           </div>
-          <p>Submitted on {submittedAt}.</p>
+          <p>Submitted on {submittedAt}. The VERSO team is reviewing your request.</p>
           <p className="text-xs text-gray-500">
-            Need to update your request? Contact your relationship manager or the VERSO team directly.
+            You&apos;ll be notified once a decision is made. Contact your relationship manager if you need to make urgent changes.
           </p>
         </CardContent>
       </Card>
