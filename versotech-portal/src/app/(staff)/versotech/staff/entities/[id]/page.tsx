@@ -43,7 +43,8 @@ export default async function EntityDetailPage({ params }: { params: Promise<{ i
     { data: events },
     { data: entityInvestors },
     { data: vehicleSubscriptions },
-    { data: valuations }
+    { data: valuations },
+    { data: positions }
   ] = await Promise.all([
     supabase
       .from('entity_directors')
@@ -138,6 +139,20 @@ export default async function EntityDetailPage({ params }: { params: Promise<{ i
       .from('valuations')
       .select('*')
       .eq('vehicle_id', id)
+      .order('as_of_date', { ascending: false }),
+    supabase
+      .from('positions')
+      .select(`
+        *,
+        investor:investors (
+          id,
+          legal_name,
+          display_name,
+          type,
+          email
+        )
+      `)
+      .eq('vehicle_id', id)
       .order('as_of_date', { ascending: false })
   ])
 
@@ -200,8 +215,8 @@ export default async function EntityDetailPage({ params }: { params: Promise<{ i
         events={(events as any) || []}
         investors={mergedInvestors}
         valuations={valuations || []}
+        positions={(positions as any) || []}
       />
     )
 }
-
 

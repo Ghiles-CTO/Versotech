@@ -1,4 +1,10 @@
-export type SubscriptionStatus = 'pending' | 'committed' | 'active' | 'closed' | 'cancelled'
+export type SubscriptionStatus =
+  | 'pending'
+  | 'committed'
+  | 'partially_funded'
+  | 'active'
+  | 'closed'
+  | 'cancelled'
 
 /**
  * Complete Subscription type matching all database fields

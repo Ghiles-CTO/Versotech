@@ -774,15 +774,14 @@ After position is created, its value is updated via:
 **UI Status**:
 
 ✅ **Backend**: Fully automated via reconciliation API
-🚧 **Coming Soon**:
-- Staff UI to manually create/edit positions
-- Bulk position import
+✅ **Staff UI**: Positions can be viewed/added/edited/deleted and bulk‑imported (CSV) on the staff entity detail page (`/versotech/staff/entities/[id]`) under the **Positions** tab.
+🚧 **Coming Soon** (optional enhancements):
 - Position history and audit trail
 - Manual NAV override capabilities
 
 **Current Behavior**:
 - Positions auto-create on 100% funding only
-- No manual position creation interface
+- Staff can add/correct positions manually if needed
 - Positions viewable in investor portal at `/versoholdings/holdings`
 
 **Why Holdings Show but Position Tab is Empty**:
@@ -977,21 +976,26 @@ audit_logs (action, entity_type, entity_id, metadata)
 ### Portfolio & Positions
 - `GET /api/vehicles?related=true` - Get investor holdings (with positions and subscriptions)
 - `GET /api/portfolio` - Get portfolio metrics (NAV, contributions, distributions, IRR)
-- **Note**: Positions auto-created via reconciliation API, no manual creation endpoint yet
+- **Note**: Positions auto-create via reconciliation on full funding, and staff can also manage them manually:
+  - `GET/POST /api/staff/vehicles/[vehicleId]/positions`
+  - `PUT/DELETE /api/staff/vehicles/[vehicleId]/positions/[positionId]`
+  - `POST /api/staff/vehicles/[vehicleId]/positions/import` (CSV upsert)
 
 ### Valuations
 - `GET /api/staff/vehicles/[vehicleId]/valuations` - List valuations
 - `POST /api/staff/vehicles/[vehicleId]/valuations` - Create valuation (updates all positions)
+- `PUT/DELETE /api/staff/vehicles/[vehicleId]/valuations/[valuationId]` - Update/remove valuation
+- `POST /api/staff/vehicles/[vehicleId]/valuations/import` - CSV upsert by date
 
 ### Distributions
 - `GET /api/distributions` - List distributions (by investor/vehicle)
-- `POST /api/distributions` - Create distribution (API ONLY - no UI yet)
+- `POST /api/distributions` - Create distribution (staff UI available on subscription detail “Capital Activity” tab)
 - `PATCH /api/distributions/[id]` - Update distribution
 - `DELETE /api/distributions/[id]` - Delete distribution
 
 ### Capital Calls
 - `GET /api/capital-calls` - List capital calls (by vehicle)
-- `POST /api/capital-calls` - Create capital call (API ONLY - no UI yet)
+- `POST /api/capital-calls` - Create capital call (staff UI available on subscription detail “Capital Activity” tab)
 - `PATCH /api/capital-calls/[id]` - Update capital call
 - `DELETE /api/capital-calls/[id]` - Delete capital call
 
@@ -1020,7 +1024,7 @@ audit_logs (action, entity_type, entity_id, metadata)
 
 1. **NDA Requirement**:
    - Must sign NDA for data room access
-   - Data room access required for submission
+   - Data room access is **not** required for subscription submission (direct subscription enabled Dec 2025)
    - 7-day expiry with extensions
 
 2. **Entity Subscriptions**:
@@ -1116,30 +1120,26 @@ Valid status progressions:
 
 **Capital Calls**:
 - ✅ Backend: `capital_calls` table exists, API endpoints functional
-- ✅ Staff View: Visible on subscription detail page (`/versotech/staff/subscriptions/[id]`)
-- 🚧 Coming Soon: Staff UI to create/edit capital calls (currently view-only)
+- ✅ Staff UI: Create/edit/delete capital calls on the staff subscription detail **Capital Activity** tab (`/versotech/staff/subscriptions/[id]`). These edits update vehicle‑level capital call records.
 
 **Distributions**:
 - ✅ Backend: `distributions` table exists, full CRUD API available (`/api/distributions`)
 - ✅ Integration: Cash flow charts, DPI/TVPI calculations ready
-- ✅ Staff View: Visible on subscription detail page (when data exists)
+- ✅ Staff UI: Create/edit/delete distributions on the staff subscription detail **Capital Activity** tab. These edits update vehicle‑level distribution records.
 - 🚧 Coming Soon:
-  - Staff UI to create/manage distribution records
   - Bulk distribution import
   - Distribution approval workflow
   - Email notifications to investors on distribution
   - Distribution tax document generation
-- **Current Workaround**: Insert distribution records via SQL or direct API calls
 
 **Valuations (NAV Updates)**:
 - ✅ Backend: `valuations` table exists, API at `/api/staff/vehicles/[vehicleId]/valuations`
-- ✅ Staff UI: Can create valuations via API
-- 🚧 Coming Soon: Enhanced valuation UI with bulk import and approval workflow
+- ✅ Staff UI: Valuations tab on staff entity detail page supports add/edit/delete and CSV import (`/versotech/staff/entities/[id]`).
+- 🚧 Coming Soon (optional): Approval/review workflow for valuations
 
 **Capital Calls & Distributions Management Location**:
-- **View**: Staff subscription page (`/versotech/staff/subscriptions/[id]`) displays capital calls, distributions, and cashflows for context
-- **Edit**: Vehicle-level management (API only, UI coming soon)
-- **Note**: Subscription page is read-only view of vehicle-level data
+- **View & Edit**: Staff subscription page (`/versotech/staff/subscriptions/[id]`) **Capital Activity** tab displays and manages capital calls, distributions, and cashflows.
+- **Note**: Capital calls and distributions are vehicle‑level records; editing them here affects all subscriptions for the vehicle.
 
 ### ❌ Not Implemented
 - Secondary market trading

@@ -70,6 +70,10 @@ import { cn } from '@/lib/utils'
 import { useConfirmationDialog } from '@/hooks/use-confirmation-dialog'
 import { SubscriptionEditModal } from './subscription-edit-modal'
 import { AddValuationModal } from './add-valuation-modal'
+import { EditValuationModal } from './edit-valuation-modal'
+import { ImportValuationsDialog } from './import-valuations-dialog'
+import { PositionModal } from './position-modal'
+import { ImportPositionsDialog } from './import-positions-dialog'
 
 interface Director {
   id: string
@@ -173,6 +177,23 @@ interface Valuation {
   nav_per_unit: number | null
 }
 
+interface Position {
+  id: string
+  investor_id: string
+  vehicle_id: string
+  units: number | null
+  cost_basis: number | null
+  last_nav: number | null
+  as_of_date: string | null
+  investor?: {
+    id: string
+    legal_name: string | null
+    display_name: string | null
+    type: string | null
+    email: string | null
+  }
+}
+
 interface EntityDetailEnhancedProps {
   entity: Entity
   directors: Director[]
@@ -183,6 +204,7 @@ interface EntityDetailEnhancedProps {
   events: EntityEvent[]
   investors: EntityInvestorSummary[]
   valuations: Valuation[]
+  positions: Position[]
 }
 
 const entityTypeLabels: Record<string, string> = {
@@ -410,7 +432,8 @@ export function EntityDetailEnhanced({
   deals,
   events: initialEvents,
   investors: initialInvestors,
-  valuations: initialValuations
+  valuations: initialValuations,
+  positions: initialPositions
 }: EntityDetailEnhancedProps) {
   const [activeTab, setActiveTab] = useState('overview')
   const [entity, setEntity] = useState(initialEntity)
@@ -434,6 +457,10 @@ export function EntityDetailEnhanced({
   const [deleteEntityDialogOpen, setDeleteEntityDialogOpen] = useState(false)
   const [investors, setInvestors] = useState<EntityInvestorSummary[]>(initialInvestors)
   const [valuations, setValuations] = useState<Valuation[]>(initialValuations)
+  const [editingValuation, setEditingValuation] = useState<Valuation | null>(null)
+  const [positions, setPositions] = useState<Position[]>(initialPositions)
+  const [positionModalOpen, setPositionModalOpen] = useState(false)
+  const [editingPosition, setEditingPosition] = useState<Position | null>(null)
   const [investorModalOpen, setInvestorModalOpen] = useState(false)
   const [updatingInvestorId, setUpdatingInvestorId] = useState<string | null>(null)
   const [removingInvestorId, setRemovingInvestorId] = useState<string | null>(null)
@@ -636,6 +663,78 @@ export function EntityDetailEnhanced({
       toast.error('Unable to reload valuations.')
     }
   }, [entity.id])
+
+  const refreshPositions = useCallback(async () => {
+    try {
+      const response = await fetch(`/api/staff/vehicles/${entity.id}/positions`)
+      if (!response.ok) {
+        throw new Error('Failed to load positions')
+      }
+      const data = await response.json()
+      setPositions((data.positions || []) as Position[])
+    } catch (error) {
+      console.error('Failed to refresh positions:', error)
+      toast.error('Unable to reload positions.')
+    }
+  }, [entity.id])
+
+  const handleDeleteValuation = useCallback((valuation: Valuation) => {
+    confirm(
+      {
+        title: 'Delete valuation?',
+        description: `This will permanently remove the valuation dated ${new Date(valuation.as_of_date).toLocaleDateString()}.`,
+        confirmText: 'Delete',
+        cancelText: 'Cancel',
+        variant: 'destructive'
+      },
+      async () => {
+        try {
+          const response = await fetch(
+            `/api/staff/vehicles/${entity.id}/valuations/${valuation.id}`,
+            { method: 'DELETE' }
+          )
+          if (!response.ok) {
+            const data = await response.json().catch(() => ({}))
+            throw new Error(data.error || 'Failed to delete valuation')
+          }
+          toast.success('Valuation deleted.')
+          await refreshValuations()
+        } catch (error: any) {
+          console.error('Failed to delete valuation:', error)
+          toast.error(error.message || 'Unable to delete valuation.')
+        }
+      }
+    )
+  }, [confirm, entity.id, refreshValuations])
+
+  const handleDeletePosition = useCallback((position: Position) => {
+    confirm(
+      {
+        title: 'Delete position?',
+        description: 'This will permanently remove this position record.',
+        confirmText: 'Delete',
+        cancelText: 'Cancel',
+        variant: 'destructive'
+      },
+      async () => {
+        try {
+          const response = await fetch(
+            `/api/staff/vehicles/${entity.id}/positions/${position.id}`,
+            { method: 'DELETE' }
+          )
+          if (!response.ok) {
+            const data = await response.json().catch(() => ({}))
+            throw new Error(data.error || 'Failed to delete position')
+          }
+          toast.success('Position deleted.')
+          await refreshPositions()
+        } catch (error: any) {
+          console.error('Failed to delete position:', error)
+          toast.error(error.message || 'Unable to delete position.')
+        }
+      }
+    )
+  }, [confirm, entity.id, refreshPositions])
 
   const handleInvestorAdded = useCallback(
     (investor: EntityInvestorSummary) => {
@@ -1275,6 +1374,10 @@ export function EntityDetailEnhanced({
           <TabsTrigger value="valuations" className="gap-2">
             <TrendingUp className="h-4 w-4" />
             Valuations ({valuations.length})
+          </TabsTrigger>
+          <TabsTrigger value="positions" className="gap-2">
+            <ClipboardList className="h-4 w-4" />
+            Positions ({positions.length})
           </TabsTrigger>
         </TabsList>
 
@@ -2286,14 +2389,20 @@ export function EntityDetailEnhanced({
                   Net Asset Value (NAV) entries for this vehicle over time
                 </CardDescription>
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setValuationModalOpen(true)}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Valuation
-              </Button>
+              <div className="flex gap-2">
+                <ImportValuationsDialog
+                  vehicleId={entity.id}
+                  onImported={refreshValuations}
+                />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setValuationModalOpen(true)}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Valuation
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               {valuations.length === 0 ? (
@@ -2346,16 +2455,166 @@ export function EntityDetailEnhanced({
                           </td>
                           <td className="py-3 px-4 text-right">
                             <div className="flex justify-end gap-2">
-                              <Button variant="ghost" size="sm">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setEditingValuation(valuation)}
+                              >
                                 <Edit className="h-4 w-4" />
                               </Button>
-                              <Button variant="ghost" size="sm">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleDeleteValuation(valuation)}
+                              >
                                 <Trash2 className="h-4 w-4" />
                               </Button>
                             </div>
                           </td>
                         </tr>
                       ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Positions Tab */}
+        <TabsContent value="positions" className="space-y-4">
+          <Card className="border border-white/10 bg-white/5">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle>Investor Positions</CardTitle>
+                <CardDescription>
+                  Unit balances and cost basis per investor for this vehicle
+                </CardDescription>
+              </div>
+              <div className="flex gap-2">
+                <ImportPositionsDialog vehicleId={entity.id} onImported={refreshPositions} />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setEditingPosition(null)
+                    setPositionModalOpen(true)
+                  }}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Position
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {positions.length === 0 ? (
+                <div className="text-center py-8">
+                  <ClipboardList className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
+                  <p className="text-muted-foreground text-sm">
+                    No position records yet. Import a CSV or add one manually.
+                  </p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-white/10">
+                        <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">
+                          Investor
+                        </th>
+                        <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground">
+                          Units
+                        </th>
+                        <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground">
+                          Cost Basis
+                        </th>
+                        <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground">
+                          Last NAV
+                        </th>
+                        <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">
+                          As of Date
+                        </th>
+                        <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {positions.map((position) => {
+                        const investorName =
+                          position.investor?.display_name ||
+                          position.investor?.legal_name ||
+                          position.investor?.email ||
+                          position.investor_id
+
+                        return (
+                          <tr
+                            key={position.id}
+                            className="border-b border-white/5 hover:bg-white/5"
+                          >
+                            <td className="py-3 px-4 text-sm">
+                              <div className="flex flex-col">
+                                <span className="text-foreground">{investorName}</span>
+                                {position.investor?.email && (
+                                  <span className="text-xs text-muted-foreground">
+                                    {position.investor.email}
+                                  </span>
+                                )}
+                              </div>
+                            </td>
+                            <td className="py-3 px-4 text-sm text-right font-mono">
+                              {position.units != null
+                                ? position.units.toLocaleString('en-US', {
+                                  minimumFractionDigits: 0,
+                                  maximumFractionDigits: 6
+                                })
+                                : '-'}
+                            </td>
+                            <td className="py-3 px-4 text-sm text-right font-mono">
+                              {position.cost_basis != null
+                                ? `$${position.cost_basis.toLocaleString('en-US', {
+                                  minimumFractionDigits: 2,
+                                  maximumFractionDigits: 2
+                                })}`
+                                : '-'}
+                            </td>
+                            <td className="py-3 px-4 text-sm text-right font-mono">
+                              {position.last_nav != null
+                                ? `$${position.last_nav.toLocaleString('en-US', {
+                                  minimumFractionDigits: 2,
+                                  maximumFractionDigits: 6
+                                })}`
+                                : '-'}
+                            </td>
+                            <td className="py-3 px-4 text-sm">
+                              {position.as_of_date
+                                ? new Date(position.as_of_date).toLocaleDateString()
+                                : '-'}
+                            </td>
+                            <td className="py-3 px-4 text-right">
+                              <div className="flex justify-end gap-2">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => {
+                                    setEditingPosition(position)
+                                    setPositionModalOpen(true)
+                                  }}
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleDeletePosition(position)}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </td>
+                          </tr>
+                        )
+                      })}
                     </tbody>
                   </table>
                 </div>
@@ -2416,6 +2675,31 @@ export function EntityDetailEnhanced({
         onSuccess={() => {
           refreshValuations()
           toast.success('Valuation added successfully')
+        }}
+      />
+
+      <EditValuationModal
+        vehicleId={entity.id}
+        valuation={editingValuation}
+        open={!!editingValuation}
+        onClose={() => setEditingValuation(null)}
+        onSuccess={() => {
+          refreshValuations()
+          toast.success('Valuation updated successfully')
+        }}
+      />
+
+      <PositionModal
+        vehicleId={entity.id}
+        position={editingPosition}
+        open={positionModalOpen}
+        onClose={() => {
+          setPositionModalOpen(false)
+          setEditingPosition(null)
+        }}
+        onSuccess={() => {
+          refreshPositions()
+          toast.success(editingPosition ? 'Position updated successfully' : 'Position added successfully')
         }}
       />
 

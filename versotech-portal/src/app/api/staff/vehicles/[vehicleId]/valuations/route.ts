@@ -1,4 +1,5 @@
-import { createServiceClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { auditLogger, AuditActions } from '@/lib/audit'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 
@@ -8,11 +9,35 @@ const valuationSchema = z.object({
   as_of_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/)
 })
 
+async function requireStaff() {
+  const authSupabase = await createClient()
+  const { data: { user }, error: authError } = await authSupabase.auth.getUser()
+
+  if (authError || !user) {
+    return { error: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }) }
+  }
+
+  const { data: profile } = await authSupabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
+  if (!profile || !['staff_admin', 'staff_ops', 'staff_rm'].includes(profile.role)) {
+    return { error: NextResponse.json({ error: 'Staff access required' }, { status: 403 }) }
+  }
+
+  return { user }
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ vehicleId: string }> }
 ) {
   try {
+    const staffCheck = await requireStaff()
+    if (staffCheck.error) return staffCheck.error
+
     const { vehicleId } = await params
     const supabase = createServiceClient()
 
@@ -46,6 +71,9 @@ export async function POST(
   { params }: { params: Promise<{ vehicleId: string }> }
 ) {
   try {
+    const staffCheck = await requireStaff()
+    if (staffCheck.error) return staffCheck.error
+
     const { vehicleId } = await params
     const supabase = createServiceClient()
 
@@ -95,6 +123,19 @@ export async function POST(
         { status: 500 }
       )
     }
+
+    await auditLogger.log({
+      actor_user_id: staffCheck.user!.id,
+      action: AuditActions.CREATE,
+      entity: 'valuations',
+      entity_id: valuation.id,
+      metadata: {
+        vehicle_id: vehicleId,
+        nav_total,
+        nav_per_unit,
+        as_of_date
+      }
+    })
 
     return NextResponse.json({ valuation })
 

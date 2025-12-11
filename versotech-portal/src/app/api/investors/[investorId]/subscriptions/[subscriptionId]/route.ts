@@ -8,7 +8,7 @@ import { calculateSubscriptionFeeEvents, createFeeEvents } from '@/lib/fees/subs
 const updateSubscriptionSchema = z.object({
   commitment: z.number().positive('Commitment must be positive').optional(),
   currency: z.string().length(3, 'Currency must be 3 letters').toUpperCase().optional(),
-  status: z.enum(['pending', 'committed', 'active', 'closed', 'cancelled']).optional(),
+  status: z.enum(['pending', 'committed', 'partially_funded', 'active', 'closed', 'cancelled']).optional(),
   effective_date: z.string().optional().nullable(),
   funding_due_at: z.string().optional().nullable(),
   acknowledgement_notes: z.string().optional().nullable()
