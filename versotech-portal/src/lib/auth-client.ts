@@ -9,7 +9,17 @@ export interface AuthUser {
   email: string
   displayName: string
   avatar?: string
-  role: 'investor' | 'staff_admin' | 'staff_ops' | 'staff_rm'
+  role:
+    | 'investor'
+    | 'staff_admin'
+    | 'staff_ops'
+    | 'staff_rm'
+    | 'arranger'
+    | 'introducer'
+    | 'partner'
+    | 'commercial_partner'
+    | 'lawyer'
+    | 'ceo'
   title?: string
   created_at: string
 }

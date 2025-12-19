@@ -29,5 +29,5 @@ export async function getUserRole(supabase: any, user: any): Promise<string | nu
  */
 export async function isStaffUser(supabase: any, user: any): Promise<boolean> {
   const role = await getUserRole(supabase, user)
-  return role ? role.startsWith('staff_') : false
+  return role ? role.startsWith('staff_') || role === 'ceo' : false
 }

@@ -25,7 +25,7 @@ export async function authenticateStaffForDocuments(): Promise<AuthResult> {
     .eq('id', user.id)
     .single()
 
-  if (!profile || !['staff_admin', 'staff_ops', 'staff_rm'].includes(profile.role)) {
+  if (!profile || !['staff_admin', 'staff_ops', 'staff_rm', 'ceo'].includes(profile.role)) {
     return {
       serviceSupabase: null,
       userId: '',
@@ -38,5 +38,4 @@ export async function authenticateStaffForDocuments(): Promise<AuthResult> {
     userId: user.id
   }
 }
-
 

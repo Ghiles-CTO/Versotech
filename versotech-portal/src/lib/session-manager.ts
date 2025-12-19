@@ -81,7 +81,7 @@ class SessionManager {
     // Clear each auth cookie with multiple path/domain combinations
     authCookieNames.forEach(name => {
       // Try various path combinations
-      const paths = ['/', '/versoholdings', '/versotech']
+      const paths = ['/', '/versoholdings', '/versotech', '/versotech_main']
       const domains = [window.location.hostname, `.${window.location.hostname}`, '']
 
       paths.forEach(path => {
@@ -144,7 +144,7 @@ class SessionManager {
   private handleStorageChange = (event: StorageEvent): void => {
     if (event.key && AUTH_KEY_HINTS.some((hint) => event.key?.includes(hint)) && event.newValue === null) {
       console.info('[auth-session] Auth state cleared in another tab, redirecting to login')
-      window.location.href = '/versoholdings/login?error=signed_out'
+      window.location.href = '/versotech_main/login?error=signed_out'
     }
   }
 

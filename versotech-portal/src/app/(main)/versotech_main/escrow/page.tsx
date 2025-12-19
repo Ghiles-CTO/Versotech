@@ -1,0 +1,743 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '@/components/ui/tabs'
+import {
+  Lock,
+  DollarSign,
+  Clock,
+  CheckCircle2,
+  Search,
+  Loader2,
+  AlertCircle,
+  Building2,
+  Wallet,
+  ArrowUpRight,
+  AlertTriangle,
+  CreditCard,
+  BanknoteIcon,
+} from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { formatCurrency, formatDate } from '@/lib/format'
+import { createClient } from '@/lib/supabase/client'
+
+type LawyerInfo = {
+  id: string
+  firm_name: string
+  display_name: string
+  specializations: string[] | null
+  is_active: boolean
+}
+
+type EscrowDeal = {
+  id: string
+  deal_id: string
+  deal_name: string
+  company_name: string | null
+  status: string
+  legal_counsel: string | null
+  wire_escrow_agent: string | null
+  wire_bank_name: string | null
+  wire_account_holder: string | null
+  wire_iban: string | null
+  wire_bic: string | null
+  escrow_fee_text: string | null
+  target_amount: number
+  currency: string
+  subscriptions_count: number
+  pending_funding: number
+  funded_amount: number
+}
+
+type PendingSettlement = {
+  id: string
+  investor_name: string
+  investor_entity: string | null
+  deal_name: string
+  deal_id: string
+  commitment_amount: number
+  funded_amount: number
+  outstanding_amount: number
+  currency: string
+  funding_due_at: string | null
+  status: string
+  days_overdue: number
+}
+
+type Summary = {
+  totalDeals: number
+  pendingSettlements: number
+  totalPendingValue: number
+  overdueSettlements: number
+}
+
+const STATUS_STYLES: Record<string, string> = {
+  pending: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+  funded: 'bg-green-100 text-green-800 border-green-200',
+  partially_funded: 'bg-blue-100 text-blue-800 border-blue-200',
+  overdue: 'bg-red-100 text-red-800 border-red-200',
+  cancelled: 'bg-gray-100 text-gray-800 border-gray-200',
+}
+
+const STATUS_FILTERS = [
+  { label: 'All Status', value: 'all' },
+  { label: 'Pending', value: 'pending' },
+  { label: 'Partially Funded', value: 'partially_funded' },
+  { label: 'Funded', value: 'funded' },
+  { label: 'Overdue', value: 'overdue' },
+]
+
+export default function EscrowPage() {
+  const [lawyerInfo, setLawyerInfo] = useState<LawyerInfo | null>(null)
+  const [escrowDeals, setEscrowDeals] = useState<EscrowDeal[]>([])
+  const [pendingSettlements, setPendingSettlements] = useState<PendingSettlement[]>([])
+  const [summary, setSummary] = useState<Summary>({
+    totalDeals: 0,
+    pendingSettlements: 0,
+    totalPendingValue: 0,
+    overdueSettlements: 0,
+  })
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [search, setSearch] = useState('')
+  const [statusFilter, setStatusFilter] = useState('all')
+  const [activeTab, setActiveTab] = useState('deals')
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        setLoading(true)
+        const supabase = createClient()
+
+        // Get current user
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) {
+          setError('Not authenticated')
+          return
+        }
+
+        // Check if user is a lawyer
+        const { data: lawyerUser, error: lawyerUserError } = await supabase
+          .from('lawyer_users')
+          .select('lawyer_id')
+          .eq('user_id', user.id)
+          .single()
+
+        if (lawyerUserError || !lawyerUser) {
+          // Staff view - show all escrow data
+          await fetchAllEscrowData(supabase)
+          return
+        }
+
+        // Fetch lawyer info
+        const { data: lawyer, error: lawyerError } = await supabase
+          .from('lawyers')
+          .select('id, firm_name, display_name, specializations, is_active')
+          .eq('id', lawyerUser.lawyer_id)
+          .single()
+
+        if (lawyerError) throw lawyerError
+        setLawyerInfo(lawyer)
+
+        // Fetch deals where this lawyer firm is legal counsel
+        await fetchLawyerEscrowData(supabase, lawyer.firm_name, lawyer.display_name)
+
+        setError(null)
+      } catch (err) {
+        console.error('[EscrowPage] Error:', err)
+        setError(err instanceof Error ? err.message : 'Failed to load escrow data')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    async function fetchLawyerEscrowData(supabase: any, firmName: string, displayName: string) {
+      // Get deal fee structures where this firm is legal counsel
+      const { data: feeStructures, error: feeError } = await supabase
+        .from('deal_fee_structures')
+        .select(`
+          id,
+          deal_id,
+          status,
+          legal_counsel,
+          wire_escrow_agent,
+          wire_bank_name,
+          wire_account_holder,
+          wire_iban,
+          wire_bic,
+          escrow_fee_text,
+          deal:deal_id (
+            id,
+            name,
+            company_name,
+            target_amount,
+            currency,
+            status
+          )
+        `)
+        .or(`legal_counsel.ilike.%${firmName}%,legal_counsel.ilike.%${displayName}%`)
+        .eq('status', 'published')
+        .order('created_at', { ascending: false })
+
+      if (feeError) throw feeError
+
+      await processEscrowData(supabase, feeStructures || [])
+    }
+
+    async function fetchAllEscrowData(supabase: any) {
+      // Staff view - get all deals with fee structures that have escrow data
+      const { data: feeStructures, error: feeError } = await supabase
+        .from('deal_fee_structures')
+        .select(`
+          id,
+          deal_id,
+          status,
+          legal_counsel,
+          wire_escrow_agent,
+          wire_bank_name,
+          wire_account_holder,
+          wire_iban,
+          wire_bic,
+          escrow_fee_text,
+          deal:deal_id (
+            id,
+            name,
+            company_name,
+            target_amount,
+            currency,
+            status
+          )
+        `)
+        .not('wire_escrow_agent', 'is', null)
+        .eq('status', 'published')
+        .order('created_at', { ascending: false })
+        .limit(100)
+
+      if (feeError) throw feeError
+
+      await processEscrowData(supabase, feeStructures || [])
+    }
+
+    async function processEscrowData(supabase: any, feeStructures: any[]) {
+      if (feeStructures.length === 0) {
+        setEscrowDeals([])
+        setPendingSettlements([])
+        setSummary({
+          totalDeals: 0,
+          pendingSettlements: 0,
+          totalPendingValue: 0,
+          overdueSettlements: 0,
+        })
+        return
+      }
+
+      const dealIds = feeStructures.map((fs: any) => fs.deal_id)
+
+      // Get subscriptions for these deals
+      const { data: subscriptions, error: subError } = await supabase
+        .from('subscriptions')
+        .select(`
+          id,
+          deal_id,
+          investor_id,
+          commitment_amount,
+          funded_amount,
+          outstanding_amount,
+          funding_due_at,
+          status,
+          funded_at,
+          investor:investor_id (
+            id,
+            display_name,
+            legal_entity_name
+          )
+        `)
+        .in('deal_id', dealIds)
+        .in('status', ['approved', 'funded', 'active', 'partially_funded'])
+        .order('created_at', { ascending: false })
+
+      if (subError) throw subError
+
+      // Process escrow deals
+      const deals: EscrowDeal[] = feeStructures.map((fs: any) => {
+        const dealSubs = (subscriptions || []).filter((s: any) => s.deal_id === fs.deal_id)
+        const pendingFunding = dealSubs.reduce((sum: number, s: any) =>
+          sum + (Number(s.outstanding_amount) || 0), 0)
+        const fundedAmount = dealSubs.reduce((sum: number, s: any) =>
+          sum + (Number(s.funded_amount) || 0), 0)
+
+        return {
+          id: fs.id,
+          deal_id: fs.deal_id,
+          deal_name: fs.deal?.name || 'Unknown Deal',
+          company_name: fs.deal?.company_name,
+          status: fs.status,
+          legal_counsel: fs.legal_counsel,
+          wire_escrow_agent: fs.wire_escrow_agent,
+          wire_bank_name: fs.wire_bank_name,
+          wire_account_holder: fs.wire_account_holder,
+          wire_iban: fs.wire_iban,
+          wire_bic: fs.wire_bic,
+          escrow_fee_text: fs.escrow_fee_text,
+          target_amount: Number(fs.deal?.target_amount) || 0,
+          currency: fs.deal?.currency || 'USD',
+          subscriptions_count: dealSubs.length,
+          pending_funding: pendingFunding,
+          funded_amount: fundedAmount,
+        }
+      })
+
+      setEscrowDeals(deals)
+
+      // Process pending settlements
+      const today = new Date()
+      const settlements: PendingSettlement[] = (subscriptions || [])
+        .filter((s: any) => (Number(s.outstanding_amount) || 0) > 0)
+        .map((s: any) => {
+          const dueDate = s.funding_due_at ? new Date(s.funding_due_at) : null
+          const daysOverdue = dueDate ? Math.floor((today.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24)) : 0
+          const deal = feeStructures.find((fs: any) => fs.deal_id === s.deal_id)
+
+          let status = s.status
+          if (daysOverdue > 0) status = 'overdue'
+          else if (Number(s.funded_amount) > 0) status = 'partially_funded'
+          else status = 'pending'
+
+          return {
+            id: s.id,
+            investor_name: s.investor?.display_name || 'Unknown Investor',
+            investor_entity: s.investor?.legal_entity_name,
+            deal_name: deal?.deal?.name || 'Unknown Deal',
+            deal_id: s.deal_id,
+            commitment_amount: Number(s.commitment_amount) || 0,
+            funded_amount: Number(s.funded_amount) || 0,
+            outstanding_amount: Number(s.outstanding_amount) || 0,
+            currency: deal?.deal?.currency || 'USD',
+            funding_due_at: s.funding_due_at,
+            status,
+            days_overdue: Math.max(0, daysOverdue),
+          }
+        })
+
+      setPendingSettlements(settlements)
+
+      // Calculate summary
+      const overdueCount = settlements.filter(s => s.days_overdue > 0).length
+      const totalPending = settlements.reduce((sum, s) => sum + s.outstanding_amount, 0)
+
+      setSummary({
+        totalDeals: deals.length,
+        pendingSettlements: settlements.length,
+        totalPendingValue: totalPending,
+        overdueSettlements: overdueCount,
+      })
+    }
+
+    fetchData()
+  }, [])
+
+  // Filter settlements
+  const filteredSettlements = pendingSettlements.filter(settlement => {
+    const matchesStatus = statusFilter === 'all' || settlement.status === statusFilter
+    const matchesSearch = !search ||
+      settlement.investor_name?.toLowerCase().includes(search.toLowerCase()) ||
+      settlement.deal_name?.toLowerCase().includes(search.toLowerCase()) ||
+      settlement.investor_entity?.toLowerCase().includes(search.toLowerCase())
+    return matchesStatus && matchesSearch
+  })
+
+  // Filter deals
+  const filteredDeals = escrowDeals.filter(deal => {
+    const matchesSearch = !search ||
+      deal.deal_name?.toLowerCase().includes(search.toLowerCase()) ||
+      deal.company_name?.toLowerCase().includes(search.toLowerCase()) ||
+      deal.wire_escrow_agent?.toLowerCase().includes(search.toLowerCase())
+    return matchesSearch
+  })
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-16">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <span className="ml-3 text-muted-foreground">Loading escrow data...</span>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-16">
+        <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
+        <h3 className="text-lg font-medium text-foreground mb-2">Error Loading Escrow Data</h3>
+        <p className="text-muted-foreground">{error}</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="p-6 space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Escrow Management</h1>
+          <p className="text-muted-foreground mt-1">
+            {lawyerInfo
+              ? `Manage escrow accounts and settlements for ${lawyerInfo.display_name}`
+              : 'Monitor all escrow accounts and pending settlements'}
+          </p>
+        </div>
+        {lawyerInfo && lawyerInfo.specializations && lawyerInfo.specializations.length > 0 && (
+          <div className="flex gap-1">
+            {lawyerInfo.specializations.slice(0, 2).map((spec, idx) => (
+              <Badge key={idx} variant="outline" className="capitalize">
+                {spec}
+              </Badge>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+              <Lock className="h-4 w-4" />
+              Escrow Deals
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{summary.totalDeals}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Active escrow accounts
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+              <Clock className="h-4 w-4" />
+              Pending Settlements
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-yellow-600">{summary.pendingSettlements}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Awaiting funding
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+              <DollarSign className="h-4 w-4" />
+              Pending Value
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-blue-600">
+              {formatCurrency(summary.totalPendingValue, 'USD')}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Total outstanding
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4" />
+              Overdue
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-red-600">{summary.overdueSettlements}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Past due date
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Filters */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex-1">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search deals, investors, or escrow agents..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+            </div>
+            {activeTab === 'settlements' && (
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-full md:w-48">
+                  <SelectValue placeholder="Filter by status" />
+                </SelectTrigger>
+                <SelectContent>
+                  {STATUS_FILTERS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="deals" className="flex items-center gap-2">
+            <Wallet className="h-4 w-4" />
+            Escrow Accounts ({escrowDeals.length})
+          </TabsTrigger>
+          <TabsTrigger value="settlements" className="flex items-center gap-2">
+            <BanknoteIcon className="h-4 w-4" />
+            Pending Settlements ({pendingSettlements.length})
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="deals">
+          <Card>
+            <CardHeader>
+              <CardTitle>Escrow Accounts</CardTitle>
+              <CardDescription>
+                {filteredDeals.length} deal{filteredDeals.length !== 1 ? 's' : ''} with escrow accounts
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {filteredDeals.length === 0 ? (
+                <div className="border border-dashed border-muted rounded-lg py-12 flex flex-col items-center justify-center text-center space-y-2">
+                  <Lock className="h-10 w-10 text-muted-foreground" />
+                  <p className="text-sm text-muted-foreground">
+                    {search
+                      ? 'No escrow accounts match your search'
+                      : lawyerInfo
+                        ? 'No deals with you as legal counsel'
+                        : 'No deals with escrow accounts found'}
+                  </p>
+                </div>
+              ) : (
+                <div className="rounded-md border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Deal</TableHead>
+                        <TableHead>Escrow Agent</TableHead>
+                        <TableHead>Bank</TableHead>
+                        <TableHead>Subscriptions</TableHead>
+                        <TableHead>Funded / Pending</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredDeals.map((deal) => (
+                        <TableRow key={deal.id}>
+                          <TableCell>
+                            <div className="flex items-center gap-3">
+                              <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center">
+                                <Building2 className="h-5 w-5 text-muted-foreground" />
+                              </div>
+                              <div>
+                                <div className="font-medium">{deal.deal_name}</div>
+                                {deal.company_name && (
+                                  <div className="text-xs text-muted-foreground">
+                                    {deal.company_name}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="font-medium">
+                              {deal.wire_escrow_agent || '—'}
+                            </div>
+                            {deal.escrow_fee_text && (
+                              <div className="text-xs text-muted-foreground">
+                                {deal.escrow_fee_text}
+                              </div>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <div>
+                              <div className="text-sm">{deal.wire_bank_name || '—'}</div>
+                              {deal.wire_iban && (
+                                <div className="text-xs text-muted-foreground font-mono">
+                                  {deal.wire_iban.slice(0, 8)}...
+                                </div>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="secondary">
+                              {deal.subscriptions_count} investor{deal.subscriptions_count !== 1 ? 's' : ''}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="space-y-1">
+                              <div className="text-sm font-medium text-green-600">
+                                {formatCurrency(deal.funded_amount, deal.currency)} funded
+                              </div>
+                              {deal.pending_funding > 0 && (
+                                <div className="text-xs text-yellow-600">
+                                  {formatCurrency(deal.pending_funding, deal.currency)} pending
+                                </div>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Button variant="ghost" size="sm" asChild>
+                              <a href={`/versotech_main/opportunities/${deal.deal_id}`}>
+                                <ArrowUpRight className="h-4 w-4" />
+                              </a>
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="settlements">
+          <Card>
+            <CardHeader>
+              <CardTitle>Pending Settlements</CardTitle>
+              <CardDescription>
+                {filteredSettlements.length} settlement{filteredSettlements.length !== 1 ? 's' : ''} awaiting funding
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {filteredSettlements.length === 0 ? (
+                <div className="border border-dashed border-muted rounded-lg py-12 flex flex-col items-center justify-center text-center space-y-2">
+                  <CheckCircle2 className="h-10 w-10 text-muted-foreground" />
+                  <p className="text-sm text-muted-foreground">
+                    {search || statusFilter !== 'all'
+                      ? 'No settlements match your filters'
+                      : 'No pending settlements'}
+                  </p>
+                </div>
+              ) : (
+                <div className="rounded-md border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Investor</TableHead>
+                        <TableHead>Deal</TableHead>
+                        <TableHead>Commitment</TableHead>
+                        <TableHead>Outstanding</TableHead>
+                        <TableHead>Due Date</TableHead>
+                        <TableHead>Status</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredSettlements.map((settlement) => (
+                        <TableRow key={settlement.id}>
+                          <TableCell>
+                            <div>
+                              <div className="font-medium">{settlement.investor_name}</div>
+                              {settlement.investor_entity && (
+                                <div className="text-xs text-muted-foreground">
+                                  {settlement.investor_entity}
+                                </div>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <a
+                              href={`/versotech_main/opportunities/${settlement.deal_id}`}
+                              className="text-primary hover:underline"
+                            >
+                              {settlement.deal_name}
+                            </a>
+                          </TableCell>
+                          <TableCell>
+                            <div className="font-medium">
+                              {formatCurrency(settlement.commitment_amount, settlement.currency)}
+                            </div>
+                            {settlement.funded_amount > 0 && (
+                              <div className="text-xs text-green-600">
+                                {formatCurrency(settlement.funded_amount, settlement.currency)} received
+                              </div>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <div className="font-medium text-yellow-600">
+                              {formatCurrency(settlement.outstanding_amount, settlement.currency)}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            {settlement.funding_due_at ? (
+                              <div className={cn(
+                                "text-sm",
+                                settlement.days_overdue > 0 && "text-red-600 font-medium"
+                              )}>
+                                {formatDate(settlement.funding_due_at)}
+                                {settlement.days_overdue > 0 && (
+                                  <div className="text-xs">
+                                    {settlement.days_overdue} day{settlement.days_overdue !== 1 ? 's' : ''} overdue
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              <span className="text-muted-foreground text-xs">Not set</span>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <Badge
+                              variant="outline"
+                              className={cn('capitalize', STATUS_STYLES[settlement.status] || STATUS_STYLES.pending)}
+                            >
+                              {settlement.status.replace('_', ' ')}
+                            </Badge>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
+  )
+}

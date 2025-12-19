@@ -42,6 +42,221 @@ export async function middleware(request: NextRequest) {
       return supabaseResponse
     }
 
+    // =========================================================================
+    // LEGACY URL REDIRECTS (301 Permanent)
+    // Phase 2 migration: Old portal URLs → New unified portal URLs
+    // =========================================================================
+
+    // Helper to create 301 redirect preserving query params
+    const createLegacyRedirect = (newPath: string) => {
+      const url = new URL(request.url)
+      url.pathname = newPath
+      return NextResponse.redirect(url, { status: 301 })
+    }
+
+    // --- Investor Portal Redirects (/versoholdings/* → /versotech_main/*) ---
+
+    // Login/Auth
+    if (pathname === '/versoholdings/login') {
+      return createLegacyRedirect('/versotech_main/login')
+    }
+    if (pathname === '/versoholdings/set-password') {
+      return createLegacyRedirect('/versotech_main/set-password')
+    }
+
+    // Dashboard
+    if (pathname === '/versoholdings/dashboard') {
+      return createLegacyRedirect('/versotech_main/dashboard')
+    }
+
+    // Deals → Opportunities (renamed)
+    if (pathname === '/versoholdings/deals') {
+      return createLegacyRedirect('/versotech_main/opportunities')
+    }
+    // Dynamic deal route
+    if (pathname.match(/^\/versoholdings\/deal\/([^/]+)$/)) {
+      const dealId = pathname.split('/')[3]
+      return createLegacyRedirect(`/versotech_main/opportunities/${dealId}`)
+    }
+
+    // Data Rooms → Opportunities (integrated)
+    if (pathname === '/versoholdings/data-rooms') {
+      return createLegacyRedirect('/versotech_main/opportunities')
+    }
+    if (pathname.match(/^\/versoholdings\/data-rooms\/([^/]+)$/)) {
+      const dealId = pathname.split('/')[3]
+      return createLegacyRedirect(`/versotech_main/opportunities/${dealId}`)
+    }
+
+    // Holdings → Portfolio (renamed)
+    if (pathname === '/versoholdings/holdings') {
+      return createLegacyRedirect('/versotech_main/portfolio')
+    }
+    // Vehicle detail → Portfolio detail
+    if (pathname.match(/^\/versoholdings\/vehicle\/([^/]+)$/)) {
+      const vehicleId = pathname.split('/')[3]
+      return createLegacyRedirect(`/versotech_main/portfolio/${vehicleId}`)
+    }
+
+    // Tasks/Notifications → Dashboard (moved to header)
+    if (pathname === '/versoholdings/tasks') {
+      return createLegacyRedirect('/versotech_main/tasks')
+    }
+    if (pathname === '/versoholdings/notifications') {
+      return createLegacyRedirect('/versotech_main/notifications')
+    }
+
+    // Messages → Inbox
+    if (pathname === '/versoholdings/messages') {
+      return createLegacyRedirect('/versotech_main/messages')
+    }
+
+    // Reports → Documents (renamed)
+    if (pathname === '/versoholdings/reports') {
+      return createLegacyRedirect('/versotech_main/documents')
+    }
+    if (pathname === '/versoholdings/documents') {
+      return createLegacyRedirect('/versotech_main/documents')
+    }
+
+    // Profile
+    if (pathname === '/versoholdings/profile') {
+      return createLegacyRedirect('/versotech_main/profile')
+    }
+
+    // --- Staff Portal Redirects (/versotech/staff/* → /versotech_main/*) ---
+
+    // Login
+    if (pathname === '/versotech/login') {
+      return createLegacyRedirect('/versotech_main/login')
+    }
+
+    // Staff dashboard
+    if (pathname === '/versotech/staff' || pathname === '/versotech/staff/') {
+      return createLegacyRedirect('/versotech_main/dashboard')
+    }
+
+    // Deals management
+    if (pathname === '/versotech/staff/deals') {
+      return createLegacyRedirect('/versotech_main/deals')
+    }
+    if (pathname === '/versotech/staff/deals/new') {
+      return createLegacyRedirect('/versotech_main/deals/new')
+    }
+    if (pathname.match(/^\/versotech\/staff\/deals\/([^/]+)$/)) {
+      const dealId = pathname.split('/')[4]
+      return createLegacyRedirect(`/versotech_main/deals/${dealId}`)
+    }
+
+    // Investors management → Users with type filter
+    if (pathname === '/versotech/staff/investors') {
+      const url = new URL(request.url)
+      url.pathname = '/versotech_main/investors'
+      return NextResponse.redirect(url, { status: 301 })
+    }
+    if (pathname.match(/^\/versotech\/staff\/investors\/([^/]+)$/)) {
+      const investorId = pathname.split('/')[4]
+      const url = new URL(request.url)
+      url.pathname = `/versotech_main/investors/${investorId}`
+      return NextResponse.redirect(url, { status: 301 })
+    }
+
+    // Arrangers management
+    if (pathname === '/versotech/staff/arrangers') {
+      return createLegacyRedirect('/versotech_main/arrangers')
+    }
+    if (pathname.match(/^\/versotech\/staff\/arrangers\/([^/]+)$/)) {
+      const arrangerId = pathname.split('/')[4]
+      return createLegacyRedirect(`/versotech_main/arrangers/${arrangerId}`)
+    }
+
+    // Introducers management
+    if (pathname === '/versotech/staff/introducers') {
+      return createLegacyRedirect('/versotech_main/introducers')
+    }
+    if (pathname.match(/^\/versotech\/staff\/introducers\/([^/]+)$/)) {
+      const introducerId = pathname.split('/')[4]
+      return createLegacyRedirect(`/versotech_main/introducers/${introducerId}`)
+    }
+
+    // Approvals → Inbox with tab
+    if (pathname === '/versotech/staff/approvals') {
+      const url = new URL(request.url)
+      url.pathname = '/versotech_main/approvals'
+      return NextResponse.redirect(url, { status: 301 })
+    }
+
+    // Messages → Inbox with tab
+    if (pathname === '/versotech/staff/messages') {
+      return createLegacyRedirect('/versotech_main/messages')
+    }
+
+    // Fees
+    if (pathname === '/versotech/staff/fees') {
+      return createLegacyRedirect('/versotech_main/fees')
+    }
+
+    // KYC Review
+    if (pathname === '/versotech/staff/kyc-review') {
+      return createLegacyRedirect('/versotech_main/kyc-review')
+    }
+
+    // VersoSign
+    if (pathname === '/versotech/staff/versosign') {
+      return createLegacyRedirect('/versotech_main/versosign')
+    }
+
+    // Audit
+    if (pathname === '/versotech/staff/audit') {
+      return createLegacyRedirect('/versotech_main/audit')
+    }
+
+    // Reconciliation
+    if (pathname === '/versotech/staff/reconciliation') {
+      return createLegacyRedirect('/versotech_main/reconciliation')
+    }
+
+    // Subscriptions
+    if (pathname === '/versotech/staff/subscriptions') {
+      return createLegacyRedirect('/versotech_main/subscriptions')
+    }
+    if (pathname === '/versotech/staff/subscriptions/vehicle-summary') {
+      return createLegacyRedirect('/versotech_main/subscriptions/vehicle-summary')
+    }
+
+    // Documents
+    if (pathname === '/versotech/staff/documents') {
+      return createLegacyRedirect('/versotech_main/documents')
+    }
+
+    // Entities
+    if (pathname === '/versotech/staff/entities') {
+      return createLegacyRedirect('/versotech_main/entities')
+    }
+    if (pathname.match(/^\/versotech\/staff\/entities\/([^/]+)$/)) {
+      const entityId = pathname.split('/')[4]
+      return createLegacyRedirect(`/versotech_main/entities/${entityId}`)
+    }
+
+    // Calendar
+    if (pathname === '/versotech/staff/calendar') {
+      return createLegacyRedirect('/versotech_main/calendar')
+    }
+
+    // Admin → Admin portal
+    if (pathname === '/versotech/staff/admin') {
+      return createLegacyRedirect('/versotech_main/admin')
+    }
+
+    // Processes
+    if (pathname === '/versotech/staff/processes') {
+      return createLegacyRedirect('/versotech_main/processes')
+    }
+
+    // =========================================================================
+    // END LEGACY URL REDIRECTS
+    // =========================================================================
+
     // Skip auth check if there's a confirmation code - let the client handle it
     const searchParams = request.nextUrl.searchParams
     const code = searchParams.get('code')
@@ -86,11 +301,13 @@ export async function middleware(request: NextRequest) {
       '/',
       '/versoholdings/login',
       '/versotech/login',
+      '/versotech_main/login',
+      '/versotech_main/set-password',
       '/logout'
     ]
 
     const isPublicRoute = publicRoutes.includes(pathname) || pathname.startsWith('/sign/')
-    const isLoginRoute = pathname === '/versoholdings/login' || pathname === '/versotech/login'
+    const isLoginRoute = pathname === '/versoholdings/login' || pathname === '/versotech/login' || pathname === '/versotech_main/login'
 
     // Step 1: Get session from cookies (no network call)
     const { data: { session }, error: sessionError } = await supabase.auth.getSession()
@@ -190,12 +407,7 @@ export async function middleware(request: NextRequest) {
       // Only redirect if not already on a public route
       if (!isPublicRoute) {
         const response = NextResponse.redirect(
-          new URL(
-            pathname.startsWith('/versotech')
-              ? '/versotech/login?error=session_expired'
-              : '/versoholdings/login?error=session_expired',
-            request.url
-          )
+          new URL('/versotech_main/login?error=session_expired', request.url)
         )
         response.cookies.delete('sb-ipguxdssecfexudnvtia-auth-token')
         response.cookies.delete('sb-ipguxdssecfexudnvtia-auth-token-code-verifier')
@@ -223,19 +435,9 @@ export async function middleware(request: NextRequest) {
 
       console.log('[auth] Authentication failed:', authError?.message || 'No user found')
 
-      // Check if there's a portal context in the URL to redirect appropriately
-      const portalParam = request.nextUrl.searchParams.get('portal')
-      let redirectUrl: URL
-      
-      if (portalParam === 'staff' || pathname.startsWith('/versotech')) {
-        redirectUrl = new URL('/versotech/login?error=auth_required', request.url)
-      } else if (pathname.startsWith('/versoholdings')) {
-        redirectUrl = new URL('/versoholdings/login?error=auth_required', request.url)
-      } else {
-        // Default to investor portal
-        redirectUrl = new URL('/versoholdings/login?error=auth_required', request.url)
-      }
-      
+      // Unified login - all unauthenticated users go to the same login
+      const redirectUrl = new URL('/versotech_main/login?error=auth_required', request.url)
+
       const response = NextResponse.redirect(redirectUrl)
 
       response.cookies.delete('sb-ipguxdssecfexudnvtia-auth-token')
@@ -276,12 +478,8 @@ export async function middleware(request: NextRequest) {
         })
         await supabase.auth.signOut()
 
-        // Determine which portal to redirect to
-        const loginUrl = pathname.startsWith('/versotech')
-          ? '/versotech/login?error=profile_not_found'
-          : '/versoholdings/login?error=profile_not_found'
-
-        return NextResponse.redirect(new URL(loginUrl, request.url))
+        // Redirect to unified login
+        return NextResponse.redirect(new URL('/versotech_main/login?error=profile_not_found', request.url))
       } else {
         // Transient database error (connection timeout, etc.) - return 500, don't sign out
         console.error('[auth] Transient database error fetching profile:', {
@@ -301,19 +499,187 @@ export async function middleware(request: NextRequest) {
 
     const effectiveProfile = profile
 
-    // Role-based access control
+    // =========================================================================
+    // ROLE-BASED & PERSONA-BASED ACCESS CONTROL
+    // =========================================================================
+    // Architecture:
+    // - MIDDLEWARE: Handles authentication and persona-based route access
+    // - LAYOUTS: Still enforce persona requirements and load full persona context
+    //   - versotech_main/layout.tsx: Requires at least one persona
+    //   - versotech_admin/layout.tsx: Requires CEO persona (staff + role_in_entity='ceo')
+    // - SIDEBAR: Filters navigation items by active persona (users only see relevant routes)
+    // - DATA QUERIES: Filter by actual entity relationships (security layer)
+    //
+    // This separation ensures:
+    // 1. Fast middleware (no persona DB calls)
+    // 2. Clean authorization in layouts (one place to maintain)
+    // 3. Defense in depth (data queries enforce final access)
+    // =========================================================================
+
+    const isUnifiedRoute = pathname.startsWith('/versotech_main')
+    const isAdminRoute = pathname.startsWith('/versotech_admin')
+
+    let personaTypes = new Set<string>()
+    let isCEO = false
+
+    if (isUnifiedRoute || isAdminRoute) {
+      const { data: personas, error: personaError } = await supabase.rpc('get_user_personas', {
+        p_user_id: user.id
+      })
+
+      if (personaError) {
+        console.warn('[middleware] Persona lookup failed, falling back to profile role:', personaError.message)
+      } else if (Array.isArray(personas)) {
+        personaTypes = new Set(personas.map((persona: any) => persona.persona_type))
+        isCEO = personas.some(
+          (persona: any) => persona.persona_type === 'staff' && persona.role_in_entity === 'ceo'
+        )
+      }
+
+      if (personaTypes.size === 0) {
+        const roleToPersona: Record<string, string> = {
+          investor: 'investor',
+          arranger: 'arranger',
+          introducer: 'introducer',
+          partner: 'partner',
+          commercial_partner: 'commercial_partner',
+          lawyer: 'lawyer',
+          ceo: 'staff',
+          staff_admin: 'staff',
+          staff_ops: 'staff',
+          staff_rm: 'staff',
+        }
+
+        const fallbackPersona = roleToPersona[effectiveProfile.role]
+        if (fallbackPersona) {
+          personaTypes.add(fallbackPersona)
+        }
+        if (effectiveProfile.role === 'ceo') {
+          isCEO = true
+        }
+      }
+
+      if (personaTypes.size === 0) {
+        return NextResponse.redirect(new URL('/versotech_main/login?error=no_personas', request.url))
+      }
+
+      supabaseResponse.cookies.set(
+        'verso_personas',
+        JSON.stringify({ types: Array.from(personaTypes), isCEO }),
+        { httpOnly: true, sameSite: 'lax', path: '/' }
+      )
+
+      const hasPersona = (personaType: string) => personaTypes.has(personaType)
+      const hasAnyPersona = (allowed: string[]) => allowed.some((type) => personaTypes.has(type))
+
+      const matchesPrefix = (prefixes: string[]) => prefixes.some((prefix) => pathname.startsWith(prefix))
+
+      const ceoOnlyPaths = [
+        '/versotech_admin',
+        '/versotech_main/kyc-review',
+        '/versotech_main/fees',
+        '/versotech_main/reconciliation',
+        '/versotech_main/audit',
+        '/versotech_main/users',
+        '/versotech_main/admin',
+        '/versotech_main/processes',
+      ]
+
+      const staffPaths = [
+        '/versotech_main/deals',
+        '/versotech_main/subscriptions',
+        '/versotech_main/investors',
+        '/versotech_main/entities',
+        '/versotech_main/approvals',
+        '/versotech_main/requests',
+        '/versotech_main/introducers',
+        '/versotech_main/arrangers',
+      ]
+
+      const investorAccessPaths = [
+        '/versotech_main/opportunities',
+        '/versotech_main/portfolio',
+      ]
+
+      const arrangerPaths = [
+        '/versotech_main/my-mandates',
+        '/versotech_main/my-partners',
+        '/versotech_main/my-introducers',
+        '/versotech_main/my-commercial-partners',
+        '/versotech_main/my-lawyers',
+      ]
+
+      const introducerPaths = [
+        '/versotech_main/introductions',
+        '/versotech_main/introducer-agreements',
+      ]
+
+      const partnerPaths = [
+        '/versotech_main/partner-transactions',
+        '/versotech_main/shared-transactions',
+      ]
+
+      const commercialPartnerPaths = [
+        '/versotech_main/client-transactions',
+        '/versotech_main/placement-agreements',
+      ]
+
+      const lawyerPaths = [
+        '/versotech_main/assigned-deals',
+        '/versotech_main/escrow',
+        '/versotech_main/subscription-packs',
+      ]
+
+      if (matchesPrefix(ceoOnlyPaths) && !isCEO) {
+        return NextResponse.redirect(new URL('/versotech_main/dashboard', request.url))
+      }
+
+      if (matchesPrefix(staffPaths) && !hasPersona('staff')) {
+        return NextResponse.redirect(new URL('/versotech_main/dashboard', request.url))
+      }
+
+      if (matchesPrefix(investorAccessPaths) && !hasAnyPersona(['investor', 'partner', 'introducer', 'commercial_partner'])) {
+        return NextResponse.redirect(new URL('/versotech_main/dashboard', request.url))
+      }
+
+      if (matchesPrefix(arrangerPaths) && !hasPersona('arranger')) {
+        return NextResponse.redirect(new URL('/versotech_main/dashboard', request.url))
+      }
+
+      if (matchesPrefix(introducerPaths) && !hasPersona('introducer')) {
+        return NextResponse.redirect(new URL('/versotech_main/dashboard', request.url))
+      }
+
+      if (matchesPrefix(partnerPaths) && !hasPersona('partner')) {
+        return NextResponse.redirect(new URL('/versotech_main/dashboard', request.url))
+      }
+
+      if (matchesPrefix(commercialPartnerPaths) && !hasPersona('commercial_partner')) {
+        return NextResponse.redirect(new URL('/versotech_main/dashboard', request.url))
+      }
+
+      if (matchesPrefix(lawyerPaths) && !hasPersona('lawyer')) {
+        return NextResponse.redirect(new URL('/versotech_main/dashboard', request.url))
+      }
+
+      console.log(`✅ Access granted (persona-checked): ${user.email} → ${pathname}`)
+      return supabaseResponse
+    }
+
+    // LEGACY: Old investor portal routes
     if (pathname.startsWith('/versoholdings') && effectiveProfile.role !== 'investor') {
       // Staff user trying to access investor portal
-      if (['staff_admin', 'staff_ops', 'staff_rm'].includes(effectiveProfile.role)) {
+      if (['staff_admin', 'staff_ops', 'staff_rm', 'ceo'].includes(effectiveProfile.role)) {
         return NextResponse.redirect(new URL('/versotech/staff', request.url))
       }
       // Unknown role, redirect to investor login
       return NextResponse.redirect(new URL('/versoholdings/login', request.url))
     }
 
-    if (pathname.startsWith('/versotech')) {
+    // LEGACY: Old staff portal routes
+    if (pathname.startsWith('/versotech/staff') || pathname.startsWith('/versotech/login') === false && pathname.startsWith('/versotech')) {
       // Only staff roles can access staff portal
-      if (!['staff_admin', 'staff_ops', 'staff_rm'].includes(effectiveProfile.role)) {
+      if (!['staff_admin', 'staff_ops', 'staff_rm', 'ceo'].includes(effectiveProfile.role)) {
         return NextResponse.redirect(new URL('/versoholdings/dashboard', request.url))
       }
     }
@@ -324,7 +690,7 @@ export async function middleware(request: NextRequest) {
   } catch (error) {
     console.error('Middleware error:', error)
     // On error, redirect to login
-    return NextResponse.redirect(new URL('/versoholdings/login', request.url))
+    return NextResponse.redirect(new URL('/versotech_main/login', request.url))
   }
 }
 

@@ -3,7 +3,26 @@ import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import type { User, Session } from '@supabase/supabase-js'
 
-export type UserRole = 'investor' | 'staff_admin' | 'staff_ops' | 'staff_rm'
+// Profile roles (stored in profiles.role)
+export type ProfileRole =
+  | 'investor'
+  | 'staff_admin'
+  | 'staff_ops'
+  | 'staff_rm'
+  | 'arranger'
+  | 'introducer'
+  | 'partner'
+  | 'commercial_partner'
+  | 'lawyer'
+  | 'ceo'
+
+// All persona types (from get_user_personas())
+export type PersonaType = 'staff' | 'investor' | 'arranger' | 'introducer' | 'partner' | 'commercial_partner' | 'lawyer'
+
+// UserRole = ProfileRole for backward compatibility
+export type UserRole = ProfileRole
+
+const STAFF_ROLES: ProfileRole[] = ['staff_admin', 'staff_ops', 'staff_rm', 'ceo']
 
 export interface AuthUser {
   id: string
@@ -85,7 +104,7 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
 
     // Fetch permissions for staff users
     let permissions: string[] = []
-    const isStaffRole = ['staff_admin', 'staff_ops', 'staff_rm'].includes(profile.role)
+    const isStaffRole = STAFF_ROLES.includes(profile.role)
 
     if (isStaffRole) {
       const { data: permissionsData } = await supabase
@@ -147,7 +166,7 @@ export async function requireAuth(allowedRoles?: UserRole[]) {
   const user = await getCurrentUser()
 
   if (!user) {
-    redirect('/versoholdings/login')
+    redirect('/versotech_main/login')
   }
 
   if (allowedRoles && !allowedRoles.includes(user.role)) {
@@ -162,7 +181,7 @@ export async function requireInvestorAuth() {
   const user = await getCurrentUser()
 
   if (!user) {
-    redirect('/versoholdings/login')
+    redirect('/versotech_main/login')
   }
 
   if (user.role !== 'investor') {
@@ -177,10 +196,10 @@ export async function requireStaffAuth() {
   const user = await getCurrentUser()
 
   if (!user) {
-    redirect('/versotech/login')
+    redirect('/versotech_main/login')
   }
 
-  if (!['staff_admin', 'staff_ops', 'staff_rm'].includes(user.role)) {
+  if (!STAFF_ROLES.includes(user.role)) {
     throw new Error('Staff access required')
   }
 

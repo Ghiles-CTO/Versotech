@@ -14,7 +14,7 @@ export function GlobalKeyboardShortcuts({ brand, role }: GlobalKeyboardShortcuts
   const [quickAddOpen, setQuickAddOpen] = useState(false)
 
   // Only show keyboard shortcuts for staff users
-  const isStaff = ['staff_admin', 'staff_ops', 'staff_rm'].includes(role)
+  const isStaff = ['staff_admin', 'staff_ops', 'staff_rm', 'ceo'].includes(role)
 
   // Cmd/Ctrl+Shift+S to open Quick Add Subscription
   useKeyboardShortcut(
