@@ -17,7 +17,7 @@ async function resolveClientAndUser() {
     .eq('id', user.id)
     .maybeSingle()
 
-  if (!profile || !profile.role?.startsWith('staff_')) {
+  if (!profile || !(profile.role?.startsWith('staff_') || profile.role === 'ceo')) {
     return { client, user: null }
   }
 
@@ -52,7 +52,7 @@ export async function POST(
       .eq('id', assignee)
       .maybeSingle()
 
-    if (!assigneeProfile || !assigneeProfile.role?.startsWith('staff_')) {
+    if (!assigneeProfile || !(assigneeProfile.role?.startsWith('staff_') || assigneeProfile.role === 'ceo')) {
       return NextResponse.json({ error: 'Invalid staff member' }, { status: 400 })
     }
 
@@ -85,5 +85,4 @@ export async function POST(
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
-
 

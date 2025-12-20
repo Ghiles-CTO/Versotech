@@ -24,7 +24,7 @@ export async function PATCH(
       .eq('id', user.id)
       .single()
 
-    if (!profile || !profile.role?.startsWith('staff_')) {
+    if (!profile || !(profile.role?.startsWith('staff_') || profile.role === 'ceo')) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
@@ -206,7 +206,7 @@ export async function DELETE(
       .eq('id', user.id)
       .single()
 
-    if (!profile || !profile.role?.startsWith('staff_')) {
+    if (!profile || !(profile.role?.startsWith('staff_') || profile.role === 'ceo')) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 

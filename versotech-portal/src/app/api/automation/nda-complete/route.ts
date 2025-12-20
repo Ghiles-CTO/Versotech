@@ -6,6 +6,8 @@ import { auditLogger, AuditActions, AuditEntities } from '@/lib/audit'
 const payloadSchema = z.object({
   deal_id: z.string().uuid(),
   investor_id: z.string().uuid(),
+  member_id: z.string().uuid().optional(), // Specific signatory who signed
+  signature_request_id: z.string().uuid().optional(), // The signature request that was completed
   interest_id: z.string().uuid().optional(),
   approval_id: z.string().uuid().optional(),
   expires_at: z.string().datetime().optional().nullable(),
@@ -28,12 +30,78 @@ export async function POST(request: NextRequest) {
   const {
     deal_id,
     investor_id,
+    member_id,
+    signature_request_id,
     interest_id,
     approval_id,
     expires_at,
     document_url,
     metadata
   } = parsed.data
+
+  // If member_id provided, record individual signatory signature
+  if (member_id) {
+    const { error: signatoryError } = await serviceSupabase
+      .from('deal_signatory_ndas')
+      .upsert({
+        deal_id,
+        investor_id,
+        member_id,
+        signed_at: new Date().toISOString(),
+        signature_data: { document_url, metadata }
+      }, { onConflict: 'deal_id,member_id' })
+
+    if (signatoryError) {
+      console.error('Failed to record signatory NDA:', signatoryError)
+    }
+
+    // Update signature request status if provided
+    if (signature_request_id) {
+      await serviceSupabase
+        .from('signature_requests')
+        .update({
+          status: 'signed',
+          signature_timestamp: new Date().toISOString()
+        })
+        .eq('id', signature_request_id)
+    }
+  }
+
+  // Check if ALL signatories have now signed (entity-level check)
+  const { data: signatoryStatus } = await serviceSupabase
+    .rpc('check_all_signatories_signed', {
+      p_deal_id: deal_id,
+      p_investor_id: investor_id
+    })
+
+  const allSignatoriesSigned = signatoryStatus?.[0]?.all_signed ?? false
+  const totalSignatories = signatoryStatus?.[0]?.total_signatories ?? 0
+  const signedCount = signatoryStatus?.[0]?.signed_count ?? 0
+
+  // If there are signatories and not all have signed, don't grant data room yet
+  if (totalSignatories > 0 && !allSignatoriesSigned) {
+    console.log(`NDA: ${signedCount}/${totalSignatories} signatories signed for investor ${investor_id} on deal ${deal_id}`)
+
+    // Log partial completion but don't grant access yet
+    await serviceSupabase.from('deal_activity_events').insert({
+      deal_id,
+      investor_id,
+      event_type: 'nda_signatory_signed',
+      payload: {
+        member_id,
+        signed_count: signedCount,
+        total_signatories: totalSignatories,
+        pending: signatoryStatus?.[0]?.pending_signatories
+      }
+    })
+
+    return NextResponse.json({
+      success: true,
+      partial: true,
+      message: `Signatory NDA recorded. ${signedCount}/${totalSignatories} signatories have signed.`,
+      pending_signatories: signatoryStatus?.[0]?.pending_signatories
+    })
+  }
 
   const eventInsert = await serviceSupabase
     .from('automation_webhook_events')

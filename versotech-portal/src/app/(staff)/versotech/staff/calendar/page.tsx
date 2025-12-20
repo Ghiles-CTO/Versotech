@@ -74,7 +74,7 @@ export default async function StaffCalendarPage() {
     .eq('id', user.id)
     .single()
 
-  if (!profile || !['staff_admin', 'staff_ops', 'staff_rm'].includes(profile.role)) {
+  if (!profile || !['staff_admin', 'staff_ops', 'staff_rm', 'ceo'].includes(profile.role)) {
     redirect('/versotech')
   }
 

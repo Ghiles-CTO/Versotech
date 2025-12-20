@@ -42,7 +42,7 @@ export async function PATCH(
       .from('profiles')
       .select('id, email, role, display_name')
       .eq('id', staffId)
-      .in('role', ['staff_admin', 'staff_ops', 'staff_rm'])
+      .in('role', ['staff_admin', 'staff_ops', 'staff_rm', 'ceo'])
       .single()
 
     if (profileError || !staffProfile) {

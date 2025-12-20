@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
       .from('profiles')
       .select('id, display_name, email, role')
       .eq('id', staffId)
-      .or('role.eq.staff_admin,role.eq.staff_ops,role.eq.staff_rm')
+      .or('role.eq.staff_admin,role.eq.staff_ops,role.eq.staff_rm,role.eq.ceo')
       .single()
 
     if (staffError || !staffMember) {

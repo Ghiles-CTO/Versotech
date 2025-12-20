@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
 
     // Verify user is staff
     const userRole = user.user_metadata?.role || user.role
-    const isStaff = ['staff_admin', 'staff_ops', 'staff_rm'].includes(userRole)
+    const isStaff = ['staff_admin', 'staff_ops', 'staff_rm', 'ceo'].includes(userRole)
     
     if (!isStaff) {
       return NextResponse.json({ error: 'Forbidden - Staff access only' }, { status: 403 })

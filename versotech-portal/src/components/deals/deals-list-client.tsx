@@ -53,9 +53,10 @@ interface DealsListClientProps {
     closed: number
     totalValue: number
   }
+  basePath?: string // Base path for links (defaults to /versotech/staff)
 }
 
-export function DealsListClient({ deals, summary }: DealsListClientProps) {
+export function DealsListClient({ deals, summary, basePath = '/versotech/staff' }: DealsListClientProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [typeFilter, setTypeFilter] = useState('all')
@@ -115,13 +116,13 @@ export function DealsListClient({ deals, summary }: DealsListClientProps) {
         </div>
         <div className="flex items-center gap-3">
           <Button asChild>
-            <Link href="/versotech/staff/deals/new">
+            <Link href={`${basePath}/deals/new`}>
               <Plus className="mr-2 h-4 w-4" />
               Create Deal
             </Link>
           </Button>
           <Button variant="outline" asChild className="gap-2">
-            <Link href="/versotech/staff/entities">
+            <Link href={`${basePath}/entities`}>
               <Building2 className="h-4 w-4" />
               Manage Entities
             </Link>
@@ -270,7 +271,7 @@ export function DealsListClient({ deals, summary }: DealsListClientProps) {
               </p>
               {deals.length === 0 && (
                 <Button asChild>
-                  <Link href="/versotech/staff/deals/new">
+                  <Link href={`${basePath}/deals/new`}>
                     <Plus className="mr-2 h-4 w-4" />
                     Create First Deal
                   </Link>
@@ -288,7 +289,7 @@ export function DealsListClient({ deals, summary }: DealsListClientProps) {
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-3 flex-1 min-w-0">
                       <Link
-                        href={`/versotech/staff/deals/${deal.id}`}
+                        href={`${basePath}/deals/${deal.id}`}
                         className="text-lg font-semibold text-sky-200 hover:text-sky-100 truncate"
                       >
                         {deal.name}
@@ -307,7 +308,7 @@ export function DealsListClient({ deals, summary }: DealsListClientProps) {
                       asChild
                       className="border-white/20 text-foreground hover:bg-white/10 whitespace-nowrap flex-shrink-0"
                     >
-                      <Link href={`/versotech/staff/deals/${deal.id}`}>View Details</Link>
+                      <Link href={`${basePath}/deals/${deal.id}`}>View Details</Link>
                     </Button>
                   </div>
 
@@ -361,7 +362,7 @@ export function DealsListClient({ deals, summary }: DealsListClientProps) {
               className="w-full border-white/20 text-foreground hover:bg-white/10"
               asChild
             >
-              <Link href="/versotech/staff/deals/new">Set Up New Deal</Link>
+              <Link href={`${basePath}/deals/new`}>Set Up New Deal</Link>
             </Button>
           </CardContent>
         </Card>
@@ -404,7 +405,7 @@ export function DealsListClient({ deals, summary }: DealsListClientProps) {
               className="w-full border-white/20 text-foreground hover:bg-white/10"
               asChild
             >
-              <Link href="/versotech/staff/approvals">Review Approvals</Link>
+              <Link href={`${basePath}/approvals`}>Review Approvals</Link>
             </Button>
           </CardContent>
         </Card>

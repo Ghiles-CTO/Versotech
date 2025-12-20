@@ -133,22 +133,118 @@ export default function AssignedDealsPage() {
         if (lawyerError) throw lawyerError
         setLawyerInfo(lawyer)
 
-        // Note: In the future, this will query a deal_lawyer_assignments table
-        // or filter deals by lawyer_id. For now, lawyer-specific deals aren't tracked,
-        // so we show an empty state for lawyer users.
+        // Query deals assigned to this lawyer via deal_lawyer_assignments
+        const { data: assignments, error: assignmentsError } = await supabase
+          .from('deal_lawyer_assignments')
+          .select(`
+            id,
+            role,
+            status,
+            assigned_at,
+            deals:deal_id (
+              id,
+              name,
+              company_name,
+              company_logo_url,
+              deal_type,
+              status,
+              currency,
+              target_amount,
+              close_at,
+              created_at
+            )
+          `)
+          .eq('lawyer_id', lawyerUser.lawyer_id)
+          .order('assigned_at', { ascending: false })
 
-        // Future query would be something like:
-        // const { data: assignments } = await supabase
-        //   .from('deal_lawyer_assignments')
-        //   .select('deal:deal_id (*)')
-        //   .eq('lawyer_id', lawyerUser.lawyer_id)
+        if (assignmentsError) {
+          console.error('Error fetching lawyer assignments:', assignmentsError)
+          // Fall back to checking assigned_deals array on lawyers table
+          const { data: lawyerWithDeals } = await supabase
+            .from('lawyers')
+            .select('assigned_deals')
+            .eq('id', lawyerUser.lawyer_id)
+            .single()
 
-        setDeals([])
+          if (lawyerWithDeals?.assigned_deals && lawyerWithDeals.assigned_deals.length > 0) {
+            const assignedDealIds = lawyerWithDeals.assigned_deals
+            const { data: dealsFromArray } = await supabase
+              .from('deals')
+              .select(`
+                id,
+                name,
+                company_name,
+                company_logo_url,
+                deal_type,
+                status,
+                currency,
+                target_amount,
+                close_at,
+                created_at
+              `)
+              .in('id', assignedDealIds)
+              .order('created_at', { ascending: false })
+
+            if (dealsFromArray) {
+              const processedDeals: AssignedDeal[] = dealsFromArray.map((deal: any) => ({
+                id: deal.id,
+                name: deal.name || 'Untitled Deal',
+                company_name: deal.company_name,
+                company_logo_url: deal.company_logo_url,
+                deal_type: deal.deal_type || 'unknown',
+                status: deal.status || 'draft',
+                currency: deal.currency || 'USD',
+                target_amount: Number(deal.target_amount) || 0,
+                close_at: deal.close_at,
+                created_at: deal.created_at,
+              }))
+              setDeals(processedDeals)
+              const active = processedDeals.filter(d => d.status === 'open' || d.status === 'allocation_pending').length
+              const closed = processedDeals.filter(d => d.status === 'closed' || d.status === 'fully_subscribed').length
+              setSummary({
+                totalAssigned: processedDeals.length,
+                activeDeals: active,
+                closedDeals: closed,
+                pendingReview: 0,
+              })
+              return
+            }
+          }
+          setDeals([])
+          setSummary({ totalAssigned: 0, activeDeals: 0, closedDeals: 0, pendingReview: 0 })
+          return
+        }
+
+        // Process assignments into deals
+        const processedDeals: AssignedDeal[] = (assignments || [])
+          .filter((a: any) => a.deals) // Filter out null deals
+          .map((a: any) => {
+            const deal = a.deals
+            return {
+              id: deal.id,
+              name: deal.name || 'Untitled Deal',
+              company_name: deal.company_name,
+              company_logo_url: deal.company_logo_url,
+              deal_type: deal.deal_type || 'unknown',
+              status: deal.status || 'draft',
+              currency: deal.currency || 'USD',
+              target_amount: Number(deal.target_amount) || 0,
+              close_at: deal.close_at,
+              created_at: deal.created_at,
+            }
+          })
+
+        setDeals(processedDeals)
+
+        const active = processedDeals.filter(d => d.status === 'open' || d.status === 'allocation_pending').length
+        const closed = processedDeals.filter(d => d.status === 'closed' || d.status === 'fully_subscribed').length
+        const pendingReview = (assignments || []).filter((a: any) => a.status === 'active').length
+
         setSummary({
-          totalAssigned: 0,
-          activeDeals: 0,
-          closedDeals: 0,
-          pendingReview: 0,
+          totalAssigned: processedDeals.length,
+          activeDeals: active,
+          closedDeals: closed,
+          pendingReview: pendingReview,
         })
 
         setError(null)

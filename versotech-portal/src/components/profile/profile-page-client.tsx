@@ -10,10 +10,11 @@ import { KYCDocumentsTab } from '@/components/profile/kyc-documents-tab'
 import { CounterpartyEntitiesTab } from '@/components/profile/counterparty-entities-tab'
 import { InvestorMembersTab } from '@/components/profile/investor-members-tab'
 import { InvestorInfoForm } from '@/components/profile/investor-info-form'
+import { ComplianceTab } from '@/components/profile/compliance-tab'
 import { KYCQuestionnaire } from '@/components/kyc/KYCQuestionnaire'
 import { KYCAlert } from '@/components/dashboard/kyc-alert'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { User, Lock, Settings, Briefcase, FileText, Building2, Bell, ShieldCheck, Users } from 'lucide-react'
+import { User, Lock, Settings, Briefcase, FileText, Building2, Bell, ShieldCheck, ShieldAlert, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 
@@ -149,7 +150,7 @@ export function ProfilePageClient({ profile: initialProfile, variant = 'investor
       {/* Right Column - Tabs */}
       <div className="lg:col-span-2">
         <Tabs defaultValue={defaultTab} className="w-full">
-          <TabsList className={isStaff ? "grid w-full grid-cols-3 bg-white/5 border border-white/10" : `grid w-full ${isEntityInvestor ? 'grid-cols-6' : 'grid-cols-5'}`}>
+          <TabsList className={isStaff ? "grid w-full grid-cols-3 bg-white/5 border border-white/10" : `grid w-full ${isEntityInvestor ? 'grid-cols-7' : 'grid-cols-6'}`}>
             <TabsTrigger
               value="profile"
               className={isStaff ? "data-[state=active]:bg-white/10 data-[state=active]:text-white text-white/70" : ""}
@@ -175,7 +176,11 @@ export function ProfilePageClient({ profile: initialProfile, variant = 'investor
               <>
                 <TabsTrigger value="kyc">
                   <ShieldCheck className="h-4 w-4 mr-2" />
-                  KYC & Onboarding
+                  KYC
+                </TabsTrigger>
+                <TabsTrigger value="compliance">
+                  <ShieldAlert className="h-4 w-4 mr-2" />
+                  Compliance
                 </TabsTrigger>
                 {isEntityInvestor && (
                   <TabsTrigger value="members">
@@ -228,6 +233,9 @@ export function ProfilePageClient({ profile: initialProfile, variant = 'investor
                 <div className="pt-6 border-t border-white/10">
                   <KYCQuestionnaire />
                 </div>
+              </TabsContent>
+              <TabsContent value="compliance" className="mt-6">
+                <ComplianceTab />
               </TabsContent>
               {isEntityInvestor && (
                 <TabsContent value="members" className="mt-6">

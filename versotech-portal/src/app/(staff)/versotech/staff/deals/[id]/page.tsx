@@ -27,7 +27,7 @@ export default async function DealDetailPage({
     .eq('id', user.id)
     .single()
   
-  if (!userProfile || !['staff_admin', 'staff_ops', 'staff_rm'].includes(userProfile.role)) {
+  if (!userProfile || !['staff_admin', 'staff_ops', 'staff_rm', 'ceo'].includes(userProfile.role)) {
     redirect('/versotech/staff')
   }
   

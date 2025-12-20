@@ -28,7 +28,7 @@ export async function PATCH(
       .eq('id', user.id)
       .single()
 
-    if (!profile || !['staff_admin', 'staff_ops', 'staff_rm'].includes(profile.role)) {
+    if (!profile || !['staff_admin', 'staff_ops', 'staff_rm', 'ceo'].includes(profile.role)) {
       return Response.json({ error: 'Forbidden - Staff access required' }, { status: 403 })
     }
 
@@ -93,7 +93,7 @@ export async function DELETE(
       .eq('id', user.id)
       .single()
 
-    if (!profile || !['staff_admin', 'staff_ops', 'staff_rm'].includes(profile.role)) {
+    if (!profile || !['staff_admin', 'staff_ops', 'staff_rm', 'ceo'].includes(profile.role)) {
       return Response.json({ error: 'Forbidden - Staff access required' }, { status: 403 })
     }
 

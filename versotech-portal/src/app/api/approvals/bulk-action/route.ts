@@ -99,7 +99,7 @@ export async function POST(request: NextRequest) {
       profile = dbProfile
     }
 
-    if (!profile || !['staff_admin', 'staff_ops', 'staff_rm'].includes(profile.role)) {
+    if (!profile || !['staff_admin', 'staff_ops', 'staff_rm', 'ceo'].includes(profile.role)) {
       return NextResponse.json(
         { error: 'Staff access required for bulk actions' },
         { status: 403 }

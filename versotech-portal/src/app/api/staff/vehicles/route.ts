@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
 
     // Verify staff role
     const userRole = user.user_metadata?.role || user.role
-    if (!['staff_admin', 'staff_ops', 'staff_rm'].includes(userRole)) {
+    if (!['staff_admin', 'staff_ops', 'staff_rm', 'ceo'].includes(userRole)) {
       return NextResponse.json({ error: 'Unauthorized - Staff access required' }, { status: 403 })
     }
 

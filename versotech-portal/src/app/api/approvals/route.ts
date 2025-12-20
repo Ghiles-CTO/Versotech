@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
       .eq('id', user.id)
       .single()
 
-    if (!profile || !['staff_admin', 'staff_ops', 'staff_rm'].includes(profile.role)) {
+    if (!profile || !['staff_admin', 'staff_ops', 'staff_rm', 'ceo'].includes(profile.role)) {
       return NextResponse.json(
         { error: 'Staff access required to create approvals' },
         { status: 403 }
@@ -213,7 +213,7 @@ export async function GET(request: NextRequest) {
       .eq('id', user.id)
       .single()
 
-    if (!profile || !['staff_admin', 'staff_ops', 'staff_rm'].includes(profile.role)) {
+    if (!profile || !['staff_admin', 'staff_ops', 'staff_rm', 'ceo'].includes(profile.role)) {
       return NextResponse.json(
         { error: 'Staff access required to view approvals' },
         { status: 403 }
@@ -434,7 +434,7 @@ export async function PATCH(request: NextRequest) {
       .eq('id', user.id)
       .single()
 
-    if (!profile || !['staff_admin', 'staff_ops', 'staff_rm'].includes(profile.role)) {
+    if (!profile || !['staff_admin', 'staff_ops', 'staff_rm', 'ceo'].includes(profile.role)) {
       return NextResponse.json(
         { error: 'Staff access required to update approvals' },
         { status: 403 }

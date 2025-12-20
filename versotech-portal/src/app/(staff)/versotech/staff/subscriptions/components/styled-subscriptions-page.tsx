@@ -20,7 +20,11 @@ import { FilterPopup, SimpleFilters } from './filter-popup'
 import { NewSubscriptionDialog } from '@/components/subscriptions/new-subscription-dialog'
 import { toast } from 'sonner'
 
-export function StyledSubscriptionsPage() {
+interface StyledSubscriptionsPageProps {
+  basePath?: string
+}
+
+export function StyledSubscriptionsPage({ basePath = '/versotech/staff' }: StyledSubscriptionsPageProps) {
   const router = useRouter()
 
   // Core data
@@ -209,7 +213,7 @@ export function StyledSubscriptionsPage() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => router.push('/versotech/staff/subscriptions/vehicle-summary')}
+            onClick={() => router.push(`${basePath}/subscriptions/vehicle-summary`)}
             className="bg-transparent text-white border-white hover:bg-white hover:text-black"
           >
             <TrendingUp className="h-4 w-4 mr-2" />

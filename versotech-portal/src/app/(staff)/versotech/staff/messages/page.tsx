@@ -6,7 +6,7 @@ import { normalizeConversation } from '@/lib/messaging/supabase'
 export const dynamic = 'force-dynamic'
 
 export default async function StaffMessages() {
-  const profile = await requireAuth(['staff_admin', 'staff_ops', 'staff_rm'])
+  const profile = await requireAuth(['staff_admin', 'staff_ops', 'staff_rm', 'ceo'])
   const supabase = createServiceClient()
 
   console.log('[Staff Messages Page] Loading conversations for user:', profile.id)

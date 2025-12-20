@@ -53,7 +53,7 @@ export interface SignatureGroup {
 export default async function StaffSignaturesPage() {
   const user = await getCurrentUser()
 
-  if (!user || !user.role?.startsWith('staff_')) {
+  if (!user || !(user.role?.startsWith('staff_') || user.role === 'ceo')) {
     redirect('/versotech/login')
   }
 

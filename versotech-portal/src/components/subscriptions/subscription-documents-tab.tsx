@@ -11,6 +11,7 @@ import { FileText, Upload, Download, CheckCircle, Clock, AlertCircle, Loader2, S
 import { toast } from 'sonner'
 import { useDocumentViewer } from '@/hooks/useDocumentViewer'
 import { DocumentViewerFullscreen } from '@/components/documents/DocumentViewerFullscreen'
+import { SignatorySelectionDialog } from './signatory-selection-dialog'
 
 interface Document {
   id: string
@@ -41,6 +42,8 @@ export function SubscriptionDocumentsTab({ subscriptionId }: SubscriptionDocumen
   const [sendingForSignature, setSendingForSignature] = useState<string | null>(null)
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [signatoryDialogOpen, setSignatoryDialogOpen] = useState(false)
+  const [selectedDocumentForSignature, setSelectedDocumentForSignature] = useState<Document | null>(null)
 
   // Document viewer hook
   const {
@@ -175,17 +178,27 @@ export function SubscriptionDocumentsTab({ subscriptionId }: SubscriptionDocumen
     }
   }
 
-  const handleReadyForSignature = async (documentId: string) => {
-    if (!confirm('Send this document for dual signature? This will notify the investor and staff signatory.')) {
-      return
-    }
+  const handleOpenSignatoryDialog = (document: Document) => {
+    setSelectedDocumentForSignature(document)
+    setSignatoryDialogOpen(true)
+  }
 
-    setSendingForSignature(documentId)
+  const handleSendForSignature = async (signatoryIds: string[]) => {
+    if (!selectedDocumentForSignature) return
+
+    setSendingForSignature(selectedDocumentForSignature.id)
     try {
+      // Filter out 'investor_primary' as it's handled specially by the API
+      const memberIds = signatoryIds.filter(id => id !== 'investor_primary')
+
       const response = await fetch(
-        `/api/subscriptions/${subscriptionId}/documents/${documentId}/ready-for-signature`,
+        `/api/subscriptions/${subscriptionId}/documents/${selectedDocumentForSignature.id}/ready-for-signature`,
         {
-          method: 'POST'
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            signatory_member_ids: memberIds.length > 0 ? memberIds : undefined
+          })
         }
       )
 
@@ -195,14 +208,16 @@ export function SubscriptionDocumentsTab({ subscriptionId }: SubscriptionDocumen
       }
 
       const data = await response.json()
-      toast.success('Document sent for signatures successfully')
+      toast.success(`Document sent to ${data.total_signatories} signatories for signature`)
       console.log('Signature requests created:', data)
       fetchDocuments()
     } catch (error) {
       console.error('Error sending for signature:', error)
       toast.error(error instanceof Error ? error.message : 'Failed to send for signature')
+      throw error // Re-throw to let the dialog handle it
     } finally {
       setSendingForSignature(null)
+      setSelectedDocumentForSignature(null)
     }
   }
 
@@ -381,7 +396,7 @@ export function SubscriptionDocumentsTab({ subscriptionId }: SubscriptionDocumen
                         variant="default"
                         size="sm"
                         className="gap-2 bg-emerald-500 hover:bg-emerald-600"
-                        onClick={() => handleReadyForSignature(document.id)}
+                        onClick={() => handleOpenSignatoryDialog(document)}
                         disabled={sendingForSignature === document.id}
                       >
                         {sendingForSignature === document.id ? (
@@ -470,6 +485,21 @@ export function SubscriptionDocumentsTab({ subscriptionId }: SubscriptionDocumen
         onClose={closePreview}
         onDownload={downloadDocument}
       />
+
+      {/* Signatory Selection Dialog */}
+      {selectedDocumentForSignature && (
+        <SignatorySelectionDialog
+          open={signatoryDialogOpen}
+          onOpenChange={(open) => {
+            setSignatoryDialogOpen(open)
+            if (!open) setSelectedDocumentForSignature(null)
+          }}
+          subscriptionId={subscriptionId}
+          documentId={selectedDocumentForSignature.id}
+          documentName={selectedDocumentForSignature.name}
+          onConfirm={handleSendForSignature}
+        />
+      )}
     </div>
   )
 }

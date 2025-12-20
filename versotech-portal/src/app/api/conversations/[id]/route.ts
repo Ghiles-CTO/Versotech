@@ -37,7 +37,7 @@ export async function DELETE(
       .eq('id', user.id)
       .single()
 
-    const isStaff = profile?.role && ['staff_admin', 'staff_ops', 'staff_rm'].includes(profile.role)
+    const isStaff = profile?.role && ['staff_admin', 'staff_ops', 'staff_rm', 'ceo'].includes(profile.role)
     const isCreator = conversation.created_by === user.id
     
     if (!isStaff && !isCreator) {

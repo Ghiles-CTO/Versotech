@@ -161,6 +161,8 @@ interface InvestorDealsListClientProps {
     activeNdas: number
     submittedSubscriptions: number
   }
+  /** Base URL for deal detail pages. Defaults to /versoholdings/deal */
+  detailUrlBase?: string
 }
 
 const dealTypeLabels: Record<string, string> = {
@@ -261,7 +263,8 @@ export function InvestorDealsListClient({
   accessByDeal,
   subscriptionByDeal,
   primaryInvestorId,
-  summary
+  summary,
+  detailUrlBase = '/versoholdings/deal'
 }: InvestorDealsListClientProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
@@ -884,7 +887,7 @@ export function InvestorDealsListClient({
                         : 'Opening window announced soon'}
                     </div>
                     <div className="flex flex-wrap items-center gap-3">
-                      <Link href={`/versoholdings/deal/${deal.id}`}>
+                      <Link href={`${detailUrlBase}/${deal.id}`}>
                         <Button variant="outline" className="gap-2">
                           View details
                           <ArrowUpRight className="h-4 w-4" />

@@ -198,7 +198,7 @@ export async function POST(request: Request) {
         const { data: fallbackProfiles, error: fallbackError } = await supabase
           .from('profiles')
           .select('id')
-          .in('role', ['staff_admin', 'staff_ops', 'staff_rm'])
+          .in('role', ['staff_admin', 'staff_ops', 'staff_rm', 'ceo'])
           .order('created_at', { ascending: true })
           .limit(1)
 

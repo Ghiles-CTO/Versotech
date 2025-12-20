@@ -25,7 +25,7 @@ export async function POST(
       .eq('id', user.id)
       .single()
 
-    const isStaff = profile?.role?.startsWith('staff_')
+    const isStaff = profile?.role?.startsWith('staff_') || profile?.role === 'ceo'
     if (!isStaff) {
       return NextResponse.json({ error: 'Staff access required' }, { status: 403 })
     }

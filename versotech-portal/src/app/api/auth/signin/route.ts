@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 
-type StaffRole = 'staff_admin' | 'staff_ops' | 'staff_rm'
+type StaffRole = 'staff_admin' | 'staff_ops' | 'staff_rm' | 'ceo'
 
 type SupabaseProfile = {
   id: string
@@ -12,7 +12,7 @@ type SupabaseProfile = {
   created_at?: string
 }
 
-const STAFF_ROLES: StaffRole[] = ['staff_admin', 'staff_ops', 'staff_rm']
+const STAFF_ROLES: StaffRole[] = ['staff_admin', 'staff_ops', 'staff_rm', 'ceo']
 const STAFF_DOMAINS = ['@versotech.com', '@verso.com']
 
 const isStaffRole = (role: string | null | undefined): role is StaffRole => {
@@ -218,11 +218,13 @@ export async function POST(request: NextRequest) {
       }, { status: 404 })
     }
 
-    let redirectPath = '/versoholdings/dashboard'
+    // Unified portal: all users go to /versotech_main/dashboard
+    // The layout handles persona-based routing and access control
+    let redirectPath = '/versotech_main/dashboard'
 
-    if (isStaffRole(resolvedProfile.role)) {
-      redirectPath = '/versotech/staff'
-    } else if (portalContext === 'staff') {
+    // Staff portal context check is no longer needed since we have unified access
+    // Keep backward compatibility: staff role users coming from old staff login
+    if (portalContext === 'staff' && !isStaffRole(resolvedProfile.role)) {
       await supabase.auth.signOut()
       return NextResponse.json({
         error: 'Staff access required. This account has investor-level access.'

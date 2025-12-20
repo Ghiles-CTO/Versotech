@@ -31,7 +31,7 @@ export async function GET(
     .eq('id', user.id)
     .single()
 
-  const isStaff = profile?.role && profile.role.startsWith('staff_')
+  const isStaff = profile?.role && (profile.role.startsWith('staff_') || profile.role === 'ceo')
 
   const { data: investorLinks } = await supabase
     .from('investor_users')

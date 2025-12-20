@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
       .eq('id', user.id)
       .single();
 
-    if (!profile?.role?.startsWith('staff_')) {
+    if (!(profile?.role?.startsWith('staff_') || profile?.role === 'ceo')) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 

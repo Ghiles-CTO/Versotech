@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
       .eq('id', user.id)
       .single()
 
-    if (!profile || !['staff_admin', 'staff_ops', 'staff_rm'].includes(profile.role)) {
+    if (!profile || !['staff_admin', 'staff_ops', 'staff_rm', 'ceo'].includes(profile.role)) {
       return NextResponse.json(
         { error: 'Staff access required to import bank transactions' },
         { status: 403 }
@@ -192,7 +192,7 @@ export async function GET(request: NextRequest) {
       .eq('id', user.id)
       .single()
 
-    if (!profile || !['staff_admin', 'staff_ops', 'staff_rm'].includes(profile.role)) {
+    if (!profile || !['staff_admin', 'staff_ops', 'staff_rm', 'ceo'].includes(profile.role)) {
       return NextResponse.json(
         { error: 'Staff access required to view bank transactions' },
         { status: 403 }

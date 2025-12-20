@@ -31,7 +31,7 @@ export function AuthHandler() {
 
       if (error) {
         console.error('[auth] OAuth callback error:', error)
-        router.push('/versoholdings/login?error=auth_failed')
+        router.push('/versotech_main/login?error=auth_failed')
         return
       }
 
@@ -45,7 +45,7 @@ export function AuthHandler() {
 
           if (exchangeError || !data?.user) {
             console.error('[auth] Failed to exchange code for session:', exchangeError)
-            router.push('/versoholdings/login?error=auth_failed')
+            router.push('/versotech_main/login?error=auth_failed')
             return
           }
 
@@ -59,14 +59,14 @@ export function AuthHandler() {
             .eq('id', user.id)
             .single()
 
-          if (profile && ['staff_admin', 'staff_ops', 'staff_rm'].includes(profile.role)) {
-            router.push('/versotech/staff')
+          if (profile) {
+            router.push('/versotech_main/dashboard')
           } else {
-            router.push('/versoholdings/dashboard')
+            router.push('/versotech_main/login?error=profile_not_found')
           }
         } catch (err) {
           console.error('[auth] Unexpected error in auth callback:', err)
-          router.push('/versoholdings/login?error=auth_failed')
+          router.push('/versotech_main/login?error=auth_failed')
         } finally {
           setIsProcessing(false)
         }

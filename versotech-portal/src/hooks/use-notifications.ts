@@ -131,7 +131,7 @@ export function useNotifications(userRole: string, userId?: string) {
         .subscribe()
     )
 
-    if (userRole.startsWith('staff_')) {
+    if (userRole.startsWith('staff_') || userRole === 'ceo') {
       subscriptions.push(
         supabaseClient
           .channel('notifications_requests')

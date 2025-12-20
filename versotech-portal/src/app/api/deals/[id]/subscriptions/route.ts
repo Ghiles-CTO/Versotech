@@ -31,7 +31,7 @@ export async function GET(
     .eq('id', user.id)
     .single()
 
-  const isStaff = profile?.role?.startsWith('staff_') ?? false
+  const isStaff = profile?.role?.startsWith('staff_') || profile?.role === 'ceo'
 
   const { data: investorLinks } = await supabase
     .from('investor_users')
@@ -159,7 +159,7 @@ export async function POST(
     .eq('id', user.id)
     .single()
 
-  const isStaff = profile?.role?.startsWith('staff_') ?? false
+  const isStaff = profile?.role?.startsWith('staff_') || profile?.role === 'ceo'
 
   const { data: investorLinks } = await supabase
     .from('investor_users')

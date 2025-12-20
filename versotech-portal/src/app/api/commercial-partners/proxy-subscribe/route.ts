@@ -1,0 +1,365 @@
+import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { NextResponse } from 'next/server'
+import { z } from 'zod'
+
+const proxySubscribeSchema = z.object({
+  deal_id: z.string().uuid(),
+  client_investor_id: z.string().uuid(),
+  commitment: z.number().positive(),
+  stock_type: z.enum(['ordinary', 'preference', 'convertible']).optional().default('ordinary'),
+  notes: z.string().optional(),
+  proxy_authorization_doc_id: z.string().uuid().optional() // Optional reference to authorization document
+})
+
+/**
+ * POST /api/commercial-partners/proxy-subscribe
+ * Commercial Partner submits a subscription on behalf of a client investor
+ *
+ * This is "MODE 2" - Commercial Partner acts as proxy for their client
+ */
+export async function POST(request: Request) {
+  const supabase = await createClient()
+  const serviceSupabase = createServiceClient()
+
+  try {
+    // Authenticate user
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    if (userError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Verify user is a commercial partner with proxy capability
+    const { data: cpLinks } = await serviceSupabase
+      .from('commercial_partner_users')
+      .select(`
+        commercial_partner_id,
+        can_execute_for_clients,
+        role,
+        commercial_partners (
+          id,
+          name,
+          legal_name,
+          status,
+          cp_type
+        )
+      `)
+      .eq('user_id', user.id)
+      .eq('can_execute_for_clients', true)
+
+    if (!cpLinks || cpLinks.length === 0) {
+      return NextResponse.json({
+        error: 'Forbidden',
+        message: 'You are not authorized to execute subscriptions for clients. Contact your administrator to enable proxy capability.'
+      }, { status: 403 })
+    }
+
+    const cpLink = cpLinks[0]
+    const commercialPartner = cpLink.commercial_partners as any
+
+    if (commercialPartner?.status !== 'active') {
+      return NextResponse.json({
+        error: 'Commercial partner not active',
+        message: 'Your commercial partner account is not active.'
+      }, { status: 403 })
+    }
+
+    // Parse and validate request body
+    const body = await request.json()
+    const validation = proxySubscribeSchema.safeParse(body)
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: 'Invalid request', details: validation.error.flatten() },
+        { status: 400 }
+      )
+    }
+
+    const { deal_id, client_investor_id, commitment, stock_type, notes, proxy_authorization_doc_id } = validation.data
+
+    // Verify deal exists and is open
+    const { data: deal, error: dealError } = await serviceSupabase
+      .from('deals')
+      .select('id, name, status, vehicle_id, min_investment, max_investment')
+      .eq('id', deal_id)
+      .single()
+
+    if (dealError || !deal) {
+      return NextResponse.json({ error: 'Deal not found' }, { status: 404 })
+    }
+
+    if (deal.status !== 'open' && deal.status !== 'active') {
+      return NextResponse.json({
+        error: 'Deal not open for subscriptions',
+        message: `Deal is currently ${deal.status}`
+      }, { status: 400 })
+    }
+
+    // Verify client investor exists
+    const { data: clientInvestor, error: investorError } = await serviceSupabase
+      .from('investors')
+      .select('id, name, investor_type, kyc_status')
+      .eq('id', client_investor_id)
+      .single()
+
+    if (investorError || !clientInvestor) {
+      return NextResponse.json({ error: 'Client investor not found' }, { status: 404 })
+    }
+
+    // Verify client investor has completed KYC
+    if (clientInvestor.kyc_status !== 'approved' && clientInvestor.kyc_status !== 'verified') {
+      return NextResponse.json({
+        error: 'Client KYC not complete',
+        message: 'Client investor must complete KYC before subscribing.',
+        kyc_status: clientInvestor.kyc_status
+      }, { status: 400 })
+    }
+
+    // Check commitment limits
+    if (deal.min_investment && commitment < deal.min_investment) {
+      return NextResponse.json({
+        error: 'Below minimum investment',
+        message: `Minimum investment is ${deal.min_investment}`
+      }, { status: 400 })
+    }
+
+    if (deal.max_investment && commitment > deal.max_investment) {
+      return NextResponse.json({
+        error: 'Exceeds maximum investment',
+        message: `Maximum investment is ${deal.max_investment}`
+      }, { status: 400 })
+    }
+
+    // Check if subscription already exists
+    const { data: existingSub } = await serviceSupabase
+      .from('subscriptions')
+      .select('id, status')
+      .eq('deal_id', deal_id)
+      .eq('investor_id', client_investor_id)
+      .not('status', 'in', '(cancelled,rejected)')
+      .maybeSingle()
+
+    if (existingSub) {
+      return NextResponse.json({
+        error: 'Subscription already exists',
+        message: 'Client already has a subscription for this deal.',
+        subscription_id: existingSub.id,
+        status: existingSub.status
+      }, { status: 400 })
+    }
+
+    // Create the subscription as proxy
+    const now = new Date().toISOString()
+    const { data: subscription, error: subError } = await serviceSupabase
+      .from('subscriptions')
+      .insert({
+        deal_id,
+        vehicle_id: deal.vehicle_id,
+        investor_id: client_investor_id,
+        commitment,
+        funded_amount: 0,
+        status: 'pending',
+        stock_type,
+        notes,
+        // Proxy-specific fields
+        submitted_by_proxy: true,
+        proxy_user_id: user.id,
+        proxy_commercial_partner_id: cpLink.commercial_partner_id,
+        proxy_authorization_doc_id,
+        created_at: now,
+        updated_at: now
+      })
+      .select()
+      .single()
+
+    if (subError) {
+      console.error('Error creating proxy subscription:', subError)
+      // Check if it's a missing column error
+      if (subError.message?.includes('submitted_by_proxy')) {
+        // Fallback without proxy fields if columns don't exist yet
+        const { data: fallbackSub, error: fallbackError } = await serviceSupabase
+          .from('subscriptions')
+          .insert({
+            deal_id,
+            vehicle_id: deal.vehicle_id,
+            investor_id: client_investor_id,
+            commitment,
+            funded_amount: 0,
+            status: 'pending',
+            stock_type,
+            notes: `${notes || ''}\n[Submitted by proxy: ${commercialPartner?.name} via ${user.email}]`.trim(),
+            created_at: now,
+            updated_at: now
+          })
+          .select()
+          .single()
+
+        if (fallbackError) {
+          return NextResponse.json({ error: 'Failed to create subscription' }, { status: 500 })
+        }
+
+        // Log audit event with proxy info
+        await serviceSupabase.from('audit_logs').insert({
+          user_id: user.id,
+          action: 'proxy_subscription_created',
+          entity_type: 'subscription',
+          entity_id: fallbackSub.id,
+          details: {
+            deal_id,
+            deal_name: deal.name,
+            client_investor_id,
+            client_name: clientInvestor.name,
+            commitment,
+            commercial_partner_id: cpLink.commercial_partner_id,
+            commercial_partner_name: commercialPartner?.name
+          },
+          created_at: now
+        })
+
+        return NextResponse.json({
+          success: true,
+          subscription_id: fallbackSub.id,
+          message: `Subscription submitted on behalf of ${clientInvestor.name}`,
+          proxy_mode: true,
+          client: {
+            id: client_investor_id,
+            name: clientInvestor.name
+          },
+          deal: {
+            id: deal_id,
+            name: deal.name
+          },
+          commitment
+        })
+      }
+      return NextResponse.json({ error: 'Failed to create subscription' }, { status: 500 })
+    }
+
+    // Log audit event
+    await serviceSupabase.from('audit_logs').insert({
+      user_id: user.id,
+      action: 'proxy_subscription_created',
+      entity_type: 'subscription',
+      entity_id: subscription.id,
+      details: {
+        deal_id,
+        deal_name: deal.name,
+        client_investor_id,
+        client_name: clientInvestor.name,
+        commitment,
+        commercial_partner_id: cpLink.commercial_partner_id,
+        commercial_partner_name: commercialPartner?.name,
+        proxy_authorization_doc_id
+      },
+      created_at: now
+    })
+
+    // Create notification for client investor's users
+    const { data: clientUsers } = await serviceSupabase
+      .from('investor_users')
+      .select('user_id')
+      .eq('investor_id', client_investor_id)
+
+    if (clientUsers && clientUsers.length > 0) {
+      const notifications = clientUsers.map(u => ({
+        user_id: u.user_id,
+        investor_id: client_investor_id,
+        title: 'Subscription Submitted',
+        message: `${commercialPartner?.name} has submitted a subscription of ${commitment.toLocaleString()} for ${deal.name} on your behalf.`,
+        link: '/versoholdings/tasks',
+        metadata: {
+          type: 'proxy_subscription',
+          subscription_id: subscription.id,
+          deal_id,
+          commercial_partner_id: cpLink.commercial_partner_id
+        }
+      }))
+
+      await serviceSupabase.from('investor_notifications').insert(notifications)
+    }
+
+    return NextResponse.json({
+      success: true,
+      subscription_id: subscription.id,
+      message: `Subscription submitted on behalf of ${clientInvestor.name}`,
+      proxy_mode: true,
+      client: {
+        id: client_investor_id,
+        name: clientInvestor.name,
+        type: clientInvestor.investor_type
+      },
+      deal: {
+        id: deal_id,
+        name: deal.name
+      },
+      commitment,
+      status: 'pending'
+    })
+  } catch (error) {
+    console.error('Unexpected error in POST /api/commercial-partners/proxy-subscribe:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}
+
+/**
+ * GET /api/commercial-partners/proxy-subscribe
+ * Get list of clients available for proxy subscription
+ */
+export async function GET(request: Request) {
+  const supabase = await createClient()
+  const serviceSupabase = createServiceClient()
+
+  try {
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    if (userError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Verify user is a commercial partner with proxy capability
+    const { data: cpLinks } = await serviceSupabase
+      .from('commercial_partner_users')
+      .select(`
+        commercial_partner_id,
+        can_execute_for_clients,
+        commercial_partners (
+          id,
+          name,
+          status
+        )
+      `)
+      .eq('user_id', user.id)
+      .eq('can_execute_for_clients', true)
+
+    if (!cpLinks || cpLinks.length === 0) {
+      return NextResponse.json({
+        error: 'Forbidden',
+        message: 'You are not authorized to execute subscriptions for clients.'
+      }, { status: 403 })
+    }
+
+    const cpId = cpLinks[0].commercial_partner_id
+
+    // Get clients associated with this commercial partner
+    // (Clients are investors who have this CP as their commercial partner)
+    const { data: clients } = await serviceSupabase
+      .from('investors')
+      .select(`
+        id,
+        name,
+        investor_type,
+        kyc_status,
+        entity_type
+      `)
+      .eq('commercial_partner_id', cpId)
+      .eq('status', 'active')
+      .order('name')
+
+    return NextResponse.json({
+      commercial_partner_id: cpId,
+      commercial_partner_name: (cpLinks[0].commercial_partners as any)?.name,
+      clients: clients || [],
+      can_execute_for_clients: true
+    })
+  } catch (error) {
+    console.error('Unexpected error in GET /api/commercial-partners/proxy-subscribe:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}

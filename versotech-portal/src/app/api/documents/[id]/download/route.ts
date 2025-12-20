@@ -49,7 +49,7 @@ export async function GET(
     }
 
     // Permission check: Staff can access all documents, investors can only access their own
-    const isStaff = profile.role.startsWith('staff_')
+    const isStaff = profile.role.startsWith('staff_') || profile.role === 'ceo'
 
     if (!isStaff) {
       // Get investor IDs for this user
@@ -91,8 +91,8 @@ export async function GET(
       // Check access via deal membership
       if (!hasAccess && document.deal_id) {
         const { data: dealMember } = await supabase
-          .from('deal_members')
-          .select('id')
+          .from('deal_memberships')
+          .select('deal_id')
           .eq('deal_id', document.deal_id)
           .in('investor_id', investorIds)
           .maybeSingle()

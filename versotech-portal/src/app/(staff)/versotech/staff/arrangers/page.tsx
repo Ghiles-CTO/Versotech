@@ -50,7 +50,7 @@ export default async function ArrangersPage() {
     .eq('id', user.id)
     .single()
 
-  if (!profile || !profile.role.startsWith('staff_')) {
+  if (!profile || !(profile.role.startsWith('staff_') || profile.role === 'ceo')) {
     redirect('/versotech/staff')
   }
 

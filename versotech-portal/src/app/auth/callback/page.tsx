@@ -105,12 +105,13 @@ function AuthCallbackContent() {
       console.log('[auth-callback] Profile ready:', profile)
 
       // Determine if user is staff
-      const isStaff = ['staff_admin', 'staff_ops', 'staff_rm'].includes(profile.role)
+      const isStaff = ['staff_admin', 'staff_ops', 'staff_rm', 'ceo'].includes(profile.role)
 
       // Check if password needs to be set (for invited users)
       if (profile.password_set === false) {
         console.log('[auth-callback] Password not set, redirecting to set-password page...')
-        const setPasswordUrl = isStaff ? '/versotech/set-password' : '/versoholdings/set-password'
+        // Unified set-password page
+        const setPasswordUrl = '/versotech_main/set-password'
 
         setStatus('success')
         setMessage('Please set your password to continue...')
@@ -121,13 +122,14 @@ function AuthCallbackContent() {
         return
       }
 
-      // Redirect to appropriate portal based on role
-      const redirectUrl = isStaff ? '/versotech/staff' : '/versoholdings/dashboard'
+      // Unified portal: all users go to the same dashboard
+      // Layout handles persona-based access control
+      const redirectUrl = '/versotech_main/dashboard'
 
-      console.log('[auth-callback] Redirecting to:', redirectUrl, 'for role:', profile.role)
+      console.log('[auth-callback] Redirecting to unified portal:', redirectUrl, 'for role:', profile.role)
 
       setStatus('success')
-      setMessage(`Email verified! Redirecting to ${isStaff ? 'Staff' : 'Investor'} portal...`)
+      setMessage('Email verified! Redirecting to portal...')
 
       setTimeout(() => {
         window.location.href = redirectUrl
@@ -147,8 +149,8 @@ function AuthCallbackContent() {
       setStatus('error')
       setMessage(errorDescription || 'Authentication failed. Please try again.')
       setTimeout(() => {
-        const loginUrl = portalContext === 'staff' ? '/versotech/login' : '/versoholdings/login'
-        router.push(`${loginUrl}?error=auth_failed`)
+        // Unified login page
+        router.push('/versotech_main/login?error=auth_failed')
       }, 2000)
       return
     }
@@ -202,8 +204,7 @@ function AuthCallbackContent() {
           setStatus('error')
           setMessage(`Verification error: ${exchangeError.message}`)
           setTimeout(() => {
-            const loginUrl = portalContext === 'staff' ? '/versotech/login' : '/versoholdings/login'
-            router.push(`${loginUrl}?error=auth_failed`)
+            router.push('/versotech_main/login?error=auth_failed')
           }, 3000)
           return
         }
@@ -265,8 +266,7 @@ function AuthCallbackContent() {
           setStatus('error')
           setMessage('Verification failed. The link may have expired or already been used.')
           setTimeout(() => {
-            const loginUrl = portalContext === 'staff' ? '/versotech/login' : '/versoholdings/login'
-            router.push(`${loginUrl}?error=auth_failed`)
+            router.push('/versotech_main/login?error=auth_failed')
           }, 3000)
         }
       }, 5000) // 5 second timeout

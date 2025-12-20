@@ -52,7 +52,7 @@ export async function GET(request: Request) {
         .eq('user_id', user.id)
 
       investorIds = investorLinks?.map(link => link.investor_id) || []
-    } else if (['staff_admin', 'staff_ops', 'staff_rm'].includes(profile.role)) {
+    } else if (['staff_admin', 'staff_ops', 'staff_rm', 'ceo'].includes(profile.role)) {
       // Staff can view cashflows for a specific investor or vehicle via query params
       const investorId = searchParams.get('investor_id')
 
@@ -210,7 +210,7 @@ export async function POST(request: Request) {
       .eq('id', user.id)
       .single()
 
-    if (!profile || !['staff_admin', 'staff_ops'].includes(profile.role)) {
+    if (!profile || !['staff_admin', 'staff_ops', 'ceo'].includes(profile.role)) {
       return NextResponse.json(
         { error: 'Staff access required' },
         { status: 403 }

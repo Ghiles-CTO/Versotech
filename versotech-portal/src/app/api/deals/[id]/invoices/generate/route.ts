@@ -37,7 +37,7 @@ export async function POST(
       .eq('id', user.id)
       .single()
 
-    if (!profile || !['staff_admin', 'staff_ops', 'staff_rm'].includes(profile.role)) {
+    if (!profile || !['staff_admin', 'staff_ops', 'staff_rm', 'ceo'].includes(profile.role)) {
       return NextResponse.json(
         { error: 'Staff access required to generate invoices' },
         { status: 403 }

@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
       .eq('id', user.id)
       .single()
 
-    const isStaff = profile?.role && ['staff_admin', 'staff_ops', 'staff_rm'].includes(profile.role)
+    const isStaff = profile?.role && ['staff_admin', 'staff_ops', 'staff_rm', 'ceo'].includes(profile.role)
     if (!isStaff) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }

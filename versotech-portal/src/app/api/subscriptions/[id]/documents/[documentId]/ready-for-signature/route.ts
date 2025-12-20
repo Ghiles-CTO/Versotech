@@ -1,5 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { z } from 'zod'
+
+// Schema for multi-signatory support
+const requestSchema = z.object({
+  signatory_member_ids: z.array(z.string().uuid()).optional(),
+  // If no signatory_member_ids provided, falls back to investor email (backwards compatible)
+}).optional()
 
 export async function POST(
   request: NextRequest,
@@ -21,9 +28,24 @@ export async function POST(
     .eq('id', user.id)
     .single()
 
-  const isStaff = profile?.role?.startsWith('staff_')
+  const isStaff = profile?.role?.startsWith('staff_') || profile?.role === 'ceo'
   if (!isStaff) {
     return NextResponse.json({ error: 'Staff access required' }, { status: 403 })
+  }
+
+  // Parse request body for signatory selection
+  let body: { signatory_member_ids?: string[] } = {}
+  try {
+    const rawBody = await request.text()
+    if (rawBody) {
+      body = JSON.parse(rawBody)
+      const validation = requestSchema.safeParse(body)
+      if (!validation.success) {
+        return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
+      }
+    }
+  } catch {
+    // Empty body is OK - use default behavior
   }
 
   const serviceSupabase = createServiceClient()
@@ -96,36 +118,82 @@ export async function POST(
     return NextResponse.json({ error: 'Failed to generate document URL' }, { status: 500 })
   }
 
-  // Create TWO signature requests (investor + staff)
+  // Determine signatories
+  type Signatory = { id: string; full_name: string; email: string }
+  let signatories: Signatory[] = []
+
+  if (body.signatory_member_ids && body.signatory_member_ids.length > 0) {
+    // Multi-signatory mode: fetch selected members
+    const { data: members, error: membersError } = await serviceSupabase
+      .from('investor_members')
+      .select('id, full_name, email')
+      .in('id', body.signatory_member_ids)
+      .eq('investor_id', subscription.investor_id)
+      .eq('is_active', true)
+
+    if (membersError || !members || members.length === 0) {
+      return NextResponse.json({
+        error: 'Selected signatories not found',
+        details: 'Could not find the specified signatory members'
+      }, { status: 400 })
+    }
+
+    signatories = members.map(m => ({
+      id: m.id,
+      full_name: m.full_name,
+      email: m.email
+    }))
+  } else {
+    // Fallback: use investor's primary email (backwards compatible)
+    signatories = [{
+      id: 'investor_primary',
+      full_name: subscription.investor.legal_name || subscription.investor.display_name,
+      email: subscription.investor.email
+    }]
+  }
+
+  // Create signature requests for each signatory
   try {
-    // 1. Investor signature request
-    // Note: No workflow_run_id because this is a manually uploaded document, not n8n generated
-    const investorSigPayload = {
-      investor_id: subscription.investor_id,
-      signer_email: subscription.investor.email,
-      signer_name: subscription.investor.legal_name || subscription.investor.display_name,
-      document_type: 'subscription',
-      google_drive_url: urlData.signedUrl, // Use Supabase signed URL
-      signer_role: 'investor',
-      signature_position: 'party_a',
-      subscription_id: subscriptionId, // Link to subscription instead of workflow
-      document_id: documentId // Link to the actual document
+    const signerPositions = ['party_a', 'party_a_2', 'party_a_3', 'party_a_4', 'party_a_5']
+    const investorSignatureRequests = []
+
+    for (let i = 0; i < signatories.length; i++) {
+      const signatory = signatories[i]
+      const position = signerPositions[i] || `party_a_${i + 1}`
+
+      const investorSigPayload = {
+        investor_id: subscription.investor_id,
+        signer_email: signatory.email,
+        signer_name: signatory.full_name,
+        document_type: 'subscription',
+        google_drive_url: urlData.signedUrl,
+        signer_role: 'investor',
+        signature_position: position,
+        subscription_id: subscriptionId,
+        document_id: documentId,
+        member_id: signatory.id !== 'investor_primary' ? signatory.id : undefined
+      }
+
+      const investorSigResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/signature/request`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(investorSigPayload)
+      })
+
+      if (!investorSigResponse.ok) {
+        const errorText = await investorSigResponse.text()
+        throw new Error(`Failed to create investor signature request for ${signatory.full_name}: ${errorText}`)
+      }
+
+      const investorSigData = await investorSigResponse.json()
+      investorSignatureRequests.push({
+        signatory: signatory.full_name,
+        email: signatory.email,
+        ...investorSigData
+      })
     }
 
-    const investorSigResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/signature/request`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(investorSigPayload)
-    })
-
-    if (!investorSigResponse.ok) {
-      const errorText = await investorSigResponse.text()
-      throw new Error(`Failed to create investor signature request: ${errorText}`)
-    }
-
-    const investorSigData = await investorSigResponse.json()
-
-    // 2. Staff signature request
+    // Staff/Admin signature request (countersignature)
     const staffSigPayload = {
       investor_id: subscription.investor_id,
       signer_email: 'cto@versoholdings.com',
@@ -134,8 +202,8 @@ export async function POST(
       google_drive_url: urlData.signedUrl,
       signer_role: 'admin',
       signature_position: 'party_b',
-      subscription_id: subscriptionId, // Link to subscription instead of workflow
-      document_id: documentId // Link to the actual document
+      subscription_id: subscriptionId,
+      document_id: documentId
     }
 
     const staffSigResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/signature/request`, {
@@ -160,19 +228,17 @@ export async function POST(
       })
       .eq('id', documentId)
 
-    // Tasks are created automatically by createSignatureRequest() in signature/client.ts
-    // No need for manual task creation here - it would create duplicates
-
-    console.log('✅ Dual signature requests created for subscription pack:', {
+    console.log('✅ Multi-signatory signature requests created for subscription pack:', {
       document_id: documentId,
-      investor_request: investorSigData.signature_request_id,
+      investor_requests: investorSignatureRequests.length,
       staff_request: staffSigData.signature_request_id
     })
 
     return NextResponse.json({
       success: true,
-      investor_signature_request: investorSigData,
-      staff_signature_request: staffSigData
+      investor_signature_requests: investorSignatureRequests,
+      staff_signature_request: staffSigData,
+      total_signatories: signatories.length + 1 // investors + staff
     })
 
   } catch (error) {

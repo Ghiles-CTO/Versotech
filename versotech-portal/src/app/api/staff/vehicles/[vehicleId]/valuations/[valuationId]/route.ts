@@ -25,7 +25,7 @@ async function requireStaff() {
     .eq('id', user.id)
     .single()
 
-  if (!profile || !['staff_admin', 'staff_ops', 'staff_rm'].includes(profile.role)) {
+  if (!profile || !['staff_admin', 'staff_ops', 'staff_rm', 'ceo'].includes(profile.role)) {
     return { error: NextResponse.json({ error: 'Staff access required' }, { status: 403 }) }
   }
 

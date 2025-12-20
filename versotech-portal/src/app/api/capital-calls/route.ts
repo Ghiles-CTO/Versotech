@@ -33,7 +33,7 @@ export async function POST(request: Request) {
       .eq('id', user.id)
       .single()
 
-    if (!profile || !['staff_admin', 'staff_ops'].includes(profile.role)) {
+    if (!profile || !['staff_admin', 'staff_ops', 'ceo'].includes(profile.role)) {
       return NextResponse.json(
         { error: 'Staff access required' },
         { status: 403 }

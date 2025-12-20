@@ -439,7 +439,7 @@ async function fetchStaffActivity(supabase: any) {
   const { data: staffProfiles } = await supabase
     .from('profiles')
     .select('id, display_name, email')
-    .in('role', ['staff_admin', 'staff_ops', 'staff_rm'])
+    .in('role', ['staff_admin', 'staff_ops', 'staff_rm', 'ceo'])
 
   if (!staffProfiles?.length) {
     return []

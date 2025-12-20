@@ -28,7 +28,7 @@ export async function GET(
       .eq('id', user.id)
       .single()
 
-    const isStaff = profile?.role?.startsWith('staff_')
+    const isStaff = profile?.role?.startsWith('staff_') || profile?.role === 'ceo'
     if (!isStaff) {
       return NextResponse.json({ error: 'Staff access required' }, { status: 403 })
     }
@@ -125,7 +125,7 @@ export async function POST(
       .eq('id', user.id)
       .single()
 
-    const isStaff = profile?.role?.startsWith('staff_')
+    const isStaff = profile?.role?.startsWith('staff_') || profile?.role === 'ceo'
     if (!isStaff) {
       return NextResponse.json({ error: 'Staff access required' }, { status: 403 })
     }
@@ -214,4 +214,3 @@ export async function POST(
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
-

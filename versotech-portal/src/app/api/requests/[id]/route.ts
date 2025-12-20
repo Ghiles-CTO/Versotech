@@ -54,7 +54,7 @@ export async function GET(
       .eq('id', user.id)
       .single()
 
-    const isStaff = profile?.role?.startsWith('staff_')
+    const isStaff = profile?.role?.startsWith('staff_') || profile?.role === 'ceo'
     const isCreator = ticket.created_by === user.id
 
     if (!isStaff && !isCreator) {
@@ -120,7 +120,7 @@ export async function PATCH(
       .eq('id', user.id)
       .single()
 
-    if (!profile || !profile.role.startsWith('staff_')) {
+    if (!profile || !(profile.role.startsWith('staff_') || profile.role === 'ceo')) {
       return NextResponse.json({ error: 'Staff access required' }, { status: 403 })
     }
 

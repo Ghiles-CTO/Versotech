@@ -6,7 +6,7 @@ import { getAppUrl } from '@/lib/signature/token'
 // Input validation schema
 const inviteStaffSchema = z.object({
   email: z.string().email('Invalid email address'),
-  role: z.enum(['staff_admin', 'staff_ops', 'staff_rm']),
+  role: z.enum(['staff_admin', 'staff_ops', 'staff_rm', 'ceo']),
   display_name: z.string().min(2, 'Display name must be at least 2 characters'),
   title: z.string().optional(),
   is_super_admin: z.boolean().optional().default(false),
@@ -100,10 +100,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Grant default permissions based on role
-    const defaultPermissions = {
+    const defaultPermissions: Record<string, string[]> = {
       staff_admin: ['manage_investors', 'manage_deals', 'trigger_workflows', 'view_financials'],
       staff_ops: ['manage_investors', 'trigger_workflows'],
       staff_rm: ['manage_investors', 'view_financials'],
+      ceo: ['manage_investors', 'manage_deals', 'trigger_workflows', 'view_financials', 'super_admin'],
     }
 
     const permissions = [...defaultPermissions[validatedData.role]]

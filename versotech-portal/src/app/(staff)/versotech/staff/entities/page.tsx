@@ -9,7 +9,7 @@ export const revalidate = 0
 export default async function EntitiesPage() {
   // Check authentication first
   const user = await getCurrentUser()
-  if (!user || !user.role.startsWith('staff_')) {
+  if (!user || !(user.role.startsWith('staff_') || user.role === 'ceo')) {
     redirect('/versotech/login')
   }
 

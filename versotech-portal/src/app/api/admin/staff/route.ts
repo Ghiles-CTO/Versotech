@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
         updated_at,
         password_set
       `)
-      .in('role', ['staff_admin', 'staff_ops', 'staff_rm'])
+      .in('role', ['staff_admin', 'staff_ops', 'staff_rm', 'ceo'])
       .order('created_at', { ascending: false })
 
     if (staffError) {

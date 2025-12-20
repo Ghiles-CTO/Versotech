@@ -30,7 +30,7 @@ export async function GET(
       .eq('id', user.id)
       .single()
 
-    const isStaff = currentProfile?.role && ['staff_admin', 'staff_ops', 'staff_rm'].includes(currentProfile.role)
+    const isStaff = currentProfile?.role && ['staff_admin', 'staff_ops', 'staff_rm', 'ceo'].includes(currentProfile.role)
     const isOwnProfile = user.id === userId
 
     if (!isOwnProfile && !isStaff) {

@@ -12,7 +12,7 @@ async function getAuthenticatedStaff(supabase: any) {
   }
 
   const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
-  if (!profile?.role?.startsWith('staff_')) {
+  if (!(profile?.role?.startsWith('staff_') || profile?.role === 'ceo')) {
     return { user: null, error: new Error('Staff access required'), role: null }
   }
   return { user, error: null, role: profile.role } as const

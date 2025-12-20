@@ -187,7 +187,7 @@ export async function GET() {
     let reconciliationCount = 0
     let feesCount = 0
 
-    if (userRole.startsWith('staff_')) {
+    if (userRole.startsWith('staff_') || userRole === 'ceo') {
       const [
         requestsResult,
         approvalsResult,
@@ -254,7 +254,7 @@ export async function GET() {
     }
 
     const baseTotal = taskCount + messageCount + notificationCount
-    const totalUnread = userRole.startsWith('staff_')
+    const totalUnread = userRole.startsWith('staff_') || userRole === 'ceo'
       ? baseTotal + requestCount + approvalCount
       : baseTotal
 

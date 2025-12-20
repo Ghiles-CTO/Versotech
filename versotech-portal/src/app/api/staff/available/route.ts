@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
     const { data: staffMembers, error: staffError } = await supabase
       .from('profiles')
       .select('id, display_name, email, role')
-      .in('role', ['staff_admin', 'staff_ops', 'staff_rm'])
+      .in('role', ['staff_admin', 'staff_ops', 'staff_rm', 'ceo'])
       .order('display_name')
 
     if (staffError) {

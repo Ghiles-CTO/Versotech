@@ -39,7 +39,7 @@ export async function GET(
     .eq('id', user.id)
     .single()
 
-  const isStaff = profile?.role?.startsWith('staff_') ?? false
+  const isStaff = profile?.role?.startsWith('staff_') || profile?.role === 'ceo'
 
   const { data: investorLinks } = await supabase
     .from('investor_users')
@@ -113,7 +113,7 @@ export async function POST(
     .eq('id', user.id)
     .single()
 
-  if (!profile || !profile.role?.startsWith('staff_')) {
+  if (!profile || !(profile.role?.startsWith('staff_') || profile.role === 'ceo')) {
     return NextResponse.json(
       { error: 'Only staff members can manage data room access' },
       { status: 403 }
@@ -260,7 +260,7 @@ export async function DELETE(
     .eq('id', user.id)
     .single()
 
-  if (!profile || !profile.role?.startsWith('staff_')) {
+  if (!profile || !(profile.role?.startsWith('staff_') || profile.role === 'ceo')) {
     return NextResponse.json(
       { error: 'Only staff members can revoke data room access' },
       { status: 403 }

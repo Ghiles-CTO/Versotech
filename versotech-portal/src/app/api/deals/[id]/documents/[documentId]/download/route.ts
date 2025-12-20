@@ -49,7 +49,7 @@ export async function GET(
       .eq('id', user.id)
       .single()
 
-    const isStaff = profile?.role?.startsWith('staff_')
+    const isStaff = profile?.role?.startsWith('staff_') || profile?.role === 'ceo'
 
     if (!isStaff) {
       // Check if document is visible to investors

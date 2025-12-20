@@ -74,7 +74,7 @@ export function InvestorContacts({
           <ul className="p-2 space-y-1">
             {filteredConversations.map(conversation => {
               const isActive = conversation.id === activeConversationId
-              const staffParticipant = conversation.participants.find(p => (p.role || '').startsWith('staff_'))
+              const staffParticipant = conversation.participants.find(p => (p.role || '').startsWith('staff_') || p.role === 'ceo')
               const contactName = staffParticipant?.displayName || staffParticipant?.email || conversation.subject || 'Verso Team'
               const additionalParticipants = conversation.participants.length > 2 ? ` +${conversation.participants.length - 2}` : ''
               const timestamp = conversation.lastMessageAt || conversation.createdAt
@@ -155,6 +155,5 @@ export function InvestorContacts({
     </aside>
   )
 }
-
 
 
