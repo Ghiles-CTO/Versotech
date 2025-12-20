@@ -3,8 +3,7 @@
 import { Suspense, useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Card, CardContent } from '@/components/ui/card'
-import { Loader2, Users, Briefcase, Building2, HandshakeIcon, Scale, UserCog } from 'lucide-react'
+import { Loader2, Users, Briefcase, Building2, HandshakeIcon, Scale } from 'lucide-react'
 
 // Lazy load user type content components
 import dynamic from 'next/dynamic'
@@ -33,40 +32,36 @@ const ArrangersContent = dynamic(
   }
 )
 
+const PartnersContent = dynamic(
+  () => import('./partners-content'),
+  {
+    loading: () => <LoadingState label="partners" />,
+    ssr: false
+  }
+)
+
+const CommercialPartnersContent = dynamic(
+  () => import('./commercial-partners-content'),
+  {
+    loading: () => <LoadingState label="commercial partners" />,
+    ssr: false
+  }
+)
+
+const LawyersContent = dynamic(
+  () => import('./lawyers-content'),
+  {
+    loading: () => <LoadingState label="lawyers" />,
+    ssr: false
+  }
+)
+
 function LoadingState({ label }: { label: string }) {
   return (
     <div className="flex items-center justify-center py-16">
       <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       <span className="ml-3 text-muted-foreground">Loading {label}...</span>
     </div>
-  )
-}
-
-function ComingSoon({ type }: { type: string }) {
-  const icons: Record<string, React.ReactNode> = {
-    partners: <HandshakeIcon className="h-12 w-12 text-muted-foreground/50" />,
-    'commercial-partners': <Building2 className="h-12 w-12 text-muted-foreground/50" />,
-    lawyers: <Scale className="h-12 w-12 text-muted-foreground/50" />,
-  }
-
-  const labels: Record<string, string> = {
-    partners: 'Partner Management',
-    'commercial-partners': 'Commercial Partner Management',
-    lawyers: 'Lawyer Management',
-  }
-
-  return (
-    <Card>
-      <CardContent className="flex flex-col items-center justify-center py-16">
-        {icons[type] || <UserCog className="h-12 w-12 text-muted-foreground/50" />}
-        <h3 className="mt-4 text-lg font-medium text-foreground">{labels[type] || 'Management'}</h3>
-        <p className="mt-2 text-sm text-muted-foreground text-center max-w-md">
-          This feature is coming soon. {type === 'partners' && 'Partners will be able to view shared transactions and co-invest in deals.'}
-          {type === 'commercial-partners' && 'Commercial partners will manage client relationships and proxy subscriptions.'}
-          {type === 'lawyers' && 'Legal counsel will access assigned deals and manage escrow accounts.'}
-        </p>
-      </CardContent>
-    </Card>
   )
 }
 
@@ -135,15 +130,21 @@ function UsersPageContent() {
         </TabsContent>
 
         <TabsContent value="partners" className="mt-6">
-          <ComingSoon type="partners" />
+          <Suspense fallback={<LoadingState label="partners" />}>
+            <PartnersContent />
+          </Suspense>
         </TabsContent>
 
         <TabsContent value="commercial-partners" className="mt-6">
-          <ComingSoon type="commercial-partners" />
+          <Suspense fallback={<LoadingState label="commercial partners" />}>
+            <CommercialPartnersContent />
+          </Suspense>
         </TabsContent>
 
         <TabsContent value="lawyers" className="mt-6">
-          <ComingSoon type="lawyers" />
+          <Suspense fallback={<LoadingState label="lawyers" />}>
+            <LawyersContent />
+          </Suspense>
         </TabsContent>
       </Tabs>
     </div>
