@@ -108,13 +108,13 @@ export async function POST(request: Request, { params }: RouteParams) {
       }, { status: 400 })
     }
 
-    // Check if subscription already exists
+    // Check if subscription already exists (use maybeSingle as subscription might not exist)
     const { data: existingSubscription } = await serviceSupabase
       .from('subscriptions')
       .select('id')
       .eq('vehicle_id', vehicleId)
       .eq('investor_id', investorId)
-      .single()
+      .maybeSingle()
 
     if (existingSubscription) {
       return NextResponse.json({
@@ -124,12 +124,13 @@ export async function POST(request: Request, { params }: RouteParams) {
 
     // Ensure deal membership exists (direct subscribe flow)
     // This is critical for journey tracking per Phase 3 plan
+    // Use maybeSingle as membership might not exist yet
     const { data: existingMembership } = await serviceSupabase
       .from('deal_memberships')
       .select('*')
       .eq('deal_id', dealId)
       .eq('user_id', user.id)
-      .single()
+      .maybeSingle()
 
     if (!existingMembership) {
       // Create membership with viewed_at only (direct subscribe skips optional stages)

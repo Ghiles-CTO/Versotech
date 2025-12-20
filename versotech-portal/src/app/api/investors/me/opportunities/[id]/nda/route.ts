@@ -35,12 +35,13 @@ export async function POST(request: Request, { params }: RouteParams) {
     const investorId = investorLinks[0].investor_id
 
     // Check membership exists and interest is confirmed (use user_id for PK)
+    // Use maybeSingle as membership might not exist
     const { data: membership } = await serviceSupabase
       .from('deal_memberships')
       .select('*')
       .eq('deal_id', dealId)
       .eq('user_id', user.id)
-      .single()
+      .maybeSingle()
 
     if (!membership) {
       return NextResponse.json({ error: 'Not a member of this deal' }, { status: 403 })

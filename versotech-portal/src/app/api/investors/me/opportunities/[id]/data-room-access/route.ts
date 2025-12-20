@@ -34,12 +34,13 @@ export async function POST(request: Request, { params }: RouteParams) {
     const investorId = investorLinks[0].investor_id
 
     // Check membership (use user_id for PK)
+    // Use maybeSingle as membership might not exist
     const { data: membership } = await serviceSupabase
       .from('deal_memberships')
       .select('*')
       .eq('deal_id', dealId)
       .eq('user_id', user.id)
-      .single()
+      .maybeSingle()
 
     if (!membership) {
       return NextResponse.json({ error: 'Not a member of this deal' }, { status: 403 })
@@ -179,7 +180,7 @@ export async function GET(request: Request, { params }: RouteParams) {
 
     const investorId = investorLinks[0].investor_id
 
-    // Get access record
+    // Get access record (use maybeSingle as access might not exist)
     const { data: accessRecord } = await serviceSupabase
       .from('deal_data_room_access')
       .select('*')
@@ -188,7 +189,7 @@ export async function GET(request: Request, { params }: RouteParams) {
       .is('revoked_at', null)
       .order('granted_at', { ascending: false })
       .limit(1)
-      .single()
+      .maybeSingle()
 
     if (!accessRecord) {
       return NextResponse.json({

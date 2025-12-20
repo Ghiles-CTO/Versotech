@@ -32,12 +32,13 @@ export async function GET(request: Request, { params }: RouteParams) {
     const investorId = investorLinks[0].investor_id
 
     // Get investor's membership for this deal first (security check)
+    // Use maybeSingle as user might not have a membership yet
     const { data: membership } = await serviceSupabase
       .from('deal_memberships')
       .select('*')
       .eq('deal_id', dealId)
       .eq('user_id', user.id)
-      .single()
+      .maybeSingle()
 
     const effectiveInvestorId = membership?.investor_id || investorId
 
@@ -69,7 +70,7 @@ export async function GET(request: Request, { params }: RouteParams) {
       return NextResponse.json({ error: 'You do not have access to this opportunity' }, { status: 403 })
     }
 
-    // Get data room access
+    // Get data room access (use maybeSingle as record might not exist)
     const { data: dataRoomAccess } = await serviceSupabase
       .from('deal_data_room_access')
       .select('*')
@@ -78,9 +79,9 @@ export async function GET(request: Request, { params }: RouteParams) {
       .is('revoked_at', null)
       .order('granted_at', { ascending: false })
       .limit(1)
-      .single()
+      .maybeSingle()
 
-    // Get subscription if exists
+    // Get subscription if exists (use maybeSingle as subscription might not exist)
     const vehicleId = deal.vehicle_id
     let subscription = null
     if (vehicleId) {
@@ -102,7 +103,7 @@ export async function GET(request: Request, { params }: RouteParams) {
         .eq('investor_id', effectiveInvestorId)
         .order('created_at', { ascending: false })
         .limit(1)
-        .single()
+        .maybeSingle()
 
       subscription = sub
     }

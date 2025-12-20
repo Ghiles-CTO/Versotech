@@ -190,7 +190,7 @@ export default function OpportunityDetailPage() {
   const dealId = params.id as string
   const actionParam = searchParams.get('action')
 
-  const { isInvestor } = usePersona()
+  const { isInvestor, isLoading: personaLoading } = usePersona()
   const [opportunity, setOpportunity] = useState<Opportunity | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -215,10 +215,10 @@ export default function OpportunityDetailPage() {
         })
 
         const response = await fetch(`/api/investors/me/opportunities/${dealId}`)
-        if (!response.ok) {
-          throw new Error('Failed to fetch opportunity')
-        }
         const data = await response.json()
+        if (!response.ok) {
+          throw new Error(data.error || `Failed to fetch opportunity (${response.status})`)
+        }
         setOpportunity(data.opportunity)
 
         // Handle action param
@@ -345,6 +345,17 @@ export default function OpportunityDetailPage() {
     } catch (err) {
       console.error('Error downloading document:', err)
     }
+  }
+
+  // Show loading while persona context is initializing
+  if (personaLoading) {
+    return (
+      <div className="p-6 space-y-6">
+        <Skeleton className="h-8 w-48" />
+        <Skeleton className="h-24 w-full" />
+        <Skeleton className="h-64 w-full" />
+      </div>
+    )
   }
 
   if (!isInvestor) {
