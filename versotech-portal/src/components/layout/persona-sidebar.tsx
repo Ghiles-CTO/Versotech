@@ -140,8 +140,8 @@ const PERSONA_NAV_ITEMS: Record<string, NavItem[]> = {
 function getNavForPersona(persona: Persona): NavItem[] {
   const baseItems = PERSONA_NAV_ITEMS[persona.persona_type] || []
 
-  // Add CEO extras for staff with ceo role
-  if (persona.persona_type === 'staff' && persona.role_in_entity === 'ceo') {
+  // Add CEO extras for staff with ceo or staff_admin role
+  if (persona.persona_type === 'staff' && (persona.role_in_entity === 'ceo' || persona.role_in_entity === 'staff_admin')) {
     return [...baseItems, ...PERSONA_NAV_ITEMS.staff_ceo_extras]
   }
 

@@ -1,6 +1,7 @@
 'use client'
 
 import { usePersona } from '@/contexts/persona-context'
+import { useTheme } from '@/components/theme-provider'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -37,9 +38,10 @@ const PERSONA_COLORS: Record<string, string> = {
 
 export default function UnifiedDashboardPage() {
   const { activePersona, personas, isCEO } = usePersona()
+  const { theme } = useTheme()
 
-  // Theme based on ACTIVE persona only
-  const isDark = activePersona?.persona_type === 'staff'
+  // Use actual theme system (user-controlled via toggle in header)
+  const isDark = theme === 'staff-dark'
 
   if (!activePersona) {
     return (

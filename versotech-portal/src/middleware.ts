@@ -531,8 +531,10 @@ export async function middleware(request: NextRequest) {
         console.warn('[middleware] Persona lookup failed, falling back to profile role:', personaError.message)
       } else if (Array.isArray(personas)) {
         personaTypes = new Set(personas.map((persona: any) => persona.persona_type))
+        // CEO check: staff persona with ceo or staff_admin role
         isCEO = personas.some(
-          (persona: any) => persona.persona_type === 'staff' && persona.role_in_entity === 'ceo'
+          (persona: any) => persona.persona_type === 'staff' &&
+            (persona.role_in_entity === 'ceo' || persona.role_in_entity === 'staff_admin')
         )
       }
 
@@ -554,7 +556,8 @@ export async function middleware(request: NextRequest) {
         if (fallbackPersona) {
           personaTypes.add(fallbackPersona)
         }
-        if (effectiveProfile.role === 'ceo') {
+        // CEO fallback: ceo or staff_admin role
+        if (effectiveProfile.role === 'ceo' || effectiveProfile.role === 'staff_admin') {
           isCEO = true
         }
       }

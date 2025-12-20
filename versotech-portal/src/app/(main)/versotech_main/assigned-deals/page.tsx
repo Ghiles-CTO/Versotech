@@ -433,7 +433,7 @@ export default function AssignedDealsPage() {
                       </TableCell>
                       <TableCell>
                         <div className="font-medium">
-                          {formatCurrency(deal.target_amount, deal.currency)}
+                          {formatCurrency(deal.target_amount)}
                         </div>
                       </TableCell>
                       <TableCell>
