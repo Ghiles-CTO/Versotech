@@ -162,7 +162,7 @@ export default function MyPartnersPage() {
           .select(`
             referred_by_entity_id,
             investor_id,
-            deal:deal_id (id, name, currency)
+            deal:deal_id (id, name, currency, created_at)
           `)
           .in('deal_id', dealIds)
           .eq('referred_by_entity_type', 'partner')
@@ -204,16 +204,22 @@ export default function MyPartnersPage() {
         // Process partners with stats
         const processedPartners: Partner[] = (partnersData || []).map((p: any) => {
           const partnerRefs = (referrals || []).filter(r => r.referred_by_entity_id === p.id)
-          const dealsInvolved = [...new Set(partnerRefs.map(r => r.deal?.id).filter(Boolean))]
+          const dealsInvolved = [...new Set(partnerRefs.map(r => {
+            const deal = Array.isArray(r.deal) ? r.deal[0] : r.deal
+            return deal?.id
+          }).filter(Boolean))]
           const totalValue = partnerRefs.reduce((sum, r) => {
             if (r.investor_id) {
               return sum + (subsByInvestor.get(r.investor_id) || 0)
             }
             return sum
           }, 0)
-          const lastRef = partnerRefs.sort((a: any, b: any) =>
-            new Date(b.deal?.created_at || 0).getTime() - new Date(a.deal?.created_at || 0).getTime()
-          )[0]
+          const lastRef = partnerRefs.sort((a: any, b: any) => {
+            const aDeal = Array.isArray(a.deal) ? a.deal[0] : a.deal
+            const bDeal = Array.isArray(b.deal) ? b.deal[0] : b.deal
+            return new Date(bDeal?.created_at || 0).getTime() - new Date(aDeal?.created_at || 0).getTime()
+          })[0]
+          const lastRefDeal = lastRef ? (Array.isArray(lastRef.deal) ? lastRef.deal[0] : lastRef.deal) : null
 
           return {
             id: p.id,
@@ -230,7 +236,7 @@ export default function MyPartnersPage() {
             deals_count: dealsInvolved.length,
             referrals_count: partnerRefs.length,
             total_referral_value: totalValue,
-            last_activity: lastRef?.deal?.created_at || null,
+            last_activity: lastRefDeal?.created_at || null,
           }
         })
 

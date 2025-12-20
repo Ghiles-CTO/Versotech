@@ -160,8 +160,14 @@ export default function SharedTransactionsPage() {
 
         // Get subscription amounts for these investors
         const investorIds = (memberships || [])
-          .filter((m: any) => m.investor?.id)
-          .map((m: any) => m.investor.id)
+          .filter((m: any) => {
+            const investor = Array.isArray(m.investor) ? m.investor[0] : m.investor
+            return investor?.id
+          })
+          .map((m: any) => {
+            const investor = Array.isArray(m.investor) ? m.investor[0] : m.investor
+            return investor.id
+          })
 
         let subscriptionsMap: Record<string, any> = {}
         if (investorIds.length > 0) {
@@ -180,7 +186,13 @@ export default function SharedTransactionsPage() {
         }
 
         // Find deals with multiple referrers (shared deals)
-        const dealIds = [...new Set((memberships || []).filter((m: any) => m.deal?.id).map((m: any) => m.deal.id))]
+        const dealIds = [...new Set((memberships || []).filter((m: any) => {
+          const deal = Array.isArray(m.deal) ? m.deal[0] : m.deal
+          return deal?.id
+        }).map((m: any) => {
+          const deal = Array.isArray(m.deal) ? m.deal[0] : m.deal
+          return deal.id
+        }))]
 
         let sharedDealInfo: Record<string, any[]> = {}
         if (dealIds.length > 0) {
@@ -247,22 +259,26 @@ export default function SharedTransactionsPage() {
       sharedDealInfo: Record<string, any[]>
     ) {
       const processed: SharedTransaction[] = data.map((membership) => {
-        const subscription = membership.investor?.id
-          ? subscriptionsMap[membership.investor.id]
+        // Handle Supabase returning array for joined foreign key
+        const investor = Array.isArray(membership.investor) ? membership.investor[0] : membership.investor
+        const deal = Array.isArray(membership.deal) ? membership.deal[0] : membership.deal
+
+        const subscription = investor?.id
+          ? subscriptionsMap[investor.id]
           : null
 
-        const coReferrers = sharedDealInfo[membership.deal?.id] || []
+        const coReferrers = sharedDealInfo[deal?.id] || []
         const hasCoReferrer = coReferrers.length > 0
         const coReferrer = coReferrers[0]
 
         return {
           id: membership.id,
-          deal_id: membership.deal?.id || '',
-          deal_name: membership.deal?.name || 'Unknown Deal',
-          deal_status: membership.deal?.status || 'draft',
-          investor_name: membership.investor?.display_name || membership.investor?.legal_name || 'Unknown',
+          deal_id: deal?.id || '',
+          deal_name: deal?.name || 'Unknown Deal',
+          deal_status: deal?.status || 'draft',
+          investor_name: investor?.display_name || investor?.legal_name || 'Unknown',
           commitment_amount: subscription?.commitment_amount || 0,
-          currency: membership.deal?.currency || 'USD',
+          currency: deal?.currency || 'USD',
           created_at: membership.created_at,
           partner_share: hasCoReferrer ? 50 : 100, // Simplified share calculation
           co_referrer_name: hasCoReferrer ? `Co-referrer (${coReferrer.referred_by_entity_type})` : null,

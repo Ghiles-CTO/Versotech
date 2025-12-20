@@ -206,7 +206,10 @@ export default function MyCommercialPartnersPage() {
 
         const processedCPs: CommercialPartner[] = (cpsData || []).map((cp: any) => {
           const cpRefs = (referrals || []).filter(r => r.referred_by_entity_id === cp.id)
-          const dealsInvolved = [...new Set(cpRefs.map(r => r.deal?.id).filter(Boolean))]
+          const dealsInvolved = [...new Set(cpRefs.map(r => {
+            const deal = Array.isArray(r.deal) ? r.deal[0] : r.deal
+            return deal?.id
+          }).filter(Boolean))]
           const totalValue = cpRefs.reduce((sum, r) => {
             if (r.investor_id) return sum + (subsByInvestor.get(r.investor_id) || 0)
             return sum

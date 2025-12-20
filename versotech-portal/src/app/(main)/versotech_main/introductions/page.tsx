@@ -197,8 +197,8 @@ export default function IntroductionsPage() {
           introduced_at: intro.introduced_at,
           commission_rate_override_bps: intro.commission_rate_override_bps,
           notes: intro.notes,
-          deal: intro.deal as Introduction['deal'],
-          investor: intro.investor as Introduction['investor'],
+          deal: (Array.isArray(intro.deal) ? intro.deal[0] : intro.deal) as Introduction['deal'],
+          investor: (Array.isArray(intro.investor) ? intro.investor[0] : intro.investor) as Introduction['investor'],
           commission: commissionsMap[intro.id] || null,
         }))
 

@@ -181,7 +181,10 @@ export default function MyIntroducersPage() {
 
         const processedIntroducers: Introducer[] = (introducersData || []).map((i: any) => {
           const introRefs = (referrals || []).filter(r => r.referred_by_entity_id === i.id)
-          const dealsInvolved = [...new Set(introRefs.map(r => r.deal?.id).filter(Boolean))]
+          const dealsInvolved = [...new Set(introRefs.map(r => {
+            const deal = Array.isArray(r.deal) ? r.deal[0] : r.deal
+            return deal?.id
+          }).filter(Boolean))]
           const totalValue = introRefs.reduce((sum, r) => {
             if (r.investor_id) return sum + (subsByInvestor.get(r.investor_id) || 0)
             return sum
