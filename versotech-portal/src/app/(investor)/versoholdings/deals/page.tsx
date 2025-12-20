@@ -36,6 +36,7 @@ interface InvestorDeal {
   deal_memberships: Array<{
     role: string
     accepted_at: string | null
+    dispatched_at: string | null
   }>
   fee_plans: Array<{
     id: string
@@ -196,7 +197,8 @@ export default async function InvestorDealsPage() {
       ),
       deal_memberships!inner (
         role,
-        accepted_at
+        accepted_at,
+        dispatched_at
       ),
       fee_plans (
         id,

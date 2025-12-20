@@ -59,6 +59,8 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
   const investorId = investorLinks[0].investor_id
 
   // Fetch deal with all related data
+  // IMPORTANT: Filter by user_id (dispatch-based), not investor_id (entity-based)
+  // This ensures entity users only see deals they've been specifically dispatched to
   const { data: deal, error: dealError } = await serviceSupabase
     .from('deals')
     .select(`
@@ -70,11 +72,13 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
       ),
       deal_memberships!inner (
         role,
-        accepted_at
+        accepted_at,
+        user_id,
+        dispatched_at
       )
     `)
     .eq('id', dealId)
-    .eq('deal_memberships.investor_id', investorId)
+    .eq('deal_memberships.user_id', user.id)
     .single()
 
   if (dealError || !deal) {

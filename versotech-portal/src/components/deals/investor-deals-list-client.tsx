@@ -65,6 +65,7 @@ interface InvestorDeal {
   deal_memberships: Array<{
     role: string
     accepted_at: string | null
+    dispatched_at: string | null
   }>
   fee_plans: Array<{
     id: string
@@ -727,6 +728,11 @@ export function InvestorDealsListClient({
             const hasDataRoomAccess = Boolean(ndaAccess)
             const isClosed = effectiveStatus === 'closed'
 
+            // Check if deal was dispatched within last 7 days
+            const dispatchedAt = deal.deal_memberships?.[0]?.dispatched_at
+            const isNewlyDispatched = dispatchedAt &&
+              (Date.now() - new Date(dispatchedAt).getTime()) < 7 * 24 * 60 * 60 * 1000
+
             return (
               <Card key={deal.id} className="overflow-hidden border border-gray-200 shadow-sm">
                 <CardHeader className="space-y-3">
@@ -751,6 +757,11 @@ export function InvestorDealsListClient({
                           <Badge className={cn('text-xs', statusBadges[effectiveStatus] ?? statusBadges.draft)}>
                             {effectiveStatus.replace(/_/g, ' ').toUpperCase()}
                           </Badge>
+                          {isNewlyDispatched && (
+                            <Badge className="bg-blue-100 text-blue-700 text-xs">
+                              NEW
+                            </Badge>
+                          )}
                         </CardTitle>
                         <CardDescription className="text-sm text-gray-600 flex items-center gap-2">
                           <Building2 className="h-4 w-4 text-gray-400" />
