@@ -79,8 +79,8 @@ export const SUGGESTED_KYC_DOCUMENT_TYPES: Record<string, KYCDocumentTypeInfo> =
     category: 'both',
   },
   utility_bill: {
-    label: 'Utility Bill',
-    description: 'Recent utility bill (less than 3 months old)',
+    label: 'Proof of Address',
+    description: 'Recent utility bill or bank statement (less than 3 months old)',
     category: 'both',
   },
   accreditation_letter: {

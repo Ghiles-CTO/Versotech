@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Users, Plus, Edit, Trash2, UserPlus, ShieldCheck, Clock } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { Users, Plus, Edit, Trash2, UserPlus, ShieldCheck, Clock, PenTool, Upload, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -56,6 +56,9 @@ interface InvestorMember {
   effective_from?: string
   effective_to?: string
   created_at: string
+  signature_specimen_url?: string
+  signature_specimen_uploaded_at?: string
+  is_signatory?: boolean
 }
 
 interface Investor {
@@ -107,7 +110,14 @@ export function InvestorMembersTab() {
     id_expiry_date: '',
     ownership_percentage: '',
     is_beneficial_owner: false,
+    is_signatory: false,
   })
+
+  // Signature specimen upload state
+  const [signatureFile, setSignatureFile] = useState<File | null>(null)
+  const [signaturePreview, setSignaturePreview] = useState<string | null>(null)
+  const [uploadingSignature, setUploadingSignature] = useState(false)
+  const signatureInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     loadMembers()
@@ -147,8 +157,11 @@ export function InvestorMembersTab() {
       id_expiry_date: '',
       ownership_percentage: '',
       is_beneficial_owner: false,
+      is_signatory: false,
     })
     setEditingMember(null)
+    setSignatureFile(null)
+    setSignaturePreview(null)
   }
 
   const handleOpenDialog = (member?: InvestorMember) => {
@@ -171,11 +184,52 @@ export function InvestorMembersTab() {
         id_expiry_date: member.id_expiry_date || '',
         ownership_percentage: member.ownership_percentage?.toString() || '',
         is_beneficial_owner: member.is_beneficial_owner || false,
+        is_signatory: member.is_signatory || false,
       })
+      // Set existing signature preview if available
+      if (member.signature_specimen_url) {
+        setSignaturePreview(member.signature_specimen_url)
+      } else {
+        setSignaturePreview(null)
+      }
+      setSignatureFile(null)
     } else {
       resetForm()
     }
     setDialogOpen(true)
+  }
+
+  // Handle signature file selection
+  const handleSignatureFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        toast.error('Please upload an image file')
+        return
+      }
+      // Validate file size (max 2MB)
+      if (file.size > 2 * 1024 * 1024) {
+        toast.error('File size must be less than 2MB')
+        return
+      }
+      setSignatureFile(file)
+      // Create preview
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setSignaturePreview(reader.result as string)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  // Remove signature
+  const handleRemoveSignature = () => {
+    setSignatureFile(null)
+    setSignaturePreview(null)
+    if (signatureInputRef.current) {
+      signatureInputRef.current.value = ''
+    }
   }
 
   const handleSave = async () => {
@@ -187,6 +241,34 @@ export function InvestorMembersTab() {
     setSaving(true)
 
     try {
+      // If signatory role and there's a new signature file, upload it first
+      let signatureUrl = editingMember?.signature_specimen_url || null
+
+      if (formData.is_signatory && signatureFile) {
+        setUploadingSignature(true)
+        const uploadFormData = new FormData()
+        uploadFormData.append('file', signatureFile)
+        uploadFormData.append('type', 'signature_specimen')
+
+        const uploadResponse = await fetch('/api/investors/me/members/upload-signature', {
+          method: 'POST',
+          body: uploadFormData,
+        })
+
+        if (!uploadResponse.ok) {
+          throw new Error('Failed to upload signature specimen')
+        }
+
+        const uploadResult = await uploadResponse.json()
+        signatureUrl = uploadResult.url
+        setUploadingSignature(false)
+      }
+
+      // If signature was removed (preview is null but member had one)
+      if (!signaturePreview && editingMember?.signature_specimen_url) {
+        signatureUrl = null
+      }
+
       const payload = {
         full_name: formData.full_name,
         role: formData.role,
@@ -204,6 +286,9 @@ export function InvestorMembersTab() {
         id_expiry_date: formData.id_expiry_date || null,
         ownership_percentage: formData.ownership_percentage ? parseFloat(formData.ownership_percentage) : null,
         is_beneficial_owner: formData.is_beneficial_owner,
+        is_signatory: formData.is_signatory,
+        signature_specimen_url: signatureUrl,
+        signature_specimen_uploaded_at: signatureFile ? new Date().toISOString() : (signatureUrl ? editingMember?.signature_specimen_uploaded_at : null),
       }
 
       const url = editingMember
@@ -230,6 +315,7 @@ export function InvestorMembersTab() {
       toast.error(error.message || 'Failed to save member')
     } finally {
       setSaving(false)
+      setUploadingSignature(false)
     }
   }
 
@@ -554,6 +640,71 @@ export function InvestorMembersTab() {
                   onChange={(e) => setFormData({ ...formData, id_expiry_date: e.target.value })}
                 />
               </div>
+            </div>
+
+            {/* Signatory & Signature Specimen */}
+            <div className="space-y-4 pt-4 border-t">
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="is_signatory"
+                  checked={formData.is_signatory}
+                  onChange={(e) => setFormData({ ...formData, is_signatory: e.target.checked })}
+                  className="rounded border-gray-300"
+                />
+                <Label htmlFor="is_signatory" className="flex items-center gap-2 cursor-pointer">
+                  <PenTool className="w-4 h-4" />
+                  Authorized Signatory
+                </Label>
+              </div>
+
+              {formData.is_signatory && (
+                <div className="space-y-3 pl-6">
+                  <Label>Signature Specimen</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Upload a signature specimen image (PNG, JPG - max 2MB)
+                  </p>
+
+                  {signaturePreview ? (
+                    <div className="relative inline-block">
+                      <div className="border rounded-lg p-4 bg-white">
+                        <img
+                          src={signaturePreview}
+                          alt="Signature specimen"
+                          className="max-h-24 max-w-xs object-contain"
+                        />
+                      </div>
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="icon"
+                        className="absolute -top-2 -right-2 h-6 w-6"
+                        onClick={handleRemoveSignature}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div
+                      className="border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:border-primary/50 transition-colors"
+                      onClick={() => signatureInputRef.current?.click()}
+                    >
+                      <Upload className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
+                      <p className="text-sm text-muted-foreground">
+                        Click to upload signature specimen
+                      </p>
+                    </div>
+                  )}
+
+                  <input
+                    ref={signatureInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleSignatureFileChange}
+                  />
+                </div>
+              )}
             </div>
           </div>
 

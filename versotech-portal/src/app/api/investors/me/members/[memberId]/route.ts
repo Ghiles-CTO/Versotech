@@ -19,6 +19,9 @@ const updateMemberSchema = z.object({
   id_expiry_date: z.string().optional().nullable(),
   ownership_percentage: z.number().min(0).max(100).optional().nullable(),
   is_beneficial_owner: z.boolean().optional(),
+  is_signatory: z.boolean().optional(),
+  signature_specimen_url: z.string().optional().nullable(),
+  signature_specimen_uploaded_at: z.string().optional().nullable(),
   effective_from: z.string().optional().nullable(),
   effective_to: z.string().optional().nullable(),
 })
