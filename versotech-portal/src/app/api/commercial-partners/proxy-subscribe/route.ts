@@ -345,11 +345,14 @@ export async function GET(request: Request) {
       .eq('user_id', user.id)
       .eq('can_execute_for_clients', true)
 
+    // Return empty response if not a commercial partner (don't 403, just indicate no proxy capability)
     if (!cpLinks || cpLinks.length === 0) {
       return NextResponse.json({
-        error: 'Forbidden',
-        message: 'You are not authorized to execute subscriptions for clients.'
-      }, { status: 403 })
+        commercial_partner_id: null,
+        commercial_partner_name: null,
+        clients: [],
+        can_execute_for_clients: false
+      })
     }
 
     const cpId = cpLinks[0].commercial_partner_id
