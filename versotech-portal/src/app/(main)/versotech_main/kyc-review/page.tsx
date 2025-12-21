@@ -1,8 +1,33 @@
-'use client'
+import { Metadata } from 'next'
+import { getCurrentUser } from '@/lib/auth'
+import { redirect } from 'next/navigation'
+import { KYCReviewClient } from '@/app/(staff)/versotech/staff/kyc-review/kyc-review-client'
 
-import { ComingSoonPage } from '@/components/common/coming-soon-page'
-import { UserCheck } from 'lucide-react'
+export const dynamic = 'force-dynamic'
 
-export default function KYCReviewPage() {
-  return <ComingSoonPage title="KYC Review" icon={UserCheck} />
+export const metadata: Metadata = {
+  title: 'KYC Review | VERSO',
+  description: 'Review and approve investor KYC documents'
+}
+
+export default async function KYCReviewPage() {
+  const user = await getCurrentUser()
+
+  if (!user) {
+    redirect('/versotech_main/login')
+  }
+
+  // Only CEO/staff can access KYC review
+  const isCEO = user.role === 'staff_admin' || user.role === 'ceo' ||
+                user.role === 'staff_ops' || user.role === 'staff_rm'
+
+  if (!isCEO) {
+    redirect('/versotech_main/dashboard')
+  }
+
+  return (
+    <div className="p-6 space-y-6">
+      <KYCReviewClient />
+    </div>
+  )
 }

@@ -73,8 +73,8 @@ const PERSONA_NAV_ITEMS: Record<string, NavItem[]> = {
     { name: 'Fees', href: '/versotech_main/fees', icon: Calculator, description: 'Billing' },
     { name: 'Reconciliation', href: '/versotech_main/reconciliation', icon: Calculator, description: 'Payments' },
     { name: 'Audit', href: '/versotech_main/audit', icon: Shield, description: 'Compliance logs' },
-    { name: 'Processes', href: '/versotech_admin/processes', icon: Workflow, description: 'Workflows' },
-    { name: 'Admin', href: '/versotech_admin', icon: Database, description: 'System settings' },
+    { name: 'Processes', href: '/versotech_main/processes', icon: Workflow, description: 'Workflows' },
+    { name: 'Admin', href: '/versotech_main/admin', icon: Database, description: 'System settings' },
   ],
 
   // Investor persona
