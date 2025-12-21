@@ -56,7 +56,7 @@ export function UserMenu({ profile, brand = 'versotech', useThemeColors = false 
   const getRoleDisplay = (role: string) => {
     switch (role) {
       case 'investor': return 'Investor'
-      case 'staff_admin': return 'Administrator'
+      case 'staff_admin': return 'CEO'
       case 'staff_ops': return 'Operations'
       case 'staff_rm': return 'Relationship Manager'
       case 'ceo': return 'CEO'

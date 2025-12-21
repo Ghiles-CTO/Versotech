@@ -276,7 +276,7 @@ export function PersonaSidebar() {
           </div>
           <div className={cn("text-xs mt-0.5", isDark ? "text-gray-500" : "text-gray-500")}>
             {activePersona.persona_type === 'staff'
-              ? activePersona.role_in_entity?.toUpperCase()
+              ? (activePersona.role_in_entity === 'staff_admin' || activePersona.role_in_entity === 'ceo' ? 'CEO' : activePersona.role_in_entity?.toUpperCase())
               : activePersona.persona_type.replace('_', ' ').toUpperCase()}
           </div>
         </div>
