@@ -190,7 +190,7 @@ export default function OpportunityDetailPage() {
   const dealId = params.id as string
   const actionParam = searchParams.get('action')
 
-  const { isInvestor, isLoading: personaLoading } = usePersona()
+  const { hasAnyPersona, isLoading: personaLoading } = usePersona()
   const [opportunity, setOpportunity] = useState<Opportunity | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -233,10 +233,10 @@ export default function OpportunityDetailPage() {
       }
     }
 
-    if (isInvestor && dealId) {
+    if (hasAnyPersona && dealId) {
       fetchOpportunity()
     }
-  }, [isInvestor, dealId, actionParam])
+  }, [hasAnyPersona, dealId, actionParam])
 
   const handleExpressInterest = async () => {
     try {
@@ -358,14 +358,14 @@ export default function OpportunityDetailPage() {
     )
   }
 
-  if (!isInvestor) {
+  if (!hasAnyPersona) {
     return (
       <div className="p-6">
         <Card className="max-w-lg mx-auto">
           <CardHeader>
-            <CardTitle>Investor Access Required</CardTitle>
+            <CardTitle>Access Required</CardTitle>
             <CardDescription>
-              Please switch to an investor persona to view this opportunity.
+              You need to be associated with an entity to view this opportunity.
             </CardDescription>
           </CardHeader>
         </Card>

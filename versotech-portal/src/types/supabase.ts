@@ -1,6980 +1,9208 @@
-/* eslint-disable */
-/* tslint:disable */
-// @ts-nocheck
-/*
- * ---------------------------------------------------------------
- * ## THIS FILE WAS GENERATED VIA SWAGGER-TYPESCRIPT-API        ##
- * ##                                                           ##
- * ## AUTHOR: acacode                                           ##
- * ## SOURCE: https://github.com/acacode/swagger-typescript-api ##
- * ---------------------------------------------------------------
- */
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
 
-/** Hierarchical view of document folders with SECURITY INVOKER for proper RLS enforcement */
-export interface FolderHierarchy {
-  /** @format uuid */
-  id?: string;
-  /** @format text */
-  indented_name?: string;
-  /** @format text */
-  path?: string;
-  /** @format text */
-  folder_type?: string;
-  /** @format uuid */
-  vehicle_id?: string;
-  /** @format integer */
-  depth?: number;
-  /** @format text */
-  full_path?: string;
+export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "13.0.5"
+  }
+  public: {
+    Tables: {
+      activity_feed: {
+        Row: {
+          activity_type: string
+          created_at: string | null
+          created_by: string | null
+          description: string
+          entity_id: string
+          id: string
+          investor_id: string | null
+          metadata: Json | null
+          title: string
+        }
+        Insert: {
+          activity_type: string
+          created_at?: string | null
+          created_by?: string | null
+          description: string
+          entity_id: string
+          id?: string
+          investor_id?: string | null
+          metadata?: Json | null
+          title: string
+        }
+        Update: {
+          activity_type?: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string
+          entity_id?: string
+          id?: string
+          investor_id?: string | null
+          metadata?: Json | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activity_feed_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "activity_feed_investor_id_fkey"
+            columns: ["investor_id"]
+            isOneToOne: false
+            referencedRelation: "investors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      allocations: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string | null
+          deal_id: string | null
+          id: string
+          investor_id: string | null
+          status: Database["public"]["Enums"]["allocation_status_enum"] | null
+          unit_price: number
+          units: number
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string | null
+          deal_id?: string | null
+          id?: string
+          investor_id?: string | null
+          status?: Database["public"]["Enums"]["allocation_status_enum"] | null
+          unit_price: number
+          units: number
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string | null
+          deal_id?: string | null
+          id?: string
+          investor_id?: string | null
+          status?: Database["public"]["Enums"]["allocation_status_enum"] | null
+          unit_price?: number
+          units?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "allocations_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "allocations_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "allocations_investor_id_fkey"
+            columns: ["investor_id"]
+            isOneToOne: false
+            referencedRelation: "investors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      approval_history: {
+        Row: {
+          action: string
+          actor_id: string
+          approval_id: string
+          created_at: string | null
+          id: string
+          metadata: Json | null
+          notes: string | null
+        }
+        Insert: {
+          action: string
+          actor_id: string
+          approval_id: string
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          notes?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string
+          approval_id?: string
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          notes?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "approval_history_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approval_history_approval_id_fkey"
+            columns: ["approval_id"]
+            isOneToOne: false
+            referencedRelation: "approvals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      approvals: {
+        Row: {
+          action: string | null
+          actual_processing_time_hours: number | null
+          approved_at: string | null
+          approved_by: string | null
+          assigned_to: string | null
+          created_at: string | null
+          entity_id: string | null
+          entity_metadata: Json | null
+          entity_type: string | null
+          id: string
+          notes: string | null
+          priority: string | null
+          rejection_reason: string | null
+          related_deal_id: string | null
+          related_investor_id: string | null
+          request_reason: string | null
+          requested_by: string | null
+          requires_secondary_approval: boolean | null
+          resolved_at: string | null
+          secondary_approved_at: string | null
+          secondary_approved_by: string | null
+          secondary_approver_role: string | null
+          sla_breach_at: string | null
+          sla_paused_at: string | null
+          sla_resumed_at: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          action?: string | null
+          actual_processing_time_hours?: number | null
+          approved_at?: string | null
+          approved_by?: string | null
+          assigned_to?: string | null
+          created_at?: string | null
+          entity_id?: string | null
+          entity_metadata?: Json | null
+          entity_type?: string | null
+          id?: string
+          notes?: string | null
+          priority?: string | null
+          rejection_reason?: string | null
+          related_deal_id?: string | null
+          related_investor_id?: string | null
+          request_reason?: string | null
+          requested_by?: string | null
+          requires_secondary_approval?: boolean | null
+          resolved_at?: string | null
+          secondary_approved_at?: string | null
+          secondary_approved_by?: string | null
+          secondary_approver_role?: string | null
+          sla_breach_at?: string | null
+          sla_paused_at?: string | null
+          sla_resumed_at?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          action?: string | null
+          actual_processing_time_hours?: number | null
+          approved_at?: string | null
+          approved_by?: string | null
+          assigned_to?: string | null
+          created_at?: string | null
+          entity_id?: string | null
+          entity_metadata?: Json | null
+          entity_type?: string | null
+          id?: string
+          notes?: string | null
+          priority?: string | null
+          rejection_reason?: string | null
+          related_deal_id?: string | null
+          related_investor_id?: string | null
+          request_reason?: string | null
+          requested_by?: string | null
+          requires_secondary_approval?: boolean | null
+          resolved_at?: string | null
+          secondary_approved_at?: string | null
+          secondary_approved_by?: string | null
+          secondary_approver_role?: string | null
+          sla_breach_at?: string | null
+          sla_paused_at?: string | null
+          sla_resumed_at?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "approvals_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approvals_decided_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approvals_related_deal_id_fkey"
+            columns: ["related_deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approvals_related_investor_id_fkey"
+            columns: ["related_investor_id"]
+            isOneToOne: false
+            referencedRelation: "investors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approvals_requested_by_fkey"
+            columns: ["requested_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approvals_secondary_approved_by_fkey"
+            columns: ["secondary_approved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      arranger_entities: {
+        Row: {
+          address: string | null
+          created_at: string | null
+          created_by: string | null
+          email: string | null
+          id: string
+          kyc_approved_at: string | null
+          kyc_approved_by: string | null
+          kyc_expires_at: string | null
+          kyc_notes: string | null
+          kyc_status: string | null
+          legal_name: string
+          license_expiry_date: string | null
+          license_number: string | null
+          license_type: string | null
+          logo_url: string | null
+          metadata: Json | null
+          phone: string | null
+          registration_number: string | null
+          regulator: string | null
+          status: string | null
+          tax_id: string | null
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          email?: string | null
+          id?: string
+          kyc_approved_at?: string | null
+          kyc_approved_by?: string | null
+          kyc_expires_at?: string | null
+          kyc_notes?: string | null
+          kyc_status?: string | null
+          legal_name: string
+          license_expiry_date?: string | null
+          license_number?: string | null
+          license_type?: string | null
+          logo_url?: string | null
+          metadata?: Json | null
+          phone?: string | null
+          registration_number?: string | null
+          regulator?: string | null
+          status?: string | null
+          tax_id?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          address?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          email?: string | null
+          id?: string
+          kyc_approved_at?: string | null
+          kyc_approved_by?: string | null
+          kyc_expires_at?: string | null
+          kyc_notes?: string | null
+          kyc_status?: string | null
+          legal_name?: string
+          license_expiry_date?: string | null
+          license_number?: string | null
+          license_type?: string | null
+          logo_url?: string | null
+          metadata?: Json | null
+          phone?: string | null
+          registration_number?: string | null
+          regulator?: string | null
+          status?: string | null
+          tax_id?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "arranger_entities_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "arranger_entities_kyc_approved_by_fkey"
+            columns: ["kyc_approved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "arranger_entities_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      arranger_members: {
+        Row: {
+          arranger_id: string
+          created_at: string
+          created_by: string | null
+          effective_from: string | null
+          effective_to: string | null
+          email: string | null
+          full_name: string
+          id: string
+          id_expiry_date: string | null
+          id_number: string | null
+          id_type: string | null
+          is_active: boolean
+          is_beneficial_owner: boolean
+          is_signatory: boolean
+          nationality: string | null
+          ownership_percentage: number | null
+          phone: string | null
+          residential_city: string | null
+          residential_country: string | null
+          residential_postal_code: string | null
+          residential_state: string | null
+          residential_street: string | null
+          role: string
+          role_title: string | null
+          updated_at: string
+        }
+        Insert: {
+          arranger_id: string
+          created_at?: string
+          created_by?: string | null
+          effective_from?: string | null
+          effective_to?: string | null
+          email?: string | null
+          full_name: string
+          id?: string
+          id_expiry_date?: string | null
+          id_number?: string | null
+          id_type?: string | null
+          is_active?: boolean
+          is_beneficial_owner?: boolean
+          is_signatory?: boolean
+          nationality?: string | null
+          ownership_percentage?: number | null
+          phone?: string | null
+          residential_city?: string | null
+          residential_country?: string | null
+          residential_postal_code?: string | null
+          residential_state?: string | null
+          residential_street?: string | null
+          role: string
+          role_title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          arranger_id?: string
+          created_at?: string
+          created_by?: string | null
+          effective_from?: string | null
+          effective_to?: string | null
+          email?: string | null
+          full_name?: string
+          id?: string
+          id_expiry_date?: string | null
+          id_number?: string | null
+          id_type?: string | null
+          is_active?: boolean
+          is_beneficial_owner?: boolean
+          is_signatory?: boolean
+          nationality?: string | null
+          ownership_percentage?: number | null
+          phone?: string | null
+          residential_city?: string | null
+          residential_country?: string | null
+          residential_postal_code?: string | null
+          residential_state?: string | null
+          residential_street?: string | null
+          role?: string
+          role_title?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "arranger_members_arranger_fk"
+            columns: ["arranger_id"]
+            isOneToOne: false
+            referencedRelation: "arranger_entities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "arranger_members_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      arranger_users: {
+        Row: {
+          arranger_id: string
+          created_at: string
+          created_by: string | null
+          is_primary: boolean
+          role: string
+          user_id: string
+        }
+        Insert: {
+          arranger_id: string
+          created_at?: string
+          created_by?: string | null
+          is_primary?: boolean
+          role?: string
+          user_id: string
+        }
+        Update: {
+          arranger_id?: string
+          created_at?: string
+          created_by?: string | null
+          is_primary?: boolean
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "arranger_users_arranger_fk"
+            columns: ["arranger_id"]
+            isOneToOne: false
+            referencedRelation: "arranger_entities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "arranger_users_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "arranger_users_user_fk"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      audit_logs: {
+        Row: {
+          action: string
+          action_details: Json | null
+          actor_email: string | null
+          actor_id: string | null
+          actor_name: string | null
+          actor_role: string | null
+          after_value: Json | null
+          before_value: Json | null
+          compliance_flag: boolean | null
+          compliance_notes: string | null
+          compliance_review_status: string | null
+          compliance_reviewed_at: string | null
+          compliance_reviewer_id: string | null
+          created_at: string
+          entity_id: string | null
+          entity_name: string | null
+          entity_type: string | null
+          event_type: string
+          id: string
+          ip_address: unknown
+          retention_category: string | null
+          retention_expiry: string | null
+          risk_level: string | null
+          timestamp: string
+          user_agent: string | null
+        }
+        Insert: {
+          action: string
+          action_details?: Json | null
+          actor_email?: string | null
+          actor_id?: string | null
+          actor_name?: string | null
+          actor_role?: string | null
+          after_value?: Json | null
+          before_value?: Json | null
+          compliance_flag?: boolean | null
+          compliance_notes?: string | null
+          compliance_review_status?: string | null
+          compliance_reviewed_at?: string | null
+          compliance_reviewer_id?: string | null
+          created_at?: string
+          entity_id?: string | null
+          entity_name?: string | null
+          entity_type?: string | null
+          event_type: string
+          id?: string
+          ip_address?: unknown
+          retention_category?: string | null
+          retention_expiry?: string | null
+          risk_level?: string | null
+          timestamp?: string
+          user_agent?: string | null
+        }
+        Update: {
+          action?: string
+          action_details?: Json | null
+          actor_email?: string | null
+          actor_id?: string | null
+          actor_name?: string | null
+          actor_role?: string | null
+          after_value?: Json | null
+          before_value?: Json | null
+          compliance_flag?: boolean | null
+          compliance_notes?: string | null
+          compliance_review_status?: string | null
+          compliance_reviewed_at?: string | null
+          compliance_reviewer_id?: string | null
+          created_at?: string
+          entity_id?: string | null
+          entity_name?: string | null
+          entity_type?: string | null
+          event_type?: string
+          id?: string
+          ip_address?: unknown
+          retention_category?: string | null
+          retention_expiry?: string | null
+          risk_level?: string | null
+          timestamp?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_logs_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audit_logs_compliance_reviewer_id_fkey"
+            columns: ["compliance_reviewer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      audit_report_templates: {
+        Row: {
+          config: Json
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          output_format: string[] | null
+          report_type: string
+        }
+        Insert: {
+          config: Json
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          output_format?: string[] | null
+          report_type: string
+        }
+        Update: {
+          config?: Json
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          output_format?: string[] | null
+          report_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_report_templates_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      automation_webhook_events: {
+        Row: {
+          event_type: string
+          id: string
+          payload: Json
+          received_at: string
+          related_deal_id: string | null
+          related_investor_id: string | null
+        }
+        Insert: {
+          event_type: string
+          id?: string
+          payload: Json
+          received_at?: string
+          related_deal_id?: string | null
+          related_investor_id?: string | null
+        }
+        Update: {
+          event_type?: string
+          id?: string
+          payload?: Json
+          received_at?: string
+          related_deal_id?: string | null
+          related_investor_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "automation_webhook_events_related_deal_id_fkey"
+            columns: ["related_deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "automation_webhook_events_related_investor_id_fkey"
+            columns: ["related_investor_id"]
+            isOneToOne: false
+            referencedRelation: "investors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bank_transactions: {
+        Row: {
+          account_ref: string | null
+          amount: number | null
+          bank_reference: string | null
+          counterparty: string | null
+          counterparty_account: string | null
+          created_at: string | null
+          currency: string | null
+          discrepancy_amount: number | null
+          id: string
+          import_batch_id: string | null
+          match_confidence: number | null
+          match_group_id: string | null
+          match_notes: string | null
+          matched_invoice_ids: string[] | null
+          matched_subscription_id: string | null
+          memo: string | null
+          resolution_notes: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          status: string | null
+          updated_at: string | null
+          value_date: string | null
+        }
+        Insert: {
+          account_ref?: string | null
+          amount?: number | null
+          bank_reference?: string | null
+          counterparty?: string | null
+          counterparty_account?: string | null
+          created_at?: string | null
+          currency?: string | null
+          discrepancy_amount?: number | null
+          id?: string
+          import_batch_id?: string | null
+          match_confidence?: number | null
+          match_group_id?: string | null
+          match_notes?: string | null
+          matched_invoice_ids?: string[] | null
+          matched_subscription_id?: string | null
+          memo?: string | null
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string | null
+          updated_at?: string | null
+          value_date?: string | null
+        }
+        Update: {
+          account_ref?: string | null
+          amount?: number | null
+          bank_reference?: string | null
+          counterparty?: string | null
+          counterparty_account?: string | null
+          created_at?: string | null
+          currency?: string | null
+          discrepancy_amount?: number | null
+          id?: string
+          import_batch_id?: string | null
+          match_confidence?: number | null
+          match_group_id?: string | null
+          match_notes?: string | null
+          matched_invoice_ids?: string[] | null
+          matched_subscription_id?: string | null
+          memo?: string | null
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string | null
+          updated_at?: string | null
+          value_date?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_transactions_matched_subscription_id_fkey"
+            columns: ["matched_subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_transactions_resolved_by_fkey"
+            columns: ["resolved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      capital_call_items: {
+        Row: {
+          balance_due: number | null
+          bank_transaction_ids: string[] | null
+          called_amount: number
+          capital_call_id: string
+          created_at: string | null
+          due_date: string
+          id: string
+          investor_id: string
+          notes: string | null
+          paid_amount: number
+          paid_date: string | null
+          status: string | null
+          subscription_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          balance_due?: number | null
+          bank_transaction_ids?: string[] | null
+          called_amount: number
+          capital_call_id: string
+          created_at?: string | null
+          due_date: string
+          id?: string
+          investor_id: string
+          notes?: string | null
+          paid_amount?: number
+          paid_date?: string | null
+          status?: string | null
+          subscription_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          balance_due?: number | null
+          bank_transaction_ids?: string[] | null
+          called_amount?: number
+          capital_call_id?: string
+          created_at?: string | null
+          due_date?: string
+          id?: string
+          investor_id?: string
+          notes?: string | null
+          paid_amount?: number
+          paid_date?: string | null
+          status?: string | null
+          subscription_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "capital_call_items_capital_call_id_fkey"
+            columns: ["capital_call_id"]
+            isOneToOne: false
+            referencedRelation: "capital_calls"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "capital_call_items_investor_id_fkey"
+            columns: ["investor_id"]
+            isOneToOne: false
+            referencedRelation: "investors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "capital_call_items_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      capital_calls: {
+        Row: {
+          call_pct: number | null
+          due_date: string | null
+          id: string
+          name: string | null
+          status: string | null
+          vehicle_id: string | null
+        }
+        Insert: {
+          call_pct?: number | null
+          due_date?: string | null
+          id?: string
+          name?: string | null
+          status?: string | null
+          vehicle_id?: string | null
+        }
+        Update: {
+          call_pct?: number | null
+          due_date?: string | null
+          id?: string
+          name?: string | null
+          status?: string | null
+          vehicle_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "capital_calls_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "entity_action_center_summary"
+            referencedColumns: ["vehicle_id"]
+          },
+          {
+            foreignKeyName: "capital_calls_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cashflows: {
+        Row: {
+          amount: number | null
+          date: string | null
+          id: string
+          investor_id: string | null
+          ref_id: string | null
+          type: string | null
+          vehicle_id: string | null
+        }
+        Insert: {
+          amount?: number | null
+          date?: string | null
+          id?: string
+          investor_id?: string | null
+          ref_id?: string | null
+          type?: string | null
+          vehicle_id?: string | null
+        }
+        Update: {
+          amount?: number | null
+          date?: string | null
+          id?: string
+          investor_id?: string | null
+          ref_id?: string | null
+          type?: string | null
+          vehicle_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cashflows_investor_id_fkey"
+            columns: ["investor_id"]
+            isOneToOne: false
+            referencedRelation: "investors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cashflows_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "entity_action_center_summary"
+            referencedColumns: ["vehicle_id"]
+          },
+          {
+            foreignKeyName: "cashflows_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      commercial_partner_clients: {
+        Row: {
+          client_email: string | null
+          client_investor_id: string | null
+          client_name: string
+          client_phone: string | null
+          client_type: string
+          commercial_partner_id: string
+          created_at: string
+          created_by: string | null
+          created_for_deal_id: string | null
+          id: string
+          is_active: boolean
+          updated_at: string
+        }
+        Insert: {
+          client_email?: string | null
+          client_investor_id?: string | null
+          client_name: string
+          client_phone?: string | null
+          client_type?: string
+          commercial_partner_id: string
+          created_at?: string
+          created_by?: string | null
+          created_for_deal_id?: string | null
+          id?: string
+          is_active?: boolean
+          updated_at?: string
+        }
+        Update: {
+          client_email?: string | null
+          client_investor_id?: string | null
+          client_name?: string
+          client_phone?: string | null
+          client_type?: string
+          commercial_partner_id?: string
+          created_at?: string
+          created_by?: string | null
+          created_for_deal_id?: string | null
+          id?: string
+          is_active?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commercial_partner_clients_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cp_clients_cp_fk"
+            columns: ["commercial_partner_id"]
+            isOneToOne: false
+            referencedRelation: "commercial_partners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cp_clients_deal_fk"
+            columns: ["created_for_deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cp_clients_investor_fk"
+            columns: ["client_investor_id"]
+            isOneToOne: false
+            referencedRelation: "investors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      commercial_partner_members: {
+        Row: {
+          commercial_partner_id: string
+          created_at: string
+          created_by: string | null
+          effective_from: string | null
+          effective_to: string | null
+          email: string | null
+          full_name: string
+          id: string
+          id_expiry_date: string | null
+          id_number: string | null
+          id_type: string | null
+          is_active: boolean
+          is_beneficial_owner: boolean
+          is_signatory: boolean
+          nationality: string | null
+          ownership_percentage: number | null
+          phone: string | null
+          residential_city: string | null
+          residential_country: string | null
+          residential_postal_code: string | null
+          residential_state: string | null
+          residential_street: string | null
+          role: string
+          role_title: string | null
+          updated_at: string
+        }
+        Insert: {
+          commercial_partner_id: string
+          created_at?: string
+          created_by?: string | null
+          effective_from?: string | null
+          effective_to?: string | null
+          email?: string | null
+          full_name: string
+          id?: string
+          id_expiry_date?: string | null
+          id_number?: string | null
+          id_type?: string | null
+          is_active?: boolean
+          is_beneficial_owner?: boolean
+          is_signatory?: boolean
+          nationality?: string | null
+          ownership_percentage?: number | null
+          phone?: string | null
+          residential_city?: string | null
+          residential_country?: string | null
+          residential_postal_code?: string | null
+          residential_state?: string | null
+          residential_street?: string | null
+          role: string
+          role_title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          commercial_partner_id?: string
+          created_at?: string
+          created_by?: string | null
+          effective_from?: string | null
+          effective_to?: string | null
+          email?: string | null
+          full_name?: string
+          id?: string
+          id_expiry_date?: string | null
+          id_number?: string | null
+          id_type?: string | null
+          is_active?: boolean
+          is_beneficial_owner?: boolean
+          is_signatory?: boolean
+          nationality?: string | null
+          ownership_percentage?: number | null
+          phone?: string | null
+          residential_city?: string | null
+          residential_country?: string | null
+          residential_postal_code?: string | null
+          residential_state?: string | null
+          residential_street?: string | null
+          role?: string
+          role_title?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commercial_partner_members_cp_fk"
+            columns: ["commercial_partner_id"]
+            isOneToOne: false
+            referencedRelation: "commercial_partners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commercial_partner_members_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      commercial_partner_users: {
+        Row: {
+          can_execute_for_clients: boolean
+          can_sign: boolean
+          commercial_partner_id: string
+          created_at: string
+          created_by: string | null
+          is_primary: boolean
+          role: string
+          user_id: string
+        }
+        Insert: {
+          can_execute_for_clients?: boolean
+          can_sign?: boolean
+          commercial_partner_id: string
+          created_at?: string
+          created_by?: string | null
+          is_primary?: boolean
+          role?: string
+          user_id: string
+        }
+        Update: {
+          can_execute_for_clients?: boolean
+          can_sign?: boolean
+          commercial_partner_id?: string
+          created_at?: string
+          created_by?: string | null
+          is_primary?: boolean
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commercial_partner_users_cp_fk"
+            columns: ["commercial_partner_id"]
+            isOneToOne: false
+            referencedRelation: "commercial_partners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commercial_partner_users_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commercial_partner_users_user_fk"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      commercial_partners: {
+        Row: {
+          account_manager_id: string | null
+          address_line_1: string | null
+          address_line_2: string | null
+          city: string | null
+          contact_email: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          contract_document_id: string | null
+          contract_end_date: string | null
+          contract_start_date: string | null
+          country: string | null
+          cp_type: string
+          created_at: string
+          created_by: string | null
+          id: string
+          jurisdiction: string | null
+          kyc_approved_at: string | null
+          kyc_approved_by: string | null
+          kyc_expires_at: string | null
+          kyc_notes: string | null
+          kyc_status: string | null
+          legal_name: string | null
+          logo_url: string | null
+          name: string
+          notes: string | null
+          payment_terms: string | null
+          postal_code: string | null
+          regulatory_number: string | null
+          regulatory_status: string | null
+          status: string
+          type: string
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          account_manager_id?: string | null
+          address_line_1?: string | null
+          address_line_2?: string | null
+          city?: string | null
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          contract_document_id?: string | null
+          contract_end_date?: string | null
+          contract_start_date?: string | null
+          country?: string | null
+          cp_type: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          jurisdiction?: string | null
+          kyc_approved_at?: string | null
+          kyc_approved_by?: string | null
+          kyc_expires_at?: string | null
+          kyc_notes?: string | null
+          kyc_status?: string | null
+          legal_name?: string | null
+          logo_url?: string | null
+          name: string
+          notes?: string | null
+          payment_terms?: string | null
+          postal_code?: string | null
+          regulatory_number?: string | null
+          regulatory_status?: string | null
+          status?: string
+          type: string
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          account_manager_id?: string | null
+          address_line_1?: string | null
+          address_line_2?: string | null
+          city?: string | null
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          contract_document_id?: string | null
+          contract_end_date?: string | null
+          contract_start_date?: string | null
+          country?: string | null
+          cp_type?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          jurisdiction?: string | null
+          kyc_approved_at?: string | null
+          kyc_approved_by?: string | null
+          kyc_expires_at?: string | null
+          kyc_notes?: string | null
+          kyc_status?: string | null
+          legal_name?: string | null
+          logo_url?: string | null
+          name?: string
+          notes?: string | null
+          payment_terms?: string | null
+          postal_code?: string | null
+          regulatory_number?: string | null
+          regulatory_status?: string | null
+          status?: string
+          type?: string
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commercial_partners_account_manager_id_fkey"
+            columns: ["account_manager_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commercial_partners_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commercial_partners_kyc_approved_by_fkey"
+            columns: ["kyc_approved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      companies: {
+        Row: {
+          company_stage: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          headquarters_city: string | null
+          headquarters_country: string | null
+          id: string
+          industry: string | null
+          legal_name: string | null
+          logo_url: string | null
+          name: string
+          sector: string | null
+          sub_industry: string | null
+          ticker_symbol: string | null
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          company_stage?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          headquarters_city?: string | null
+          headquarters_country?: string | null
+          id?: string
+          industry?: string | null
+          legal_name?: string | null
+          logo_url?: string | null
+          name: string
+          sector?: string | null
+          sub_industry?: string | null
+          ticker_symbol?: string | null
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          company_stage?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          headquarters_city?: string | null
+          headquarters_country?: string | null
+          id?: string
+          industry?: string | null
+          legal_name?: string | null
+          logo_url?: string | null
+          name?: string
+          sector?: string | null
+          sub_industry?: string | null
+          ticker_symbol?: string | null
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "companies_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      company_valuations: {
+        Row: {
+          company_id: string
+          created_at: string
+          created_by: string | null
+          funding_round: string | null
+          id: string
+          source: string | null
+          valuation_amount: number
+          valuation_currency: string
+          valuation_date: string
+          valuation_type: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          funding_round?: string | null
+          id?: string
+          source?: string | null
+          valuation_amount: number
+          valuation_currency?: string
+          valuation_date: string
+          valuation_type?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          funding_round?: string | null
+          id?: string
+          source?: string | null
+          valuation_amount?: number
+          valuation_currency?: string
+          valuation_date?: string
+          valuation_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_valuations_company_fk"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "company_valuations_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      compliance_alerts: {
+        Row: {
+          alert_type: string
+          assigned_to: string | null
+          audit_log_id: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          resolution_notes: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: string | null
+          status: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          alert_type: string
+          assigned_to?: string | null
+          audit_log_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string | null
+          status?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          alert_type?: string
+          assigned_to?: string | null
+          audit_log_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string | null
+          status?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "compliance_alerts_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "compliance_alerts_resolved_by_fkey"
+            columns: ["resolved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      conversation_participants: {
+        Row: {
+          conversation_id: string
+          created_at: string
+          is_muted: boolean
+          is_pinned: boolean
+          joined_at: string
+          last_notified_at: string | null
+          last_read_at: string | null
+          participant_role: Database["public"]["Enums"]["participant_role_enum"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          conversation_id: string
+          created_at?: string
+          is_muted?: boolean
+          is_pinned?: boolean
+          joined_at?: string
+          last_notified_at?: string | null
+          last_read_at?: string | null
+          participant_role?: Database["public"]["Enums"]["participant_role_enum"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          conversation_id?: string
+          created_at?: string
+          is_muted?: boolean
+          is_pinned?: boolean
+          joined_at?: string
+          last_notified_at?: string | null
+          last_read_at?: string | null
+          participant_role?: Database["public"]["Enums"]["participant_role_enum"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_participants_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversation_participants_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      conversations: {
+        Row: {
+          archived_at: string | null
+          created_at: string
+          created_by: string | null
+          deal_id: string | null
+          id: string
+          last_message_at: string | null
+          last_message_id: string | null
+          metadata: Json
+          owner_team: string | null
+          preview: string | null
+          subject: string | null
+          type: Database["public"]["Enums"]["conversation_type_enum"]
+          updated_at: string
+          visibility: Database["public"]["Enums"]["conversation_visibility_enum"]
+        }
+        Insert: {
+          archived_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          deal_id?: string | null
+          id?: string
+          last_message_at?: string | null
+          last_message_id?: string | null
+          metadata?: Json
+          owner_team?: string | null
+          preview?: string | null
+          subject?: string | null
+          type?: Database["public"]["Enums"]["conversation_type_enum"]
+          updated_at?: string
+          visibility?: Database["public"]["Enums"]["conversation_visibility_enum"]
+        }
+        Update: {
+          archived_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          deal_id?: string | null
+          id?: string
+          last_message_at?: string | null
+          last_message_id?: string | null
+          metadata?: Json
+          owner_team?: string | null
+          preview?: string | null
+          subject?: string | null
+          type?: Database["public"]["Enums"]["conversation_type_enum"]
+          updated_at?: string
+          visibility?: Database["public"]["Enums"]["conversation_visibility_enum"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversations_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversations_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      counterparty_entity_members: {
+        Row: {
+          counterparty_entity_id: string
+          created_at: string | null
+          created_by: string | null
+          effective_from: string | null
+          effective_to: string | null
+          email: string | null
+          full_name: string
+          id: string
+          id_expiry_date: string | null
+          id_number: string | null
+          id_type: string | null
+          is_active: boolean | null
+          is_beneficial_owner: boolean | null
+          kyc_approved_at: string | null
+          kyc_approved_by: string | null
+          kyc_expiry_date: string | null
+          kyc_status: string | null
+          nationality: string | null
+          ownership_percentage: number | null
+          phone: string | null
+          residential_city: string | null
+          residential_country: string | null
+          residential_postal_code: string | null
+          residential_state: string | null
+          residential_street: string | null
+          role: string
+          role_title: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          counterparty_entity_id: string
+          created_at?: string | null
+          created_by?: string | null
+          effective_from?: string | null
+          effective_to?: string | null
+          email?: string | null
+          full_name: string
+          id?: string
+          id_expiry_date?: string | null
+          id_number?: string | null
+          id_type?: string | null
+          is_active?: boolean | null
+          is_beneficial_owner?: boolean | null
+          kyc_approved_at?: string | null
+          kyc_approved_by?: string | null
+          kyc_expiry_date?: string | null
+          kyc_status?: string | null
+          nationality?: string | null
+          ownership_percentage?: number | null
+          phone?: string | null
+          residential_city?: string | null
+          residential_country?: string | null
+          residential_postal_code?: string | null
+          residential_state?: string | null
+          residential_street?: string | null
+          role: string
+          role_title?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          counterparty_entity_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          effective_from?: string | null
+          effective_to?: string | null
+          email?: string | null
+          full_name?: string
+          id?: string
+          id_expiry_date?: string | null
+          id_number?: string | null
+          id_type?: string | null
+          is_active?: boolean | null
+          is_beneficial_owner?: boolean | null
+          kyc_approved_at?: string | null
+          kyc_approved_by?: string | null
+          kyc_expiry_date?: string | null
+          kyc_status?: string | null
+          nationality?: string | null
+          ownership_percentage?: number | null
+          phone?: string | null
+          residential_city?: string | null
+          residential_country?: string | null
+          residential_postal_code?: string | null
+          residential_state?: string | null
+          residential_street?: string | null
+          role?: string
+          role_title?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "counterparty_entity_members_counterparty_entity_id_fkey"
+            columns: ["counterparty_entity_id"]
+            isOneToOne: false
+            referencedRelation: "investor_counterparty"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "counterparty_entity_members_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "counterparty_entity_members_kyc_approved_by_fkey"
+            columns: ["kyc_approved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dashboard_preferences: {
+        Row: {
+          custom_metrics: Json | null
+          id: string
+          layout_config: Json | null
+          notification_settings: Json | null
+          theme_settings: Json | null
+          updated_at: string | null
+          user_id: string | null
+          widget_order: string[] | null
+        }
+        Insert: {
+          custom_metrics?: Json | null
+          id?: string
+          layout_config?: Json | null
+          notification_settings?: Json | null
+          theme_settings?: Json | null
+          updated_at?: string | null
+          user_id?: string | null
+          widget_order?: string[] | null
+        }
+        Update: {
+          custom_metrics?: Json | null
+          id?: string
+          layout_config?: Json | null
+          notification_settings?: Json | null
+          theme_settings?: Json | null
+          updated_at?: string | null
+          user_id?: string | null
+          widget_order?: string[] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dashboard_preferences_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      deal_activity_events: {
+        Row: {
+          deal_id: string
+          event_type: string
+          id: string
+          investor_id: string | null
+          occurred_at: string
+          payload: Json
+        }
+        Insert: {
+          deal_id: string
+          event_type: string
+          id?: string
+          investor_id?: string | null
+          occurred_at?: string
+          payload?: Json
+        }
+        Update: {
+          deal_id?: string
+          event_type?: string
+          id?: string
+          investor_id?: string | null
+          occurred_at?: string
+          payload?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deal_activity_events_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deal_activity_events_investor_id_fkey"
+            columns: ["investor_id"]
+            isOneToOne: false
+            referencedRelation: "investors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      deal_data_room_access: {
+        Row: {
+          auto_granted: boolean
+          deal_id: string
+          expires_at: string | null
+          granted_at: string
+          granted_by: string | null
+          id: string
+          investor_id: string
+          last_warning_sent_at: string | null
+          notes: string | null
+          revoked_at: string | null
+          revoked_by: string | null
+        }
+        Insert: {
+          auto_granted?: boolean
+          deal_id: string
+          expires_at?: string | null
+          granted_at?: string
+          granted_by?: string | null
+          id?: string
+          investor_id: string
+          last_warning_sent_at?: string | null
+          notes?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
+        }
+        Update: {
+          auto_granted?: boolean
+          deal_id?: string
+          expires_at?: string | null
+          granted_at?: string
+          granted_by?: string | null
+          id?: string
+          investor_id?: string
+          last_warning_sent_at?: string | null
+          notes?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deal_data_room_access_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deal_data_room_access_granted_by_fkey"
+            columns: ["granted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deal_data_room_access_investor_id_fkey"
+            columns: ["investor_id"]
+            isOneToOne: false
+            referencedRelation: "investors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deal_data_room_access_revoked_by_fkey"
+            columns: ["revoked_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      deal_data_room_documents: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          deal_id: string
+          document_expires_at: string | null
+          document_notes: string | null
+          external_link: string | null
+          file_key: string | null
+          file_name: string | null
+          file_size_bytes: number | null
+          folder: string | null
+          id: string
+          is_featured: boolean | null
+          metadata_json: Json | null
+          mime_type: string | null
+          replaced_by_id: string | null
+          tags: string[] | null
+          updated_at: string
+          version: number
+          visible_to_investors: boolean
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          deal_id: string
+          document_expires_at?: string | null
+          document_notes?: string | null
+          external_link?: string | null
+          file_key?: string | null
+          file_name?: string | null
+          file_size_bytes?: number | null
+          folder?: string | null
+          id?: string
+          is_featured?: boolean | null
+          metadata_json?: Json | null
+          mime_type?: string | null
+          replaced_by_id?: string | null
+          tags?: string[] | null
+          updated_at?: string
+          version?: number
+          visible_to_investors?: boolean
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          deal_id?: string
+          document_expires_at?: string | null
+          document_notes?: string | null
+          external_link?: string | null
+          file_key?: string | null
+          file_name?: string | null
+          file_size_bytes?: number | null
+          folder?: string | null
+          id?: string
+          is_featured?: boolean | null
+          metadata_json?: Json | null
+          mime_type?: string | null
+          replaced_by_id?: string | null
+          tags?: string[] | null
+          updated_at?: string
+          version?: number
+          visible_to_investors?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deal_data_room_documents_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deal_data_room_documents_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deal_data_room_documents_replaced_by_id_fkey"
+            columns: ["replaced_by_id"]
+            isOneToOne: false
+            referencedRelation: "deal_data_room_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      deal_faqs: {
+        Row: {
+          answer: string
+          created_at: string
+          created_by: string | null
+          deal_id: string
+          display_order: number
+          id: string
+          question: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          answer: string
+          created_at?: string
+          created_by?: string | null
+          deal_id: string
+          display_order?: number
+          id?: string
+          question: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          answer?: string
+          created_at?: string
+          created_by?: string | null
+          deal_id?: string
+          display_order?: number
+          id?: string
+          question?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deal_faqs_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deal_faqs_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deal_faqs_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      deal_fee_structures: {
+        Row: {
+          allocation_up_to: number | null
+          archived_at: string | null
+          arranger_person_name: string | null
+          arranger_person_title: string | null
+          capital_call_timeline: string | null
+          carried_interest_percent: number | null
+          completion_date_text: string | null
+          created_at: string
+          created_by: string | null
+          deal_id: string
+          effective_at: string | null
+          escrow_fee_text: string | null
+          exclusive_arranger: string | null
+          id: string
+          in_principle_approval_text: string | null
+          interest_confirmation_deadline: string | null
+          issue_within_business_days: number | null
+          issuer: string | null
+          issuer_signatory_name: string | null
+          issuer_signatory_title: string | null
+          legal_counsel: string | null
+          management_fee_clause: string | null
+          management_fee_percent: number | null
+          maximum_ticket: number | null
+          minimum_ticket: number | null
+          opportunity_summary: string | null
+          payment_deadline_days: number | null
+          performance_fee_clause: string | null
+          price_per_share_text: string | null
+          published_at: string | null
+          purchaser: string | null
+          recital_b_html: string | null
+          seller: string | null
+          share_certificates_note: string | null
+          status: string
+          structure: string | null
+          subject_to_change_note: string | null
+          subscription_fee_percent: number | null
+          subscription_pack_note: string | null
+          term_sheet_attachment_key: string | null
+          term_sheet_date: string | null
+          term_sheet_html: string | null
+          transaction_type: string | null
+          updated_at: string
+          validity_date: string | null
+          vehicle: string | null
+          version: number
+          wire_account_holder: string | null
+          wire_bank_address: string | null
+          wire_bank_name: string | null
+          wire_bic: string | null
+          wire_contact_email: string | null
+          wire_description_format: string | null
+          wire_escrow_agent: string | null
+          wire_iban: string | null
+          wire_law_firm_address: string | null
+          wire_reference_format: string | null
+        }
+        Insert: {
+          allocation_up_to?: number | null
+          archived_at?: string | null
+          arranger_person_name?: string | null
+          arranger_person_title?: string | null
+          capital_call_timeline?: string | null
+          carried_interest_percent?: number | null
+          completion_date_text?: string | null
+          created_at?: string
+          created_by?: string | null
+          deal_id: string
+          effective_at?: string | null
+          escrow_fee_text?: string | null
+          exclusive_arranger?: string | null
+          id?: string
+          in_principle_approval_text?: string | null
+          interest_confirmation_deadline?: string | null
+          issue_within_business_days?: number | null
+          issuer?: string | null
+          issuer_signatory_name?: string | null
+          issuer_signatory_title?: string | null
+          legal_counsel?: string | null
+          management_fee_clause?: string | null
+          management_fee_percent?: number | null
+          maximum_ticket?: number | null
+          minimum_ticket?: number | null
+          opportunity_summary?: string | null
+          payment_deadline_days?: number | null
+          performance_fee_clause?: string | null
+          price_per_share_text?: string | null
+          published_at?: string | null
+          purchaser?: string | null
+          recital_b_html?: string | null
+          seller?: string | null
+          share_certificates_note?: string | null
+          status?: string
+          structure?: string | null
+          subject_to_change_note?: string | null
+          subscription_fee_percent?: number | null
+          subscription_pack_note?: string | null
+          term_sheet_attachment_key?: string | null
+          term_sheet_date?: string | null
+          term_sheet_html?: string | null
+          transaction_type?: string | null
+          updated_at?: string
+          validity_date?: string | null
+          vehicle?: string | null
+          version?: number
+          wire_account_holder?: string | null
+          wire_bank_address?: string | null
+          wire_bank_name?: string | null
+          wire_bic?: string | null
+          wire_contact_email?: string | null
+          wire_description_format?: string | null
+          wire_escrow_agent?: string | null
+          wire_iban?: string | null
+          wire_law_firm_address?: string | null
+          wire_reference_format?: string | null
+        }
+        Update: {
+          allocation_up_to?: number | null
+          archived_at?: string | null
+          arranger_person_name?: string | null
+          arranger_person_title?: string | null
+          capital_call_timeline?: string | null
+          carried_interest_percent?: number | null
+          completion_date_text?: string | null
+          created_at?: string
+          created_by?: string | null
+          deal_id?: string
+          effective_at?: string | null
+          escrow_fee_text?: string | null
+          exclusive_arranger?: string | null
+          id?: string
+          in_principle_approval_text?: string | null
+          interest_confirmation_deadline?: string | null
+          issue_within_business_days?: number | null
+          issuer?: string | null
+          issuer_signatory_name?: string | null
+          issuer_signatory_title?: string | null
+          legal_counsel?: string | null
+          management_fee_clause?: string | null
+          management_fee_percent?: number | null
+          maximum_ticket?: number | null
+          minimum_ticket?: number | null
+          opportunity_summary?: string | null
+          payment_deadline_days?: number | null
+          performance_fee_clause?: string | null
+          price_per_share_text?: string | null
+          published_at?: string | null
+          purchaser?: string | null
+          recital_b_html?: string | null
+          seller?: string | null
+          share_certificates_note?: string | null
+          status?: string
+          structure?: string | null
+          subject_to_change_note?: string | null
+          subscription_fee_percent?: number | null
+          subscription_pack_note?: string | null
+          term_sheet_attachment_key?: string | null
+          term_sheet_date?: string | null
+          term_sheet_html?: string | null
+          transaction_type?: string | null
+          updated_at?: string
+          validity_date?: string | null
+          vehicle?: string | null
+          version?: number
+          wire_account_holder?: string | null
+          wire_bank_address?: string | null
+          wire_bank_name?: string | null
+          wire_bic?: string | null
+          wire_contact_email?: string | null
+          wire_description_format?: string | null
+          wire_escrow_agent?: string | null
+          wire_iban?: string | null
+          wire_law_firm_address?: string | null
+          wire_reference_format?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deal_fee_structures_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deal_fee_structures_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      deal_lawyer_assignments: {
+        Row: {
+          assigned_at: string | null
+          assigned_by: string | null
+          completed_at: string | null
+          created_at: string | null
+          deal_id: string
+          id: string
+          lawyer_id: string
+          notes: string | null
+          role: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          assigned_at?: string | null
+          assigned_by?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          deal_id: string
+          id?: string
+          lawyer_id: string
+          notes?: string | null
+          role?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          assigned_at?: string | null
+          assigned_by?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          deal_id?: string
+          id?: string
+          lawyer_id?: string
+          notes?: string | null
+          role?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deal_lawyer_assignments_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deal_lawyer_assignments_lawyer_id_fkey"
+            columns: ["lawyer_id"]
+            isOneToOne: false
+            referencedRelation: "lawyers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      deal_memberships: {
+        Row: {
+          accepted_at: string | null
+          data_room_granted_at: string | null
+          deal_id: string
+          dispatched_at: string | null
+          interest_confirmed_at: string | null
+          investor_id: string | null
+          invited_at: string | null
+          invited_by: string | null
+          nda_signed_at: string | null
+          referred_by_entity_id: string | null
+          referred_by_entity_type: string | null
+          role: Database["public"]["Enums"]["deal_member_role"]
+          user_id: string
+          viewed_at: string | null
+        }
+        Insert: {
+          accepted_at?: string | null
+          data_room_granted_at?: string | null
+          deal_id: string
+          dispatched_at?: string | null
+          interest_confirmed_at?: string | null
+          investor_id?: string | null
+          invited_at?: string | null
+          invited_by?: string | null
+          nda_signed_at?: string | null
+          referred_by_entity_id?: string | null
+          referred_by_entity_type?: string | null
+          role: Database["public"]["Enums"]["deal_member_role"]
+          user_id: string
+          viewed_at?: string | null
+        }
+        Update: {
+          accepted_at?: string | null
+          data_room_granted_at?: string | null
+          deal_id?: string
+          dispatched_at?: string | null
+          interest_confirmed_at?: string | null
+          investor_id?: string | null
+          invited_at?: string | null
+          invited_by?: string | null
+          nda_signed_at?: string | null
+          referred_by_entity_id?: string | null
+          referred_by_entity_type?: string | null
+          role?: Database["public"]["Enums"]["deal_member_role"]
+          user_id?: string
+          viewed_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deal_memberships_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deal_memberships_investor_id_fkey"
+            columns: ["investor_id"]
+            isOneToOne: false
+            referencedRelation: "investors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deal_memberships_invited_by_fkey"
+            columns: ["invited_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deal_memberships_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      deal_signatory_ndas: {
+        Row: {
+          created_at: string | null
+          deal_id: string
+          id: string
+          investor_id: string
+          member_id: string
+          signature_data: Json | null
+          signed_at: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          deal_id: string
+          id?: string
+          investor_id: string
+          member_id: string
+          signature_data?: Json | null
+          signed_at?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          deal_id?: string
+          id?: string
+          investor_id?: string
+          member_id?: string
+          signature_data?: Json | null
+          signed_at?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deal_signatory_ndas_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deal_signatory_ndas_investor_id_fkey"
+            columns: ["investor_id"]
+            isOneToOne: false
+            referencedRelation: "investors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deal_signatory_ndas_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "investor_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      deal_subscription_submissions: {
+        Row: {
+          approval_id: string | null
+          approved_at: string | null
+          approved_by: string | null
+          counterparty_entity_id: string | null
+          created_by: string | null
+          deal_id: string
+          decided_at: string | null
+          decided_by: string | null
+          formal_subscription_id: string | null
+          id: string
+          investor_id: string
+          payload_json: Json
+          rejected_at: string | null
+          rejected_by: string | null
+          rejection_reason: string | null
+          status: string
+          submitted_at: string
+          subscription_type: string | null
+        }
+        Insert: {
+          approval_id?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          counterparty_entity_id?: string | null
+          created_by?: string | null
+          deal_id: string
+          decided_at?: string | null
+          decided_by?: string | null
+          formal_subscription_id?: string | null
+          id?: string
+          investor_id: string
+          payload_json?: Json
+          rejected_at?: string | null
+          rejected_by?: string | null
+          rejection_reason?: string | null
+          status?: string
+          submitted_at?: string
+          subscription_type?: string | null
+        }
+        Update: {
+          approval_id?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          counterparty_entity_id?: string | null
+          created_by?: string | null
+          deal_id?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          formal_subscription_id?: string | null
+          id?: string
+          investor_id?: string
+          payload_json?: Json
+          rejected_at?: string | null
+          rejected_by?: string | null
+          rejection_reason?: string | null
+          status?: string
+          submitted_at?: string
+          subscription_type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deal_subscription_submissions_approval_id_fkey"
+            columns: ["approval_id"]
+            isOneToOne: false
+            referencedRelation: "approvals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deal_subscription_submissions_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deal_subscription_submissions_counterparty_entity_id_fkey"
+            columns: ["counterparty_entity_id"]
+            isOneToOne: false
+            referencedRelation: "investor_counterparty"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deal_subscription_submissions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deal_subscription_submissions_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deal_subscription_submissions_decided_by_fkey"
+            columns: ["decided_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deal_subscription_submissions_formal_subscription_id_fkey"
+            columns: ["formal_subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deal_subscription_submissions_investor_id_fkey"
+            columns: ["investor_id"]
+            isOneToOne: false
+            referencedRelation: "investors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deal_subscription_submissions_rejected_by_fkey"
+            columns: ["rejected_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      deals: {
+        Row: {
+          arranger_entity_id: string | null
+          close_at: string | null
+          company_id: string | null
+          company_logo_url: string | null
+          company_name: string | null
+          company_website: string | null
+          created_at: string | null
+          created_by: string | null
+          currency: string | null
+          deal_round: string | null
+          deal_type: Database["public"]["Enums"]["deal_type_enum"] | null
+          description: string | null
+          id: string
+          investment_thesis: string | null
+          location: string | null
+          maximum_investment: number | null
+          minimum_investment: number | null
+          name: string
+          offer_unit_price: number | null
+          open_at: string | null
+          raised_amount: number | null
+          sector: string | null
+          stage: string | null
+          status: Database["public"]["Enums"]["deal_status_enum"] | null
+          stock_type: string | null
+          target_amount: number | null
+          terms_schema: Json | null
+          vehicle_id: string
+        }
+        Insert: {
+          arranger_entity_id?: string | null
+          close_at?: string | null
+          company_id?: string | null
+          company_logo_url?: string | null
+          company_name?: string | null
+          company_website?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          currency?: string | null
+          deal_round?: string | null
+          deal_type?: Database["public"]["Enums"]["deal_type_enum"] | null
+          description?: string | null
+          id?: string
+          investment_thesis?: string | null
+          location?: string | null
+          maximum_investment?: number | null
+          minimum_investment?: number | null
+          name: string
+          offer_unit_price?: number | null
+          open_at?: string | null
+          raised_amount?: number | null
+          sector?: string | null
+          stage?: string | null
+          status?: Database["public"]["Enums"]["deal_status_enum"] | null
+          stock_type?: string | null
+          target_amount?: number | null
+          terms_schema?: Json | null
+          vehicle_id: string
+        }
+        Update: {
+          arranger_entity_id?: string | null
+          close_at?: string | null
+          company_id?: string | null
+          company_logo_url?: string | null
+          company_name?: string | null
+          company_website?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          currency?: string | null
+          deal_round?: string | null
+          deal_type?: Database["public"]["Enums"]["deal_type_enum"] | null
+          description?: string | null
+          id?: string
+          investment_thesis?: string | null
+          location?: string | null
+          maximum_investment?: number | null
+          minimum_investment?: number | null
+          name?: string
+          offer_unit_price?: number | null
+          open_at?: string | null
+          raised_amount?: number | null
+          sector?: string | null
+          stage?: string | null
+          status?: Database["public"]["Enums"]["deal_status_enum"] | null
+          stock_type?: string | null
+          target_amount?: number | null
+          terms_schema?: Json | null
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deals_arranger_entity_id_fkey"
+            columns: ["arranger_entity_id"]
+            isOneToOne: false
+            referencedRelation: "arranger_entities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deals_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deals_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deals_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "entity_action_center_summary"
+            referencedColumns: ["vehicle_id"]
+          },
+          {
+            foreignKeyName: "deals_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      director_registry: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          email: string | null
+          full_name: string
+          id: string
+          id_number: string | null
+          nationality: string | null
+          notes: string | null
+          phone: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          email?: string | null
+          full_name: string
+          id?: string
+          id_number?: string | null
+          nationality?: string | null
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          email?: string | null
+          full_name?: string
+          id?: string
+          id_number?: string | null
+          nationality?: string | null
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "director_registry_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      distribution_items: {
+        Row: {
+          balance_pending: number | null
+          confirmed_date: string | null
+          created_at: string | null
+          distribution_amount: number
+          distribution_id: string
+          id: string
+          investor_id: string
+          notes: string | null
+          sent_amount: number
+          sent_date: string | null
+          status: string | null
+          subscription_id: string
+          updated_at: string | null
+          wire_reference: string | null
+        }
+        Insert: {
+          balance_pending?: number | null
+          confirmed_date?: string | null
+          created_at?: string | null
+          distribution_amount: number
+          distribution_id: string
+          id?: string
+          investor_id: string
+          notes?: string | null
+          sent_amount?: number
+          sent_date?: string | null
+          status?: string | null
+          subscription_id: string
+          updated_at?: string | null
+          wire_reference?: string | null
+        }
+        Update: {
+          balance_pending?: number | null
+          confirmed_date?: string | null
+          created_at?: string | null
+          distribution_amount?: number
+          distribution_id?: string
+          id?: string
+          investor_id?: string
+          notes?: string | null
+          sent_amount?: number
+          sent_date?: string | null
+          status?: string | null
+          subscription_id?: string
+          updated_at?: string | null
+          wire_reference?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "distribution_items_distribution_id_fkey"
+            columns: ["distribution_id"]
+            isOneToOne: false
+            referencedRelation: "distributions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "distribution_items_investor_id_fkey"
+            columns: ["investor_id"]
+            isOneToOne: false
+            referencedRelation: "investors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "distribution_items_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      distributions: {
+        Row: {
+          amount: number | null
+          classification: string | null
+          date: string | null
+          id: string
+          name: string | null
+          vehicle_id: string | null
+        }
+        Insert: {
+          amount?: number | null
+          classification?: string | null
+          date?: string | null
+          id?: string
+          name?: string | null
+          vehicle_id?: string | null
+        }
+        Update: {
+          amount?: number | null
+          classification?: string | null
+          date?: string | null
+          id?: string
+          name?: string | null
+          vehicle_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "distributions_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "entity_action_center_summary"
+            referencedColumns: ["vehicle_id"]
+          },
+          {
+            foreignKeyName: "distributions_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      document_approvals: {
+        Row: {
+          created_at: string | null
+          document_id: string | null
+          id: string
+          requested_at: string | null
+          requested_by: string | null
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          document_id?: string | null
+          id?: string
+          requested_at?: string | null
+          requested_by?: string | null
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          document_id?: string | null
+          id?: string
+          requested_at?: string | null
+          requested_by?: string | null
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_approvals_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_approvals_requested_by_fkey"
+            columns: ["requested_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_approvals_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      document_folders: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          folder_type: string
+          id: string
+          name: string
+          parent_folder_id: string | null
+          path: string
+          updated_at: string | null
+          vehicle_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          folder_type: string
+          id?: string
+          name: string
+          parent_folder_id?: string | null
+          path: string
+          updated_at?: string | null
+          vehicle_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          folder_type?: string
+          id?: string
+          name?: string
+          parent_folder_id?: string | null
+          path?: string
+          updated_at?: string | null
+          vehicle_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_folders_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_folders_parent_folder_id_fkey"
+            columns: ["parent_folder_id"]
+            isOneToOne: false
+            referencedRelation: "document_folders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_folders_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "entity_action_center_summary"
+            referencedColumns: ["vehicle_id"]
+          },
+          {
+            foreignKeyName: "document_folders_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      document_publishing_schedule: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          document_id: string | null
+          id: string
+          publish_at: string
+          published: boolean | null
+          unpublish_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          document_id?: string | null
+          id?: string
+          publish_at: string
+          published?: boolean | null
+          unpublish_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          document_id?: string | null
+          id?: string
+          publish_at?: string
+          published?: boolean | null
+          unpublish_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_publishing_schedule_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_publishing_schedule_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      document_versions: {
+        Row: {
+          changes_description: string | null
+          created_at: string | null
+          created_by: string | null
+          document_id: string | null
+          file_key: string
+          file_size_bytes: number | null
+          id: string
+          mime_type: string | null
+          version_number: number
+        }
+        Insert: {
+          changes_description?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          document_id?: string | null
+          file_key: string
+          file_size_bytes?: number | null
+          id?: string
+          mime_type?: string | null
+          version_number: number
+        }
+        Update: {
+          changes_description?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          document_id?: string | null
+          file_key?: string
+          file_size_bytes?: number | null
+          id?: string
+          mime_type?: string | null
+          version_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_versions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_versions_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      documents: {
+        Row: {
+          arranger_entity_id: string | null
+          created_at: string | null
+          created_by: string | null
+          current_version: number | null
+          deal_id: string | null
+          description: string | null
+          entity_id: string | null
+          external_url: string | null
+          file_key: string
+          file_size_bytes: number | null
+          folder_id: string | null
+          id: string
+          is_published: boolean | null
+          link_type: string | null
+          mime_type: string | null
+          name: string | null
+          owner_investor_id: string | null
+          owner_user_id: string | null
+          published_at: string | null
+          ready_for_signature: boolean | null
+          signature_workflow_run_id: string | null
+          status: string | null
+          subscription_id: string | null
+          subscription_submission_id: string | null
+          tags: string[] | null
+          type: string | null
+          updated_at: string | null
+          vehicle_id: string | null
+          watermark: Json | null
+        }
+        Insert: {
+          arranger_entity_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          current_version?: number | null
+          deal_id?: string | null
+          description?: string | null
+          entity_id?: string | null
+          external_url?: string | null
+          file_key: string
+          file_size_bytes?: number | null
+          folder_id?: string | null
+          id?: string
+          is_published?: boolean | null
+          link_type?: string | null
+          mime_type?: string | null
+          name?: string | null
+          owner_investor_id?: string | null
+          owner_user_id?: string | null
+          published_at?: string | null
+          ready_for_signature?: boolean | null
+          signature_workflow_run_id?: string | null
+          status?: string | null
+          subscription_id?: string | null
+          subscription_submission_id?: string | null
+          tags?: string[] | null
+          type?: string | null
+          updated_at?: string | null
+          vehicle_id?: string | null
+          watermark?: Json | null
+        }
+        Update: {
+          arranger_entity_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          current_version?: number | null
+          deal_id?: string | null
+          description?: string | null
+          entity_id?: string | null
+          external_url?: string | null
+          file_key?: string
+          file_size_bytes?: number | null
+          folder_id?: string | null
+          id?: string
+          is_published?: boolean | null
+          link_type?: string | null
+          mime_type?: string | null
+          name?: string | null
+          owner_investor_id?: string | null
+          owner_user_id?: string | null
+          published_at?: string | null
+          ready_for_signature?: boolean | null
+          signature_workflow_run_id?: string | null
+          status?: string | null
+          subscription_id?: string | null
+          subscription_submission_id?: string | null
+          tags?: string[] | null
+          type?: string | null
+          updated_at?: string | null
+          vehicle_id?: string | null
+          watermark?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documents_arranger_entity_id_fkey"
+            columns: ["arranger_entity_id"]
+            isOneToOne: false
+            referencedRelation: "arranger_entities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entity_action_center_summary"
+            referencedColumns: ["vehicle_id"]
+          },
+          {
+            foreignKeyName: "documents_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_folder_id_fkey"
+            columns: ["folder_id"]
+            isOneToOne: false
+            referencedRelation: "document_folders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_owner_investor_id_fkey"
+            columns: ["owner_investor_id"]
+            isOneToOne: false
+            referencedRelation: "investors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_owner_user_id_fkey"
+            columns: ["owner_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_signature_workflow_run_id_fkey"
+            columns: ["signature_workflow_run_id"]
+            isOneToOne: false
+            referencedRelation: "workflow_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_subscription_submission_id_fkey"
+            columns: ["subscription_submission_id"]
+            isOneToOne: false
+            referencedRelation: "deal_subscription_submissions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "entity_action_center_summary"
+            referencedColumns: ["vehicle_id"]
+          },
+          {
+            foreignKeyName: "documents_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      entity_directors: {
+        Row: {
+          created_at: string | null
+          effective_from: string | null
+          effective_to: string | null
+          email: string | null
+          full_name: string
+          id: string
+          notes: string | null
+          role: string | null
+          vehicle_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          effective_from?: string | null
+          effective_to?: string | null
+          email?: string | null
+          full_name: string
+          id?: string
+          notes?: string | null
+          role?: string | null
+          vehicle_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          effective_from?: string | null
+          effective_to?: string | null
+          email?: string | null
+          full_name?: string
+          id?: string
+          notes?: string | null
+          role?: string | null
+          vehicle_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "entity_directors_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "entity_action_center_summary"
+            referencedColumns: ["vehicle_id"]
+          },
+          {
+            foreignKeyName: "entity_directors_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      entity_events: {
+        Row: {
+          changed_by: string | null
+          created_at: string | null
+          description: string | null
+          event_type: string
+          id: string
+          payload: Json | null
+          vehicle_id: string | null
+        }
+        Insert: {
+          changed_by?: string | null
+          created_at?: string | null
+          description?: string | null
+          event_type: string
+          id?: string
+          payload?: Json | null
+          vehicle_id?: string | null
+        }
+        Update: {
+          changed_by?: string | null
+          created_at?: string | null
+          description?: string | null
+          event_type?: string
+          id?: string
+          payload?: Json | null
+          vehicle_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "entity_events_changed_by_fkey"
+            columns: ["changed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "entity_events_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "entity_action_center_summary"
+            referencedColumns: ["vehicle_id"]
+          },
+          {
+            foreignKeyName: "entity_events_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      entity_flags: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          due_date: string | null
+          flag_type: Database["public"]["Enums"]["flag_type"]
+          id: string
+          is_resolved: boolean | null
+          resolution_notes: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: Database["public"]["Enums"]["flag_severity"]
+          status: string | null
+          title: string
+          updated_at: string | null
+          vehicle_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          due_date?: string | null
+          flag_type: Database["public"]["Enums"]["flag_type"]
+          id?: string
+          is_resolved?: boolean | null
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: Database["public"]["Enums"]["flag_severity"]
+          status?: string | null
+          title: string
+          updated_at?: string | null
+          vehicle_id: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          due_date?: string | null
+          flag_type?: Database["public"]["Enums"]["flag_type"]
+          id?: string
+          is_resolved?: boolean | null
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: Database["public"]["Enums"]["flag_severity"]
+          status?: string | null
+          title?: string
+          updated_at?: string | null
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "entity_flags_resolved_by_fkey"
+            columns: ["resolved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "entity_flags_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "entity_action_center_summary"
+            referencedColumns: ["vehicle_id"]
+          },
+          {
+            foreignKeyName: "entity_flags_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      entity_folders: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          folder_name: string
+          folder_type: Database["public"]["Enums"]["folder_type"]
+          id: string
+          is_default: boolean | null
+          parent_folder_id: string | null
+          updated_at: string | null
+          vehicle_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          folder_name: string
+          folder_type: Database["public"]["Enums"]["folder_type"]
+          id?: string
+          is_default?: boolean | null
+          parent_folder_id?: string | null
+          updated_at?: string | null
+          vehicle_id: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          folder_name?: string
+          folder_type?: Database["public"]["Enums"]["folder_type"]
+          id?: string
+          is_default?: boolean | null
+          parent_folder_id?: string | null
+          updated_at?: string | null
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "entity_folders_parent_folder_id_fkey"
+            columns: ["parent_folder_id"]
+            isOneToOne: false
+            referencedRelation: "entity_folders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "entity_folders_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "entity_action_center_summary"
+            referencedColumns: ["vehicle_id"]
+          },
+          {
+            foreignKeyName: "entity_folders_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      entity_investors: {
+        Row: {
+          allocation_status: string | null
+          created_at: string | null
+          created_by: string | null
+          id: string
+          investor_id: string | null
+          invite_sent_at: string | null
+          notes: string | null
+          relationship_role: string | null
+          updated_at: string | null
+          vehicle_id: string | null
+        }
+        Insert: {
+          allocation_status?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          investor_id?: string | null
+          invite_sent_at?: string | null
+          notes?: string | null
+          relationship_role?: string | null
+          updated_at?: string | null
+          vehicle_id?: string | null
+        }
+        Update: {
+          allocation_status?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          investor_id?: string | null
+          invite_sent_at?: string | null
+          notes?: string | null
+          relationship_role?: string | null
+          updated_at?: string | null
+          vehicle_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "entity_investors_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "entity_investors_investor_id_fkey"
+            columns: ["investor_id"]
+            isOneToOne: false
+            referencedRelation: "investors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "entity_investors_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "entity_action_center_summary"
+            referencedColumns: ["vehicle_id"]
+          },
+          {
+            foreignKeyName: "entity_investors_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      entity_stakeholders: {
+        Row: {
+          company_name: string | null
+          contact_person: string | null
+          created_at: string | null
+          effective_from: string | null
+          effective_to: string | null
+          email: string | null
+          id: string
+          notes: string | null
+          phone: string | null
+          role: Database["public"]["Enums"]["stakeholder_role"]
+          updated_at: string | null
+          vehicle_id: string
+        }
+        Insert: {
+          company_name?: string | null
+          contact_person?: string | null
+          created_at?: string | null
+          effective_from?: string | null
+          effective_to?: string | null
+          email?: string | null
+          id?: string
+          notes?: string | null
+          phone?: string | null
+          role: Database["public"]["Enums"]["stakeholder_role"]
+          updated_at?: string | null
+          vehicle_id: string
+        }
+        Update: {
+          company_name?: string | null
+          contact_person?: string | null
+          created_at?: string | null
+          effective_from?: string | null
+          effective_to?: string | null
+          email?: string | null
+          id?: string
+          notes?: string | null
+          phone?: string | null
+          role?: Database["public"]["Enums"]["stakeholder_role"]
+          updated_at?: string | null
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "entity_stakeholders_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "entity_action_center_summary"
+            referencedColumns: ["vehicle_id"]
+          },
+          {
+            foreignKeyName: "entity_stakeholders_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      esign_envelopes: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          envelope_id: string | null
+          id: string
+          recipient_email: string | null
+          status: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          envelope_id?: string | null
+          id?: string
+          recipient_email?: string | null
+          status?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          envelope_id?: string | null
+          id?: string
+          recipient_email?: string | null
+          status?: string | null
+        }
+        Relationships: []
+      }
+      fee_components: {
+        Row: {
+          base_calculation: string | null
+          calc_method:
+            | Database["public"]["Enums"]["fee_calc_method_enum"]
+            | null
+          catchup_rate_bps: number | null
+          created_at: string
+          duration_periods: number | null
+          duration_unit: string | null
+          fee_plan_id: string | null
+          flat_amount: number | null
+          frequency: Database["public"]["Enums"]["fee_frequency_enum"] | null
+          has_catchup: boolean
+          has_high_water_mark: boolean
+          hurdle_rate_bps: number | null
+          id: string
+          kind: Database["public"]["Enums"]["fee_component_kind_enum"]
+          next_tier_component_id: string | null
+          notes: string | null
+          payment_schedule: string | null
+          rate_bps: number | null
+          tier_threshold_multiplier: number | null
+          updated_at: string
+        }
+        Insert: {
+          base_calculation?: string | null
+          calc_method?:
+            | Database["public"]["Enums"]["fee_calc_method_enum"]
+            | null
+          catchup_rate_bps?: number | null
+          created_at?: string
+          duration_periods?: number | null
+          duration_unit?: string | null
+          fee_plan_id?: string | null
+          flat_amount?: number | null
+          frequency?: Database["public"]["Enums"]["fee_frequency_enum"] | null
+          has_catchup?: boolean
+          has_high_water_mark?: boolean
+          hurdle_rate_bps?: number | null
+          id?: string
+          kind: Database["public"]["Enums"]["fee_component_kind_enum"]
+          next_tier_component_id?: string | null
+          notes?: string | null
+          payment_schedule?: string | null
+          rate_bps?: number | null
+          tier_threshold_multiplier?: number | null
+          updated_at?: string
+        }
+        Update: {
+          base_calculation?: string | null
+          calc_method?:
+            | Database["public"]["Enums"]["fee_calc_method_enum"]
+            | null
+          catchup_rate_bps?: number | null
+          created_at?: string
+          duration_periods?: number | null
+          duration_unit?: string | null
+          fee_plan_id?: string | null
+          flat_amount?: number | null
+          frequency?: Database["public"]["Enums"]["fee_frequency_enum"] | null
+          has_catchup?: boolean
+          has_high_water_mark?: boolean
+          hurdle_rate_bps?: number | null
+          id?: string
+          kind?: Database["public"]["Enums"]["fee_component_kind_enum"]
+          next_tier_component_id?: string | null
+          notes?: string | null
+          payment_schedule?: string | null
+          rate_bps?: number | null
+          tier_threshold_multiplier?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fee_components_fee_plan_id_fkey"
+            columns: ["fee_plan_id"]
+            isOneToOne: false
+            referencedRelation: "fee_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fee_components_next_tier_component_id_fkey"
+            columns: ["next_tier_component_id"]
+            isOneToOne: false
+            referencedRelation: "fee_components"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fee_events: {
+        Row: {
+          allocation_id: string | null
+          allocation_type: string | null
+          base_amount: number | null
+          computed_amount: number
+          created_at: string | null
+          currency: string | null
+          deal_id: string | null
+          event_date: string
+          fee_component_id: string | null
+          fee_type:
+            | Database["public"]["Enums"]["fee_component_kind_enum"]
+            | null
+          id: string
+          investor_id: string | null
+          invoice_id: string | null
+          notes: string | null
+          payment_id: string | null
+          period_end_date: string | null
+          period_start_date: string | null
+          processed_at: string | null
+          rate_bps: number | null
+          source_ref: string | null
+          status: Database["public"]["Enums"]["fee_event_status_enum"] | null
+        }
+        Insert: {
+          allocation_id?: string | null
+          allocation_type?: string | null
+          base_amount?: number | null
+          computed_amount: number
+          created_at?: string | null
+          currency?: string | null
+          deal_id?: string | null
+          event_date: string
+          fee_component_id?: string | null
+          fee_type?:
+            | Database["public"]["Enums"]["fee_component_kind_enum"]
+            | null
+          id?: string
+          investor_id?: string | null
+          invoice_id?: string | null
+          notes?: string | null
+          payment_id?: string | null
+          period_end_date?: string | null
+          period_start_date?: string | null
+          processed_at?: string | null
+          rate_bps?: number | null
+          source_ref?: string | null
+          status?: Database["public"]["Enums"]["fee_event_status_enum"] | null
+        }
+        Update: {
+          allocation_id?: string | null
+          allocation_type?: string | null
+          base_amount?: number | null
+          computed_amount?: number
+          created_at?: string | null
+          currency?: string | null
+          deal_id?: string | null
+          event_date?: string
+          fee_component_id?: string | null
+          fee_type?:
+            | Database["public"]["Enums"]["fee_component_kind_enum"]
+            | null
+          id?: string
+          investor_id?: string | null
+          invoice_id?: string | null
+          notes?: string | null
+          payment_id?: string | null
+          period_end_date?: string | null
+          period_start_date?: string | null
+          processed_at?: string | null
+          rate_bps?: number | null
+          source_ref?: string | null
+          status?: Database["public"]["Enums"]["fee_event_status_enum"] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fee_events_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fee_events_fee_component_id_fkey"
+            columns: ["fee_component_id"]
+            isOneToOne: false
+            referencedRelation: "fee_components"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fee_events_investor_id_fkey"
+            columns: ["investor_id"]
+            isOneToOne: false
+            referencedRelation: "investors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fee_events_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fee_events_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "payments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fee_plans: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          deal_id: string | null
+          description: string | null
+          effective_from: string
+          effective_until: string | null
+          id: string
+          is_active: boolean
+          is_default: boolean | null
+          name: string
+          updated_at: string
+          vehicle_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          deal_id?: string | null
+          description?: string | null
+          effective_from?: string
+          effective_until?: string | null
+          id?: string
+          is_active?: boolean
+          is_default?: boolean | null
+          name: string
+          updated_at?: string
+          vehicle_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          deal_id?: string | null
+          description?: string | null
+          effective_from?: string
+          effective_until?: string | null
+          id?: string
+          is_active?: boolean
+          is_default?: boolean | null
+          name?: string
+          updated_at?: string
+          vehicle_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fee_plans_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fee_plans_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fee_plans_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "entity_action_center_summary"
+            referencedColumns: ["vehicle_id"]
+          },
+          {
+            foreignKeyName: "fee_plans_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fee_schedules: {
+        Row: {
+          allocation_id: string | null
+          completed_periods: number | null
+          created_at: string | null
+          created_by: string | null
+          deal_id: string | null
+          end_date: string | null
+          fee_component_id: string
+          id: string
+          investor_id: string
+          next_due_date: string | null
+          start_date: string
+          status: string | null
+          total_periods: number
+          updated_at: string | null
+        }
+        Insert: {
+          allocation_id?: string | null
+          completed_periods?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          deal_id?: string | null
+          end_date?: string | null
+          fee_component_id: string
+          id?: string
+          investor_id: string
+          next_due_date?: string | null
+          start_date: string
+          status?: string | null
+          total_periods: number
+          updated_at?: string | null
+        }
+        Update: {
+          allocation_id?: string | null
+          completed_periods?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          deal_id?: string | null
+          end_date?: string | null
+          fee_component_id?: string
+          id?: string
+          investor_id?: string
+          next_due_date?: string | null
+          start_date?: string
+          status?: string | null
+          total_periods?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fee_schedules_allocation_id_fkey"
+            columns: ["allocation_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fee_schedules_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fee_schedules_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fee_schedules_fee_component_id_fkey"
+            columns: ["fee_component_id"]
+            isOneToOne: false
+            referencedRelation: "fee_components"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fee_schedules_investor_id_fkey"
+            columns: ["investor_id"]
+            isOneToOne: false
+            referencedRelation: "investors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      import_batches: {
+        Row: {
+          bank_account_id: string
+          created_at: string | null
+          file_name: string
+          id: string
+          imported_by: string | null
+          transaction_count: number
+        }
+        Insert: {
+          bank_account_id: string
+          created_at?: string | null
+          file_name: string
+          id?: string
+          imported_by?: string | null
+          transaction_count: number
+        }
+        Update: {
+          bank_account_id?: string
+          created_at?: string | null
+          file_name?: string
+          id?: string
+          imported_by?: string | null
+          transaction_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "import_batches_imported_by_fkey"
+            columns: ["imported_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      introducer_agreements: {
+        Row: {
+          agreement_document_id: string | null
+          agreement_type: string
+          commission_cap_amount: number | null
+          created_at: string
+          created_by: string | null
+          deal_types: string[] | null
+          default_commission_bps: number
+          effective_date: string | null
+          exclusivity_level: string | null
+          expiry_date: string | null
+          id: string
+          introducer_id: string
+          payment_terms: string | null
+          signed_date: string | null
+          status: string
+          territory: string | null
+          updated_at: string
+        }
+        Insert: {
+          agreement_document_id?: string | null
+          agreement_type?: string
+          commission_cap_amount?: number | null
+          created_at?: string
+          created_by?: string | null
+          deal_types?: string[] | null
+          default_commission_bps?: number
+          effective_date?: string | null
+          exclusivity_level?: string | null
+          expiry_date?: string | null
+          id?: string
+          introducer_id: string
+          payment_terms?: string | null
+          signed_date?: string | null
+          status?: string
+          territory?: string | null
+          updated_at?: string
+        }
+        Update: {
+          agreement_document_id?: string | null
+          agreement_type?: string
+          commission_cap_amount?: number | null
+          created_at?: string
+          created_by?: string | null
+          deal_types?: string[] | null
+          default_commission_bps?: number
+          effective_date?: string | null
+          exclusivity_level?: string | null
+          expiry_date?: string | null
+          id?: string
+          introducer_id?: string
+          payment_terms?: string | null
+          signed_date?: string | null
+          status?: string
+          territory?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "introducer_agreements_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "introducer_agreements_doc_fk"
+            columns: ["agreement_document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "introducer_agreements_introducer_fk"
+            columns: ["introducer_id"]
+            isOneToOne: false
+            referencedRelation: "introducers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      introducer_commissions: {
+        Row: {
+          accrual_amount: number
+          approved_at: string | null
+          approved_by: string | null
+          base_amount: number | null
+          basis_type: string | null
+          created_at: string | null
+          currency: string | null
+          deal_id: string | null
+          id: string
+          introducer_id: string | null
+          introduction_id: string | null
+          investor_id: string | null
+          invoice_id: string | null
+          notes: string | null
+          paid_at: string | null
+          payment_due_date: string | null
+          payment_reference: string | null
+          rate_bps: number
+          status: string | null
+        }
+        Insert: {
+          accrual_amount: number
+          approved_at?: string | null
+          approved_by?: string | null
+          base_amount?: number | null
+          basis_type?: string | null
+          created_at?: string | null
+          currency?: string | null
+          deal_id?: string | null
+          id?: string
+          introducer_id?: string | null
+          introduction_id?: string | null
+          investor_id?: string | null
+          invoice_id?: string | null
+          notes?: string | null
+          paid_at?: string | null
+          payment_due_date?: string | null
+          payment_reference?: string | null
+          rate_bps: number
+          status?: string | null
+        }
+        Update: {
+          accrual_amount?: number
+          approved_at?: string | null
+          approved_by?: string | null
+          base_amount?: number | null
+          basis_type?: string | null
+          created_at?: string | null
+          currency?: string | null
+          deal_id?: string | null
+          id?: string
+          introducer_id?: string | null
+          introduction_id?: string | null
+          investor_id?: string | null
+          invoice_id?: string | null
+          notes?: string | null
+          paid_at?: string | null
+          payment_due_date?: string | null
+          payment_reference?: string | null
+          rate_bps?: number
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "introducer_commissions_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "introducer_commissions_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "introducer_commissions_introducer_id_fkey"
+            columns: ["introducer_id"]
+            isOneToOne: false
+            referencedRelation: "introducers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "introducer_commissions_introduction_id_fkey"
+            columns: ["introduction_id"]
+            isOneToOne: false
+            referencedRelation: "introductions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "introducer_commissions_investor_id_fkey"
+            columns: ["investor_id"]
+            isOneToOne: false
+            referencedRelation: "investors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      introducer_members: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          effective_from: string | null
+          effective_to: string | null
+          email: string | null
+          full_name: string
+          id: string
+          id_expiry_date: string | null
+          id_number: string | null
+          id_type: string | null
+          introducer_id: string
+          is_active: boolean
+          is_beneficial_owner: boolean
+          is_signatory: boolean
+          nationality: string | null
+          ownership_percentage: number | null
+          phone: string | null
+          residential_city: string | null
+          residential_country: string | null
+          residential_postal_code: string | null
+          residential_state: string | null
+          residential_street: string | null
+          role: string
+          role_title: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          effective_from?: string | null
+          effective_to?: string | null
+          email?: string | null
+          full_name: string
+          id?: string
+          id_expiry_date?: string | null
+          id_number?: string | null
+          id_type?: string | null
+          introducer_id: string
+          is_active?: boolean
+          is_beneficial_owner?: boolean
+          is_signatory?: boolean
+          nationality?: string | null
+          ownership_percentage?: number | null
+          phone?: string | null
+          residential_city?: string | null
+          residential_country?: string | null
+          residential_postal_code?: string | null
+          residential_state?: string | null
+          residential_street?: string | null
+          role: string
+          role_title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          effective_from?: string | null
+          effective_to?: string | null
+          email?: string | null
+          full_name?: string
+          id?: string
+          id_expiry_date?: string | null
+          id_number?: string | null
+          id_type?: string | null
+          introducer_id?: string
+          is_active?: boolean
+          is_beneficial_owner?: boolean
+          is_signatory?: boolean
+          nationality?: string | null
+          ownership_percentage?: number | null
+          phone?: string | null
+          residential_city?: string | null
+          residential_country?: string | null
+          residential_postal_code?: string | null
+          residential_state?: string | null
+          residential_street?: string | null
+          role?: string
+          role_title?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "introducer_members_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "introducer_members_introducer_fk"
+            columns: ["introducer_id"]
+            isOneToOne: false
+            referencedRelation: "introducers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      introducer_users: {
+        Row: {
+          can_sign: boolean
+          created_at: string
+          created_by: string | null
+          introducer_id: string
+          is_primary: boolean
+          role: string
+          user_id: string
+        }
+        Insert: {
+          can_sign?: boolean
+          created_at?: string
+          created_by?: string | null
+          introducer_id: string
+          is_primary?: boolean
+          role?: string
+          user_id: string
+        }
+        Update: {
+          can_sign?: boolean
+          created_at?: string
+          created_by?: string | null
+          introducer_id?: string
+          is_primary?: boolean
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "introducer_users_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "introducer_users_introducer_fk"
+            columns: ["introducer_id"]
+            isOneToOne: false
+            referencedRelation: "introducers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "introducer_users_user_fk"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      introducers: {
+        Row: {
+          agreement_doc_id: string | null
+          agreement_expiry_date: string | null
+          commission_cap_amount: number | null
+          contact_name: string | null
+          created_at: string | null
+          created_by: string | null
+          default_commission_bps: number | null
+          email: string | null
+          id: string
+          legal_name: string | null
+          logo_url: string | null
+          notes: string | null
+          payment_terms: string | null
+          status: string | null
+          user_id: string | null
+        }
+        Insert: {
+          agreement_doc_id?: string | null
+          agreement_expiry_date?: string | null
+          commission_cap_amount?: number | null
+          contact_name?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          default_commission_bps?: number | null
+          email?: string | null
+          id?: string
+          legal_name?: string | null
+          logo_url?: string | null
+          notes?: string | null
+          payment_terms?: string | null
+          status?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          agreement_doc_id?: string | null
+          agreement_expiry_date?: string | null
+          commission_cap_amount?: number | null
+          contact_name?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          default_commission_bps?: number | null
+          email?: string | null
+          id?: string
+          legal_name?: string | null
+          logo_url?: string | null
+          notes?: string | null
+          payment_terms?: string | null
+          status?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "introducers_agreement_doc_id_fkey"
+            columns: ["agreement_doc_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "introducers_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "introducers_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      introductions: {
+        Row: {
+          commission_rate_override_bps: number | null
+          created_at: string | null
+          created_by: string | null
+          deal_id: string | null
+          id: string
+          introduced_at: string | null
+          introducer_id: string | null
+          notes: string | null
+          prospect_email: string | null
+          prospect_investor_id: string | null
+          status: string | null
+        }
+        Insert: {
+          commission_rate_override_bps?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          deal_id?: string | null
+          id?: string
+          introduced_at?: string | null
+          introducer_id?: string | null
+          notes?: string | null
+          prospect_email?: string | null
+          prospect_investor_id?: string | null
+          status?: string | null
+        }
+        Update: {
+          commission_rate_override_bps?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          deal_id?: string | null
+          id?: string
+          introduced_at?: string | null
+          introducer_id?: string | null
+          notes?: string | null
+          prospect_email?: string | null
+          prospect_investor_id?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "introductions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "introductions_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "introductions_introducer_id_fkey"
+            columns: ["introducer_id"]
+            isOneToOne: false
+            referencedRelation: "introducers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "introductions_prospect_investor_id_fkey"
+            columns: ["prospect_investor_id"]
+            isOneToOne: false
+            referencedRelation: "investors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      investor_counterparty: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          entity_type: string
+          formation_date: string | null
+          id: string
+          investor_id: string
+          is_active: boolean | null
+          jurisdiction: string | null
+          kyc_completed_at: string | null
+          kyc_expiry_date: string | null
+          kyc_notes: string | null
+          kyc_status: string | null
+          legal_name: string
+          notes: string | null
+          registered_address: Json | null
+          registration_number: string | null
+          representative_email: string | null
+          representative_name: string | null
+          representative_phone: string | null
+          representative_title: string | null
+          tax_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          entity_type: string
+          formation_date?: string | null
+          id?: string
+          investor_id: string
+          is_active?: boolean | null
+          jurisdiction?: string | null
+          kyc_completed_at?: string | null
+          kyc_expiry_date?: string | null
+          kyc_notes?: string | null
+          kyc_status?: string | null
+          legal_name: string
+          notes?: string | null
+          registered_address?: Json | null
+          registration_number?: string | null
+          representative_email?: string | null
+          representative_name?: string | null
+          representative_phone?: string | null
+          representative_title?: string | null
+          tax_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          entity_type?: string
+          formation_date?: string | null
+          id?: string
+          investor_id?: string
+          is_active?: boolean | null
+          jurisdiction?: string | null
+          kyc_completed_at?: string | null
+          kyc_expiry_date?: string | null
+          kyc_notes?: string | null
+          kyc_status?: string | null
+          legal_name?: string
+          notes?: string | null
+          registered_address?: Json | null
+          registration_number?: string | null
+          representative_email?: string | null
+          representative_name?: string | null
+          representative_phone?: string | null
+          representative_title?: string | null
+          tax_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "investor_counterparty_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_counterparty_investor_id_fkey"
+            columns: ["investor_id"]
+            isOneToOne: false
+            referencedRelation: "investors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      investor_deal_holdings: {
+        Row: {
+          approval_id: string | null
+          created_at: string
+          currency: string
+          deal_id: string
+          effective_date: string | null
+          funded_at: string | null
+          funding_due_at: string | null
+          id: string
+          investor_id: string
+          status: string
+          subscribed_amount: number
+          subscription_submission_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          approval_id?: string | null
+          created_at?: string
+          currency?: string
+          deal_id: string
+          effective_date?: string | null
+          funded_at?: string | null
+          funding_due_at?: string | null
+          id?: string
+          investor_id: string
+          status?: string
+          subscribed_amount: number
+          subscription_submission_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          approval_id?: string | null
+          created_at?: string
+          currency?: string
+          deal_id?: string
+          effective_date?: string | null
+          funded_at?: string | null
+          funding_due_at?: string | null
+          id?: string
+          investor_id?: string
+          status?: string
+          subscribed_amount?: number
+          subscription_submission_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "investor_deal_holdings_approval_id_fkey"
+            columns: ["approval_id"]
+            isOneToOne: false
+            referencedRelation: "approvals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_deal_holdings_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_deal_holdings_investor_id_fkey"
+            columns: ["investor_id"]
+            isOneToOne: false
+            referencedRelation: "investors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_deal_holdings_subscription_submission_id_fkey"
+            columns: ["subscription_submission_id"]
+            isOneToOne: false
+            referencedRelation: "deal_subscription_submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      investor_deal_interest: {
+        Row: {
+          approval_id: string | null
+          approved_at: string | null
+          created_by: string | null
+          deal_id: string
+          id: string
+          indicative_amount: number | null
+          indicative_currency: string | null
+          investor_id: string
+          is_post_close: boolean
+          notes: string | null
+          status: string
+          submitted_at: string
+          updated_at: string
+        }
+        Insert: {
+          approval_id?: string | null
+          approved_at?: string | null
+          created_by?: string | null
+          deal_id: string
+          id?: string
+          indicative_amount?: number | null
+          indicative_currency?: string | null
+          investor_id: string
+          is_post_close?: boolean
+          notes?: string | null
+          status?: string
+          submitted_at?: string
+          updated_at?: string
+        }
+        Update: {
+          approval_id?: string | null
+          approved_at?: string | null
+          created_by?: string | null
+          deal_id?: string
+          id?: string
+          indicative_amount?: number | null
+          indicative_currency?: string | null
+          investor_id?: string
+          is_post_close?: boolean
+          notes?: string | null
+          status?: string
+          submitted_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "investor_deal_interest_approval_id_fkey"
+            columns: ["approval_id"]
+            isOneToOne: false
+            referencedRelation: "approvals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_deal_interest_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_deal_interest_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_deal_interest_investor_id_fkey"
+            columns: ["investor_id"]
+            isOneToOne: false
+            referencedRelation: "investors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      investor_interest_signals: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          deal_id: string
+          id: string
+          investor_id: string
+          metadata: Json | null
+          signal_type: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          deal_id: string
+          id?: string
+          investor_id: string
+          metadata?: Json | null
+          signal_type: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          deal_id?: string
+          id?: string
+          investor_id?: string
+          metadata?: Json | null
+          signal_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "investor_interest_signals_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_interest_signals_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_interest_signals_investor_id_fkey"
+            columns: ["investor_id"]
+            isOneToOne: false
+            referencedRelation: "investors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      investor_members: {
+        Row: {
+          can_sign: boolean | null
+          created_at: string | null
+          created_by: string | null
+          effective_from: string | null
+          effective_to: string | null
+          email: string | null
+          full_name: string
+          id: string
+          id_expiry_date: string | null
+          id_number: string | null
+          id_type: string | null
+          investor_id: string
+          is_active: boolean | null
+          is_beneficial_owner: boolean | null
+          is_signatory: boolean | null
+          kyc_approved_at: string | null
+          kyc_approved_by: string | null
+          kyc_expiry_date: string | null
+          kyc_status: string | null
+          nationality: string | null
+          ownership_percentage: number | null
+          phone: string | null
+          residential_city: string | null
+          residential_country: string | null
+          residential_postal_code: string | null
+          residential_state: string | null
+          residential_street: string | null
+          role: string
+          role_title: string | null
+          signature_specimen_uploaded_at: string | null
+          signature_specimen_url: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          can_sign?: boolean | null
+          created_at?: string | null
+          created_by?: string | null
+          effective_from?: string | null
+          effective_to?: string | null
+          email?: string | null
+          full_name: string
+          id?: string
+          id_expiry_date?: string | null
+          id_number?: string | null
+          id_type?: string | null
+          investor_id: string
+          is_active?: boolean | null
+          is_beneficial_owner?: boolean | null
+          is_signatory?: boolean | null
+          kyc_approved_at?: string | null
+          kyc_approved_by?: string | null
+          kyc_expiry_date?: string | null
+          kyc_status?: string | null
+          nationality?: string | null
+          ownership_percentage?: number | null
+          phone?: string | null
+          residential_city?: string | null
+          residential_country?: string | null
+          residential_postal_code?: string | null
+          residential_state?: string | null
+          residential_street?: string | null
+          role: string
+          role_title?: string | null
+          signature_specimen_uploaded_at?: string | null
+          signature_specimen_url?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          can_sign?: boolean | null
+          created_at?: string | null
+          created_by?: string | null
+          effective_from?: string | null
+          effective_to?: string | null
+          email?: string | null
+          full_name?: string
+          id?: string
+          id_expiry_date?: string | null
+          id_number?: string | null
+          id_type?: string | null
+          investor_id?: string
+          is_active?: boolean | null
+          is_beneficial_owner?: boolean | null
+          is_signatory?: boolean | null
+          kyc_approved_at?: string | null
+          kyc_approved_by?: string | null
+          kyc_expiry_date?: string | null
+          kyc_status?: string | null
+          nationality?: string | null
+          ownership_percentage?: number | null
+          phone?: string | null
+          residential_city?: string | null
+          residential_country?: string | null
+          residential_postal_code?: string | null
+          residential_state?: string | null
+          residential_street?: string | null
+          role?: string
+          role_title?: string | null
+          signature_specimen_uploaded_at?: string | null
+          signature_specimen_url?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "investor_members_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_members_investor_id_fkey"
+            columns: ["investor_id"]
+            isOneToOne: false
+            referencedRelation: "investors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_members_kyc_approved_by_fkey"
+            columns: ["kyc_approved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      investor_notifications: {
+        Row: {
+          created_at: string
+          id: string
+          investor_id: string | null
+          link: string | null
+          message: string
+          read_at: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          investor_id?: string | null
+          link?: string | null
+          message: string
+          read_at?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          investor_id?: string | null
+          link?: string | null
+          message?: string
+          read_at?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "investor_notifications_investor_id_fkey"
+            columns: ["investor_id"]
+            isOneToOne: false
+            referencedRelation: "investors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      investor_terms: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          base_fee_plan_id: string | null
+          created_at: string | null
+          created_by: string | null
+          deal_id: string | null
+          effective_from: string
+          effective_until: string | null
+          id: string
+          investor_id: string | null
+          justification: string | null
+          overrides: Json | null
+          selected_fee_plan_id: string | null
+          status: string | null
+          updated_at: string
+          vehicle_id: string | null
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          base_fee_plan_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          deal_id?: string | null
+          effective_from?: string
+          effective_until?: string | null
+          id?: string
+          investor_id?: string | null
+          justification?: string | null
+          overrides?: Json | null
+          selected_fee_plan_id?: string | null
+          status?: string | null
+          updated_at?: string
+          vehicle_id?: string | null
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          base_fee_plan_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          deal_id?: string | null
+          effective_from?: string
+          effective_until?: string | null
+          id?: string
+          investor_id?: string | null
+          justification?: string | null
+          overrides?: Json | null
+          selected_fee_plan_id?: string | null
+          status?: string | null
+          updated_at?: string
+          vehicle_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "investor_terms_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_terms_base_fee_plan_id_fkey"
+            columns: ["base_fee_plan_id"]
+            isOneToOne: false
+            referencedRelation: "fee_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_terms_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_terms_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_terms_investor_id_fkey"
+            columns: ["investor_id"]
+            isOneToOne: false
+            referencedRelation: "investors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_terms_selected_fee_plan_id_fkey"
+            columns: ["selected_fee_plan_id"]
+            isOneToOne: false
+            referencedRelation: "fee_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_terms_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "entity_action_center_summary"
+            referencedColumns: ["vehicle_id"]
+          },
+          {
+            foreignKeyName: "investor_terms_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      investor_users: {
+        Row: {
+          can_sign: boolean
+          created_at: string
+          created_by: string | null
+          investor_id: string
+          is_primary: boolean
+          role: string
+          user_id: string
+        }
+        Insert: {
+          can_sign?: boolean
+          created_at?: string
+          created_by?: string | null
+          investor_id: string
+          is_primary?: boolean
+          role?: string
+          user_id: string
+        }
+        Update: {
+          can_sign?: boolean
+          created_at?: string
+          created_by?: string | null
+          investor_id?: string
+          is_primary?: boolean
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "investor_users_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_users_investor_id_fkey"
+            columns: ["investor_id"]
+            isOneToOne: false
+            referencedRelation: "investors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_users_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      investors: {
+        Row: {
+          accreditation_expiry: string | null
+          aml_last_reviewed_at: string | null
+          aml_risk_rating: string | null
+          archived_at: string | null
+          city: string | null
+          commercial_partner_id: string | null
+          country: string | null
+          country_of_incorporation: string | null
+          created_at: string | null
+          created_by: string | null
+          display_name: string | null
+          email: string | null
+          entity_identifier: string | null
+          id: string
+          is_pep: boolean | null
+          is_professional_investor: boolean | null
+          is_qualified_purchaser: boolean | null
+          is_sanctioned: boolean | null
+          kyc_approved_by: string | null
+          kyc_completed_at: string | null
+          kyc_expiry_date: string | null
+          kyc_status: string | null
+          legal_name: string
+          logo_url: string | null
+          onboarding_status: string | null
+          phone: string | null
+          phone_mobile: string | null
+          phone_office: string | null
+          primary_rm: string | null
+          registered_address: string | null
+          representative_name: string | null
+          representative_title: string | null
+          residential_city: string | null
+          residential_country: string | null
+          residential_postal_code: string | null
+          residential_state: string | null
+          residential_street: string | null
+          secondary_rm: string | null
+          status: string | null
+          tax_residency: string | null
+          type: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          accreditation_expiry?: string | null
+          aml_last_reviewed_at?: string | null
+          aml_risk_rating?: string | null
+          archived_at?: string | null
+          city?: string | null
+          commercial_partner_id?: string | null
+          country?: string | null
+          country_of_incorporation?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          display_name?: string | null
+          email?: string | null
+          entity_identifier?: string | null
+          id?: string
+          is_pep?: boolean | null
+          is_professional_investor?: boolean | null
+          is_qualified_purchaser?: boolean | null
+          is_sanctioned?: boolean | null
+          kyc_approved_by?: string | null
+          kyc_completed_at?: string | null
+          kyc_expiry_date?: string | null
+          kyc_status?: string | null
+          legal_name: string
+          logo_url?: string | null
+          onboarding_status?: string | null
+          phone?: string | null
+          phone_mobile?: string | null
+          phone_office?: string | null
+          primary_rm?: string | null
+          registered_address?: string | null
+          representative_name?: string | null
+          representative_title?: string | null
+          residential_city?: string | null
+          residential_country?: string | null
+          residential_postal_code?: string | null
+          residential_state?: string | null
+          residential_street?: string | null
+          secondary_rm?: string | null
+          status?: string | null
+          tax_residency?: string | null
+          type?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          accreditation_expiry?: string | null
+          aml_last_reviewed_at?: string | null
+          aml_risk_rating?: string | null
+          archived_at?: string | null
+          city?: string | null
+          commercial_partner_id?: string | null
+          country?: string | null
+          country_of_incorporation?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          display_name?: string | null
+          email?: string | null
+          entity_identifier?: string | null
+          id?: string
+          is_pep?: boolean | null
+          is_professional_investor?: boolean | null
+          is_qualified_purchaser?: boolean | null
+          is_sanctioned?: boolean | null
+          kyc_approved_by?: string | null
+          kyc_completed_at?: string | null
+          kyc_expiry_date?: string | null
+          kyc_status?: string | null
+          legal_name?: string
+          logo_url?: string | null
+          onboarding_status?: string | null
+          phone?: string | null
+          phone_mobile?: string | null
+          phone_office?: string | null
+          primary_rm?: string | null
+          registered_address?: string | null
+          representative_name?: string | null
+          representative_title?: string | null
+          residential_city?: string | null
+          residential_country?: string | null
+          residential_postal_code?: string | null
+          residential_state?: string | null
+          residential_street?: string | null
+          secondary_rm?: string | null
+          status?: string | null
+          tax_residency?: string | null
+          type?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "investors_commercial_partner_id_fkey"
+            columns: ["commercial_partner_id"]
+            isOneToOne: false
+            referencedRelation: "commercial_partners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investors_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investors_kyc_approved_by_fkey"
+            columns: ["kyc_approved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investors_primary_rm_fkey"
+            columns: ["primary_rm"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investors_secondary_rm_fkey"
+            columns: ["secondary_rm"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invite_links: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          deal_id: string | null
+          expires_at: string | null
+          id: string
+          max_uses: number | null
+          role: Database["public"]["Enums"]["deal_member_role"]
+          token_hash: string
+          used_count: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          deal_id?: string | null
+          expires_at?: string | null
+          id?: string
+          max_uses?: number | null
+          role: Database["public"]["Enums"]["deal_member_role"]
+          token_hash: string
+          used_count?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          deal_id?: string | null
+          expires_at?: string | null
+          id?: string
+          max_uses?: number | null
+          role?: Database["public"]["Enums"]["deal_member_role"]
+          token_hash?: string
+          used_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invite_links_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invite_links_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invoice_lines: {
+        Row: {
+          amount: number
+          description: string | null
+          fee_event_id: string | null
+          id: string
+          invoice_id: string | null
+          kind: string | null
+          quantity: number | null
+          unit_price: number | null
+        }
+        Insert: {
+          amount: number
+          description?: string | null
+          fee_event_id?: string | null
+          id?: string
+          invoice_id?: string | null
+          kind?: string | null
+          quantity?: number | null
+          unit_price?: number | null
+        }
+        Update: {
+          amount?: number
+          description?: string | null
+          fee_event_id?: string | null
+          id?: string
+          invoice_id?: string | null
+          kind?: string | null
+          quantity?: number | null
+          unit_price?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_lines_fee_event_id_fkey"
+            columns: ["fee_event_id"]
+            isOneToOne: true
+            referencedRelation: "fee_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoice_lines_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invoices: {
+        Row: {
+          auto_send_enabled: boolean | null
+          balance_due: number | null
+          created_at: string | null
+          created_by: string | null
+          currency: string | null
+          deal_id: string | null
+          doc_id: string | null
+          due_date: string | null
+          generated_from: string | null
+          id: string
+          investor_id: string | null
+          invoice_number: string | null
+          match_status: string | null
+          paid_amount: number
+          paid_at: string | null
+          reminder_days_before: number | null
+          reminder_task_id: string | null
+          sent_at: string | null
+          status: Database["public"]["Enums"]["invoice_status_enum"] | null
+          subtotal: number | null
+          tax: number | null
+          total: number | null
+        }
+        Insert: {
+          auto_send_enabled?: boolean | null
+          balance_due?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          currency?: string | null
+          deal_id?: string | null
+          doc_id?: string | null
+          due_date?: string | null
+          generated_from?: string | null
+          id?: string
+          investor_id?: string | null
+          invoice_number?: string | null
+          match_status?: string | null
+          paid_amount?: number
+          paid_at?: string | null
+          reminder_days_before?: number | null
+          reminder_task_id?: string | null
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["invoice_status_enum"] | null
+          subtotal?: number | null
+          tax?: number | null
+          total?: number | null
+        }
+        Update: {
+          auto_send_enabled?: boolean | null
+          balance_due?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          currency?: string | null
+          deal_id?: string | null
+          doc_id?: string | null
+          due_date?: string | null
+          generated_from?: string | null
+          id?: string
+          investor_id?: string | null
+          invoice_number?: string | null
+          match_status?: string | null
+          paid_amount?: number
+          paid_at?: string | null
+          reminder_days_before?: number | null
+          reminder_task_id?: string | null
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["invoice_status_enum"] | null
+          subtotal?: number | null
+          tax?: number | null
+          total?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_doc_id_fkey"
+            columns: ["doc_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_investor_id_fkey"
+            columns: ["investor_id"]
+            isOneToOne: false
+            referencedRelation: "investors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_reminder_task_id_fkey"
+            columns: ["reminder_task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      kyc_submissions: {
+        Row: {
+          counterparty_entity_id: string | null
+          counterparty_member_id: string | null
+          created_at: string
+          custom_label: string | null
+          document_id: string | null
+          document_type: string
+          expiry_date: string | null
+          id: string
+          investor_id: string
+          investor_member_id: string | null
+          metadata: Json | null
+          previous_submission_id: string | null
+          rejection_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          submitted_at: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          counterparty_entity_id?: string | null
+          counterparty_member_id?: string | null
+          created_at?: string
+          custom_label?: string | null
+          document_id?: string | null
+          document_type: string
+          expiry_date?: string | null
+          id?: string
+          investor_id: string
+          investor_member_id?: string | null
+          metadata?: Json | null
+          previous_submission_id?: string | null
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submitted_at?: string
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          counterparty_entity_id?: string | null
+          counterparty_member_id?: string | null
+          created_at?: string
+          custom_label?: string | null
+          document_id?: string | null
+          document_type?: string
+          expiry_date?: string | null
+          id?: string
+          investor_id?: string
+          investor_member_id?: string | null
+          metadata?: Json | null
+          previous_submission_id?: string | null
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submitted_at?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_kyc_submissions_previous"
+            columns: ["previous_submission_id"]
+            isOneToOne: false
+            referencedRelation: "kyc_submissions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "kyc_submissions_counterparty_entity_id_fkey"
+            columns: ["counterparty_entity_id"]
+            isOneToOne: false
+            referencedRelation: "investor_counterparty"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "kyc_submissions_counterparty_member_id_fkey"
+            columns: ["counterparty_member_id"]
+            isOneToOne: false
+            referencedRelation: "counterparty_entity_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "kyc_submissions_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "kyc_submissions_investor_id_fkey"
+            columns: ["investor_id"]
+            isOneToOne: false
+            referencedRelation: "investors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "kyc_submissions_investor_member_id_fkey"
+            columns: ["investor_member_id"]
+            isOneToOne: false
+            referencedRelation: "investor_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "kyc_submissions_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lawyer_members: {
+        Row: {
+          bar_jurisdiction: string | null
+          bar_number: string | null
+          created_at: string
+          created_by: string | null
+          effective_from: string | null
+          effective_to: string | null
+          email: string | null
+          full_name: string
+          id: string
+          id_expiry_date: string | null
+          id_number: string | null
+          id_type: string | null
+          is_active: boolean
+          is_signatory: boolean
+          lawyer_id: string
+          nationality: string | null
+          phone: string | null
+          residential_city: string | null
+          residential_country: string | null
+          residential_postal_code: string | null
+          residential_state: string | null
+          residential_street: string | null
+          role: string
+          role_title: string | null
+          updated_at: string
+        }
+        Insert: {
+          bar_jurisdiction?: string | null
+          bar_number?: string | null
+          created_at?: string
+          created_by?: string | null
+          effective_from?: string | null
+          effective_to?: string | null
+          email?: string | null
+          full_name: string
+          id?: string
+          id_expiry_date?: string | null
+          id_number?: string | null
+          id_type?: string | null
+          is_active?: boolean
+          is_signatory?: boolean
+          lawyer_id: string
+          nationality?: string | null
+          phone?: string | null
+          residential_city?: string | null
+          residential_country?: string | null
+          residential_postal_code?: string | null
+          residential_state?: string | null
+          residential_street?: string | null
+          role: string
+          role_title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          bar_jurisdiction?: string | null
+          bar_number?: string | null
+          created_at?: string
+          created_by?: string | null
+          effective_from?: string | null
+          effective_to?: string | null
+          email?: string | null
+          full_name?: string
+          id?: string
+          id_expiry_date?: string | null
+          id_number?: string | null
+          id_type?: string | null
+          is_active?: boolean
+          is_signatory?: boolean
+          lawyer_id?: string
+          nationality?: string | null
+          phone?: string | null
+          residential_city?: string | null
+          residential_country?: string | null
+          residential_postal_code?: string | null
+          residential_state?: string | null
+          residential_street?: string | null
+          role?: string
+          role_title?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lawyer_members_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lawyer_members_lawyer_fk"
+            columns: ["lawyer_id"]
+            isOneToOne: false
+            referencedRelation: "lawyers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lawyer_users: {
+        Row: {
+          can_sign: boolean
+          created_at: string
+          created_by: string | null
+          is_primary: boolean
+          lawyer_id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          can_sign?: boolean
+          created_at?: string
+          created_by?: string | null
+          is_primary?: boolean
+          lawyer_id: string
+          role?: string
+          user_id: string
+        }
+        Update: {
+          can_sign?: boolean
+          created_at?: string
+          created_by?: string | null
+          is_primary?: boolean
+          lawyer_id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lawyer_users_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lawyer_users_lawyer_fk"
+            columns: ["lawyer_id"]
+            isOneToOne: false
+            referencedRelation: "lawyers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lawyer_users_user_fk"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lawyers: {
+        Row: {
+          assigned_deals: string[] | null
+          city: string | null
+          country: string | null
+          created_at: string
+          created_by: string | null
+          display_name: string
+          firm_name: string
+          id: string
+          is_active: boolean
+          kyc_approved_at: string | null
+          kyc_approved_by: string | null
+          kyc_expires_at: string | null
+          kyc_notes: string | null
+          kyc_status: string | null
+          legal_entity_type: string | null
+          logo_url: string | null
+          onboarded_at: string | null
+          postal_code: string | null
+          primary_contact_email: string | null
+          primary_contact_name: string | null
+          primary_contact_phone: string | null
+          registration_number: string | null
+          specializations: string[] | null
+          state_province: string | null
+          street_address: string | null
+          tax_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          assigned_deals?: string[] | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          created_by?: string | null
+          display_name: string
+          firm_name: string
+          id?: string
+          is_active?: boolean
+          kyc_approved_at?: string | null
+          kyc_approved_by?: string | null
+          kyc_expires_at?: string | null
+          kyc_notes?: string | null
+          kyc_status?: string | null
+          legal_entity_type?: string | null
+          logo_url?: string | null
+          onboarded_at?: string | null
+          postal_code?: string | null
+          primary_contact_email?: string | null
+          primary_contact_name?: string | null
+          primary_contact_phone?: string | null
+          registration_number?: string | null
+          specializations?: string[] | null
+          state_province?: string | null
+          street_address?: string | null
+          tax_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          assigned_deals?: string[] | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          created_by?: string | null
+          display_name?: string
+          firm_name?: string
+          id?: string
+          is_active?: boolean
+          kyc_approved_at?: string | null
+          kyc_approved_by?: string | null
+          kyc_expires_at?: string | null
+          kyc_notes?: string | null
+          kyc_status?: string | null
+          legal_entity_type?: string | null
+          logo_url?: string | null
+          onboarded_at?: string | null
+          postal_code?: string | null
+          primary_contact_email?: string | null
+          primary_contact_name?: string | null
+          primary_contact_phone?: string | null
+          registration_number?: string | null
+          specializations?: string[] | null
+          state_province?: string | null
+          street_address?: string | null
+          tax_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lawyers_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lawyers_kyc_approved_by_fkey"
+            columns: ["kyc_approved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      message_reads: {
+        Row: {
+          message_id: string
+          read_at: string
+          user_id: string
+        }
+        Insert: {
+          message_id: string
+          read_at?: string
+          user_id: string
+        }
+        Update: {
+          message_id?: string
+          read_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_reads_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "message_reads_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messages: {
+        Row: {
+          body: string | null
+          conversation_id: string
+          created_at: string
+          deleted_at: string | null
+          edited_at: string | null
+          file_key: string | null
+          id: string
+          message_type: Database["public"]["Enums"]["message_type_enum"]
+          metadata: Json
+          reply_to_message_id: string | null
+          sender_id: string | null
+        }
+        Insert: {
+          body?: string | null
+          conversation_id: string
+          created_at?: string
+          deleted_at?: string | null
+          edited_at?: string | null
+          file_key?: string | null
+          id?: string
+          message_type?: Database["public"]["Enums"]["message_type_enum"]
+          metadata?: Json
+          reply_to_message_id?: string | null
+          sender_id?: string | null
+        }
+        Update: {
+          body?: string | null
+          conversation_id?: string
+          created_at?: string
+          deleted_at?: string | null
+          edited_at?: string | null
+          file_key?: string | null
+          id?: string
+          message_type?: Database["public"]["Enums"]["message_type_enum"]
+          metadata?: Json
+          reply_to_message_id?: string | null
+          sender_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_reply_to_message_id_fkey"
+            columns: ["reply_to_message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      partner_members: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          effective_from: string | null
+          effective_to: string | null
+          email: string | null
+          full_name: string
+          id: string
+          id_expiry_date: string | null
+          id_number: string | null
+          id_type: string | null
+          is_active: boolean
+          is_beneficial_owner: boolean
+          is_signatory: boolean
+          nationality: string | null
+          ownership_percentage: number | null
+          partner_id: string
+          phone: string | null
+          residential_city: string | null
+          residential_country: string | null
+          residential_postal_code: string | null
+          residential_state: string | null
+          residential_street: string | null
+          role: string
+          role_title: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          effective_from?: string | null
+          effective_to?: string | null
+          email?: string | null
+          full_name: string
+          id?: string
+          id_expiry_date?: string | null
+          id_number?: string | null
+          id_type?: string | null
+          is_active?: boolean
+          is_beneficial_owner?: boolean
+          is_signatory?: boolean
+          nationality?: string | null
+          ownership_percentage?: number | null
+          partner_id: string
+          phone?: string | null
+          residential_city?: string | null
+          residential_country?: string | null
+          residential_postal_code?: string | null
+          residential_state?: string | null
+          residential_street?: string | null
+          role: string
+          role_title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          effective_from?: string | null
+          effective_to?: string | null
+          email?: string | null
+          full_name?: string
+          id?: string
+          id_expiry_date?: string | null
+          id_number?: string | null
+          id_type?: string | null
+          is_active?: boolean
+          is_beneficial_owner?: boolean
+          is_signatory?: boolean
+          nationality?: string | null
+          ownership_percentage?: number | null
+          partner_id?: string
+          phone?: string | null
+          residential_city?: string | null
+          residential_country?: string | null
+          residential_postal_code?: string | null
+          residential_state?: string | null
+          residential_street?: string | null
+          role?: string
+          role_title?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_members_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_members_partner_fk"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      partner_users: {
+        Row: {
+          can_sign: boolean
+          created_at: string
+          created_by: string | null
+          is_primary: boolean
+          partner_id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          can_sign?: boolean
+          created_at?: string
+          created_by?: string | null
+          is_primary?: boolean
+          partner_id: string
+          role?: string
+          user_id: string
+        }
+        Update: {
+          can_sign?: boolean
+          created_at?: string
+          created_by?: string | null
+          is_primary?: boolean
+          partner_id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_users_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_users_partner_fk"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_users_user_fk"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      partners: {
+        Row: {
+          accreditation_status: string | null
+          address_line_1: string | null
+          address_line_2: string | null
+          city: string | null
+          contact_email: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          country: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          kyc_approved_at: string | null
+          kyc_approved_by: string | null
+          kyc_expires_at: string | null
+          kyc_notes: string | null
+          kyc_status: string | null
+          legal_name: string | null
+          logo_url: string | null
+          name: string
+          notes: string | null
+          partner_type: string
+          postal_code: string | null
+          preferred_geographies: string[] | null
+          preferred_sectors: string[] | null
+          relationship_manager_id: string | null
+          status: string
+          type: string
+          typical_investment_max: number | null
+          typical_investment_min: number | null
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          accreditation_status?: string | null
+          address_line_1?: string | null
+          address_line_2?: string | null
+          city?: string | null
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          country?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kyc_approved_at?: string | null
+          kyc_approved_by?: string | null
+          kyc_expires_at?: string | null
+          kyc_notes?: string | null
+          kyc_status?: string | null
+          legal_name?: string | null
+          logo_url?: string | null
+          name: string
+          notes?: string | null
+          partner_type: string
+          postal_code?: string | null
+          preferred_geographies?: string[] | null
+          preferred_sectors?: string[] | null
+          relationship_manager_id?: string | null
+          status?: string
+          type: string
+          typical_investment_max?: number | null
+          typical_investment_min?: number | null
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          accreditation_status?: string | null
+          address_line_1?: string | null
+          address_line_2?: string | null
+          city?: string | null
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          country?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kyc_approved_at?: string | null
+          kyc_approved_by?: string | null
+          kyc_expires_at?: string | null
+          kyc_notes?: string | null
+          kyc_status?: string | null
+          legal_name?: string | null
+          logo_url?: string | null
+          name?: string
+          notes?: string | null
+          partner_type?: string
+          postal_code?: string | null
+          preferred_geographies?: string[] | null
+          preferred_sectors?: string[] | null
+          relationship_manager_id?: string | null
+          status?: string
+          type?: string
+          typical_investment_max?: number | null
+          typical_investment_min?: number | null
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partners_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partners_kyc_approved_by_fkey"
+            columns: ["kyc_approved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partners_relationship_manager_id_fkey"
+            columns: ["relationship_manager_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payments: {
+        Row: {
+          amount: number | null
+          bank_txn_id: string | null
+          created_at: string | null
+          currency: string | null
+          id: string
+          investor_id: string | null
+          invoice_id: string | null
+          method: string | null
+          paid_at: string | null
+          status: Database["public"]["Enums"]["payment_status_enum"] | null
+        }
+        Insert: {
+          amount?: number | null
+          bank_txn_id?: string | null
+          created_at?: string | null
+          currency?: string | null
+          id?: string
+          investor_id?: string | null
+          invoice_id?: string | null
+          method?: string | null
+          paid_at?: string | null
+          status?: Database["public"]["Enums"]["payment_status_enum"] | null
+        }
+        Update: {
+          amount?: number | null
+          bank_txn_id?: string | null
+          created_at?: string | null
+          currency?: string | null
+          id?: string
+          investor_id?: string | null
+          invoice_id?: string | null
+          method?: string | null
+          paid_at?: string | null
+          status?: Database["public"]["Enums"]["payment_status_enum"] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_investor_id_fkey"
+            columns: ["investor_id"]
+            isOneToOne: false
+            referencedRelation: "investors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      performance_snapshots: {
+        Row: {
+          contributed: number | null
+          created_at: string | null
+          distributed: number | null
+          dpi: number | null
+          id: string
+          investor_id: string | null
+          irr_gross: number | null
+          irr_net: number | null
+          nav_value: number | null
+          snapshot_date: string
+          tvpi: number | null
+          vehicle_id: string | null
+        }
+        Insert: {
+          contributed?: number | null
+          created_at?: string | null
+          distributed?: number | null
+          dpi?: number | null
+          id?: string
+          investor_id?: string | null
+          irr_gross?: number | null
+          irr_net?: number | null
+          nav_value?: number | null
+          snapshot_date: string
+          tvpi?: number | null
+          vehicle_id?: string | null
+        }
+        Update: {
+          contributed?: number | null
+          created_at?: string | null
+          distributed?: number | null
+          dpi?: number | null
+          id?: string
+          investor_id?: string | null
+          irr_gross?: number | null
+          irr_net?: number | null
+          nav_value?: number | null
+          snapshot_date?: string
+          tvpi?: number | null
+          vehicle_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "performance_snapshots_investor_id_fkey"
+            columns: ["investor_id"]
+            isOneToOne: false
+            referencedRelation: "investors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "performance_snapshots_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "entity_action_center_summary"
+            referencedColumns: ["vehicle_id"]
+          },
+          {
+            foreignKeyName: "performance_snapshots_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      placement_agreements: {
+        Row: {
+          agreement_document_id: string | null
+          agreement_type: string
+          commercial_partner_id: string
+          commission_cap_amount: number | null
+          created_at: string
+          created_by: string | null
+          deal_types: string[] | null
+          default_commission_bps: number
+          effective_date: string | null
+          exclusivity_level: string | null
+          expiry_date: string | null
+          id: string
+          payment_terms: string | null
+          signed_date: string | null
+          status: string
+          territory: string | null
+          updated_at: string
+        }
+        Insert: {
+          agreement_document_id?: string | null
+          agreement_type?: string
+          commercial_partner_id: string
+          commission_cap_amount?: number | null
+          created_at?: string
+          created_by?: string | null
+          deal_types?: string[] | null
+          default_commission_bps?: number
+          effective_date?: string | null
+          exclusivity_level?: string | null
+          expiry_date?: string | null
+          id?: string
+          payment_terms?: string | null
+          signed_date?: string | null
+          status?: string
+          territory?: string | null
+          updated_at?: string
+        }
+        Update: {
+          agreement_document_id?: string | null
+          agreement_type?: string
+          commercial_partner_id?: string
+          commission_cap_amount?: number | null
+          created_at?: string
+          created_by?: string | null
+          deal_types?: string[] | null
+          default_commission_bps?: number
+          effective_date?: string | null
+          exclusivity_level?: string | null
+          expiry_date?: string | null
+          id?: string
+          payment_terms?: string | null
+          signed_date?: string | null
+          status?: string
+          territory?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "placement_agreements_cp_fk"
+            columns: ["commercial_partner_id"]
+            isOneToOne: false
+            referencedRelation: "commercial_partners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "placement_agreements_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "placement_agreements_doc_fk"
+            columns: ["agreement_document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      positions: {
+        Row: {
+          as_of_date: string | null
+          cost_basis: number | null
+          id: string
+          investor_id: string | null
+          last_nav: number | null
+          units: number | null
+          vehicle_id: string | null
+        }
+        Insert: {
+          as_of_date?: string | null
+          cost_basis?: number | null
+          id?: string
+          investor_id?: string | null
+          last_nav?: number | null
+          units?: number | null
+          vehicle_id?: string | null
+        }
+        Update: {
+          as_of_date?: string | null
+          cost_basis?: number | null
+          id?: string
+          investor_id?: string | null
+          last_nav?: number | null
+          units?: number | null
+          vehicle_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "positions_investor_id_fkey"
+            columns: ["investor_id"]
+            isOneToOne: false
+            referencedRelation: "investors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "positions_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "entity_action_center_summary"
+            referencedColumns: ["vehicle_id"]
+          },
+          {
+            foreignKeyName: "positions_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          created_at: string | null
+          deleted_at: string | null
+          display_name: string | null
+          email: string | null
+          has_seen_intro_video: boolean | null
+          id: string
+          last_login_at: string | null
+          office_location: string | null
+          password_set: boolean | null
+          phone: string | null
+          role: Database["public"]["Enums"]["user_role"]
+          title: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          deleted_at?: string | null
+          display_name?: string | null
+          email?: string | null
+          has_seen_intro_video?: boolean | null
+          id: string
+          last_login_at?: string | null
+          office_location?: string | null
+          password_set?: boolean | null
+          phone?: string | null
+          role?: Database["public"]["Enums"]["user_role"]
+          title?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          deleted_at?: string | null
+          display_name?: string | null
+          email?: string | null
+          has_seen_intro_video?: boolean | null
+          id?: string
+          last_login_at?: string | null
+          office_location?: string | null
+          password_set?: boolean | null
+          phone?: string | null
+          role?: Database["public"]["Enums"]["user_role"]
+          title?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      reconciliation_matches: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          bank_transaction_id: string | null
+          created_at: string | null
+          id: string
+          invoice_id: string | null
+          match_confidence: number | null
+          match_reason: string | null
+          match_type: string
+          matched_amount: number
+          notes: string | null
+          status: string | null
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          bank_transaction_id?: string | null
+          created_at?: string | null
+          id?: string
+          invoice_id?: string | null
+          match_confidence?: number | null
+          match_reason?: string | null
+          match_type: string
+          matched_amount: number
+          notes?: string | null
+          status?: string | null
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          bank_transaction_id?: string | null
+          created_at?: string | null
+          id?: string
+          invoice_id?: string | null
+          match_confidence?: number | null
+          match_reason?: string | null
+          match_type?: string
+          matched_amount?: number
+          notes?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reconciliation_matches_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reconciliation_matches_bank_transaction_id_fkey"
+            columns: ["bank_transaction_id"]
+            isOneToOne: false
+            referencedRelation: "bank_transactions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reconciliation_matches_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reconciliations: {
+        Row: {
+          bank_transaction_id: string | null
+          id: string
+          invoice_id: string | null
+          matched_amount: number | null
+          matched_at: string | null
+          matched_by: string | null
+        }
+        Insert: {
+          bank_transaction_id?: string | null
+          id?: string
+          invoice_id?: string | null
+          matched_amount?: number | null
+          matched_at?: string | null
+          matched_by?: string | null
+        }
+        Update: {
+          bank_transaction_id?: string | null
+          id?: string
+          invoice_id?: string | null
+          matched_amount?: number | null
+          matched_at?: string | null
+          matched_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reconciliations_bank_transaction_id_fkey"
+            columns: ["bank_transaction_id"]
+            isOneToOne: false
+            referencedRelation: "bank_transactions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reconciliations_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reconciliations_matched_by_fkey"
+            columns: ["matched_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      report_requests: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          filters: Json | null
+          id: string
+          investor_id: string | null
+          result_doc_id: string | null
+          status: Database["public"]["Enums"]["report_status_enum"] | null
+          vehicle_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          filters?: Json | null
+          id?: string
+          investor_id?: string | null
+          result_doc_id?: string | null
+          status?: Database["public"]["Enums"]["report_status_enum"] | null
+          vehicle_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          filters?: Json | null
+          id?: string
+          investor_id?: string | null
+          result_doc_id?: string | null
+          status?: Database["public"]["Enums"]["report_status_enum"] | null
+          vehicle_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "report_requests_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "report_requests_investor_id_fkey"
+            columns: ["investor_id"]
+            isOneToOne: false
+            referencedRelation: "investors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "report_requests_result_doc_id_fkey"
+            columns: ["result_doc_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "report_requests_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "entity_action_center_summary"
+            referencedColumns: ["vehicle_id"]
+          },
+          {
+            foreignKeyName: "report_requests_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      request_tickets: {
+        Row: {
+          assigned_to: string | null
+          category: string | null
+          created_at: string | null
+          created_by: string | null
+          deal_id: string | null
+          details: string | null
+          due_date: string | null
+          id: string
+          investor_id: string | null
+          linked_workflow_run: string | null
+          priority: Database["public"]["Enums"]["request_priority_enum"] | null
+          result_doc_id: string | null
+          status: Database["public"]["Enums"]["request_status_enum"] | null
+          subject: string | null
+        }
+        Insert: {
+          assigned_to?: string | null
+          category?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          deal_id?: string | null
+          details?: string | null
+          due_date?: string | null
+          id?: string
+          investor_id?: string | null
+          linked_workflow_run?: string | null
+          priority?: Database["public"]["Enums"]["request_priority_enum"] | null
+          result_doc_id?: string | null
+          status?: Database["public"]["Enums"]["request_status_enum"] | null
+          subject?: string | null
+        }
+        Update: {
+          assigned_to?: string | null
+          category?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          deal_id?: string | null
+          details?: string | null
+          due_date?: string | null
+          id?: string
+          investor_id?: string | null
+          linked_workflow_run?: string | null
+          priority?: Database["public"]["Enums"]["request_priority_enum"] | null
+          result_doc_id?: string | null
+          status?: Database["public"]["Enums"]["request_status_enum"] | null
+          subject?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "request_tickets_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "request_tickets_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "request_tickets_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "request_tickets_investor_id_fkey"
+            columns: ["investor_id"]
+            isOneToOne: false
+            referencedRelation: "investors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "request_tickets_result_doc_id_fkey"
+            columns: ["result_doc_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      share_lots: {
+        Row: {
+          acquired_at: string | null
+          created_at: string | null
+          currency: string | null
+          deal_id: string | null
+          id: string
+          lockup_until: string | null
+          source_id: string | null
+          status: string | null
+          unit_cost: number
+          units_remaining: number
+          units_total: number
+        }
+        Insert: {
+          acquired_at?: string | null
+          created_at?: string | null
+          currency?: string | null
+          deal_id?: string | null
+          id?: string
+          lockup_until?: string | null
+          source_id?: string | null
+          status?: string | null
+          unit_cost: number
+          units_remaining: number
+          units_total: number
+        }
+        Update: {
+          acquired_at?: string | null
+          created_at?: string | null
+          currency?: string | null
+          deal_id?: string | null
+          id?: string
+          lockup_until?: string | null
+          source_id?: string | null
+          status?: string | null
+          unit_cost?: number
+          units_remaining?: number
+          units_total?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "share_lots_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "share_lots_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "share_sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      share_sources: {
+        Row: {
+          contract_doc_id: string | null
+          counterparty_name: string | null
+          id: string
+          kind: string
+          notes: string | null
+        }
+        Insert: {
+          contract_doc_id?: string | null
+          counterparty_name?: string | null
+          id?: string
+          kind: string
+          notes?: string | null
+        }
+        Update: {
+          contract_doc_id?: string | null
+          counterparty_name?: string | null
+          id?: string
+          kind?: string
+          notes?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "share_sources_contract_doc_id_fkey"
+            columns: ["contract_doc_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      signature_requests: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          deal_id: string | null
+          document_id: string | null
+          document_type: string
+          email_error: string | null
+          email_message_id: string | null
+          email_opened_at: string | null
+          email_sent_at: string | null
+          google_drive_file_id: string | null
+          google_drive_url: string | null
+          id: string
+          investor_id: string | null
+          member_id: string | null
+          signature_data_url: string | null
+          signature_ip_address: string | null
+          signature_position: string
+          signature_timestamp: string | null
+          signed_pdf_path: string | null
+          signed_pdf_size: number | null
+          signer_email: string
+          signer_name: string
+          signer_role: string
+          signing_token: string
+          status: string
+          subscription_id: string | null
+          token_expires_at: string
+          unsigned_pdf_path: string | null
+          unsigned_pdf_size: number | null
+          updated_at: string | null
+          workflow_run_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          deal_id?: string | null
+          document_id?: string | null
+          document_type: string
+          email_error?: string | null
+          email_message_id?: string | null
+          email_opened_at?: string | null
+          email_sent_at?: string | null
+          google_drive_file_id?: string | null
+          google_drive_url?: string | null
+          id?: string
+          investor_id?: string | null
+          member_id?: string | null
+          signature_data_url?: string | null
+          signature_ip_address?: string | null
+          signature_position: string
+          signature_timestamp?: string | null
+          signed_pdf_path?: string | null
+          signed_pdf_size?: number | null
+          signer_email: string
+          signer_name: string
+          signer_role: string
+          signing_token: string
+          status?: string
+          subscription_id?: string | null
+          token_expires_at: string
+          unsigned_pdf_path?: string | null
+          unsigned_pdf_size?: number | null
+          updated_at?: string | null
+          workflow_run_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          deal_id?: string | null
+          document_id?: string | null
+          document_type?: string
+          email_error?: string | null
+          email_message_id?: string | null
+          email_opened_at?: string | null
+          email_sent_at?: string | null
+          google_drive_file_id?: string | null
+          google_drive_url?: string | null
+          id?: string
+          investor_id?: string | null
+          member_id?: string | null
+          signature_data_url?: string | null
+          signature_ip_address?: string | null
+          signature_position?: string
+          signature_timestamp?: string | null
+          signed_pdf_path?: string | null
+          signed_pdf_size?: number | null
+          signer_email?: string
+          signer_name?: string
+          signer_role?: string
+          signing_token?: string
+          status?: string
+          subscription_id?: string | null
+          token_expires_at?: string
+          unsigned_pdf_path?: string | null
+          unsigned_pdf_size?: number | null
+          updated_at?: string | null
+          workflow_run_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "signature_requests_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "signature_requests_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "signature_requests_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "signature_requests_investor_id_fkey"
+            columns: ["investor_id"]
+            isOneToOne: false
+            referencedRelation: "investors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "signature_requests_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "investor_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "signature_requests_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "signature_requests_workflow_run_id_fkey"
+            columns: ["workflow_run_id"]
+            isOneToOne: false
+            referencedRelation: "workflow_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      staff_filter_views: {
+        Row: {
+          created_at: string | null
+          entity_type: string
+          filters: Json
+          id: string
+          is_default: boolean | null
+          name: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          entity_type: string
+          filters?: Json
+          id?: string
+          is_default?: boolean | null
+          name: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          entity_type?: string
+          filters?: Json
+          id?: string
+          is_default?: boolean | null
+          name?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_filter_views_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      staff_permissions: {
+        Row: {
+          expires_at: string | null
+          granted_at: string | null
+          granted_by: string | null
+          id: string
+          permission: string
+          user_id: string
+        }
+        Insert: {
+          expires_at?: string | null
+          granted_at?: string | null
+          granted_by?: string | null
+          id?: string
+          permission: string
+          user_id: string
+        }
+        Update: {
+          expires_at?: string | null
+          granted_at?: string | null
+          granted_by?: string | null
+          id?: string
+          permission?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_permissions_granted_by_fkey"
+            columns: ["granted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_permissions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subscription_fingerprints: {
+        Row: {
+          created_at: string | null
+          fingerprint: string
+          subscription_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          fingerprint: string
+          subscription_id: string
+        }
+        Update: {
+          created_at?: string | null
+          fingerprint?: string
+          subscription_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_fingerprints_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subscription_import_results: {
+        Row: {
+          created_at: string
+          entity_investor_id: string | null
+          id: string
+          investor_deal_holding_id: string | null
+          investor_id: string
+          run_id: string
+          subscription_id: string | null
+          vehicle_id: string
+        }
+        Insert: {
+          created_at?: string
+          entity_investor_id?: string | null
+          id?: string
+          investor_deal_holding_id?: string | null
+          investor_id: string
+          run_id: string
+          subscription_id?: string | null
+          vehicle_id: string
+        }
+        Update: {
+          created_at?: string
+          entity_investor_id?: string | null
+          id?: string
+          investor_deal_holding_id?: string | null
+          investor_id?: string
+          run_id?: string
+          subscription_id?: string | null
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_import_results_entity_investor_id_fkey"
+            columns: ["entity_investor_id"]
+            isOneToOne: false
+            referencedRelation: "entity_investors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_import_results_investor_deal_holding_id_fkey"
+            columns: ["investor_deal_holding_id"]
+            isOneToOne: false
+            referencedRelation: "investor_deal_holdings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_import_results_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_workbook_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_import_results_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subscription_workbook_runs: {
+        Row: {
+          created_at: string
+          dry_run: boolean | null
+          executed_by: string | null
+          id: string
+          notes: string | null
+          run_state: string
+          source_filename: string
+          source_hash: string | null
+        }
+        Insert: {
+          created_at?: string
+          dry_run?: boolean | null
+          executed_by?: string | null
+          id?: string
+          notes?: string | null
+          run_state?: string
+          source_filename: string
+          source_hash?: string | null
+        }
+        Update: {
+          created_at?: string
+          dry_run?: boolean | null
+          executed_by?: string | null
+          id?: string
+          notes?: string | null
+          run_state?: string
+          source_filename?: string
+          source_hash?: string | null
+        }
+        Relationships: []
+      }
+      subscriptions: {
+        Row: {
+          acknowledgement_notes: string | null
+          activated_at: string | null
+          bd_fee_amount: number | null
+          bd_fee_percent: number | null
+          capital_calls_total: number | null
+          commitment: number | null
+          committed_at: string | null
+          contract_date: string | null
+          cost_per_share: number | null
+          created_at: string | null
+          currency: string | null
+          current_nav: number | null
+          deal_id: string | null
+          distributions_total: number | null
+          effective_date: string | null
+          fee_plan_id: string | null
+          finra_fee_amount: number | null
+          funded_amount: number | null
+          funded_at: string | null
+          funding_due_at: string | null
+          id: string
+          introducer_id: string | null
+          introduction_id: string | null
+          investor_id: string | null
+          management_fee_amount: number | null
+          management_fee_frequency: string | null
+          management_fee_percent: number | null
+          num_shares: number | null
+          opportunity_name: string | null
+          outstanding_amount: number | null
+          pack_generated_at: string | null
+          pack_sent_at: string | null
+          performance_fee_tier1_percent: number | null
+          performance_fee_tier1_threshold: number | null
+          performance_fee_tier2_percent: number | null
+          performance_fee_tier2_threshold: number | null
+          price_per_share: number | null
+          proxy_authorization_doc_id: string | null
+          proxy_commercial_partner_id: string | null
+          proxy_user_id: string | null
+          signed_at: string | null
+          signed_doc_id: string | null
+          sourcing_contract_ref: string | null
+          spread_fee_amount: number | null
+          spread_per_share: number | null
+          status: string | null
+          submitted_by_proxy: boolean | null
+          subscription_date: string | null
+          subscription_fee_amount: number | null
+          subscription_fee_percent: number | null
+          subscription_number: number
+          units: number | null
+          vehicle_id: string | null
+        }
+        Insert: {
+          acknowledgement_notes?: string | null
+          activated_at?: string | null
+          bd_fee_amount?: number | null
+          bd_fee_percent?: number | null
+          capital_calls_total?: number | null
+          commitment?: number | null
+          committed_at?: string | null
+          contract_date?: string | null
+          cost_per_share?: number | null
+          created_at?: string | null
+          currency?: string | null
+          current_nav?: number | null
+          deal_id?: string | null
+          distributions_total?: number | null
+          effective_date?: string | null
+          fee_plan_id?: string | null
+          finra_fee_amount?: number | null
+          funded_amount?: number | null
+          funded_at?: string | null
+          funding_due_at?: string | null
+          id?: string
+          introducer_id?: string | null
+          introduction_id?: string | null
+          investor_id?: string | null
+          management_fee_amount?: number | null
+          management_fee_frequency?: string | null
+          management_fee_percent?: number | null
+          num_shares?: number | null
+          opportunity_name?: string | null
+          outstanding_amount?: number | null
+          pack_generated_at?: string | null
+          pack_sent_at?: string | null
+          performance_fee_tier1_percent?: number | null
+          performance_fee_tier1_threshold?: number | null
+          performance_fee_tier2_percent?: number | null
+          performance_fee_tier2_threshold?: number | null
+          price_per_share?: number | null
+          proxy_authorization_doc_id?: string | null
+          proxy_commercial_partner_id?: string | null
+          proxy_user_id?: string | null
+          signed_at?: string | null
+          signed_doc_id?: string | null
+          sourcing_contract_ref?: string | null
+          spread_fee_amount?: number | null
+          spread_per_share?: number | null
+          status?: string | null
+          submitted_by_proxy?: boolean | null
+          subscription_date?: string | null
+          subscription_fee_amount?: number | null
+          subscription_fee_percent?: number | null
+          subscription_number?: number
+          units?: number | null
+          vehicle_id?: string | null
+        }
+        Update: {
+          acknowledgement_notes?: string | null
+          activated_at?: string | null
+          bd_fee_amount?: number | null
+          bd_fee_percent?: number | null
+          capital_calls_total?: number | null
+          commitment?: number | null
+          committed_at?: string | null
+          contract_date?: string | null
+          cost_per_share?: number | null
+          created_at?: string | null
+          currency?: string | null
+          current_nav?: number | null
+          deal_id?: string | null
+          distributions_total?: number | null
+          effective_date?: string | null
+          fee_plan_id?: string | null
+          finra_fee_amount?: number | null
+          funded_amount?: number | null
+          funded_at?: string | null
+          funding_due_at?: string | null
+          id?: string
+          introducer_id?: string | null
+          introduction_id?: string | null
+          investor_id?: string | null
+          management_fee_amount?: number | null
+          management_fee_frequency?: string | null
+          management_fee_percent?: number | null
+          num_shares?: number | null
+          opportunity_name?: string | null
+          outstanding_amount?: number | null
+          pack_generated_at?: string | null
+          pack_sent_at?: string | null
+          performance_fee_tier1_percent?: number | null
+          performance_fee_tier1_threshold?: number | null
+          performance_fee_tier2_percent?: number | null
+          performance_fee_tier2_threshold?: number | null
+          price_per_share?: number | null
+          proxy_authorization_doc_id?: string | null
+          proxy_commercial_partner_id?: string | null
+          proxy_user_id?: string | null
+          signed_at?: string | null
+          signed_doc_id?: string | null
+          sourcing_contract_ref?: string | null
+          spread_fee_amount?: number | null
+          spread_per_share?: number | null
+          status?: string | null
+          submitted_by_proxy?: boolean | null
+          subscription_date?: string | null
+          subscription_fee_amount?: number | null
+          subscription_fee_percent?: number | null
+          subscription_number?: number
+          units?: number | null
+          vehicle_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscriptions_fee_plan_id_fkey"
+            columns: ["fee_plan_id"]
+            isOneToOne: false
+            referencedRelation: "fee_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscriptions_introducer_id_fkey"
+            columns: ["introducer_id"]
+            isOneToOne: false
+            referencedRelation: "introducers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscriptions_introduction_id_fkey"
+            columns: ["introduction_id"]
+            isOneToOne: false
+            referencedRelation: "introductions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscriptions_investor_id_fkey"
+            columns: ["investor_id"]
+            isOneToOne: false
+            referencedRelation: "investors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscriptions_proxy_authorization_doc_id_fkey"
+            columns: ["proxy_authorization_doc_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscriptions_proxy_commercial_partner_id_fkey"
+            columns: ["proxy_commercial_partner_id"]
+            isOneToOne: false
+            referencedRelation: "commercial_partners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscriptions_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "entity_action_center_summary"
+            referencedColumns: ["vehicle_id"]
+          },
+          {
+            foreignKeyName: "subscriptions_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      suggested_matches: {
+        Row: {
+          amount_difference: number | null
+          bank_transaction_id: string | null
+          confidence: number
+          created_at: string | null
+          id: string
+          invoice_id: string | null
+          match_reason: string
+          subscription_id: string | null
+        }
+        Insert: {
+          amount_difference?: number | null
+          bank_transaction_id?: string | null
+          confidence: number
+          created_at?: string | null
+          id?: string
+          invoice_id?: string | null
+          match_reason: string
+          subscription_id?: string | null
+        }
+        Update: {
+          amount_difference?: number | null
+          bank_transaction_id?: string | null
+          confidence?: number
+          created_at?: string | null
+          id?: string
+          invoice_id?: string | null
+          match_reason?: string
+          subscription_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "suggested_matches_bank_transaction_id_fkey"
+            columns: ["bank_transaction_id"]
+            isOneToOne: false
+            referencedRelation: "bank_transactions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "suggested_matches_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "suggested_matches_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      system_metrics: {
+        Row: {
+          created_at: string | null
+          id: string
+          metadata: Json | null
+          metric_type: string
+          timestamp: string
+          unit: string | null
+          value: number
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          metric_type: string
+          timestamp?: string
+          unit?: string | null
+          value: number
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          metric_type?: string
+          timestamp?: string
+          unit?: string | null
+          value?: number
+        }
+        Relationships: []
+      }
+      task_actions: {
+        Row: {
+          action_config: Json | null
+          action_type: string
+          task_id: string
+        }
+        Insert: {
+          action_config?: Json | null
+          action_type: string
+          task_id: string
+        }
+        Update: {
+          action_config?: Json | null
+          action_type?: string
+          task_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_actions_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: true
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      task_dependencies: {
+        Row: {
+          depends_on_task_id: string
+          task_id: string
+        }
+        Insert: {
+          depends_on_task_id: string
+          task_id: string
+        }
+        Update: {
+          depends_on_task_id?: string
+          task_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_dependencies_depends_on_task_id_fkey"
+            columns: ["depends_on_task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_dependencies_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      task_templates: {
+        Row: {
+          category: string
+          created_at: string | null
+          default_due_days: number | null
+          description: string | null
+          estimated_minutes: number | null
+          id: string
+          kind: string
+          prerequisite_task_kinds: string[] | null
+          priority: string | null
+          title: string
+          trigger_event: string | null
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          default_due_days?: number | null
+          description?: string | null
+          estimated_minutes?: number | null
+          id?: string
+          kind: string
+          prerequisite_task_kinds?: string[] | null
+          priority?: string | null
+          title: string
+          trigger_event?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          default_due_days?: number | null
+          description?: string | null
+          estimated_minutes?: number | null
+          id?: string
+          kind?: string
+          prerequisite_task_kinds?: string[] | null
+          priority?: string | null
+          title?: string
+          trigger_event?: string | null
+        }
+        Relationships: []
+      }
+      tasks: {
+        Row: {
+          category: string | null
+          completed_at: string | null
+          completed_by: string | null
+          completion_reason: string | null
+          created_at: string | null
+          description: string | null
+          due_at: string | null
+          estimated_minutes: number | null
+          id: string
+          instructions: Json | null
+          kind: string | null
+          owner_investor_id: string | null
+          owner_user_id: string | null
+          priority: string | null
+          related_entity_id: string | null
+          related_entity_type: string | null
+          started_at: string | null
+          status: string | null
+          title: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          category?: string | null
+          completed_at?: string | null
+          completed_by?: string | null
+          completion_reason?: string | null
+          created_at?: string | null
+          description?: string | null
+          due_at?: string | null
+          estimated_minutes?: number | null
+          id?: string
+          instructions?: Json | null
+          kind?: string | null
+          owner_investor_id?: string | null
+          owner_user_id?: string | null
+          priority?: string | null
+          related_entity_id?: string | null
+          related_entity_type?: string | null
+          started_at?: string | null
+          status?: string | null
+          title?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string | null
+          completed_at?: string | null
+          completed_by?: string | null
+          completion_reason?: string | null
+          created_at?: string | null
+          description?: string | null
+          due_at?: string | null
+          estimated_minutes?: number | null
+          id?: string
+          instructions?: Json | null
+          kind?: string | null
+          owner_investor_id?: string | null
+          owner_user_id?: string | null
+          priority?: string | null
+          related_entity_id?: string | null
+          related_entity_type?: string | null
+          started_at?: string | null
+          status?: string | null
+          title?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tasks_completed_by_fkey"
+            columns: ["completed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_owner_investor_id_fkey"
+            columns: ["owner_investor_id"]
+            isOneToOne: false
+            referencedRelation: "investors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_owner_user_id_fkey"
+            columns: ["owner_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      term_sheets: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          currency: string | null
+          deal_id: string | null
+          doc_id: string | null
+          fee_plan_id: string | null
+          id: string
+          investor_id: string | null
+          price_per_unit: number | null
+          status: string | null
+          supersedes_id: string | null
+          terms_data: Json | null
+          valid_until: string | null
+          version: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          currency?: string | null
+          deal_id?: string | null
+          doc_id?: string | null
+          fee_plan_id?: string | null
+          id?: string
+          investor_id?: string | null
+          price_per_unit?: number | null
+          status?: string | null
+          supersedes_id?: string | null
+          terms_data?: Json | null
+          valid_until?: string | null
+          version?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          currency?: string | null
+          deal_id?: string | null
+          doc_id?: string | null
+          fee_plan_id?: string | null
+          id?: string
+          investor_id?: string | null
+          price_per_unit?: number | null
+          status?: string | null
+          supersedes_id?: string | null
+          terms_data?: Json | null
+          valid_until?: string | null
+          version?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "term_sheets_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "term_sheets_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "term_sheets_doc_id_fkey"
+            columns: ["doc_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "term_sheets_fee_plan_id_fkey"
+            columns: ["fee_plan_id"]
+            isOneToOne: false
+            referencedRelation: "fee_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "term_sheets_investor_id_fkey"
+            columns: ["investor_id"]
+            isOneToOne: false
+            referencedRelation: "investors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "term_sheets_supersedes_id_fkey"
+            columns: ["supersedes_id"]
+            isOneToOne: false
+            referencedRelation: "term_sheets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      valuations: {
+        Row: {
+          as_of_date: string
+          id: string
+          nav_per_unit: number | null
+          nav_total: number | null
+          vehicle_id: string | null
+        }
+        Insert: {
+          as_of_date: string
+          id?: string
+          nav_per_unit?: number | null
+          nav_total?: number | null
+          vehicle_id?: string | null
+        }
+        Update: {
+          as_of_date?: string
+          id?: string
+          nav_per_unit?: number | null
+          nav_total?: number | null
+          vehicle_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "valuations_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "entity_action_center_summary"
+            referencedColumns: ["vehicle_id"]
+          },
+          {
+            foreignKeyName: "valuations_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vehicles: {
+        Row: {
+          arranger_entity_id: string | null
+          created_at: string | null
+          currency: string | null
+          domicile: string | null
+          entity_code: string | null
+          formation_date: string | null
+          former_entity: string | null
+          id: string
+          investment_name: string | null
+          issuer_gp_name: string | null
+          issuer_gp_rcc_number: string | null
+          issuer_rcc_number: string | null
+          issuer_website: string | null
+          legal_jurisdiction: string | null
+          logo_url: string | null
+          name: string
+          notes: string | null
+          platform: string | null
+          registration_number: string | null
+          reporting_type: Database["public"]["Enums"]["reporting_type"] | null
+          requires_reporting: boolean | null
+          series_number: string | null
+          series_short_title: string | null
+          status: Database["public"]["Enums"]["entity_status"] | null
+          type: Database["public"]["Enums"]["vehicle_type"] | null
+          website_url: string | null
+        }
+        Insert: {
+          arranger_entity_id?: string | null
+          created_at?: string | null
+          currency?: string | null
+          domicile?: string | null
+          entity_code?: string | null
+          formation_date?: string | null
+          former_entity?: string | null
+          id?: string
+          investment_name?: string | null
+          issuer_gp_name?: string | null
+          issuer_gp_rcc_number?: string | null
+          issuer_rcc_number?: string | null
+          issuer_website?: string | null
+          legal_jurisdiction?: string | null
+          logo_url?: string | null
+          name: string
+          notes?: string | null
+          platform?: string | null
+          registration_number?: string | null
+          reporting_type?: Database["public"]["Enums"]["reporting_type"] | null
+          requires_reporting?: boolean | null
+          series_number?: string | null
+          series_short_title?: string | null
+          status?: Database["public"]["Enums"]["entity_status"] | null
+          type?: Database["public"]["Enums"]["vehicle_type"] | null
+          website_url?: string | null
+        }
+        Update: {
+          arranger_entity_id?: string | null
+          created_at?: string | null
+          currency?: string | null
+          domicile?: string | null
+          entity_code?: string | null
+          formation_date?: string | null
+          former_entity?: string | null
+          id?: string
+          investment_name?: string | null
+          issuer_gp_name?: string | null
+          issuer_gp_rcc_number?: string | null
+          issuer_rcc_number?: string | null
+          issuer_website?: string | null
+          legal_jurisdiction?: string | null
+          logo_url?: string | null
+          name?: string
+          notes?: string | null
+          platform?: string | null
+          registration_number?: string | null
+          reporting_type?: Database["public"]["Enums"]["reporting_type"] | null
+          requires_reporting?: boolean | null
+          series_number?: string | null
+          series_short_title?: string | null
+          status?: Database["public"]["Enums"]["entity_status"] | null
+          type?: Database["public"]["Enums"]["vehicle_type"] | null
+          website_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehicles_arranger_entity_id_fkey"
+            columns: ["arranger_entity_id"]
+            isOneToOne: false
+            referencedRelation: "arranger_entities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workflow_run_logs: {
+        Row: {
+          created_at: string | null
+          id: string
+          log_level: string | null
+          message: string | null
+          metadata: Json | null
+          step_name: string
+          step_status: string | null
+          workflow_run_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          log_level?: string | null
+          message?: string | null
+          metadata?: Json | null
+          step_name: string
+          step_status?: string | null
+          workflow_run_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          log_level?: string | null
+          message?: string | null
+          metadata?: Json | null
+          step_name?: string
+          step_status?: string | null
+          workflow_run_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workflow_run_logs_workflow_run_id_fkey"
+            columns: ["workflow_run_id"]
+            isOneToOne: false
+            referencedRelation: "workflow_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workflow_runs: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          created_tasks: string[] | null
+          duration_ms: number | null
+          entity_id: string | null
+          entity_type: string | null
+          error_message: string | null
+          id: string
+          idempotency_token: string | null
+          input_params: Json | null
+          output_data: Json | null
+          queued_at: string | null
+          result_doc_id: string | null
+          signing_in_progress: boolean | null
+          signing_locked_at: string | null
+          signing_locked_by: string | null
+          started_at: string | null
+          status: string | null
+          triggered_by: string | null
+          updated_at: string | null
+          webhook_signature: string | null
+          workflow_id: string | null
+          workflow_key: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          created_tasks?: string[] | null
+          duration_ms?: number | null
+          entity_id?: string | null
+          entity_type?: string | null
+          error_message?: string | null
+          id?: string
+          idempotency_token?: string | null
+          input_params?: Json | null
+          output_data?: Json | null
+          queued_at?: string | null
+          result_doc_id?: string | null
+          signing_in_progress?: boolean | null
+          signing_locked_at?: string | null
+          signing_locked_by?: string | null
+          started_at?: string | null
+          status?: string | null
+          triggered_by?: string | null
+          updated_at?: string | null
+          webhook_signature?: string | null
+          workflow_id?: string | null
+          workflow_key?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          created_tasks?: string[] | null
+          duration_ms?: number | null
+          entity_id?: string | null
+          entity_type?: string | null
+          error_message?: string | null
+          id?: string
+          idempotency_token?: string | null
+          input_params?: Json | null
+          output_data?: Json | null
+          queued_at?: string | null
+          result_doc_id?: string | null
+          signing_in_progress?: boolean | null
+          signing_locked_at?: string | null
+          signing_locked_by?: string | null
+          started_at?: string | null
+          status?: string | null
+          triggered_by?: string | null
+          updated_at?: string | null
+          webhook_signature?: string | null
+          workflow_id?: string | null
+          workflow_key?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workflow_runs_signing_locked_by_fkey"
+            columns: ["signing_locked_by"]
+            isOneToOne: false
+            referencedRelation: "signature_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workflow_runs_triggered_by_fkey"
+            columns: ["triggered_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workflow_runs_workflow_id_fkey"
+            columns: ["workflow_id"]
+            isOneToOne: false
+            referencedRelation: "workflows"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workflows: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          input_schema: Json | null
+          is_active: boolean | null
+          key: string
+          n8n_webhook_url: string
+          name: string | null
+          required_role: string | null
+          required_title: string[] | null
+          trigger_type: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          input_schema?: Json | null
+          is_active?: boolean | null
+          key: string
+          n8n_webhook_url: string
+          name?: string | null
+          required_role?: string | null
+          required_title?: string[] | null
+          trigger_type?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          input_schema?: Json | null
+          is_active?: boolean | null
+          key?: string
+          n8n_webhook_url?: string
+          name?: string | null
+          required_role?: string | null
+          required_title?: string[] | null
+          trigger_type?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+    }
+    Views: {
+      entity_action_center_summary: {
+        Row: {
+          critical_flags: number | null
+          earliest_due_date: string | null
+          entity_code: string | null
+          info_flags: number | null
+          last_flag_update: string | null
+          platform: string | null
+          total_unresolved_flags: number | null
+          vehicle_id: string | null
+          vehicle_name: string | null
+          vehicle_status: Database["public"]["Enums"]["entity_status"] | null
+          warning_flags: number | null
+        }
+        Relationships: []
+      }
+      folder_hierarchy: {
+        Row: {
+          depth: number | null
+          folder_type: string | null
+          full_path: string | null
+          id: string | null
+          indented_name: string | null
+          path: string | null
+          vehicle_id: string | null
+        }
+        Relationships: []
+      }
+    }
+    Functions: {
+      accrue_quarterly_management_fees: {
+        Args: { p_deal_id: string; p_quarter_end_date: string }
+        Returns: {
+          fee_amount: number
+          fee_event_id: string
+          investor_id: string
+        }[]
+      }
+      aggregate_fee_events_by_date: {
+        Args: { start_date: string }
+        Returns: {
+          amount: number
+          date: string
+        }[]
+      }
+      aggregate_subscriptions_by_date: {
+        Args: { start_date: string }
+        Returns: {
+          amount: number
+          date: string
+        }[]
+      }
+      apply_match: {
+        Args: { p_approved_by: string; p_match_id: string }
+        Returns: undefined
+      }
+      auto_create_deal_folder_for_existing: {
+        Args: { p_created_by?: string; p_deal_id: string }
+        Returns: undefined
+      }
+      auto_create_vehicle_folders_for_existing: {
+        Args: { p_created_by?: string; p_vehicle_id: string }
+        Returns: undefined
+      }
+      calculate_investor_kpis: {
+        Args: { as_of_date?: string; investor_ids: string[] }
+        Returns: {
+          current_nav: number
+          dpi: number
+          irr_estimate: number
+          total_commitment: number
+          total_contributed: number
+          total_cost_basis: number
+          total_distributions: number
+          total_positions: number
+          total_vehicles: number
+          tvpi: number
+          unfunded_commitment: number
+          unrealized_gain: number
+          unrealized_gain_pct: number
+        }[]
+      }
+      calculate_investor_kpis_with_deals: {
+        Args: { as_of_date?: string; investor_ids: string[] }
+        Returns: {
+          current_nav: number
+          dpi: number
+          irr_estimate: number
+          pending_allocations: number
+          total_commitment: number
+          total_contributed: number
+          total_cost_basis: number
+          total_deal_value: number
+          total_deals: number
+          total_distributions: number
+          total_positions: number
+          total_vehicles: number
+          tvpi: number
+          unfunded_commitment: number
+          unrealized_gain: number
+          unrealized_gain_pct: number
+        }[]
+      }
+      calculate_management_fee: {
+        Args: {
+          p_base_amount: number
+          p_period_days: number
+          p_rate_bps: number
+        }
+        Returns: number
+      }
+      calculate_performance_fee: {
+        Args: {
+          p_carry_rate_bps: number
+          p_contributed_capital: number
+          p_exit_proceeds: number
+          p_hurdle_rate_bps: number
+          p_years_held: number
+        }
+        Returns: number
+      }
+      calculate_subscription_fee: {
+        Args: { p_commitment_amount: number; p_rate_bps: number }
+        Returns: number
+      }
+      check_all_signatories_signed: {
+        Args: { p_deal_id: string; p_investor_id: string }
+        Returns: {
+          all_signed: boolean
+          pending_signatories: Json
+          signed_count: number
+          total_signatories: number
+        }[]
+      }
+      check_auto_approval_criteria: {
+        Args: { p_approval_id: string }
+        Returns: boolean
+      }
+      check_entity_compliance: {
+        Args: never
+        Returns: {
+          issues_found: number
+          vehicle_id: string
+        }[]
+      }
+      create_default_entity_folders: {
+        Args: { p_vehicle_id: string }
+        Returns: undefined
+      }
+      create_default_vehicle_folders: {
+        Args: { p_created_by: string; p_vehicle_id: string }
+        Returns: undefined
+      }
+      create_tasks_from_templates: {
+        Args: {
+          p_investor_id: string
+          p_trigger_event: string
+          p_user_id: string
+        }
+        Returns: {
+          category: string | null
+          completed_at: string | null
+          completed_by: string | null
+          completion_reason: string | null
+          created_at: string | null
+          description: string | null
+          due_at: string | null
+          estimated_minutes: number | null
+          id: string
+          instructions: Json | null
+          kind: string | null
+          owner_investor_id: string | null
+          owner_user_id: string | null
+          priority: string | null
+          related_entity_id: string | null
+          related_entity_type: string | null
+          started_at: string | null
+          status: string | null
+          title: string | null
+          updated_at: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "tasks"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      dispatch_to_deal: {
+        Args: {
+          p_deal_id: string
+          p_entity_id: string
+          p_entity_type: string
+          p_investor_id?: string
+          p_user_id: string
+        }
+        Returns: string
+      }
+      ensure_entity_default_folders: {
+        Args: { p_actor?: string; p_vehicle_id: string }
+        Returns: undefined
+      }
+      fn_compute_fee_events: {
+        Args: { p_as_of_date?: string; p_deal_id: string }
+        Returns: number
+      }
+      fn_deal_inventory_summary: {
+        Args: { p_deal_id: string }
+        Returns: {
+          allocated_units: number
+          available_units: number
+          reserved_units: number
+          total_units: number
+        }[]
+      }
+      fn_expire_reservations: { Args: never; Returns: number }
+      fn_finalize_allocation: {
+        Args: { p_approver_id: string; p_reservation_id: string }
+        Returns: string
+      }
+      fn_invoice_fees: {
+        Args: {
+          p_deal_id: string
+          p_investor_id?: string
+          p_up_to_date?: string
+        }
+        Returns: string
+      }
+      fn_reserve_inventory: {
+        Args: {
+          p_deal_id: string
+          p_hold_minutes?: number
+          p_investor_id: string
+          p_proposed_unit_price: number
+          p_requested_units: number
+        }
+        Returns: string
+      }
+      get_applicable_fee_plan: {
+        Args: {
+          p_as_of_date?: string
+          p_deal_id: string
+          p_investor_id: string
+        }
+        Returns: {
+          components: Json
+          fee_plan_id: string
+          fee_plan_name: string
+          overrides: Json
+        }[]
+      }
+      get_approval_stats: {
+        Args: { p_staff_id?: string }
+        Returns: {
+          approval_rate_24h: number
+          avg_processing_time_hours: number
+          overdue_count: number
+          total_approved_30d: number
+          total_awaiting_info: number
+          total_pending: number
+          total_rejected_30d: number
+        }[]
+      }
+      get_conversation_unread_counts: {
+        Args: { p_conversation_ids: string[]; p_user_id: string }
+        Returns: {
+          conversation_id: string
+          unread_count: number
+        }[]
+      }
+      get_dashboard_counts: {
+        Args: { month_start: string }
+        Returns: {
+          active_deals: number
+          active_lps: number
+          active_requests: number
+          active_workflows: number
+          compliant_investors: number
+          high_priority_kyc: number
+          pending_kyc: number
+          total_investors: number
+          workflow_runs_mtd: number
+        }[]
+      }
+      get_folder_path: { Args: { p_folder_id: string }; Returns: string }
+      get_investor_capital_summary: {
+        Args: { p_investor_ids: string[] }
+        Returns: {
+          current_nav: number
+          investor_id: string
+          last_capital_call_date: string
+          last_distribution_date: string
+          position_count: number
+          total_commitment: number
+          total_contributed: number
+          total_distributed: number
+          unfunded_commitment: number
+          vehicle_count: number
+        }[]
+      }
+      get_investor_journey_stage: {
+        Args: { p_deal_id: string; p_investor_id: string }
+        Returns: {
+          completed_at: string
+          is_current: boolean
+          stage_name: string
+          stage_number: number
+        }[]
+      }
+      get_investor_kpi_details: {
+        Args: { as_of_date?: string; investor_ids: string[]; kpi_type: string }
+        Returns: {
+          id: string
+          metadata: Json
+          name: string
+          percentage: number
+          type: string
+          value: number
+        }[]
+      }
+      get_investor_vehicle_breakdown: {
+        Args: { investor_ids: string[] }
+        Returns: {
+          as_of_date: string
+          commitment: number
+          contributed: number
+          cost_basis: number
+          current_value: number
+          distributed: number
+          id: string
+          logo_url: string
+          name: string
+          nav_per_unit: number
+          units: number
+          unrealized_gain: number
+          unrealized_gain_pct: number
+          vehicle_type: string
+        }[]
+      }
+      get_latest_valuations: {
+        Args: never
+        Returns: {
+          as_of_date: string
+          nav_per_unit: number
+          vehicle_id: string
+        }[]
+      }
+      get_my_investor_ids: { Args: never; Returns: string[] }
+      get_or_create_investor: {
+        Args: { p_name: string; p_type: string }
+        Returns: string
+      }
+      get_or_create_vehicle: { Args: { p_code: string }; Returns: string }
+      get_portfolio_trends: {
+        Args: { days_back?: number; investor_ids: string[] }
+        Returns: {
+          nav_change: number
+          nav_change_pct: number
+          performance_change: number
+          period_days: number
+        }[]
+      }
+      get_reconciliation_summary: {
+        Args: never
+        Returns: {
+          match_rate: number
+          matched_transactions: number
+          pending_amount: number
+          reconciled_amount: number
+          total_transactions: number
+          unmatched_transactions: number
+        }[]
+      }
+      get_subscription_amount: { Args: { p_payload: Json }; Returns: number }
+      get_task_progress_by_category: {
+        Args: { p_investor_id?: string; p_user_id: string }
+        Returns: {
+          category: string
+          completed_tasks: number
+          percentage: number
+          total_tasks: number
+        }[]
+      }
+      get_unread_message_count: { Args: { p_user_id: string }; Returns: number }
+      get_user_personas: {
+        Args: { p_user_id?: string }
+        Returns: {
+          can_execute_for_clients: boolean
+          can_sign: boolean
+          entity_id: string
+          entity_logo_url: string
+          entity_name: string
+          is_primary: boolean
+          persona_type: string
+          role_in_entity: string
+        }[]
+      }
+      has_document_access: { Args: { p_document_id: string }; Returns: boolean }
+      has_vehicle_access: { Args: { p_vehicle_id: string }; Returns: boolean }
+      is_ceo: { Args: never; Returns: boolean }
+      is_staff: { Args: never; Returns: boolean }
+      is_staff_user: { Args: never; Returns: boolean }
+      is_user_dispatched_to_deal: {
+        Args: { p_deal_id: string }
+        Returns: boolean
+      }
+      log_audit_event: {
+        Args: {
+          p_action: string
+          p_action_details: Json
+          p_actor_id: string
+          p_after: Json
+          p_before: Json
+          p_compliance_flag: boolean
+          p_entity_id: string
+          p_entity_name: string
+          p_entity_type: string
+          p_event_type: string
+          p_retention_category: string
+          p_risk_level: string
+        }
+        Returns: string
+      }
+      mark_compliance_review: {
+        Args: {
+          p_audit_log_id: string
+          p_notes: string
+          p_reviewer_id: string
+          p_status: string
+        }
+        Returns: undefined
+      }
+      mark_conversation_read: {
+        Args: { p_conversation_id: string; p_user_id: string }
+        Returns: undefined
+      }
+      mark_overdue_tasks: {
+        Args: never
+        Returns: {
+          updated_count: number
+        }[]
+      }
+      publish_scheduled_documents: {
+        Args: never
+        Returns: {
+          document_id: string
+          published_count: number
+        }[]
+      }
+      revoke_dispatch: {
+        Args: { p_deal_id: string; p_user_id: string }
+        Returns: boolean
+      }
+      run_auto_match: {
+        Args: never
+        Returns: {
+          confidence: number
+          invoice_id: string
+          reason: string
+          transaction_id: string
+        }[]
+      }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
+      unpublish_expired_documents: {
+        Args: never
+        Returns: {
+          document_id: string
+          unpublished_count: number
+        }[]
+      }
+      user_has_deal_access: {
+        Args: { target_deal_id: string }
+        Returns: boolean
+      }
+      user_is_staff: { Args: never; Returns: boolean }
+      user_linked_to_investor: {
+        Args: { target_investor_id: string }
+        Returns: boolean
+      }
+      user_requires_dispatch: { Args: never; Returns: boolean }
+    }
+    Enums: {
+      allocation_status_enum:
+        | "pending_review"
+        | "approved"
+        | "rejected"
+        | "settled"
+      conversation_type_enum: "dm" | "group" | "deal_room" | "broadcast"
+      conversation_visibility_enum: "investor" | "internal" | "deal"
+      convo_type_enum: "dm" | "group" | "deal_room" | "broadcast"
+      deal_member_role:
+        | "investor"
+        | "co_investor"
+        | "spouse"
+        | "advisor"
+        | "lawyer"
+        | "banker"
+        | "introducer"
+        | "viewer"
+        | "verso_staff"
+        | "partner_investor"
+        | "introducer_investor"
+        | "commercial_partner_investor"
+        | "commercial_partner_proxy"
+        | "arranger"
+      deal_status_enum:
+        | "draft"
+        | "open"
+        | "allocation_pending"
+        | "closed"
+        | "cancelled"
+      deal_type_enum:
+        | "equity_secondary"
+        | "equity_primary"
+        | "credit_trade_finance"
+        | "other"
+      entity_status: "LIVE" | "CLOSED" | "TBD"
+      fee_calc_method_enum:
+        | "percent_of_investment"
+        | "percent_per_annum"
+        | "percent_of_profit"
+        | "per_unit_spread"
+        | "fixed"
+        | "percent_of_commitment"
+        | "percent_of_nav"
+        | "fixed_amount"
+      fee_component_kind_enum:
+        | "subscription"
+        | "management"
+        | "performance"
+        | "spread_markup"
+        | "flat"
+        | "other"
+        | "bd_fee"
+        | "finra_fee"
+      fee_event_status_enum:
+        | "accrued"
+        | "invoiced"
+        | "voided"
+        | "paid"
+        | "waived"
+        | "disputed"
+        | "cancelled"
+      fee_frequency_enum:
+        | "one_time"
+        | "annual"
+        | "quarterly"
+        | "monthly"
+        | "on_exit"
+        | "on_event"
+      flag_severity: "critical" | "warning" | "info" | "success"
+      flag_type:
+        | "compliance_issue"
+        | "missing_documents"
+        | "expiring_documents"
+        | "reporting_due"
+        | "approval_required"
+        | "action_required"
+        | "information_needed"
+        | "review_required"
+      folder_type:
+        | "kyc"
+        | "legal"
+        | "redemption_closure"
+        | "financial_statements"
+        | "tax_documents"
+        | "board_minutes"
+        | "investor_agreements"
+        | "compliance"
+        | "correspondence"
+        | "other"
+      invoice_status_enum:
+        | "draft"
+        | "sent"
+        | "paid"
+        | "partially_paid"
+        | "cancelled"
+        | "overdue"
+        | "disputed"
+      kyc_status_type:
+        | "not_started"
+        | "in_progress"
+        | "pending_review"
+        | "approved"
+        | "rejected"
+        | "expired"
+        | "renewal_required"
+      message_type_enum: "text" | "system" | "file"
+      participant_role_enum: "owner" | "member" | "viewer"
+      payment_status_enum: "received" | "applied" | "refunded"
+      report_status_enum: "queued" | "processing" | "ready" | "failed"
+      reporting_type:
+        | "Not Required"
+        | "Company Only"
+        | "Online only"
+        | "Company + Online"
+      request_priority_enum: "low" | "normal" | "high" | "urgent"
+      request_status_enum:
+        | "open"
+        | "assigned"
+        | "in_progress"
+        | "ready"
+        | "closed"
+        | "awaiting_info"
+        | "cancelled"
+      reservation_status_enum: "pending" | "approved" | "expired" | "cancelled"
+      stakeholder_role:
+        | "lawyer"
+        | "accountant"
+        | "administrator"
+        | "auditor"
+        | "strategic_partner"
+        | "director"
+        | "other"
+      user_role:
+        | "investor"
+        | "staff_admin"
+        | "staff_ops"
+        | "staff_rm"
+        | "arranger"
+        | "introducer"
+        | "partner"
+        | "commercial_partner"
+        | "lawyer"
+        | "ceo"
+      vehicle_type:
+        | "fund"
+        | "spv"
+        | "securitization"
+        | "note"
+        | "other"
+        | "real_estate"
+        | "private_equity"
+        | "venture_capital"
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
 }
 
-export interface Investors {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /** @format text */
-  legal_name: string;
-  /** @format text */
-  type?: string;
-  /**
-   * @format text
-   * @default "pending"
-   */
-  kyc_status?: string;
-  /** @format text */
-  country?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at?: string;
-  /** @format text */
-  display_name?: string;
-  /** @format text */
-  email?: string;
-  /** @format text */
-  phone?: string;
-  /** @format text */
-  country_of_incorporation?: string;
-  /** @format text */
-  tax_residency?: string;
-  /** @format text */
-  entity_identifier?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  primary_rm?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  secondary_rm?: string;
-  /**
-   * @format text
-   * @default "active"
-   */
-  status?: string;
-  /**
-   * @format text
-   * @default "pending"
-   */
-  onboarding_status?: string;
-  /** @format timestamp with time zone */
-  kyc_completed_at?: string;
-  /** @format date */
-  kyc_expiry_date?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  kyc_approved_by?: string;
-  /** @format text */
-  aml_risk_rating?: string;
-  /** @format timestamp with time zone */
-  aml_last_reviewed_at?: string;
-  /**
-   * @format boolean
-   * @default false
-   */
-  is_pep?: boolean;
-  /**
-   * @format boolean
-   * @default false
-   */
-  is_sanctioned?: boolean;
-  /**
-   * @format boolean
-   * @default false
-   */
-  is_professional_investor?: boolean;
-  /**
-   * @format boolean
-   * @default false
-   */
-  is_qualified_purchaser?: boolean;
-  /** @format date */
-  accreditation_expiry?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  created_by?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  updated_at?: string;
-  /** @format timestamp with time zone */
-  archived_at?: string;
-  /**
-   * Registered address of the investor entity
-   * @format text
-   */
-  registered_address?: string;
-  /**
-   * City for NDA Party A (City, Country Code format)
-   * @format text
-   */
-  city?: string;
-  /**
-   * Name of authorized representative for corporate entities
-   * @format text
-   */
-  representative_name?: string;
-  /**
-   * Title of authorized representative
-   * @format text
-   */
-  representative_title?: string;
-  /**
-   * Residential address street (required for contracts)
-   * @format text
-   */
-  residential_street?: string;
-  /**
-   * Residential address city
-   * @format text
-   */
-  residential_city?: string;
-  /**
-   * Residential address state/province
-   * @format text
-   */
-  residential_state?: string;
-  /**
-   * Residential address postal/zip code
-   * @format text
-   */
-  residential_postal_code?: string;
-  /**
-   * Residential address country
-   * @format text
-   */
-  residential_country?: string;
-  /**
-   * Mobile phone number (primary contact)
-   * @format text
-   */
-  phone_mobile?: string;
-  /**
-   * Office/work phone number
-   * @format text
-   */
-  phone_office?: string;
-  /** @format text */
-  logo_url?: string;
-}
-
-/** Members (directors, shareholders, beneficial owners) of entity-type investors */
-export interface InvestorMembers {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /**
-   * References investors where type IN (entity, institution)
-   *
-   * Note:
-   * This is a Foreign Key to `investors.id`.<fk table='investors' column='id'/>
-   * @format uuid
-   */
-  investor_id: string;
-  /** @format text */
-  full_name: string;
-  /** @format text */
-  role: string;
-  /** @format text */
-  role_title?: string;
-  /** @format text */
-  email?: string;
-  /** @format text */
-  phone?: string;
-  /** @format text */
-  residential_street?: string;
-  /** @format text */
-  residential_city?: string;
-  /** @format text */
-  residential_state?: string;
-  /** @format text */
-  residential_postal_code?: string;
-  /** @format text */
-  residential_country?: string;
-  /** @format text */
-  nationality?: string;
-  /** @format text */
-  id_type?: string;
-  /** @format text */
-  id_number?: string;
-  /** @format date */
-  id_expiry_date?: string;
-  /** @format numeric */
-  ownership_percentage?: number;
-  /**
-   * @format boolean
-   * @default false
-   */
-  is_beneficial_owner?: boolean;
-  /**
-   * @format text
-   * @default "pending"
-   */
-  kyc_status?: string;
-  /** @format timestamp with time zone */
-  kyc_approved_at?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  kyc_approved_by?: string;
-  /** @format date */
-  kyc_expiry_date?: string;
-  /**
-   * @format boolean
-   * @default true
-   */
-  is_active?: boolean;
-  /**
-   * @format date
-   * @default "CURRENT_DATE"
-   */
-  effective_from?: string;
-  /** @format date */
-  effective_to?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  updated_at?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  created_by?: string;
-}
-
-export interface ImportBatches {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /** @format text */
-  bank_account_id: string;
-  /** @format text */
-  file_name: string;
-  /** @format integer */
-  transaction_count: number;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  imported_by?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at?: string;
-}
-
-/** Links multiple users to commercial partner entities. WHO CAN LOGIN as this commercial partner. */
-export interface CommercialPartnerUsers {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * This is a Foreign Key to `commercial_partners.id`.<fk table='commercial_partners' column='id'/>
-   * @format uuid
-   */
-  commercial_partner_id: string;
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  user_id: string;
-  /**
-   * @format text
-   * @default "contact"
-   */
-  role: string;
-  /**
-   * @format boolean
-   * @default false
-   */
-  is_primary: boolean;
-  /**
-   * Whether this user can sign documents and execute transactions on behalf of clients (proxy mode).
-   * @format boolean
-   * @default false
-   */
-  can_execute_for_clients: boolean;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  created_by?: string;
-  /**
-   * @format boolean
-   * @default false
-   */
-  can_sign: boolean;
-}
-
-export interface Payments {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `investors.id`.<fk table='investors' column='id'/>
-   * @format uuid
-   */
-  investor_id?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `invoices.id`.<fk table='invoices' column='id'/>
-   * @format uuid
-   */
-  invoice_id?: string;
-  /** @format numeric */
-  amount?: number;
-  /**
-   * @format text
-   * @default "USD"
-   */
-  currency?: string;
-  /** @format timestamp with time zone */
-  paid_at?: string;
-  /** @format text */
-  method?: string;
-  /** @format uuid */
-  bank_txn_id?: string;
-  /**
-   * @format public.payment_status_enum
-   * @default "received"
-   */
-  status?: "received" | "applied" | "refunded";
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at?: string;
-}
-
-/** Master registry of all directors that can be assigned to entities */
-export interface DirectorRegistry {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /** @format text */
-  full_name: string;
-  /** @format text */
-  email?: string;
-  /** @format text */
-  phone?: string;
-  /** @format text */
-  nationality?: string;
-  /**
-   * Passport or National ID number
-   * @format text
-   */
-  id_number?: string;
-  /** @format text */
-  notes?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  created_by?: string;
-  /** @format timestamp with time zone */
-  updated_at?: string;
-}
-
-export interface ShareLots {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `deals.id`.<fk table='deals' column='id'/>
-   * @format uuid
-   */
-  deal_id?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `share_sources.id`.<fk table='share_sources' column='id'/>
-   * @format uuid
-   */
-  source_id?: string;
-  /** @format numeric */
-  units_total: number;
-  /** @format numeric */
-  unit_cost: number;
-  /**
-   * @format text
-   * @default "USD"
-   */
-  currency?: string;
-  /** @format date */
-  acquired_at?: string;
-  /** @format date */
-  lockup_until?: string;
-  /** @format numeric */
-  units_remaining: number;
-  /**
-   * @format text
-   * @default "available"
-   */
-  status?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at?: string;
-}
-
-/** Stores saved filter combinations for staff users. */
-export interface StaffFilterViews {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  user_id: string;
-  /** @format text */
-  name: string;
-  /** @format text */
-  entity_type: string;
-  /** @format jsonb */
-  filters: any;
-  /**
-   * @format boolean
-   * @default false
-   */
-  is_default?: boolean;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  updated_at?: string;
-}
-
-/** Tracks all stakeholders (lawyers, accountants, auditors, etc.) associated with each entity/vehicle */
-export interface EntityStakeholders {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `vehicles.id`.<fk table='vehicles' column='id'/>
-   * @format uuid
-   */
-  vehicle_id: string;
-  /**
-   * Type of stakeholder: lawyer, accountant, administrator, auditor, strategic_partner, director, other
-   * @format public.stakeholder_role
-   */
-  role:
-    | "lawyer"
-    | "accountant"
-    | "administrator"
-    | "auditor"
-    | "strategic_partner"
-    | "director"
-    | "other";
-  /** @format text */
-  company_name?: string;
-  /** @format text */
-  contact_person?: string;
-  /** @format text */
-  email?: string;
-  /** @format text */
-  phone?: string;
-  /**
-   * Date when this stakeholder relationship became active
-   * @format date
-   */
-  effective_from?: string;
-  /**
-   * Date when this stakeholder relationship ended (NULL if still active)
-   * @format date
-   */
-  effective_to?: string;
-  /** @format text */
-  notes?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  updated_at?: string;
-}
-
-/** Members (directors, trustees, partners) of counterparty entities that investors invest through */
-export interface CounterpartyEntityMembers {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /**
-   * References investor_counterparty table
-   *
-   * Note:
-   * This is a Foreign Key to `investor_counterparty.id`.<fk table='investor_counterparty' column='id'/>
-   * @format uuid
-   */
-  counterparty_entity_id: string;
-  /** @format text */
-  full_name: string;
-  /** @format text */
-  role: string;
-  /** @format text */
-  role_title?: string;
-  /** @format text */
-  email?: string;
-  /** @format text */
-  phone?: string;
-  /** @format text */
-  residential_street?: string;
-  /** @format text */
-  residential_city?: string;
-  /** @format text */
-  residential_state?: string;
-  /** @format text */
-  residential_postal_code?: string;
-  /** @format text */
-  residential_country?: string;
-  /** @format text */
-  nationality?: string;
-  /** @format text */
-  id_type?: string;
-  /** @format text */
-  id_number?: string;
-  /** @format date */
-  id_expiry_date?: string;
-  /** @format numeric */
-  ownership_percentage?: number;
-  /**
-   * @format boolean
-   * @default false
-   */
-  is_beneficial_owner?: boolean;
-  /**
-   * @format text
-   * @default "pending"
-   */
-  kyc_status?: string;
-  /** @format timestamp with time zone */
-  kyc_approved_at?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  kyc_approved_by?: string;
-  /** @format date */
-  kyc_expiry_date?: string;
-  /**
-   * @format boolean
-   * @default true
-   */
-  is_active?: boolean;
-  /**
-   * @format date
-   * @default "CURRENT_DATE"
-   */
-  effective_from?: string;
-  /** @format date */
-  effective_to?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  updated_at?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  created_by?: string;
-}
-
-/** Commercial partner organizations (placement agents, distributors, wealth managers). Follows investors pattern. */
-export interface CommercialPartners {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /** @format text */
-  name: string;
-  /** @format text */
-  legal_name?: string;
-  /** @format text */
-  type: string;
-  /** @format text */
-  cp_type: string;
-  /**
-   * @format text
-   * @default "active"
-   */
-  status: string;
-  /** @format text */
-  regulatory_status?: string;
-  /** @format text */
-  regulatory_number?: string;
-  /** @format text */
-  jurisdiction?: string;
-  /** @format text */
-  contact_name?: string;
-  /** @format text */
-  contact_email?: string;
-  /** @format text */
-  contact_phone?: string;
-  /** @format text */
-  website?: string;
-  /** @format text */
-  address_line_1?: string;
-  /** @format text */
-  address_line_2?: string;
-  /** @format text */
-  city?: string;
-  /** @format text */
-  postal_code?: string;
-  /** @format text */
-  country?: string;
-  /** @format text */
-  payment_terms?: string;
-  /** @format date */
-  contract_start_date?: string;
-  /** @format date */
-  contract_end_date?: string;
-  /** @format uuid */
-  contract_document_id?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  account_manager_id?: string;
-  /** @format text */
-  notes?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  created_by?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  updated_at: string;
-  /**
-   * @format text
-   * @default "not_started"
-   */
-  kyc_status?: string;
-  /** @format timestamp with time zone */
-  kyc_approved_at?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  kyc_approved_by?: string;
-  /** @format timestamp with time zone */
-  kyc_expires_at?: string;
-  /** @format text */
-  kyc_notes?: string;
-  /** @format text */
-  logo_url?: string;
-}
-
-/** Personnel/compliance tracking for introducer entities. Directors, UBOs, signatories. */
-export interface IntroducerMembers {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `introducers.id`.<fk table='introducers' column='id'/>
-   * @format uuid
-   */
-  introducer_id: string;
-  /** @format text */
-  full_name: string;
-  /** @format text */
-  role: string;
-  /** @format text */
-  role_title?: string;
-  /** @format text */
-  email?: string;
-  /** @format text */
-  phone?: string;
-  /** @format text */
-  residential_street?: string;
-  /** @format text */
-  residential_city?: string;
-  /** @format text */
-  residential_state?: string;
-  /** @format text */
-  residential_postal_code?: string;
-  /** @format text */
-  residential_country?: string;
-  /** @format text */
-  nationality?: string;
-  /** @format text */
-  id_type?: string;
-  /** @format text */
-  id_number?: string;
-  /** @format date */
-  id_expiry_date?: string;
-  /** @format numeric */
-  ownership_percentage?: number;
-  /**
-   * @format boolean
-   * @default false
-   */
-  is_beneficial_owner: boolean;
-  /**
-   * @format boolean
-   * @default false
-   */
-  is_signatory: boolean;
-  /**
-   * @format boolean
-   * @default true
-   */
-  is_active: boolean;
-  /** @format date */
-  effective_from?: string;
-  /** @format date */
-  effective_to?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  created_by?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  updated_at: string;
-}
-
-export interface Subscriptions {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `investors.id`.<fk table='investors' column='id'/>
-   * @format uuid
-   */
-  investor_id?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `vehicles.id`.<fk table='vehicles' column='id'/>
-   * @format uuid
-   */
-  vehicle_id?: string;
-  /** @format numeric */
-  commitment?: number;
-  /**
-   * @format text
-   * @default "USD"
-   */
-  currency?: string;
-  /**
-   * @format text
-   * @default "pending"
-   */
-  status?: string;
-  /** @format uuid */
-  signed_doc_id?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at?: string;
-  /** @format timestamp with time zone */
-  committed_at?: string;
-  /** @format date */
-  effective_date?: string;
-  /** @format date */
-  funding_due_at?: string;
-  /** @format numeric */
-  units?: number;
-  /** @format text */
-  acknowledgement_notes?: string;
-  /**
-   * Sequential number for multiple subscriptions per investor-vehicle pair. First subscription is #1, follow-on investments are #2, #3, etc. Auto-assigned by trigger on INSERT.
-   * @format integer
-   */
-  subscription_number: number;
-  /**
-   * Price per share that investor paid (entry price)
-   * @format numeric
-   */
-  price_per_share?: number;
-  /**
-   * Cost per share that VERSO paid to acquire
-   * @format numeric
-   */
-  cost_per_share?: number;
-  /**
-   * Number of shares invested
-   * @format numeric
-   */
-  num_shares?: number;
-  /**
-   * Spread per share (price_per_share - cost_per_share)
-   * @format numeric
-   */
-  spread_per_share?: number;
-  /**
-   * Total spread fees earned (spread_per_share * num_shares) - PRIMARY REVENUE
-   * @format numeric
-   */
-  spread_fee_amount?: number;
-  /**
-   * Subscription fee percentage charged to investor
-   * @format numeric
-   */
-  subscription_fee_percent?: number;
-  /**
-   * Total subscription fee amount
-   * @format numeric
-   */
-  subscription_fee_amount?: number;
-  /**
-   * Business development / introducer commission percentage
-   * @format numeric
-   */
-  bd_fee_percent?: number;
-  /**
-   * Total BD/introducer commission amount
-   * @format numeric
-   */
-  bd_fee_amount?: number;
-  /**
-   * FINRA regulatory fees
-   * @format numeric
-   */
-  finra_fee_amount?: number;
-  /**
-   * Performance fee tier 1 percentage (carry)
-   * @format numeric
-   */
-  performance_fee_tier1_percent?: number;
-  /**
-   * Threshold for tier 1 performance fee
-   * @format numeric
-   */
-  performance_fee_tier1_threshold?: number;
-  /**
-   * Performance fee tier 2 percentage (carry)
-   * @format numeric
-   */
-  performance_fee_tier2_percent?: number;
-  /**
-   * Threshold for tier 2 performance fee
-   * @format numeric
-   */
-  performance_fee_tier2_threshold?: number;
-  /**
-   * Name of the investment opportunity/deal
-   * @format text
-   */
-  opportunity_name?: string;
-  /**
-   * Date of subscription contract
-   * @format date
-   */
-  contract_date?: string;
-  /**
-   * Reference to sourcing contract document
-   * @format text
-   */
-  sourcing_contract_ref?: string;
-  /**
-   * Foreign key to introducers table if subscription came through introducer
-   *
-   * Note:
-   * This is a Foreign Key to `introducers.id`.<fk table='introducers' column='id'/>
-   * @format uuid
-   */
-  introducer_id?: string;
-  /**
-   * Foreign key to introductions table linking to specific introduction record
-   *
-   * Note:
-   * This is a Foreign Key to `introductions.id`.<fk table='introductions' column='id'/>
-   * @format uuid
-   */
-  introduction_id?: string;
-  /**
-   * Amount actually funded by investor (may differ from commitment)
-   * @format numeric
-   * @default 0
-   */
-  funded_amount?: number;
-  /**
-   * Calculated: commitment - funded_amount
-   * @format numeric
-   */
-  outstanding_amount?: number;
-  /**
-   * Total capital calls issued to this investor
-   * @format numeric
-   * @default 0
-   */
-  capital_calls_total?: number;
-  /**
-   * Total distributions paid to this investor
-   * @format numeric
-   * @default 0
-   */
-  distributions_total?: number;
-  /**
-   * Current net asset value of this subscription position
-   * @format numeric
-   */
-  current_nav?: number;
-  /**
-   * References the fee plan that was used to populate this subscription fees
-   *
-   * Note:
-   * This is a Foreign Key to `fee_plans.id`.<fk table='fee_plans' column='id'/>
-   * @format uuid
-   */
-  fee_plan_id?: string;
-  /**
-   * Management fee as percentage (e.g., 2.5 for 2.5%)
-   * @format numeric
-   */
-  management_fee_percent?: number;
-  /**
-   * Fixed management fee amount if applicable
-   * @format numeric
-   */
-  management_fee_amount?: number;
-  /**
-   * How often management fees are charged
-   * @format text
-   */
-  management_fee_frequency?: string;
-  /**
-   * The deal that led to this subscription (for tracking deal flow to committed subscriptions)
-   *
-   * Note:
-   * This is a Foreign Key to `deals.id`.<fk table='deals' column='id'/>
-   * @format uuid
-   */
-  deal_id?: string;
-  /**
-   * Date when the subscription was formally created/approved
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  subscription_date?: string;
-  /**
-   * When subscription pack was generated (Stage 6)
-   * @format timestamp with time zone
-   */
-  pack_generated_at?: string;
-  /**
-   * When subscription pack was sent for signing (Stage 7)
-   * @format timestamp with time zone
-   */
-  pack_sent_at?: string;
-  /**
-   * When all signatories completed signing (Stage 8)
-   * @format timestamp with time zone
-   */
-  signed_at?: string;
-  /**
-   * When funds were received (Stage 9)
-   * @format timestamp with time zone
-   */
-  funded_at?: string;
-  /**
-   * When investment became active (Stage 10)
-   * @format timestamp with time zone
-   */
-  activated_at?: string;
-}
-
-/** Participants in a conversation with read state and preferences. */
-export interface ConversationParticipants {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * This is a Foreign Key to `conversations.id`.<fk table='conversations' column='id'/>
-   * @format uuid
-   */
-  conversation_id: string;
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  user_id: string;
-  /**
-   * Role within the conversation (owner/member/viewer).
-   * @format public.participant_role_enum
-   * @default "member"
-   */
-  participant_role: "owner" | "member" | "viewer";
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  joined_at: string;
-  /**
-   * Last time participant read the conversation.
-   * @format timestamp with time zone
-   */
-  last_read_at?: string;
-  /** @format timestamp with time zone */
-  last_notified_at?: string;
-  /**
-   * @format boolean
-   * @default false
-   */
-  is_muted: boolean;
-  /**
-   * @format boolean
-   * @default false
-   */
-  is_pinned: boolean;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  updated_at: string;
-}
-
-/** Structured term sheet data for each deal version (draft/published/archived). */
-export interface DealFeeStructures {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `deals.id`.<fk table='deals' column='id'/>
-   * @format uuid
-   */
-  deal_id: string;
-  /**
-   * @format text
-   * @default "draft"
-   */
-  status: string;
-  /**
-   * @format integer
-   * @default 1
-   */
-  version: number;
-  /** @format date */
-  term_sheet_date?: string;
-  /** @format text */
-  transaction_type?: string;
-  /** @format text */
-  opportunity_summary?: string;
-  /** @format text */
-  issuer?: string;
-  /** @format text */
-  vehicle?: string;
-  /** @format text */
-  exclusive_arranger?: string;
-  /** @format text */
-  purchaser?: string;
-  /** @format text */
-  seller?: string;
-  /** @format text */
-  structure?: string;
-  /** @format numeric */
-  allocation_up_to?: number;
-  /** @format text */
-  price_per_share_text?: string;
-  /** @format numeric */
-  minimum_ticket?: number;
-  /** @format numeric */
-  maximum_ticket?: number;
-  /** @format numeric */
-  subscription_fee_percent?: number;
-  /** @format numeric */
-  management_fee_percent?: number;
-  /** @format numeric */
-  carried_interest_percent?: number;
-  /** @format text */
-  legal_counsel?: string;
-  /** @format timestamp with time zone */
-  interest_confirmation_deadline?: string;
-  /** @format text */
-  capital_call_timeline?: string;
-  /** @format text */
-  completion_date_text?: string;
-  /** @format text */
-  in_principle_approval_text?: string;
-  /** @format text */
-  subscription_pack_note?: string;
-  /** @format text */
-  share_certificates_note?: string;
-  /** @format text */
-  subject_to_change_note?: string;
-  /** @format timestamp with time zone */
-  validity_date?: string;
-  /** @format text */
-  term_sheet_html?: string;
-  /** @format text */
-  term_sheet_attachment_key?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  created_by?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  updated_at: string;
-  /** @format timestamp with time zone */
-  effective_at?: string;
-  /** @format timestamp with time zone */
-  published_at?: string;
-  /** @format timestamp with time zone */
-  archived_at?: string;
-  /**
-   * Escrow bank name
-   * @format text
-   */
-  wire_bank_name?: string;
-  /** @format text */
-  wire_bank_address?: string;
-  /** @format text */
-  wire_account_holder?: string;
-  /** @format text */
-  wire_escrow_agent?: string;
-  /** @format text */
-  wire_law_firm_address?: string;
-  /**
-   * Escrow account IBAN
-   * @format text
-   */
-  wire_iban?: string;
-  /**
-   * Bank BIC/SWIFT code
-   * @format text
-   */
-  wire_bic?: string;
-  /** @format text */
-  wire_reference_format?: string;
-  /** @format text */
-  wire_description_format?: string;
-  /** @format text */
-  wire_contact_email?: string;
-  /**
-   * Full legal text for management fee clause
-   * @format text
-   */
-  management_fee_clause?: string;
-  /**
-   * Full legal text for performance/carried interest clause
-   * @format text
-   */
-  performance_fee_clause?: string;
-  /** @format text */
-  escrow_fee_text?: string;
-  /**
-   * HTML for Recital B describing the investment
-   * @format text
-   */
-  recital_b_html?: string;
-  /**
-   * @format integer
-   * @default 10
-   */
-  payment_deadline_days?: number;
-  /**
-   * @format integer
-   * @default 5
-   */
-  issue_within_business_days?: number;
-  /** @format text */
-  arranger_person_name?: string;
-  /** @format text */
-  arranger_person_title?: string;
-  /** @format text */
-  issuer_signatory_name?: string;
-  /** @format text */
-  issuer_signatory_title?: string;
-}
-
-export interface TaskTemplates {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /** @format text */
-  kind: string;
-  /** @format text */
-  category: string;
-  /** @format text */
-  title: string;
-  /** @format text */
-  description?: string;
-  /**
-   * @format text
-   * @default "medium"
-   */
-  priority?: string;
-  /** @format integer */
-  estimated_minutes?: number;
-  /** @format integer */
-  default_due_days?: number;
-  /** @format text[] */
-  prerequisite_task_kinds?: string[];
-  /** @format text */
-  trigger_event?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at?: string;
-}
-
-/** Partner organizations (co-investors, syndicates, strategic partners). Follows investors pattern. */
-export interface Partners {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /** @format text */
-  name: string;
-  /** @format text */
-  legal_name?: string;
-  /** @format text */
-  type: string;
-  /** @format text */
-  partner_type: string;
-  /**
-   * @format text
-   * @default "active"
-   */
-  status: string;
-  /** @format text */
-  accreditation_status?: string;
-  /** @format text */
-  contact_name?: string;
-  /** @format text */
-  contact_email?: string;
-  /** @format text */
-  contact_phone?: string;
-  /** @format text */
-  website?: string;
-  /** @format text */
-  address_line_1?: string;
-  /** @format text */
-  address_line_2?: string;
-  /** @format text */
-  city?: string;
-  /** @format text */
-  postal_code?: string;
-  /** @format text */
-  country?: string;
-  /** @format numeric */
-  typical_investment_min?: number;
-  /** @format numeric */
-  typical_investment_max?: number;
-  /** @format text[] */
-  preferred_sectors?: string[];
-  /** @format text[] */
-  preferred_geographies?: string[];
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  relationship_manager_id?: string;
-  /** @format text */
-  notes?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  created_by?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  updated_at: string;
-  /**
-   * @format text
-   * @default "not_started"
-   */
-  kyc_status?: string;
-  /** @format timestamp with time zone */
-  kyc_approved_at?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  kyc_approved_by?: string;
-  /** @format timestamp with time zone */
-  kyc_expires_at?: string;
-  /** @format text */
-  kyc_notes?: string;
-  /** @format text */
-  logo_url?: string;
-}
-
-/** Tracks red/yellow/green flags and action items for the entity action center */
-export interface EntityFlags {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `vehicles.id`.<fk table='vehicles' column='id'/>
-   * @format uuid
-   */
-  vehicle_id: string;
-  /**
-   * Type of flag: compliance_issue, missing_documents, expiring_documents, reporting_due, etc.
-   * @format public.flag_type
-   */
-  flag_type:
-    | "compliance_issue"
-    | "missing_documents"
-    | "expiring_documents"
-    | "reporting_due"
-    | "approval_required"
-    | "action_required"
-    | "information_needed"
-    | "review_required";
-  /**
-   * Severity level: critical (red), warning (yellow), info (blue), success (green)
-   * @format public.flag_severity
-   * @default "warning"
-   */
-  severity: "critical" | "warning" | "info" | "success";
-  /** @format text */
-  title: string;
-  /** @format text */
-  description?: string;
-  /**
-   * Whether this flag has been resolved/cleared
-   * @format boolean
-   * @default false
-   */
-  is_resolved?: boolean;
-  /** @format timestamp with time zone */
-  resolved_at?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  resolved_by?: string;
-  /** @format text */
-  resolution_notes?: string;
-  /**
-   * Optional due date for resolving this flag
-   * @format date
-   */
-  due_date?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  updated_at?: string;
-  /**
-   * @format text
-   * @default "open"
-   */
-  status?: string;
-}
-
-export interface ReconciliationMatches {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `bank_transactions.id`.<fk table='bank_transactions' column='id'/>
-   * @format uuid
-   */
-  bank_transaction_id?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `invoices.id`.<fk table='invoices' column='id'/>
-   * @format uuid
-   */
-  invoice_id?: string;
-  /** @format text */
-  match_type: string;
-  /** @format numeric */
-  matched_amount: number;
-  /** @format integer */
-  match_confidence?: number;
-  /** @format text */
-  match_reason?: string;
-  /**
-   * @format text
-   * @default "suggested"
-   */
-  status?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  approved_by?: string;
-  /** @format timestamp with time zone */
-  approved_at?: string;
-  /** @format text */
-  notes?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at?: string;
-}
-
-export interface Vehicles {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /** @format text */
-  name: string;
-  /** @format text */
-  domicile?: string;
-  /**
-   * @format text
-   * @default "USD"
-   */
-  currency?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at?: string;
-  /** @format public.vehicle_type */
-  type?:
-    | "fund"
-    | "spv"
-    | "securitization"
-    | "note"
-    | "other"
-    | "real_estate"
-    | "private_equity"
-    | "venture_capital";
-  /** @format date */
-  formation_date?: string;
-  /** @format text */
-  legal_jurisdiction?: string;
-  /** @format text */
-  registration_number?: string;
-  /** @format text */
-  notes?: string;
-  /**
-   * Reference code like VC101, VC106, IN101, RE1, used for identification
-   * @format text
-   */
-  entity_code?: string;
-  /**
-   * Platform identifier: VC1SCSP, VC2SCSP, REC, VCL
-   * @format text
-   */
-  platform?: string;
-  /**
-   * The actual investment name (e.g., CRANS, USDC INDIA, REVOLUT)
-   * @format text
-   */
-  investment_name?: string;
-  /**
-   * Legacy entity name for tracking history
-   * @format text
-   */
-  former_entity?: string;
-  /**
-   * Current status of the entity: LIVE, CLOSED, or TBD
-   * @format public.entity_status
-   * @default "LIVE"
-   */
-  status?: "LIVE" | "CLOSED" | "TBD";
-  /**
-   * Type of reporting required for this entity
-   * @format public.reporting_type
-   * @default "Not Required"
-   */
-  reporting_type?:
-    | "Not Required"
-    | "Company Only"
-    | "Online only"
-    | "Company + Online";
-  /**
-   * Whether this entity requires regular reporting
-   * @format boolean
-   * @default false
-   */
-  requires_reporting?: boolean;
-  /** @format text */
-  logo_url?: string;
-  /** @format text */
-  website_url?: string;
-  /**
-   * Series identifier (e.g., VC203, VC204)
-   * @format text
-   */
-  series_number?: string;
-  /**
-   * Short name for series (e.g., XAI, Revolut)
-   * @format text
-   */
-  series_short_title?: string;
-  /**
-   * General Partner legal entity name
-   * @format text
-   */
-  issuer_gp_name?: string;
-  /**
-   * GP registration/RCC number
-   * @format text
-   */
-  issuer_gp_rcc_number?: string;
-  /**
-   * Vehicle RCC/registration number
-   * @format text
-   */
-  issuer_rcc_number?: string;
-  /**
-   * Issuer website URL
-   * @format text
-   */
-  issuer_website?: string;
-  /**
-   * Regulated entity that manages this vehicle/fund
-   *
-   * Note:
-   * This is a Foreign Key to `arranger_entities.id`.<fk table='arranger_entities' column='id'/>
-   * @format uuid
-   */
-  arranger_entity_id?: string;
-}
-
-/** Scheduled publishing and unpublishing of documents */
-export interface DocumentPublishingSchedule {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `documents.id`.<fk table='documents' column='id'/>
-   * @format uuid
-   */
-  document_id?: string;
-  /** @format timestamp with time zone */
-  publish_at: string;
-  /** @format timestamp with time zone */
-  unpublish_at?: string;
-  /**
-   * @format boolean
-   * @default false
-   */
-  published?: boolean;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  created_by?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  updated_at?: string;
-}
-
-export interface Reconciliations {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `invoices.id`.<fk table='invoices' column='id'/>
-   * @format uuid
-   */
-  invoice_id?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `bank_transactions.id`.<fk table='bank_transactions' column='id'/>
-   * @format uuid
-   */
-  bank_transaction_id?: string;
-  /** @format numeric */
-  matched_amount?: number;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  matched_at?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  matched_by?: string;
-}
-
-export interface TaskActions {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * This is a Foreign Key to `tasks.id`.<fk table='tasks' column='id'/>
-   * @format uuid
-   */
-  task_id: string;
-  /** @format text */
-  action_type: string;
-  /** @format jsonb */
-  action_config?: any;
-}
-
-export interface TermSheets {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `deals.id`.<fk table='deals' column='id'/>
-   * @format uuid
-   */
-  deal_id?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `investors.id`.<fk table='investors' column='id'/>
-   * @format uuid
-   */
-  investor_id?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `fee_plans.id`.<fk table='fee_plans' column='id'/>
-   * @format uuid
-   */
-  fee_plan_id?: string;
-  /** @format numeric */
-  price_per_unit?: number;
-  /**
-   * @format text
-   * @default "USD"
-   */
-  currency?: string;
-  /** @format timestamp with time zone */
-  valid_until?: string;
-  /**
-   * @format text
-   * @default "draft"
-   */
-  status?: string;
-  /**
-   * @format integer
-   * @default 1
-   */
-  version?: number;
-  /**
-   * Note:
-   * This is a Foreign Key to `term_sheets.id`.<fk table='term_sheets' column='id'/>
-   * @format uuid
-   */
-  supersedes_id?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `documents.id`.<fk table='documents' column='id'/>
-   * @format uuid
-   */
-  doc_id?: string;
-  /** @format jsonb */
-  terms_data?: any;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  created_by?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at?: string;
-}
-
-/** Links multiple users to partner entities. WHO CAN LOGIN as this partner. */
-export interface PartnerUsers {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * This is a Foreign Key to `partners.id`.<fk table='partners' column='id'/>
-   * @format uuid
-   */
-  partner_id: string;
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  user_id: string;
-  /**
-   * @format text
-   * @default "member"
-   */
-  role: string;
-  /**
-   * @format boolean
-   * @default false
-   */
-  is_primary: boolean;
-  /**
-   * Whether this user can sign documents (NDA, subscription pack, etc.) on behalf of the partner entity.
-   * @format boolean
-   * @default false
-   */
-  can_sign: boolean;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  created_by?: string;
-}
-
-/** Approval workflow for document publishing */
-export interface DocumentApprovals {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `documents.id`.<fk table='documents' column='id'/>
-   * @format uuid
-   */
-  document_id?: string;
-  /**
-   * @format text
-   * @default "pending"
-   */
-  status?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  requested_by?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  reviewed_by?: string;
-  /** @format text */
-  review_notes?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  requested_at?: string;
-  /** @format timestamp with time zone */
-  reviewed_at?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  updated_at?: string;
-}
-
-/** Granular permission system for staff users */
-export interface StaffPermissions {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  user_id: string;
-  /** @format text */
-  permission: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  granted_by?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  granted_at?: string;
-  /** @format timestamp with time zone */
-  expires_at?: string;
-}
-
-/** Tracks e-signature requests for NDAs, subscription agreements, and other documents */
-export interface SignatureRequests {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /**
-   * Optional workflow run ID - only populated for n8n generated documents. NULL for manually uploaded documents.
-   *
-   * Note:
-   * This is a Foreign Key to `workflow_runs.id`.<fk table='workflow_runs' column='id'/>
-   * @format uuid
-   */
-  workflow_run_id?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `investors.id`.<fk table='investors' column='id'/>
-   * @format uuid
-   */
-  investor_id?: string;
-  /** @format text */
-  signer_email: string;
-  /** @format text */
-  signer_name: string;
-  /** @format text */
-  document_type: string;
-  /**
-   * Cryptographically secure random token for signing URL
-   * @format text
-   */
-  signing_token: string;
-  /**
-   * Token expiration timestamp (default 7 days from creation)
-   * @format timestamp with time zone
-   */
-  token_expires_at: string;
-  /**
-   * Source file ID from Google Drive (from n8n workflow)
-   * @format text
-   */
-  google_drive_file_id?: string;
-  /** @format text */
-  google_drive_url?: string;
-  /**
-   * Supabase Storage path for unsigned PDF
-   * @format text
-   */
-  unsigned_pdf_path?: string;
-  /** @format integer */
-  unsigned_pdf_size?: number;
-  /**
-   * Supabase Storage path for signed PDF with stamped signature
-   * @format text
-   */
-  signed_pdf_path?: string;
-  /** @format integer */
-  signed_pdf_size?: number;
-  /**
-   * Base64 encoded signature image from canvas
-   * @format text
-   */
-  signature_data_url?: string;
-  /** @format timestamp with time zone */
-  signature_timestamp?: string;
-  /** @format text */
-  signature_ip_address?: string;
-  /**
-   * Current status: pending, signed, expired, cancelled
-   * @format text
-   * @default "pending"
-   */
-  status: string;
-  /** @format timestamp with time zone */
-  email_sent_at?: string;
-  /** @format timestamp with time zone */
-  email_opened_at?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  updated_at?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  created_by?: string;
-  /**
-   * Role of the signer: investor or admin
-   * @format text
-   */
-  signer_role: string;
-  /**
-   * Position in signature table: party_a (left) or party_b (right)
-   * @format text
-   */
-  signature_position: string;
-  /**
-   * Resend message ID for tracking email delivery
-   * @format text
-   */
-  email_message_id?: string;
-  /**
-   * Error message if email send failed
-   * @format text
-   */
-  email_error?: string;
-  /**
-   * Direct link to subscription for manually uploaded subscription packs
-   *
-   * Note:
-   * This is a Foreign Key to `subscriptions.id`.<fk table='subscriptions' column='id'/>
-   * @format uuid
-   */
-  subscription_id?: string;
-  /**
-   * Direct link to document being signed
-   *
-   * Note:
-   * This is a Foreign Key to `documents.id`.<fk table='documents' column='id'/>
-   * @format uuid
-   */
-  document_id?: string;
-}
-
-/** Frequently asked questions for deals, managed by staff and viewable by investors with active data room access */
-export interface DealFaqs {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /**
-   * The deal this FAQ belongs to
-   *
-   * Note:
-   * This is a Foreign Key to `deals.id`.<fk table='deals' column='id'/>
-   * @format uuid
-   */
-  deal_id: string;
-  /**
-   * The FAQ question text
-   * @format text
-   */
-  question: string;
-  /**
-   * The FAQ answer text
-   * @format text
-   */
-  answer: string;
-  /**
-   * Order in which FAQs appear (lower numbers first). Auto-assigned based on creation order.
-   * @format integer
-   * @default 0
-   */
-  display_order: number;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  updated_at: string;
-  /**
-   * Staff member who created this FAQ
-   *
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  created_by?: string;
-  /**
-   * Staff member who last updated this FAQ
-   *
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  updated_by?: string;
-}
-
-export interface InviteLinks {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `deals.id`.<fk table='deals' column='id'/>
-   * @format uuid
-   */
-  deal_id?: string;
-  /** @format public.deal_member_role */
-  role:
-    | "investor"
-    | "co_investor"
-    | "spouse"
-    | "advisor"
-    | "lawyer"
-    | "banker"
-    | "introducer"
-    | "viewer"
-    | "verso_staff"
-    | "partner_investor"
-    | "introducer_investor"
-    | "commercial_partner_investor"
-    | "commercial_partner_proxy";
-  /** @format text */
-  token_hash: string;
-  /** @format timestamp with time zone */
-  expires_at?: string;
-  /**
-   * @format integer
-   * @default 1
-   */
-  max_uses?: number;
-  /**
-   * @format integer
-   * @default 0
-   */
-  used_count?: number;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  created_by?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at?: string;
-}
-
-export interface Tasks {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  owner_user_id?: string;
-  /**
-   *
-   * Task types:
-   * - Onboarding: onboarding_profile, onboarding_bank_details
-   * - KYC: kyc_individual
-   * - Compliance: compliance_nda, compliance_subscription_agreement, compliance_tax_forms
-   * - Deals: deal_nda_signature
-   * - Investment: investment_allocation_confirmation, investment_capital_call_response
-   * - Signatures: subscription_pack_signature (investor signs), countersignature (staff signs)
-   * - Other: other (generic tasks)
-   * @format text
-   */
-  kind?: string;
-  /** @format timestamp with time zone */
-  due_at?: string;
-  /**
-   * @format text
-   * @default "pending"
-   */
-  status?: string;
-  /** @format text */
-  related_entity_type?: string;
-  /** @format uuid */
-  related_entity_id?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `investors.id`.<fk table='investors' column='id'/>
-   * @format uuid
-   */
-  owner_investor_id?: string;
-  /** @format text */
-  category?: string;
-  /**
-   * @format text
-   * @default "Untitled Task"
-   */
-  title?: string;
-  /** @format text */
-  description?: string;
-  /**
-   * @format text
-   * @default "medium"
-   */
-  priority?: string;
-  /** @format integer */
-  estimated_minutes?: number;
-  /** @format text */
-  completion_reason?: string;
-  /** @format timestamp with time zone */
-  completed_at?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  completed_by?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  updated_at?: string;
-  /**
-   * Timestamp when task was marked as in_progress
-   * @format timestamp with time zone
-   */
-  started_at?: string;
-  /**
-   * Structured instructions and steps for completing the task
-   * @format jsonb
-   */
-  instructions?: any;
-}
-
-/** Underlying companies/startups that deals are about */
-export interface Companies {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /** @format text */
-  name: string;
-  /** @format text */
-  legal_name?: string;
-  /** @format text */
-  ticker_symbol?: string;
-  /** @format text */
-  sector?: string;
-  /** @format text */
-  industry?: string;
-  /** @format text */
-  sub_industry?: string;
-  /** @format text */
-  company_stage?: string;
-  /** @format text */
-  headquarters_city?: string;
-  /** @format text */
-  headquarters_country?: string;
-  /** @format text */
-  description?: string;
-  /** @format text */
-  website?: string;
-  /** @format text */
-  logo_url?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  created_by?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  updated_at: string;
-}
-
-export interface InvestorTerms {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `deals.id`.<fk table='deals' column='id'/>
-   * @format uuid
-   */
-  deal_id?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `investors.id`.<fk table='investors' column='id'/>
-   * @format uuid
-   */
-  investor_id?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `fee_plans.id`.<fk table='fee_plans' column='id'/>
-   * @format uuid
-   */
-  selected_fee_plan_id?: string;
-  /** @format jsonb */
-  overrides?: any;
-  /**
-   * @format text
-   * @default "active"
-   */
-  status?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `vehicles.id`.<fk table='vehicles' column='id'/>
-   * @format uuid
-   */
-  vehicle_id?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `fee_plans.id`.<fk table='fee_plans' column='id'/>
-   * @format uuid
-   */
-  base_fee_plan_id?: string;
-  /** @format text */
-  justification?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  approved_by?: string;
-  /** @format timestamp with time zone */
-  approved_at?: string;
-  /**
-   * @format date
-   * @default "CURRENT_DATE"
-   */
-  effective_from: string;
-  /** @format date */
-  effective_until?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  created_by?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  updated_at: string;
-}
-
-export interface Profiles {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   */
-  id: string;
-  /**
-   * @format public.user_role
-   * @default "investor"
-   */
-  role:
-    | "investor"
-    | "staff_admin"
-    | "staff_ops"
-    | "staff_rm"
-    | "arranger"
-    | "introducer"
-    | "partner"
-    | "commercial_partner"
-    | "lawyer"
-    | "ceo";
-  /** @format text */
-  display_name?: string;
-  /** @format public.citext */
-  email?: string;
-  /** @format text */
-  title?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at?: string;
-  /**
-   * URL to profile avatar image in storage bucket
-   * @format text
-   */
-  avatar_url?: string;
-  /**
-   * User phone number (mainly for staff)
-   * @format text
-   */
-  phone?: string;
-  /**
-   * Office location (mainly for staff)
-   * @format text
-   */
-  office_location?: string;
-  /**
-   * User biography or description
-   * @format text
-   */
-  bio?: string;
-  /**
-   * Timestamp of last login
-   * @format timestamp with time zone
-   */
-  last_login_at?: string;
-  /**
-   * Timestamp of last profile update
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  updated_at?: string;
-  /**
-   * Tracks whether user has seen the intro video on first login. Once true, never shows again.
-   * @format boolean
-   * @default false
-   */
-  has_seen_intro_video?: boolean;
-  /**
-   * Tracks if user has set password after invitation. False for invited users until they set password.
-   * @format boolean
-   * @default false
-   */
-  password_set?: boolean;
-  /**
-   * Soft delete timestamp - null means active, populated means deactivated
-   * @format timestamp with time zone
-   */
-  deleted_at?: string;
-}
-
-/** Personnel tracking for law firms - partners, associates, etc. */
-export interface LawyerMembers {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `lawyers.id`.<fk table='lawyers' column='id'/>
-   * @format uuid
-   */
-  lawyer_id: string;
-  /** @format text */
-  full_name: string;
-  /** @format text */
-  role: string;
-  /** @format text */
-  role_title?: string;
-  /** @format text */
-  email?: string;
-  /** @format text */
-  phone?: string;
-  /** @format text */
-  bar_number?: string;
-  /** @format text */
-  bar_jurisdiction?: string;
-  /** @format text */
-  residential_street?: string;
-  /** @format text */
-  residential_city?: string;
-  /** @format text */
-  residential_state?: string;
-  /** @format text */
-  residential_postal_code?: string;
-  /** @format text */
-  residential_country?: string;
-  /** @format text */
-  nationality?: string;
-  /** @format text */
-  id_type?: string;
-  /** @format text */
-  id_number?: string;
-  /** @format date */
-  id_expiry_date?: string;
-  /**
-   * @format boolean
-   * @default true
-   */
-  is_active: boolean;
-  /** @format date */
-  effective_from?: string;
-  /** @format date */
-  effective_to?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  created_by?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  updated_at: string;
-  /**
-   * @format boolean
-   * @default false
-   */
-  is_signatory: boolean;
-}
-
-export interface IntroducerCommissions {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `introducers.id`.<fk table='introducers' column='id'/>
-   * @format uuid
-   */
-  introducer_id?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `deals.id`.<fk table='deals' column='id'/>
-   * @format uuid
-   */
-  deal_id?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `investors.id`.<fk table='investors' column='id'/>
-   * @format uuid
-   */
-  investor_id?: string;
-  /** @format text */
-  basis_type?: string;
-  /** @format integer */
-  rate_bps: number;
-  /** @format numeric */
-  accrual_amount: number;
-  /**
-   * @format text
-   * @default "USD"
-   */
-  currency?: string;
-  /**
-   * @format text
-   * @default "accrued"
-   */
-  status?: string;
-  /** @format uuid */
-  invoice_id?: string;
-  /** @format timestamp with time zone */
-  paid_at?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `introductions.id`.<fk table='introductions' column='id'/>
-   * @format uuid
-   */
-  introduction_id?: string;
-  /** @format numeric */
-  base_amount?: number;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  approved_by?: string;
-  /** @format timestamp with time zone */
-  approved_at?: string;
-  /** @format date */
-  payment_due_date?: string;
-  /** @format text */
-  payment_reference?: string;
-  /** @format text */
-  notes?: string;
-}
-
-export interface InvestorUsers {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * This is a Foreign Key to `investors.id`.<fk table='investors' column='id'/>
-   * @format uuid
-   */
-  investor_id: string;
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  user_id: string;
-  /**
-   * @format text
-   * @default "member"
-   */
-  role: string;
-  /**
-   * @format boolean
-   * @default false
-   */
-  is_primary: boolean;
-  /**
-   * @format boolean
-   * @default false
-   */
-  can_sign: boolean;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  created_by?: string;
-}
-
-export interface EntityDirectors {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `vehicles.id`.<fk table='vehicles' column='id'/>
-   * @format uuid
-   */
-  vehicle_id?: string;
-  /** @format text */
-  full_name: string;
-  /** @format text */
-  role?: string;
-  /** @format text */
-  email?: string;
-  /**
-   * @format date
-   * @default "CURRENT_DATE"
-   */
-  effective_from?: string;
-  /** @format date */
-  effective_to?: string;
-  /** @format text */
-  notes?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at?: string;
-}
-
-export interface WorkflowRuns {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `workflows.id`.<fk table='workflows' column='id'/>
-   * @format uuid
-   */
-  workflow_id?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  triggered_by?: string;
-  /** @format jsonb */
-  input_params?: any;
-  /**
-   * @format text
-   * @default "queued"
-   */
-  status?: string;
-  /** @format uuid */
-  result_doc_id?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  updated_at?: string;
-  /** @format text */
-  workflow_key?: string;
-  /** @format text */
-  entity_type?: string;
-  /** @format uuid */
-  entity_id?: string;
-  /** @format jsonb */
-  output_data?: any;
-  /** @format text */
-  error_message?: string;
-  /** @format text */
-  webhook_signature?: string;
-  /** @format text */
-  idempotency_token?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  queued_at?: string;
-  /** @format timestamp with time zone */
-  started_at?: string;
-  /** @format timestamp with time zone */
-  completed_at?: string;
-  /** @format integer */
-  duration_ms?: number;
-  /** @format uuid[] */
-  created_tasks?: string[];
-  /**
-   * Lock flag for progressive signing. TRUE when a signature is being processed, NULL when available. Used to prevent race conditions.
-   * @format boolean
-   */
-  signing_in_progress?: boolean;
-  /**
-   * References the signature_request that currently holds the lock. NULL when unlocked. FK constraint ensures referential integrity.
-   *
-   * Note:
-   * This is a Foreign Key to `signature_requests.id`.<fk table='signature_requests' column='id'/>
-   * @format uuid
-   */
-  signing_locked_by?: string;
-  /**
-   * Timestamp when the lock was acquired. Used for detecting stale locks and debugging race conditions.
-   * @format timestamp with time zone
-   */
-  signing_locked_at?: string;
-}
-
-/** Personnel/compliance tracking for commercial partner entities. Directors, UBOs, signatories. */
-export interface CommercialPartnerMembers {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `commercial_partners.id`.<fk table='commercial_partners' column='id'/>
-   * @format uuid
-   */
-  commercial_partner_id: string;
-  /** @format text */
-  full_name: string;
-  /** @format text */
-  role: string;
-  /** @format text */
-  role_title?: string;
-  /** @format text */
-  email?: string;
-  /** @format text */
-  phone?: string;
-  /** @format text */
-  residential_street?: string;
-  /** @format text */
-  residential_city?: string;
-  /** @format text */
-  residential_state?: string;
-  /** @format text */
-  residential_postal_code?: string;
-  /** @format text */
-  residential_country?: string;
-  /** @format text */
-  nationality?: string;
-  /** @format text */
-  id_type?: string;
-  /** @format text */
-  id_number?: string;
-  /** @format date */
-  id_expiry_date?: string;
-  /** @format numeric */
-  ownership_percentage?: number;
-  /**
-   * @format boolean
-   * @default false
-   */
-  is_beneficial_owner: boolean;
-  /**
-   * @format boolean
-   * @default false
-   */
-  is_signatory: boolean;
-  /**
-   * @format boolean
-   * @default true
-   */
-  is_active: boolean;
-  /** @format date */
-  effective_from?: string;
-  /** @format date */
-  effective_to?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  created_by?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  updated_at: string;
-}
-
-/** Per-investor capital call payment tracking for reconciliation */
-export interface CapitalCallItems {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `capital_calls.id`.<fk table='capital_calls' column='id'/>
-   * @format uuid
-   */
-  capital_call_id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `subscriptions.id`.<fk table='subscriptions' column='id'/>
-   * @format uuid
-   */
-  subscription_id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `investors.id`.<fk table='investors' column='id'/>
-   * @format uuid
-   */
-  investor_id: string;
-  /**
-   * Amount this investor owes for this capital call
-   * @format numeric
-   */
-  called_amount: number;
-  /**
-   * Amount paid so far (sum of matched bank transactions)
-   * @format numeric
-   * @default 0
-   */
-  paid_amount: number;
-  /**
-   * Remaining amount owed (auto-calculated)
-   * @format numeric
-   */
-  balance_due?: number;
-  /** @format date */
-  due_date: string;
-  /** @format date */
-  paid_date?: string;
-  /**
-   * @format text
-   * @default "pending"
-   */
-  status?: string;
-  /**
-   * Array of bank_transactions.id that were matched to this item
-   * @format uuid[]
-   */
-  bank_transaction_ids?: string[];
-  /** @format text */
-  notes?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  updated_at?: string;
-}
-
-export interface SuggestedMatches {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `bank_transactions.id`.<fk table='bank_transactions' column='id'/>
-   * @format uuid
-   */
-  bank_transaction_id?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `invoices.id`.<fk table='invoices' column='id'/>
-   * @format uuid
-   */
-  invoice_id?: string;
-  /** @format integer */
-  confidence: number;
-  /** @format text */
-  match_reason: string;
-  /** @format numeric */
-  amount_difference?: number;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at?: string;
-  /**
-   * Match suggestion for subscription-based reconciliation
-   *
-   * Note:
-   * This is a Foreign Key to `subscriptions.id`.<fk table='subscriptions' column='id'/>
-   * @format uuid
-   */
-  subscription_id?: string;
-}
-
-/** Investor expressions of interest captured prior to formal commitments. */
-export interface InvestorDealInterest {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `deals.id`.<fk table='deals' column='id'/>
-   * @format uuid
-   */
-  deal_id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `investors.id`.<fk table='investors' column='id'/>
-   * @format uuid
-   */
-  investor_id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  created_by?: string;
-  /** @format numeric */
-  indicative_amount?: number;
-  /** @format text */
-  indicative_currency?: string;
-  /** @format text */
-  notes?: string;
-  /**
-   * @format text
-   * @default "pending_review"
-   */
-  status: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `approvals.id`.<fk table='approvals' column='id'/>
-   * @format uuid
-   */
-  approval_id?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  submitted_at: string;
-  /** @format timestamp with time zone */
-  approved_at?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  updated_at: string;
-  /**
-   * True if this interest was expressed for a closed deal (future similar opportunities). Post-close interests are auto-approved and do not trigger the approval workflow.
-   * @format boolean
-   * @default false
-   */
-  is_post_close: boolean;
-}
-
-/** Tracks recurring fee schedules for automatic generation */
-export interface FeeSchedules {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `fee_components.id`.<fk table='fee_components' column='id'/>
-   * @format uuid
-   */
-  fee_component_id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `investors.id`.<fk table='investors' column='id'/>
-   * @format uuid
-   */
-  investor_id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `deals.id`.<fk table='deals' column='id'/>
-   * @format uuid
-   */
-  deal_id?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `subscriptions.id`.<fk table='subscriptions' column='id'/>
-   * @format uuid
-   */
-  allocation_id?: string;
-  /** @format date */
-  start_date: string;
-  /** @format date */
-  end_date?: string;
-  /**
-   * Total number of fee periods (e.g., 3 for "3 years")
-   * @format integer
-   */
-  total_periods: number;
-  /**
-   * Number of periods already invoiced
-   * @format integer
-   * @default 0
-   */
-  completed_periods?: number;
-  /**
-   * Date when next fee event should be generated
-   * @format date
-   */
-  next_due_date?: string;
-  /**
-   * @format text
-   * @default "active"
-   */
-  status?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  updated_at?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  created_by?: string;
-}
-
-export interface FeeComponents {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `fee_plans.id`.<fk table='fee_plans' column='id'/>
-   * @format uuid
-   */
-  fee_plan_id?: string;
-  /** @format public.fee_component_kind_enum */
-  kind:
-    | "subscription"
-    | "management"
-    | "performance"
-    | "spread_markup"
-    | "flat"
-    | "other"
-    | "bd_fee"
-    | "finra_fee";
-  /** @format public.fee_calc_method_enum */
-  calc_method?:
-    | "percent_of_investment"
-    | "percent_per_annum"
-    | "percent_of_profit"
-    | "per_unit_spread"
-    | "fixed"
-    | "percent_of_commitment"
-    | "percent_of_nav"
-    | "fixed_amount";
-  /** @format integer */
-  rate_bps?: number;
-  /** @format numeric */
-  flat_amount?: number;
-  /**
-   * @format public.fee_frequency_enum
-   * @default "one_time"
-   */
-  frequency?:
-    | "one_time"
-    | "annual"
-    | "quarterly"
-    | "monthly"
-    | "on_exit"
-    | "on_event";
-  /** @format integer */
-  hurdle_rate_bps?: number;
-  /** @format text */
-  notes?: string;
-  /** @format text */
-  base_calculation?: string;
-  /**
-   * @format boolean
-   * @default false
-   */
-  has_catchup: boolean;
-  /** @format integer */
-  catchup_rate_bps?: number;
-  /**
-   * @format boolean
-   * @default false
-   */
-  has_high_water_mark: boolean;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  updated_at: string;
-  /**
-   * Number of periods the fee applies (e.g., 3 for "3 years"). NULL = indefinite/life of vehicle
-   * @format integer
-   */
-  duration_periods?: number;
-  /**
-   * Unit for duration_periods: years, months, quarters, or life_of_vehicle
-   * @format text
-   */
-  duration_unit?: string;
-  /**
-   * upfront = all periods paid at once, recurring = invoiced per period, on_demand = manual
-   * @format text
-   * @default "recurring"
-   */
-  payment_schedule?: string;
-  /**
-   * Threshold for this tier (e.g., 10.00 for "10x return"). NULL = no threshold
-   * @format numeric
-   */
-  tier_threshold_multiplier?: number;
-  /**
-   * Link to next tier fee component for tiered performance fees
-   *
-   * Note:
-   * This is a Foreign Key to `fee_components.id`.<fk table='fee_components' column='id'/>
-   * @format uuid
-   */
-  next_tier_component_id?: string;
-}
-
-export interface InvoiceLines {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `invoices.id`.<fk table='invoices' column='id'/>
-   * @format uuid
-   */
-  invoice_id?: string;
-  /** @format text */
-  kind?: string;
-  /** @format text */
-  description?: string;
-  /** @format numeric */
-  quantity?: number;
-  /** @format numeric */
-  unit_price?: number;
-  /** @format numeric */
-  amount: number;
-  /**
-   * Note:
-   * This is a Foreign Key to `fee_events.id`.<fk table='fee_events' column='id'/>
-   * @format uuid
-   */
-  fee_event_id?: string;
-}
-
-export interface FeePlans {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `deals.id`.<fk table='deals' column='id'/>
-   * @format uuid
-   */
-  deal_id?: string;
-  /** @format text */
-  name: string;
-  /** @format text */
-  description?: string;
-  /**
-   * @format boolean
-   * @default false
-   */
-  is_default?: boolean;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `vehicles.id`.<fk table='vehicles' column='id'/>
-   * @format uuid
-   */
-  vehicle_id?: string;
-  /**
-   * @format boolean
-   * @default true
-   */
-  is_active: boolean;
-  /**
-   * @format date
-   * @default "CURRENT_DATE"
-   */
-  effective_from: string;
-  /** @format date */
-  effective_until?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  created_by?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  updated_at: string;
-}
-
-export interface WorkflowRunLogs {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `workflow_runs.id`.<fk table='workflow_runs' column='id'/>
-   * @format uuid
-   */
-  workflow_run_id: string;
-  /** @format text */
-  step_name: string;
-  /** @format text */
-  step_status?: string;
-  /**
-   * @format text
-   * @default "info"
-   */
-  log_level?: string;
-  /** @format text */
-  message?: string;
-  /** @format jsonb */
-  metadata?: any;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at?: string;
-}
-
-/** Captures analytics events for the deal workflow (interest approvals, NDA completion, subscription funding, etc.). */
-export interface DealActivityEvents {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `deals.id`.<fk table='deals' column='id'/>
-   * @format uuid
-   */
-  deal_id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `investors.id`.<fk table='investors' column='id'/>
-   * @format uuid
-   */
-  investor_id?: string;
-  /** @format text */
-  event_type: string;
-  /** @format jsonb */
-  payload: any;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  occurred_at: string;
-}
-
-export interface FeeEvents {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `deals.id`.<fk table='deals' column='id'/>
-   * @format uuid
-   */
-  deal_id?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `investors.id`.<fk table='investors' column='id'/>
-   * @format uuid
-   */
-  investor_id?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `fee_components.id`.<fk table='fee_components' column='id'/>
-   * @format uuid
-   */
-  fee_component_id?: string;
-  /** @format date */
-  event_date: string;
-  /** @format numeric */
-  base_amount?: number;
-  /** @format numeric */
-  computed_amount: number;
-  /**
-   * @format text
-   * @default "USD"
-   */
-  currency?: string;
-  /** @format text */
-  source_ref?: string;
-  /**
-   * @format public.fee_event_status_enum
-   * @default "accrued"
-   */
-  status?:
-    | "accrued"
-    | "invoiced"
-    | "voided"
-    | "paid"
-    | "waived"
-    | "disputed"
-    | "cancelled";
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at?: string;
-  /** @format public.fee_component_kind_enum */
-  fee_type?:
-    | "subscription"
-    | "management"
-    | "performance"
-    | "spread_markup"
-    | "flat"
-    | "other"
-    | "bd_fee"
-    | "finra_fee";
-  /**
-   * Polymorphic reference: stores either allocations.id OR subscriptions.id. No FK constraint to allow both uses. Check allocation_type column to determine which table is referenced.
-   * @format uuid
-   */
-  allocation_id?: string;
-  /** @format integer */
-  rate_bps?: number;
-  /**
-   * Note:
-   * This is a Foreign Key to `invoices.id`.<fk table='invoices' column='id'/>
-   * @format uuid
-   */
-  invoice_id?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `payments.id`.<fk table='payments' column='id'/>
-   * @format uuid
-   */
-  payment_id?: string;
-  /** @format timestamp with time zone */
-  processed_at?: string;
-  /** @format text */
-  notes?: string;
-  /** @format date */
-  period_start_date?: string;
-  /** @format date */
-  period_end_date?: string;
-  /**
-   * Indicates whether allocation_id references allocations or subscriptions table. Used for polymorphic relationship tracking.
-   * @format text
-   */
-  allocation_type?: string;
-}
-
-/** Links investors to vehicles (funds/SPVs). Multiple subscriptions per investor-vehicle pair are supported. Subscriptions are fetched via JOIN on (vehicle_id, investor_id), not via subscription_id FK. */
-export interface EntityInvestors {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `vehicles.id`.<fk table='vehicles' column='id'/>
-   * @format uuid
-   */
-  vehicle_id?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `investors.id`.<fk table='investors' column='id'/>
-   * @format uuid
-   */
-  investor_id?: string;
-  /** @format text */
-  relationship_role?: string;
-  /**
-   * @format text
-   * @default "pending"
-   */
-  allocation_status?: string;
-  /** @format timestamp with time zone */
-  invite_sent_at?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  created_by?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  updated_at?: string;
-  /** @format text */
-  notes?: string;
-}
-
-export interface Positions {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `investors.id`.<fk table='investors' column='id'/>
-   * @format uuid
-   */
-  investor_id?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `vehicles.id`.<fk table='vehicles' column='id'/>
-   * @format uuid
-   */
-  vehicle_id?: string;
-  /** @format numeric */
-  units?: number;
-  /** @format numeric */
-  cost_basis?: number;
-  /** @format numeric */
-  last_nav?: number;
-  /** @format date */
-  as_of_date?: string;
-}
-
-export interface Approvals {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /** @format text */
-  entity_type?: string;
-  /** @format uuid */
-  entity_id?: string;
-  /** @format text */
-  action?: string;
-  /**
-   * @format text
-   * @default "pending"
-   */
-  status?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  requested_by?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  assigned_to?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  approved_by?: string;
-  /** @format timestamp with time zone */
-  approved_at?: string;
-  /** @format text */
-  notes?: string;
-  /**
-   * @format text
-   * @default "medium"
-   */
-  priority?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at?: string;
-  /** @format jsonb */
-  entity_metadata?: any;
-  /** @format text */
-  request_reason?: string;
-  /** @format text */
-  rejection_reason?: string;
-  /** @format timestamp with time zone */
-  sla_breach_at?: string;
-  /** @format timestamp with time zone */
-  sla_paused_at?: string;
-  /** @format timestamp with time zone */
-  sla_resumed_at?: string;
-  /** @format numeric */
-  actual_processing_time_hours?: number;
-  /**
-   * @format boolean
-   * @default false
-   */
-  requires_secondary_approval?: boolean;
-  /** @format text */
-  secondary_approver_role?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  secondary_approved_by?: string;
-  /** @format timestamp with time zone */
-  secondary_approved_at?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `deals.id`.<fk table='deals' column='id'/>
-   * @format uuid
-   */
-  related_deal_id?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `investors.id`.<fk table='investors' column='id'/>
-   * @format uuid
-   */
-  related_investor_id?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  updated_at?: string;
-  /** @format timestamp with time zone */
-  resolved_at?: string;
-}
-
-/** Commercial partner placement agreements for commission structures */
-export interface PlacementAgreements {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `commercial_partners.id`.<fk table='commercial_partners' column='id'/>
-   * @format uuid
-   */
-  commercial_partner_id: string;
-  /**
-   * @format text
-   * @default "standard"
-   */
-  agreement_type: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `documents.id`.<fk table='documents' column='id'/>
-   * @format uuid
-   */
-  agreement_document_id?: string;
-  /** @format date */
-  signed_date?: string;
-  /** @format date */
-  effective_date?: string;
-  /** @format date */
-  expiry_date?: string;
-  /**
-   * @format integer
-   * @default 0
-   */
-  default_commission_bps: number;
-  /** @format numeric */
-  commission_cap_amount?: number;
-  /** @format text */
-  payment_terms?: string;
-  /** @format text */
-  territory?: string;
-  /** @format text[] */
-  deal_types?: string[];
-  /** @format text */
-  exclusivity_level?: string;
-  /**
-   * @format text
-   * @default "draft"
-   */
-  status: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  created_by?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  updated_at: string;
-}
-
-export interface EntityEvents {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `vehicles.id`.<fk table='vehicles' column='id'/>
-   * @format uuid
-   */
-  vehicle_id?: string;
-  /** @format text */
-  event_type: string;
-  /** @format text */
-  description?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  changed_by?: string;
-  /** @format jsonb */
-  payload?: any;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at?: string;
-}
-
-/** Tracks KYC document submissions from investors and their approval status */
-export interface KycSubmissions {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /**
-   * The investor that owns this submission. Always required.
-   *
-   * Note:
-   * This is a Foreign Key to `investors.id`.<fk table='investors' column='id'/>
-   * @format uuid
-   */
-  investor_id: string;
-  /**
-   * Document type identifier. Can be predefined type (government_id, proof_of_address, etc.) or custom type. When custom_label is set, that label should be displayed instead.
-   * @format text
-   */
-  document_type: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `documents.id`.<fk table='documents' column='id'/>
-   * @format uuid
-   */
-  document_id?: string;
-  /**
-   * Approval status: pending, under_review, approved, rejected, expired
-   * @format text
-   * @default "pending"
-   */
-  status: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  submitted_at: string;
-  /** @format timestamp with time zone */
-  reviewed_at?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  reviewed_by?: string;
-  /** @format text */
-  rejection_reason?: string;
-  /** @format date */
-  expiry_date?: string;
-  /**
-   * Additional metadata like file_size, mime_type, original_filename
-   * @format jsonb
-   */
-  metadata?: any;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  updated_at: string;
-  /**
-   * Version number of this submission (increments with each re-upload for same document type)
-   * @format integer
-   * @default 1
-   */
-  version: number;
-  /**
-   * Reference to the previous version of this submission (if this is a re-upload)
-   *
-   * Note:
-   * This is a Foreign Key to `kyc_submissions.id`.<fk table='kyc_submissions' column='id'/>
-   * @format uuid
-   */
-  previous_submission_id?: string;
-  /**
-   * Optional. If set, this KYC is for a specific counterparty entity owned by the investor.
-   *
-   * Note:
-   * This is a Foreign Key to `investor_counterparty.id`.<fk table='investor_counterparty' column='id'/>
-   * @format uuid
-   */
-  counterparty_entity_id?: string;
-  /**
-   * User-provided label for custom document types. When set, this overrides the display of document_type for user-facing labels.
-   * @format text
-   */
-  custom_label?: string;
-  /**
-   * Links KYC doc to specific member of entity-type investor
-   *
-   * Note:
-   * This is a Foreign Key to `investor_members.id`.<fk table='investor_members' column='id'/>
-   * @format uuid
-   */
-  investor_member_id?: string;
-  /**
-   * Links KYC doc to specific member of counterparty entity
-   *
-   * Note:
-   * This is a Foreign Key to `counterparty_entity_members.id`.<fk table='counterparty_entity_members' column='id'/>
-   * @format uuid
-   */
-  counterparty_member_id?: string;
-}
-
-/** Stores investor-related entities (Trust, LLC, etc.) used for subscriptions */
-export interface InvestorCounterparty {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `investors.id`.<fk table='investors' column='id'/>
-   * @format uuid
-   */
-  investor_id: string;
-  /** @format text */
-  entity_type: string;
-  /** @format text */
-  legal_name: string;
-  /** @format text */
-  registration_number?: string;
-  /** @format text */
-  jurisdiction?: string;
-  /** @format text */
-  tax_id?: string;
-  /** @format date */
-  formation_date?: string;
-  /** @format jsonb */
-  registered_address?: any;
-  /** @format text */
-  representative_name?: string;
-  /** @format text */
-  representative_title?: string;
-  /** @format text */
-  representative_email?: string;
-  /** @format text */
-  representative_phone?: string;
-  /**
-   * @format text
-   * @default "pending"
-   */
-  kyc_status?: string;
-  /** @format timestamp with time zone */
-  kyc_completed_at?: string;
-  /** @format date */
-  kyc_expiry_date?: string;
-  /** @format text */
-  kyc_notes?: string;
-  /** @format text */
-  notes?: string;
-  /**
-   * @format boolean
-   * @default true
-   */
-  is_active?: boolean;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  created_by?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  updated_at?: string;
-}
-
-/** Message-level read receipts for compliance and realtime indicators. */
-export interface MessageReads {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * This is a Foreign Key to `messages.id`.<fk table='messages' column='id'/>
-   * @format uuid
-   */
-  message_id: string;
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  user_id: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  read_at: string;
-}
-
-/** Historical valuation data for companies */
-export interface CompanyValuations {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `companies.id`.<fk table='companies' column='id'/>
-   * @format uuid
-   */
-  company_id: string;
-  /** @format date */
-  valuation_date: string;
-  /** @format numeric */
-  valuation_amount: number;
-  /**
-   * @format text
-   * @default "USD"
-   */
-  valuation_currency: string;
-  /**
-   * @format text
-   * @default "post_money"
-   */
-  valuation_type: string;
-  /** @format text */
-  source?: string;
-  /** @format text */
-  funding_round?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  created_by?: string;
-}
-
-/** Tracks per-investor holdings/allocations for each deal once subscriptions are confirmed. */
-export interface InvestorDealHoldings {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `investors.id`.<fk table='investors' column='id'/>
-   * @format uuid
-   */
-  investor_id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `deals.id`.<fk table='deals' column='id'/>
-   * @format uuid
-   */
-  deal_id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `deal_subscription_submissions.id`.<fk table='deal_subscription_submissions' column='id'/>
-   * @format uuid
-   */
-  subscription_submission_id?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `approvals.id`.<fk table='approvals' column='id'/>
-   * @format uuid
-   */
-  approval_id?: string;
-  /**
-   * @format text
-   * @default "pending_funding"
-   */
-  status: string;
-  /** @format numeric */
-  subscribed_amount: number;
-  /**
-   * @format text
-   * @default "USD"
-   */
-  currency: string;
-  /** @format date */
-  effective_date?: string;
-  /** @format timestamp with time zone */
-  funding_due_at?: string;
-  /** @format timestamp with time zone */
-  funded_at?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  updated_at: string;
-}
-
-/** Tracks SHA256 fingerprints of imported subscriptions for idempotency. Fingerprint = hash(investor_id:vehicle_id:commitment:effective_date). Allows safe re-runs of migration scripts - duplicates are skipped, legitimate follow-on investments are imported. */
-export interface SubscriptionFingerprints {
-  /**
-   * SHA256 hash of investor_id:vehicle_id:commitment:effective_date. Used to detect exact duplicate imports.
-   *
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format text
-   */
-  fingerprint: string;
-  /**
-   * Reference to the subscription this fingerprint represents. Cascades on delete.
-   *
-   * Note:
-   * This is a Foreign Key to `subscriptions.id`.<fk table='subscriptions' column='id'/>
-   * @format uuid
-   */
-  subscription_id: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at?: string;
-}
-
-/** Post-NDA subscription submissions awaiting staff approval. */
-export interface DealSubscriptionSubmissions {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `deals.id`.<fk table='deals' column='id'/>
-   * @format uuid
-   */
-  deal_id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `investors.id`.<fk table='investors' column='id'/>
-   * @format uuid
-   */
-  investor_id: string;
-  /** @format jsonb */
-  payload_json: any;
-  /**
-   * @format text
-   * @default "pending_review"
-   */
-  status: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `approvals.id`.<fk table='approvals' column='id'/>
-   * @format uuid
-   */
-  approval_id?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  created_by?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  submitted_at: string;
-  /** @format timestamp with time zone */
-  decided_at?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  decided_by?: string;
-  /**
-   * Staff member who approved the subscription
-   *
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  approved_by?: string;
-  /**
-   * Timestamp when subscription was approved
-   * @format timestamp with time zone
-   */
-  approved_at?: string;
-  /**
-   * Staff member who rejected the subscription
-   *
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  rejected_by?: string;
-  /**
-   * Timestamp when subscription was rejected
-   * @format timestamp with time zone
-   */
-  rejected_at?: string;
-  /**
-   * Reason for rejection
-   * @format text
-   */
-  rejection_reason?: string;
-  /**
-   * Whether investor is subscribing personally or through a counterparty entity
-   * @format text
-   * @default "personal"
-   */
-  subscription_type?: string;
-  /**
-   * The counterparty entity used for subscription (if subscription_type = entity)
-   *
-   * Note:
-   * This is a Foreign Key to `investor_counterparty.id`.<fk table='investor_counterparty' column='id'/>
-   * @format uuid
-   */
-  counterparty_entity_id?: string;
-  /**
-   * Links to the formal subscription record created when this submission is approved
-   *
-   * Note:
-   * This is a Foreign Key to `subscriptions.id`.<fk table='subscriptions' column='id'/>
-   * @format uuid
-   */
-  formal_subscription_id?: string;
-}
-
-/** Personnel/compliance tracking for partner entities. Directors, UBOs, signatories. */
-export interface PartnerMembers {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `partners.id`.<fk table='partners' column='id'/>
-   * @format uuid
-   */
-  partner_id: string;
-  /** @format text */
-  full_name: string;
-  /** @format text */
-  role: string;
-  /** @format text */
-  role_title?: string;
-  /** @format text */
-  email?: string;
-  /** @format text */
-  phone?: string;
-  /** @format text */
-  residential_street?: string;
-  /** @format text */
-  residential_city?: string;
-  /** @format text */
-  residential_state?: string;
-  /** @format text */
-  residential_postal_code?: string;
-  /** @format text */
-  residential_country?: string;
-  /** @format text */
-  nationality?: string;
-  /** @format text */
-  id_type?: string;
-  /** @format text */
-  id_number?: string;
-  /** @format date */
-  id_expiry_date?: string;
-  /** @format numeric */
-  ownership_percentage?: number;
-  /**
-   * @format boolean
-   * @default false
-   */
-  is_beneficial_owner: boolean;
-  /**
-   * @format boolean
-   * @default false
-   */
-  is_signatory: boolean;
-  /**
-   * @format boolean
-   * @default true
-   */
-  is_active: boolean;
-  /** @format date */
-  effective_from?: string;
-  /** @format date */
-  effective_to?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  created_by?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  updated_at: string;
-}
-
-export interface Invoices {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `investors.id`.<fk table='investors' column='id'/>
-   * @format uuid
-   */
-  investor_id?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `deals.id`.<fk table='deals' column='id'/>
-   * @format uuid
-   */
-  deal_id?: string;
-  /** @format date */
-  due_date?: string;
-  /**
-   * @format text
-   * @default "USD"
-   */
-  currency?: string;
-  /** @format numeric */
-  subtotal?: number;
-  /** @format numeric */
-  tax?: number;
-  /** @format numeric */
-  total?: number;
-  /**
-   * @format public.invoice_status_enum
-   * @default "draft"
-   */
-  status?:
-    | "draft"
-    | "sent"
-    | "paid"
-    | "partially_paid"
-    | "cancelled"
-    | "overdue"
-    | "disputed";
-  /** @format text */
-  generated_from?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `documents.id`.<fk table='documents' column='id'/>
-   * @format uuid
-   */
-  doc_id?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at?: string;
-  /** @format timestamp with time zone */
-  sent_at?: string;
-  /** @format timestamp with time zone */
-  paid_at?: string;
-  /**
-   * @format numeric
-   * @default 0
-   */
-  paid_amount: number;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  created_by?: string;
-  /** @format numeric */
-  balance_due?: number;
-  /** @format text */
-  invoice_number?: string;
-  /**
-   * @format text
-   * @default "unmatched"
-   */
-  match_status?: string;
-  /**
-   * Task created for invoice reminder
-   *
-   * Note:
-   * This is a Foreign Key to `tasks.id`.<fk table='tasks' column='id'/>
-   * @format uuid
-   */
-  reminder_task_id?: string;
-  /**
-   * Whether this invoice should be auto-sent on due date
-   * @format boolean
-   * @default false
-   */
-  auto_send_enabled?: boolean;
-  /**
-   * Days before due_date to send reminder
-   * @format integer
-   * @default 7
-   */
-  reminder_days_before?: number;
-}
-
-export interface Allocations {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `deals.id`.<fk table='deals' column='id'/>
-   * @format uuid
-   */
-  deal_id?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `investors.id`.<fk table='investors' column='id'/>
-   * @format uuid
-   */
-  investor_id?: string;
-  /** @format numeric */
-  unit_price: number;
-  /** @format numeric */
-  units: number;
-  /**
-   * @format public.allocation_status_enum
-   * @default "pending_review"
-   */
-  status?: "pending_review" | "approved" | "rejected" | "settled";
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  approved_by?: string;
-  /** @format timestamp with time zone */
-  approved_at?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at?: string;
-}
-
-/** Controls which investors can see data room documents and for how long. */
-export interface DealDataRoomAccess {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `deals.id`.<fk table='deals' column='id'/>
-   * @format uuid
-   */
-  deal_id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `investors.id`.<fk table='investors' column='id'/>
-   * @format uuid
-   */
-  investor_id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  granted_by?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  granted_at: string;
-  /** @format timestamp with time zone */
-  expires_at?: string;
-  /** @format timestamp with time zone */
-  revoked_at?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  revoked_by?: string;
-  /**
-   * @format boolean
-   * @default false
-   */
-  auto_granted: boolean;
-  /** @format text */
-  notes?: string;
-  /**
-   * Timestamp of last expiry warning notification sent to investor to prevent spam
-   * @format timestamp with time zone
-   */
-  last_warning_sent_at?: string;
-}
-
-export interface EsignEnvelopes {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /** @format text */
-  envelope_id?: string;
-  /** @format text */
-  status?: string;
-  /** @format public.citext */
-  recipient_email?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at?: string;
-  /** @format timestamp with time zone */
-  completed_at?: string;
-}
-
-export interface Workflows {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /** @format text */
-  key: string;
-  /** @format text */
-  n8n_webhook_url: string;
-  /** @format jsonb */
-  input_schema?: any;
-  /** @format text[] */
-  required_title?: string[];
-  /** @format text */
-  name?: string;
-  /** @format text */
-  description?: string;
-  /** @format text */
-  category?: string;
-  /** @format text */
-  required_role?: string;
-  /**
-   * @format boolean
-   * @default true
-   */
-  is_active?: boolean;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  updated_at?: string;
-  /**
-   * @format text
-   * @default "manual"
-   */
-  trigger_type?: string;
-}
-
-export interface Deals {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `vehicles.id`.<fk table='vehicles' column='id'/>
-   * @format uuid
-   */
-  vehicle_id: string;
-  /** @format text */
-  name: string;
-  /**
-   * @format public.deal_type_enum
-   * @default "equity_secondary"
-   */
-  deal_type?:
-    | "equity_secondary"
-    | "equity_primary"
-    | "credit_trade_finance"
-    | "other";
-  /**
-   * @format public.deal_status_enum
-   * @default "open"
-   */
-  status?: "draft" | "open" | "allocation_pending" | "closed" | "cancelled";
-  /**
-   * @format text
-   * @default "USD"
-   */
-  currency?: string;
-  /** @format timestamp with time zone */
-  open_at?: string;
-  /** @format timestamp with time zone */
-  close_at?: string;
-  /** @format jsonb */
-  terms_schema?: any;
-  /** @format numeric */
-  offer_unit_price?: number;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  created_by?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at?: string;
-  /** @format text */
-  description?: string;
-  /** @format text */
-  investment_thesis?: string;
-  /** @format numeric */
-  minimum_investment?: number;
-  /** @format numeric */
-  maximum_investment?: number;
-  /** @format numeric */
-  target_amount?: number;
-  /**
-   * @format numeric
-   * @default 0
-   */
-  raised_amount?: number;
-  /** @format text */
-  company_name?: string;
-  /** @format text */
-  company_logo_url?: string;
-  /** @format text */
-  sector?: string;
-  /** @format text */
-  stage?: string;
-  /** @format text */
-  location?: string;
-  /** @format text */
-  company_website?: string;
-  /**
-   * Regulated entity that arranged/structured this deal
-   *
-   * Note:
-   * This is a Foreign Key to `arranger_entities.id`.<fk table='arranger_entities' column='id'/>
-   * @format uuid
-   */
-  arranger_entity_id?: string;
-  /**
-   * The underlying company this deal relates to
-   *
-   * Note:
-   * This is a Foreign Key to `companies.id`.<fk table='companies' column='id'/>
-   * @format uuid
-   */
-  company_id?: string;
-  /**
-   * Type of stock/instrument for this deal
-   * @format text
-   */
-  stock_type?: string;
-  /**
-   * Investment round (seed, series_a, etc.)
-   * @format text
-   */
-  deal_round?: string;
-}
-
-/** Links multiple users to introducers. WHO CAN LOGIN as this introducer. */
-export interface IntroducerUsers {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * This is a Foreign Key to `introducers.id`.<fk table='introducers' column='id'/>
-   * @format uuid
-   */
-  introducer_id: string;
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  user_id: string;
-  /**
-   * @format text
-   * @default "contact"
-   */
-  role: string;
-  /**
-   * @format boolean
-   * @default false
-   */
-  is_primary: boolean;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  created_by?: string;
-  /**
-   * @format boolean
-   * @default false
-   */
-  can_sign: boolean;
-}
-
-/** Law firm entities that provide legal services for deals */
-export interface Lawyers {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /** @format text */
-  firm_name: string;
-  /** @format text */
-  display_name: string;
-  /** @format text */
-  legal_entity_type?: string;
-  /** @format text */
-  registration_number?: string;
-  /** @format text */
-  tax_id?: string;
-  /** @format text */
-  primary_contact_name?: string;
-  /** @format text */
-  primary_contact_email?: string;
-  /** @format text */
-  primary_contact_phone?: string;
-  /** @format text */
-  street_address?: string;
-  /** @format text */
-  city?: string;
-  /** @format text */
-  state_province?: string;
-  /** @format text */
-  postal_code?: string;
-  /** @format text */
-  country?: string;
-  /** @format text[] */
-  specializations?: string[];
-  /**
-   * @format boolean
-   * @default true
-   */
-  is_active: boolean;
-  /** @format timestamp with time zone */
-  onboarded_at?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  created_by?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  updated_at: string;
-  /** @format text */
-  logo_url?: string;
-  /**
-   * @format text
-   * @default "not_started"
-   */
-  kyc_status?: string;
-  /** @format timestamp with time zone */
-  kyc_approved_at?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  kyc_approved_by?: string;
-  /** @format timestamp with time zone */
-  kyc_expires_at?: string;
-  /** @format text */
-  kyc_notes?: string;
-}
-
-/** Introducer fee agreements for referral commissions */
-export interface IntroducerAgreements {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `introducers.id`.<fk table='introducers' column='id'/>
-   * @format uuid
-   */
-  introducer_id: string;
-  /**
-   * @format text
-   * @default "standard"
-   */
-  agreement_type: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `documents.id`.<fk table='documents' column='id'/>
-   * @format uuid
-   */
-  agreement_document_id?: string;
-  /** @format date */
-  signed_date?: string;
-  /** @format date */
-  effective_date?: string;
-  /** @format date */
-  expiry_date?: string;
-  /**
-   * @format integer
-   * @default 0
-   */
-  default_commission_bps: number;
-  /** @format numeric */
-  commission_cap_amount?: number;
-  /** @format text */
-  payment_terms?: string;
-  /** @format text */
-  territory?: string;
-  /** @format text[] */
-  deal_types?: string[];
-  /** @format text */
-  exclusivity_level?: string;
-  /**
-   * @format text
-   * @default "draft"
-   */
-  status: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  created_by?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  updated_at: string;
-}
-
-/** Summary of entity flags per vehicle with SECURITY INVOKER for proper RLS enforcement */
-export interface EntityActionCenterSummary {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   */
-  vehicle_id?: string;
-  /** @format text */
-  vehicle_name?: string;
-  /** @format text */
-  entity_code?: string;
-  /** @format text */
-  platform?: string;
-  /** @format public.entity_status */
-  vehicle_status?: "LIVE" | "CLOSED" | "TBD";
-  /** @format bigint */
-  critical_flags?: number;
-  /** @format bigint */
-  warning_flags?: number;
-  /** @format bigint */
-  info_flags?: number;
-  /** @format bigint */
-  total_unresolved_flags?: number;
-  /** @format date */
-  earliest_due_date?: string;
-  /** @format timestamp with time zone */
-  last_flag_update?: string;
-}
-
-export interface SubscriptionImportResults {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `subscription_workbook_runs.id`.<fk table='subscription_workbook_runs' column='id'/>
-   * @format uuid
-   */
-  run_id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `subscriptions.id`.<fk table='subscriptions' column='id'/>
-   * @format uuid
-   */
-  subscription_id?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `entity_investors.id`.<fk table='entity_investors' column='id'/>
-   * @format uuid
-   */
-  entity_investor_id?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `investor_deal_holdings.id`.<fk table='investor_deal_holdings' column='id'/>
-   * @format uuid
-   */
-  investor_deal_holding_id?: string;
-  /** @format uuid */
-  investor_id: string;
-  /** @format uuid */
-  vehicle_id: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at: string;
-}
-
-export interface AuditReportTemplates {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /** @format text */
-  name: string;
-  /** @format text */
-  description?: string;
-  /** @format text */
-  report_type: string;
-  /** @format jsonb */
-  config: any;
-  /** @format text[] */
-  output_format?: string[];
-  /**
-   * @format boolean
-   * @default true
-   */
-  is_active?: boolean;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  created_by?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at?: string;
-}
-
-export interface RequestTickets {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `investors.id`.<fk table='investors' column='id'/>
-   * @format uuid
-   */
-  investor_id?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  created_by?: string;
-  /** @format text */
-  category?: string;
-  /** @format text */
-  subject?: string;
-  /** @format text */
-  details?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  assigned_to?: string;
-  /** @format uuid */
-  linked_workflow_run?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `documents.id`.<fk table='documents' column='id'/>
-   * @format uuid
-   */
-  result_doc_id?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `deals.id`.<fk table='deals' column='id'/>
-   * @format uuid
-   */
-  deal_id?: string;
-  /**
-   * @format public.request_status_enum
-   * @default "open"
-   */
-  status?:
-    | "open"
-    | "assigned"
-    | "in_progress"
-    | "ready"
-    | "closed"
-    | "awaiting_info"
-    | "cancelled";
-  /**
-   * @format public.request_priority_enum
-   * @default "normal"
-   */
-  priority?: "low" | "normal" | "high" | "urgent";
-  /**
-   * Deadline for completing the request
-   * @format timestamp with time zone
-   */
-  due_date?: string;
-}
-
-/** Individual messages including attachments and system notices. */
-export interface Messages {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `conversations.id`.<fk table='conversations' column='id'/>
-   * @format uuid
-   */
-  conversation_id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  sender_id?: string;
-  /** @format text */
-  body?: string;
-  /**
-   * text/system/file indicator for rendering and permissions.
-   * @format public.message_type_enum
-   * @default "text"
-   */
-  message_type: "text" | "system" | "file";
-  /** @format text */
-  file_key?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `messages.id`.<fk table='messages' column='id'/>
-   * @format uuid
-   */
-  reply_to_message_id?: string;
-  /**
-   * JSON metadata for reactions, attachments, or workflow references.
-   * @format jsonb
-   */
-  metadata: any;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at: string;
-  /** @format timestamp with time zone */
-  edited_at?: string;
-  /** @format timestamp with time zone */
-  deleted_at?: string;
-}
-
-export interface ApprovalHistory {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `approvals.id`.<fk table='approvals' column='id'/>
-   * @format uuid
-   */
-  approval_id: string;
-  /** @format text */
-  action: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  actor_id: string;
-  /** @format text */
-  notes?: string;
-  /** @format jsonb */
-  metadata?: any;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at?: string;
-}
-
-/** Signals captured when investors express general interest in closed deals. */
-export interface InvestorInterestSignals {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `investors.id`.<fk table='investors' column='id'/>
-   * @format uuid
-   */
-  investor_id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `deals.id`.<fk table='deals' column='id'/>
-   * @format uuid
-   */
-  deal_id: string;
-  /** @format text */
-  signal_type: string;
-  /** @format jsonb */
-  metadata?: any;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  created_by?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at: string;
-}
-
-/** Tracks all activities and interactions for audit and timeline. */
-export interface ActivityFeed {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /** @format text */
-  activity_type: string;
-  /** @format uuid */
-  entity_id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `investors.id`.<fk table='investors' column='id'/>
-   * @format uuid
-   */
-  investor_id?: string;
-  /** @format text */
-  title: string;
-  /** @format text */
-  description: string;
-  /** @format jsonb */
-  metadata?: any;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  created_by?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at?: string;
-}
-
-/** Links multiple users to arranger entities. WHO CAN LOGIN as this arranger. */
-export interface ArrangerUsers {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * This is a Foreign Key to `arranger_entities.id`.<fk table='arranger_entities' column='id'/>
-   * @format uuid
-   */
-  arranger_id: string;
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  user_id: string;
-  /**
-   * @format text
-   * @default "member"
-   */
-  role: string;
-  /**
-   * @format boolean
-   * @default false
-   */
-  is_primary: boolean;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  created_by?: string;
-}
-
-export interface ShareSources {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /** @format text */
-  kind: string;
-  /** @format text */
-  counterparty_name?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `documents.id`.<fk table='documents' column='id'/>
-   * @format uuid
-   */
-  contract_doc_id?: string;
-  /** @format text */
-  notes?: string;
-}
-
-export interface BankTransactions {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /** @format text */
-  account_ref?: string;
-  /** @format numeric */
-  amount?: number;
-  /**
-   * @format text
-   * @default "USD"
-   */
-  currency?: string;
-  /** @format date */
-  value_date?: string;
-  /** @format text */
-  memo?: string;
-  /** @format text */
-  counterparty?: string;
-  /** @format uuid */
-  import_batch_id?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at?: string;
-  /** @format text */
-  counterparty_account?: string;
-  /** @format text */
-  bank_reference?: string;
-  /**
-   * @format text
-   * @default "unmatched"
-   */
-  status?: string;
-  /** @format uuid[] */
-  matched_invoice_ids?: string[];
-  /**
-   * Confidence score 0-100 from auto-matching algorithm
-   * @format integer
-   */
-  match_confidence?: number;
-  /** @format text */
-  match_notes?: string;
-  /** @format uuid */
-  match_group_id?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  updated_at?: string;
-  /**
-   * Links to the subscription this transaction was matched to
-   *
-   * Note:
-   * This is a Foreign Key to `subscriptions.id`.<fk table='subscriptions' column='id'/>
-   * @format uuid
-   */
-  matched_subscription_id?: string;
-  /**
-   * Expected amount - actual amount (for flagging differences)
-   * @format numeric
-   */
-  discrepancy_amount?: number;
-  /**
-   * User notes explaining how discrepancy was resolved
-   * @format text
-   */
-  resolution_notes?: string;
-  /**
-   * Staff member who resolved the discrepancy
-   *
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  resolved_by?: string;
-  /**
-   * When the discrepancy was resolved
-   * @format timestamp with time zone
-   */
-  resolved_at?: string;
-}
-
-export interface Documents {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `investors.id`.<fk table='investors' column='id'/>
-   * @format uuid
-   */
-  owner_investor_id?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  owner_user_id?: string;
-  /**
-   * Vehicle this document belongs to. Auto-populated from deal.vehicle_id when document is uploaded to a deal.
-   *
-   * Note:
-   * This is a Foreign Key to `vehicles.id`.<fk table='vehicles' column='id'/>
-   * @format uuid
-   */
-  vehicle_id?: string;
-  /** @format text */
-  type?: string;
-  /** @format text */
-  file_key: string;
-  /** @format jsonb */
-  watermark?: any;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  created_by?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at?: string;
-  /**
-   * Deal this document belongs to. When set, entity_id and vehicle_id are auto-populated from deal.vehicle_id.
-   *
-   * Note:
-   * This is a Foreign Key to `deals.id`.<fk table='deals' column='id'/>
-   * @format uuid
-   */
-  deal_id?: string;
-  /**
-   * Entity (vehicle) this document belongs to. Auto-populated from deal.vehicle_id when document is uploaded to a deal.
-   *
-   * Note:
-   * This is a Foreign Key to `vehicles.id`.<fk table='vehicles' column='id'/>
-   * @format uuid
-   */
-  entity_id?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `document_folders.id`.<fk table='document_folders' column='id'/>
-   * @format uuid
-   */
-  folder_id?: string;
-  /** @format text */
-  name?: string;
-  /** @format text */
-  description?: string;
-  /** @format text[] */
-  tags?: string[];
-  /**
-   * Current version number for display
-   * @format integer
-   * @default 1
-   */
-  current_version?: number;
-  /**
-   * Workflow status: draft → pending_approval → approved → published → archived
-   * @format text
-   * @default "draft"
-   */
-  status?: string;
-  /** @format bigint */
-  file_size_bytes?: number;
-  /** @format text */
-  mime_type?: string;
-  /**
-   * Whether document is visible to investors
-   * @format boolean
-   * @default false
-   */
-  is_published?: boolean;
-  /** @format timestamp with time zone */
-  published_at?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  updated_at?: string;
-  /** @format text */
-  external_url?: string;
-  /** @format text */
-  link_type?: string;
-  /**
-   * Links document to a formal subscription record
-   *
-   * Note:
-   * This is a Foreign Key to `subscriptions.id`.<fk table='subscriptions' column='id'/>
-   * @format uuid
-   */
-  subscription_id?: string;
-  /**
-   * Links document to the original submission/approval
-   *
-   * Note:
-   * This is a Foreign Key to `deal_subscription_submissions.id`.<fk table='deal_subscription_submissions' column='id'/>
-   * @format uuid
-   */
-  subscription_submission_id?: string;
-  /**
-   * Indicates if document is ready to be sent for signatures
-   * @format boolean
-   * @default false
-   */
-  ready_for_signature?: boolean;
-  /**
-   * Links to the workflow run that manages the signature process
-   *
-   * Note:
-   * This is a Foreign Key to `workflow_runs.id`.<fk table='workflow_runs' column='id'/>
-   * @format uuid
-   */
-  signature_workflow_run_id?: string;
-  /**
-   * Documents uploaded for arranger entity (KYC, licenses, certificates)
-   *
-   * Note:
-   * This is a Foreign Key to `arranger_entities.id`.<fk table='arranger_entities' column='id'/>
-   * @format uuid
-   */
-  arranger_entity_id?: string;
-}
-
-/** Links profiles to lawyer entities for portal access */
-export interface LawyerUsers {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * This is a Foreign Key to `lawyers.id`.<fk table='lawyers' column='id'/>
-   * @format uuid
-   */
-  lawyer_id: string;
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  user_id: string;
-  /**
-   * @format text
-   * @default "member"
-   */
-  role: string;
-  /**
-   * @format boolean
-   * @default false
-   */
-  is_primary: boolean;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  created_by?: string;
-  /**
-   * @format boolean
-   * @default false
-   */
-  can_sign: boolean;
-}
-
-export interface SubscriptionWorkbookRuns {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /** @format text */
-  source_filename: string;
-  /** @format text */
-  source_hash?: string;
-  /**
-   * @format boolean
-   * @default false
-   */
-  dry_run?: boolean;
-  /** @format text */
-  executed_by?: string;
-  /**
-   * @format text
-   * @default "importing"
-   */
-  run_state: string;
-  /** @format text */
-  notes?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at: string;
-}
-
-export interface Valuations {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `vehicles.id`.<fk table='vehicles' column='id'/>
-   * @format uuid
-   */
-  vehicle_id?: string;
-  /** @format date */
-  as_of_date: string;
-  /** @format numeric */
-  nav_total?: number;
-  /** @format numeric */
-  nav_per_unit?: number;
-}
-
-/** Version history for documents with change tracking */
-export interface DocumentVersions {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `documents.id`.<fk table='documents' column='id'/>
-   * @format uuid
-   */
-  document_id?: string;
-  /** @format integer */
-  version_number: number;
-  /** @format text */
-  file_key: string;
-  /** @format bigint */
-  file_size_bytes?: number;
-  /** @format text */
-  mime_type?: string;
-  /** @format text */
-  changes_description?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  created_by?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at?: string;
-}
-
-export interface ReportRequests {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `investors.id`.<fk table='investors' column='id'/>
-   * @format uuid
-   */
-  investor_id?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `vehicles.id`.<fk table='vehicles' column='id'/>
-   * @format uuid
-   */
-  vehicle_id?: string;
-  /** @format jsonb */
-  filters?: any;
-  /**
-   * Note:
-   * This is a Foreign Key to `documents.id`.<fk table='documents' column='id'/>
-   * @format uuid
-   */
-  result_doc_id?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  created_by?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at?: string;
-  /**
-   * @format public.report_status_enum
-   * @default "queued"
-   */
-  status?: "queued" | "processing" | "ready" | "failed";
-}
-
-/** Audit log of inbound automation webhooks (n8n). */
-export interface AutomationWebhookEvents {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /** @format text */
-  event_type: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `deals.id`.<fk table='deals' column='id'/>
-   * @format uuid
-   */
-  related_deal_id?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `investors.id`.<fk table='investors' column='id'/>
-   * @format uuid
-   */
-  related_investor_id?: string;
-  /** @format jsonb */
-  payload: any;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  received_at: string;
-}
-
-export interface TaskDependencies {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * This is a Foreign Key to `tasks.id`.<fk table='tasks' column='id'/>
-   * @format uuid
-   */
-  task_id: string;
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * This is a Foreign Key to `tasks.id`.<fk table='tasks' column='id'/>
-   * @format uuid
-   */
-  depends_on_task_id: string;
-}
-
-/** Regulated financial entities (arrangers/advisors) that structure deals and manage vehicles */
-export interface ArrangerEntities {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /** @format text */
-  legal_name: string;
-  /** @format text */
-  registration_number?: string;
-  /** @format text */
-  tax_id?: string;
-  /** @format text */
-  regulator?: string;
-  /** @format text */
-  license_number?: string;
-  /** @format text */
-  license_type?: string;
-  /** @format date */
-  license_expiry_date?: string;
-  /** @format text */
-  email?: string;
-  /** @format text */
-  phone?: string;
-  /** @format text */
-  address?: string;
-  /**
-   * @format text
-   * @default "draft"
-   */
-  kyc_status?: string;
-  /** @format timestamp with time zone */
-  kyc_approved_at?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  kyc_approved_by?: string;
-  /** @format timestamp with time zone */
-  kyc_expires_at?: string;
-  /** @format text */
-  kyc_notes?: string;
-  /**
-   * Flexible JSONB field for beneficial owners, key personnel, insurance details, etc.
-   * @format jsonb
-   */
-  metadata?: any;
-  /**
-   * @format text
-   * @default "active"
-   */
-  status?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  created_by?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  updated_at?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  updated_by?: string;
-  /** @format text */
-  logo_url?: string;
-}
-
-export interface Introductions {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `introducers.id`.<fk table='introducers' column='id'/>
-   * @format uuid
-   */
-  introducer_id?: string;
-  /** @format public.citext */
-  prospect_email?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `investors.id`.<fk table='investors' column='id'/>
-   * @format uuid
-   */
-  prospect_investor_id?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `deals.id`.<fk table='deals' column='id'/>
-   * @format uuid
-   */
-  deal_id?: string;
-  /**
-   * @format text
-   * @default "invited"
-   */
-  status?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at?: string;
-  /**
-   * @format date
-   * @default "CURRENT_DATE"
-   */
-  introduced_at?: string;
-  /** @format integer */
-  commission_rate_override_bps?: number;
-  /** @format text */
-  notes?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  created_by?: string;
-}
-
-export interface DealMemberships {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * This is a Foreign Key to `deals.id`.<fk table='deals' column='id'/>
-   * @format uuid
-   */
-  deal_id: string;
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  user_id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `investors.id`.<fk table='investors' column='id'/>
-   * @format uuid
-   */
-  investor_id?: string;
-  /** @format public.deal_member_role */
-  role:
-    | "investor"
-    | "co_investor"
-    | "spouse"
-    | "advisor"
-    | "lawyer"
-    | "banker"
-    | "introducer"
-    | "viewer"
-    | "verso_staff"
-    | "partner_investor"
-    | "introducer_investor"
-    | "commercial_partner_investor"
-    | "commercial_partner_proxy";
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  invited_by?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  invited_at?: string;
-  /** @format timestamp with time zone */
-  accepted_at?: string;
-  /**
-   * When IO was dispatched to this member (Stage 1: Received)
-   * @format timestamp with time zone
-   */
-  dispatched_at?: string;
-  /**
-   * When member first viewed the IO (Stage 2: Viewed)
-   * @format timestamp with time zone
-   */
-  viewed_at?: string;
-  /**
-   * When member confirmed interest (Stage 3)
-   * @format timestamp with time zone
-   */
-  interest_confirmed_at?: string;
-  /**
-   * When all signatories completed NDA (Stage 4)
-   * @format timestamp with time zone
-   */
-  nda_signed_at?: string;
-  /**
-   * When data room access was granted (Stage 5)
-   * @format timestamp with time zone
-   */
-  data_room_granted_at?: string;
-}
-
-export interface DashboardPreferences {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  user_id?: string;
-  /** @format jsonb */
-  layout_config?: any;
-  /** @format text[] */
-  widget_order?: string[];
-  /** @format jsonb */
-  custom_metrics?: any;
-  /** @format jsonb */
-  notification_settings?: any;
-  /** @format jsonb */
-  theme_settings?: any;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  updated_at?: string;
-}
-
-/** Per-investor distribution payment tracking */
-export interface DistributionItems {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `distributions.id`.<fk table='distributions' column='id'/>
-   * @format uuid
-   */
-  distribution_id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `subscriptions.id`.<fk table='subscriptions' column='id'/>
-   * @format uuid
-   */
-  subscription_id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `investors.id`.<fk table='investors' column='id'/>
-   * @format uuid
-   */
-  investor_id: string;
-  /**
-   * Amount this investor should receive
-   * @format numeric
-   */
-  distribution_amount: number;
-  /**
-   * Amount sent so far
-   * @format numeric
-   * @default 0
-   */
-  sent_amount: number;
-  /** @format numeric */
-  balance_pending?: number;
-  /** @format date */
-  sent_date?: string;
-  /**
-   * Wire confirmation number or reference
-   * @format text
-   */
-  wire_reference?: string;
-  /** @format date */
-  confirmed_date?: string;
-  /**
-   * @format text
-   * @default "pending"
-   */
-  status?: string;
-  /** @format text */
-  notes?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  updated_at?: string;
-}
-
-/** Hierarchical folder structure for organizing documents by vehicle and category */
-export interface DocumentFolders {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `document_folders.id`.<fk table='document_folders' column='id'/>
-   * @format uuid
-   */
-  parent_folder_id?: string;
-  /** @format text */
-  name: string;
-  /**
-   * Full path from root, e.g. /VERSO Fund I/Reports
-   * @format text
-   */
-  path: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `vehicles.id`.<fk table='vehicles' column='id'/>
-   * @format uuid
-   */
-  vehicle_id?: string;
-  /**
-   * Type: vehicle_root (top-level), category (Agreements/KYC/etc), custom (user-created)
-   * @format text
-   */
-  folder_type: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  created_by?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  updated_at?: string;
-}
-
-export interface CapitalCalls {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `vehicles.id`.<fk table='vehicles' column='id'/>
-   * @format uuid
-   */
-  vehicle_id?: string;
-  /** @format text */
-  name?: string;
-  /** @format numeric */
-  call_pct?: number;
-  /** @format date */
-  due_date?: string;
-  /**
-   * @format text
-   * @default "draft"
-   */
-  status?: string;
-}
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
 
-/** Document folder structure for organizing entity/vehicle documents */
-export interface EntityFolders {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `vehicles.id`.<fk table='vehicles' column='id'/>
-   * @format uuid
-   */
-  vehicle_id: string;
-  /**
-   * Type of folder: kyc, legal, redemption_closure, financial_statements, etc.
-   * @format public.folder_type
-   */
-  folder_type:
-    | "kyc"
-    | "legal"
-    | "redemption_closure"
-    | "financial_statements"
-    | "tax_documents"
-    | "board_minutes"
-    | "investor_agreements"
-    | "compliance"
-    | "correspondence"
-    | "other";
-  /** @format text */
-  folder_name: string;
-  /** @format text */
-  description?: string;
-  /**
-   * Whether this is a system-created default folder
-   * @format boolean
-   * @default false
-   */
-  is_default?: boolean;
-  /**
-   * Optional parent folder for creating folder hierarchies
-   *
-   * Note:
-   * This is a Foreign Key to `entity_folders.id`.<fk table='entity_folders' column='id'/>
-   * @format uuid
-   */
-  parent_folder_id?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  updated_at?: string;
-}
-
-export interface ComplianceAlerts {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /** @format uuid */
-  audit_log_id?: string;
-  /** @format text */
-  alert_type: string;
-  /**
-   * @format text
-   * @default "medium"
-   */
-  severity?: string;
-  /** @format text */
-  title: string;
-  /** @format text */
-  description?: string;
-  /**
-   * @format text
-   * @default "open"
-   */
-  status?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  assigned_to?: string;
-  /** @format text */
-  resolution_notes?: string;
-  /** @format timestamp with time zone */
-  resolved_at?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  resolved_by?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  updated_at?: string;
-}
-
-/** Clients that commercial partners act on behalf of (proxy mode). Links CP to investors or stores info for new clients. */
-export interface CommercialPartnerClients {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `commercial_partners.id`.<fk table='commercial_partners' column='id'/>
-   * @format uuid
-   */
-  commercial_partner_id: string;
-  /** @format text */
-  client_name: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `investors.id`.<fk table='investors' column='id'/>
-   * @format uuid
-   */
-  client_investor_id?: string;
-  /** @format text */
-  client_email?: string;
-  /** @format text */
-  client_phone?: string;
-  /**
-   * @format text
-   * @default "individual"
-   */
-  client_type: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `deals.id`.<fk table='deals' column='id'/>
-   * @format uuid
-   */
-  created_for_deal_id?: string;
-  /**
-   * @format boolean
-   * @default true
-   */
-  is_active: boolean;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  created_by?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  updated_at: string;
-}
-
-/** Personnel/compliance tracking for arranger entities. Directors, UBOs, signatories. */
-export interface ArrangerMembers {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `arranger_entities.id`.<fk table='arranger_entities' column='id'/>
-   * @format uuid
-   */
-  arranger_id: string;
-  /** @format text */
-  full_name: string;
-  /** @format text */
-  role: string;
-  /** @format text */
-  role_title?: string;
-  /** @format text */
-  email?: string;
-  /** @format text */
-  phone?: string;
-  /** @format text */
-  residential_street?: string;
-  /** @format text */
-  residential_city?: string;
-  /** @format text */
-  residential_state?: string;
-  /** @format text */
-  residential_postal_code?: string;
-  /** @format text */
-  residential_country?: string;
-  /** @format text */
-  nationality?: string;
-  /** @format text */
-  id_type?: string;
-  /** @format text */
-  id_number?: string;
-  /** @format date */
-  id_expiry_date?: string;
-  /** @format numeric */
-  ownership_percentage?: number;
-  /**
-   * @format boolean
-   * @default false
-   */
-  is_beneficial_owner: boolean;
-  /**
-   * @format boolean
-   * @default false
-   */
-  is_signatory: boolean;
-  /**
-   * @format boolean
-   * @default true
-   */
-  is_active: boolean;
-  /** @format date */
-  effective_from?: string;
-  /** @format date */
-  effective_to?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  created_by?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  updated_at: string;
-}
-
-export interface Distributions {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `vehicles.id`.<fk table='vehicles' column='id'/>
-   * @format uuid
-   */
-  vehicle_id?: string;
-  /** @format text */
-  name?: string;
-  /** @format numeric */
-  amount?: number;
-  /** @format date */
-  date?: string;
-  /** @format text */
-  classification?: string;
-}
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
-/** Documents made available in the investor data room with visibility flags. */
-export interface DealDataRoomDocuments {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `deals.id`.<fk table='deals' column='id'/>
-   * @format uuid
-   */
-  deal_id: string;
-  /** @format text */
-  folder?: string;
-  /** @format text */
-  file_key?: string;
-  /** @format text */
-  file_name?: string;
-  /**
-   * @format boolean
-   * @default false
-   */
-  visible_to_investors: boolean;
-  /** @format jsonb */
-  metadata_json?: any;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  created_by?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  updated_at: string;
-  /**
-   * Array of tags for document categorization and search
-   * @format text[]
-   */
-  tags?: string[];
-  /**
-   * Optional expiry timestamp for time-limited documents
-   * @format timestamp with time zone
-   */
-  document_expires_at?: string;
-  /**
-   * Internal notes about the document
-   * @format text
-   */
-  document_notes?: string;
-  /**
-   * Document version number, increments with replacements
-   * @format integer
-   * @default 1
-   */
-  version: number;
-  /**
-   * ID of the document that replaced this version (forms version chain)
-   *
-   * Note:
-   * This is a Foreign Key to `deal_data_room_documents.id`.<fk table='deal_data_room_documents' column='id'/>
-   * @format uuid
-   */
-  replaced_by_id?: string;
-  /**
-   * File size in bytes for display and validation
-   * @format bigint
-   */
-  file_size_bytes?: number;
-  /**
-   * MIME type of the uploaded file
-   * @format text
-   */
-  mime_type?: string;
-  /**
-   * External link to document (e.g., Google Drive link) instead of uploaded file
-   * @format text
-   */
-  external_link?: string;
-  /**
-   * When true, document appears in featured section at top of data room
-   * @format boolean
-   * @default false
-   */
-  is_featured?: boolean;
+export type Tables<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
 }
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
 
-/** Real-time system performance metrics for super admin dashboard */
-export interface SystemMetrics {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /** @format text */
-  metric_type: string;
-  /** @format numeric */
-  value: number;
-  /** @format text */
-  unit?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  timestamp: string;
-  /** @format jsonb */
-  metadata?: any;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at?: string;
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
 }
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
 
-export interface Cashflows {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `investors.id`.<fk table='investors' column='id'/>
-   * @format uuid
-   */
-  investor_id?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `vehicles.id`.<fk table='vehicles' column='id'/>
-   * @format uuid
-   */
-  vehicle_id?: string;
-  /** @format text */
-  type?: string;
-  /** @format numeric */
-  amount?: number;
-  /** @format date */
-  date?: string;
-  /** @format uuid */
-  ref_id?: string;
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
 }
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
 
-/** Conversation metadata for investor/staff messages and deal rooms. */
-export interface Conversations {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /** @format text */
-  subject?: string;
-  /**
-   * Latest text preview used for inbox listing.
-   * @format text
-   */
-  preview?: string;
-  /**
-   * @format public.conversation_type_enum
-   * @default "dm"
-   */
-  type: "dm" | "group" | "deal_room" | "broadcast";
-  /**
-   * Visibility scope used by staff filters (investor/internal/deal).
-   * @format public.conversation_visibility_enum
-   * @default "internal"
-   */
-  visibility: "investor" | "internal" | "deal";
-  /**
-   * Optional staff team identifier owning the conversation.
-   * @format text
-   */
-  owner_team?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `deals.id`.<fk table='deals' column='id'/>
-   * @format uuid
-   */
-  deal_id?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  created_by?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  updated_at: string;
-  /** @format timestamp with time zone */
-  last_message_at?: string;
-  /** @format uuid */
-  last_message_id?: string;
-  /** @format timestamp with time zone */
-  archived_at?: string;
-  /**
-   * JSON metadata such as pinned flags, workflow bindings, or escalation status.
-   * @format jsonb
-   */
-  metadata: any;
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
 }
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
 
-/** Stores notification entries delivered to investors and staff for deal workflow events. */
-export interface InvestorNotifications {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  user_id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `investors.id`.<fk table='investors' column='id'/>
-   * @format uuid
-   */
-  investor_id?: string;
-  /** @format text */
-  title: string;
-  /** @format text */
-  message: string;
-  /** @format text */
-  link?: string;
-  /** @format timestamp with time zone */
-  read_at?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at: string;
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
 }
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
 
-export interface PerformanceSnapshots {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `investors.id`.<fk table='investors' column='id'/>
-   * @format uuid
-   */
-  investor_id?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `vehicles.id`.<fk table='vehicles' column='id'/>
-   * @format uuid
-   */
-  vehicle_id?: string;
-  /** @format date */
-  snapshot_date: string;
-  /** @format numeric */
-  nav_value?: number;
-  /** @format numeric */
-  contributed?: number;
-  /** @format numeric */
-  distributed?: number;
-  /** @format numeric */
-  dpi?: number;
-  /** @format numeric */
-  tvpi?: number;
-  /** @format numeric */
-  irr_gross?: number;
-  /** @format numeric */
-  irr_net?: number;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at?: string;
-}
-
-export interface Introducers {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  user_id?: string;
-  /** @format text */
-  legal_name?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `documents.id`.<fk table='documents' column='id'/>
-   * @format uuid
-   */
-  agreement_doc_id?: string;
-  /**
-   * @format integer
-   * @default 0
-   */
-  default_commission_bps?: number;
-  /**
-   * @format text
-   * @default "active"
-   */
-  status?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at?: string;
-  /** @format text */
-  contact_name?: string;
-  /** @format text */
-  email?: string;
-  /** @format numeric */
-  commission_cap_amount?: number;
-  /** @format text */
-  payment_terms?: string;
-  /** @format date */
-  agreement_expiry_date?: string;
-  /** @format text */
-  notes?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  created_by?: string;
-  /** @format text */
-  logo_url?: string;
-}
+export const Constants = {
+  public: {
+    Enums: {
+      allocation_status_enum: [
+        "pending_review",
+        "approved",
+        "rejected",
+        "settled",
+      ],
+      conversation_type_enum: ["dm", "group", "deal_room", "broadcast"],
+      conversation_visibility_enum: ["investor", "internal", "deal"],
+      convo_type_enum: ["dm", "group", "deal_room", "broadcast"],
+      deal_member_role: [
+        "investor",
+        "co_investor",
+        "spouse",
+        "advisor",
+        "lawyer",
+        "banker",
+        "introducer",
+        "viewer",
+        "verso_staff",
+        "partner_investor",
+        "introducer_investor",
+        "commercial_partner_investor",
+        "commercial_partner_proxy",
+        "arranger",
+      ],
+      deal_status_enum: [
+        "draft",
+        "open",
+        "allocation_pending",
+        "closed",
+        "cancelled",
+      ],
+      deal_type_enum: [
+        "equity_secondary",
+        "equity_primary",
+        "credit_trade_finance",
+        "other",
+      ],
+      entity_status: ["LIVE", "CLOSED", "TBD"],
+      fee_calc_method_enum: [
+        "percent_of_investment",
+        "percent_per_annum",
+        "percent_of_profit",
+        "per_unit_spread",
+        "fixed",
+        "percent_of_commitment",
+        "percent_of_nav",
+        "fixed_amount",
+      ],
+      fee_component_kind_enum: [
+        "subscription",
+        "management",
+        "performance",
+        "spread_markup",
+        "flat",
+        "other",
+        "bd_fee",
+        "finra_fee",
+      ],
+      fee_event_status_enum: [
+        "accrued",
+        "invoiced",
+        "voided",
+        "paid",
+        "waived",
+        "disputed",
+        "cancelled",
+      ],
+      fee_frequency_enum: [
+        "one_time",
+        "annual",
+        "quarterly",
+        "monthly",
+        "on_exit",
+        "on_event",
+      ],
+      flag_severity: ["critical", "warning", "info", "success"],
+      flag_type: [
+        "compliance_issue",
+        "missing_documents",
+        "expiring_documents",
+        "reporting_due",
+        "approval_required",
+        "action_required",
+        "information_needed",
+        "review_required",
+      ],
+      folder_type: [
+        "kyc",
+        "legal",
+        "redemption_closure",
+        "financial_statements",
+        "tax_documents",
+        "board_minutes",
+        "investor_agreements",
+        "compliance",
+        "correspondence",
+        "other",
+      ],
+      invoice_status_enum: [
+        "draft",
+        "sent",
+        "paid",
+        "partially_paid",
+        "cancelled",
+        "overdue",
+        "disputed",
+      ],
+      kyc_status_type: [
+        "not_started",
+        "in_progress",
+        "pending_review",
+        "approved",
+        "rejected",
+        "expired",
+        "renewal_required",
+      ],
+      message_type_enum: ["text", "system", "file"],
+      participant_role_enum: ["owner", "member", "viewer"],
+      payment_status_enum: ["received", "applied", "refunded"],
+      report_status_enum: ["queued", "processing", "ready", "failed"],
+      reporting_type: [
+        "Not Required",
+        "Company Only",
+        "Online only",
+        "Company + Online",
+      ],
+      request_priority_enum: ["low", "normal", "high", "urgent"],
+      request_status_enum: [
+        "open",
+        "assigned",
+        "in_progress",
+        "ready",
+        "closed",
+        "awaiting_info",
+        "cancelled",
+      ],
+      reservation_status_enum: ["pending", "approved", "expired", "cancelled"],
+      stakeholder_role: [
+        "lawyer",
+        "accountant",
+        "administrator",
+        "auditor",
+        "strategic_partner",
+        "director",
+        "other",
+      ],
+      user_role: [
+        "investor",
+        "staff_admin",
+        "staff_ops",
+        "staff_rm",
+        "arranger",
+        "introducer",
+        "partner",
+        "commercial_partner",
+        "lawyer",
+        "ceo",
+      ],
+      vehicle_type: [
+        "fund",
+        "spv",
+        "securitization",
+        "note",
+        "other",
+        "real_estate",
+        "private_equity",
+        "venture_capital",
+      ],
+    },
+  },
+} as const
 
-/** Immutable audit trail for all system activities with rich metadata. Replaced legacy audit_log table on 2025-11-15. */
-export interface AuditLogs {
-  /**
-   * Note:
-   * This is a Primary Key.<pk/>
-   * @format uuid
-   * @default "gen_random_uuid()"
-   */
-  id: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  timestamp: string;
-  /**
-   * High-level event category
-   * @format text
-   */
-  event_type: string;
-  /**
-   * Specific action performed
-   * @format text
-   */
-  action: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  actor_id?: string;
-  /** @format text */
-  actor_email?: string;
-  /** @format text */
-  actor_name?: string;
-  /** @format text */
-  actor_role?: string;
-  /** @format text */
-  entity_type?: string;
-  /** @format uuid */
-  entity_id?: string;
-  /** @format text */
-  entity_name?: string;
-  /** @format jsonb */
-  action_details?: any;
-  /** @format jsonb */
-  before_value?: any;
-  /** @format jsonb */
-  after_value?: any;
-  /** @format inet */
-  ip_address?: string;
-  /** @format text */
-  user_agent?: string;
-  /**
-   * Risk assessment of the action
-   * @format text
-   */
-  risk_level?: string;
-  /**
-   * Whether this event requires compliance review
-   * @format boolean
-   * @default false
-   */
-  compliance_flag?: boolean;
-  /** @format text */
-  compliance_review_status?: string;
-  /**
-   * Note:
-   * This is a Foreign Key to `profiles.id`.<fk table='profiles' column='id'/>
-   * @format uuid
-   */
-  compliance_reviewer_id?: string;
-  /** @format timestamp with time zone */
-  compliance_reviewed_at?: string;
-  /** @format text */
-  compliance_notes?: string;
-  /**
-   * Data retention category determining how long to keep this record
-   * @format text
-   */
-  retention_category?: string;
-  /** @format date */
-  retention_expiry?: string;
-  /**
-   * @format timestamp with time zone
-   * @default "now()"
-   */
-  created_at: string;
-}

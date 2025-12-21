@@ -83,10 +83,8 @@ const PERSONA_NAV_ITEMS: Record<string, NavItem[]> = {
     { name: 'Opportunities', href: '/versotech_main/opportunities', icon: TrendingUp, description: 'Investment opportunities' },
     { name: 'Portfolio', href: '/versotech_main/portfolio', icon: Briefcase, description: 'My investments' },
     { name: 'Documents', href: '/versotech_main/documents', icon: FileText, description: 'My documents' },
-    { name: 'Tasks', href: '/versotech_main/tasks', icon: CheckSquare, description: 'Action items' },
-    { name: 'Messages', href: '/versotech_main/messages', icon: MessageSquare, description: 'Communications' },
+    { name: 'Inbox', href: '/versotech_main/inbox', icon: MessageSquare, description: 'Tasks, messages & notifications' },
     { name: 'Calendar', href: '/versotech_main/calendar', icon: Calendar, description: 'Schedule' },
-    { name: 'Notifications', href: '/versotech_main/notifications', icon: Bell, description: 'Alerts' },
   ],
 
   // Arranger persona

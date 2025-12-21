@@ -144,7 +144,7 @@ export function NotificationCenter({ className }: NotificationCenterProps) {
               type: 'message',
               title: conv.subject || 'New message',
               description: conv.preview || 'You have a new message',
-              href: '/versotech_main/messages',
+              href: '/versotech_main/inbox?tab=messages',
               read: false,
               created_at: lastMessageAt
             })

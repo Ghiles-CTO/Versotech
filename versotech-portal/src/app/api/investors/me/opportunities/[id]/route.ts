@@ -19,20 +19,8 @@ export async function GET(request: Request, { params }: RouteParams) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get investor ID for this user
-    const { data: investorLinks, error: linksError } = await serviceSupabase
-      .from('investor_users')
-      .select('investor_id')
-      .eq('user_id', user.id)
-
-    if (linksError || !investorLinks || investorLinks.length === 0) {
-      return NextResponse.json({ error: 'No investor profile found' }, { status: 404 })
-    }
-
-    const investorId = investorLinks[0].investor_id
-
-    // Get investor's membership for this deal first (security check)
-    // Use maybeSingle as user might not have a membership yet
+    // Get user's membership for this deal first (security check)
+    // This works for ALL personas: investors, partners, introducers, CPs, lawyers, arrangers
     const { data: membership } = await serviceSupabase
       .from('deal_memberships')
       .select('*')
@@ -40,6 +28,15 @@ export async function GET(request: Request, { params }: RouteParams) {
       .eq('user_id', user.id)
       .maybeSingle()
 
+    // Get investor ID for this user (optional - only investors have this)
+    const { data: investorLinks } = await serviceSupabase
+      .from('investor_users')
+      .select('investor_id')
+      .eq('user_id', user.id)
+
+    const investorId = investorLinks?.[0]?.investor_id || null
+
+    // Use investor_id from membership if available, fallback to direct investor link
     const effectiveInvestorId = membership?.investor_id || investorId
 
     // Check if investor has access to this deal (must be a member or deal is public)

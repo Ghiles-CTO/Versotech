@@ -78,9 +78,9 @@ function InboxPageContent() {
           .select('*', { count: 'exact', head: true })
           .eq('status', 'pending')
 
-        // Get open requests count
+        // Get open requests count (using request_tickets table)
         const { count: requestCount } = await supabase
-          .from('data_room_extension_requests')
+          .from('request_tickets')
           .select('*', { count: 'exact', head: true })
           .eq('status', 'pending')
 

@@ -477,12 +477,14 @@ export async function handleSubscriptionSignature(
   }
 
   // Update with race condition detection
+  const now = new Date().toISOString()
   const { data: updatedSubscription, error: subUpdateError } = await supabase
     .from('subscriptions')
     .update({
       status: 'committed',
-      committed_at: new Date().toISOString(),
-      contract_date: new Date().toISOString().split('T')[0], // Set contract date when signed
+      committed_at: now,
+      signed_at: now, // Set signed_at for journey stage tracking
+      contract_date: now.split('T')[0], // Set contract date when signed
       signed_doc_id: document.id,
       acknowledgement_notes: 'Subscription agreement fully executed by both parties.'
     })

@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { PersonaProvider, Persona } from '@/contexts/persona-context'
 import { UnifiedAppLayout } from '@/components/layout/unified-app-layout'
+import { ProxyModeProvider, ProxyModeBanner } from '@/components/commercial-partner'
 
 export const dynamic = 'force-dynamic'
 
@@ -39,9 +40,12 @@ export default async function UnifiedPortalLayout({ children }: LayoutProps) {
 
   return (
     <PersonaProvider initialPersonas={userPersonas}>
-      <UnifiedAppLayout profile={profile}>
-        {children}
-      </UnifiedAppLayout>
+      <ProxyModeProvider>
+        <ProxyModeBanner />
+        <UnifiedAppLayout profile={profile}>
+          {children}
+        </UnifiedAppLayout>
+      </ProxyModeProvider>
     </PersonaProvider>
   )
 }

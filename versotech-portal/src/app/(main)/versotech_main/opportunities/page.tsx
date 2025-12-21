@@ -149,8 +149,10 @@ function groupByDealId<T extends { deal_id: string }>(
 }
 
 /**
- * Opportunities List Page - Copied from /versoholdings/deals per PHASE2_BASE_PLAN.md Section 12.1
- * Reuse Level: HIGH - Renamed, updated nav
+ * Opportunities List Page - Unified Portal
+ *
+ * Access: Any user with deal_memberships (investors, partners, introducers, CPs, lawyers)
+ * The deal_memberships table tracks who has access to which deals.
  */
 export default async function OpportunitiesPage() {
   const clientSupabase = await createClient()
@@ -162,31 +164,8 @@ export default async function OpportunitiesPage() {
 
   const serviceSupabase = createServiceClient()
 
-  const { data: investorLinks } = await serviceSupabase
-    .from('investor_users')
-    .select('investor_id')
-    .eq('user_id', user.id)
-
-  if (!investorLinks || investorLinks.length === 0) {
-    return (
-      <div className="p-6">
-        <div className="text-center py-16">
-          <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
-            No investor profile linked
-          </h3>
-          <p className="text-gray-500">
-            Please contact the VERSO team to be added to an investor account.
-          </p>
-        </div>
-      </div>
-    )
-  }
-
-  const investorIds = investorLinks.map(link => link.investor_id)
-  const primaryInvestorId = investorIds[0]
-
-  // Fetch all deals accessible to this user (including closed ones for historical view)
+  // Fetch all deals accessible to this user via deal_memberships
+  // This works for ALL persona types: investors, partners, introducers, CPs, lawyers, arrangers
   const { data: deals, error: dealsError } = await serviceSupabase
     .from('deals')
     .select(`
@@ -225,7 +204,35 @@ export default async function OpportunitiesPage() {
     console.error('Failed to load deals', dealsError)
   }
 
-  const dealsData: InvestorDeal[] = deals ?? []
+  const dealsData = (deals ?? []) as unknown as InvestorDeal[]
+
+  // If user has no deal memberships, show appropriate message
+  if (dealsData.length === 0) {
+    return (
+      <div className="p-6">
+        <div className="text-center py-16">
+          <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            No opportunities available
+          </h3>
+          <p className="text-gray-500">
+            You haven&apos;t been dispatched to any investment opportunities yet.
+            <br />
+            Please contact your relationship manager for access.
+          </p>
+        </div>
+      </div>
+    )
+  }
+
+  // Get investor IDs if user has investor persona (optional - for interest/subscription tracking)
+  const { data: investorLinks } = await serviceSupabase
+    .from('investor_users')
+    .select('investor_id')
+    .eq('user_id', user.id)
+
+  const investorIds = investorLinks?.map(link => link.investor_id) ?? []
+  const primaryInvestorId = investorIds[0] ?? null
   const dealIds = dealsData.map(deal => deal.id)
 
   let feeStructureMap = new Map<string, FeeStructure>()

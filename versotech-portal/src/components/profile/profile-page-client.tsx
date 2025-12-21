@@ -228,14 +228,14 @@ export function ProfilePageClient({ profile: initialProfile, variant = 'investor
                 <div className="pt-6 border-t border-white/10">
                   <InvestorInfoForm />
                 </div>
+              </TabsContent>
+              <TabsContent value="compliance" className="mt-6 space-y-6">
+                <ComplianceTab />
 
-                {/* Step 3: Compliance Questionnaire */}
+                {/* Compliance Questionnaire */}
                 <div className="pt-6 border-t border-white/10">
                   <KYCQuestionnaire />
                 </div>
-              </TabsContent>
-              <TabsContent value="compliance" className="mt-6">
-                <ComplianceTab />
               </TabsContent>
               {isEntityInvestor && (
                 <TabsContent value="members" className="mt-6">

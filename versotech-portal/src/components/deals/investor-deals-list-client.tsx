@@ -154,7 +154,7 @@ interface InvestorDealsListClientProps {
   interestByDeal: Map<string, DealInterest>
   accessByDeal: Map<string, DataRoomAccess>
   subscriptionByDeal: Map<string, SubscriptionSubmission>
-  primaryInvestorId: string
+  primaryInvestorId: string | null
   summary: {
     totalDeals: number
     openDeals: number
@@ -905,7 +905,8 @@ export function InvestorDealsListClient({
                         </Button>
                       </Link>
 
-                      {!isClosed && (
+                      {/* Subscribe button only for investors with valid investor ID */}
+                      {!isClosed && primaryInvestorId && (
                         <SubscribeNowDialog
                           dealId={deal.id}
                           dealName={deal.name}
@@ -919,19 +920,22 @@ export function InvestorDealsListClient({
                         </SubscribeNowDialog>
                       )}
 
-                      <InterestModal
-                        dealId={deal.id}
-                        dealName={deal.name}
-                        currency={deal.currency}
-                        investorId={primaryInvestorId}
-                        defaultAmount={indicativeAmount}
-                        isClosed={isClosed}
-                      >
-                        <Button className="gap-2" variant={isClosed ? 'secondary' : 'outline'}>
-                          {isClosed ? "Notify Me About Similar" : "Request data room access"}
-                          <ArrowUpRight className="h-4 w-4" />
-                        </Button>
-                      </InterestModal>
+                      {/* InterestModal only shown for investors with a valid investor ID */}
+                      {primaryInvestorId && (
+                        <InterestModal
+                          dealId={deal.id}
+                          dealName={deal.name}
+                          currency={deal.currency}
+                          investorId={primaryInvestorId}
+                          defaultAmount={indicativeAmount}
+                          isClosed={isClosed}
+                        >
+                          <Button className="gap-2" variant={isClosed ? 'secondary' : 'outline'}>
+                            {isClosed ? "Notify Me About Similar" : "Request data room access"}
+                            <ArrowUpRight className="h-4 w-4" />
+                          </Button>
+                        </InterestModal>
+                      )}
                     </div>
                   </div>
                 </CardContent>

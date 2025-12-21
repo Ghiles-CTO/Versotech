@@ -170,7 +170,7 @@ export default function ClientTransactionsPage() {
         if (investorIds.length > 0) {
           const { data: subs } = await supabase
             .from('subscriptions')
-            .select('investor_id, commitment_amount, status, subscription_date')
+            .select('investor_id, commitment, status, subscription_date')
             .in('investor_id', investorIds)
 
           if (subs) {
@@ -238,7 +238,7 @@ export default function ClientTransactionsPage() {
           deal_name: client.deal?.name || null,
           deal_id: client.created_for_deal_id,
           investor_id: client.client_investor_id,
-          subscription_amount: subscription?.commitment_amount || null,
+          subscription_amount: subscription?.commitment || null,
           subscription_status: subscription?.status || null,
           subscription_date: subscription?.subscription_date || null,
         }

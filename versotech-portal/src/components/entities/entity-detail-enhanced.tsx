@@ -1130,7 +1130,7 @@ export function EntityDetailEnhanced({
   const overviewStats = useMemo(() => {
     return [
       {
-        label: 'Entity Code',
+        label: 'Vehicle Code',
         value: entity.entity_code || '—',
         icon: ClipboardList
       },
@@ -1345,7 +1345,7 @@ export function EntityDetailEnhanced({
           </TabsTrigger>
           <TabsTrigger value="investors" className="gap-2">
             <ShieldCheck className="h-4 w-4" />
-            Investors ({investors.length})
+            Subscriptions ({investors.length})
           </TabsTrigger>
           <TabsTrigger value="documents" className="gap-2">
             <FolderOpen className="h-4 w-4" />
@@ -1385,13 +1385,13 @@ export function EntityDetailEnhanced({
         <TabsContent value="overview" className="space-y-4">
           <Card className="border border-white/10 bg-white/5">
             <CardHeader>
-              <CardTitle>Entity Details</CardTitle>
-              <CardDescription>Complete information about this entity</CardDescription>
+              <CardTitle>Vehicle Details</CardTitle>
+              <CardDescription>Complete information about this vehicle</CardDescription>
             </CardHeader>
             <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
               {entity.entity_code && (
                 <div>
-                  <p className="text-muted-foreground">Entity Code</p>
+                  <p className="text-muted-foreground">Vehicle Code</p>
                   <p className="text-foreground font-medium font-mono text-lg">
                     {entity.entity_code}
                   </p>
@@ -1494,7 +1494,7 @@ export function EntityDetailEnhanced({
           <Card className="border border-white/10 bg-white/5">
             <CardHeader className="flex flex-row items-center justify-between gap-4">
               <div>
-                <CardTitle>Investors & Allocations</CardTitle>
+                <CardTitle>Subscriptions & Allocations</CardTitle>
                 <CardDescription>
                   Manage allocations, commitments, and onboarding for this vehicle.
                 </CardDescription>

@@ -78,7 +78,7 @@ export async function POST(request: Request) {
     // Verify deal exists and is open
     const { data: deal, error: dealError } = await serviceSupabase
       .from('deals')
-      .select('id, name, status, vehicle_id, min_investment, max_investment')
+      .select('id, name, status, vehicle_id, minimum_investment, maximum_investment')
       .eq('id', deal_id)
       .single()
 
@@ -86,17 +86,34 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Deal not found' }, { status: 404 })
     }
 
-    if (deal.status !== 'open' && deal.status !== 'active') {
+    if (deal.status !== 'open' && deal.status !== 'allocation_pending') {
       return NextResponse.json({
         error: 'Deal not open for subscriptions',
         message: `Deal is currently ${deal.status}`
       }, { status: 400 })
     }
 
+    // SECURITY: Verify the commercial partner user has been dispatched to this deal
+    // This prevents CPs from subscribing to deals they don't have access to
+    const { data: cpDealMembership } = await serviceSupabase
+      .from('deal_memberships')
+      .select('id, role, dispatched_at')
+      .eq('deal_id', deal_id)
+      .eq('user_id', user.id)
+      .in('role', ['commercial_partner_investor', 'commercial_partner_proxy'])
+      .maybeSingle()
+
+    if (!cpDealMembership) {
+      return NextResponse.json({
+        error: 'Not authorized for this deal',
+        message: 'You have not been dispatched to this deal. Contact your relationship manager for access.'
+      }, { status: 403 })
+    }
+
     // Verify client investor exists
     const { data: clientInvestor, error: investorError } = await serviceSupabase
       .from('investors')
-      .select('id, name, investor_type, kyc_status')
+      .select('id, legal_name, type, kyc_status')
       .eq('id', client_investor_id)
       .single()
 
@@ -114,17 +131,17 @@ export async function POST(request: Request) {
     }
 
     // Check commitment limits
-    if (deal.min_investment && commitment < deal.min_investment) {
+    if (deal.minimum_investment && commitment < deal.minimum_investment) {
       return NextResponse.json({
         error: 'Below minimum investment',
-        message: `Minimum investment is ${deal.min_investment}`
+        message: `Minimum investment is ${deal.minimum_investment}`
       }, { status: 400 })
     }
 
-    if (deal.max_investment && commitment > deal.max_investment) {
+    if (deal.maximum_investment && commitment > deal.maximum_investment) {
       return NextResponse.json({
         error: 'Exceeds maximum investment',
-        message: `Maximum investment is ${deal.max_investment}`
+        message: `Maximum investment is ${deal.maximum_investment}`
       }, { status: 400 })
     }
 
@@ -206,7 +223,7 @@ export async function POST(request: Request) {
             deal_id,
             deal_name: deal.name,
             client_investor_id,
-            client_name: clientInvestor.name,
+            client_name: clientInvestor.legal_name,
             commitment,
             commercial_partner_id: cpLink.commercial_partner_id,
             commercial_partner_name: commercialPartner?.name
@@ -217,11 +234,11 @@ export async function POST(request: Request) {
         return NextResponse.json({
           success: true,
           subscription_id: fallbackSub.id,
-          message: `Subscription submitted on behalf of ${clientInvestor.name}`,
+          message: `Subscription submitted on behalf of ${clientInvestor.legal_name}`,
           proxy_mode: true,
           client: {
             id: client_investor_id,
-            name: clientInvestor.name
+            name: clientInvestor.legal_name
           },
           deal: {
             id: deal_id,
@@ -243,7 +260,7 @@ export async function POST(request: Request) {
         deal_id,
         deal_name: deal.name,
         client_investor_id,
-        client_name: clientInvestor.name,
+        client_name: clientInvestor.legal_name,
         commitment,
         commercial_partner_id: cpLink.commercial_partner_id,
         commercial_partner_name: commercialPartner?.name,
@@ -279,12 +296,12 @@ export async function POST(request: Request) {
     return NextResponse.json({
       success: true,
       subscription_id: subscription.id,
-      message: `Subscription submitted on behalf of ${clientInvestor.name}`,
+      message: `Subscription submitted on behalf of ${clientInvestor.legal_name}`,
       proxy_mode: true,
       client: {
         id: client_investor_id,
-        name: clientInvestor.name,
-        type: clientInvestor.investor_type
+        name: clientInvestor.legal_name,
+        type: clientInvestor.type
       },
       deal: {
         id: deal_id,
@@ -343,14 +360,14 @@ export async function GET(request: Request) {
       .from('investors')
       .select(`
         id,
-        name,
-        investor_type,
+        legal_name,
+        type,
         kyc_status,
         entity_type
       `)
       .eq('commercial_partner_id', cpId)
       .eq('status', 'active')
-      .order('name')
+      .order('legal_name')
 
     return NextResponse.json({
       commercial_partner_id: cpId,

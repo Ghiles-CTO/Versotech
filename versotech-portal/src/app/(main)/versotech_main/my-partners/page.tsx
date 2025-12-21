@@ -192,13 +192,13 @@ export default function MyPartnersPage() {
         const investorIds = [...new Set((referrals || []).filter(r => r.investor_id).map(r => r.investor_id))]
         const { data: subs } = await supabase
           .from('subscriptions')
-          .select('investor_id, commitment_amount')
+          .select('investor_id, commitment')
           .in('investor_id', investorIds)
 
         const subsByInvestor = new Map<string, number>()
         ;(subs || []).forEach((s: any) => {
           const current = subsByInvestor.get(s.investor_id) || 0
-          subsByInvestor.set(s.investor_id, current + (Number(s.commitment_amount) || 0))
+          subsByInvestor.set(s.investor_id, current + (Number(s.commitment) || 0))
         })
 
         // Process partners with stats

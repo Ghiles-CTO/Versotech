@@ -31,6 +31,9 @@ interface PersonaContextState {
   isCEO: boolean
   isStaff: boolean
   isInvestor: boolean
+  isPartner: boolean
+  isLawyer: boolean
+  hasAnyPersona: boolean
   hasMultiplePersonas: boolean
 }
 
@@ -140,6 +143,17 @@ export function PersonaProvider({ children, initialPersonas = [] }: PersonaProvi
   // Investor check: any investor persona
   const isInvestor = personas.some(p => p.persona_type === 'investor')
 
+  // Partner check: any partner, introducer, commercial_partner, or arranger persona
+  const isPartner = personas.some(p =>
+    ['partner', 'introducer', 'commercial_partner', 'arranger'].includes(p.persona_type)
+  )
+
+  // Lawyer check: any lawyer persona
+  const isLawyer = personas.some(p => p.persona_type === 'lawyer')
+
+  // Has any persona (used for deal access - anyone with a persona can potentially view deals)
+  const hasAnyPersona = personas.length > 0
+
   // Multiple personas check
   const hasMultiplePersonas = personas.length > 1
 
@@ -153,6 +167,9 @@ export function PersonaProvider({ children, initialPersonas = [] }: PersonaProvi
     isCEO,
     isStaff,
     isInvestor,
+    isPartner,
+    isLawyer,
+    hasAnyPersona,
     hasMultiplePersonas,
   }
 

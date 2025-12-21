@@ -224,7 +224,7 @@ export default async function InvestorDealsPage() {
     console.error('Failed to load deals', dealsError)
   }
 
-  const dealsData: InvestorDeal[] = deals ?? []
+  const dealsData = (deals ?? []) as unknown as InvestorDeal[]
   const dealIds = dealsData.map(deal => deal.id)
 
   let feeStructureMap = new Map<string, FeeStructure>()

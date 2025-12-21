@@ -9,8 +9,9 @@ export const dynamic = 'force-dynamic'
  * VersoSign Page for Unified Portal (versotech_main)
  *
  * Persona-aware signature management:
- * - Staff/CEO personas: Full access to signature tasks
- * - Other personas: Access denied
+ * - Staff/CEO personas: Full access to all signature tasks
+ * - Lawyers: Access to subscription pack signature tasks for their assigned deals
+ * - Investors/Partners/CPs: Access to their own signature tasks (countersignatures, sub packs)
  */
 export default async function VersoSignPage() {
   const clientSupabase = await createClient()
@@ -32,39 +33,66 @@ export default async function VersoSignPage() {
     )
   }
 
-  // Check if user has staff/CEO persona for full access
   const serviceSupabase = createServiceClient()
+
+  // Check user personas for access level
   const { data: personas } = await serviceSupabase.rpc('get_user_personas', {
     p_user_id: user.id
   })
 
-  const hasStaffAccess = personas?.some(
-    (p: any) => p.persona_type === 'staff'
-  ) || false
+  const isStaff = personas?.some((p: any) => p.persona_type === 'staff') || false
+  const isLawyer = personas?.some((p: any) => p.persona_type === 'lawyer') || false
 
-  if (!hasStaffAccess) {
+  // Get investor IDs if user has investor persona
+  let investorIds: string[] = []
+  const hasInvestorAccess = personas?.some((p: any) => p.persona_type === 'investor') || false
+  if (hasInvestorAccess) {
+    const { data: investorLinks } = await serviceSupabase
+      .from('investor_users')
+      .select('investor_id')
+      .eq('user_id', user.id)
+
+    investorIds = investorLinks?.map(link => link.investor_id) || []
+  }
+
+  // Fetch signature tasks for this user
+  // Staff see all tasks, others see only tasks assigned to them (by user_id OR investor_id)
+  let tasksQuery = serviceSupabase
+    .from('tasks')
+    .select('*')
+    .in('kind', ['countersignature', 'subscription_pack_signature', 'other'])
+
+  // Build filter based on whether user has investor IDs
+  if (investorIds.length > 0) {
+    // For investors: tasks owned by user OR by their investor IDs
+    tasksQuery = tasksQuery.or(
+      `owner_user_id.eq.${user.id},owner_investor_id.in.(${investorIds.join(',')})`
+    )
+  } else {
+    // For non-investors: just tasks owned by the user directly
+    tasksQuery = tasksQuery.eq('owner_user_id', user.id)
+  }
+
+  const { data: tasks } = await tasksQuery
+    .order('due_at', { ascending: true, nullsFirst: false })
+
+  // If user has no signature tasks and is not staff/lawyer, show appropriate message
+  const hasTasks = tasks && tasks.length > 0
+  if (!hasTasks && !isStaff && !isLawyer) {
     return (
       <div className="p-6">
         <div className="text-center py-16">
           <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-foreground mb-2">
-            Access Restricted
+            No Signature Tasks
           </h3>
           <p className="text-muted-foreground">
-            VersoSign is only available to staff members.
+            You don&apos;t have any pending signature tasks at this time.
           </p>
         </div>
       </div>
     )
   }
-
-  // Fetch all signature-related tasks for this staff member
-  const { data: tasks } = await serviceSupabase
-    .from('tasks')
-    .select('*')
-    .eq('owner_user_id', user.id)
-    .in('kind', ['countersignature', 'subscription_pack_signature', 'other'])
-    .order('due_at', { ascending: true, nullsFirst: false })
 
   // Sort by priority (high → medium → low), then by due_at
   const priorityOrder: Record<string, number> = { high: 0, medium: 1, low: 2 }

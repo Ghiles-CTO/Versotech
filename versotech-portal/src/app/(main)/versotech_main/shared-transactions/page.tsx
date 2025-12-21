@@ -173,7 +173,7 @@ export default function SharedTransactionsPage() {
         if (investorIds.length > 0) {
           const { data: subs } = await supabase
             .from('subscriptions')
-            .select('investor_id, commitment_amount, status')
+            .select('investor_id, commitment, status')
             .in('investor_id', investorIds)
 
           if (subs) {
@@ -277,7 +277,7 @@ export default function SharedTransactionsPage() {
           deal_name: deal?.name || 'Unknown Deal',
           deal_status: deal?.status || 'draft',
           investor_name: investor?.display_name || investor?.legal_name || 'Unknown',
-          commitment_amount: subscription?.commitment_amount || 0,
+          commitment_amount: subscription?.commitment || 0,
           currency: deal?.currency || 'USD',
           created_at: membership.created_at,
           partner_share: hasCoReferrer ? 50 : 100, // Simplified share calculation
