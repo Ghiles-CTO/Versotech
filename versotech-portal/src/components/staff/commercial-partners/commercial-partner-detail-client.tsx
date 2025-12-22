@@ -26,7 +26,9 @@ import { formatDistanceToNow, format } from 'date-fns'
 import { EditCommercialPartnerDialog } from '@/components/staff/commercial-partners/edit-commercial-partner-dialog'
 import { KYCDocumentsTab } from '@/components/shared/kyc-documents-tab'
 import { BankDetailsTab } from '@/components/shared/bank-details-tab'
+import { ActivityTimelineTab } from '@/components/shared/activity-timeline-tab'
 import { InviteUserDialog } from '@/components/users/invite-user-dialog'
+import { statusStyles, kycStyles, getStatusStyle } from '@/lib/status-styles'
 
 type CommercialPartner = {
   id: string
@@ -76,20 +78,6 @@ interface CommercialPartnerDetailClientProps {
   partner: CommercialPartner
   linkedUsers: LinkedUser[]
   documentCount: number
-}
-
-const statusStyles: Record<string, string> = {
-  active: 'bg-green-500/20 text-green-400 border-green-500/30',
-  pending: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
-  inactive: 'bg-gray-500/20 text-gray-400 border-gray-500/30',
-}
-
-const kycStyles: Record<string, string> = {
-  approved: 'bg-green-500/20 text-green-400 border-green-500/30',
-  pending: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
-  not_started: 'bg-gray-500/20 text-gray-400 border-gray-500/30',
-  expired: 'bg-red-500/20 text-red-400 border-red-500/30',
-  rejected: 'bg-red-500/20 text-red-400 border-red-500/30',
 }
 
 const cpTypeLabels: Record<string, string> = {
@@ -147,11 +135,11 @@ export function CommercialPartnerDetailClient({
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Badge className={statusStyles[partner.status] || 'bg-gray-500/20 text-gray-400'}>
+          <Badge className={getStatusStyle(partner.status, statusStyles)}>
             {partner.status}
           </Badge>
           {partner.kyc_status && (
-            <Badge className={kycStyles[partner.kyc_status] || 'bg-gray-500/20 text-gray-400'}>
+            <Badge className={getStatusStyle(partner.kyc_status, kycStyles)}>
               KYC: {partner.kyc_status.replace('_', ' ')}
             </Badge>
           )}
@@ -253,7 +241,7 @@ export function CommercialPartnerDetailClient({
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Status</p>
-                    <Badge className={statusStyles[partner.status] || 'bg-gray-500/20 text-gray-400'}>
+                    <Badge className={getStatusStyle(partner.status, statusStyles)}>
                       {partner.status}
                     </Badge>
                   </div>
@@ -449,40 +437,11 @@ export function CommercialPartnerDetailClient({
 
         {/* Activity Tab */}
         <TabsContent value="activity">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Activity Log</CardTitle>
-              <CardDescription>Recent activity for this commercial partner</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-start gap-4 p-4 rounded-lg border border-white/10">
-                  <div className="h-8 w-8 rounded-full bg-blue-500/20 flex items-center justify-center">
-                    <Building2 className="h-4 w-4 text-blue-400" />
-                  </div>
-                  <div>
-                    <p className="font-medium">Commercial partner created</p>
-                    <p className="text-sm text-muted-foreground">
-                      {format(new Date(partner.created_at), 'dd MMM yyyy HH:mm')}
-                    </p>
-                  </div>
-                </div>
-                {partner.updated_at !== partner.created_at && (
-                  <div className="flex items-start gap-4 p-4 rounded-lg border border-white/10">
-                    <div className="h-8 w-8 rounded-full bg-green-500/20 flex items-center justify-center">
-                      <Edit className="h-4 w-4 text-green-400" />
-                    </div>
-                    <div>
-                      <p className="font-medium">Commercial partner updated</p>
-                      <p className="text-sm text-muted-foreground">
-                        {format(new Date(partner.updated_at), 'dd MMM yyyy HH:mm')}
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+          <ActivityTimelineTab
+            entityType="commercial_partner"
+            entityId={partner.id}
+            entityName={partner.name}
+          />
         </TabsContent>
       </Tabs>
 

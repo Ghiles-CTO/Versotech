@@ -18,82 +18,81 @@ import {
   Activity,
   Shield,
   Briefcase,
-  DollarSign,
+  Scale,
   Edit,
   UserPlus,
-  Globe,
   ExternalLink,
 } from 'lucide-react'
 import { useState } from 'react'
 import { KYCDocumentsTab } from '@/components/shared/kyc-documents-tab'
 import { BankDetailsTab } from '@/components/shared/bank-details-tab'
 import { ActivityTimelineTab } from '@/components/shared/activity-timeline-tab'
-import { EditPartnerDialog } from '@/components/staff/partners/edit-partner-dialog'
+import { EditLawyerDialog } from '@/components/staff/lawyers/edit-lawyer-dialog'
 import { InviteUserDialog } from '@/components/users/invite-user-dialog'
-import { formatCurrency, formatDate } from '@/lib/format'
+import { formatDate } from '@/lib/format'
 import { statusStyles, kycStyles, getStatusStyle } from '@/lib/status-styles'
 
-type PartnerDetail = {
+type LawyerDetail = {
   id: string
-  name: string
-  legal_name: string | null
-  type: string
-  partner_type: string
-  status: string
-  accreditation_status: string | null
-  contact_name: string | null
-  contact_email: string | null
-  contact_phone: string | null
-  website: string | null
-  address_line_1: string | null
-  address_line_2: string | null
+  firm_name: string
+  display_name: string
+  legal_entity_type: string | null
+  registration_number: string | null
+  tax_id: string | null
+  primary_contact_name: string | null
+  primary_contact_email: string | null
+  primary_contact_phone: string | null
+  street_address: string | null
   city: string | null
+  state_province: string | null
   postal_code: string | null
   country: string | null
-  typical_investment_min: number | null
-  typical_investment_max: number | null
-  preferred_sectors: string[] | null
-  preferred_geographies: string[] | null
-  relationship_manager_id: string | null
-  notes: string | null
+  specializations: string[] | null
+  is_active: boolean
+  onboarded_at: string | null
   created_at: string | null
   created_by: string | null
   updated_at: string | null
+  logo_url: string | null
   kyc_status: string | null
   kyc_approved_at: string | null
   kyc_approved_by: string | null
   kyc_expires_at: string | null
   kyc_notes: string | null
-  logo_url: string | null
+  assigned_deals: string[] | null
 }
 
-type PartnerMetrics = {
+type LawyerMetrics = {
+  totalDeals: number
+  activeDeals: number
   documentCount: number
 }
 
-interface PartnerDetailClientProps {
-  partner: PartnerDetail
-  metrics: PartnerMetrics
+type Deal = {
+  id: string
+  name: string
+  status: string
+  target_raise: number | null
+  created_at: string
 }
 
-export function PartnerDetailClient({ partner, metrics }: PartnerDetailClientProps) {
+interface LawyerDetailClientProps {
+  lawyer: LawyerDetail
+  metrics: LawyerMetrics
+  deals: Deal[]
+}
+
+export function LawyerDetailClient({ lawyer, metrics, deals }: LawyerDetailClientProps) {
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false)
 
-  const typeLabels: Record<string, string> = {
-    'co-investor': 'Co-Investor',
-    'syndicate-lead': 'Syndicate Lead',
-    'family-office': 'Family Office',
-    'other': 'Other',
-  }
-
   const formatAddress = () => {
     const parts = [
-      partner.address_line_1,
-      partner.address_line_2,
-      partner.city,
-      partner.postal_code,
-      partner.country,
+      lawyer.street_address,
+      lawyer.city,
+      lawyer.state_province,
+      lawyer.postal_code,
+      lawyer.country,
     ].filter(Boolean)
     return parts.join(', ')
   }
@@ -103,31 +102,33 @@ export function PartnerDetailClient({ partner, metrics }: PartnerDetailClientPro
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Link href="/versotech/staff/partners">
+          <Link href="/versotech/staff/lawyers">
             <Button variant="ghost" size="sm" className="bg-gray-800 text-white hover:bg-gray-700">
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Partners
+              Back to Lawyers
             </Button>
           </Link>
           <div className="flex items-center gap-3">
-            {partner.logo_url ? (
+            {lawyer.logo_url ? (
               <img
-                src={partner.logo_url}
-                alt={partner.name}
+                src={lawyer.logo_url}
+                alt={lawyer.firm_name}
                 className="h-10 w-10 rounded-full object-cover"
               />
             ) : (
               <div className="h-10 w-10 rounded-full bg-white/10 flex items-center justify-center">
-                <Briefcase className="h-5 w-5 text-muted-foreground" />
+                <Scale className="h-5 w-5 text-muted-foreground" />
               </div>
             )}
             <div>
               <h1 className="text-2xl font-bold text-foreground">
-                {partner.name}
+                {lawyer.firm_name}
               </h1>
               <p className="text-sm text-muted-foreground">
-                {typeLabels[partner.partner_type] || partner.partner_type}
-                {partner.country && ` • ${partner.country}`}
+                {lawyer.display_name !== lawyer.firm_name
+                  ? lawyer.display_name
+                  : `ID: ${lawyer.id.slice(0, 8)}`
+                }
               </p>
             </div>
           </div>
@@ -146,15 +147,17 @@ export function PartnerDetailClient({ partner, metrics }: PartnerDetailClientPro
 
       {/* Status Badges */}
       <div className="flex gap-2 flex-wrap">
-        <Badge className={getStatusStyle(partner.status, statusStyles)}>
-          {partner.status}
+        <Badge className={getStatusStyle(lawyer.is_active ? 'active' : 'inactive', statusStyles)}>
+          {lawyer.is_active ? 'Active' : 'Inactive'}
         </Badge>
-        <Badge className={getStatusStyle(partner.kyc_status, kycStyles)}>
-          KYC: {partner.kyc_status || 'draft'}
+        <Badge className={getStatusStyle(lawyer.kyc_status, kycStyles)}>
+          KYC: {lawyer.kyc_status || 'draft'}
         </Badge>
-        <Badge variant="outline">
-          {partner.type === 'entity' ? 'Entity' : 'Individual'}
-        </Badge>
+        {lawyer.legal_entity_type && (
+          <Badge variant="outline">
+            {lawyer.legal_entity_type.toUpperCase()}
+          </Badge>
+        )}
       </div>
 
       {/* Metrics Cards */}
@@ -162,21 +165,15 @@ export function PartnerDetailClient({ partner, metrics }: PartnerDetailClientPro
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <DollarSign className="h-4 w-4" />
-              Investment Range
+              <Briefcase className="h-4 w-4" />
+              Assigned Deals
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-foreground">
-              {partner.typical_investment_min && partner.typical_investment_max ? (
-                <>
-                  {formatCurrency(partner.typical_investment_min)} - {formatCurrency(partner.typical_investment_max)}
-                </>
-              ) : (
-                '-'
-              )}
+            <div className="text-2xl font-bold text-foreground">{metrics.totalDeals}</div>
+            <div className="text-sm text-muted-foreground mt-1">
+              {metrics.activeDeals} active
             </div>
-            <div className="text-sm text-muted-foreground mt-1">Typical investment</div>
           </CardContent>
         </Card>
 
@@ -197,23 +194,25 @@ export function PartnerDetailClient({ partner, metrics }: PartnerDetailClientPro
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
               <Calendar className="h-4 w-4" />
-              Created
+              Onboarded
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-foreground">
-              {partner.created_at ? formatDate(partner.created_at) : '-'}
+              {lawyer.onboarded_at ? formatDate(lawyer.onboarded_at) : '-'}
             </div>
-            <div className="text-sm text-muted-foreground mt-1">Registration date</div>
+            <div className="text-sm text-muted-foreground mt-1">
+              Created: {lawyer.created_at ? formatDate(lawyer.created_at) : '-'}
+            </div>
           </CardContent>
         </Card>
       </div>
 
       {/* Tabbed Content */}
       <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:inline-grid">
+        <TabsList className="grid w-full grid-cols-5 lg:w-auto lg:inline-grid">
           <TabsTrigger value="overview" className="gap-2">
-            <Briefcase className="h-4 w-4" />
+            <Scale className="h-4 w-4" />
             <span className="hidden sm:inline">Overview</span>
           </TabsTrigger>
           <TabsTrigger value="kyc" className="gap-2">
@@ -223,6 +222,10 @@ export function PartnerDetailClient({ partner, metrics }: PartnerDetailClientPro
           <TabsTrigger value="bank" className="gap-2">
             <Banknote className="h-4 w-4" />
             <span className="hidden sm:inline">Bank Details</span>
+          </TabsTrigger>
+          <TabsTrigger value="deals" className="gap-2">
+            <Briefcase className="h-4 w-4" />
+            <span className="hidden sm:inline">Deals</span>
           </TabsTrigger>
           <TabsTrigger value="activity" className="gap-2">
             <Activity className="h-4 w-4" />
@@ -239,47 +242,30 @@ export function PartnerDetailClient({ partner, metrics }: PartnerDetailClientPro
                 <CardTitle>Contact Information</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {partner.contact_name && (
+                {lawyer.primary_contact_name && (
                   <div className="flex items-center gap-3">
                     <Users className="h-4 w-4 text-muted-foreground" />
                     <div>
                       <div className="text-sm text-muted-foreground">Primary Contact</div>
-                      <div className="text-sm font-medium">{partner.contact_name}</div>
+                      <div className="text-sm font-medium">{lawyer.primary_contact_name}</div>
                     </div>
                   </div>
                 )}
-                {partner.contact_email && (
+                {lawyer.primary_contact_email && (
                   <div className="flex items-center gap-3">
                     <Mail className="h-4 w-4 text-muted-foreground" />
                     <div>
                       <div className="text-sm text-muted-foreground">Email</div>
-                      <div className="text-sm font-medium">{partner.contact_email}</div>
+                      <div className="text-sm font-medium">{lawyer.primary_contact_email}</div>
                     </div>
                   </div>
                 )}
-                {partner.contact_phone && (
+                {lawyer.primary_contact_phone && (
                   <div className="flex items-center gap-3">
                     <Phone className="h-4 w-4 text-muted-foreground" />
                     <div>
                       <div className="text-sm text-muted-foreground">Phone</div>
-                      <div className="text-sm font-medium">{partner.contact_phone}</div>
-                    </div>
-                  </div>
-                )}
-                {partner.website && (
-                  <div className="flex items-center gap-3">
-                    <Globe className="h-4 w-4 text-muted-foreground" />
-                    <div>
-                      <div className="text-sm text-muted-foreground">Website</div>
-                      <a
-                        href={partner.website}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-sm font-medium text-primary hover:underline flex items-center gap-1"
-                      >
-                        {partner.website}
-                        <ExternalLink className="h-3 w-3" />
-                      </a>
+                      <div className="text-sm font-medium">{lawyer.primary_contact_phone}</div>
                     </div>
                   </div>
                 )}
@@ -292,51 +278,42 @@ export function PartnerDetailClient({ partner, metrics }: PartnerDetailClientPro
                     </div>
                   </div>
                 )}
-                {!partner.contact_name && !partner.contact_email && !formatAddress() && (
+                {!lawyer.primary_contact_name && !lawyer.primary_contact_email && !formatAddress() && (
                   <p className="text-sm text-muted-foreground">No contact information available</p>
                 )}
               </CardContent>
             </Card>
 
-            {/* Partner Details */}
+            {/* Firm Details */}
             <Card>
               <CardHeader>
-                <CardTitle>Partner Details</CardTitle>
+                <CardTitle>Firm Details</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {partner.legal_name && (
+                {lawyer.legal_entity_type && (
                   <div className="flex items-center gap-3">
                     <Building2 className="h-4 w-4 text-muted-foreground" />
                     <div>
-                      <div className="text-sm text-muted-foreground">Legal Name</div>
-                      <div className="text-sm font-medium">{partner.legal_name}</div>
+                      <div className="text-sm text-muted-foreground">Entity Type</div>
+                      <div className="text-sm font-medium">{lawyer.legal_entity_type.toUpperCase()}</div>
                     </div>
                   </div>
                 )}
-                <div className="flex items-center gap-3">
-                  <Briefcase className="h-4 w-4 text-muted-foreground" />
-                  <div>
-                    <div className="text-sm text-muted-foreground">Partner Type</div>
-                    <div className="text-sm font-medium">
-                      {typeLabels[partner.partner_type] || partner.partner_type}
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Building2 className="h-4 w-4 text-muted-foreground" />
-                  <div>
-                    <div className="text-sm text-muted-foreground">Entity Type</div>
-                    <div className="text-sm font-medium">
-                      {partner.type === 'entity' ? 'Entity' : 'Individual'}
-                    </div>
-                  </div>
-                </div>
-                {partner.accreditation_status && (
+                {lawyer.registration_number && (
                   <div className="flex items-center gap-3">
-                    <Shield className="h-4 w-4 text-muted-foreground" />
+                    <FileText className="h-4 w-4 text-muted-foreground" />
                     <div>
-                      <div className="text-sm text-muted-foreground">Accreditation</div>
-                      <div className="text-sm font-medium">{partner.accreditation_status}</div>
+                      <div className="text-sm text-muted-foreground">Registration Number</div>
+                      <div className="text-sm font-medium">{lawyer.registration_number}</div>
+                    </div>
+                  </div>
+                )}
+                {lawyer.tax_id && (
+                  <div className="flex items-center gap-3">
+                    <FileText className="h-4 w-4 text-muted-foreground" />
+                    <div>
+                      <div className="text-sm text-muted-foreground">Tax ID</div>
+                      <div className="text-sm font-medium">{lawyer.tax_id}</div>
                     </div>
                   </div>
                 )}
@@ -344,58 +321,23 @@ export function PartnerDetailClient({ partner, metrics }: PartnerDetailClientPro
             </Card>
           </div>
 
-          {/* Investment Preferences */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Investment Preferences</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <div className="text-sm text-muted-foreground">Investment Range</div>
-                  <div className="text-sm font-medium">
-                    {partner.typical_investment_min && partner.typical_investment_max ? (
-                      <>
-                        {formatCurrency(partner.typical_investment_min)} - {formatCurrency(partner.typical_investment_max)}
-                      </>
-                    ) : (
-                      'Not specified'
-                    )}
-                  </div>
+          {/* Specializations */}
+          {lawyer.specializations && lawyer.specializations.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Specializations</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-wrap gap-2">
+                  {lawyer.specializations.map((spec) => (
+                    <Badge key={spec} variant="outline">
+                      {spec}
+                    </Badge>
+                  ))}
                 </div>
-              </div>
-              {partner.preferred_sectors && partner.preferred_sectors.length > 0 && (
-                <div>
-                  <div className="text-sm text-muted-foreground mb-2">Preferred Sectors</div>
-                  <div className="flex flex-wrap gap-2">
-                    {partner.preferred_sectors.map((sector) => (
-                      <Badge key={sector} variant="outline">
-                        {sector}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {partner.preferred_geographies && partner.preferred_geographies.length > 0 && (
-                <div>
-                  <div className="text-sm text-muted-foreground mb-2">Preferred Geographies</div>
-                  <div className="flex flex-wrap gap-2">
-                    {partner.preferred_geographies.map((geo) => (
-                      <Badge key={geo} variant="outline">
-                        {geo}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {partner.notes && (
-                <div>
-                  <div className="text-sm text-muted-foreground mb-1">Notes</div>
-                  <div className="text-sm bg-white/5 rounded-lg p-3">{partner.notes}</div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          )}
 
           {/* KYC Status Card */}
           <Card>
@@ -406,27 +348,27 @@ export function PartnerDetailClient({ partner, metrics }: PartnerDetailClientPro
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div>
                   <div className="text-sm text-muted-foreground">Status</div>
-                  <Badge className={getStatusStyle(partner.kyc_status, kycStyles)}>
-                    {partner.kyc_status || 'draft'}
+                  <Badge className={getStatusStyle(lawyer.kyc_status, kycStyles)}>
+                    {lawyer.kyc_status || 'draft'}
                   </Badge>
                 </div>
-                {partner.kyc_approved_at && (
+                {lawyer.kyc_approved_at && (
                   <div>
                     <div className="text-sm text-muted-foreground">Approved At</div>
-                    <div className="text-sm font-medium">{formatDate(partner.kyc_approved_at)}</div>
+                    <div className="text-sm font-medium">{formatDate(lawyer.kyc_approved_at)}</div>
                   </div>
                 )}
-                {partner.kyc_expires_at && (
+                {lawyer.kyc_expires_at && (
                   <div>
                     <div className="text-sm text-muted-foreground">Expires At</div>
-                    <div className="text-sm font-medium">{formatDate(partner.kyc_expires_at)}</div>
+                    <div className="text-sm font-medium">{formatDate(lawyer.kyc_expires_at)}</div>
                   </div>
                 )}
               </div>
-              {partner.kyc_notes && (
+              {lawyer.kyc_notes && (
                 <div>
                   <div className="text-sm text-muted-foreground mb-1">Notes</div>
-                  <div className="text-sm bg-white/5 rounded-lg p-3">{partner.kyc_notes}</div>
+                  <div className="text-sm bg-white/5 rounded-lg p-3">{lawyer.kyc_notes}</div>
                 </div>
               )}
             </CardContent>
@@ -436,44 +378,87 @@ export function PartnerDetailClient({ partner, metrics }: PartnerDetailClientPro
         {/* KYC Documents Tab */}
         <TabsContent value="kyc">
           <KYCDocumentsTab
-            entityType="partner"
-            entityId={partner.id}
-            entityName={partner.name}
+            entityType="lawyer"
+            entityId={lawyer.id}
+            entityName={lawyer.firm_name}
           />
         </TabsContent>
 
         {/* Bank Details Tab */}
         <TabsContent value="bank">
           <BankDetailsTab
-            entityType="partner"
-            entityId={partner.id}
-            entityName={partner.name}
+            entityType="lawyer"
+            entityId={lawyer.id}
+            entityName={lawyer.firm_name}
           />
+        </TabsContent>
+
+        {/* Deals Tab */}
+        <TabsContent value="deals">
+          <Card>
+            <CardHeader>
+              <CardTitle>Assigned Deals</CardTitle>
+              <CardDescription>
+                Deals where {lawyer.firm_name} is assigned as legal counsel
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {deals.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-8 text-center">
+                  <Briefcase className="h-12 w-12 text-muted-foreground mb-4 opacity-50" />
+                  <p className="text-muted-foreground">No deals assigned yet</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {deals.map((deal) => (
+                    <Link
+                      key={deal.id}
+                      href={`/versotech/staff/deals/${deal.id}`}
+                      className="block"
+                    >
+                      <div className="flex items-center justify-between p-4 rounded-lg border border-white/10 hover:bg-white/5 transition-colors">
+                        <div>
+                          <div className="font-medium text-foreground">{deal.name}</div>
+                          <div className="text-sm text-muted-foreground">
+                            Created: {formatDate(deal.created_at)}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline">{deal.status}</Badge>
+                          <ExternalLink className="h-4 w-4 text-muted-foreground" />
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* Activity Tab */}
         <TabsContent value="activity">
           <ActivityTimelineTab
-            entityType="partner"
-            entityId={partner.id}
-            entityName={partner.name}
+            entityType="lawyer"
+            entityId={lawyer.id}
+            entityName={lawyer.firm_name}
           />
         </TabsContent>
       </Tabs>
 
       {/* Dialogs */}
-      <EditPartnerDialog
+      <EditLawyerDialog
         open={editDialogOpen}
         onOpenChange={setEditDialogOpen}
-        partner={partner}
+        lawyer={lawyer}
       />
 
       <InviteUserDialog
         open={inviteDialogOpen}
         onOpenChange={setInviteDialogOpen}
-        entityType="partner"
-        entityId={partner.id}
-        entityName={partner.name}
+        entityType="lawyer"
+        entityId={lawyer.id}
+        entityName={lawyer.firm_name}
       />
     </div>
   )
