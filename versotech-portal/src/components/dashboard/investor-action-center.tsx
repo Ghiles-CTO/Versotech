@@ -152,7 +152,7 @@ export function InvestorActionCenter({ tasks, tasksTotal, recentActivity }: Inve
                 </CardDescription>
               </div>
               {outstandingTasks.length > 0 && (
-                <Link href="/versoholdings/tasks">
+                <Link href="/versotech_main/tasks">
                   <Button variant="ghost" size="sm" className="text-xs hover:bg-slate-100/50">
                     View all
                     <ArrowUpRight className="ml-1 h-3 w-3" />
@@ -208,7 +208,7 @@ export function InvestorActionCenter({ tasks, tasksTotal, recentActivity }: Inve
                         </div>
                       </div>
 
-                      <Link href={`/versoholdings/tasks?id=${task.id}`}>
+                      <Link href={`/versotech_main/tasks?id=${task.id}`}>
                         <Button size="sm" className={cn(
                           "gap-1 shadow-sm transition-all",
                           isOverdue ? "bg-rose-600 hover:bg-rose-700" : "bg-slate-900 hover:bg-slate-800 group-hover:bg-amber-900"
@@ -235,7 +235,7 @@ export function InvestorActionCenter({ tasks, tasksTotal, recentActivity }: Inve
                   Portfolio activity stream.
                 </CardDescription>
               </div>
-              <Link href="/versoholdings/messages">
+              <Link href="/versotech_main/inbox">
                 <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-slate-100/50">
                   <ArrowUpRight className="h-4 w-4" />
                 </Button>
@@ -280,7 +280,7 @@ export function InvestorActionCenter({ tasks, tasksTotal, recentActivity }: Inve
           </CardContent>
           {recentActivity.length > 0 && (
             <CardFooter className="border-t border-slate-100/50 p-3">
-              <Link href="/versoholdings/messages" className="w-full">
+              <Link href="/versotech_main/inbox" className="w-full">
                 <Button variant="ghost" size="sm" className="w-full justify-between text-xs text-slate-500 hover:text-slate-900 hover:bg-slate-100/50">
                   View full history
                   <ChevronRight className="h-3 w-3" />
@@ -296,35 +296,35 @@ export function InvestorActionCenter({ tasks, tasksTotal, recentActivity }: Inve
         <CardContent className="grid gap-4 p-6 md:grid-cols-2 lg:grid-cols-5">
           {[
             {
-              href: '/versoholdings/holdings',
+              href: '/versotech_main/opportunities',
               label: 'Holdings',
               description: 'Portfolio & NAV',
               icon: Target,
               color: 'text-indigo-600'
             },
             {
-              href: '/versoholdings/tasks',
+              href: '/versotech_main/tasks',
               label: 'Tasks',
               description: 'Action items',
               icon: CheckSquare,
               color: 'text-blue-600'
             },
             {
-              href: '/versoholdings/reports?view=documents',
+              href: '/versotech_main/documents',
               label: 'Documents',
               description: 'Statements',
               icon: FileText,
               color: 'text-emerald-600'
             },
             {
-              href: '/versoholdings/calendar',
+              href: '/versotech_main/tasks',
               label: 'Calendar',
               description: 'Deadlines',
               icon: CalendarDays,
               color: 'text-amber-600'
             },
             {
-              href: '/versoholdings/messages',
+              href: '/versotech_main/inbox',
               label: 'Support',
               description: 'Contact team',
               icon: MessageSquare,
@@ -334,7 +334,7 @@ export function InvestorActionCenter({ tasks, tasksTotal, recentActivity }: Inve
             const Icon = action.icon
             return (
               <Link
-                key={action.href}
+                key={action.label}
                 href={action.href}
                 className="glass-card group flex flex-col gap-3 rounded-xl border-0 ring-1 ring-slate-200/50 p-4 hover:ring-amber-200/50"
               >

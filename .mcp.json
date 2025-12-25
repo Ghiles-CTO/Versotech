@@ -12,24 +12,6 @@
       "env": {
         "SUPABASE_ACCESS_TOKEN": "sbp_f05a05722f153cd46a25f0d8752dab8c4922013a"
       }
-    },
-    "shadcn": {
-      "command": "cmd",
-      "args": [
-        "/c",
-        "npx",
-        "shadcn@latest",
-        "mcp"
-      ]
-    },
-    "executeautomation-playwright-server": {
-      "command": "cmd",
-      "args": [
-        "/c",
-        "npx",
-        "-y",
-        "@executeautomation/playwright-mcp-server"
-      ]
     }
   }
 }

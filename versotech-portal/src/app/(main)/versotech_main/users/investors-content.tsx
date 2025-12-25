@@ -1,13 +1,14 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { AddInvestorModal } from '@/components/investors/add-investor-modal'
 import { InvestorFilters } from '@/components/investors/investor-filters'
 import { ExportInvestorsButton } from '@/components/investors/export-investors-button'
 import { InvestorSearch } from '@/components/investors/investor-search'
 import { InvestorsDataTable } from '@/components/investors/investors-data-table'
-import { investorColumns } from '@/components/investors/investor-columns'
+import { investorColumns, InvestorRow } from '@/components/investors/investor-columns'
+import { InviteUserDialog } from '@/components/users/invite-user-dialog'
 import { AlertCircle, Loader2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 
@@ -48,11 +49,40 @@ export default function InvestorsContent() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  // Invite dialog state
+  const [showInviteDialog, setShowInviteDialog] = useState(false)
+  const [selectedInvestor, setSelectedInvestor] = useState<{ id: string; name: string } | null>(null)
+
+  // Handle invite event from data table
+  const handleInviteEvent = useCallback((event: Event) => {
+    const customEvent = event as CustomEvent<InvestorRow>
+    const investor = customEvent.detail
+    setSelectedInvestor({ id: investor.id, name: investor.name })
+    setShowInviteDialog(true)
+  }, [])
+
+  // Listen for invite events
+  useEffect(() => {
+    window.addEventListener('investor-invite', handleInviteEvent)
+    return () => window.removeEventListener('investor-invite', handleInviteEvent)
+  }, [handleInviteEvent])
+
   useEffect(() => {
     async function fetchInvestors() {
       try {
         setLoading(true)
         const supabase = createClient()
+
+        // Verify we have an active session
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+        if (sessionError) {
+          console.error('[InvestorsContent] Session error:', sessionError)
+          throw new Error('Authentication error: ' + (sessionError.message || 'Unknown session error'))
+        }
+        if (!session) {
+          console.warn('[InvestorsContent] No active session')
+          throw new Error('No active session. Please log in again.')
+        }
 
         // Fetch investors
         const { data, error: fetchError } = await supabase
@@ -87,7 +117,10 @@ export default function InvestorsContent() {
           .order('created_at', { ascending: false })
           .limit(500)
 
-        if (fetchError) throw fetchError
+        if (fetchError) {
+          console.error('[InvestorsContent] Fetch error details:', JSON.stringify(fetchError, null, 2))
+          throw fetchError
+        }
 
         const enriched: UIInvestor[] = (data || []).map((inv: any) => {
           const rmProfile = Array.isArray(inv.rm_profile) ? inv.rm_profile[0] : inv.rm_profile
@@ -130,9 +163,16 @@ export default function InvestorsContent() {
           institutional: enriched.filter(i => i.type === 'institutional' || i.type === 'entity').length
         })
         setError(null)
-      } catch (err) {
-        console.error('[InvestorsContent] Error:', err)
-        setError(err instanceof Error ? err.message : 'Failed to load investors')
+      } catch (err: any) {
+        // Log detailed error info for Supabase errors
+        console.error('[InvestorsContent] Error:', {
+          message: err?.message,
+          details: err?.details,
+          hint: err?.hint,
+          code: err?.code,
+          raw: err
+        })
+        setError(err?.message || err?.details || 'Failed to load investors')
       } finally {
         setLoading(false)
       }
@@ -233,6 +273,17 @@ export default function InvestorsContent() {
           <InvestorsDataTable columns={investorColumns} data={investors} />
         </CardContent>
       </Card>
+
+      {/* Invite User Dialog */}
+      {selectedInvestor && (
+        <InviteUserDialog
+          open={showInviteDialog}
+          onOpenChange={setShowInviteDialog}
+          entityType="investor"
+          entityId={selectedInvestor.id}
+          entityName={selectedInvestor.name}
+        />
+      )}
     </div>
   )
 }

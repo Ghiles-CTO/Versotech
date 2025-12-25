@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import {
@@ -24,10 +24,16 @@ interface UserMenuProps {
 }
 
 export function UserMenu({ profile, brand = 'versotech', useThemeColors = false }: UserMenuProps) {
+  const [mounted, setMounted] = useState(false)
   const { theme } = useTheme()
   const isDark = useThemeColors ? theme === 'staff-dark' : brand === 'versotech'
   const router = useRouter()
   const [isLoggingOut, setIsLoggingOut] = useState(false)
+
+  // Wait for client-side hydration to complete
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const handleLogout = async () => {
     setIsLoggingOut(true)
@@ -80,6 +86,23 @@ export function UserMenu({ profile, brand = 'versotech', useThemeColors = false 
   }
 
   const RoleIcon = getRoleIcon(profile.role)
+
+  // Render placeholder until mounted to prevent Radix UI hydration mismatch
+  if (!mounted) {
+    return (
+      <Button variant="ghost" className={`flex items-center gap-2 h-auto px-3 py-2 ${isDark ? 'hover:bg-white/10' : 'hover:bg-black/5'}`}>
+        <Avatar className="h-8 w-8">
+          <AvatarFallback className={`${isDark ? 'bg-white/20 text-white' : 'bg-black/10 text-black'} text-xs`}>
+            {getInitials(profile.displayName)}
+          </AvatarFallback>
+        </Avatar>
+        <div className="text-left">
+          <div className={`font-medium text-sm ${isDark ? 'text-white' : 'text-black'}`}>{profile.displayName}</div>
+          <div className={`text-xs ${isDark ? 'text-white/70' : 'text-black/70'}`}>{getRoleDisplay(profile.role)}</div>
+        </div>
+      </Button>
+    )
+  }
 
   return (
     <DropdownMenu>

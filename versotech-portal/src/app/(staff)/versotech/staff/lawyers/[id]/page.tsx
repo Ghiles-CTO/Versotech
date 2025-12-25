@@ -40,7 +40,7 @@ type Deal = {
   id: string
   name: string
   status: string
-  target_raise: number | null
+  target_amount: number | null
   created_at: string
 }
 
@@ -73,7 +73,7 @@ export default async function LawyerDetailPage({
   if (assignedDealIds.length > 0) {
     const { data: dealsData } = await serviceClient
       .from('deals')
-      .select('id, name, status, target_raise, created_at')
+      .select('id, name, status, target_amount, created_at')
       .in('id', assignedDealIds)
       .order('created_at', { ascending: false })
 
@@ -81,7 +81,7 @@ export default async function LawyerDetailPage({
       id: d.id,
       name: d.name,
       status: d.status || 'unknown',
-      target_raise: d.target_raise,
+      target_amount: d.target_amount,
       created_at: d.created_at
     }))
   }

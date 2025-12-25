@@ -123,8 +123,8 @@ interface Membership {
   } | null
   investors: {
     id: string
-    name: string
-    investor_type: string
+    legal_name: string
+    type: string
     kyc_status: string
   } | null
   subscription: {
@@ -692,7 +692,7 @@ export function DealDetailClient({ deal, memberships, dispatchableUsers, current
                       <TableCell>
                         <div>
                           <div className="font-medium">
-                            {investor?.name || profile?.display_name || 'Unknown'}
+                            {investor?.legal_name || profile?.display_name || 'Unknown'}
                           </div>
                           <div className="text-sm text-muted-foreground">
                             {profile?.email}

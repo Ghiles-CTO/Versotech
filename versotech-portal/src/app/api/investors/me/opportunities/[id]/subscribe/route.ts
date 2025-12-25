@@ -170,23 +170,77 @@ export async function POST(request: Request, { params }: RouteParams) {
       return NextResponse.json({ error: 'Failed to create subscription' }, { status: 500 })
     }
 
-    // Get authorized signatories
+    // Get authorized signatories (check both role and is_signatory flag for backwards compat)
     const { data: signatories } = await serviceSupabase
       .from('investor_members')
-      .select('id, full_name, email')
+      .select('id, full_name, email, is_signatory')
       .eq('investor_id', investorId)
-      .eq('role', 'authorized_signatory')
       .eq('is_active', true)
+      .or('is_signatory.eq.true,role.eq.authorized_signatory')
 
-    // Create signature requests for all signatories
+    // Track signature request counts for response
+    let ndaSignatureCount = 0
+    let subscriptionSignatureCount = 0
+
+    // Create signature requests for all signatories - BOTH NDA and Subscription Pack
+    // This is the "Direct Subscribe" flow that bundles both documents per Phase II design
     if (signatories && signatories.length > 0) {
       const crypto = await import('crypto')
       const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 days
 
-      const signatureRequests = signatories.map((sig, index) => ({
+      // 1. Create NDA signature requests (document_type='nda')
+      const ndaSignatureRequests = signatories.map((sig, index) => ({
+        investor_id: investorId,
+        deal_id: dealId,
+        member_id: sig.id, // Important for signatory tracking
+        signer_email: sig.email,
+        signer_name: sig.full_name,
+        signer_role: 'authorized_signatory',
+        signature_position: `nda_signatory_${index + 1}`,
+        document_type: 'nda',
+        signing_token: crypto.randomBytes(32).toString('hex'),
+        token_expires_at: expiresAt,
+        status: 'pending',
+        created_at: now,
+        created_by: user.id
+      }))
+
+      const { error: ndaSigReqError } = await serviceSupabase
+        .from('signature_requests')
+        .insert(ndaSignatureRequests)
+
+      if (ndaSigReqError) {
+        console.warn('Could not create NDA signature requests:', ndaSigReqError)
+      } else {
+        ndaSignatureCount = ndaSignatureRequests.length
+      }
+
+      // 2. Create deal_signatory_ndas tracking entries (for entity-level NDA tracking)
+      const signatoryNdaEntries = signatories.map(sig => ({
+        deal_id: dealId,
+        investor_id: investorId,
+        member_id: sig.id,
+        user_id: user.id,
+        signed_at: null // Will be updated when signed
+      }))
+
+      const { error: ndaTrackingError } = await serviceSupabase
+        .from('deal_signatory_ndas')
+        .upsert(signatoryNdaEntries, {
+          onConflict: 'deal_id,member_id',
+          ignoreDuplicates: true
+        })
+
+      if (ndaTrackingError) {
+        console.warn('Could not create NDA tracking entries:', ndaTrackingError)
+      }
+
+      // 3. Create Subscription Pack signature requests (document_type='subscription')
+      const subscriptionSignatureRequests = signatories.map((sig, index) => ({
         subscription_id: subscription.id,
         investor_id: investorId,
         deal_id: dealId,
+        member_id: sig.id,
         signer_email: sig.email,
         signer_name: sig.full_name,
         signer_role: 'authorized_signatory',
@@ -199,16 +253,18 @@ export async function POST(request: Request, { params }: RouteParams) {
         created_by: user.id
       }))
 
-      const { error: sigReqError } = await serviceSupabase
+      const { error: subSigReqError } = await serviceSupabase
         .from('signature_requests')
-        .insert(signatureRequests)
+        .insert(subscriptionSignatureRequests)
 
-      if (sigReqError) {
-        console.warn('Could not create signature requests:', sigReqError)
+      if (subSigReqError) {
+        console.warn('Could not create subscription signature requests:', subSigReqError)
+      } else {
+        subscriptionSignatureCount = subscriptionSignatureRequests.length
       }
     }
 
-    // Log audit event
+    // Log audit event with bundled document info
     await serviceSupabase
       .from('audit_logs')
       .insert({
@@ -221,11 +277,16 @@ export async function POST(request: Request, { params }: RouteParams) {
           investor_id: investorId,
           commitment_amount,
           direct_subscribe: true,
-          signatories_count: signatories?.length || 0
+          bundled_nda: true,
+          signatories_count: signatories?.length || 0,
+          nda_signature_requests: ndaSignatureCount,
+          subscription_signature_requests: subscriptionSignatureCount
         },
         created_at: now
       })
 
+    // Return response with bundled documents info
+    const totalSignatories = signatories?.length || 0
     return NextResponse.json({
       success: true,
       subscription: {
@@ -235,7 +296,20 @@ export async function POST(request: Request, { params }: RouteParams) {
         pack_generated_at: subscription.pack_generated_at,
         pack_sent_at: subscription.pack_sent_at
       },
-      signatories_notified: signatories?.length || 0
+      bundled_documents: {
+        nda: {
+          signature_requests: ndaSignatureCount,
+          status: ndaSignatureCount > 0 ? 'pending' : 'no_signatories'
+        },
+        subscription_pack: {
+          signature_requests: subscriptionSignatureCount,
+          status: subscriptionSignatureCount > 0 ? 'pending' : 'no_signatories'
+        }
+      },
+      signatories_notified: totalSignatories,
+      message: totalSignatories > 0
+        ? `NDA and Subscription Pack sent to ${totalSignatories} signatory(ies) for signing.`
+        : 'Subscription created. Please add authorized signatories to your investor profile to proceed with signing.'
     })
   } catch (error) {
     console.error('Unexpected error in POST /api/investors/me/opportunities/:id/subscribe:', error)

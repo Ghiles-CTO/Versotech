@@ -72,7 +72,7 @@ type Deal = {
   id: string
   name: string
   status: string
-  target_raise: number | null
+  target_amount: number | null
   created_at: string
 }
 
@@ -102,10 +102,10 @@ export function LawyerDetailClient({ lawyer, metrics, deals }: LawyerDetailClien
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Link href="/versotech/staff/lawyers">
+          <Link href="/versotech_main/users">
             <Button variant="ghost" size="sm" className="bg-gray-800 text-white hover:bg-gray-700">
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Lawyers
+              Back to Users
             </Button>
           </Link>
           <div className="flex items-center gap-3">
@@ -413,7 +413,7 @@ export function LawyerDetailClient({ lawyer, metrics, deals }: LawyerDetailClien
                   {deals.map((deal) => (
                     <Link
                       key={deal.id}
-                      href={`/versotech/staff/deals/${deal.id}`}
+                      href={`/versotech_main/deals/${deal.id}`}
                       className="block"
                     >
                       <div className="flex items-center justify-between p-4 rounded-lg border border-white/10 hover:bg-white/5 transition-colors">

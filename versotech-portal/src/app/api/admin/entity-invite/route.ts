@@ -33,6 +33,25 @@ const ENTITY_ID_COLUMNS: Record<string, string> = {
   commercial_partner: 'commercial_partner_id',
 }
 
+// Valid roles per entity type (from database constraints)
+const VALID_ROLES_BY_ENTITY: Record<string, string[]> = {
+  investor: ['admin', 'member', 'viewer'],
+  arranger: ['admin', 'member', 'viewer'],
+  lawyer: ['admin', 'member', 'viewer'],
+  partner: ['admin', 'member', 'viewer'],
+  introducer: ['admin', 'contact', 'payment_contact', 'legal_contact'],
+  commercial_partner: ['admin', 'contact', 'billing_contact', 'technical_contact'],
+}
+
+const DEFAULT_ROLE_BY_ENTITY: Record<string, string> = {
+  investor: 'member',
+  arranger: 'member',
+  lawyer: 'member',
+  partner: 'member',
+  introducer: 'contact',
+  commercial_partner: 'contact',
+}
+
 // Input validation schema
 const inviteEntityUserSchema = z.object({
   entity_type: z.enum(['investor', 'arranger', 'lawyer', 'introducer', 'partner', 'commercial_partner']),
@@ -40,7 +59,7 @@ const inviteEntityUserSchema = z.object({
   email: z.string().email('Invalid email address'),
   display_name: z.string().min(2, 'Display name must be at least 2 characters'),
   title: z.string().optional(),
-  role: z.string().default('member'),
+  role: z.string().optional(), // Will use entity-specific default if not provided
   is_primary: z.boolean().default(false),
   is_signatory: z.boolean().optional().default(false),
   can_sign: z.boolean().optional().default(false),
@@ -74,7 +93,16 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const validatedData = inviteEntityUserSchema.parse(body)
 
-    const { entity_type, entity_id, email, display_name, title, role, is_primary, is_signatory, can_sign } = validatedData
+    const { entity_type, entity_id, email, display_name, title, is_primary, is_signatory, can_sign } = validatedData
+
+    // Use entity-specific default role if not provided, and validate
+    const role = validatedData.role || DEFAULT_ROLE_BY_ENTITY[entity_type]
+    const validRoles = VALID_ROLES_BY_ENTITY[entity_type]
+    if (!validRoles.includes(role)) {
+      return NextResponse.json({
+        error: `Invalid role '${role}' for ${entity_type}. Valid roles: ${validRoles.join(', ')}`
+      }, { status: 400 })
+    }
 
     // Check entity exists
     const entityTable = ENTITY_TABLES[entity_type]

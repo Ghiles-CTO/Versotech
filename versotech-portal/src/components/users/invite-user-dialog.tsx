@@ -58,11 +58,51 @@ const ENTITY_TYPE_LABELS: Record<EntityType, string> = {
   commercial_partner: 'Commercial Partner',
 }
 
-const ROLE_OPTIONS = [
-  { value: 'member', label: 'Member' },
-  { value: 'admin', label: 'Admin' },
-  { value: 'viewer', label: 'Viewer' },
-]
+// Role options per entity type (from database constraints)
+const ROLE_OPTIONS_BY_ENTITY: Record<EntityType, { value: string; label: string }[]> = {
+  investor: [
+    { value: 'admin', label: 'Admin' },
+    { value: 'member', label: 'Member' },
+    { value: 'viewer', label: 'Viewer' },
+  ],
+  arranger: [
+    { value: 'admin', label: 'Admin' },
+    { value: 'member', label: 'Member' },
+    { value: 'viewer', label: 'Viewer' },
+  ],
+  lawyer: [
+    { value: 'admin', label: 'Admin' },
+    { value: 'member', label: 'Member' },
+    { value: 'viewer', label: 'Viewer' },
+  ],
+  partner: [
+    { value: 'admin', label: 'Admin' },
+    { value: 'member', label: 'Member' },
+    { value: 'viewer', label: 'Viewer' },
+  ],
+  introducer: [
+    { value: 'admin', label: 'Admin' },
+    { value: 'contact', label: 'Contact' },
+    { value: 'payment_contact', label: 'Payment Contact' },
+    { value: 'legal_contact', label: 'Legal Contact' },
+  ],
+  commercial_partner: [
+    { value: 'admin', label: 'Admin' },
+    { value: 'contact', label: 'Contact' },
+    { value: 'billing_contact', label: 'Billing Contact' },
+    { value: 'technical_contact', label: 'Technical Contact' },
+  ],
+}
+
+// Default role per entity type
+const DEFAULT_ROLE_BY_ENTITY: Record<EntityType, string> = {
+  investor: 'member',
+  arranger: 'member',
+  lawyer: 'member',
+  partner: 'member',
+  introducer: 'contact',
+  commercial_partner: 'contact',
+}
 
 export function InviteUserDialog({
   entityType,
@@ -73,6 +113,10 @@ export function InviteUserDialog({
   onSuccess,
 }: InviteUserDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  // Get role options and default for this entity type
+  const roleOptions = ROLE_OPTIONS_BY_ENTITY[entityType]
+  const defaultRole = DEFAULT_ROLE_BY_ENTITY[entityType]
 
   const {
     register,
@@ -87,7 +131,7 @@ export function InviteUserDialog({
       email: '',
       display_name: '',
       title: '',
-      role: 'member',
+      role: defaultRole,
       is_primary: false,
       is_signatory: false,
       can_sign: false,
@@ -206,7 +250,7 @@ export function InviteUserDialog({
                 <SelectValue placeholder="Select role" />
               </SelectTrigger>
               <SelectContent>
-                {ROLE_OPTIONS.map((option) => (
+                {roleOptions.map((option) => (
                   <SelectItem key={option.value} value={option.value}>
                     {option.label}
                   </SelectItem>

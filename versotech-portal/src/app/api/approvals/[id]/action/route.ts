@@ -1187,6 +1187,134 @@ async function handleEntityApproval(
         }
         break
 
+      case 'sale_request':
+        // Approve investor sale request - updates status to 'approved'
+        // CEO can then work on finding a buyer
+        const { error: saleApproveError } = await supabase
+          .from('investor_sale_requests')
+          .update({
+            status: 'approved',
+            approved_at: new Date().toISOString()
+          })
+          .eq('id', entityId)
+
+        if (saleApproveError) {
+          console.error('Error approving sale request:', saleApproveError)
+          return { success: false, error: 'Failed to approve sale request' }
+        }
+
+        console.log('Sale request approved:', entityId)
+        break
+
+      case 'gdpr_deletion_request':
+        // GDPR Article 17 - Right to Erasure
+        // Soft-delete user data and anonymize records
+        const userId = entityId // entityId is the user_id for GDPR requests
+
+        // Get user profile for audit
+        const { data: userProfile } = await supabase
+          .from('profiles')
+          .select('email, display_name')
+          .eq('id', userId)
+          .single()
+
+        if (!userProfile) {
+          return { success: false, error: 'User profile not found' }
+        }
+
+        const anonymizedEmail = `deleted_${userId.substring(0, 8)}@anonymized.local`
+        const anonymizedName = `Deleted User ${userId.substring(0, 8)}`
+
+        // 1. Anonymize profile (soft delete)
+        const { error: profileAnonymizeError } = await supabase
+          .from('profiles')
+          .update({
+            display_name: anonymizedName,
+            full_name: anonymizedName,
+            email: anonymizedEmail,
+            phone: null,
+            avatar_url: null,
+            is_active: false,
+            metadata: {
+              gdpr_deleted: true,
+              deleted_at: new Date().toISOString(),
+              original_email_hash: Buffer.from(userProfile.email || '').toString('base64').substring(0, 16),
+              approved_by: actorId
+            }
+          })
+          .eq('id', userId)
+
+        if (profileAnonymizeError) {
+          console.error('Error anonymizing profile:', profileAnonymizeError)
+          return { success: false, error: 'Failed to anonymize profile' }
+        }
+
+        // 2. Anonymize investor record if exists
+        const { data: investorUser } = await supabase
+          .from('investor_users')
+          .select('investor_id')
+          .eq('user_id', userId)
+          .single()
+
+        if (investorUser?.investor_id) {
+          await supabase
+            .from('investors')
+            .update({
+              legal_name: anonymizedName,
+              display_name: anonymizedName,
+              email: anonymizedEmail,
+              phone: null,
+              registered_address: null,
+              representative_name: null,
+              is_deleted: true,
+              deleted_at: new Date().toISOString()
+            })
+            .eq('id', investorUser.investor_id)
+        }
+
+        // 3. Clear notifications for this user
+        await supabase
+          .from('investor_notifications')
+          .delete()
+          .eq('user_id', userId)
+
+        // 4. Anonymize audit logs actor name (keep logs for compliance but anonymize)
+        await supabase
+          .from('audit_logs')
+          .update({
+            action_details: supabase.rpc('jsonb_set', {
+              target: 'action_details',
+              path: '{actor_anonymized}',
+              value: '"true"'
+            })
+          })
+          .eq('actor_id', userId)
+
+        // 5. Notify the user that deletion is complete
+        // (They may still have access briefly until session expires)
+        console.log('GDPR deletion completed for user:', userId)
+
+        // Create audit log for GDPR deletion
+        await auditLogger.log({
+          actor_user_id: actorId,
+          action: 'gdpr_deletion_completed',
+          entity: 'profile',
+          entity_id: userId,
+          metadata: {
+            original_email_hash: Buffer.from(userProfile.email || '').toString('base64').substring(0, 16),
+            approval_id: approval.id,
+            gdpr_article: '17'
+          }
+        })
+
+        return {
+          success: true,
+          notificationData: {
+            type: 'gdpr_deletion_completed',
+            user_id: userId
+          }
+        }
+
       default:
         console.log(`No specific approval handler for entity type: ${entityType}`)
     }
@@ -1251,6 +1379,33 @@ async function handleEntityRejection(
           rejection_reason: reason
         })
         .eq('id', entityId)
+    }
+
+    if (entityType === 'sale_request') {
+      await supabase
+        .from('investor_sale_requests')
+        .update({
+          status: 'rejected',
+          rejection_reason: reason,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', entityId)
+    }
+
+    if (entityType === 'gdpr_deletion_request') {
+      // Notify user their deletion request was rejected
+      await supabase
+        .from('investor_notifications')
+        .insert({
+          user_id: entityId, // entityId is the user_id for GDPR requests
+          title: 'Deletion Request Rejected',
+          message: `Your account deletion request was rejected. Reason: ${reason || 'No reason provided'}`,
+          type: 'gdpr_request_rejected',
+          metadata: {
+            approval_id: approval.id,
+            rejection_reason: reason
+          }
+        })
     }
   } catch (error) {
     console.error('Entity rejection handler error:', error)

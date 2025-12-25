@@ -49,13 +49,16 @@ export function SubscribeNowDialog({
       <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100">
-              <Briefcase className="h-5 w-5 text-blue-600" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100">
+              <Briefcase className="h-5 w-5 text-emerald-600" />
             </div>
             <div>
-              <DialogTitle className="text-xl">Subscribe to {dealName}</DialogTitle>
+              <DialogTitle className="text-xl">Subscribe to Investment Opportunity</DialogTitle>
               <DialogDescription>
-                Submit your subscription request directly. The VERSO team will review and follow up.
+                Subscribe directly to {dealName}. You&apos;ll receive the NDA and subscription documents to sign together.
+                <span className="block mt-1 text-amber-600 dark:text-amber-400 text-xs">
+                  Note: This direct path does not include data room access.
+                </span>
               </DialogDescription>
             </div>
           </div>

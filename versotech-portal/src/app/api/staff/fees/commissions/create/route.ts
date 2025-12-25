@@ -56,6 +56,25 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Verify introducer has a valid signed agreement
+    const today = new Date().toISOString().split('T')[0];
+    const { data: validAgreement } = await supabase
+      .from('introducer_agreements')
+      .select('id, status, signed_date, expiry_date')
+      .eq('introducer_id', data.introducer_id)
+      .eq('status', 'active')
+      .not('signed_date', 'is', null)
+      .or(`expiry_date.is.null,expiry_date.gte.${today}`)
+      .limit(1)
+      .maybeSingle();
+
+    if (!validAgreement) {
+      return NextResponse.json({
+        error: 'No valid introducer agreement',
+        message: 'Cannot create commission without an active signed introducer agreement'
+      }, { status: 400 });
+    }
+
     // Create commission
     const { data: commission, error } = await supabase
       .from('introducer_commissions')

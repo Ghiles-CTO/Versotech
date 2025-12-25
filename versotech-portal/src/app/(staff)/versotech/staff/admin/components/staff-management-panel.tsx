@@ -49,13 +49,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { cn } from '@/lib/utils'
 
 interface StaffManagementPanelProps {
   staffMembers: any[]
   onStaffUpdate: () => void
+  isDark?: boolean
 }
 
-export function StaffManagementPanel({ staffMembers, onStaffUpdate }: StaffManagementPanelProps) {
+export function StaffManagementPanel({ staffMembers, onStaffUpdate, isDark = true }: StaffManagementPanelProps) {
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false)
   const [selectedStaff, setSelectedStaff] = useState<any>(null)
   const [activityDialogOpen, setActivityDialogOpen] = useState(false)
@@ -167,10 +169,12 @@ export function StaffManagementPanel({ staffMembers, onStaffUpdate }: StaffManag
 
   return (
     <>
-      <Card>
+      <Card className={cn(
+        isDark ? 'bg-zinc-900/50 border-white/10' : 'bg-white border-gray-200 shadow-sm'
+      )}>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle>Staff Management</CardTitle>
+            <CardTitle className={isDark ? 'text-white' : 'text-gray-900'}>Staff Management</CardTitle>
             <Button onClick={() => setInviteDialogOpen(true)}>
               <UserPlus className="h-4 w-4 mr-2" />
               Invite Staff
@@ -178,35 +182,49 @@ export function StaffManagementPanel({ staffMembers, onStaffUpdate }: StaffManag
           </div>
         </CardHeader>
         <CardContent>
-          <div className="rounded-md border">
+          <div className={cn(
+            'rounded-md border',
+            isDark ? 'border-zinc-700' : 'border-gray-200'
+          )}>
             <Table>
               <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Permissions</TableHead>
-                  <TableHead>Last Login</TableHead>
-                  <TableHead>Last Activity</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                <TableRow className={isDark ? 'border-zinc-700' : 'border-gray-200'}>
+                  <TableHead className={isDark ? 'text-zinc-400' : 'text-gray-500'}>Name</TableHead>
+                  <TableHead className={isDark ? 'text-zinc-400' : 'text-gray-500'}>Email</TableHead>
+                  <TableHead className={isDark ? 'text-zinc-400' : 'text-gray-500'}>Role</TableHead>
+                  <TableHead className={isDark ? 'text-zinc-400' : 'text-gray-500'}>Status</TableHead>
+                  <TableHead className={isDark ? 'text-zinc-400' : 'text-gray-500'}>Permissions</TableHead>
+                  <TableHead className={isDark ? 'text-zinc-400' : 'text-gray-500'}>Last Login</TableHead>
+                  <TableHead className={isDark ? 'text-zinc-400' : 'text-gray-500'}>Last Activity</TableHead>
+                  <TableHead className={cn(
+                    'text-right',
+                    isDark ? 'text-zinc-400' : 'text-gray-500'
+                  )}>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {staffMembers.map((staff) => (
-                  <TableRow key={staff.id}>
+                  <TableRow key={staff.id} className={cn(
+                    isDark ? 'border-zinc-700 hover:bg-zinc-800/50' : 'border-gray-200 hover:bg-gray-50'
+                  )}>
                     <TableCell className="font-medium">
                       <div>
-                        <p>{staff.display_name || 'N/A'}</p>
+                        <p className={isDark ? 'text-white' : 'text-gray-900'}>{staff.display_name || 'N/A'}</p>
                         {staff.title && (
-                          <p className="text-xs text-muted-foreground">{staff.title}</p>
+                          <p className={cn(
+                            'text-xs',
+                            isDark ? 'text-zinc-400' : 'text-gray-500'
+                          )}>{staff.title}</p>
                         )}
                       </div>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1">
-                        <Mail className="h-3 w-3 text-muted-foreground" />
-                        {staff.email}
+                        <Mail className={cn(
+                          'h-3 w-3',
+                          isDark ? 'text-zinc-400' : 'text-gray-500'
+                        )} />
+                        <span className={isDark ? 'text-zinc-300' : 'text-gray-700'}>{staff.email}</span>
                       </div>
                     </TableCell>
                     <TableCell>{getRoleBadge(staff.role)}</TableCell>
@@ -229,25 +247,34 @@ export function StaffManagementPanel({ staffMembers, onStaffUpdate }: StaffManag
                     <TableCell>
                       {staff.last_login_at ? (
                         <div className="text-sm">
-                          <p>{new Date(staff.last_login_at).toLocaleDateString()}</p>
-                          <p className="text-xs text-muted-foreground">
+                          <p className={isDark ? 'text-zinc-300' : 'text-gray-700'}>{new Date(staff.last_login_at).toLocaleDateString()}</p>
+                          <p className={cn(
+                            'text-xs',
+                            isDark ? 'text-zinc-400' : 'text-gray-500'
+                          )}>
                             {new Date(staff.last_login_at).toLocaleTimeString()}
                           </p>
                         </div>
                       ) : (
-                        <span className="text-muted-foreground">Never</span>
+                        <span className={isDark ? 'text-zinc-400' : 'text-gray-500'}>Never</span>
                       )}
                     </TableCell>
                     <TableCell>
                       {staff.last_activity ? (
                         <div className="text-sm">
-                          <p className="text-xs">{staff.last_action}</p>
-                          <p className="text-xs text-muted-foreground">
+                          <p className={cn(
+                            'text-xs',
+                            isDark ? 'text-zinc-300' : 'text-gray-700'
+                          )}>{staff.last_action}</p>
+                          <p className={cn(
+                            'text-xs',
+                            isDark ? 'text-zinc-400' : 'text-gray-500'
+                          )}>
                             {new Date(staff.last_activity).toLocaleString()}
                           </p>
                         </div>
                       ) : (
-                        <span className="text-muted-foreground">No activity</span>
+                        <span className={isDark ? 'text-zinc-400' : 'text-gray-500'}>No activity</span>
                       )}
                       {staff.recent_failed_logins > 0 && (
                         <Badge variant="destructive" className="text-xs mt-1">
@@ -258,18 +285,30 @@ export function StaffManagementPanel({ staffMembers, onStaffUpdate }: StaffManag
                     <TableCell className="text-right">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="h-8 w-8 p-0">
+                          <Button variant="ghost" className={cn(
+                            'h-8 w-8 p-0',
+                            isDark ? 'text-zinc-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'
+                          )}>
                             <span className="sr-only">Open menu</span>
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuItem onClick={() => handleViewActivity(staff)}>
+                        <DropdownMenuContent align="end" className={cn(
+                          isDark ? 'bg-zinc-800 border-zinc-700' : 'bg-white border-gray-200'
+                        )}>
+                          <DropdownMenuLabel className={isDark ? 'text-zinc-400' : 'text-gray-500'}>Actions</DropdownMenuLabel>
+                          <DropdownMenuItem
+                            onClick={() => handleViewActivity(staff)}
+                            className={cn(
+                              isDark
+                                ? 'text-zinc-300 focus:text-white focus:bg-zinc-700'
+                                : 'text-gray-700 focus:text-gray-900 focus:bg-gray-100'
+                            )}
+                          >
                             <Activity className="h-4 w-4 mr-2" />
                             View Activity
                           </DropdownMenuItem>
-                          <DropdownMenuSeparator />
+                          <DropdownMenuSeparator className={isDark ? 'bg-zinc-700' : 'bg-gray-200'} />
                           <DropdownMenuItem
                             className="text-red-600"
                             onClick={() => handleDeactivateStaff(staff.id)}
@@ -289,27 +328,63 @@ export function StaffManagementPanel({ staffMembers, onStaffUpdate }: StaffManag
 
           {/* Summary Stats */}
           <div className="grid grid-cols-4 gap-4 mt-6">
-            <div className="text-center">
-              <p className="text-2xl font-bold">{staffMembers.length}</p>
-              <p className="text-xs text-muted-foreground">Total Staff</p>
+            <div className={cn(
+              'text-center p-4 rounded-lg',
+              isDark ? 'bg-zinc-800/50' : 'bg-gray-100'
+            )}>
+              <p className={cn(
+                'text-2xl font-bold',
+                isDark ? 'text-white' : 'text-gray-900'
+              )}>{staffMembers.length}</p>
+              <p className={cn(
+                'text-xs',
+                isDark ? 'text-zinc-400' : 'text-gray-500'
+              )}>Total Staff</p>
             </div>
-            <div className="text-center">
-              <p className="text-2xl font-bold">
+            <div className={cn(
+              'text-center p-4 rounded-lg',
+              isDark ? 'bg-zinc-800/50' : 'bg-gray-100'
+            )}>
+              <p className={cn(
+                'text-2xl font-bold',
+                isDark ? 'text-white' : 'text-gray-900'
+              )}>
                 {staffMembers.filter(s => s.status === 'active').length}
               </p>
-              <p className="text-xs text-muted-foreground">Active</p>
+              <p className={cn(
+                'text-xs',
+                isDark ? 'text-zinc-400' : 'text-gray-500'
+              )}>Active</p>
             </div>
-            <div className="text-center">
-              <p className="text-2xl font-bold">
+            <div className={cn(
+              'text-center p-4 rounded-lg',
+              isDark ? 'bg-zinc-800/50' : 'bg-gray-100'
+            )}>
+              <p className={cn(
+                'text-2xl font-bold',
+                isDark ? 'text-white' : 'text-gray-900'
+              )}>
                 {staffMembers.filter(s => s.is_super_admin).length}
               </p>
-              <p className="text-xs text-muted-foreground">Super Admins</p>
+              <p className={cn(
+                'text-xs',
+                isDark ? 'text-zinc-400' : 'text-gray-500'
+              )}>Super Admins</p>
             </div>
-            <div className="text-center">
-              <p className="text-2xl font-bold">
+            <div className={cn(
+              'text-center p-4 rounded-lg',
+              isDark ? 'bg-zinc-800/50' : 'bg-gray-100'
+            )}>
+              <p className={cn(
+                'text-2xl font-bold',
+                isDark ? 'text-white' : 'text-gray-900'
+              )}>
                 {staffMembers.filter(s => s.recent_failed_logins > 0).length}
               </p>
-              <p className="text-xs text-muted-foreground">With Failed Logins</p>
+              <p className={cn(
+                'text-xs',
+                isDark ? 'text-zinc-400' : 'text-gray-500'
+              )}>With Failed Logins</p>
             </div>
           </div>
         </CardContent>
@@ -317,43 +392,59 @@ export function StaffManagementPanel({ staffMembers, onStaffUpdate }: StaffManag
 
       {/* Invite Staff Dialog */}
       <Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
-        <DialogContent>
+        <DialogContent className={cn(
+          isDark ? 'bg-zinc-900 border-zinc-700' : 'bg-white border-gray-200'
+        )}>
           <DialogHeader>
-            <DialogTitle>Invite New Staff Member</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className={isDark ? 'text-white' : 'text-gray-900'}>Invite New Staff Member</DialogTitle>
+            <DialogDescription className={isDark ? 'text-zinc-400' : 'text-gray-500'}>
               Send an invitation to add a new staff member to the platform.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email Address</Label>
+              <Label htmlFor="email" className={isDark ? 'text-zinc-300' : 'text-gray-700'}>Email Address</Label>
               <Input
                 id="email"
                 type="email"
                 placeholder="staff@verso.com"
                 value={inviteFormData.email}
                 onChange={(e) => setInviteFormData({ ...inviteFormData, email: e.target.value })}
+                className={cn(
+                  isDark
+                    ? 'bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500'
+                    : 'bg-white border-gray-300 text-gray-900 placeholder:text-gray-400'
+                )}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="display_name">Display Name</Label>
+              <Label htmlFor="display_name" className={isDark ? 'text-zinc-300' : 'text-gray-700'}>Display Name</Label>
               <Input
                 id="display_name"
                 placeholder="John Doe"
                 value={inviteFormData.display_name}
                 onChange={(e) => setInviteFormData({ ...inviteFormData, display_name: e.target.value })}
+                className={cn(
+                  isDark
+                    ? 'bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500'
+                    : 'bg-white border-gray-300 text-gray-900 placeholder:text-gray-400'
+                )}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="role">Role</Label>
+              <Label htmlFor="role" className={isDark ? 'text-zinc-300' : 'text-gray-700'}>Role</Label>
               <Select
                 value={inviteFormData.role}
                 onValueChange={(value) => setInviteFormData({ ...inviteFormData, role: value })}
               >
-                <SelectTrigger>
+                <SelectTrigger className={cn(
+                  isDark ? 'bg-zinc-800 border-zinc-700 text-white' : 'bg-white border-gray-300 text-gray-900'
+                )}>
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className={cn(
+                  isDark ? 'bg-zinc-800 border-zinc-700' : 'bg-white border-gray-200'
+                )}>
                   <SelectItem value="staff_admin">Admin</SelectItem>
                   <SelectItem value="staff_ops">Operations</SelectItem>
                   <SelectItem value="staff_rm">Relationship Manager</SelectItem>
@@ -361,15 +452,23 @@ export function StaffManagementPanel({ staffMembers, onStaffUpdate }: StaffManag
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="title">Title (Optional)</Label>
+              <Label htmlFor="title" className={isDark ? 'text-zinc-300' : 'text-gray-700'}>Title (Optional)</Label>
               <Input
                 id="title"
                 placeholder="Senior Operations Manager"
                 value={inviteFormData.title}
                 onChange={(e) => setInviteFormData({ ...inviteFormData, title: e.target.value })}
+                className={cn(
+                  isDark
+                    ? 'bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500'
+                    : 'bg-white border-gray-300 text-gray-900 placeholder:text-gray-400'
+                )}
               />
             </div>
-            <div className="flex items-center space-x-2 pt-2 border-t">
+            <div className={cn(
+              'flex items-center space-x-2 pt-2 border-t',
+              isDark ? 'border-zinc-700' : 'border-gray-200'
+            )}>
               <Checkbox
                 id="is_super_admin"
                 checked={inviteFormData.is_super_admin}
@@ -380,19 +479,31 @@ export function StaffManagementPanel({ staffMembers, onStaffUpdate }: StaffManag
               <div className="grid gap-1.5 leading-none">
                 <Label
                   htmlFor="is_super_admin"
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex items-center gap-2"
+                  className={cn(
+                    'text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex items-center gap-2',
+                    isDark ? 'text-zinc-300' : 'text-gray-700'
+                  )}
                 >
                   <Shield className="h-4 w-4 text-amber-500" />
                   Grant Super Admin Access
                 </Label>
-                <p className="text-xs text-muted-foreground">
+                <p className={cn(
+                  'text-xs',
+                  isDark ? 'text-zinc-400' : 'text-gray-500'
+                )}>
                   Super admins have full access to system settings and can manage all staff.
                 </p>
               </div>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setInviteDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setInviteDialogOpen(false)}
+              className={cn(
+                isDark ? 'border-zinc-700 text-zinc-400' : 'border-gray-300 text-gray-600'
+              )}
+            >
               Cancel
             </Button>
             <Button onClick={handleInviteStaff} disabled={loading}>
@@ -404,52 +515,100 @@ export function StaffManagementPanel({ staffMembers, onStaffUpdate }: StaffManag
 
       {/* Activity Dialog */}
       <Dialog open={activityDialogOpen} onOpenChange={setActivityDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
+        <DialogContent className={cn(
+          'max-w-2xl max-h-[80vh] overflow-hidden flex flex-col',
+          isDark ? 'bg-zinc-900 border-zinc-700' : 'bg-white border-gray-200'
+        )}>
           <DialogHeader>
-            <DialogTitle>
+            <DialogTitle className={isDark ? 'text-white' : 'text-gray-900'}>
               Activity Log - {selectedStaff?.display_name || selectedStaff?.email}
             </DialogTitle>
-            <DialogDescription>
+            <DialogDescription className={isDark ? 'text-zinc-400' : 'text-gray-500'}>
               Recent activity and login history for this staff member.
             </DialogDescription>
           </DialogHeader>
           <div className="flex-1 overflow-y-auto space-y-4">
             {activityLoading ? (
               <div className="flex items-center justify-center py-8">
-                <Clock className="h-6 w-6 animate-spin text-muted-foreground" />
+                <Clock className={cn(
+                  'h-6 w-6 animate-spin',
+                  isDark ? 'text-zinc-400' : 'text-gray-500'
+                )} />
               </div>
             ) : activityData ? (
               <>
                 {/* Activity Stats */}
                 {activityData.statistics && (
                   <div className="grid grid-cols-3 gap-4">
-                    <div className="text-center p-3 rounded-lg bg-muted">
-                      <p className="text-2xl font-bold">{activityData.statistics.actions_today || 0}</p>
-                      <p className="text-xs text-muted-foreground">Today</p>
+                    <div className={cn(
+                      'text-center p-3 rounded-lg',
+                      isDark ? 'bg-zinc-800' : 'bg-gray-100'
+                    )}>
+                      <p className={cn(
+                        'text-2xl font-bold',
+                        isDark ? 'text-white' : 'text-gray-900'
+                      )}>{activityData.statistics.actions_today || 0}</p>
+                      <p className={cn(
+                        'text-xs',
+                        isDark ? 'text-zinc-400' : 'text-gray-500'
+                      )}>Today</p>
                     </div>
-                    <div className="text-center p-3 rounded-lg bg-muted">
-                      <p className="text-2xl font-bold">{activityData.statistics.actions_this_week || 0}</p>
-                      <p className="text-xs text-muted-foreground">This Week</p>
+                    <div className={cn(
+                      'text-center p-3 rounded-lg',
+                      isDark ? 'bg-zinc-800' : 'bg-gray-100'
+                    )}>
+                      <p className={cn(
+                        'text-2xl font-bold',
+                        isDark ? 'text-white' : 'text-gray-900'
+                      )}>{activityData.statistics.actions_this_week || 0}</p>
+                      <p className={cn(
+                        'text-xs',
+                        isDark ? 'text-zinc-400' : 'text-gray-500'
+                      )}>This Week</p>
                     </div>
-                    <div className="text-center p-3 rounded-lg bg-muted">
-                      <p className="text-2xl font-bold">{activityData.statistics.actions_this_month || 0}</p>
-                      <p className="text-xs text-muted-foreground">This Month</p>
+                    <div className={cn(
+                      'text-center p-3 rounded-lg',
+                      isDark ? 'bg-zinc-800' : 'bg-gray-100'
+                    )}>
+                      <p className={cn(
+                        'text-2xl font-bold',
+                        isDark ? 'text-white' : 'text-gray-900'
+                      )}>{activityData.statistics.actions_this_month || 0}</p>
+                      <p className={cn(
+                        'text-xs',
+                        isDark ? 'text-zinc-400' : 'text-gray-500'
+                      )}>This Month</p>
                     </div>
                   </div>
                 )}
                 {/* Activity List */}
                 {activityData.activities && activityData.activities.length > 0 ? (
-                  <div className="border rounded-lg divide-y">
+                  <div className={cn(
+                    'border rounded-lg divide-y',
+                    isDark ? 'border-zinc-700 divide-zinc-700' : 'border-gray-200 divide-gray-200'
+                  )}>
                     {activityData.activities.map((activity: any) => (
-                      <div key={activity.id} className="p-3 text-sm">
+                      <div key={activity.id} className={cn(
+                        'p-3 text-sm',
+                        isDark ? 'bg-zinc-800/50' : 'bg-white'
+                      )}>
                         <div className="flex items-center justify-between">
-                          <span className="font-medium">{activity.action?.replace(/_/g, ' ')}</span>
-                          <span className="text-xs text-muted-foreground">
+                          <span className={cn(
+                            'font-medium',
+                            isDark ? 'text-white' : 'text-gray-900'
+                          )}>{activity.action?.replace(/_/g, ' ')}</span>
+                          <span className={cn(
+                            'text-xs',
+                            isDark ? 'text-zinc-400' : 'text-gray-500'
+                          )}>
                             {new Date(activity.timestamp).toLocaleString()}
                           </span>
                         </div>
                         {activity.entity_type && (
-                          <p className="text-xs text-muted-foreground mt-1">
+                          <p className={cn(
+                            'text-xs mt-1',
+                            isDark ? 'text-zinc-400' : 'text-gray-500'
+                          )}>
                             {activity.entity_type} {activity.entity_id ? `(${activity.entity_id.slice(0, 8)}...)` : ''}
                           </p>
                         )}
@@ -457,19 +616,31 @@ export function StaffManagementPanel({ staffMembers, onStaffUpdate }: StaffManag
                     ))}
                   </div>
                 ) : (
-                  <p className="text-sm text-muted-foreground text-center py-4">
+                  <p className={cn(
+                    'text-sm text-center py-4',
+                    isDark ? 'text-zinc-400' : 'text-gray-500'
+                  )}>
                     No activity recorded for this staff member.
                   </p>
                 )}
               </>
             ) : (
-              <p className="text-sm text-muted-foreground text-center py-4">
+              <p className={cn(
+                'text-sm text-center py-4',
+                isDark ? 'text-zinc-400' : 'text-gray-500'
+              )}>
                 Failed to load activity data.
               </p>
             )}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setActivityDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setActivityDialogOpen(false)}
+              className={cn(
+                isDark ? 'border-zinc-700 text-zinc-400' : 'border-gray-300 text-gray-600'
+              )}
+            >
               Close
             </Button>
           </DialogFooter>

@@ -265,6 +265,33 @@ export async function handleNDASignature(
       console.log('✅ [NDA HANDLER] Audit log entry created successfully')
     }
 
+    // Update journey tracking in deal_memberships for all investor users
+    console.log('📊 [NDA HANDLER] Updating deal_memberships journey tracking')
+    try {
+      const { data: investorUsers } = await supabase
+        .from('investor_users')
+        .select('user_id')
+        .eq('investor_id', dealInterest.investor_id)
+
+      if (investorUsers && investorUsers.length > 0) {
+        const journeyNow = new Date().toISOString()
+        for (const iu of investorUsers) {
+          await supabase
+            .from('deal_memberships')
+            .update({
+              nda_signed_at: journeyNow,
+              data_room_granted_at: journeyNow
+            })
+            .eq('deal_id', dealInterest.deal_id)
+            .eq('user_id', iu.user_id)
+        }
+        console.log('✅ [NDA HANDLER] Updated deal_memberships journey tracking for', investorUsers.length, 'user(s)')
+      }
+    } catch (journeyError) {
+      console.error('❌ [NDA HANDLER] Failed to update journey tracking:', journeyError)
+      // Non-blocking - don't fail NDA completion if journey tracking fails
+    }
+
     // Log NDA completion event for analytics KPIs
     try {
       await supabase.from('deal_activity_events').insert({
@@ -672,16 +699,10 @@ export async function handleSubscriptionSignature(
       .from('investor_notifications')
       .insert({
         user_id: investorUserId,
-        type: 'subscription_committed',
+        investor_id: subscription.investor_id,
         title: 'Investment Commitment Confirmed',
         message: `Your subscription agreement for ${subscription.vehicle?.name || 'the investment'} has been fully executed. Your commitment of ${subscription.commitment} ${subscription.currency} is now confirmed.`,
-        action_url: `/versoholdings/holdings`,
-        metadata: {
-          subscription_id: subscriptionId,
-          vehicle_id: subscription.vehicle_id,
-          commitment: subscription.commitment,
-          currency: subscription.currency
-        }
+        link: `/versotech_main/portfolio`,
       })
 
     if (notifError) {
@@ -758,6 +779,212 @@ export async function handleSubscriptionSignature(
 }
 
 /**
+ * Introducer Agreement Post-Signature Handler
+ *
+ * Executes when an introducer agreement is signed. This handler:
+ * - For CEO signature (party_a): Updates status, creates signature request for introducer
+ * - For Introducer signature (party_b): Activates agreement, notifies CEO
+ */
+export async function handleIntroducerAgreementSignature(
+  params: PostSignatureHandlerParams
+): Promise<void> {
+  console.log('\n🔵 [INTRODUCER AGREEMENT HANDLER] handleIntroducerAgreementSignature() called')
+  const { signatureRequest, signedPdfPath, signedPdfBytes, supabase } = params
+
+  console.log('📋 [INTRODUCER AGREEMENT HANDLER] Signature request details:', {
+    id: signatureRequest.id,
+    introducer_agreement_id: signatureRequest.introducer_agreement_id,
+    introducer_id: signatureRequest.introducer_id,
+    signature_position: signatureRequest.signature_position,
+    signed_pdf_path: signedPdfPath
+  })
+
+  const agreementId = signatureRequest.introducer_agreement_id
+
+  if (!agreementId) {
+    console.error('❌ [INTRODUCER AGREEMENT HANDLER] No introducer_agreement_id found')
+    throw new Error('No introducer_agreement_id in signature request')
+  }
+
+  // Get the agreement with introducer info
+  const { data: agreement, error: agreementError } = await supabase
+    .from('introducer_agreements')
+    .select(`
+      *,
+      introducer:introducer_id (
+        id,
+        legal_name,
+        email,
+        user_id
+      )
+    `)
+    .eq('id', agreementId)
+    .single()
+
+  if (agreementError || !agreement) {
+    console.error('❌ [INTRODUCER AGREEMENT HANDLER] Agreement not found:', agreementError)
+    throw new Error('Introducer agreement not found')
+  }
+
+  console.log('✅ [INTRODUCER AGREEMENT HANDLER] Agreement found:', {
+    agreement_id: agreement.id,
+    introducer_id: agreement.introducer_id,
+    current_status: agreement.status
+  })
+
+  // Check which signer just signed
+  if (signatureRequest.signature_position === 'party_a') {
+    // CEO signed first
+    console.log('👔 [INTRODUCER AGREEMENT HANDLER] CEO (party_a) signed - updating status')
+
+    // Update agreement status and store CEO signature request ID
+    const { error: updateError } = await supabase
+      .from('introducer_agreements')
+      .update({
+        status: 'pending_introducer_signature',
+        ceo_signature_request_id: signatureRequest.id,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', agreementId)
+
+    if (updateError) {
+      console.error('❌ [INTRODUCER AGREEMENT HANDLER] Failed to update agreement status:', updateError)
+      throw updateError
+    }
+
+    console.log('✅ [INTRODUCER AGREEMENT HANDLER] Status updated to pending_introducer_signature')
+
+    // Create signature request for introducer (party_b)
+    const introducer = agreement.introducer as any
+    if (introducer?.user_id) {
+      // Generate token for introducer's signature
+      const crypto = await import('crypto')
+      const signingToken = crypto.randomBytes(32).toString('hex')
+      const expiryDate = new Date()
+      expiryDate.setDate(expiryDate.getDate() + 14) // 14 days to sign
+
+      const { data: introducerSignatureRequest, error: sigReqError } = await supabase
+        .from('signature_requests')
+        .insert({
+          document_type: 'introducer_agreement',
+          introducer_agreement_id: agreementId,
+          introducer_id: agreement.introducer_id,
+          investor_id: null, // Not an investor signature
+          signer_user_id: introducer.user_id,
+          signer_email: introducer.email || '',
+          signer_name: introducer.legal_name || '',
+          signer_role: 'introducer',
+          signature_position: 'party_b',
+          status: 'pending',
+          signing_token: signingToken,
+          token_expires_at: expiryDate.toISOString(),
+          unsigned_pdf_path: signedPdfPath, // CEO-signed PDF becomes unsigned for introducer
+        })
+        .select()
+        .single()
+
+      if (sigReqError) {
+        console.error('❌ [INTRODUCER AGREEMENT HANDLER] Failed to create introducer signature request:', sigReqError)
+        // CRITICAL: Roll back agreement status since signature request failed
+        // Otherwise agreement shows "pending_signature" but introducer cannot sign
+        await supabase
+          .from('introducer_agreements')
+          .update({
+            status: 'approved', // Roll back to previous status
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', agreementId)
+        console.log('⚠️ [INTRODUCER AGREEMENT HANDLER] Rolled back agreement status to approved due to signature request failure')
+        throw new Error(`Failed to create introducer signature request: ${sigReqError.message}`)
+      } else {
+        console.log('✅ [INTRODUCER AGREEMENT HANDLER] Created signature request for introducer:', introducerSignatureRequest.id)
+
+        // Update agreement with introducer signature request ID
+        await supabase
+          .from('introducer_agreements')
+          .update({ introducer_signature_request_id: introducerSignatureRequest.id })
+          .eq('id', agreementId)
+
+        // Create notification for introducer
+        await supabase.from('investor_notifications').insert({
+          user_id: introducer.user_id,
+          investor_id: null, // Introducer notification, not investor
+          title: 'Agreement Ready for Signature',
+          message: 'Your fee agreement has been signed by the CEO and is ready for your signature.',
+          link: `/versotech_main/introducer-agreements/${agreementId}`,
+        })
+
+        console.log('✅ [INTRODUCER AGREEMENT HANDLER] Notification sent to introducer')
+      }
+    } else {
+      console.warn('⚠️ [INTRODUCER AGREEMENT HANDLER] Introducer has no user_id - cannot create signature request')
+    }
+  } else {
+    // Introducer signed (party_b) - agreement is now active
+    console.log('✍️ [INTRODUCER AGREEMENT HANDLER] Introducer (party_b) signed - activating agreement')
+
+    const { error: updateError } = await supabase
+      .from('introducer_agreements')
+      .update({
+        status: 'active',
+        signed_date: new Date().toISOString(),
+        introducer_signature_request_id: signatureRequest.id,
+        signed_pdf_url: signedPdfPath, // Store fully signed PDF path
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', agreementId)
+
+    if (updateError) {
+      console.error('❌ [INTRODUCER AGREEMENT HANDLER] Failed to activate agreement:', updateError)
+      throw updateError
+    }
+
+    console.log('✅ [INTRODUCER AGREEMENT HANDLER] Agreement activated')
+
+    // Notify CEO/staff_admin users
+    const { data: ceoUsers } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('role', 'staff_admin')
+      .limit(5)
+
+    const introducer = agreement.introducer as any
+    if (ceoUsers && ceoUsers.length > 0) {
+      const notifications = ceoUsers.map((ceo: any) => ({
+        user_id: ceo.id,
+        investor_id: null, // Staff notification, not investor
+        title: 'Agreement Fully Signed',
+        message: `${introducer?.legal_name || 'Introducer'}'s fee agreement has been fully executed and is now active.`,
+        link: `/versotech_main/introducers/${agreement.introducer_id}?tab=agreements`,
+      }))
+
+      await supabase.from('investor_notifications').insert(notifications)
+      console.log('✅ [INTRODUCER AGREEMENT HANDLER] Notifications sent to CEO/staff')
+    }
+
+    // Create audit log
+    await supabase.from('audit_logs').insert({
+      event_type: 'introducer',
+      action: 'agreement_activated',
+      entity_type: 'introducer_agreement',
+      entity_id: agreementId,
+      actor_id: null, // System-generated
+      action_details: {
+        description: 'Introducer agreement fully executed and activated',
+        introducer_id: agreement.introducer_id,
+        agreement_id: agreementId,
+        signature_request_id: signatureRequest.id
+      },
+      timestamp: new Date().toISOString()
+    })
+
+    console.log('✅ [INTRODUCER AGREEMENT HANDLER] Audit log created')
+  }
+
+  console.log('\n🎉 [INTRODUCER AGREEMENT HANDLER] handleIntroducerAgreementSignature() completed')
+}
+
+/**
  * Amendment Post-Signature Handler
  *
  * Executes when an amendment is fully signed. This handler:
@@ -806,6 +1033,8 @@ export async function routeSignatureHandler(
       return handleNDASignature(params)
     case 'subscription':
       return handleSubscriptionSignature(params)
+    case 'introducer_agreement':
+      return handleIntroducerAgreementSignature(params)
     case 'amendment':
       return handleAmendmentSignature(params)
     case 'other':

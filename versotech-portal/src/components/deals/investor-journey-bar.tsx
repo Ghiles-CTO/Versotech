@@ -53,6 +53,15 @@ const STAGE_DEFINITIONS = [
 
 type StageStatus = 'completed' | 'current' | 'skipped' | 'pending'
 
+/**
+ * Detect if investor took Direct Subscribe path
+ * Direct Subscribe: pack_generated is set but interest_confirmed is null
+ * This means they skipped the Interest and Data Room stages
+ */
+function isDirectSubscribePath(summary: JourneySummary): boolean {
+  return summary.pack_generated !== null && summary.interest_confirmed === null
+}
+
 function getStageStatus(
   stageDef: typeof STAGE_DEFINITIONS[number],
   summary: JourneySummary,
@@ -66,6 +75,19 @@ function getStageStatus(
 
   if (stageDef.number === currentStage) {
     return 'current'
+  }
+
+  // Special handling for Direct Subscribe path
+  // Interest (stage 3) and Data Room (stage 5) are explicitly skipped
+  const isDirectPath = isDirectSubscribePath(summary)
+  if (isDirectPath) {
+    // For Direct Subscribe: Interest and Data Room are skipped
+    if (stageDef.number === 3 || stageDef.number === 5) {
+      // Only mark as skipped if we're past these stages
+      if (currentStage > stageDef.number || summary.pack_generated) {
+        return 'skipped'
+      }
+    }
   }
 
   // Check if this is an optional stage that was skipped

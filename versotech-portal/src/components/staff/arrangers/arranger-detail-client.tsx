@@ -68,7 +68,7 @@ type Deal = {
   id: string
   name: string
   status: string
-  target_raise: number | null
+  target_amount: number | null
   created_at: string
 }
 
@@ -76,7 +76,6 @@ type Vehicle = {
   id: string
   name: string
   status: string
-  aum: number | null
   created_at: string
 }
 
@@ -121,10 +120,10 @@ export function ArrangerDetailClient({ arranger, metrics, deals, vehicles }: Arr
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Link href="/versotech/staff/arrangers">
+          <Link href="/versotech_main/users">
             <Button variant="ghost" size="sm" className="bg-gray-800 text-white hover:bg-gray-700">
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Arrangers
+              Back to Users
             </Button>
           </Link>
           <div>
@@ -167,7 +166,7 @@ export function ArrangerDetailClient({ arranger, metrics, deals, vehicles }: Arr
       </div>
 
       {/* Metrics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
@@ -193,21 +192,6 @@ export function ArrangerDetailClient({ arranger, metrics, deals, vehicles }: Arr
           <CardContent>
             <div className="text-2xl font-bold text-foreground">{metrics.totalVehicles}</div>
             <div className="text-sm text-muted-foreground mt-1">Managed</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <DollarSign className="h-4 w-4" />
-              Total AUM
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-400">
-              {formatCurrency(metrics.totalAum)}
-            </div>
-            <div className="text-sm text-muted-foreground mt-1">Under management</div>
           </CardContent>
         </Card>
 
@@ -434,7 +418,7 @@ export function ArrangerDetailClient({ arranger, metrics, deals, vehicles }: Arr
                   {deals.map((deal) => (
                     <Link
                       key={deal.id}
-                      href={`/versotech/staff/deals/${deal.id}`}
+                      href={`/versotech_main/deals/${deal.id}`}
                       className="block"
                     >
                       <div className="flex items-center justify-between p-4 rounded-lg border border-white/10 hover:bg-white/5 transition-colors">
@@ -446,9 +430,9 @@ export function ArrangerDetailClient({ arranger, metrics, deals, vehicles }: Arr
                         </div>
                         <div className="text-right">
                           <Badge variant="outline">{deal.status}</Badge>
-                          {deal.target_raise && (
+                          {deal.target_amount && (
                             <div className="text-sm text-muted-foreground mt-1">
-                              {formatCurrency(deal.target_raise)}
+                              {formatCurrency(deal.target_amount)}
                             </div>
                           )}
                         </div>
@@ -479,28 +463,20 @@ export function ArrangerDetailClient({ arranger, metrics, deals, vehicles }: Arr
               ) : (
                 <div className="space-y-3">
                   {vehicles.map((vehicle) => (
-                    <Link
+                    <div
                       key={vehicle.id}
-                      href={`/versotech/staff/entities/${vehicle.id}`}
-                      className="block"
+                      className="flex items-center justify-between p-4 rounded-lg border border-white/10 hover:bg-white/5 transition-colors"
                     >
-                      <div className="flex items-center justify-between p-4 rounded-lg border border-white/10 hover:bg-white/5 transition-colors">
-                        <div>
-                          <div className="font-medium text-foreground">{vehicle.name}</div>
-                          <div className="text-sm text-muted-foreground">
-                            Created: {formatDate(vehicle.created_at)}
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <Badge variant="outline">{vehicle.status}</Badge>
-                          {vehicle.aum && (
-                            <div className="text-sm text-green-400 mt-1">
-                              {formatCurrency(vehicle.aum)}
-                            </div>
-                          )}
+                      <div>
+                        <div className="font-medium text-foreground">{vehicle.name}</div>
+                        <div className="text-sm text-muted-foreground">
+                          Created: {formatDate(vehicle.created_at)}
                         </div>
                       </div>
-                    </Link>
+                      <div className="text-right">
+                        <Badge variant="outline">{vehicle.status}</Badge>
+                      </div>
+                    </div>
                   ))}
                 </div>
               )}

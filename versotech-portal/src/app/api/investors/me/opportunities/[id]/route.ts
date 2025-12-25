@@ -9,7 +9,9 @@ interface RouteParams {
  * Fetch a single opportunity with full details, journey stages, and data room access
  */
 export async function GET(request: Request, { params }: RouteParams) {
+  console.log('🔴 [opportunities/[id]] GET handler called')
   const { id: dealId } = await params
+  console.log('🔴 [opportunities/[id]] dealId:', dealId)
   const supabase = await createClient()
   const serviceSupabase = createServiceClient()
 
@@ -42,22 +44,24 @@ export async function GET(request: Request, { params }: RouteParams) {
     // Check if investor has access to this deal (must be a member or deal is public)
     const { data: deal, error: dealError } = await serviceSupabase
       .from('deals')
-      .select(`
-        *,
-        vehicles (
-          id,
-          name,
-          type,
-          inception_date,
-          target_size,
-          currency
-        )
-      `)
+      .select('*')
       .eq('id', dealId)
       .single()
 
     if (dealError || !deal) {
+      console.error('[GET opportunity] Deal query failed:', { dealId, dealError, deal })
       return NextResponse.json({ error: 'Deal not found' }, { status: 404 })
+    }
+
+    // Fetch vehicle separately if it exists
+    let vehicle = null
+    if (deal.vehicle_id) {
+      const { data: v } = await serviceSupabase
+        .from('vehicles')
+        .select('id, name, type, inception_date, target_size, currency')
+        .eq('id', deal.vehicle_id)
+        .single()
+      vehicle = v
     }
 
     const isDealOpen = deal.status === 'open' || deal.status === 'allocation_pending'
@@ -81,6 +85,35 @@ export async function GET(request: Request, { params }: RouteParams) {
     // Get subscription if exists (use maybeSingle as subscription might not exist)
     const vehicleId = deal.vehicle_id
     let subscription = null
+    let subscriptionDocuments: {
+      nda: {
+        status: string
+        signatories: Array<{
+          name: string
+          email: string
+          status: string
+          signed_at: string | null
+        }>
+        unsigned_url: string | null
+        signed_url: string | null
+      }
+      subscription_pack: {
+        status: string
+        signatories: Array<{
+          name: string
+          email: string
+          status: string
+          signed_at: string | null
+        }>
+        unsigned_url: string | null
+        signed_url: string | null
+      }
+      certificate: {
+        status: string
+        url: string | null
+      } | null
+    } | null = null
+
     if (vehicleId) {
       const { data: sub } = await serviceSupabase
         .from('subscriptions')
@@ -88,6 +121,7 @@ export async function GET(request: Request, { params }: RouteParams) {
           id,
           status,
           commitment,
+          currency,
           funded_amount,
           pack_generated_at,
           pack_sent_at,
@@ -103,6 +137,74 @@ export async function GET(request: Request, { params }: RouteParams) {
         .maybeSingle()
 
       subscription = sub
+
+      // Fetch signature documents for this subscription
+      if (sub) {
+        // Get NDA signature requests for this deal/investor
+        const { data: ndaSignatures } = await serviceSupabase
+          .from('signature_requests')
+          .select('id, signer_name, signer_email, status, signature_timestamp, unsigned_pdf_path, signed_pdf_path')
+          .eq('deal_id', dealId)
+          .eq('investor_id', effectiveInvestorId)
+          .eq('document_type', 'nda')
+          .order('created_at', { ascending: true })
+
+        // Get subscription pack signature requests
+        const { data: subPackSignatures } = await serviceSupabase
+          .from('signature_requests')
+          .select('id, signer_name, signer_email, status, signature_timestamp, unsigned_pdf_path, signed_pdf_path')
+          .eq('subscription_id', sub.id)
+          .eq('document_type', 'subscription')
+          .order('created_at', { ascending: true })
+
+        // Calculate NDA status
+        const ndaSigs = ndaSignatures || []
+        const ndaAllSigned = ndaSigs.length > 0 && ndaSigs.every(s => s.status === 'signed')
+        const ndaSomeSigned = ndaSigs.some(s => s.status === 'signed')
+        const ndaStatus = ndaAllSigned ? 'complete' : ndaSomeSigned ? 'partial' : ndaSigs.length > 0 ? 'pending' : 'not_started'
+
+        // Calculate subscription pack status
+        const subSigs = subPackSignatures || []
+        const subAllSigned = subSigs.length > 0 && subSigs.every(s => s.status === 'signed')
+        const subSomeSigned = subSigs.some(s => s.status === 'signed')
+        const subStatus = subAllSigned ? 'complete' : subSomeSigned ? 'partial' : subSigs.length > 0 ? 'pending' : 'not_started'
+
+        // Get the first available PDF paths (they're the same for all signatories of same doc type)
+        const ndaUnsignedPath = ndaSigs.find(s => s.unsigned_pdf_path)?.unsigned_pdf_path || null
+        const ndaSignedPath = ndaAllSigned ? ndaSigs.find(s => s.signed_pdf_path)?.signed_pdf_path : null
+        const subUnsignedPath = subSigs.find(s => s.unsigned_pdf_path)?.unsigned_pdf_path || null
+        const subSignedPath = subAllSigned ? subSigs.find(s => s.signed_pdf_path)?.signed_pdf_path : null
+
+        subscriptionDocuments = {
+          nda: {
+            status: ndaStatus,
+            signatories: ndaSigs.map(s => ({
+              name: s.signer_name,
+              email: s.signer_email,
+              status: s.status,
+              signed_at: s.signature_timestamp
+            })),
+            unsigned_url: ndaUnsignedPath,
+            signed_url: ndaSignedPath
+          },
+          subscription_pack: {
+            status: subStatus,
+            signatories: subSigs.map(s => ({
+              name: s.signer_name,
+              email: s.signer_email,
+              status: s.status,
+              signed_at: s.signature_timestamp
+            })),
+            unsigned_url: subUnsignedPath,
+            signed_url: subSignedPath
+          },
+          // Certificate - future feature, check if subscription is active
+          certificate: sub.activated_at ? {
+            status: 'available', // In future, check actual certificate generation
+            url: null // Would be fetched from certificate table
+          } : null
+        }
+      }
     }
 
     // Get journey stages using RPC function
@@ -126,9 +228,35 @@ export async function GET(request: Request, { params }: RouteParams) {
       .eq('deal_id', dealId)
       .order('display_order', { ascending: true })
 
+    // Get all authorized signatories for the investor entity
+    const { data: allSignatories } = await serviceSupabase
+      .from('investor_members')
+      .select('id')
+      .eq('investor_id', effectiveInvestorId)
+      .eq('role', 'authorized_signatory')
+      .eq('is_active', true)
+
+    // Check if ALL signatories have signed NDA for this deal (entity-level check)
+    // Per Fred's requirement: ALL signatories must sign before ANY entity user gets data room access
+    let allSignatoriesSignedNda = true
+    if (allSignatories && allSignatories.length > 0) {
+      const { data: ndaSignatures } = await serviceSupabase
+        .from('signature_requests')
+        .select('member_id')
+        .eq('deal_id', dealId)
+        .eq('investor_id', effectiveInvestorId)
+        .eq('document_type', 'nda')
+        .not('signature_timestamp', 'is', null)
+
+      const signedMemberIds = new Set((ndaSignatures || []).map(sig => sig.member_id))
+      allSignatoriesSignedNda = allSignatories.every(sig => signedMemberIds.has(sig.id))
+    }
+
     // Get data room documents if investor has access
+    // Entity-level NDA check: ALL signatories must have signed before granting data room access
     let dataRoomDocuments: any[] = []
-    const hasDataRoomAccess = dataRoomAccess && !dataRoomAccess.revoked_at &&
+    const hasDataRoomAccess = allSignatoriesSignedNda &&
+      dataRoomAccess && !dataRoomAccess.revoked_at &&
       (!dataRoomAccess.expires_at || new Date(dataRoomAccess.expires_at) > new Date())
 
     if (hasDataRoomAccess) {
@@ -144,7 +272,9 @@ export async function GET(request: Request, { params }: RouteParams) {
           mime_type,
           document_notes,
           created_at,
-          document_expires_at
+          document_expires_at,
+          is_featured,
+          external_link
         `)
         .eq('deal_id', dealId)
         .eq('visible_to_investors', true)
@@ -161,7 +291,10 @@ export async function GET(request: Request, { params }: RouteParams) {
           file_size: doc.file_size_bytes ? Number(doc.file_size_bytes) : 0,
           category: doc.folder || 'General',
           description: doc.document_notes || null,
-          uploaded_at: doc.created_at
+          uploaded_at: doc.created_at,
+          is_featured: doc.is_featured || false,
+          external_link: doc.external_link || null,
+          file_key: doc.file_key || null
         }))
     }
 
@@ -199,6 +332,7 @@ export async function GET(request: Request, { params }: RouteParams) {
       maximum_investment: deal.maximum_investment,
       target_amount: deal.target_amount,
       raised_amount: deal.raised_amount,
+      offer_unit_price: deal.offer_unit_price,
       open_at: deal.open_at,
       close_at: deal.close_at,
       company_name: deal.company_name,
@@ -209,7 +343,7 @@ export async function GET(request: Request, { params }: RouteParams) {
       location: deal.location,
       stock_type: deal.stock_type,
       deal_round: deal.deal_round,
-      vehicle: deal.vehicles,
+      vehicle: vehicle,
 
       // Membership status
       has_membership: !!membership,
@@ -249,7 +383,14 @@ export async function GET(request: Request, { params }: RouteParams) {
           auto_granted: dataRoomAccess.auto_granted
         } : null,
         documents: dataRoomDocuments,
-        requires_nda: !membership?.nda_signed_at
+        requires_nda: !allSignatoriesSignedNda,
+        nda_status: {
+          all_signed: allSignatoriesSignedNda,
+          total_signatories: allSignatories?.length || 0,
+          message: allSignatories && allSignatories.length > 0 && !allSignatoriesSignedNda
+            ? `All ${allSignatories.length} authorized signatories must sign the NDA to unlock the data room`
+            : null
+        }
       },
 
       // Subscription status
@@ -257,15 +398,18 @@ export async function GET(request: Request, { params }: RouteParams) {
         id: subscription.id,
         status: subscription.status,
         commitment: subscription.commitment,
+        currency: subscription.currency || deal.currency || 'USD',
         funded_amount: subscription.funded_amount,
         pack_generated_at: subscription.pack_generated_at,
         pack_sent_at: subscription.pack_sent_at,
         signed_at: subscription.signed_at,
         funded_at: subscription.funded_at,
         activated_at: subscription.activated_at,
+        created_at: subscription.created_at,
         is_signed: !!subscription.signed_at,
         is_funded: !!subscription.funded_at,
-        is_active: !!subscription.activated_at
+        is_active: !!subscription.activated_at,
+        documents: subscriptionDocuments
       } : null,
 
       // Fee structures
@@ -278,7 +422,8 @@ export async function GET(request: Request, { params }: RouteParams) {
       signatories: signatories || [],
 
       // Computed flags for UI (Direct subscribe allows skipping NDA)
-      can_express_interest: !membership?.interest_confirmed_at,
+      // Only show express interest for users with an investor persona
+      can_express_interest: effectiveInvestorId !== null && !membership?.interest_confirmed_at,
       can_sign_nda: !!membership?.interest_confirmed_at && !membership?.nda_signed_at,
       can_access_data_room: hasDataRoomAccess,
       can_subscribe: !subscription && isDealOpen,

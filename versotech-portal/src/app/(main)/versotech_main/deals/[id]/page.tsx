@@ -90,8 +90,8 @@ export default async function DealDetailPage({ params }: PageParams) {
       ),
       investors:investor_id (
         id,
-        name,
-        investor_type,
+        legal_name,
+        type,
         kyc_status
       )
     `)

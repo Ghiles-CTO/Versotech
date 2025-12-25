@@ -110,7 +110,7 @@ export function CommercialPartnerDetailClient({
       {/* Header */}
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-4">
-          <Link href="/versotech/staff/commercial-partners">
+          <Link href="/versotech_main/users">
             <Button variant="ghost" size="icon">
               <ArrowLeft className="h-5 w-5" />
             </Button>

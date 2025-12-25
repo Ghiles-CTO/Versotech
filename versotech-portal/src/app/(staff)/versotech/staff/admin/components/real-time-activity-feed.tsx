@@ -18,6 +18,7 @@ import {
   Pause,
   Play,
 } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 interface AuditLog {
   id: string
@@ -31,7 +32,11 @@ interface AuditLog {
   after_value: any
 }
 
-export function RealTimeActivityFeed() {
+interface RealTimeActivityFeedProps {
+  isDark?: boolean
+}
+
+export function RealTimeActivityFeed({ isDark = true }: RealTimeActivityFeedProps) {
   const [activities, setActivities] = useState<AuditLog[]>([])
   const [isPaused, setIsPaused] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
@@ -83,7 +88,7 @@ export function RealTimeActivityFeed() {
     if (action.includes('create') || action.includes('insert')) return 'text-green-500'
     if (action.includes('update')) return 'text-blue-500'
     if (action.includes('delete')) return 'text-red-500'
-    return 'text-muted-foreground'
+    return isDark ? 'text-zinc-400' : 'text-gray-500'
   }
 
   const formatTimestamp = (timestamp: string) => {
@@ -102,15 +107,22 @@ export function RealTimeActivityFeed() {
   }
 
   return (
-    <Card>
+    <Card className={cn(
+      isDark ? 'bg-zinc-900/50 border-white/10' : 'bg-white border-gray-200 shadow-sm'
+    )}>
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle>Real-Time Activity Feed</CardTitle>
+          <CardTitle className={isDark ? 'text-white' : 'text-gray-900'}>Real-Time Activity Feed</CardTitle>
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
               size="sm"
               onClick={() => setIsPaused(!isPaused)}
+              className={cn(
+                isDark
+                  ? 'border-zinc-700 text-zinc-400 hover:text-white'
+                  : 'border-gray-300 text-gray-600 hover:text-gray-900'
+              )}
             >
               {isPaused ? (
                 <>
@@ -128,6 +140,11 @@ export function RealTimeActivityFeed() {
               variant="outline"
               size="sm"
               onClick={() => fetchActivities()}
+              className={cn(
+                isDark
+                  ? 'border-zinc-700 text-zinc-400 hover:text-white'
+                  : 'border-gray-300 text-gray-600 hover:text-gray-900'
+              )}
             >
               <RefreshCw className="h-4 w-4" />
             </Button>
@@ -137,8 +154,14 @@ export function RealTimeActivityFeed() {
       <CardContent>
         {isLoading ? (
           <div className="text-center py-8">
-            <RefreshCw className="h-8 w-8 animate-spin mx-auto text-muted-foreground" />
-            <p className="text-sm text-muted-foreground mt-2">Loading activities...</p>
+            <RefreshCw className={cn(
+              'h-8 w-8 animate-spin mx-auto',
+              isDark ? 'text-zinc-400' : 'text-gray-500'
+            )} />
+            <p className={cn(
+              'text-sm mt-2',
+              isDark ? 'text-zinc-400' : 'text-gray-500'
+            )}>Loading activities...</p>
           </div>
         ) : (
           <ScrollArea className="h-[500px]">
@@ -148,7 +171,12 @@ export function RealTimeActivityFeed() {
                 return (
                   <div
                     key={activity.id}
-                    className="flex items-start gap-3 p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+                    className={cn(
+                      'flex items-start gap-3 p-3 rounded-lg border transition-colors',
+                      isDark
+                        ? 'bg-zinc-800/50 border-zinc-700 hover:bg-zinc-800'
+                        : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
+                    )}
                   >
                     <div className={`mt-1 ${getActionColor(activity.action)}`}>
                       <Icon className="h-5 w-5" />
@@ -157,17 +185,29 @@ export function RealTimeActivityFeed() {
                       <div className="flex items-start justify-between">
                         <div>
                           <p className="text-sm">
-                            <span className="font-medium">{activity.actor_name || 'System'}</span>
-                            <span className="text-muted-foreground mx-1">•</span>
-                            <span className="text-muted-foreground">
+                            <span className={cn(
+                              'font-medium',
+                              isDark ? 'text-white' : 'text-gray-900'
+                            )}>{activity.actor_name || 'System'}</span>
+                            <span className={cn(
+                              'mx-1',
+                              isDark ? 'text-zinc-400' : 'text-gray-500'
+                            )}>•</span>
+                            <span className={isDark ? 'text-zinc-400' : 'text-gray-500'}>
                               {activity.action.replace(/_/g, ' ')}
                             </span>
                           </p>
-                          <p className="text-xs text-muted-foreground">
+                          <p className={cn(
+                            'text-xs',
+                            isDark ? 'text-zinc-400' : 'text-gray-500'
+                          )}>
                             {activity.entity_type}: {activity.entity_id}
                           </p>
                         </div>
-                        <span className="text-xs text-muted-foreground">
+                        <span className={cn(
+                          'text-xs',
+                          isDark ? 'text-zinc-400' : 'text-gray-500'
+                        )}>
                           {formatTimestamp(activity.timestamp)}
                         </span>
                       </div>
@@ -178,8 +218,14 @@ export function RealTimeActivityFeed() {
 
               {activities.length === 0 && (
                 <div className="text-center py-8">
-                  <Activity className="h-8 w-8 mx-auto text-muted-foreground" />
-                  <p className="text-sm text-muted-foreground mt-2">No recent activity</p>
+                  <Activity className={cn(
+                    'h-8 w-8 mx-auto',
+                    isDark ? 'text-zinc-400' : 'text-gray-500'
+                  )} />
+                  <p className={cn(
+                    'text-sm mt-2',
+                    isDark ? 'text-zinc-400' : 'text-gray-500'
+                  )}>No recent activity</p>
                 </div>
               )}
             </div>
@@ -187,35 +233,59 @@ export function RealTimeActivityFeed() {
         )}
 
         {/* Activity Summary */}
-        <div className="grid grid-cols-4 gap-4 mt-6 pt-6 border-t">
+        <div className={cn(
+          'grid grid-cols-4 gap-4 mt-6 pt-6 border-t',
+          isDark ? 'border-zinc-700' : 'border-gray-200'
+        )}>
           <div className="text-center">
-            <p className="text-2xl font-bold">
+            <p className={cn(
+              'text-2xl font-bold',
+              isDark ? 'text-white' : 'text-gray-900'
+            )}>
               {activities.length}
             </p>
-            <p className="text-xs text-muted-foreground">Total Events</p>
+            <p className={cn(
+              'text-xs',
+              isDark ? 'text-zinc-400' : 'text-gray-500'
+            )}>Total Events</p>
           </div>
           <div className="text-center">
             <p className="text-2xl font-bold text-green-500">
               {activities.filter(a => a.action.includes('create') || a.action.includes('insert')).length}
             </p>
-            <p className="text-xs text-muted-foreground">Created</p>
+            <p className={cn(
+              'text-xs',
+              isDark ? 'text-zinc-400' : 'text-gray-500'
+            )}>Created</p>
           </div>
           <div className="text-center">
             <p className="text-2xl font-bold text-blue-500">
               {activities.filter(a => a.action.includes('update')).length}
             </p>
-            <p className="text-xs text-muted-foreground">Updated</p>
+            <p className={cn(
+              'text-xs',
+              isDark ? 'text-zinc-400' : 'text-gray-500'
+            )}>Updated</p>
           </div>
           <div className="text-center">
             <p className="text-2xl font-bold text-red-500">
               {activities.filter(a => a.action.includes('delete')).length}
             </p>
-            <p className="text-xs text-muted-foreground">Deleted</p>
+            <p className={cn(
+              'text-xs',
+              isDark ? 'text-zinc-400' : 'text-gray-500'
+            )}>Deleted</p>
           </div>
         </div>
 
-        <div className="mt-4 p-3 bg-muted rounded-lg">
-          <p className="text-xs text-muted-foreground flex items-center gap-2">
+        <div className={cn(
+          'mt-4 p-3 rounded-lg',
+          isDark ? 'bg-zinc-800' : 'bg-gray-100'
+        )}>
+          <p className={cn(
+            'text-xs flex items-center gap-2',
+            isDark ? 'text-zinc-400' : 'text-gray-500'
+          )}>
             <Info className="h-3 w-3" />
             Real-time updates {isPaused ? 'paused' : 'active'}. Auto-refreshes every 30 seconds.
           </p>

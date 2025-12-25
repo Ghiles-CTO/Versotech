@@ -3,7 +3,7 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { createInvestorNotification, getInvestorPrimaryUserId } from '@/lib/notifications'
 
 interface ReviewBody {
-  action: 'approve' | 'reject'
+  action: 'approve' | 'reject' | 'request_info'
   rejection_reason?: string
   notes?: string
 }
@@ -44,9 +44,9 @@ export async function POST(
     const body: ReviewBody = await request.json()
     const { action, rejection_reason, notes } = body
 
-    if (!action || !['approve', 'reject'].includes(action)) {
+    if (!action || !['approve', 'reject', 'request_info'].includes(action)) {
       return NextResponse.json(
-        { error: 'Invalid action. Must be "approve" or "reject"' },
+        { error: 'Invalid action. Must be "approve", "reject", or "request_info"' },
         { status: 400 }
       )
     }
@@ -54,6 +54,13 @@ export async function POST(
     if (action === 'reject' && !rejection_reason) {
       return NextResponse.json(
         { error: 'Rejection reason is required when rejecting' },
+        { status: 400 }
+      )
+    }
+
+    if (action === 'request_info' && !rejection_reason) {
+      return NextResponse.json(
+        { error: 'Please specify what additional information is needed' },
         { status: 400 }
       )
     }
@@ -88,7 +95,7 @@ export async function POST(
 
     // Update submission
     const updateData: any = {
-      status: action === 'approve' ? 'approved' : 'rejected',
+      status: action === 'approve' ? 'approved' : action === 'reject' ? 'rejected' : 'pending',
       reviewed_at: new Date().toISOString(),
       reviewed_by: user.id
     }
@@ -97,7 +104,17 @@ export async function POST(
       updateData.rejection_reason = rejection_reason
     }
 
-    if (notes) {
+    // For request_info, store the request in metadata but keep status as pending
+    if (action === 'request_info') {
+      updateData.metadata = {
+        ...(submission.metadata || {}),
+        info_requested: true,
+        info_request_reason: rejection_reason,
+        info_requested_at: new Date().toISOString(),
+        info_requested_by: user.id,
+        review_notes: notes || undefined
+      }
+    } else if (notes) {
       updateData.metadata = {
         ...(submission.metadata || {}),
         review_notes: notes
@@ -138,10 +155,16 @@ export async function POST(
     }
 
     // Create audit log
+    const auditActions: Record<string, string> = {
+      approve: 'kyc_document_approved',
+      reject: 'kyc_document_rejected',
+      request_info: 'kyc_info_requested'
+    }
+
     await serviceSupabase.from('audit_logs').insert({
       event_type: 'compliance',
       actor_id: user.id,
-      action: action === 'approve' ? 'kyc_document_approved' : 'kyc_document_rejected',
+      action: auditActions[action],
       entity_type: 'kyc_submission',
       entity_id: submissionId,
       action_details: {
@@ -149,6 +172,7 @@ export async function POST(
         investor_id: submission.investor.id,
         investor_name: submission.investor.legal_name || submission.investor.display_name,
         rejection_reason: rejection_reason || null,
+        info_request_reason: action === 'request_info' ? rejection_reason : null,
         notes: notes || null
       },
       timestamp: new Date().toISOString()
@@ -173,6 +197,20 @@ export async function POST(
               document_type: submission.document_type
             }
           })
+        } else if (action === 'request_info') {
+          await createInvestorNotification({
+            userId: investorUserId,
+            investorId: submission.investor.id,
+            title: 'Additional Information Requested',
+            message: `Our compliance team has requested additional information for your ${submission.document_type.replace(/_/g, ' ')} submission. Please review and provide the requested details.`,
+            link: '/versoholdings/documents',
+            type: 'kyc_status',
+            extraMetadata: {
+              submission_id: submissionId,
+              document_type: submission.document_type,
+              info_request_reason: rejection_reason
+            }
+          })
         } else {
           await createInvestorNotification({
             userId: investorUserId,
@@ -193,12 +231,16 @@ export async function POST(
       console.error('[kyc-review] Failed to send notification:', notificationError)
     }
 
+    const successMessages: Record<string, string> = {
+      approve: 'Document approved successfully',
+      reject: 'Document rejected successfully',
+      request_info: 'Information request sent to investor'
+    }
+
     return NextResponse.json({
       success: true,
       submission: updatedSubmission,
-      message: action === 'approve'
-        ? 'Document approved successfully'
-        : 'Document rejected successfully'
+      message: successMessages[action]
     })
 
   } catch (error) {

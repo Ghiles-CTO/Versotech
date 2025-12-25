@@ -1,0 +1,110 @@
+Plan Summary:
+- Phase 2 plan v1.4 with 69 acceptance criteria spanning portal structure, personas, investor journey, document workflows, database/security, and performance.
+Audit Progress: 69/69 items verified
+Feature Status:
+  - ✅ Done:
+    - Admin portal exists and is CEO-gated.
+    - Admin portal includes Processes.
+    - Persona switcher UI shows for multi-persona users.
+    - Navigation updates based on active persona.
+    - Header notification center unifies tasks/notifications.
+    - Tasks/notifications removed from unified sidebar.
+    - Profile has separate KYC + Compliance tabs.
+    - Theme toggle available with light default + dark option.
+    - Theme preference persists locally.
+    - deal_memberships.role enum includes partner_investor/introducer_investor/commercial_partner_investor/commercial_partner_proxy.
+    - Investor journey bar renders 10 stages from real stage data.
+    - Subscription pack auto-generates on invest (tracked via subscriptions.pack_generated_at/pack_sent_at).
+    - Subscription pack identifies all authorized signatories for signature requests.
+    - Subscription pack goes straight to signing queue after generation.
+    - NDA creates one signature request per authorized signatory.
+    - Data room access gated by all signatory signatures (entity-level).
+    - Data room access counts signatory completion vs total.
+    - Non-signatory entity users gain access only after all signatories sign.
+    - Data room is integrated within opportunity detail (no separate nav entry).
+    - “Documents” replaces “Reports” in unified navigation.
+    - deals.vehicle_id is NOT NULL.
+    - companies table exists (separate from vehicles).
+    - commercial_partner_clients table exists.
+    - “Utility Bill” label replaced with “Proof of Address” in KYC docs list.
+    - Inbox has tabs for Messages + Approvals.
+    - “Investors” tab renamed to “Subscriptions” on vehicle detail page.
+    - Default persona selected on first login (primary persona or first available).
+    - Multi-persona users can switch personas without re-login.
+    - Deal creation exposes stock_type selection for staff/CEO (UNVERIFIED).
+    - signature_requests investor RLS policy uses investor_users (UNVERIFIED).
+  - 🟡 Partial:
+    - /versotech_main exists but serving all personas end-to-end not fully verified.
+    - Legacy redirects: mappings diverge from plan (tasks/notifications/inbox/admin/users).
+    - Unified inbox exists but staff nav + legacy redirects still use separate Messages/Approvals pages.
+    - Admin/Processes still accessible under /versotech_main alongside admin portal.
+    - Unified Users page exists but staff nav + legacy redirects still point to legacy user-type pages.
+    - “Investment Opportunities” rename incomplete; “Active Deals” still appears in UI surfaces.
+    - Single unified login exists but end-to-end behavior not yet validated.
+    - Persona detection uses get_user_personas; default persona selection is localStorage/primary but “correctness” not verified end-to-end.
+    - Conditional investor access only partially enforced (entity dispatch checked, role-specific gating incomplete).
+    - NDA entity-address requirement not traceable in code (UNVERIFIED).
+    - Document signatory logic appears limited to NDA/subscription; no evidence for amendments/placement agreements.
+    - Signature queue likely visible to non-signatories (tasks keyed by investor_id, not signatory user).
+    - Commercial Partner proxy mode only partially wired (banner not tied to per-deal role; no UI hook into proxy-subscribe).
+    - companies/company_valuations exist but company_stakeholders/company_directors tables not found (entity_* tables present instead).
+    - RLS coverage appears enabled for most new tables; deal_signatory_ndas RLS missing in schema dumps.
+    - User type filter/tabs not verified (unified users uses filters, not tabs).
+    - “Entity” terminology persists in staff UI (Entities page); rename to “Vehicle” incomplete.
+    - Subscription-packs page implemented for lawyer visibility; notifications still missing (UNVERIFIED).
+    - deals.stock_type wired to creation; display still missing (UNVERIFIED).
+  - ❌ Missing:
+    - Introducer agreement prerequisite enforcement (UI + API blocking/403 not present).
+    - Signature queue restricted to signatories only (current tasks visible to all investor users).
+    - Commercial Partner proxy signatures on behalf of client (no flow to sign as CP; signatory logic still tied to client investors).
+    - vehicles.company_id foreign key (missing from vehicles schema).
+    - company_stakeholders and company_directors tables (not present in schema dump).
+    - KYC document types still include NDA/NDNC (should be excluded from KYC list).
+    - User detail page that handles all user types (no /versotech_main/users/[id]).
+    - Stock type not displayed in deal detail UI.
+    - All new tables do not have RLS (deal_signatory_ndas lacks RLS in schema dumps).
+    - Subscription packs do not support 10 signatory blocks (signature positions limited).
+    - Conditional investor access by role + UI controls based on deal_memberships.role are missing.
+    - Documents do not show client as investing party in proxy mode; CP signature flow absent.
+    - Lawyer read-only access to signed subscription packs is not implemented.
+    - Signatory logic for amendments/placement agreements is missing; non-signatory restrictions are not enforced.
+    - No data-leakage testing between personas recorded.
+    - Performance targets (dashboard <2s, no journey regression) not verified.
+Collateral Issues:
+- Redirect mismatches vs plan: tasks/notifications should land on dashboard; staff approvals/messages should land on inbox; staff admin/processes should point to admin portal; staff user-type routes should point to unified users.
+- Dual admin surfaces (/versotech_main/admin operational, /versotech_admin placeholder) create ambiguity on intended control panel (UNVERIFIED).
+- “Active Deals” label persists in dashboards/command palette, undermining terminology update.
+- deal_member_role enum lacks partner/commercial_partner tracking roles called for in plan.
+- /api/investors/me/opportunities/:id/subscribe does not enforce investor-role vs proxy-role; CP proxy users could hit direct subscribe path.
+- Opportunity detail API exposes can_subscribe without checking membership role or proxy mode.
+- Opportunity UI can show “Subscribe Now” for non-investor personas (API later fails with “No investor profile found”).
+- Signature system supports only party_a/party_b positions; multi-signatory NDA/subscription flows use unsupported positions (party_a_2, signatory_1, etc.).
+- VersoSign tasks are assigned by investor_id and first investor user; non-signatory users can see signature tasks/links.
+- Lawyer subscription notifications not implemented (subscription-packs page now exists; no notification hooks found) (UNVERIFIED).
+- Introducer agreement prerequisite not enforced in introducer-facing UI/API.
+- Vehicles are not linked to companies (company_id missing on vehicles).
+- Deal creation form/API allow null vehicle_id despite DB NOT NULL (will fail at insert).
+- Proxy mode banner is not tied to per-deal dispatch role; it relies on can_execute_for_clients only.
+- deal_signatory_ndas lacks RLS in schema dumps, so signatory tracking is not protected by policies.
+Remaining Work:
+  - Must-have:
+    - Resolve stock/company schema gaps (vehicles.company_id, company_stakeholders, company_directors).
+    - Fix signatory access controls (tasks visibility, multi-signature positioning).
+    - Enforce introducer agreement prerequisite + lawyer subscription notifications/read-only pack access.
+  - Nice-to-have:
+    - Validate performance targets and note UX regressions/testing gaps.
+Open Questions (UNVERIFIED if needed):
+- Are there prior audit notes or known gaps to incorporate?
+- Any persona or feature area to prioritize first?
+- Should verification include live environment checks or code-only audit?
+- Which Supabase project/branch should be used for DB validation and migrations?
+Recommended Next Steps:
+- Verify signature_requests RLS policy change with investor users (UNVERIFIED).
+- QA stock_type field in deal creation and decide deal detail display.
+- Validate lawyer subscription-packs view; plan notifications/read-only pack access.
+Working Set:
+- src/components/deals/create-deal-form.tsx
+- src/app/api/deals/route.ts
+- src/app/(main)/versotech_main/subscription-packs/page.tsx
+- src/app/(main)/versotech_main/subscription-packs/subscription-packs-client.tsx
+- supabase/migrations/20251223000001_fix_signature_requests_investor_rls.sql

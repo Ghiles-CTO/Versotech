@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { CheckCircle, XCircle, Clock, AlertCircle, FileText, Download, Eye, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ExternalLink, User, ClipboardList, Calendar } from 'lucide-react'
+import { CheckCircle, XCircle, Clock, AlertCircle, FileText, Download, Eye, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ExternalLink, User, ClipboardList, Calendar, MessageSquare } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -124,10 +124,70 @@ export function KYCReviewClient() {
   // Review dialog state
   const [reviewDialogOpen, setReviewDialogOpen] = useState(false)
   const [selectedSubmission, setSelectedSubmission] = useState<KYCSubmission | null>(null)
-  const [reviewAction, setReviewAction] = useState<'approve' | 'reject'>('approve')
+  const [reviewAction, setReviewAction] = useState<'approve' | 'reject' | 'request_info'>('approve')
   const [rejectionReason, setRejectionReason] = useState('')
   const [reviewNotes, setReviewNotes] = useState('')
   const [reviewing, setReviewing] = useState(false)
+
+  // Bulk selection state
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [bulkRejectOpen, setBulkRejectOpen] = useState(false)
+  const [bulkRejectionReason, setBulkRejectionReason] = useState('')
+
+  // Get reviewable submissions (pending or under_review)
+  const reviewableSubmissions = submissions.filter(s => ['pending', 'under_review'].includes(s.status))
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) {
+        next.delete(id)
+      } else {
+        next.add(id)
+      }
+      return next
+    })
+  }
+
+  const selectAllReviewable = () => {
+    const ids = reviewableSubmissions.map(s => s.id)
+    setSelectedIds(new Set(ids))
+  }
+
+  const clearSelection = () => setSelectedIds(new Set())
+
+  const handleBulkAction = async (action: 'approve' | 'reject', reason?: string) => {
+    if (selectedIds.size === 0) return
+
+    setReviewing(true)
+    try {
+      const promises = Array.from(selectedIds).map(id =>
+        fetch(`/api/staff/kyc-submissions/${id}/review`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action,
+            rejection_reason: action === 'reject' ? reason : undefined
+          })
+        })
+      )
+
+      const results = await Promise.all(promises)
+      const successCount = results.filter(r => r.ok).length
+
+      toast.success(`${successCount} document${successCount !== 1 ? 's' : ''} ${action === 'approve' ? 'approved' : 'rejected'}`)
+
+      clearSelection()
+      setBulkRejectOpen(false)
+      setBulkRejectionReason('')
+      await loadSubmissions()
+    } catch (error: any) {
+      console.error('Bulk action error:', error)
+      toast.error('Failed to process some documents')
+    } finally {
+      setReviewing(false)
+    }
+  }
 
   // Document viewer hook (fullscreen)
   const {
@@ -198,7 +258,7 @@ export function KYCReviewClient() {
     loadSubmissions()
   }, [loadSubmissions])
 
-  const openReviewDialog = (submission: KYCSubmission, action: 'approve' | 'reject') => {
+  const openReviewDialog = (submission: KYCSubmission, action: 'approve' | 'reject' | 'request_info') => {
     setSelectedSubmission(submission)
     setReviewAction(action)
     setRejectionReason('')
@@ -209,8 +269,10 @@ export function KYCReviewClient() {
   const handleReview = async () => {
     if (!selectedSubmission) return
 
-    if (reviewAction === 'reject' && !rejectionReason.trim()) {
-      toast.error('Please provide a rejection reason')
+    if ((reviewAction === 'reject' || reviewAction === 'request_info') && !rejectionReason.trim()) {
+      toast.error(reviewAction === 'request_info'
+        ? 'Please specify what additional information is needed'
+        : 'Please provide a rejection reason')
       return
     }
 
@@ -222,7 +284,7 @@ export function KYCReviewClient() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: reviewAction,
-          rejection_reason: reviewAction === 'reject' ? rejectionReason : undefined,
+          rejection_reason: (reviewAction === 'reject' || reviewAction === 'request_info') ? rejectionReason : undefined,
           notes: reviewNotes || undefined
         })
       })
@@ -232,11 +294,12 @@ export function KYCReviewClient() {
         throw new Error(error.error || 'Review failed')
       }
 
-      toast.success(
-        reviewAction === 'approve'
-          ? 'Document approved successfully'
-          : 'Document rejected successfully'
-      )
+      const successMessages = {
+        approve: 'Document approved successfully',
+        reject: 'Document rejected successfully',
+        request_info: 'Information request sent to investor'
+      }
+      toast.success(successMessages[reviewAction])
 
       setReviewDialogOpen(false)
       await loadSubmissions()
@@ -457,6 +520,14 @@ export function KYCReviewClient() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-10">
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.size > 0 && selectedIds.size === reviewableSubmissions.length}
+                    onChange={(e) => e.target.checked ? selectAllReviewable() : clearSelection()}
+                    className="h-4 w-4 rounded border-gray-300"
+                  />
+                </TableHead>
                 <TableHead>Investor</TableHead>
                 <TableHead>Document Type</TableHead>
                 <TableHead>Content</TableHead>
@@ -469,13 +540,23 @@ export function KYCReviewClient() {
             <TableBody>
               {filteredSubmissions.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
                     No submissions found
                   </TableCell>
                 </TableRow>
               ) : (
                 filteredSubmissions.map((submission) => (
                   <TableRow key={submission.id}>
+                    <TableCell>
+                      {['pending', 'under_review'].includes(submission.status) && (
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.has(submission.id)}
+                          onChange={() => toggleSelect(submission.id)}
+                          className="h-4 w-4 rounded border-gray-300"
+                        />
+                      )}
+                    </TableCell>
                     <TableCell>
                       <div>
                         <div className="font-medium flex items-center gap-1">
@@ -656,6 +737,15 @@ export function KYCReviewClient() {
                             <Button
                               variant="outline"
                               size="sm"
+                              className="text-amber-500 border-amber-500 hover:bg-amber-950 hover:text-amber-400"
+                              onClick={() => openReviewDialog(submission, 'request_info')}
+                            >
+                              <MessageSquare className="w-4 h-4 mr-1" />
+                              Request Info
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
                               className="text-rose-500 border-rose-500 hover:bg-rose-950 hover:text-rose-400"
                               onClick={() => openReviewDialog(submission, 'reject')}
                             >
@@ -752,7 +842,9 @@ export function KYCReviewClient() {
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>
-              {reviewAction === 'approve' ? 'Approve Document' : 'Reject Document'}
+              {reviewAction === 'approve' && 'Approve Document'}
+              {reviewAction === 'reject' && 'Reject Document'}
+              {reviewAction === 'request_info' && 'Request Additional Information'}
             </DialogTitle>
             <DialogDescription>
               {selectedSubmission && (
@@ -768,14 +860,20 @@ export function KYCReviewClient() {
           </DialogHeader>
 
           <div className="space-y-4 py-4">
-            {reviewAction === 'reject' && (
+            {(reviewAction === 'reject' || reviewAction === 'request_info') && (
               <div>
                 <Label htmlFor="rejection-reason">
-                  Rejection Reason <span className="text-red-500">*</span>
+                  {reviewAction === 'request_info'
+                    ? 'What information is needed?'
+                    : 'Rejection Reason'
+                  } <span className="text-red-500">*</span>
                 </Label>
                 <Textarea
                   id="rejection-reason"
-                  placeholder="Please explain why this document is being rejected..."
+                  placeholder={reviewAction === 'request_info'
+                    ? 'Please specify what additional information or documents the investor needs to provide...'
+                    : 'Please explain why this document is being rejected...'
+                  }
                   value={rejectionReason}
                   onChange={(e) => setRejectionReason(e.target.value)}
                   rows={4}
@@ -808,9 +906,22 @@ export function KYCReviewClient() {
             <Button
               onClick={handleReview}
               disabled={reviewing}
-              className={reviewAction === 'approve' ? 'bg-emerald-600 hover:bg-emerald-700' : ''}
+              className={
+                reviewAction === 'approve'
+                  ? 'bg-emerald-600 hover:bg-emerald-700'
+                  : reviewAction === 'request_info'
+                    ? 'bg-amber-600 hover:bg-amber-700'
+                    : ''
+              }
             >
-              {reviewing ? 'Processing...' : reviewAction === 'approve' ? 'Approve' : 'Reject'}
+              {reviewing
+                ? 'Processing...'
+                : reviewAction === 'approve'
+                  ? 'Approve'
+                  : reviewAction === 'request_info'
+                    ? 'Send Request'
+                    : 'Reject'
+              }
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -837,6 +948,82 @@ export function KYCReviewClient() {
           metadata={viewingQuestionnaire.metadata || {}}
         />
       )}
+
+      {/* Bulk Action Bar */}
+      {selectedIds.size > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-background border border-border rounded-lg shadow-lg p-4 flex items-center gap-4 z-50">
+          <span className="text-sm text-muted-foreground font-medium">
+            {selectedIds.size} selected
+          </span>
+          <Button
+            size="sm"
+            className="bg-emerald-600 hover:bg-emerald-700"
+            onClick={() => handleBulkAction('approve')}
+            disabled={reviewing}
+          >
+            <CheckCircle className="h-4 w-4 mr-1" />
+            Approve All
+          </Button>
+          <Button
+            size="sm"
+            variant="destructive"
+            onClick={() => setBulkRejectOpen(true)}
+            disabled={reviewing}
+          >
+            <XCircle className="h-4 w-4 mr-1" />
+            Reject All
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={clearSelection}
+            disabled={reviewing}
+          >
+            Cancel
+          </Button>
+        </div>
+      )}
+
+      {/* Bulk Reject Dialog */}
+      <Dialog open={bulkRejectOpen} onOpenChange={setBulkRejectOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Reject {selectedIds.size} Documents</DialogTitle>
+            <DialogDescription>
+              This will reject all selected documents with the same reason.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <Label htmlFor="bulk-rejection-reason">
+              Rejection Reason <span className="text-red-500">*</span>
+            </Label>
+            <Textarea
+              id="bulk-rejection-reason"
+              placeholder="Please explain why these documents are being rejected..."
+              value={bulkRejectionReason}
+              onChange={(e) => setBulkRejectionReason(e.target.value)}
+              rows={4}
+              className="mt-1"
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setBulkRejectOpen(false)}
+              disabled={reviewing}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => handleBulkAction('reject', bulkRejectionReason)}
+              disabled={reviewing || !bulkRejectionReason.trim()}
+            >
+              {reviewing ? 'Processing...' : 'Reject All'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

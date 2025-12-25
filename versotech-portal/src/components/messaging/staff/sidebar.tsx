@@ -19,6 +19,8 @@ interface ConversationsSidebarProps {
   activeConversationId: string | null
   isLoading: boolean
   errorMessage: string | null
+  /** If false, hides New Chat/Group buttons. Default: true */
+  canCreateConversation?: boolean
 }
 
 const VISIBILITY_FILTERS: Array<{ value: ConversationFilters['visibility']; label: string }> = [
@@ -46,6 +48,7 @@ export function ConversationsSidebar({
   activeConversationId,
   isLoading,
   errorMessage,
+  canCreateConversation = true,
 }: ConversationsSidebarProps) {
   const [searchValue, setSearchValue] = useState(filters.search || '')
 
@@ -152,27 +155,29 @@ export function ConversationsSidebar({
           >
             Unread {filters.unreadOnly ? '' : `(${unreadTotals.all})`}
           </Button>
-          
-          <div className="grid grid-cols-2 gap-2">
-            <Button
-              size="sm"
-              variant="default"
-              className="bg-blue-600 hover:bg-blue-700 text-white"
-              onClick={() => onCreateConversation('dm')}
-            >
-              <MessageSquarePlus className="h-3.5 w-3.5 mr-1.5" />
-              New Chat
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              className="border-border text-popover-foreground hover:bg-muted"
-              onClick={() => onCreateConversation('group')}
-            >
-              <MessageSquarePlus className="h-3.5 w-3.5 mr-1.5" />
-              New Group
-            </Button>
-          </div>
+
+          {canCreateConversation && (
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                size="sm"
+                variant="default"
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+                onClick={() => onCreateConversation('dm')}
+              >
+                <MessageSquarePlus className="h-3.5 w-3.5 mr-1.5" />
+                New Chat
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="border-border text-popover-foreground hover:bg-muted"
+                onClick={() => onCreateConversation('group')}
+              >
+                <MessageSquarePlus className="h-3.5 w-3.5 mr-1.5" />
+                New Group
+              </Button>
+            </div>
+          )}
         </div>
 
         <Input

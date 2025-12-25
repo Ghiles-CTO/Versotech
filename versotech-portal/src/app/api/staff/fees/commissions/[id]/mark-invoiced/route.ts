@@ -15,6 +15,17 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Staff role check - only staff can mark commissions as invoiced
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+
+    if (!(profile?.role?.startsWith('staff_') || profile?.role === 'ceo')) {
+      return NextResponse.json({ error: 'Forbidden - Staff only' }, { status: 403 });
+    }
+
     // Update commission status to invoiced
     const { error } = await supabase
       .from('introducer_commissions')

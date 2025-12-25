@@ -45,6 +45,24 @@ export async function POST(request: NextRequest) {
 
     const parsed = result.data
 
+    // Check if introducer has a valid signed agreement
+    const today = new Date().toISOString().split('T')[0]
+    const { data: validAgreement, error: agreementError } = await supabase
+      .from("introducer_agreements")
+      .select("id")
+      .eq("introducer_id", parsed.introducer_id)
+      .eq("status", "active")
+      .not("signed_date", "is", null)
+      .or(`expiry_date.is.null,expiry_date.gte.${today}`)
+      .limit(1)
+
+    if (agreementError || !validAgreement || validAgreement.length === 0) {
+      return NextResponse.json(
+        { error: "Introducer must have a valid signed agreement before making introductions" },
+        { status: 403 }
+      )
+    }
+
     // Check if prospect already has an introduction for this deal
     const { data: existing } = await supabase
       .from("introductions")

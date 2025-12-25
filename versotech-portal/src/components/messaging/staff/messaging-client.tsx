@@ -13,6 +13,8 @@ import type { StaffDirectoryEntry, InvestorDirectoryEntry } from './new-conversa
 interface MessagingClientProps {
   initialConversations: ConversationSummary[]
   currentUserId: string
+  /** If false, hides "New Conversation" and doesn't load staff/investor directories. Default: true (staff behavior) */
+  canCreateConversation?: boolean
 }
 
 const INITIAL_FILTERS: ConversationFilters = {
@@ -20,7 +22,7 @@ const INITIAL_FILTERS: ConversationFilters = {
   type: 'all',
 }
 
-export function MessagingClient({ initialConversations, currentUserId }: MessagingClientProps) {
+export function MessagingClient({ initialConversations, currentUserId, canCreateConversation = true }: MessagingClientProps) {
   const supabase = useMemo(() => createClient(), [])
   const [filters, setFilters] = useState<ConversationFilters>(INITIAL_FILTERS)
   const [conversations, setConversations] = useState<ConversationSummary[]>(initialConversations)
@@ -142,6 +144,12 @@ export function MessagingClient({ initialConversations, currentUserId }: Messagi
   }, [])
 
   useEffect(() => {
+    // Only load directories if user can create conversations (staff only)
+    if (!canCreateConversation) {
+      console.log('[MessagingClient] Skipping directory load - user cannot create conversations')
+      return
+    }
+
     const loadDirectories = async () => {
       try {
         console.log('[MessagingClient] Loading staff and investor directories...')
@@ -172,7 +180,7 @@ export function MessagingClient({ initialConversations, currentUserId }: Messagi
     }
 
     loadDirectories()
-  }, [])
+  }, [canCreateConversation])
 
   const handleCreateConversation = async (payload: {
     subject: string
@@ -252,6 +260,7 @@ export function MessagingClient({ initialConversations, currentUserId }: Messagi
         activeConversationId={activeConversationId}
         isLoading={isLoading}
         errorMessage={errorMessage}
+        canCreateConversation={canCreateConversation}
       />
       <div className="flex-1 flex flex-col">
         {activeConversation ? (
@@ -269,15 +278,17 @@ export function MessagingClient({ initialConversations, currentUserId }: Messagi
           </div>
         )}
       </div>
-      <NewConversationDialog
-        open={isNewConversationOpen}
-        onOpenChange={setIsNewConversationOpen}
-        mode={conversationMode}
-        staffDirectory={staffDirectory}
-        investorDirectory={investorDirectory}
-        onCreate={handleCreateConversation}
-        isSubmitting={isCreatingConversation}
-      />
+      {canCreateConversation && (
+        <NewConversationDialog
+          open={isNewConversationOpen}
+          onOpenChange={setIsNewConversationOpen}
+          mode={conversationMode}
+          staffDirectory={staffDirectory}
+          investorDirectory={investorDirectory}
+          onCreate={handleCreateConversation}
+          isSubmitting={isCreatingConversation}
+        />
+      )}
     </div>
   )
 }

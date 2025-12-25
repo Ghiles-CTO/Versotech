@@ -1,8 +1,24 @@
 # VERSO Phase 2: Platform Restructuring Plan
 
-**Version:** 1.2
-**Date:** December 16, 2025
-**Status:** Final Draft for Review
+**Version:** 1.4
+**Date:** December 18, 2025
+**Status:** VERIFIED against production database schema
+
+**Change Log v1.4:** (Database Schema Verification)
+- ✅ CORRECTED: `investor_members` table EXISTS with `role='authorized_signatory'` - NO `is_signatory` boolean needed
+- ✅ CORRECTED: `deal_nda_signatures` table does NOT exist - use `signature_requests WHERE document_type='nda'`
+- ✅ CORRECTED: `allocations` table is LEGACY (deprecated reservation system) - use `subscriptions` for funding tracking
+- ✅ CORRECTED: Stage 9 (Funded) uses `subscriptions.funded_amount > 0` NOT `allocations.funding_status`
+- ✅ ADDED: Required migrations for `deal_memberships.received_at`, `deal_memberships.first_viewed_at`, `deal_subscription_submissions.pack_generated_at`
+- ✅ CLARIFIED: `investor_members` vs `investor_users` distinction (members = entity roles, users = login accounts)
+
+**Change Log v1.3:**
+- Added conditional investor access for Partner/Introducer/Commercial Partner (CEO dispatch per-deal)
+- Added Commercial Partner Proxy Mode (on behalf of Client XXX)
+- Updated investor journey to 10 stages (was 7)
+- Added lawyer subscription visibility
+- Broadened signatory logic to all documents
+- Added proxy mode tables and tracking to database schema
 
 ---
 
@@ -133,18 +149,29 @@ Each persona type represents a different business relationship with VERSO. Below
 **Business Role:** Invests AND brings other investors to deals.
 
 **What they do:**
-- **EVERYTHING an Investor does** (the user stories explicitly state: "My opportunities as investor even if I am partner")
-- PLUS: View opportunities they're assigned to as a partner
-- PLUS: Track transactions from investors they brought
-- PLUS: View reporting on their partner activity
-- PLUS: Share investment opportunities with their network
-- PLUS: View shared transactions
+- **CAN act as Investor** for specific deals IF CEO dispatches the IO to them as investor (conditional, per-deal)
+- View opportunities they're assigned to as a partner
+- Track transactions from investors they brought
+- View reporting on their partner activity
+- Share investment opportunities with their network
+- View shared transactions
 
-**Why they exist:** Partners have a dual relationship - they invest their own money AND bring other investors. They need both views.
+**IMPORTANT - Conditional Investor Access:**
+- Partner does NOT automatically have investor capabilities
+- For EACH Investment Opportunity, CEO must dispatch to Partner AND mark them for investor access
+- Only for IOs where they are dispatched as investor can they:
+  - Request data room access
+  - Sign NDA
+  - Submit subscription
+  - Sign subscription pack
+  - Fund investment
+- This is tracked via `deal_memberships.role = 'partner_investor'`
+
+**Why they exist:** Partners have a dual relationship - they CAN invest their own money AND bring other investors. But investing is not automatic; it requires CEO dispatch per deal.
 
 **Key sections from user stories:**
 - Profile
-- My Opportunities (SAME AS INVESTOR - explicitly stated)
+- My Opportunities (IOs dispatched TO THEM as investor - not all deals)
 - My Transactions as Partner:
   - View opportunities assigned as partner
   - View opportunity transactions (what their referred investors did)
@@ -160,23 +187,34 @@ Each persona type represents a different business relationship with VERSO. Below
 **Business Role:** Brings new investors to deals for a commission.
 
 **What they do:**
-- **EVERYTHING an Investor does** (the user stories explicitly state: "My opportunities as investor even if I am Introducer")
-- PLUS: Sign Introducer Agreements with VERSO
-- PLUS: Track their introductions (referrals)
-- PLUS: View reporting on their introducer activity
+- **CAN act as Investor** for specific deals IF CEO dispatches the IO to them as investor (conditional, per-deal)
+- Sign Introducer Agreements with VERSO (REQUIRED before introducing)
+- Track their introductions (referrals)
+- View reporting on their introducer activity
 
-**Why they exist:** Introducers earn commissions for bringing investors. Unlike Partners, they don't necessarily invest themselves (though they can, since they have the full investor journey available).
+**IMPORTANT - Conditional Investor Access:**
+- Introducer does NOT automatically have investor capabilities
+- For EACH Investment Opportunity, CEO must dispatch to Introducer AND mark them for investor access
+- Only for IOs where they are dispatched as investor can they:
+  - Request data room access
+  - Sign NDA
+  - Submit subscription
+  - Sign subscription pack
+  - Fund investment
+- This is tracked via `deal_memberships.role = 'introducer_investor'`
+
+**Why they exist:** Introducers earn commissions for bringing investors. They CAN invest themselves if CEO dispatches them as investor for a specific deal.
 
 **Key sections from user stories:**
 - Profile
-- My Opportunities (SAME AS INVESTOR - explicitly stated)
+- My Opportunities (IOs dispatched TO THEM as investor - not all deals)
 - My Introductions:
   - Introducer Agreements (legal agreements with VERSO about commission terms)
   - Introductions Tracking (status of referrals)
   - Reporting as Introducer (commission tracking)
 
 **Critical distinction from Partner:**
-- Introducer has "Introducer Agreements" (fee agreements with VERSO)
+- Introducer has "Introducer Agreements" (fee agreements with VERSO) - REQUIRED before introducing
 - Partner has "View opportunity transactions" and "Shared Transactions" (they see what their investors do)
 - Different business model, different features
 
@@ -186,27 +224,58 @@ Each persona type represents a different business relationship with VERSO. Below
 
 **Business Role:** Institutional partner that can act on behalf of clients.
 
+**TWO MODES OF OPERATION:**
+
+**MODE 1: Direct Investment**
+- Commercial Partner invests their OWN money
+- Same as investor journey (when CEO dispatches them as investor)
+- Tracked via `deal_memberships.role = 'commercial_partner_investor'`
+
+**MODE 2: Proxy Mode (On Behalf of Client XXX) - NEW**
+- CEO dispatches IO to Commercial Partner with "on behalf of Client XXX"
+- Client XXX may be:
+  - Unknown to VERSO (new investor never seen before)
+  - Known investor (existing in system)
+- Commercial Partner handles ENTIRE flow FOR Client XXX:
+  - Views data room for Client XXX
+  - Signs NDA on behalf of Client XXX
+  - Submits subscription on behalf of Client XXX
+  - Signs subscription pack on behalf of Client XXX
+- All documents show "Client XXX" as the investing party
+- Commercial Partner is the executor, NOT the investor
+- Tracked via `deal_memberships.role = 'commercial_partner_proxy'`
+- Requires `commercial_partner_clients` table to track proxy relationships
+
 **What they do:**
-- **EVERYTHING an Investor does** (has full investor journey)
-- PLUS: View opportunities they're assigned to as commercial partner
-- PLUS: Track transactions for their clients
-- PLUS: Sign Placement Agreements with VERSO
-- PLUS: Execute (sign) documents on behalf of their clients
+- **CAN act as Investor** for specific deals IF CEO dispatches them as investor (MODE 1)
+- **CAN act as Proxy** for Client XXX IF CEO dispatches them with proxy flag (MODE 2)
+- View opportunities they're assigned to as commercial partner
+- Track transactions for their clients
+- Sign Placement Agreements with VERSO
+- Execute (sign) documents on behalf of their clients (MODE 2 only)
+
+**IMPORTANT - Conditional Access:**
+- Commercial Partner does NOT automatically have investor capabilities
+- CEO dispatch determines:
+  a) If dispatched as investor → MODE 1 (direct investment)
+  b) If dispatched with "on behalf of Client XXX" → MODE 2 (proxy)
+  c) If dispatched as commercial partner only → Can view deal, track clients, but cannot invest or act as proxy
 
 **Why they exist:** Commercial Partners represent institutions (wealth managers, family offices) that place capital on behalf of their clients. Unlike regular Partners, they CAN sign subscription packs for their clients.
 
 **Key sections from user stories:**
 - Profile
-- My Opportunities (SAME AS INVESTOR)
+- My Opportunities (IOs dispatched TO THEM - investor mode or proxy mode)
 - My Transactions as Commercial Partner:
   - View opportunities assigned as commercial partner
-  - View transactions for clients
+  - View transactions for clients (proxy mode)
   - Reporting as Commercial Partner
 - My Placement Agreements (legal agreements defining their relationship with VERSO)
 
 **Critical distinction from Partner:**
 - Commercial Partner has "Placement Agreements" (formal institutional agreements)
-- Commercial Partner CAN execute on behalf of clients (Partner cannot)
+- Commercial Partner CAN execute on behalf of clients (Partner CANNOT)
+- Commercial Partner has Proxy Mode (Partner does NOT)
 - Different legal/regulatory relationship
 
 ---
@@ -271,6 +340,8 @@ The current database has inconsistent patterns:
 
 ## 4. Persona Detection Logic
 
+### 4.1 Global Persona Detection (Login Time)
+
 When a user logs in, the system determines which personas they have by checking the linking tables:
 
 ```
@@ -296,12 +367,39 @@ When a user logs in, the system determines which personas they have by checking 
    → If role = 'ceo', user is a CEO
 ```
 
-**A single user can have MULTIPLE personas.** Example: John Doe might be:
-- An Investor (via investor_users)
-- AND an Introducer (via introducer_users)
-- AND a Partner (via partner_users)
+### 4.2 Deal-Specific Persona Detection (Per-Deal Access)
 
-The system shows navigation items and features for ALL their personas.
+**IMPORTANT:** For Partner, Introducer, and Commercial Partner, investor capabilities are DEAL-SPECIFIC. The system must check `deal_memberships` for each deal:
+
+```
+8. SELECT * FROM deal_memberships
+   WHERE user_id = [logged_in_user] AND deal_id = [current_deal]
+
+   Possible roles determine access:
+   - 'investor' → Standard investor for this deal
+   - 'partner_investor' → Partner with investor access for this deal
+   - 'introducer_investor' → Introducer with investor access for this deal
+   - 'commercial_partner_investor' → Commercial Partner investing directly (MODE 1)
+   - 'commercial_partner_proxy' → Commercial Partner acting on behalf of client (MODE 2)
+   - 'partner' → Partner tracking only, no investor access
+   - 'introducer' → Introducer tracking only, no investor access
+   - 'commercial_partner' → Commercial Partner tracking only, no investor/proxy access
+   - 'lawyer' → Lawyer assigned to deal, can view subscriptions
+```
+
+### 4.3 Multi-Persona Users
+
+**A single user can have MULTIPLE personas.** Example: John Doe might be:
+- An Investor (via investor_users) → Can invest in deals dispatched to him as investor
+- AND an Introducer (via introducer_users) → Can introduce others to deals
+- AND a Partner (via partner_users) → Can track referred investors
+
+**Persona Access Per Deal:**
+- John may be dispatched to Deal A as `partner_investor` → Can invest in Deal A
+- John may be dispatched to Deal B as `partner` only → Can track but NOT invest in Deal B
+- John may be dispatched to Deal C as `investor` (via his investor entity) → Standard investor access
+
+The system shows navigation items and features for ALL their global personas, but per-deal investor access is determined by `deal_memberships.role`.
 
 ---
 
@@ -352,11 +450,17 @@ Based on user stories section "3. Lawyer":
 - **Dashboard** - Assigned deals summary
 - **Profile** - Personal information
 - **My Assigned Deals** - Deals they're legal counsel for
+- **Subscriptions** - View signed subscription packs for assigned deals (read-only)
 - **Escrow Accounts** - View and manage escrow
 - **Documents** - Deal documents
 - **Verso Sign** - Documents requiring signature
 - **Inbox** - Notifications (subscription packs, funding, certificates)
 - **Reporting** - Activity reports
+
+**Subscription Visibility:**
+- Lawyer receives notification when investor signs subscription pack
+- Lawyer can view signed subscription packs for deals they are assigned to
+- This is read-only access (lawyer cannot modify subscriptions)
 
 ### 5.4 Investor Navigation
 
@@ -526,9 +630,13 @@ Fields:
 - Keep it for backwards compatibility during migration
 - All new code should use `introducer_users` table
 
-**C. `investor_members` table (if exists)**
-- Add `is_signatory` boolean field
-- Purpose: Only signatories can sign subscription packs
+**C. `investor_members` table - VERIFIED EXISTS**
+- ✅ **NO MIGRATION NEEDED** - signatory tracking already exists via `role` column
+- The `role` column has CHECK constraint including `'authorized_signatory'`
+- Query signatories with: `WHERE role = 'authorized_signatory'`
+- Other role values: director, shareholder, beneficial_owner, officer, partner, other
+- **IMPORTANT**: `investor_members` = entity members (may NOT have login)
+- **IMPORTANT**: `investor_users` = login accounts (just investor_id + user_id linking)
 
 ### 6.3 Tables that may already exist (verify before creating)
 
@@ -568,7 +676,9 @@ Fields:
 
 ---
 
-## 7. Signatory Logic
+## 7. Document Signatory Logic
+
+**APPLIES TO ALL LEGAL DOCUMENTS** - NDA, Subscription Pack, Amendments, Placement Agreements, etc.
 
 Not everyone linked to an entity can sign documents. Example:
 
@@ -577,15 +687,48 @@ Not everyone linked to an entity can sign documents. Example:
 - Mary Smith (Trustee) - IS a signatory
 - Jane Doe (Assistant) - NOT a signatory
 
-When generating a subscription pack for signature:
-1. Look up all users linked to the investor entity
-2. Filter to those marked as signatories
-3. Create signature requests only for signatories
+### 7.1 NDA Signing
+
+**Rule:** One NDA per signatory.
+- Entity with 3 signatories = 3 separate NDAs to sign
+- Each signatory signs their OWN NDA
+- NDA uses ENTITY address (not individual signatory address)
+- Data room access granted only when ALL signatories have signed
+
+### 7.2 Subscription Pack Signing
+
+**Rule:** ONE pack with MULTIPLE signature blocks.
+- Entity with 3 signatories = 1 subscription pack with 3 signature blocks
+- All signatories sign the SAME document
+- System creates signature requests for ALL signatories
+- Pack status = "Signed" only when ALL signatories complete
+
+### 7.3 Other Documents
+
+**Rule:** All legal documents follow the same pattern as their type requires.
+- Placement Agreements → Follow subscription pack pattern (one doc, multiple signatures)
+- Introducer Agreements → Follow subscription pack pattern
+- Amendments → Follow subscription pack pattern
+
+### 7.4 Non-Signatories
+
+**Critical Rule:** Non-signatories can VIEW but NEVER SIGN any document.
+- Jane Doe (Assistant) can view the entity's documents
+- Jane Doe CANNOT sign NDA, subscription pack, or any legal document
+- The signature queue should NOT show documents to non-signatories
+
+### 7.5 Database Tracking
 
 This requires tracking signatory status in the linking tables:
-- `investor_users.is_signatory` (or `investor_members.is_signatory`)
-- `partner_users.can_sign`
-- `commercial_partner_users.can_execute_for_clients`
+- ✅ `investor_members.role = 'authorized_signatory'` - ALREADY EXISTS, no migration needed
+- `partner_users.can_sign` - NEW, needs creation
+- `commercial_partner_users.can_execute_for_clients` - NEW, for proxy mode
+
+**NOTE on investor signatory tracking:**
+- `investor_members` table tracks entity members (directors, shareholders, signatories)
+- `investor_users` table is ONLY for login account linking (investor_id, user_id)
+- Signatories are identified via `investor_members.role = 'authorized_signatory'`
+- These are DIFFERENT concepts: members may not have login accounts
 
 ---
 
@@ -715,8 +858,37 @@ These changes are documented in the client vision and must be implemented.
 **Required Changes:**
 1. **Rename** "Active Deals" → "Investment Opportunities"
 2. **Integrate data room** inside Investment Opportunity detail (remove separate Data Rooms page from navigation)
-3. **Add journey/progress bar** showing investor journey stages:
-   - Opportunity Received → Interest Confirmed → NDA Signed → Data Room Access → Subscription Pack → Signed → Funded → Active Investment
+3. **Add journey/progress bar** showing investor journey stages (10 STAGES):
+
+   **IMPORTANT: BRANCHING JOURNEY MODEL**
+   The journey is NOT strictly linear. Investors can subscribe DIRECTLY from deal cards or deal detail page without going through Interest/NDA/Data Room stages. The journey bar shows ACTUAL STATUS of each stage, with visual distinction for skipped stages.
+
+   **Stage Types:**
+   - **OPTIONAL stages (can be skipped):** Received, Viewed, Interest Confirmed, NDA Signed, Data Room Access
+   - **REQUIRED stages:** Pack Generated, Pack Sent, Signed, Funded, Active
+
+   **Journey Paths:**
+   - **Full path:** Received → Viewed → Interest → NDA → Data Room → Subscribe → Sign → Fund → Active
+   - **Direct path:** Viewed → Subscribe → Sign → Fund → Active (skips Interest, NDA, Data Room)
+
+   **10 Stages with Required/Optional indicators:**
+   1. **Received** (OPTIONAL) - IO dispatched to investor (investor notified)
+   2. **Viewed** (OPTIONAL) - Investor opened/viewed the IO
+   3. **Interest Confirmed** (OPTIONAL) - Investor expressed interest
+   4. **NDA Signed** (OPTIONAL) - All signatories signed NDA
+   5. **Data Room Access** (OPTIONAL) - Access granted (after all signatories sign NDA)
+   6. **Pack Generated** (REQUIRED) - Subscription pack created (system action)
+   7. **Pack Sent** (REQUIRED) - Pack sent to signatories for signature
+   8. **Signed** (REQUIRED) - All signatories signed subscription pack
+   9. **Funded** (REQUIRED) - Funds received
+   10. **Active** (REQUIRED) - Investment active in portfolio
+
+   **Visual Design for Journey Bar:**
+   - ✅ Green = Completed
+   - 🔵 Blue = In Progress (current stage)
+   - ⚪ Gray = Pending (required, not started)
+   - ⊘ Dotted/Dimmed = Skipped (optional stage not done)
+
 4. **Portfolio integration** - Investment becomes part of "My Investments" only when active (funded)
 
 ### 11.2 Tasks & Notifications
@@ -848,7 +1020,7 @@ This section maps existing pages to the new portal structure and identifies what
 
 ## 13. Implementation Phases
 
-Total estimated time: **182 hours**
+Total estimated time: **188 hours**
 
 **Ordering Principle:** Database schema must be stable BEFORE dependent UI development begins. This ensures TypeScript types are correct, RLS policies are in place, and no mid-project rework is needed.
 
@@ -868,8 +1040,50 @@ Total estimated time: **182 hours**
 5. Create `lawyer_entities` + `lawyer_users` tables (or configure deal_memberships)
 6. Create `placement_agreements` table
 7. Create `introducer_agreements` table
-8. Add `is_signatory` boolean to `investor_users` (or `investor_members`)
+8. ~~Add `is_signatory` boolean~~ ✅ NOT NEEDED - use existing `investor_members.role = 'authorized_signatory'`
 9. Update `profiles.role` enum: add `ceo`, deprecate `staff_*` values
+
+**NEW - F. Commercial Partner Proxy Mode Tables:**
+23. Create `commercial_partner_clients` table:
+    - `id` (uuid, primary key)
+    - `commercial_partner_id` (uuid, FK to commercial_partner_entities)
+    - `client_name` (text) - May be unknown investor
+    - `client_investor_id` (uuid, nullable, FK to investors) - If client is known investor
+    - `created_for_deal_id` (uuid, FK to deals) - Which deal this was created for
+    - `created_at` (timestamp)
+    - Purpose: Track proxy relationships for MODE 2 operations
+
+**NEW - G. Deal Membership Role Updates:**
+24. Update `deal_memberships.role` enum to add:
+    - `partner_investor` - Partner with investor access for this deal
+    - `introducer_investor` - Introducer with investor access for this deal
+    - `commercial_partner_investor` - Commercial Partner direct investment (MODE 1)
+    - `commercial_partner_proxy` - Commercial Partner acting on behalf of client (MODE 2)
+    - `commercial_partner` - Commercial Partner tracking only (no invest/proxy access)
+    - `partner` - Partner tracking only (no investor access)
+
+**NEW - H. Investor Journey Stage Tracking:**
+
+**DECISION:** Use `deal_memberships` columns (NOT a separate table). Rationale:
+- Keeps journey data with the investor-deal relationship
+- Simpler architecture (one table query for journey status)
+- For direct subscribers who skip dispatch, auto-create deal_membership when they subscribe
+- NULL values indicate stage was skipped (branching journey support)
+
+25. Add tracking for Received/Viewed stages on `deal_memberships`:
+    - Add `received_at` (timestamp, nullable) - When IO was dispatched to investor
+    - Add `first_viewed_at` (timestamp, nullable) - When investor first opened deal detail page
+    - NULL = stage skipped (investor found deal on their own / subscribed directly)
+
+26. Add tracking for Pack Generated stage:
+    - Add `deal_subscription_submissions.pack_generated_at` (timestamp)
+    - Use existing `signature_requests.email_sent_at` for Pack Sent stage
+
+27. Auto-create `deal_memberships` record:
+    - When investor subscribes directly (without prior dispatch), create membership with:
+      - `received_at = NULL` (not dispatched)
+      - `first_viewed_at` = subscription timestamp (they viewed to subscribe)
+      - `role = 'investor'`
 
 **B. Companies Table (Vehicle vs Company Separation):**
 10. Create `companies` table:
@@ -977,18 +1191,20 @@ Total estimated time: **182 hours**
 
 **Deliverables:**
 
-**A. Opportunity Pages (10 hours)**
+**A. Opportunity Pages (12 hours)**
 1. Create `/versotech_main/opportunities` page (rename from deals)
 2. Create `/versotech_main/opportunities/[id]` with:
    - Overview section (deal details)
    - Integrated data room (documents tab, NDA signing)
    - Subscription pack section (submit, sign, fund)
-   - **Journey progress bar** showing investor stages
+   - **Journey progress bar** showing investor stages (10 stages)
 3. Create `/versotech_main/portfolio` page (rename from holdings)
 4. Create `/versotech_main/portfolio/[id]` (rename from vehicle)
 5. Remove separate `/data-rooms` navigation item
-6. Journey bar component with stages: Interest → NDA → Data Room → Subscribe → Sign → Fund → Active
+6. Journey bar component with 10 stages:
+   - Received → Viewed → Interest Confirmed → NDA Signed → Data Room Access → Pack Generated → Pack Sent → Signed → Funded → Active
 7. **Stock type display** - Show stock type field in deal detail (data from `deals.stock_type`)
+8. Track `viewed_at` when investor first opens opportunity detail page
 
 **B. Subscription Pack Workflow (CRITICAL - 12 hours)**
 **Important:** NO DRAFT STEP. Pack generates immediately when investor clicks "Invest."
@@ -1025,8 +1241,9 @@ Total estimated time: **182 hours**
 
 **Implementation:**
 - Update data room access grant logic
-- Check `deal_nda_signatures` for ALL signatories of entity
-- Only grant access when count matches total signatory count
+- ✅ Check `signature_requests WHERE document_type = 'nda' AND status = 'signed'` for ALL signatories
+- **NOTE:** `deal_nda_signatures` table does NOT exist - use `signature_requests` table instead
+- Only grant access when signed count matches total signatory count (from `investor_members WHERE role = 'authorized_signatory'`)
 - Update RLS policy for `deal_data_room_access` table
 
 **E. CEO Deal Creation UI (4 hours)**
@@ -1034,17 +1251,67 @@ Total estimated time: **182 hours**
 - Required vehicle selection (vehicle_id is NOT NULL)
 - Display company info from linked vehicle.company
 
-**Journey Bar Data Sources:**
-- `investor_deal_interest` → Interest stage
-- `deal_nda_signatures` → NDA stage (check ALL signatories)
-- `deal_data_room_access` → Data Room stage
-- `deal_subscription_submissions` → Subscribe stage
-- `signature_requests` → Sign stage (check ALL signatories)
-- `allocations.funding_status` → Fund stage
-- `subscriptions` → Active stage
+**Journey Bar Data Sources (10 Stages):**
 
-**Database Changes:**
-- None (uses existing tables from Phase 1)
+**OPTIONAL STAGES (can be skipped - investor may subscribe directly):**
+1. **Received** → `deal_memberships.received_at` (when IO dispatched)
+   - NULL = investor found deal on their own (not dispatched)
+2. **Viewed** → `deal_memberships.first_viewed_at` (when investor first opened deal detail)
+   - NULL = should not happen (they must view to subscribe)
+3. **Interest Confirmed** → `investor_deal_interest` (explicit interest expression)
+   - NULL = investor skipped interest step, went straight to subscribe
+4. **NDA Signed** → `signature_requests WHERE document_type = 'nda' AND status = 'signed'`
+   - ✅ CORRECTED: Use `signature_requests` table (NOT `deal_nda_signatures` which doesn't exist)
+   - NULL = investor skipped NDA (direct subscription enabled)
+5. **Data Room Access** → `deal_data_room_access.granted_at` (access granted)
+   - NULL = investor subscribed without data room access
+
+**REQUIRED STAGES (always executed for completed investments):**
+6. **Pack Generated** → `deal_subscription_submissions.pack_generated_at` ⚠️ NEEDS MIGRATION
+7. **Pack Sent** → `signature_requests.email_sent_at` (first signature request sent)
+8. **Signed** → `signature_requests WHERE document_type = 'subscription' AND status = 'signed'` (check ALL signatories)
+9. **Funded** → `subscriptions.funded_amount > 0` OR `subscriptions.status IN ('committed', 'active')`
+   - ✅ CORRECTED: `allocations` table is LEGACY (not used) - use `subscriptions` instead
+   - Alternative for deal-level: `investor_deal_holdings.status = 'funded'`
+10. **Active** → `subscriptions.status = 'active'`
+
+**⚠️ LEGACY TABLE WARNING:**
+The `allocations` table is LEGACY from the deprecated reservation system.
+- NO new allocations are created in the codebase
+- Funding tracking uses `subscriptions.funded_amount` and `subscriptions.status`
+- Consider deprecating `allocations` table in future cleanup
+
+**Journey Bar Visual Logic:**
+- ✅ **Green (Completed)** = Stage done (timestamp exists or status met)
+- 🔵 **Blue (In Progress)** = Current stage investor is on
+- ⚪ **Gray (Pending)** = Required stage not yet started
+- ⊘ **Dotted/Dimmed** = Optional stage skipped (NULL timestamp)
+- **Don't show skipped optional stages as "failed"** - they are intentionally bypassed
+
+**Implementation Note:**
+When auto-creating `deal_memberships` for direct subscribers, set `first_viewed_at` to subscription timestamp but leave `received_at` as NULL to indicate they were not formally dispatched.
+
+**Database Changes - REQUIRED MIGRATIONS:**
+```sql
+-- 1. Add journey tracking columns to deal_memberships
+ALTER TABLE deal_memberships
+ADD COLUMN received_at TIMESTAMPTZ,
+ADD COLUMN first_viewed_at TIMESTAMPTZ;
+
+COMMENT ON COLUMN deal_memberships.received_at IS 'When IO was dispatched to investor. NULL = investor found deal on their own.';
+COMMENT ON COLUMN deal_memberships.first_viewed_at IS 'When investor first viewed deal detail page.';
+
+-- 2. Add pack_generated_at for Stage 6 tracking
+ALTER TABLE deal_subscription_submissions
+ADD COLUMN pack_generated_at TIMESTAMPTZ;
+
+COMMENT ON COLUMN deal_subscription_submissions.pack_generated_at IS 'When subscription pack PDF was generated.';
+```
+
+**⚠️ NO MIGRATION NEEDED FOR:**
+- Signatory tracking: Use existing `investor_members.role = 'authorized_signatory'`
+- NDA tracking: Use existing `signature_requests WHERE document_type = 'nda'`
+- Funding tracking: Use existing `subscriptions.funded_amount` and `subscriptions.status`
 
 **Files Affected:**
 - New: `app/(main)/versotech_main/opportunities/page.tsx`
@@ -1178,7 +1445,7 @@ Total estimated time: **182 hours**
 
 ---
 
-### Phase 6: Partner, Introducer & Commercial Partner Features (~19 hours)
+### Phase 6: Partner, Introducer & Commercial Partner Features (~21 hours)
 
 **Objective:** Build persona-specific pages for Partners, Introducers, and Commercial Partners.
 
@@ -1215,11 +1482,33 @@ Total estimated time: **182 hours**
    - UI: Show "Sign Agreement First" message if no agreement exists
    - API: Return 403 if introducer tries to introduce without agreement
 
-**C. Commercial Partner Features (6 hours)**
+**C. Commercial Partner Features (8 hours)**
 1. `/versotech_main/commercial-transactions` - Track client transactions
 2. `/versotech_main/placement-agreements` - View/sign placement agreements
    - Client list
    - Execute-on-behalf capability
+
+3. **TWO-MODE UI (NEW - from Fred's feedback)**
+   **Important:** Commercial Partners have TWO modes of operation.
+
+   **MODE 1: Direct Investment** (same as investor)
+   - When dispatched as `commercial_partner_investor`
+   - UI shows standard investor journey
+   - Commercial Partner invests their own money
+
+   **MODE 2: Proxy Mode** (on behalf of Client XXX)
+   - When dispatched as `commercial_partner_proxy`
+   - UI shows "Acting on behalf of: [Client Name]" banner
+   - "On behalf of" selector when submitting subscription
+   - Documents generated with Client XXX as investing party
+   - Commercial Partner signs but client is the investor
+
+   **Implementation:**
+   - Check `deal_memberships.role` to determine mode
+   - For proxy mode, read `commercial_partner_clients` to get client info
+   - UI banner/selector to show proxy context
+   - Subscription API accepts `proxy_client_id` parameter
+   - Documents generated with proxy client details
 
 **Database Changes:**
 - None (tables exist from Phase 1)
@@ -1239,24 +1528,30 @@ Total estimated time: **182 hours**
 - Update: `/api/introducers/introductions` - Block if no signed agreement
 - New: `/api/commercial-partners/transactions` - Commercial partner data
 - New: `/api/commercial-partners/placements` - Placement agreements
+- New: `/api/commercial-partners/proxy-subscribe` - Proxy mode subscription
 
-**Estimated Hours:** 19
+**Estimated Hours:** 21
 
 ---
 
-### Phase 7: Testing, Polish & Documentation (~24 hours)
+### Phase 7: Testing, Polish & Documentation (~26 hours)
 
 **Objective:** Comprehensive testing of all persona flows, bug fixes, and documentation.
 
 **Deliverables:**
 
-**A. Persona Flow Testing (10 hours)**
+**A. Persona Flow Testing (12 hours)**
 1. Test CEO flow: Login → Dashboard → Users → Deals → KYC Review → Inbox
-2. Test Investor flow: Login → Opportunities → Journey → Portfolio → Documents
-3. Test Partner flow: Investor journey + Partner transactions
-4. Test Introducer flow: Investor journey + Introductions + Agreements
-5. Test Commercial Partner flow: Investor journey + Client transactions + Placements
-6. Test Hybrid user: Switch between personas, verify navigation updates
+2. Test Investor flow: Login → Opportunities → 10-stage Journey → Portfolio → Documents
+3. Test Partner flow: Conditional investor access + Partner transactions
+4. Test Introducer flow: Conditional investor access + Introductions + Agreements
+5. Test Commercial Partner flow MODE 1: Direct investment (same as investor)
+6. Test Commercial Partner flow MODE 2: Proxy mode (on behalf of Client XXX)
+   - UI shows proxy banner
+   - Subscription submitted for client
+   - Documents generated with client details
+7. Test Hybrid user: Switch between personas, verify navigation updates
+8. Test Conditional Access: Verify Partner/Introducer/CP cannot invest in deals where not dispatched as investor
 
 **B. Redirect & Migration Testing (4 hours)**
 1. Test ALL legacy URL redirects (30+ routes)
@@ -1298,16 +1593,20 @@ Total estimated time: **182 hours**
 | 3 | Investor Journey Restructure | 40 | Phase 2 (needs routes) |
 | 4 | UI/UX Consolidation | 26 | Phase 3 (investor base) |
 | 5 | CEO Features - Inbox & Users | 24 | Phase 1 (needs all tables) |
-| 6 | Partner/Introducer/Commercial Features | 19 | Phase 1, 5 (needs tables + users page) |
-| 7 | Testing, Polish & Documentation | 24 | All phases |
-| **TOTAL** | | **182 hours** | |
+| 6 | Partner/Introducer/Commercial Features | 21 | Phase 1, 5 (needs tables + users page) |
+| 7 | Testing, Polish & Documentation | 26 | All phases |
+| **TOTAL** | | **188 hours** | |
 
-**Note:** Timeline increased from original 160 hours to 182 hours due to additional requirements:
+**Note:** Timeline increased from original 160 hours to 188 hours due to additional requirements:
 - Phase 1: +8 hours for companies table, stock_type field, vehicle required, KYC document cleanup
+- Phase 1: +NEW proxy mode tables, role enum updates, journey stage tracking
 - Phase 2: +1 hour for moving Processes to Admin Portal
 - Phase 3: +8 hours for subscription pack auto-generation, NDA handling, entity-level data room access
+- Phase 3: +2 hours for 10-stage journey bar (was 7)
 - Phase 4: +2 hours for terminology updates
 - Phase 6: +3 hours for introducer agreement prerequisite
+- Phase 6: +2 hours for Commercial Partner two-mode UI (v1.3 update)
+- Phase 7: +2 hours for additional testing (proxy mode, conditional access)
 
 **Phase Ordering Rationale:**
 1. **Database first** - TypeScript types and RLS policies must be stable before UI work
@@ -1316,7 +1615,7 @@ Total estimated time: **182 hours**
 4. **UI/UX fourth** - Polish and consolidation of investor experience
 5. **CEO features fifth** - Now all user type tables exist for consolidated Users page
 6. **Persona features sixth** - Partner/Introducer/Commercial pages depend on tables AND users page patterns
-7. **Testing last** - Comprehensive QA with adequate time (24 hours, not 8)
+7. **Testing last** - Comprehensive QA with adequate time (26 hours)
 
 ---
 
@@ -1339,6 +1638,48 @@ These features from user stories are NOT included in this plan:
 
 **Admin Portal:**
 10. **Admin Portal Full Build** - CMS, SaaS management, Growth marketing dashboards (initial carve-out in Phase 1, full build deferred)
+
+---
+
+## 15.1 Legacy Database Cleanup (Recommended)
+
+**⚠️ LEGACY TABLES TO DEPRECATE:**
+
+### A. `allocations` Table
+**Status:** LEGACY - from deprecated reservation system
+**Evidence:**
+- NO new inserts from application code
+- Only created via `finalize_reservation` DB function (tied to deprecated `reservations`)
+- `reservations` table marked as "FULLY DEPRECATED" in migration 20251015110000
+
+**Current Usage (legacy handling code only):**
+- `api/approvals/[id]/action/route.ts` - handles entity_type='allocation'
+- `api/approvals/bulk-action/route.ts` - bulk allocation handling
+- NO new allocations are being created
+
+**Replacement:**
+- Funding tracking: `subscriptions.funded_amount`, `subscriptions.status`
+- Deal holdings: `investor_deal_holdings` table (status: pending_funding, funded, active, closed)
+- Position snapshots: `positions` table
+
+**Deprecation Plan:**
+1. Add deprecation comment to `allocations` table
+2. Remove allocation handling code from approvals API (or leave as no-op)
+3. Archive existing allocation data if needed
+4. Drop table after confirming no references
+
+```sql
+-- Add deprecation comment
+COMMENT ON TABLE allocations IS
+  'DEPRECATED: Legacy table from reservation system.
+   Use subscriptions for funding tracking.
+   Use investor_deal_holdings for deal-level holdings.
+   See migration 20251015110000_remove_reservation_support.sql';
+```
+
+### B. Related Legacy Tables
+- `allocation_lot_items` - Junction table for allocations (deprecated with allocations)
+- `reservations_archive` - Historical backup (keep for audit)
 
 ---
 
@@ -1425,8 +1766,8 @@ To ensure zero downtime and preserve bookmarked URLs, the following redirects wi
 
 - [ ] "Investment Opportunities" replaces "Active Deals" (nav + page titles)
 - [ ] Data room is integrated within opportunity detail (no separate nav item)
-- [ ] Journey bar exists and updates based on real data:
-  - Interest → NDA → Data Room → Subscribe → Sign → Fund → Active
+- [ ] Journey bar exists with 10 STAGES and updates based on real data:
+  - Received → Viewed → Interest Confirmed → NDA Signed → Data Room Access → Pack Generated → Pack Sent → Signed → Funded → Active
 - [ ] Tasks + Notifications unified in header panel (bell icon near profile)
 - [ ] Tasks/Notifications removed from sidebar
 - [ ] "Reports" removed from nav, replaced with "Documents"
@@ -1481,13 +1822,43 @@ To ensure zero downtime and preserve bookmarked URLs, the following redirects wi
 - [ ] User type filter/tabs work correctly
 - [ ] User detail page handles all user types
 
+### Conditional Investor Access (v1.3 - NEW)
+
+- [ ] Partner cannot invest in a deal unless CEO dispatched them as `partner_investor` for that deal
+- [ ] Introducer cannot invest in a deal unless CEO dispatched them as `introducer_investor` for that deal
+- [ ] Commercial Partner cannot invest in a deal unless CEO dispatched them as `commercial_partner_investor` for that deal
+- [ ] `deal_memberships.role` enum includes: partner_investor, introducer_investor, commercial_partner_investor, commercial_partner_proxy
+- [ ] UI shows appropriate access controls based on `deal_memberships.role`
+
+### Commercial Partner Proxy Mode (v1.3 - NEW)
+
+- [ ] `commercial_partner_clients` table exists for tracking proxy relationships
+- [ ] Commercial Partner dispatched with proxy flag sees "Acting on behalf of: [Client Name]" banner
+- [ ] Commercial Partner can submit subscription on behalf of client
+- [ ] Documents generated show client (not Commercial Partner) as investing party
+- [ ] Signature is by Commercial Partner but investment belongs to client
+
+### Lawyer Subscription Visibility (v1.3 - NEW)
+
+- [ ] Lawyer assigned to a deal can view signed subscription packs for that deal
+- [ ] Lawyer receives notification when investor signs subscription pack
+- [ ] Lawyer has read-only access (cannot modify subscriptions)
+
+### Document Signatory Logic (v1.3 - EXPANDED)
+
+- [ ] Signatory logic applies to ALL documents (NDA, Subscription Pack, Amendments, Placement Agreements)
+- [ ] Non-signatories can view but NEVER sign any document
+- [ ] Signature queue does NOT show documents to non-signatories
+
 ### Database & Security
 
 - [ ] All new tables have RLS policies
 - [ ] `companies`, `company_stakeholders`, `company_directors`, `company_valuations` tables exist
+- [ ] `commercial_partner_clients` table exists for proxy mode
 - [ ] KYC document types exclude NDA and DNC (investment documents, not KYC)
-- [ ] Persona detection works via linking tables
+- [ ] Persona detection works via linking tables (global) AND deal_memberships (per-deal)
 - [ ] No data leakage between personas (verified via testing)
+- [ ] Conditional investor access enforced at API level
 
 ### Performance
 
@@ -1498,4 +1869,14 @@ To ensure zero downtime and preserve bookmarked URLs, the following redirects wi
 
 **END OF PLAN**
 
-This document is ready for client review. All phases are based on the user stories from Mobile V6 specifications and the existing codebase structure.
+**Version 1.3 (December 18, 2025):** Updated based on Fred's feedback review.
+
+Key changes in v1.3:
+1. Conditional investor access for Partner/Introducer/Commercial Partner (per-deal, CEO dispatch)
+2. Commercial Partner Proxy Mode (on behalf of Client XXX)
+3. 10-stage investor journey (was 7)
+4. Lawyer subscription visibility
+5. Document signatory logic expanded to all documents
+6. New database tables for proxy mode and journey tracking
+
+This document is ready for client review. All phases are based on the user stories from Mobile V6 specifications, the existing codebase structure, and Fred's feedback from December 2025.

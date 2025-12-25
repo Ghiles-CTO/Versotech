@@ -9,6 +9,12 @@ import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { AlertTriangle, CheckCircle2, Loader2, FileSignature } from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
+import Link from 'next/link'
+
+type AgreementStatus = 'loading' | 'valid' | 'invalid' | 'none'
 
 type AddIntroductionDialogProps = {
   open: boolean
@@ -24,7 +30,50 @@ export function AddIntroductionDialog({ open, onOpenChange, introducers, deals }
   const [commissionOverride, setCommissionOverride] = useState<number | ''>('')
   const [notes, setNotes] = useState('')
   const [isPending, startTransition] = useTransition()
+  const [agreementStatus, setAgreementStatus] = useState<AgreementStatus>('none')
   const router = useRouter()
+
+  // Check if selected introducer has a valid agreement
+  useEffect(() => {
+    if (!introducerId) {
+      setAgreementStatus('none')
+      return
+    }
+
+    const checkAgreement = async () => {
+      setAgreementStatus('loading')
+      try {
+        const supabase = createClient()
+        const today = new Date().toISOString().split('T')[0]
+
+        const { data, error } = await supabase
+          .from('introducer_agreements')
+          .select('id, status, signed_date, expiry_date')
+          .eq('introducer_id', introducerId)
+          .eq('status', 'active')
+          .not('signed_date', 'is', null)
+          .or(`expiry_date.is.null,expiry_date.gte.${today}`)
+          .limit(1)
+
+        if (error) {
+          console.error('Error checking agreement:', error)
+          setAgreementStatus('invalid')
+          return
+        }
+
+        if (data && data.length > 0) {
+          setAgreementStatus('valid')
+        } else {
+          setAgreementStatus('invalid')
+        }
+      } catch (err) {
+        console.error('Error checking agreement:', err)
+        setAgreementStatus('invalid')
+      }
+    }
+
+    checkAgreement()
+  }, [introducerId])
 
   const resetForm = () => {
     setIntroducerId('')
@@ -32,6 +81,7 @@ export function AddIntroductionDialog({ open, onOpenChange, introducers, deals }
     setDealId('')
     setCommissionOverride('')
     setNotes('')
+    setAgreementStatus('none')
   }
 
   const handleCreate = () => {
@@ -130,6 +180,34 @@ export function AddIntroductionDialog({ open, onOpenChange, introducers, deals }
                 ))}
               </SelectContent>
             </Select>
+
+            {/* Agreement Status Warning */}
+            {introducerId && agreementStatus === 'loading' && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                <Loader2 className="h-3 w-3 animate-spin" />
+                Checking agreement status...
+              </div>
+            )}
+            {introducerId && agreementStatus === 'valid' && (
+              <div className="flex items-center gap-2 text-sm text-green-600 mt-1">
+                <CheckCircle2 className="h-3 w-3" />
+                Valid signed agreement on file
+              </div>
+            )}
+            {introducerId && agreementStatus === 'invalid' && (
+              <Alert variant="destructive" className="mt-2">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription className="flex items-center justify-between">
+                  <span>This introducer does not have a valid signed agreement.</span>
+                  <Link
+                    href={`/versotech_main/introducers/${introducerId}?tab=agreements`}
+                    className="text-xs underline ml-2 whitespace-nowrap"
+                  >
+                    Create Agreement
+                  </Link>
+                </AlertDescription>
+              </Alert>
+            )}
           </div>
 
           <div className="grid gap-2">
@@ -189,7 +267,10 @@ export function AddIntroductionDialog({ open, onOpenChange, introducers, deals }
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isPending}>
             Cancel
           </Button>
-          <Button onClick={handleCreate} disabled={isPending}>
+          <Button
+            onClick={handleCreate}
+            disabled={isPending || agreementStatus === 'invalid' || agreementStatus === 'loading'}
+          >
             {isPending ? 'Recording…' : 'Record Introduction'}
           </Button>
         </DialogFooter>

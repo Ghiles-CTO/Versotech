@@ -9,6 +9,7 @@ export type ApprovalEntityType =
   | 'fee_override'
   | 'document_access'
   | 'permission_grant'
+  | 'gdpr_deletion_request'
 
 // Approval status values
 export type ApprovalStatus =

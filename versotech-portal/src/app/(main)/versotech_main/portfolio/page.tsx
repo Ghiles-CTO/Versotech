@@ -1,14 +1,19 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Progress } from '@/components/ui/progress'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import {
   Building2,
   Briefcase,
@@ -20,9 +25,12 @@ import {
   FileSignature,
   AlertCircle,
   ArrowUpRight,
-  Wallet
+  Wallet,
+  DollarSign as SellIcon
 } from 'lucide-react'
 import { usePersona } from '@/contexts/persona-context'
+import { SellPositionForm } from '@/components/investor/sell-position-form'
+import { SaleStatusTracker } from '@/components/investor/sale-status-tracker'
 
 interface Investment {
   id: string
@@ -43,6 +51,36 @@ interface Investment {
   activated_at: string | null
   subscription_date: string | null
   company_logo_url: string | null
+}
+
+interface SaleRequest {
+  id: string
+  subscription_id: string  // Direct field for reliable matching
+  status: string
+  amount_to_sell: number
+  asking_price_per_unit?: number
+  notes?: string
+  status_notes?: string
+  rejection_reason?: string
+  created_at: string
+  approved_at?: string
+  matched_at?: string
+  transfer_completed_at?: string
+  subscription?: {
+    id: string
+    commitment: number
+    funded_amount: number
+    currency: string
+    vehicle?: {
+      id: string
+      name: string
+      type: string
+    }
+  }
+  matched_buyer?: {
+    id: string
+    legal_name: string
+  }
 }
 
 function formatCurrency(amount: number | null, currency: string = 'USD'): string {
@@ -80,7 +118,17 @@ function getInvestmentStatus(investment: Investment) {
   return { label: 'Pending', color: 'bg-gray-500', icon: AlertCircle }
 }
 
-function InvestmentCard({ investment, showFundedOnly = false }: { investment: Investment; showFundedOnly?: boolean }) {
+function InvestmentCard({
+  investment,
+  showFundedOnly = false,
+  onSell,
+  hasPendingSale = false
+}: {
+  investment: Investment
+  showFundedOnly?: boolean
+  onSell?: (investment: Investment) => void
+  hasPendingSale?: boolean
+}) {
   const router = useRouter()
   const status = getInvestmentStatus(investment)
   const StatusIcon = status.icon
@@ -194,17 +242,32 @@ function InvestmentCard({ investment, showFundedOnly = false }: { investment: In
           )}
         </div>
 
-        {/* View details */}
-        {investment.deal_id && (
-          <Button
-            variant="outline"
-            className="w-full"
-            onClick={() => router.push(`/versotech_main/opportunities/${investment.deal_id}`)}
-          >
-            View Details
-            <ArrowUpRight className="w-4 h-4 ml-2" />
-          </Button>
-        )}
+        {/* Action buttons */}
+        <div className="flex gap-2">
+          {investment.deal_id && (
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={() => router.push(`/versotech_main/opportunities/${investment.deal_id}`)}
+            >
+              View Details
+              <ArrowUpRight className="w-4 h-4 ml-2" />
+            </Button>
+          )}
+          {/* Sell button for active investments */}
+          {investment.activated_at && investment.funded_amount && onSell && (
+            <Button
+              variant="outline"
+              className={`flex-1 ${hasPendingSale ? 'opacity-50 cursor-not-allowed' : 'border-amber-300 text-amber-700 hover:bg-amber-50'}`}
+              onClick={() => !hasPendingSale && onSell(investment)}
+              disabled={hasPendingSale}
+              title={hasPendingSale ? 'You have a pending sale request for this position' : 'Request to sell this position'}
+            >
+              <SellIcon className="w-4 h-4 mr-2" />
+              {hasPendingSale ? 'Sale Pending' : 'Sell Position'}
+            </Button>
+          )}
+        </div>
       </CardContent>
     </Card>
   )
@@ -238,11 +301,35 @@ function InvestmentSkeleton() {
 }
 
 export default function PortfolioPage() {
+  const router = useRouter()
   const { isInvestor } = usePersona()
   const [investments, setInvestments] = useState<Investment[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  // Sale request state
+  const [saleRequests, setSaleRequests] = useState<SaleRequest[]>([])
+  const [saleRequestsLoading, setSaleRequestsLoading] = useState(true)
+  const [sellDialogOpen, setSellDialogOpen] = useState(false)
+  const [selectedInvestment, setSelectedInvestment] = useState<Investment | null>(null)
+
+  // Fetch sale requests - memoized to prevent unnecessary re-renders
+  const fetchSaleRequests = useCallback(async () => {
+    try {
+      setSaleRequestsLoading(true)
+      const response = await fetch('/api/investor/sell-request')
+      if (response.ok) {
+        const data = await response.json()
+        setSaleRequests(data.data || [])
+      }
+    } catch (err) {
+      console.error('Error fetching sale requests:', err)
+    } finally {
+      setSaleRequestsLoading(false)
+    }
+  }, [])
+
+  // Fetch portfolio data
   useEffect(() => {
     async function fetchPortfolio() {
       try {
@@ -263,8 +350,38 @@ export default function PortfolioPage() {
 
     if (isInvestor) {
       fetchPortfolio()
+      fetchSaleRequests()
     }
-  }, [isInvestor])
+  }, [isInvestor, fetchSaleRequests])
+
+  // Handle sell button click
+  const handleSellClick = (investment: Investment) => {
+    setSelectedInvestment(investment)
+    setSellDialogOpen(true)
+  }
+
+  // Handle sell form success
+  const handleSellSuccess = () => {
+    setSellDialogOpen(false)
+    setSelectedInvestment(null)
+    fetchSaleRequests()
+  }
+
+  // Handle dialog close - reset selected investment
+  const handleDialogChange = (open: boolean) => {
+    setSellDialogOpen(open)
+    if (!open) {
+      setSelectedInvestment(null)
+    }
+  }
+
+  // Check if investment has pending sale - use direct subscription_id field
+  const hasPendingSale = useCallback((subscriptionId: string) => {
+    return saleRequests.some(
+      r => r.subscription_id === subscriptionId &&
+           ['pending', 'approved', 'matched', 'in_progress'].includes(r.status)
+    )
+  }, [saleRequests])
 
   // Filter investments by status
   const activeInvestments = investments.filter(i => i.activated_at)
@@ -295,9 +412,9 @@ export default function PortfolioPage() {
     <div className="p-6 space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold">Investment Portfolio</h1>
+        <h1 className="text-2xl font-bold">Active Portfolio</h1>
         <p className="text-muted-foreground">
-          View and manage your active investments
+          Your activated investments with live NAV tracking
         </p>
       </div>
 
@@ -364,111 +481,93 @@ export default function PortfolioPage() {
         </div>
       )}
 
-      {/* Investments */}
-      {!loading && !error && (
-        <Tabs defaultValue="active" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="active">
-              Active ({activeInvestments.length})
-            </TabsTrigger>
-            <TabsTrigger value="funded">
-              Funded ({fundedInvestments.length})
-            </TabsTrigger>
-            <TabsTrigger value="pending">
-              Pending ({pendingInvestments.length})
-            </TabsTrigger>
-            <TabsTrigger value="all">
-              All ({investments.length})
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="active" className="space-y-4">
-            {activeInvestments.length === 0 ? (
-              <Card>
-                <CardContent className="py-12 text-center">
-                  <CheckCircle2 className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-medium mb-2">No Active Investments</h3>
-                  <p className="text-muted-foreground mb-4">
-                    Active investments will appear here once they are fully funded and activated.
+      {/* In-Progress Banner - Direct to Opportunities for Stages 1-9 */}
+      {!loading && (fundedInvestments.length > 0 || pendingInvestments.length > 0) && (
+        <Card className="border-amber-200 bg-amber-50 dark:bg-amber-900/20">
+          <CardContent className="py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Clock className="w-5 h-5 text-amber-600" />
+                <div>
+                  <p className="font-medium text-amber-800 dark:text-amber-200">
+                    {fundedInvestments.length + pendingInvestments.length} subscription(s) in progress
                   </p>
-                  <Button onClick={() => window.location.href = '/versotech_main/opportunities'}>
-                    Browse Opportunities
-                  </Button>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {activeInvestments.map((investment) => (
-                  <InvestmentCard key={investment.id} investment={investment} />
-                ))}
-              </div>
-            )}
-          </TabsContent>
-
-          <TabsContent value="funded" className="space-y-4">
-            {fundedInvestments.length === 0 ? (
-              <Card>
-                <CardContent className="py-12 text-center">
-                  <DollarSign className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-medium mb-2">No Funded Investments</h3>
-                  <p className="text-muted-foreground">
-                    Investments awaiting activation will appear here.
+                  <p className="text-sm text-amber-600 dark:text-amber-300">
+                    View your pending and funded subscriptions in Investment Opportunities
                   </p>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {fundedInvestments.map((investment) => (
-                  <InvestmentCard key={investment.id} investment={investment} />
-                ))}
+                </div>
               </div>
-            )}
-          </TabsContent>
-
-          <TabsContent value="pending" className="space-y-4">
-            {pendingInvestments.length === 0 ? (
-              <Card>
-                <CardContent className="py-12 text-center">
-                  <Clock className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-medium mb-2">No Pending Investments</h3>
-                  <p className="text-muted-foreground">
-                    Investments awaiting signature or funding will appear here.
-                  </p>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {pendingInvestments.map((investment) => (
-                  <InvestmentCard key={investment.id} investment={investment} />
-                ))}
-              </div>
-            )}
-          </TabsContent>
-
-          <TabsContent value="all" className="space-y-4">
-            {investments.length === 0 ? (
-              <Card>
-                <CardContent className="py-12 text-center">
-                  <Briefcase className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-medium mb-2">No Investments Yet</h3>
-                  <p className="text-muted-foreground mb-4">
-                    Start building your portfolio by subscribing to investment opportunities.
-                  </p>
-                  <Button onClick={() => window.location.href = '/versotech_main/opportunities'}>
-                    Browse Opportunities
-                  </Button>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {investments.map((investment) => (
-                  <InvestmentCard key={investment.id} investment={investment} />
-                ))}
-              </div>
-            )}
-          </TabsContent>
-        </Tabs>
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-amber-300 text-amber-700 hover:bg-amber-100"
+                onClick={() => router.push('/versotech_main/opportunities')}
+              >
+                View Subscriptions
+                <ArrowUpRight className="w-4 h-4 ml-2" />
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       )}
+
+      {/* Active Investments Only (Stage 10) */}
+      {!loading && !error && (
+        <div className="space-y-4">
+          {activeInvestments.length === 0 ? (
+            <Card>
+              <CardContent className="py-12 text-center">
+                <CheckCircle2 className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                <h3 className="text-lg font-medium mb-2">No Active Investments</h3>
+                <p className="text-muted-foreground mb-4">
+                  Active investments will appear here once they are fully funded and activated.
+                </p>
+                <Button onClick={() => router.push('/versotech_main/opportunities')}>
+                  Browse Opportunities
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {activeInvestments.map((investment) => (
+                <InvestmentCard
+                  key={investment.id}
+                  investment={investment}
+                  onSell={handleSellClick}
+                  hasPendingSale={hasPendingSale(investment.id)}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Sale Requests Tracker */}
+      {!loading && saleRequests.length > 0 && (
+        <SaleStatusTracker
+          requests={saleRequests}
+          onRequestCancelled={fetchSaleRequests}
+        />
+      )}
+
+      {/* Sell Position Dialog */}
+      <Dialog open={sellDialogOpen} onOpenChange={handleDialogChange}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Sell Position</DialogTitle>
+          </DialogHeader>
+          {selectedInvestment && (
+            <SellPositionForm
+              subscriptionId={selectedInvestment.id}
+              vehicleName={selectedInvestment.vehicle_name}
+              fundedAmount={selectedInvestment.funded_amount || 0}
+              currency={selectedInvestment.currency}
+              onSuccess={handleSellSuccess}
+              onCancel={() => handleDialogChange(false)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

@@ -27,9 +27,11 @@ interface CreateDealFormProps {
     logo_url?: string | null
     website_url?: string | null
   }>
+  /** Base path for navigation (e.g., '/versotech/staff' or '/versotech_main') */
+  basePath?: string
 }
 
-export function CreateDealForm({ entities }: CreateDealFormProps) {
+export function CreateDealForm({ entities, basePath = '/versotech/staff' }: CreateDealFormProps) {
   const router = useRouter()
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
@@ -40,6 +42,7 @@ export function CreateDealForm({ entities }: CreateDealFormProps) {
     name: '',
     company_name: '',
     deal_type: 'equity_secondary',
+    stock_type: 'ordinary',
     vehicle_id: '',
     sector: '',
     stage: '',
@@ -113,6 +116,7 @@ export function CreateDealForm({ entities }: CreateDealFormProps) {
         name: formData.name.trim(),
         company_name: formData.company_name.trim() || null,
         deal_type: formData.deal_type,
+        stock_type: formData.stock_type || null,
         vehicle_id: formData.vehicle_id || null,
         sector: formData.sector.trim() || null,
         stage: formData.stage.trim() || null,
@@ -159,7 +163,7 @@ export function CreateDealForm({ entities }: CreateDealFormProps) {
       }
 
       const { deal } = await response.json()
-      router.push(`/versotech/staff/deals/${deal.id}`)
+      router.push(`${basePath}/deals/${deal.id}`)
     } catch (err: any) {
       setError(err.message)
       setLoading(false)
@@ -174,7 +178,7 @@ export function CreateDealForm({ entities }: CreateDealFormProps) {
           <h1 className="text-3xl font-bold text-foreground">Create New Deal</h1>
           <p className="text-muted-foreground mt-1">Set up a new investment opportunity</p>
         </div>
-        <Link href="/versotech/staff/deals">
+        <Link href={`${basePath}/deals`}>
           <Button variant="ghost" className="gap-2">
             <ArrowLeft className="h-4 w-4" />
             Back to Deals
@@ -261,6 +265,20 @@ export function CreateDealForm({ entities }: CreateDealFormProps) {
                 </div>
 
                 <div className="space-y-2">
+                  <Label htmlFor="stock_type" className="text-foreground">Stock Type *</Label>
+                  <Select value={formData.stock_type} onValueChange={(v) => updateField('stock_type', v)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ordinary">Ordinary Shares</SelectItem>
+                      <SelectItem value="preference">Preference Shares</SelectItem>
+                      <SelectItem value="convertible">Convertible Notes</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <Label htmlFor="vehicle_id" className="text-foreground">
                       Entity (Optional)
@@ -281,7 +299,7 @@ export function CreateDealForm({ entities }: CreateDealFormProps) {
                   </Select>
                   <p className="text-xs text-muted-foreground">
                     Choose an entity for pooled investments, or "No entity" for direct ownership deals. Manage entities from{' '}
-                    <Link href="/versotech/staff/entities" className="text-emerald-300 hover:text-emerald-200 underline">
+                    <Link href={`${basePath}/entities`} className="text-emerald-300 hover:text-emerald-200 underline">
                       Entities
                     </Link>
                   </p>

@@ -193,6 +193,18 @@ export async function POST(
     return NextResponse.json({ error: 'Failed to submit interest' }, { status: 500 })
   }
 
+  // Update deal_memberships.interest_confirmed_at if not already set
+  // This ensures the journey stage tracking is accurate
+  await serviceSupabase
+    .from('deal_memberships')
+    .update({
+      interest_confirmed_at: new Date().toISOString(),
+      viewed_at: new Date().toISOString() // Ensure viewed is also set
+    })
+    .eq('deal_id', dealId)
+    .eq('investor_id', resolvedInvestorId)
+    .is('interest_confirmed_at', null) // Only update if not already set
+
   // Track analytics event
   await trackDealEvent({
     supabase: serviceSupabase,

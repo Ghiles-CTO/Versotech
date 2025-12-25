@@ -51,6 +51,7 @@ import {
   Calendar,
   AlertTriangle,
 } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 interface UserAccount {
   id: string
@@ -74,7 +75,11 @@ interface UserActivityLog {
   user_agent?: string
 }
 
-export function UserAccountManagement() {
+interface UserAccountManagementProps {
+  isDark?: boolean
+}
+
+export function UserAccountManagement({ isDark = true }: UserAccountManagementProps) {
   const [users, setUsers] = useState<UserAccount[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
@@ -210,29 +215,47 @@ export function UserAccountManagement() {
     if (user.status === 'active') {
       return <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30">Active</Badge>
     }
-    return <Badge className="bg-zinc-500/20 text-zinc-400 border-zinc-500/30">{user.status}</Badge>
+    return <Badge className={cn(
+      'bg-zinc-500/20 border-zinc-500/30',
+      isDark ? 'text-zinc-400' : 'text-zinc-600'
+    )}>{user.status}</Badge>
   }
 
   return (
     <div className="space-y-4">
       {/* Filters */}
-      <Card className="bg-zinc-900/50 border-white/10">
+      <Card className={cn(
+        isDark ? 'bg-zinc-900/50 border-white/10' : 'bg-white border-gray-200 shadow-sm'
+      )}>
         <CardContent className="p-4">
           <div className="flex items-center gap-4">
             <div className="relative flex-1 max-w-sm">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
+              <Search className={cn(
+                'absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4',
+                isDark ? 'text-zinc-400' : 'text-gray-400'
+              )} />
               <Input
                 placeholder="Search by name or email..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500"
+                className={cn(
+                  'pl-9',
+                  isDark
+                    ? 'bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500'
+                    : 'bg-white border-gray-300 text-gray-900 placeholder:text-gray-400'
+                )}
               />
             </div>
             <Select value={roleFilter} onValueChange={setRoleFilter}>
-              <SelectTrigger className="w-40 bg-zinc-800 border-zinc-700 text-white">
+              <SelectTrigger className={cn(
+                'w-40',
+                isDark ? 'bg-zinc-800 border-zinc-700 text-white' : 'bg-white border-gray-300 text-gray-900'
+              )}>
                 <SelectValue placeholder="Role" />
               </SelectTrigger>
-              <SelectContent className="bg-zinc-800 border-zinc-700">
+              <SelectContent className={cn(
+                isDark ? 'bg-zinc-800 border-zinc-700' : 'bg-white border-gray-200'
+              )}>
                 <SelectItem value="all">All Roles</SelectItem>
                 <SelectItem value="investor">Investor</SelectItem>
                 <SelectItem value="staff_admin">Staff Admin</SelectItem>
@@ -241,10 +264,15 @@ export function UserAccountManagement() {
               </SelectContent>
             </Select>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-40 bg-zinc-800 border-zinc-700 text-white">
+              <SelectTrigger className={cn(
+                'w-40',
+                isDark ? 'bg-zinc-800 border-zinc-700 text-white' : 'bg-white border-gray-300 text-gray-900'
+              )}>
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
-              <SelectContent className="bg-zinc-800 border-zinc-700">
+              <SelectContent className={cn(
+                isDark ? 'bg-zinc-800 border-zinc-700' : 'bg-white border-gray-200'
+              )}>
                 <SelectItem value="all">All Status</SelectItem>
                 <SelectItem value="active">Active</SelectItem>
                 <SelectItem value="inactive">Inactive</SelectItem>
@@ -255,7 +283,11 @@ export function UserAccountManagement() {
               variant="outline"
               size="icon"
               onClick={fetchUsers}
-              className="border-zinc-700 text-zinc-400 hover:text-white"
+              className={cn(
+                isDark
+                  ? 'border-zinc-700 text-zinc-400 hover:text-white'
+                  : 'border-gray-300 text-gray-500 hover:text-gray-900'
+              )}
             >
               <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
             </Button>
@@ -264,68 +296,113 @@ export function UserAccountManagement() {
       </Card>
 
       {/* Users Table */}
-      <Card className="bg-zinc-900/50 border-white/10">
+      <Card className={cn(
+        isDark ? 'bg-zinc-900/50 border-white/10' : 'bg-white border-gray-200 shadow-sm'
+      )}>
         <CardContent className="p-0">
           <Table>
             <TableHeader>
-              <TableRow className="border-zinc-700 hover:bg-transparent">
-                <TableHead className="text-zinc-400">User</TableHead>
-                <TableHead className="text-zinc-400">Role</TableHead>
-                <TableHead className="text-zinc-400">Status</TableHead>
-                <TableHead className="text-zinc-400">Last Sign In</TableHead>
-                <TableHead className="text-zinc-400">Failed Logins</TableHead>
-                <TableHead className="text-zinc-400 text-right">Actions</TableHead>
+              <TableRow className={cn(
+                isDark ? 'border-zinc-700 hover:bg-transparent' : 'border-gray-200 hover:bg-transparent'
+              )}>
+                <TableHead className={isDark ? 'text-zinc-400' : 'text-gray-500'}>User</TableHead>
+                <TableHead className={isDark ? 'text-zinc-400' : 'text-gray-500'}>Role</TableHead>
+                <TableHead className={isDark ? 'text-zinc-400' : 'text-gray-500'}>Status</TableHead>
+                <TableHead className={isDark ? 'text-zinc-400' : 'text-gray-500'}>Last Sign In</TableHead>
+                <TableHead className={isDark ? 'text-zinc-400' : 'text-gray-500'}>Failed Logins</TableHead>
+                <TableHead className={cn(
+                  'text-right',
+                  isDark ? 'text-zinc-400' : 'text-gray-500'
+                )}>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {loading ? (
                 [...Array(5)].map((_, i) => (
-                  <TableRow key={i} className="border-zinc-700">
+                  <TableRow key={i} className={isDark ? 'border-zinc-700' : 'border-gray-200'}>
                     <TableCell>
-                      <div className="h-10 bg-zinc-800 rounded animate-pulse" />
+                      <div className={cn(
+                        'h-10 rounded animate-pulse',
+                        isDark ? 'bg-zinc-800' : 'bg-gray-200'
+                      )} />
                     </TableCell>
                     <TableCell>
-                      <div className="h-6 w-20 bg-zinc-800 rounded animate-pulse" />
+                      <div className={cn(
+                        'h-6 w-20 rounded animate-pulse',
+                        isDark ? 'bg-zinc-800' : 'bg-gray-200'
+                      )} />
                     </TableCell>
                     <TableCell>
-                      <div className="h-6 w-16 bg-zinc-800 rounded animate-pulse" />
+                      <div className={cn(
+                        'h-6 w-16 rounded animate-pulse',
+                        isDark ? 'bg-zinc-800' : 'bg-gray-200'
+                      )} />
                     </TableCell>
                     <TableCell>
-                      <div className="h-4 w-24 bg-zinc-800 rounded animate-pulse" />
+                      <div className={cn(
+                        'h-4 w-24 rounded animate-pulse',
+                        isDark ? 'bg-zinc-800' : 'bg-gray-200'
+                      )} />
                     </TableCell>
                     <TableCell>
-                      <div className="h-4 w-8 bg-zinc-800 rounded animate-pulse" />
+                      <div className={cn(
+                        'h-4 w-8 rounded animate-pulse',
+                        isDark ? 'bg-zinc-800' : 'bg-gray-200'
+                      )} />
                     </TableCell>
                     <TableCell>
-                      <div className="h-8 w-8 bg-zinc-800 rounded animate-pulse ml-auto" />
+                      <div className={cn(
+                        'h-8 w-8 rounded animate-pulse ml-auto',
+                        isDark ? 'bg-zinc-800' : 'bg-gray-200'
+                      )} />
                     </TableCell>
                   </TableRow>
                 ))
               ) : users.length === 0 ? (
-                <TableRow className="border-zinc-700">
-                  <TableCell colSpan={6} className="text-center py-8 text-zinc-400">
+                <TableRow className={isDark ? 'border-zinc-700' : 'border-gray-200'}>
+                  <TableCell colSpan={6} className={cn(
+                    'text-center py-8',
+                    isDark ? 'text-zinc-400' : 'text-gray-500'
+                  )}>
                     No users found
                   </TableCell>
                 </TableRow>
               ) : (
                 users.map((user) => (
-                  <TableRow key={user.id} className="border-zinc-700 hover:bg-zinc-800/50">
+                  <TableRow key={user.id} className={cn(
+                    isDark ? 'border-zinc-700 hover:bg-zinc-800/50' : 'border-gray-200 hover:bg-gray-50'
+                  )}>
                     <TableCell>
                       <div className="flex items-center gap-3">
-                        <div className="h-9 w-9 rounded-full bg-zinc-800 flex items-center justify-center">
-                          <User className="h-4 w-4 text-zinc-400" />
+                        <div className={cn(
+                          'h-9 w-9 rounded-full flex items-center justify-center',
+                          isDark ? 'bg-zinc-800' : 'bg-gray-100'
+                        )}>
+                          <User className={cn(
+                            'h-4 w-4',
+                            isDark ? 'text-zinc-400' : 'text-gray-500'
+                          )} />
                         </div>
                         <div>
-                          <p className="text-white font-medium">
+                          <p className={cn(
+                            'font-medium',
+                            isDark ? 'text-white' : 'text-gray-900'
+                          )}>
                             {user.display_name || 'N/A'}
                           </p>
-                          <p className="text-sm text-zinc-400">{user.email}</p>
+                          <p className={cn(
+                            'text-sm',
+                            isDark ? 'text-zinc-400' : 'text-gray-500'
+                          )}>{user.email}</p>
                         </div>
                       </div>
                     </TableCell>
                     <TableCell>{getRoleBadge(user.role)}</TableCell>
                     <TableCell>{getStatusBadge(user)}</TableCell>
-                    <TableCell className="text-zinc-400 text-sm">
+                    <TableCell className={cn(
+                      'text-sm',
+                      isDark ? 'text-zinc-400' : 'text-gray-500'
+                    )}>
                       {user.last_sign_in_at
                         ? new Date(user.last_sign_in_at).toLocaleDateString()
                         : 'Never'}
@@ -342,7 +419,7 @@ export function UserAccountManagement() {
                           {user.failed_login_attempts}
                         </Badge>
                       ) : (
-                        <span className="text-zinc-500">0</span>
+                        <span className={isDark ? 'text-zinc-500' : 'text-gray-400'}>0</span>
                       )}
                     </TableCell>
                     <TableCell className="text-right">
@@ -351,16 +428,25 @@ export function UserAccountManagement() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8 text-zinc-400 hover:text-white"
+                            className={cn(
+                              'h-8 w-8',
+                              isDark ? 'text-zinc-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'
+                            )}
                           >
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="bg-zinc-800 border-zinc-700">
-                          <DropdownMenuLabel className="text-zinc-400">Actions</DropdownMenuLabel>
+                        <DropdownMenuContent align="end" className={cn(
+                          isDark ? 'bg-zinc-800 border-zinc-700' : 'bg-white border-gray-200'
+                        )}>
+                          <DropdownMenuLabel className={isDark ? 'text-zinc-400' : 'text-gray-500'}>Actions</DropdownMenuLabel>
                           <DropdownMenuItem
                             onClick={() => handleViewActivity(user)}
-                            className="text-zinc-300 focus:text-white focus:bg-zinc-700"
+                            className={cn(
+                              isDark
+                                ? 'text-zinc-300 focus:text-white focus:bg-zinc-700'
+                                : 'text-gray-700 focus:text-gray-900 focus:bg-gray-100'
+                            )}
                           >
                             <Activity className="h-4 w-4 mr-2" />
                             View Activity
@@ -370,16 +456,23 @@ export function UserAccountManagement() {
                               setSelectedUser(user)
                               setResetPasswordDialogOpen(true)
                             }}
-                            className="text-zinc-300 focus:text-white focus:bg-zinc-700"
+                            className={cn(
+                              isDark
+                                ? 'text-zinc-300 focus:text-white focus:bg-zinc-700'
+                                : 'text-gray-700 focus:text-gray-900 focus:bg-gray-100'
+                            )}
                           >
                             <KeyRound className="h-4 w-4 mr-2" />
                             Reset Password
                           </DropdownMenuItem>
-                          <DropdownMenuSeparator className="bg-zinc-700" />
+                          <DropdownMenuSeparator className={isDark ? 'bg-zinc-700' : 'bg-gray-200'} />
                           {user.is_locked ? (
                             <DropdownMenuItem
                               onClick={() => handleToggleLock(user)}
-                              className="text-emerald-400 focus:text-emerald-300 focus:bg-zinc-700"
+                              className={cn(
+                                'text-emerald-400',
+                                isDark ? 'focus:text-emerald-300 focus:bg-zinc-700' : 'focus:text-emerald-500 focus:bg-gray-100'
+                              )}
                             >
                               <CheckCircle className="h-4 w-4 mr-2" />
                               Unlock Account
@@ -387,7 +480,10 @@ export function UserAccountManagement() {
                           ) : (
                             <DropdownMenuItem
                               onClick={() => handleToggleLock(user)}
-                              className="text-amber-400 focus:text-amber-300 focus:bg-zinc-700"
+                              className={cn(
+                                'text-amber-400',
+                                isDark ? 'focus:text-amber-300 focus:bg-zinc-700' : 'focus:text-amber-500 focus:bg-gray-100'
+                              )}
                             >
                               <Ban className="h-4 w-4 mr-2" />
                               Lock Account
@@ -395,7 +491,10 @@ export function UserAccountManagement() {
                           )}
                           <DropdownMenuItem
                             onClick={() => handleDeactivate(user)}
-                            className="text-red-400 focus:text-red-300 focus:bg-zinc-700"
+                            className={cn(
+                              'text-red-400',
+                              isDark ? 'focus:text-red-300 focus:bg-zinc-700' : 'focus:text-red-500 focus:bg-gray-100'
+                            )}
                           >
                             <Ban className="h-4 w-4 mr-2" />
                             Deactivate
@@ -413,56 +512,96 @@ export function UserAccountManagement() {
 
       {/* Summary */}
       <div className="grid grid-cols-4 gap-4">
-        <Card className="bg-zinc-900/50 border-white/10">
+        <Card className={cn(
+          isDark ? 'bg-zinc-900/50 border-white/10' : 'bg-white border-gray-200 shadow-sm'
+        )}>
           <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold text-white">{users.length}</p>
-            <p className="text-xs text-zinc-400">Total Users</p>
+            <p className={cn(
+              'text-2xl font-bold',
+              isDark ? 'text-white' : 'text-gray-900'
+            )}>{users.length}</p>
+            <p className={cn(
+              'text-xs',
+              isDark ? 'text-zinc-400' : 'text-gray-500'
+            )}>Total Users</p>
           </CardContent>
         </Card>
-        <Card className="bg-zinc-900/50 border-white/10">
+        <Card className={cn(
+          isDark ? 'bg-zinc-900/50 border-white/10' : 'bg-white border-gray-200 shadow-sm'
+        )}>
           <CardContent className="p-4 text-center">
             <p className="text-2xl font-bold text-emerald-400">
               {users.filter((u) => u.status === 'active' && !u.is_locked).length}
             </p>
-            <p className="text-xs text-zinc-400">Active</p>
+            <p className={cn(
+              'text-xs',
+              isDark ? 'text-zinc-400' : 'text-gray-500'
+            )}>Active</p>
           </CardContent>
         </Card>
-        <Card className="bg-zinc-900/50 border-white/10">
+        <Card className={cn(
+          isDark ? 'bg-zinc-900/50 border-white/10' : 'bg-white border-gray-200 shadow-sm'
+        )}>
           <CardContent className="p-4 text-center">
             <p className="text-2xl font-bold text-red-400">
               {users.filter((u) => u.is_locked).length}
             </p>
-            <p className="text-xs text-zinc-400">Locked</p>
+            <p className={cn(
+              'text-xs',
+              isDark ? 'text-zinc-400' : 'text-gray-500'
+            )}>Locked</p>
           </CardContent>
         </Card>
-        <Card className="bg-zinc-900/50 border-white/10">
+        <Card className={cn(
+          isDark ? 'bg-zinc-900/50 border-white/10' : 'bg-white border-gray-200 shadow-sm'
+        )}>
           <CardContent className="p-4 text-center">
             <p className="text-2xl font-bold text-amber-400">
               {users.filter((u) => u.failed_login_attempts > 0).length}
             </p>
-            <p className="text-xs text-zinc-400">Failed Logins</p>
+            <p className={cn(
+              'text-xs',
+              isDark ? 'text-zinc-400' : 'text-gray-500'
+            )}>Failed Logins</p>
           </CardContent>
         </Card>
       </div>
 
       {/* Reset Password Dialog */}
       <Dialog open={resetPasswordDialogOpen} onOpenChange={setResetPasswordDialogOpen}>
-        <DialogContent className="bg-zinc-900 border-zinc-700">
+        <DialogContent className={cn(
+          isDark ? 'bg-zinc-900 border-zinc-700' : 'bg-white border-gray-200'
+        )}>
           <DialogHeader>
-            <DialogTitle className="text-white">Reset Password</DialogTitle>
-            <DialogDescription className="text-zinc-400">
+            <DialogTitle className={isDark ? 'text-white' : 'text-gray-900'}>Reset Password</DialogTitle>
+            <DialogDescription className={isDark ? 'text-zinc-400' : 'text-gray-500'}>
               Send a password reset email to {selectedUser?.email}?
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
-            <div className="flex items-center gap-3 p-3 rounded-lg bg-zinc-800">
-              <Mail className="h-5 w-5 text-zinc-400" />
+            <div className={cn(
+              'flex items-center gap-3 p-3 rounded-lg',
+              isDark ? 'bg-zinc-800' : 'bg-gray-100'
+            )}>
+              <Mail className={cn(
+                'h-5 w-5',
+                isDark ? 'text-zinc-400' : 'text-gray-500'
+              )} />
               <div>
-                <p className="text-white font-medium">{selectedUser?.display_name || 'User'}</p>
-                <p className="text-sm text-zinc-400">{selectedUser?.email}</p>
+                <p className={cn(
+                  'font-medium',
+                  isDark ? 'text-white' : 'text-gray-900'
+                )}>{selectedUser?.display_name || 'User'}</p>
+                <p className={cn(
+                  'text-sm',
+                  isDark ? 'text-zinc-400' : 'text-gray-500'
+                )}>{selectedUser?.email}</p>
               </div>
             </div>
-            <p className="text-sm text-zinc-400 mt-4">
+            <p className={cn(
+              'text-sm mt-4',
+              isDark ? 'text-zinc-400' : 'text-gray-500'
+            )}>
               An email with password reset instructions will be sent to this address.
             </p>
           </div>
@@ -470,7 +609,9 @@ export function UserAccountManagement() {
             <Button
               variant="outline"
               onClick={() => setResetPasswordDialogOpen(false)}
-              className="border-zinc-700 text-zinc-400"
+              className={cn(
+                isDark ? 'border-zinc-700 text-zinc-400' : 'border-gray-300 text-gray-600'
+              )}
             >
               Cancel
             </Button>
@@ -483,16 +624,22 @@ export function UserAccountManagement() {
 
       {/* Activity Dialog */}
       <Dialog open={activityDialogOpen} onOpenChange={setActivityDialogOpen}>
-        <DialogContent className="bg-zinc-900 border-zinc-700 max-w-2xl">
+        <DialogContent className={cn(
+          'max-w-2xl',
+          isDark ? 'bg-zinc-900 border-zinc-700' : 'bg-white border-gray-200'
+        )}>
           <DialogHeader>
-            <DialogTitle className="text-white">User Activity</DialogTitle>
-            <DialogDescription className="text-zinc-400">
+            <DialogTitle className={isDark ? 'text-white' : 'text-gray-900'}>User Activity</DialogTitle>
+            <DialogDescription className={isDark ? 'text-zinc-400' : 'text-gray-500'}>
               Recent activity for {selectedUser?.display_name || selectedUser?.email}
             </DialogDescription>
           </DialogHeader>
           <div className="py-4 max-h-[400px] overflow-y-auto">
             {activityLogs.length === 0 ? (
-              <div className="text-center py-8 text-zinc-400">
+              <div className={cn(
+                'text-center py-8',
+                isDark ? 'text-zinc-400' : 'text-gray-500'
+              )}>
                 <Activity className="h-8 w-8 mx-auto mb-2" />
                 <p>No activity logs found</p>
               </div>
@@ -501,16 +648,31 @@ export function UserAccountManagement() {
                 {activityLogs.map((log) => (
                   <div
                     key={log.id}
-                    className="flex items-start gap-3 p-3 rounded-lg bg-zinc-800"
+                    className={cn(
+                      'flex items-start gap-3 p-3 rounded-lg',
+                      isDark ? 'bg-zinc-800' : 'bg-gray-100'
+                    )}
                   >
-                    <Calendar className="h-4 w-4 text-zinc-400 mt-0.5" />
+                    <Calendar className={cn(
+                      'h-4 w-4 mt-0.5',
+                      isDark ? 'text-zinc-400' : 'text-gray-500'
+                    )} />
                     <div className="flex-1">
-                      <p className="text-white text-sm">{log.action}</p>
-                      <p className="text-xs text-zinc-400">
+                      <p className={cn(
+                        'text-sm',
+                        isDark ? 'text-white' : 'text-gray-900'
+                      )}>{log.action}</p>
+                      <p className={cn(
+                        'text-xs',
+                        isDark ? 'text-zinc-400' : 'text-gray-500'
+                      )}>
                         {new Date(log.timestamp).toLocaleString()}
                       </p>
                       {log.ip_address && (
-                        <p className="text-xs text-zinc-500 mt-1">IP: {log.ip_address}</p>
+                        <p className={cn(
+                          'text-xs mt-1',
+                          isDark ? 'text-zinc-500' : 'text-gray-400'
+                        )}>IP: {log.ip_address}</p>
                       )}
                     </div>
                   </div>
@@ -522,7 +684,9 @@ export function UserAccountManagement() {
             <Button
               variant="outline"
               onClick={() => setActivityDialogOpen(false)}
-              className="border-zinc-700 text-zinc-400"
+              className={cn(
+                isDark ? 'border-zinc-700 text-zinc-400' : 'border-gray-300 text-gray-600'
+              )}
             >
               Close
             </Button>

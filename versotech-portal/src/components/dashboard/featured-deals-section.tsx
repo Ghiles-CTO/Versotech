@@ -108,7 +108,7 @@ export function FeaturedDealsSection({ deals }: FeaturedDealsSectionProps) {
           <h2 className="text-2xl font-medium font-serif text-slate-900">Featured Opportunities</h2>
           <p className="text-sm text-slate-500">Exclusive investment access curated for your mandate.</p>
         </div>
-        <Link href="/versoholdings/deals">
+        <Link href="/versotech_main/opportunities">
           <Button variant="outline" className="gap-2 border-slate-300 text-slate-700 hover:bg-slate-50 hover:text-slate-900">
             View all deals
             <ArrowUpRight className="h-4 w-4" />
@@ -127,12 +127,12 @@ export function FeaturedDealsSection({ deals }: FeaturedDealsSectionProps) {
               There are currently no deals matching your profile. You can browse our complete historical archive or request access to specific sectors.
             </CardDescription>
             <div className="mt-6 flex gap-3">
-              <Link href="/versoholdings/deals?view=archive">
+              <Link href="/versotech_main/opportunities?view=archive">
                 <Button variant="outline" className="gap-2">
                   Browse archive
                 </Button>
               </Link>
-              <Link href="/versoholdings/messages">
+              <Link href="/versotech_main/inbox">
                 <Button className="gap-2 bg-slate-900 text-white hover:bg-slate-800">
                   Contact Relationship Manager
                 </Button>
@@ -231,7 +231,7 @@ export function FeaturedDealsSection({ deals }: FeaturedDealsSectionProps) {
                 </CardContent>
 
                 <CardFooter className="relative border-t border-slate-100 p-4">
-                  <Link href={`/versoholdings/deal/${deal.id}`} className="w-full">
+                  <Link href={`/versotech_main/opportunities/${deal.id}`} className="w-full">
                     <Button className="w-full justify-between bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900 group-hover:border-amber-200 group-hover:text-amber-900 shadow-sm" variant="outline">
                       Review opportunity
                       <ArrowUpRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />

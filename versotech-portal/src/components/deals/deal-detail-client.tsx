@@ -97,6 +97,7 @@ export function DealDetailClient({
     investment_thesis: deal?.investment_thesis || '',
     status: deal?.status || 'draft',
     deal_type: deal?.deal_type || 'equity_secondary',
+    stock_type: deal?.stock_type || 'ordinary',
     company_name: deal?.company_name || '',
     company_website: deal?.company_website || '',
     sector: deal?.sector || '',
@@ -105,6 +106,9 @@ export function DealDetailClient({
     open_at: deal?.open_at ? deal.open_at.slice(0, 16) : '',
     close_at: deal?.close_at ? deal.close_at.slice(0, 16) : '',
     offer_unit_price: deal?.offer_unit_price || '',
+    target_amount: deal?.target_amount || '',
+    minimum_investment: deal?.minimum_investment || '',
+    maximum_investment: deal?.maximum_investment || '',
     currency: deal?.currency || 'USD'
   })
   const router = useRouter()
@@ -155,7 +159,10 @@ export function DealDetailClient({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...editFormData,
-          offer_unit_price: editFormData.offer_unit_price ? parseFloat(editFormData.offer_unit_price as string) : null
+          offer_unit_price: editFormData.offer_unit_price ? parseFloat(editFormData.offer_unit_price as string) : null,
+          target_amount: editFormData.target_amount ? parseFloat(editFormData.target_amount as string) : null,
+          minimum_investment: editFormData.minimum_investment ? parseFloat(editFormData.minimum_investment as string) : null,
+          maximum_investment: editFormData.maximum_investment ? parseFloat(editFormData.maximum_investment as string) : null
         })
       })
 
@@ -188,7 +195,7 @@ export function DealDetailClient({
         <Card className="border border-destructive/50 bg-destructive/10">
           <CardContent className="p-6 text-center text-foreground">
             <p>Unable to load deal details</p>
-            <Link href="/versotech/staff/deals">
+            <Link href="/versotech_main/deals">
               <Button variant="outline" className="mt-4">
                 Back to Deals
               </Button>
@@ -209,7 +216,7 @@ export function DealDetailClient({
               variant="ghost" 
               size="sm" 
               className="gap-2 text-foreground hover:text-sky-200 hover:bg-white/10"
-              onClick={() => router.push('/versotech/staff/deals')}
+              onClick={() => router.push('/versotech_main/deals')}
             >
               <ArrowLeft className="h-4 w-4" />
               Back to Deals
@@ -468,6 +475,23 @@ export function DealDetailClient({
               </div>
 
               <div className="space-y-2">
+                <Label htmlFor="edit-stock-type">Stock Type</Label>
+                <Select
+                  value={editFormData.stock_type}
+                  onValueChange={(value) => setEditFormData({ ...editFormData, stock_type: value })}
+                >
+                  <SelectTrigger id="edit-stock-type">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ordinary">Ordinary Shares</SelectItem>
+                    <SelectItem value="preference">Preference Shares</SelectItem>
+                    <SelectItem value="convertible">Convertible Notes</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
                 <Label htmlFor="edit-company-name">Company Name</Label>
                 <Input
                   id="edit-company-name"
@@ -564,6 +588,42 @@ export function DealDetailClient({
                   value={editFormData.offer_unit_price}
                   onChange={(e) => setEditFormData({ ...editFormData, offer_unit_price: e.target.value })}
                   placeholder="e.g., 85.00"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-target-amount">Target Amount</Label>
+                <Input
+                  id="edit-target-amount"
+                  type="number"
+                  step="1"
+                  value={editFormData.target_amount}
+                  onChange={(e) => setEditFormData({ ...editFormData, target_amount: e.target.value })}
+                  placeholder="e.g., 5000000"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-min-investment">Minimum Investment</Label>
+                <Input
+                  id="edit-min-investment"
+                  type="number"
+                  step="1"
+                  value={editFormData.minimum_investment}
+                  onChange={(e) => setEditFormData({ ...editFormData, minimum_investment: e.target.value })}
+                  placeholder="e.g., 10000"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-max-investment">Maximum Investment</Label>
+                <Input
+                  id="edit-max-investment"
+                  type="number"
+                  step="1"
+                  value={editFormData.maximum_investment}
+                  onChange={(e) => setEditFormData({ ...editFormData, maximum_investment: e.target.value })}
+                  placeholder="e.g., 500000"
                 />
               </div>
 

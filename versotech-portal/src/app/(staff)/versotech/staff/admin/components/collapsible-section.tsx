@@ -11,6 +11,7 @@ interface CollapsibleSectionProps {
   defaultOpen?: boolean
   children: React.ReactNode
   badge?: React.ReactNode
+  isDark?: boolean
 }
 
 export function CollapsibleSection({
@@ -19,21 +20,28 @@ export function CollapsibleSection({
   defaultOpen = false,
   children,
   badge,
+  isDark = true,
 }: CollapsibleSectionProps) {
   const [isOpen, setIsOpen] = useState(defaultOpen)
 
   return (
-    <Card className="bg-zinc-900/50 border-white/10 overflow-hidden">
+    <Card className={cn(
+      'overflow-hidden',
+      isDark ? 'bg-zinc-900/50 border-white/10' : 'bg-white border-gray-200 shadow-sm'
+    )}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between p-6 hover:bg-white/5 transition-colors"
+        className={cn(
+          'w-full flex items-center justify-between p-6 transition-colors',
+          isDark ? 'hover:bg-white/5' : 'hover:bg-gray-50'
+        )}
       >
         <div className="flex items-center gap-3">
-          {icon && <span className="text-zinc-400">{icon}</span>}
-          <span className="text-lg font-semibold text-white">{title}</span>
+          {icon && <span className={isDark ? 'text-zinc-400' : 'text-gray-500'}>{icon}</span>}
+          <span className={cn('text-lg font-semibold', isDark ? 'text-white' : 'text-gray-900')}>{title}</span>
           {badge}
         </div>
-        <div className="text-zinc-400">
+        <div className={isDark ? 'text-zinc-400' : 'text-gray-500'}>
           {isOpen ? (
             <ChevronDown className="h-5 w-5" />
           ) : (
@@ -47,7 +55,7 @@ export function CollapsibleSection({
           isOpen ? 'max-h-[5000px] opacity-100' : 'max-h-0 opacity-0'
         )}
       >
-        <CardContent className="pt-0 border-t border-white/5">
+        <CardContent className={cn('pt-0 border-t', isDark ? 'border-white/5' : 'border-gray-200')}>
           <div className="pt-6">{children}</div>
         </CardContent>
       </div>

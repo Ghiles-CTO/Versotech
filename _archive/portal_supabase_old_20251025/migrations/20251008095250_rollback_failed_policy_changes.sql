@@ -1,2 +1,0 @@
--- Cleanup any partially applied changes (none expected)
--- No-op placeholder since previous transaction failed entirely.;

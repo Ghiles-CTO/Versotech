@@ -23,7 +23,7 @@ import {
 import { format } from 'date-fns'
 import { SignatureCanvasWidget } from '@/components/signature/signature-canvas-widget'
 import { InlinePdfViewer } from '@/components/signature/inline-pdf-viewer'
-import type { SignatureTask, SignatureGroup } from './page'
+import type { SignatureTask, SignatureGroup, ExpiredSignature } from './page'
 
 interface SignatureRequestPublicView {
   signing_token: string
@@ -44,6 +44,7 @@ interface VersoSignPageClientProps {
     in_progress: number
     completed_today: number
     overdue: number
+    expired: number
   }
 }
 
@@ -420,6 +421,15 @@ Action Required: ${task.instructions?.action_required || 'Send signature link to
             <CheckCircle2 className="h-4 w-4 mr-2" />
             Completed
           </TabsTrigger>
+          <TabsTrigger value="expired">
+            <AlertCircle className="h-4 w-4 mr-2" />
+            Expired
+            {stats.expired > 0 && (
+              <Badge className="ml-2" variant="destructive">
+                {stats.expired}
+              </Badge>
+            )}
+          </TabsTrigger>
         </TabsList>
 
         {signatureGroups.map(group => (
@@ -430,7 +440,50 @@ Action Required: ${task.instructions?.action_required || 'Send signature link to
                 <CardDescription>{group.description}</CardDescription>
               </CardHeader>
               <CardContent>
-                {group.tasks.length === 0 ? (
+                {/* Handle expired signatures tab */}
+                {group.category === 'expired' ? (
+                  (group.expiredSignatures?.length || 0) === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      No expired signatures
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {group.expiredSignatures?.map(sig => (
+                        <div
+                          key={sig.id}
+                          className="border rounded-lg p-4 hover:bg-muted/50 transition-colors"
+                        >
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                <AlertCircle className="h-4 w-4 text-red-600" />
+                                <h4 className="font-semibold">{sig.document_type.toUpperCase()}</h4>
+                                <Badge variant="destructive">Expired</Badge>
+                              </div>
+                              <p className="text-sm text-muted-foreground mb-3">
+                                Request for {sig.signer_name} expired on {format(new Date(sig.token_expires_at), 'MMM d, yyyy')}
+                              </p>
+                              <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+                                <span className="flex items-center gap-1">
+                                  <Users className="h-3 w-3" />
+                                  {sig.investor?.display_name || sig.investor?.legal_name || sig.signer_name}
+                                </span>
+                                <span className="flex items-center gap-1">
+                                  <Mail className="h-3 w-3" />
+                                  {sig.signer_email}
+                                </span>
+                                <span className="flex items-center gap-1">
+                                  <Calendar className="h-3 w-3" />
+                                  Created {format(new Date(sig.created_at), 'MMM d, yyyy')}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )
+                ) : group.tasks.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
                     No tasks in this category
                   </div>

@@ -1,9 +1,13 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { usePersona } from '@/contexts/persona-context'
 import { useTheme } from '@/components/theme-provider'
+import { createClient } from '@/lib/supabase/client'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { InvestorDashboard } from './investor-dashboard'
+import { IntroducerDashboard } from './introducer-dashboard'
 import {
   Building2,
   Users,
@@ -13,7 +17,8 @@ import {
   User,
   TrendingUp,
   FileText,
-  CheckSquare
+  CheckSquare,
+  Loader2
 } from 'lucide-react'
 
 const PERSONA_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -38,25 +43,63 @@ const PERSONA_COLORS: Record<string, string> = {
 
 /**
  * Persona-aware dashboard for non-CEO users
- * Shows persona cards and basic stats for investors, partners, etc.
+ * Routes to persona-specific dashboards based on active persona type
  */
 export function PersonaDashboard() {
   const { activePersona, personas, isCEO } = usePersona()
   const { theme } = useTheme()
+  const [userId, setUserId] = useState<string | null>(null)
+  const [loadingUser, setLoadingUser] = useState(true)
+
+  // Fetch the current user ID on mount
+  useEffect(() => {
+    async function fetchUser() {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      setUserId(user?.id ?? null)
+      setLoadingUser(false)
+    }
+    fetchUser()
+  }, [])
 
   // Use actual theme system (user-controlled via toggle in header)
   const isDark = theme === 'staff-dark'
 
-  if (!activePersona) {
+  // Show loading state while fetching user
+  if (loadingUser || !activePersona) {
     return (
-      <div className="p-8 text-center">
-        <p className="text-gray-500">Loading...</p>
+      <div className="p-8 text-center flex flex-col items-center gap-3">
+        <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+        <p className="text-gray-500">Loading dashboard...</p>
       </div>
+    )
+  }
+
+  // Route investor personas to the investor-specific dashboard
+  if (activePersona.persona_type === 'investor' && userId) {
+    return (
+      <InvestorDashboard
+        investorId={activePersona.entity_id}
+        userId={userId}
+        persona={activePersona}
+      />
+    )
+  }
+
+  // Route introducer personas to the introducer-specific dashboard
+  if (activePersona.persona_type === 'introducer' && userId) {
+    return (
+      <IntroducerDashboard
+        introducerId={activePersona.entity_id}
+        userId={userId}
+        persona={activePersona}
+      />
     )
   }
 
   const ActiveIcon = PERSONA_ICONS[activePersona.persona_type] || User
 
+  // Generic dashboard for other persona types (arranger, introducer, partner, etc.)
   return (
     <div className="p-6 space-y-6">
       {/* Welcome Header */}

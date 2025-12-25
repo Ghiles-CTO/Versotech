@@ -64,6 +64,7 @@ const PERSONA_NAV_ITEMS: Record<string, NavItem[]> = {
     { name: 'VersoSign', href: '/versotech_main/versosign', icon: FileSignature, description: 'E-signatures' },
     { name: 'Introducers', href: '/versotech_main/introducers', icon: HandHeart, description: 'Partners' },
     { name: 'Arrangers', href: '/versotech_main/arrangers', icon: Briefcase, description: 'Regulated entities' },
+    { name: 'Users', href: '/versotech_main/users', icon: Users, description: 'All user types' },
     { name: 'Calendar', href: '/versotech_main/calendar', icon: Calendar, description: 'Schedule' },
   ],
 
@@ -80,7 +81,7 @@ const PERSONA_NAV_ITEMS: Record<string, NavItem[]> = {
   // Investor persona
   investor: [
     { name: 'Dashboard', href: '/versotech_main/dashboard', icon: LayoutDashboard, description: 'Portfolio overview' },
-    { name: 'Opportunities', href: '/versotech_main/opportunities', icon: TrendingUp, description: 'Investment opportunities' },
+    { name: 'Investment Opportunities', href: '/versotech_main/opportunities', icon: TrendingUp, description: 'Active deals & pipeline' },
     { name: 'Portfolio', href: '/versotech_main/portfolio', icon: Briefcase, description: 'My investments' },
     { name: 'Documents', href: '/versotech_main/documents', icon: FileText, description: 'My documents' },
     { name: 'Inbox', href: '/versotech_main/inbox', icon: MessageSquare, description: 'Tasks, messages & notifications' },
@@ -102,7 +103,8 @@ const PERSONA_NAV_ITEMS: Record<string, NavItem[]> = {
   introducer: [
     { name: 'Dashboard', href: '/versotech_main/dashboard', icon: LayoutDashboard, description: 'Overview' },
     { name: 'Introductions', href: '/versotech_main/introductions', icon: UserPlus, description: 'My introductions' },
-    { name: 'Agreements', href: '/versotech_main/introducer-agreements', icon: FileText, description: 'Introducer agreements' },
+    { name: 'Agreements', href: '/versotech_main/introducer-agreements', icon: FileText, description: 'Fee agreements' },
+    { name: 'VersoSign', href: '/versotech_main/versosign', icon: FileSignature, description: 'E-signatures' },
     { name: 'Messages', href: '/versotech_main/messages', icon: MessageSquare, description: 'Communications' },
   ],
 

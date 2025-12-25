@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -29,7 +29,12 @@ import {
   Search,
   Filter,
   X,
-  SlidersHorizontal
+  SlidersHorizontal,
+  FileSignature,
+  Clock,
+  CheckCircle2,
+  DollarSign,
+  Package
 } from 'lucide-react'
 import { InterestModal } from '@/components/deals/interest-modal'
 import { SubscribeNowDialog } from '@/components/deals/subscribe-now-dialog'
@@ -191,6 +196,100 @@ const interestStatusMeta: Record<
   withdrawn: { label: 'Withdrawn', tone: 'bg-slate-100 text-slate-700' }
 }
 
+// Subscription stages 6-9 metadata (before Active/Stage 10)
+// Maps actual database status values to journey stages
+const subscriptionStageMeta: Record<string, {
+  label: string
+  stage: number
+  icon: typeof Package
+  bgColor: string
+  textColor: string
+  borderColor: string
+}> = {
+  // Actual database statuses from subscriptions table
+  pending: {
+    label: 'Pending Review',
+    stage: 6,
+    icon: Clock,
+    bgColor: 'bg-amber-50',
+    textColor: 'text-amber-700',
+    borderColor: 'border-amber-200'
+  },
+  approved: {
+    label: 'Approved',
+    stage: 7,
+    icon: MailCheck,
+    bgColor: 'bg-indigo-50',
+    textColor: 'text-indigo-700',
+    borderColor: 'border-indigo-200'
+  },
+  committed: {
+    label: 'Committed',
+    stage: 8,
+    icon: FileSignature,
+    bgColor: 'bg-purple-50',
+    textColor: 'text-purple-700',
+    borderColor: 'border-purple-200'
+  },
+  partially_funded: {
+    label: 'Partially Funded',
+    stage: 9,
+    icon: DollarSign,
+    bgColor: 'bg-teal-50',
+    textColor: 'text-teal-700',
+    borderColor: 'border-teal-200'
+  },
+  funded: {
+    label: 'Funded',
+    stage: 9,
+    icon: DollarSign,
+    bgColor: 'bg-emerald-50',
+    textColor: 'text-emerald-700',
+    borderColor: 'border-emerald-200'
+  },
+  // Legacy/alternative status names (for compatibility)
+  pack_generated: {
+    label: 'Pack Generated',
+    stage: 6,
+    icon: Package,
+    bgColor: 'bg-blue-50',
+    textColor: 'text-blue-700',
+    borderColor: 'border-blue-200'
+  },
+  pack_sent: {
+    label: 'Pack Sent',
+    stage: 7,
+    icon: MailCheck,
+    bgColor: 'bg-indigo-50',
+    textColor: 'text-indigo-700',
+    borderColor: 'border-indigo-200'
+  },
+  signed: {
+    label: 'Signed',
+    stage: 8,
+    icon: FileSignature,
+    bgColor: 'bg-purple-50',
+    textColor: 'text-purple-700',
+    borderColor: 'border-purple-200'
+  },
+  submitted: {
+    label: 'Submitted',
+    stage: 6,
+    icon: Clock,
+    bgColor: 'bg-amber-50',
+    textColor: 'text-amber-700',
+    borderColor: 'border-amber-200'
+  },
+  in_review: {
+    label: 'In Review',
+    stage: 6,
+    icon: Clock,
+    bgColor: 'bg-amber-50',
+    textColor: 'text-amber-700',
+    borderColor: 'border-amber-200'
+  }
+}
+
 function normalizeCurrency(code: Nullable<string>) {
   if (!code) return 'USD'
   return code.length === 3 ? code.toUpperCase() : code.toUpperCase().slice(0, 3)
@@ -267,6 +366,7 @@ export function InvestorDealsListClient({
   summary,
   detailUrlBase = '/versoholdings/deal'
 }: InvestorDealsListClientProps) {
+  const [mounted, setMounted] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [dealTypeFilter, setDealTypeFilter] = useState('all')
@@ -278,7 +378,13 @@ export function InvestorDealsListClient({
   const [sortBy, setSortBy] = useState('closing_date')
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
 
+  // Wait for client-side hydration to complete before rendering Radix UI components
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
   // Extract unique values for filter dropdowns
+  // NOTE: All useMemo hooks MUST be called before any early returns to comply with Rules of Hooks
   const uniqueSectors = useMemo(() => {
     const sectors = new Set<string>()
     dealsData.forEach(deal => {
@@ -302,6 +408,36 @@ export function InvestorDealsListClient({
     })
     return Array.from(locations).sort()
   }, [dealsData])
+
+  // Compute subscriptions in progress (Stages 6-9)
+  // These are subscriptions that are not yet activated (Stage 10)
+  const subscriptionsInProgress = useMemo(() => {
+    const inProgress: Array<{
+      deal: InvestorDeal
+      subscription: SubscriptionSubmission
+      stageMeta: typeof subscriptionStageMeta[string]
+    }> = []
+
+    // Stage 10 (activated) subscriptions go to Portfolio, not here
+    const activeStatuses = ['activated', 'active', 'completed']
+
+    dealsData.forEach(deal => {
+      const subscription = subscriptionByDeal.get(deal.id)
+      if (subscription && !activeStatuses.includes(subscription.status.toLowerCase())) {
+        const stageMeta = subscriptionStageMeta[subscription.status.toLowerCase()] ||
+          subscriptionStageMeta.pending
+        inProgress.push({ deal, subscription, stageMeta })
+      }
+    })
+
+    // Sort by submission date (most recent first)
+    inProgress.sort((a, b) => {
+      return new Date(b.subscription.submitted_at).getTime() -
+        new Date(a.subscription.submitted_at).getTime()
+    })
+
+    return inProgress
+  }, [dealsData, subscriptionByDeal])
 
   // Filter and sort deals
   const filteredDeals = useMemo(() => {
@@ -438,6 +574,22 @@ export function InvestorDealsListClient({
     setSectorFilter('all')
     setStageFilter('all')
     setLocationFilter('all')
+  }
+
+  // Render loading state until hydration is complete to prevent Radix UI ID mismatches
+  // This must come AFTER all hooks (useState, useEffect, useMemo) to comply with Rules of Hooks
+  if (!mounted) {
+    return (
+      <div className="p-6 space-y-8">
+        <div className="h-24 bg-gray-100 animate-pulse rounded-lg" />
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="h-32 bg-gray-100 animate-pulse rounded-lg" />
+          ))}
+        </div>
+        <div className="h-48 bg-gray-100 animate-pulse rounded-lg" />
+      </div>
+    )
   }
 
   return (
@@ -683,6 +835,119 @@ export function InvestorDealsListClient({
         </CardContent>
       </Card>
 
+      {/* My Subscriptions Section - Stages 6-9 (In Progress) */}
+      {subscriptionsInProgress.length > 0 && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+                <Clock className="h-5 w-5 text-amber-500" />
+                My Subscriptions
+              </h2>
+              <p className="text-sm text-gray-600">
+                Track your in-progress subscriptions (Stages 6-9)
+              </p>
+            </div>
+            <Badge variant="outline" className="text-amber-600 border-amber-300">
+              {subscriptionsInProgress.length} in progress
+            </Badge>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            {subscriptionsInProgress.map(({ deal, subscription, stageMeta }) => {
+              const StageIcon = stageMeta.icon
+
+              return (
+                <Card
+                  key={subscription.id}
+                  className={cn(
+                    'overflow-hidden border-2 transition-all hover:shadow-md',
+                    stageMeta.borderColor,
+                    stageMeta.bgColor
+                  )}
+                >
+                  <CardHeader className="pb-2">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        {deal.company_logo_url ? (
+                          <Image
+                            src={deal.company_logo_url}
+                            alt={`${deal.company_name ?? deal.name} logo`}
+                            width={40}
+                            height={40}
+                            className="rounded-lg object-contain bg-white border border-gray-200 p-1"
+                          />
+                        ) : (
+                          <div className="h-10 w-10 rounded-lg bg-white flex items-center justify-center text-gray-400 text-lg font-semibold border border-gray-200">
+                            {deal.name.charAt(0)}
+                          </div>
+                        )}
+                        <div>
+                          <CardTitle className="text-base text-gray-900">
+                            {deal.name}
+                          </CardTitle>
+                          <CardDescription className="text-xs text-gray-600">
+                            {deal.company_name ?? 'Issuer TBA'}
+                          </CardDescription>
+                        </div>
+                      </div>
+                      <Badge className={cn('text-xs font-medium', stageMeta.bgColor, stageMeta.textColor, stageMeta.borderColor, 'border')}>
+                        <StageIcon className="h-3 w-3 mr-1" />
+                        {stageMeta.label}
+                      </Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-0 space-y-3">
+                    {/* Progress indicator */}
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                        <div
+                          className={cn(
+                            'h-full rounded-full transition-all',
+                            stageMeta.stage === 6 ? 'w-1/4 bg-blue-500' :
+                            stageMeta.stage === 7 ? 'w-2/4 bg-indigo-500' :
+                            stageMeta.stage === 8 ? 'w-3/4 bg-purple-500' :
+                            'w-full bg-emerald-500'
+                          )}
+                        />
+                      </div>
+                      <span className="text-xs text-gray-500">
+                        Stage {stageMeta.stage}/10
+                      </span>
+                    </div>
+
+                    {/* Submission date */}
+                    <div className="flex items-center justify-between text-xs text-gray-600">
+                      <span>Submitted</span>
+                      <span>{new Date(subscription.submitted_at).toLocaleDateString()}</span>
+                    </div>
+
+                    {/* View Details button */}
+                    <Link href={`${detailUrlBase}/${deal.id}`}>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full gap-2 mt-2"
+                      >
+                        View Details
+                        <ArrowUpRight className="h-3 w-3" />
+                      </Button>
+                    </Link>
+                  </CardContent>
+                </Card>
+              )
+            })}
+          </div>
+
+          {/* Divider */}
+          <div className="flex items-center gap-4 pt-4">
+            <div className="flex-1 h-px bg-gray-200" />
+            <span className="text-sm text-gray-500">Open Opportunities</span>
+            <div className="flex-1 h-px bg-gray-200" />
+          </div>
+        </div>
+      )}
+
       {/* Deals Grid */}
       {filteredDeals.length === 0 ? (
         <div className="text-center py-16">
@@ -905,7 +1170,7 @@ export function InvestorDealsListClient({
                         </Button>
                       </Link>
 
-                      {/* Subscribe button only for investors with valid investor ID */}
+                      {/* Subscribe to Investment - primary CTA for investors with valid investor ID */}
                       {!isClosed && primaryInvestorId && (
                         <SubscribeNowDialog
                           dealId={deal.id}
@@ -914,13 +1179,13 @@ export function InvestorDealsListClient({
                           existingSubmission={subscription}
                         >
                           <Button className="gap-2 bg-emerald-600 hover:bg-emerald-700">
-                            Subscribe Now
+                            Subscribe to Investment Opportunity
                             <ArrowUpRight className="h-4 w-4" />
                           </Button>
                         </SubscribeNowDialog>
                       )}
 
-                      {/* InterestModal only shown for investors with a valid investor ID */}
+                      {/* Submit Interest for Data Room - secondary CTA for investors with a valid investor ID */}
                       {primaryInvestorId && (
                         <InterestModal
                           dealId={deal.id}
@@ -931,7 +1196,7 @@ export function InvestorDealsListClient({
                           isClosed={isClosed}
                         >
                           <Button className="gap-2" variant={isClosed ? 'secondary' : 'outline'}>
-                            {isClosed ? "Notify Me About Similar" : "Request data room access"}
+                            {isClosed ? "Notify Me About Similar" : "Submit Interest for Data Room"}
                             <ArrowUpRight className="h-4 w-4" />
                           </Button>
                         </InterestModal>

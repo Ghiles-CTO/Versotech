@@ -8,7 +8,9 @@ import { Input } from '@/components/ui/input'
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
@@ -36,6 +38,7 @@ import {
 import { cn } from '@/lib/utils'
 import { formatDate } from '@/lib/format'
 import { createClient } from '@/lib/supabase/client'
+import { useRouter } from 'next/navigation'
 
 type Agreement = {
   id: string
@@ -68,20 +71,65 @@ type Summary = {
   expiringSoon: number
 }
 
-const STATUS_STYLES: Record<string, string> = {
-  active: 'bg-green-100 text-green-800 border-green-200',
-  pending: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-  expired: 'bg-red-100 text-red-800 border-red-200',
-  draft: 'bg-gray-100 text-gray-800 border-gray-200',
-  terminated: 'bg-red-100 text-red-800 border-red-200',
+const STATUS_STYLES: Record<string, { className: string; label: string }> = {
+  // Workflow statuses with distinctive colors
+  draft: {
+    className: 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700',
+    label: 'Draft',
+  },
+  sent: {
+    className: 'bg-sky-100 text-sky-700 border-sky-200 dark:bg-sky-900/50 dark:text-sky-300 dark:border-sky-800',
+    label: 'Sent',
+  },
+  pending_approval: {
+    className: 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/50 dark:text-amber-300 dark:border-amber-800',
+    label: 'Pending Approval',
+  },
+  approved: {
+    className: 'bg-teal-100 text-teal-700 border-teal-200 dark:bg-teal-900/50 dark:text-teal-300 dark:border-teal-800',
+    label: 'Approved',
+  },
+  pending_ceo_signature: {
+    className: 'bg-indigo-100 text-indigo-700 border-indigo-200 dark:bg-indigo-900/50 dark:text-indigo-300 dark:border-indigo-800',
+    label: 'Awaiting CEO',
+  },
+  pending_introducer_signature: {
+    className: 'bg-violet-100 text-violet-700 border-violet-200 dark:bg-violet-900/50 dark:text-violet-300 dark:border-violet-800',
+    label: 'Awaiting Introducer',
+  },
+  active: {
+    className: 'bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/50 dark:text-emerald-300 dark:border-emerald-800',
+    label: 'Active',
+  },
+  rejected: {
+    className: 'bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-900/50 dark:text-rose-300 dark:border-rose-800',
+    label: 'Rejected',
+  },
+  expired: {
+    className: 'bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-900/50 dark:text-orange-300 dark:border-orange-800',
+    label: 'Expired',
+  },
+  terminated: {
+    className: 'bg-red-100 text-red-700 border-red-200 dark:bg-red-900/50 dark:text-red-300 dark:border-red-800',
+    label: 'Terminated',
+  },
 }
 
 const STATUS_FILTERS = [
-  { label: 'All Status', value: 'all' },
-  { label: 'Active', value: 'active' },
-  { label: 'Pending', value: 'pending' },
-  { label: 'Expired', value: 'expired' },
-  { label: 'Draft', value: 'draft' },
+  { label: 'All Agreements', value: 'all', group: null },
+  // In Progress
+  { label: 'Draft', value: 'draft', group: 'In Progress' },
+  { label: 'Sent', value: 'sent', group: 'In Progress' },
+  { label: 'Pending Approval', value: 'pending_approval', group: 'In Progress' },
+  { label: 'Approved', value: 'approved', group: 'In Progress' },
+  // Awaiting Signatures
+  { label: 'Awaiting CEO Signature', value: 'pending_ceo_signature', group: 'Signatures' },
+  { label: 'Awaiting Introducer Signature', value: 'pending_introducer_signature', group: 'Signatures' },
+  // Final States
+  { label: 'Active', value: 'active', group: 'Final' },
+  { label: 'Rejected', value: 'rejected', group: 'Final' },
+  { label: 'Expired', value: 'expired', group: 'Final' },
+  { label: 'Terminated', value: 'terminated', group: 'Final' },
 ]
 
 const AGREEMENT_TYPE_LABELS: Record<string, string> = {
@@ -92,6 +140,7 @@ const AGREEMENT_TYPE_LABELS: Record<string, string> = {
 }
 
 export default function IntroducerAgreementsPage() {
+  const router = useRouter()
   const [introducerInfo, setIntroducerInfo] = useState<IntroducerInfo | null>(null)
   const [agreements, setAgreements] = useState<Agreement[]>([])
   const [summary, setSummary] = useState<Summary>({
@@ -202,7 +251,9 @@ export default function IntroducerAgreementsPage() {
       setAgreements(processed)
 
       const active = processed.filter(a => a.status === 'active').length
-      const pending = processed.filter(a => a.status === 'pending').length
+      // Count all "in-progress" statuses as pending
+      const pendingStatuses = ['draft', 'sent', 'pending_approval', 'approved', 'pending_ceo_signature', 'pending_introducer_signature']
+      const pending = processed.filter(a => pendingStatuses.includes(a.status)).length
       const expiring = processed.filter(a => {
         if (!a.expiry_date) return false
         const expDate = new Date(a.expiry_date)
@@ -282,60 +333,72 @@ export default function IntroducerAgreementsPage() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
+        <Card className="relative overflow-hidden group hover:shadow-md transition-shadow">
+          <div className="absolute inset-0 bg-gradient-to-br from-slate-500/5 to-slate-600/5 opacity-0 group-hover:opacity-100 transition-opacity" />
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <FileText className="h-4 w-4" />
+              <div className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800">
+                <FileText className="h-3.5 w-3.5 text-slate-600 dark:text-slate-400" />
+              </div>
               Total Agreements
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{summary.totalAgreements}</div>
+            <div className="text-3xl font-bold tracking-tight">{summary.totalAgreements}</div>
             <p className="text-xs text-muted-foreground mt-1">
               All fee arrangements
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="relative overflow-hidden group hover:shadow-md transition-shadow">
+          <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-green-600/5 opacity-0 group-hover:opacity-100 transition-opacity" />
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <CheckCircle2 className="h-4 w-4" />
+              <div className="p-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-900/50">
+                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+              </div>
               Active
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{summary.activeAgreements}</div>
+            <div className="text-3xl font-bold tracking-tight text-emerald-600 dark:text-emerald-400">{summary.activeAgreements}</div>
             <p className="text-xs text-muted-foreground mt-1">
               Currently in effect
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="relative overflow-hidden group hover:shadow-md transition-shadow">
+          <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-yellow-600/5 opacity-0 group-hover:opacity-100 transition-opacity" />
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <Clock className="h-4 w-4" />
-              Pending
+              <div className="p-1.5 rounded-lg bg-amber-100 dark:bg-amber-900/50">
+                <Clock className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+              </div>
+              In Progress
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">{summary.pendingAgreements}</div>
+            <div className="text-3xl font-bold tracking-tight text-amber-600 dark:text-amber-400">{summary.pendingAgreements}</div>
             <p className="text-xs text-muted-foreground mt-1">
-              Awaiting signature
+              Awaiting action
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="relative overflow-hidden group hover:shadow-md transition-shadow">
+          <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-red-600/5 opacity-0 group-hover:opacity-100 transition-opacity" />
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4" />
+              <div className="p-1.5 rounded-lg bg-orange-100 dark:bg-orange-900/50">
+                <AlertTriangle className="h-3.5 w-3.5 text-orange-600 dark:text-orange-400" />
+              </div>
               Expiring Soon
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-orange-500">{summary.expiringSoon}</div>
+            <div className="text-3xl font-bold tracking-tight text-orange-600 dark:text-orange-400">{summary.expiringSoon}</div>
             <p className="text-xs text-muted-foreground mt-1">
               Within 30 days
             </p>
@@ -359,15 +422,73 @@ export default function IntroducerAgreementsPage() {
               </div>
             </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full md:w-48">
+              <SelectTrigger className="w-full md:w-56">
                 <SelectValue placeholder="Filter by status" />
               </SelectTrigger>
               <SelectContent>
-                {STATUS_FILTERS.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
+                {/* All option */}
+                <SelectItem value="all">All Agreements</SelectItem>
+
+                {/* In Progress group */}
+                <SelectGroup>
+                  <SelectLabel className="text-xs text-muted-foreground font-semibold px-2 py-1.5">
+                    In Progress
+                  </SelectLabel>
+                  {STATUS_FILTERS.filter(f => f.group === 'In Progress').map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      <span className="flex items-center gap-2">
+                        <span className={cn(
+                          'w-2 h-2 rounded-full',
+                          option.value === 'draft' && 'bg-slate-500',
+                          option.value === 'sent' && 'bg-sky-500',
+                          option.value === 'pending_approval' && 'bg-amber-500',
+                          option.value === 'approved' && 'bg-teal-500'
+                        )} />
+                        {option.label}
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+
+                {/* Signatures group */}
+                <SelectGroup>
+                  <SelectLabel className="text-xs text-muted-foreground font-semibold px-2 py-1.5">
+                    Awaiting Signatures
+                  </SelectLabel>
+                  {STATUS_FILTERS.filter(f => f.group === 'Signatures').map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      <span className="flex items-center gap-2">
+                        <span className={cn(
+                          'w-2 h-2 rounded-full',
+                          option.value === 'pending_ceo_signature' && 'bg-indigo-500',
+                          option.value === 'pending_introducer_signature' && 'bg-violet-500'
+                        )} />
+                        {option.label}
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+
+                {/* Final States group */}
+                <SelectGroup>
+                  <SelectLabel className="text-xs text-muted-foreground font-semibold px-2 py-1.5">
+                    Final States
+                  </SelectLabel>
+                  {STATUS_FILTERS.filter(f => f.group === 'Final').map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      <span className="flex items-center gap-2">
+                        <span className={cn(
+                          'w-2 h-2 rounded-full',
+                          option.value === 'active' && 'bg-emerald-500',
+                          option.value === 'rejected' && 'bg-rose-500',
+                          option.value === 'expired' && 'bg-orange-500',
+                          option.value === 'terminated' && 'bg-red-500'
+                        )} />
+                        {option.label}
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
               </SelectContent>
             </Select>
           </div>
@@ -384,20 +505,37 @@ export default function IntroducerAgreementsPage() {
         </CardHeader>
         <CardContent>
           {filteredAgreements.length === 0 ? (
-            <div className="border border-dashed border-muted rounded-lg py-12 flex flex-col items-center justify-center text-center space-y-2">
-              <FileSignature className="h-10 w-10 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">
-                {search || statusFilter !== 'all'
-                  ? 'No agreements match your filters'
-                  : introducerInfo
-                    ? 'No fee agreements on file'
-                    : 'No introducer agreements found'}
-              </p>
-              {introducerInfo && agreements.length === 0 && (
-                <p className="text-xs text-muted-foreground">
-                  Contact your relationship manager to set up an agreement
+            <div className="border-2 border-dashed border-muted/50 rounded-xl py-16 flex flex-col items-center justify-center text-center space-y-4 bg-gradient-to-br from-muted/20 to-muted/5">
+              <div className="p-4 rounded-2xl bg-muted/30">
+                <FileSignature className="h-12 w-12 text-muted-foreground/60" />
+              </div>
+              <div className="space-y-1">
+                <p className="text-base font-medium text-muted-foreground">
+                  {search || statusFilter !== 'all'
+                    ? 'No agreements match your filters'
+                    : introducerInfo
+                      ? 'No fee agreements on file'
+                      : 'No introducer agreements found'}
                 </p>
-              )}
+                {introducerInfo && agreements.length === 0 && (
+                  <p className="text-sm text-muted-foreground/70 max-w-sm">
+                    Contact your relationship manager to set up a fee agreement and start making introductions.
+                  </p>
+                )}
+                {(search || statusFilter !== 'all') && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="mt-2"
+                    onClick={() => {
+                      setSearch('')
+                      setStatusFilter('all')
+                    }}
+                  >
+                    Clear filters
+                  </Button>
+                )}
+              </div>
             </div>
           ) : (
             <div className="rounded-md border">
@@ -414,7 +552,11 @@ export default function IntroducerAgreementsPage() {
                 </TableHeader>
                 <TableBody>
                   {filteredAgreements.map((agreement) => (
-                    <TableRow key={agreement.id}>
+                    <TableRow
+                      key={agreement.id}
+                      className="cursor-pointer hover:bg-muted/50 transition-colors duration-150 group"
+                      onClick={() => router.push(`/versotech_main/introducer-agreements/${agreement.id}`)}
+                    >
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <FileText className="h-4 w-4 text-muted-foreground" />
@@ -483,9 +625,12 @@ export default function IntroducerAgreementsPage() {
                       <TableCell>
                         <Badge
                           variant="outline"
-                          className={cn('capitalize', STATUS_STYLES[agreement.status] || STATUS_STYLES.draft)}
+                          className={cn(
+                            'font-medium',
+                            (STATUS_STYLES[agreement.status] || STATUS_STYLES.draft).className
+                          )}
                         >
-                          {agreement.status}
+                          {(STATUS_STYLES[agreement.status] || STATUS_STYLES.draft).label}
                         </Badge>
                       </TableCell>
                     </TableRow>

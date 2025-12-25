@@ -32,10 +32,15 @@ import {
   HandshakeIcon,
   CheckCircle2,
   Clock,
-  XCircle
+  XCircle,
+  Plus,
+  UserPlus,
+  Users
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
+import { AddPartnerModal } from '@/components/users/add-partner-modal'
+import { InviteUserDialog } from '@/components/users/invite-user-dialog'
 
 type PartnerUser = {
   id: string
@@ -119,100 +124,115 @@ export default function PartnersContent() {
   const [searchQuery, setSearchQuery] = useState('')
   const router = useRouter()
 
-  useEffect(() => {
-    async function fetchPartners() {
-      try {
-        setLoading(true)
-        const supabase = createClient()
+  // Modal states
+  const [showAddModal, setShowAddModal] = useState(false)
+  const [showInviteDialog, setShowInviteDialog] = useState(false)
+  const [selectedPartner, setSelectedPartner] = useState<Partner | null>(null)
 
-        const { data, error: fetchError } = await supabase
-          .from('partners')
-          .select(`
-            id,
-            name,
-            legal_name,
-            type,
-            partner_type,
-            status,
-            accreditation_status,
-            contact_name,
-            contact_email,
-            contact_phone,
-            website,
-            country,
-            typical_investment_min,
-            typical_investment_max,
-            preferred_sectors,
-            preferred_geographies,
-            kyc_status,
-            created_at,
-            partner_users (
-              user_id,
-              role,
-              is_primary,
-              profiles (
-                id,
-                display_name,
-                email
-              )
+  const handleInviteClick = (partner: Partner) => {
+    setSelectedPartner(partner)
+    setShowInviteDialog(true)
+  }
+
+  const refreshData = () => {
+    // Trigger re-fetch by re-running useEffect
+    setLoading(true)
+    fetchPartners()
+  }
+
+  async function fetchPartners() {
+    try {
+      const supabase = createClient()
+
+      const { data, error: fetchError } = await supabase
+        .from('partners')
+        .select(`
+          id,
+          name,
+          legal_name,
+          type,
+          partner_type,
+          status,
+          accreditation_status,
+          contact_name,
+          contact_email,
+          contact_phone,
+          website,
+          country,
+          typical_investment_min,
+          typical_investment_max,
+          preferred_sectors,
+          preferred_geographies,
+          kyc_status,
+          created_at,
+          partner_users (
+            user_id,
+            role,
+            is_primary,
+            profiles (
+              id,
+              display_name,
+              email
             )
-          `)
-          .order('created_at', { ascending: false })
+          )
+        `)
+        .order('created_at', { ascending: false })
 
-        if (fetchError) throw fetchError
+      if (fetchError) throw fetchError
 
-        const processed: Partner[] = (data || []).map((p: any) => {
-          const users: PartnerUser[] = (p.partner_users || []).map((pu: any) => {
-            const profile = Array.isArray(pu.profiles) ? pu.profiles[0] : pu.profiles
-            return {
-              id: profile?.id || pu.user_id,
-              name: profile?.display_name || 'Unknown User',
-              email: profile?.email || '',
-              role: pu.role || 'member',
-              isPrimary: pu.is_primary || false
-            }
-          })
-
+      const processed: Partner[] = (data || []).map((p: any) => {
+        const users: PartnerUser[] = (p.partner_users || []).map((pu: any) => {
+          const profile = Array.isArray(pu.profiles) ? pu.profiles[0] : pu.profiles
           return {
-            id: p.id,
-            name: p.name || 'Unnamed Partner',
-            legalName: p.legal_name,
-            type: p.type || 'entity',
-            partnerType: p.partner_type || 'co-investor',
-            status: p.status || 'pending',
-            accreditationStatus: p.accreditation_status,
-            contactName: p.contact_name,
-            contactEmail: p.contact_email,
-            contactPhone: p.contact_phone,
-            website: p.website,
-            country: p.country,
-            typicalInvestmentMin: p.typical_investment_min ? Number(p.typical_investment_min) : null,
-            typicalInvestmentMax: p.typical_investment_max ? Number(p.typical_investment_max) : null,
-            preferredSectors: p.preferred_sectors,
-            preferredGeographies: p.preferred_geographies,
-            kycStatus: p.kyc_status,
-            createdAt: p.created_at,
-            users
+            id: profile?.id || pu.user_id,
+            name: profile?.display_name || 'Unknown User',
+            email: profile?.email || '',
+            role: pu.role || 'member',
+            isPrimary: pu.is_primary || false
           }
         })
 
-        setPartners(processed)
-        setFilteredPartners(processed)
-        setStats({
-          total: processed.length,
-          active: processed.filter(p => p.status === 'active').length,
-          kycApproved: processed.filter(p => p.kycStatus === 'approved').length,
-          coInvestors: processed.filter(p => p.partnerType === 'co-investor').length
-        })
-        setError(null)
-      } catch (err) {
-        console.error('[PartnersContent] Error:', err)
-        setError(err instanceof Error ? err.message : 'Failed to load partners')
-      } finally {
-        setLoading(false)
-      }
-    }
+        return {
+          id: p.id,
+          name: p.name || 'Unnamed Partner',
+          legalName: p.legal_name,
+          type: p.type || 'entity',
+          partnerType: p.partner_type || 'co-investor',
+          status: p.status || 'pending',
+          accreditationStatus: p.accreditation_status,
+          contactName: p.contact_name,
+          contactEmail: p.contact_email,
+          contactPhone: p.contact_phone,
+          website: p.website,
+          country: p.country,
+          typicalInvestmentMin: p.typical_investment_min ? Number(p.typical_investment_min) : null,
+          typicalInvestmentMax: p.typical_investment_max ? Number(p.typical_investment_max) : null,
+          preferredSectors: p.preferred_sectors,
+          preferredGeographies: p.preferred_geographies,
+          kycStatus: p.kyc_status,
+          createdAt: p.created_at,
+          users
+        }
+      })
 
+      setPartners(processed)
+      setFilteredPartners(processed)
+      setStats({
+        total: processed.length,
+        active: processed.filter(p => p.status === 'active').length,
+        kycApproved: processed.filter(p => p.kycStatus === 'approved').length,
+        coInvestors: processed.filter(p => p.partnerType === 'co-investor').length
+      })
+      setError(null)
+    } catch (err) {
+      console.error('[PartnersContent] Error:', err)
+      setError(err instanceof Error ? err.message : 'Failed to load partners')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
     fetchPartners()
   }, [])
 
@@ -312,14 +332,20 @@ export default function PartnersContent() {
 
       {/* Table */}
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <HandshakeIcon className="h-5 w-5" />
-            All Partners ({filteredPartners.length})
-          </CardTitle>
-          <CardDescription>
-            Co-investment partners and strategic relationships
-          </CardDescription>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <HandshakeIcon className="h-5 w-5" />
+              All Partners ({filteredPartners.length})
+            </CardTitle>
+            <CardDescription className="mt-1">
+              Co-investment partners and strategic relationships
+            </CardDescription>
+          </div>
+          <Button onClick={() => setShowAddModal(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Add Partner
+          </Button>
         </CardHeader>
         <CardContent>
           <Table>
@@ -327,6 +353,7 @@ export default function PartnersContent() {
               <TableRow>
                 <TableHead>Partner</TableHead>
                 <TableHead>Type</TableHead>
+                <TableHead>Users</TableHead>
                 <TableHead>Contact</TableHead>
                 <TableHead>Investment Range</TableHead>
                 <TableHead>KYC</TableHead>
@@ -337,7 +364,7 @@ export default function PartnersContent() {
             <TableBody>
               {filteredPartners.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                     No partners found
                   </TableCell>
                 </TableRow>
@@ -359,6 +386,12 @@ export default function PartnersContent() {
                       <Badge variant="outline" className="capitalize">
                         {partner.partnerType.replace(/-/g, ' ')}
                       </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1.5">
+                        <Users className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm font-medium">{partner.users.length}</span>
+                      </div>
                     </TableCell>
                     <TableCell>
                       {partner.contactName ? (
@@ -396,6 +429,10 @@ export default function PartnersContent() {
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
                           <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={() => handleInviteClick(partner)}>
+                            <UserPlus className="mr-2 h-4 w-4" />
+                            Invite User
+                          </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => router.push(`/versotech_main/partners/${partner.id}`)}>
                             <Eye className="mr-2 h-4 w-4" />
                             View Details
@@ -422,6 +459,25 @@ export default function PartnersContent() {
           </Table>
         </CardContent>
       </Card>
+
+      {/* Add Partner Modal */}
+      <AddPartnerModal
+        open={showAddModal}
+        onOpenChange={setShowAddModal}
+        onSuccess={refreshData}
+      />
+
+      {/* Invite User Dialog */}
+      {selectedPartner && (
+        <InviteUserDialog
+          open={showInviteDialog}
+          onOpenChange={setShowInviteDialog}
+          entityType="partner"
+          entityId={selectedPartner.id}
+          entityName={selectedPartner.name}
+          onSuccess={refreshData}
+        />
+      )}
     </div>
   )
 }

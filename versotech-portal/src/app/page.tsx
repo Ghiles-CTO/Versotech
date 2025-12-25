@@ -55,18 +55,13 @@ const NavBar = () => {
         <div className="hidden md:flex items-center gap-8">
           <Link href="#expertise" className="text-xs text-zinc-300 hover:text-white transition-colors uppercase tracking-[0.2em] font-medium">Expertise</Link>
           <Link href="#platform" className="text-xs text-zinc-300 hover:text-white transition-colors uppercase tracking-[0.2em] font-medium">Platform</Link>
-          <Link href="#portals" className="text-xs text-zinc-300 hover:text-white transition-colors uppercase tracking-[0.2em] font-medium">Portals</Link>
+          <Link href="#portals" className="text-xs text-zinc-300 hover:text-white transition-colors uppercase tracking-[0.2em] font-medium">Access</Link>
         </div>
 
         <div className="flex items-center gap-4">
-          <Link href="/versoholdings/login">
-            <Button variant="ghost" className="text-zinc-200 border border-transparent hover:border-white/20 hover:text-white hover:bg-white/5 font-light tracking-wide transition-all">
-              Investor Login
-            </Button>
-          </Link>
-          <Link href="/versotech/login">
+          <Link href="/versotech_main/login">
             <Button className="bg-white text-black hover:bg-zinc-200 px-6 rounded-none font-medium tracking-wide transition-all hover:scale-105 shadow-[0_0_15px_rgba(255,255,255,0.3)]">
-              Staff Access
+              Sign In
             </Button>
           </Link>
         </div>
@@ -131,9 +126,9 @@ export default function LandingPage() {
             </p>
 
             <div className="flex flex-wrap gap-6 pt-4">
-              <Link href="/versoholdings/login">
+              <Link href="/versotech_main/login">
                 <Button className="h-16 px-10 rounded-none bg-white text-black hover:bg-zinc-200 text-base font-bold tracking-wide transition-all hover:translate-x-1 shadow-[0_0_25px_rgba(255,255,255,0.2)] border-2 border-white hover:border-zinc-200">
-                  Investor Portal
+                  Get Started
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </Link>
@@ -303,29 +298,23 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* --- Portals CTA --- */}
+      {/* --- Access CTA --- */}
       <section id="portals" className="py-40 max-w-[1400px] mx-auto px-6">
         <div className="bg-gradient-to-br from-zinc-900 to-black border border-white/10 p-16 md:p-24 text-center relative overflow-hidden group perspective-[1000px]">
           <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-[0.05] group-hover:scale-105 transition-transform duration-1000" />
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-emerald-500 to-transparent opacity-50 shadow-[0_0_20px_rgba(16,185,129,0.5)]" />
-          
+
           <div className="relative z-10 space-y-10 transform transition-transform duration-700 group-hover:translate-z-10">
             <h2 className="text-5xl md:text-6xl font-light text-white tracking-tighter">Access Your Dashboard</h2>
             <p className="text-xl text-zinc-300 font-normal max-w-2xl mx-auto">
-              Secure gateways for investors and staff. Please ensure you are using an authorized device.
+              Secure unified portal for all stakeholders. Sign in to access your personalized dashboard.
             </p>
-            
-            <div className="flex flex-col md:flex-row items-center justify-center gap-8 pt-8">
-              <Link href="/versoholdings/login" className="w-full md:w-auto">
-                <Button className="w-full h-20 px-12 bg-white hover:bg-zinc-200 text-black font-bold rounded-none text-lg transition-all hover:shadow-[0_0_40px_rgba(255,255,255,0.4)] tracking-wide hover:-translate-y-1 border-2 border-white">
-                  Investor Portal
+
+            <div className="flex items-center justify-center pt-8">
+              <Link href="/versotech_main/login">
+                <Button className="h-20 px-16 bg-white hover:bg-zinc-200 text-black font-bold rounded-none text-lg transition-all hover:shadow-[0_0_40px_rgba(255,255,255,0.4)] tracking-wide hover:-translate-y-1 border-2 border-white">
+                  Sign In
                   <ChevronRight className="ml-2 h-5 w-5" />
-                </Button>
-              </Link>
-              <Link href="/versotech/login" className="w-full md:w-auto">
-                <Button variant="outline" className="w-full h-20 px-12 border-2 border-white/30 text-white bg-black/20 hover:bg-white hover:text-black font-medium rounded-none text-lg backdrop-blur-sm tracking-wide transition-all duration-300 hover:-translate-y-1">
-                  Staff Terminal
-                  <Lock className="ml-2 h-4 w-4" />
                 </Button>
               </Link>
             </div>
@@ -350,7 +339,7 @@ export default function LandingPage() {
           </div>
 
           <div className="text-xs text-zinc-500 uppercase tracking-widest">
-            © 2024 Verso Holdings Ltd.
+            © 2025 Verso Holdings Ltd.
           </div>
         </div>
       </footer>

@@ -124,12 +124,12 @@ export function InterestModal({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-blue-600" />
-            {isClosed ? "Notify Me About Similar Deals" : "I'm Interested"}
+            {isClosed ? "Notify Me About Similar Deals" : "Submit Interest for Data Room"}
           </DialogTitle>
           <DialogDescription>
             {isClosed
-              ? `Let the VERSO team know you&apos;re interested in similar opportunities to ${dealName}. We'll notify you when comparable deals become available.`
-              : `Share a quick signal and the VERSO team will review your interest in ${dealName}.`
+              ? `Let the VERSO team know you're interested in similar opportunities to ${dealName}. We'll notify you when comparable deals become available.`
+              : `Submit your interest to access the data room for ${dealName}. Once approved, you'll receive the NDA to sign.`
             }
           </DialogDescription>
         </DialogHeader>

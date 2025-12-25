@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { RefreshCw, Users, Zap, Activity, Settings, Download, Shield } from 'lucide-react'
+import { useTheme } from '@/components/theme-provider'
 
 // Import components from staff admin
 import { CollapsibleSection } from '@/app/(staff)/versotech/staff/admin/components/collapsible-section'
@@ -21,6 +22,9 @@ import { WorkflowTrendChart } from '@/app/(staff)/versotech/staff/admin/componen
 import { ComplianceForecastChart } from '@/app/(staff)/versotech/staff/admin/components/compliance-forecast-chart'
 
 export function AdminDashboardClient() {
+  const { theme } = useTheme()
+  const isDark = theme === 'staff-dark'
+
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [financialMetrics, setFinancialMetrics] = useState<any>(null)
@@ -95,12 +99,12 @@ export function AdminDashboardClient() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-zinc-950 text-white">
+      <div className={`min-h-screen ${isDark ? 'bg-zinc-950 text-white' : 'bg-gray-50 text-gray-900'}`}>
         <div className="container mx-auto py-8 space-y-6">
-          <div className="h-12 w-64 bg-zinc-800 rounded animate-pulse" />
+          <div className={`h-12 w-64 ${isDark ? 'bg-zinc-800' : 'bg-gray-200'} rounded animate-pulse`} />
           <div className="grid gap-4 md:grid-cols-2">
-            <div className="h-64 bg-zinc-800 rounded-xl animate-pulse" />
-            <div className="h-64 bg-zinc-800 rounded-xl animate-pulse" />
+            <div className={`h-64 ${isDark ? 'bg-zinc-800' : 'bg-gray-200'} rounded-xl animate-pulse`} />
+            <div className={`h-64 ${isDark ? 'bg-zinc-800' : 'bg-gray-200'} rounded-xl animate-pulse`} />
           </div>
         </div>
       </div>
@@ -108,20 +112,20 @@ export function AdminDashboardClient() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white">
+    <div className={`min-h-screen ${isDark ? 'bg-zinc-950 text-white' : 'bg-gray-50 text-gray-900'}`}>
       <div className="container mx-auto py-8 space-y-8">
         {/* Header */}
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold text-white">Super Admin Dashboard</h1>
-            <p className="text-zinc-400">Complete operational visibility and control</p>
+            <h1 className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Super Admin Dashboard</h1>
+            <p className={isDark ? 'text-zinc-400' : 'text-gray-600'}>Complete operational visibility and control</p>
           </div>
           <div className="flex items-center gap-3">
             <Button
               onClick={handleRefresh}
               disabled={refreshing}
               variant="outline"
-              className="border-zinc-700 text-zinc-300 hover:text-white hover:bg-zinc-800"
+              className={isDark ? 'border-zinc-700 text-zinc-300 hover:text-white hover:bg-zinc-800' : 'border-gray-300 text-gray-700 hover:text-gray-900 hover:bg-gray-100'}
             >
               <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
               Refresh
@@ -146,8 +150,8 @@ export function AdminDashboardClient() {
         </div>
 
         {/* Financial Overview */}
-        <div className="rounded-xl border border-white/10 bg-zinc-900/50 p-1">
-          <FinancialOverview metrics={financialMetrics} />
+        <div className={`rounded-xl border p-1 ${isDark ? 'border-white/10 bg-zinc-900/50' : 'border-gray-200 bg-white shadow-sm'}`}>
+          <FinancialOverview metrics={financialMetrics} isDark={isDark} />
         </div>
 
         {/* Collapsible Sections */}
@@ -157,8 +161,9 @@ export function AdminDashboardClient() {
             title="Compliance & KYC Alerts"
             icon={<Shield className="h-5 w-5" />}
             defaultOpen={false}
+            isDark={isDark}
           >
-            <ComplianceAlertsPanel />
+            <ComplianceAlertsPanel isDark={isDark} />
           </CollapsibleSection>
 
           {/* Staff Management */}
@@ -166,13 +171,14 @@ export function AdminDashboardClient() {
             title="Staff Management"
             icon={<Users className="h-5 w-5" />}
             defaultOpen={false}
+            isDark={isDark}
             badge={
-              <Badge variant="outline" className="border-zinc-600 text-zinc-400 text-xs">
+              <Badge variant="outline" className={isDark ? 'border-zinc-600 text-zinc-400 text-xs' : 'border-gray-300 text-gray-600 text-xs'}>
                 {staffMembers.length} Members
               </Badge>
             }
           >
-            <StaffManagementPanel staffMembers={staffMembers} onStaffUpdate={fetchStaffMembers} />
+            <StaffManagementPanel staffMembers={staffMembers} onStaffUpdate={fetchStaffMembers} isDark={isDark} />
           </CollapsibleSection>
 
           {/* Activity Feed */}
@@ -180,8 +186,9 @@ export function AdminDashboardClient() {
             title="Real-Time Activity Feed"
             icon={<Activity className="h-5 w-5" />}
             defaultOpen={false}
+            isDark={isDark}
           >
-            <RealTimeActivityFeed />
+            <RealTimeActivityFeed isDark={isDark} />
           </CollapsibleSection>
 
           {/* Workflow Monitoring */}
@@ -189,8 +196,9 @@ export function AdminDashboardClient() {
             title="Workflow Monitoring"
             icon={<Zap className="h-5 w-5" />}
             defaultOpen={false}
+            isDark={isDark}
           >
-            <WorkflowMonitoring />
+            <WorkflowMonitoring isDark={isDark} />
           </CollapsibleSection>
 
           {/* User Account Management */}
@@ -198,8 +206,9 @@ export function AdminDashboardClient() {
             title="User Account Management"
             icon={<Settings className="h-5 w-5" />}
             defaultOpen={false}
+            isDark={isDark}
           >
-            <UserAccountManagement />
+            <UserAccountManagement isDark={isDark} />
           </CollapsibleSection>
 
           {/* Data Export */}
@@ -207,14 +216,15 @@ export function AdminDashboardClient() {
             title="Data Export"
             icon={<Download className="h-5 w-5" />}
             defaultOpen={false}
+            isDark={isDark}
           >
-            <DataExportPanel />
+            <DataExportPanel isDark={isDark} />
           </CollapsibleSection>
         </div>
 
         {/* Footer */}
-        <div className="text-center py-6 border-t border-zinc-800">
-          <p className="text-sm text-zinc-500">
+        <div className={`text-center py-6 border-t ${isDark ? 'border-zinc-800' : 'border-gray-200'}`}>
+          <p className={`text-sm ${isDark ? 'text-zinc-500' : 'text-gray-500'}`}>
             VERSO Holdings Super Admin Dashboard • Last updated:{' '}
             {new Date().toLocaleString()}
           </p>

@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { requireStaffAuth } from '@/lib/auth'
 import { NextResponse } from 'next/server'
 import { auditLogger, AuditActions, AuditEntities } from '@/lib/audit'
+import { triggerCertificateGeneration } from '@/lib/subscription/certificate-trigger'
 
 export const dynamic = 'force-dynamic'
 
@@ -477,6 +478,19 @@ export async function POST(req: Request) {
                 } else {
                   console.warn(`⚠️ Could not determine units for subscription ${subscriptionId} - position not created`)
                 }
+
+                // Trigger certificate generation when subscription becomes active
+                triggerCertificateGeneration({
+                  supabase,
+                  subscriptionId,
+                  investorId: fullSubscription.investor_id,
+                  vehicleId: fullSubscription.vehicle_id,
+                  commitment,
+                  fundedAmount: newFundedAmount,
+                  shares: fullSubscription.num_shares || fullSubscription.units,
+                  pricePerShare: fullSubscription.price_per_share,
+                  profile
+                })
               }
             }
 

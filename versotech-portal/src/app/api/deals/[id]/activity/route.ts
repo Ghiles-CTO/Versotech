@@ -71,23 +71,13 @@ export async function GET(
         id,
         submitted_at,
         approved_at,
-        rejected_at,
+        updated_at,
         status,
         indicative_amount,
         investor_id,
         investors (
           legal_name,
           display_name
-        ),
-        approved_by_profile:profiles!investor_deal_interest_approved_by_fkey (
-          display_name,
-          email,
-          role
-        ),
-        rejected_by_profile:profiles!investor_deal_interest_rejected_by_fkey (
-          display_name,
-          email,
-          role
         )
       `)
       .eq('deal_id', dealId)
@@ -105,7 +95,7 @@ export async function GET(
         submitted_at,
         decided_at,
         status,
-        subscription_amount,
+        payload_json,
         investor_id,
         investors (
           legal_name,
@@ -131,7 +121,7 @@ export async function GET(
         id,
         granted_at,
         revoked_at,
-        access_type,
+        auto_granted,
         investor_id,
         investors (
           legal_name,
@@ -245,18 +235,15 @@ export async function GET(
 
       // Interest approved
       if (interest.approved_at && interest.status === 'approved') {
-        const approver = Array.isArray(interest.approved_by_profile)
-          ? interest.approved_by_profile[0]
-          : interest.approved_by_profile
         allEvents.push({
           id: `interest-approved-${interest.id}`,
           timestamp: interest.approved_at,
           type: 'interest_approved',
           category: 'interest',
           actor: {
-            name: approver?.display_name || 'Staff',
-            email: approver?.email || null,
-            role: approver?.role || 'staff'
+            name: 'Staff',
+            email: null,
+            role: 'staff'
           },
           description: `Approved interest from ${investorName}${interest.indicative_amount ? ` (${formatAmount(interest.indicative_amount)})` : ''}`,
           details: {
@@ -267,20 +254,17 @@ export async function GET(
         })
       }
 
-      // Interest rejected
-      if (interest.rejected_at && interest.status === 'rejected') {
-        const rejector = Array.isArray(interest.rejected_by_profile)
-          ? interest.rejected_by_profile[0]
-          : interest.rejected_by_profile
+      // Interest rejected (use updated_at as timestamp since rejected_at doesn't exist)
+      if (interest.status === 'rejected' && interest.updated_at) {
         allEvents.push({
           id: `interest-rejected-${interest.id}`,
-          timestamp: interest.rejected_at,
+          timestamp: interest.updated_at,
           type: 'interest_rejected',
           category: 'interest',
           actor: {
-            name: rejector?.display_name || 'Staff',
-            email: rejector?.email || null,
-            role: rejector?.role || 'staff'
+            name: 'Staff',
+            email: null,
+            role: 'staff'
           },
           description: `Rejected interest from ${investorName}`,
           details: {
@@ -295,6 +279,9 @@ export async function GET(
     subscriptions?.forEach(sub => {
       const investor = Array.isArray(sub.investors) ? sub.investors[0] : sub.investors
       const investorName = investor?.legal_name || investor?.display_name || 'Unknown Investor'
+      // Extract subscription amount from payload_json if available
+      const payload = sub.payload_json as Record<string, any> | null
+      const subscriptionAmount = payload?.commitment_amount || payload?.subscription_amount || null
 
       // Subscription submitted
       if (sub.submitted_at) {
@@ -308,10 +295,10 @@ export async function GET(
             email: null,
             role: 'investor'
           },
-          description: `${investorName} submitted subscription${sub.subscription_amount ? ` for ${formatAmount(sub.subscription_amount)}` : ''}`,
+          description: `${investorName} submitted subscription${subscriptionAmount ? ` for ${formatAmount(subscriptionAmount)}` : ''}`,
           details: {
             subscription_id: sub.id,
-            subscription_amount: sub.subscription_amount,
+            subscription_amount: subscriptionAmount,
             status: sub.status
           }
         })
@@ -333,11 +320,11 @@ export async function GET(
             email: decider?.email || null,
             role: decider?.role || 'staff'
           },
-          description: `${isApproved ? 'Approved' : 'Rejected'} subscription from ${investorName}${sub.subscription_amount ? ` (${formatAmount(sub.subscription_amount)})` : ''}`,
+          description: `${isApproved ? 'Approved' : 'Rejected'} subscription from ${investorName}${subscriptionAmount ? ` (${formatAmount(subscriptionAmount)})` : ''}`,
           details: {
             subscription_id: sub.id,
             investor_name: investorName,
-            subscription_amount: sub.subscription_amount
+            subscription_amount: subscriptionAmount
           }
         })
       }
@@ -353,21 +340,21 @@ export async function GET(
         const granter = Array.isArray(access.granted_by_profile)
           ? access.granted_by_profile[0]
           : access.granted_by_profile
-        const isManual = access.access_type === 'manual'
+        const isAutoGranted = access.auto_granted === true
         allEvents.push({
           id: `access-granted-${access.id}`,
           timestamp: access.granted_at,
           type: 'data_room_granted',
           category: 'access',
           actor: {
-            name: granter?.display_name || (isManual ? 'Staff' : 'System'),
+            name: granter?.display_name || (isAutoGranted ? 'System' : 'Staff'),
             email: granter?.email || null,
-            role: granter?.role || (isManual ? 'staff' : 'system')
+            role: granter?.role || (isAutoGranted ? 'system' : 'staff')
           },
-          description: `${isManual ? 'Manually granted' : 'Auto-granted'} data room access to ${investorName}`,
+          description: `${isAutoGranted ? 'Auto-granted' : 'Manually granted'} data room access to ${investorName}`,
           details: {
             access_id: access.id,
-            access_type: access.access_type,
+            auto_granted: access.auto_granted,
             investor_name: investorName
           }
         })

@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { cn } from '@/lib/utils'
 import {
   Table,
   TableBody,
@@ -57,7 +58,11 @@ interface WorkflowRun {
   trigger_type: string
 }
 
-export function WorkflowMonitoring() {
+interface WorkflowMonitoringProps {
+  isDark?: boolean
+}
+
+export function WorkflowMonitoring({ isDark = true }: WorkflowMonitoringProps) {
   const [workflows, setWorkflows] = useState<Workflow[]>([])
   const [recentRuns, setRecentRuns] = useState<WorkflowRun[]>([])
   const [loading, setLoading] = useState(true)
@@ -113,7 +118,7 @@ export function WorkflowMonitoring() {
       case 'multi_step':
         return 'text-red-400'
       default:
-        return 'text-zinc-400'
+        return isDark ? 'text-zinc-400' : 'text-gray-500'
     }
   }
 
@@ -128,11 +133,13 @@ export function WorkflowMonitoring() {
     <div className="space-y-6">
       {/* Health Overview */}
       <div className="grid grid-cols-4 gap-4">
-        <Card className="bg-zinc-800/50 border-zinc-700">
+        <Card className={cn(
+          isDark ? 'bg-zinc-800/50 border-zinc-700' : 'bg-white border-gray-200 shadow-sm'
+        )}>
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-2">
-              <Activity className="h-4 w-4 text-zinc-400" />
-              <span className="text-sm text-zinc-400">Overall Health</span>
+              <Activity className={cn('h-4 w-4', isDark ? 'text-zinc-400' : 'text-gray-500')} />
+              <span className={cn('text-sm', isDark ? 'text-zinc-400' : 'text-gray-500')}>Overall Health</span>
             </div>
             <div className="flex items-end gap-2">
               <span
@@ -147,36 +154,42 @@ export function WorkflowMonitoring() {
               </span>
               <Progress
                 value={overallHealth}
-                className="h-2 flex-1 bg-zinc-700"
+                className={cn('h-2 flex-1', isDark ? 'bg-zinc-700' : 'bg-gray-200')}
               />
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-zinc-800/50 border-zinc-700">
+        <Card className={cn(
+          isDark ? 'bg-zinc-800/50 border-zinc-700' : 'bg-white border-gray-200 shadow-sm'
+        )}>
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-2">
-              <Zap className="h-4 w-4 text-zinc-400" />
-              <span className="text-sm text-zinc-400">Active Workflows</span>
+              <Zap className={cn('h-4 w-4', isDark ? 'text-zinc-400' : 'text-gray-500')} />
+              <span className={cn('text-sm', isDark ? 'text-zinc-400' : 'text-gray-500')}>Active Workflows</span>
             </div>
-            <span className="text-2xl font-bold text-white">
+            <span className={cn('text-2xl font-bold', isDark ? 'text-white' : 'text-gray-900')}>
               {workflows.filter((w) => w.enabled).length}/{workflows.length}
             </span>
           </CardContent>
         </Card>
-        <Card className="bg-zinc-800/50 border-zinc-700">
+        <Card className={cn(
+          isDark ? 'bg-zinc-800/50 border-zinc-700' : 'bg-white border-gray-200 shadow-sm'
+        )}>
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-2">
               <CheckCircle className="h-4 w-4 text-emerald-400" />
-              <span className="text-sm text-zinc-400">Recent Success</span>
+              <span className={cn('text-sm', isDark ? 'text-zinc-400' : 'text-gray-500')}>Recent Success</span>
             </div>
             <span className="text-2xl font-bold text-emerald-400">{totalSuccess}</span>
           </CardContent>
         </Card>
-        <Card className="bg-zinc-800/50 border-zinc-700">
+        <Card className={cn(
+          isDark ? 'bg-zinc-800/50 border-zinc-700' : 'bg-white border-gray-200 shadow-sm'
+        )}>
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-2">
               <XCircle className="h-4 w-4 text-red-400" />
-              <span className="text-sm text-zinc-400">Recent Failed</span>
+              <span className={cn('text-sm', isDark ? 'text-zinc-400' : 'text-gray-500')}>Recent Failed</span>
             </div>
             <span className="text-2xl font-bold text-red-400">{totalFailed}</span>
           </CardContent>
@@ -184,14 +197,22 @@ export function WorkflowMonitoring() {
       </div>
 
       {/* Workflows Table */}
-      <Card className="border-zinc-700 overflow-hidden">
-        <CardHeader className="px-4 py-3 border-b border-zinc-700 flex flex-row items-center justify-between space-y-0">
-          <CardTitle className="text-white font-medium text-base">Workflow Status</CardTitle>
+      <Card className={cn(
+        'overflow-hidden',
+        isDark ? 'border-zinc-700' : 'border-gray-200 shadow-sm'
+      )}>
+        <CardHeader className={cn(
+          'px-4 py-3 flex flex-row items-center justify-between space-y-0 border-b',
+          isDark ? 'border-zinc-700' : 'border-gray-200'
+        )}>
+          <CardTitle className={cn('font-medium text-base', isDark ? 'text-white' : 'text-gray-900')}>Workflow Status</CardTitle>
           <Button
             variant="outline"
             size="sm"
             onClick={fetchData}
-            className="border-zinc-700 text-zinc-400"
+            className={cn(
+              isDark ? 'border-zinc-700 text-zinc-400' : 'border-gray-300 text-gray-600'
+            )}
           >
             <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
             Refresh
@@ -200,40 +221,44 @@ export function WorkflowMonitoring() {
         <CardContent className="p-0">
           <Table>
             <TableHeader>
-              <TableRow className="border-zinc-700 hover:bg-transparent">
-                <TableHead className="text-zinc-400">Workflow</TableHead>
-                <TableHead className="text-zinc-400">Category</TableHead>
-                <TableHead className="text-zinc-400">Success Rate</TableHead>
-                <TableHead className="text-zinc-400">Total Runs</TableHead>
-                <TableHead className="text-zinc-400">Last Run</TableHead>
-                <TableHead className="text-zinc-400">Avg Duration</TableHead>
-                <TableHead className="text-zinc-400 text-right">Status</TableHead>
+              <TableRow className={cn(
+                isDark ? 'border-zinc-700 hover:bg-transparent' : 'border-gray-200 hover:bg-transparent'
+              )}>
+                <TableHead className={isDark ? 'text-zinc-400' : 'text-gray-500'}>Workflow</TableHead>
+                <TableHead className={isDark ? 'text-zinc-400' : 'text-gray-500'}>Category</TableHead>
+                <TableHead className={isDark ? 'text-zinc-400' : 'text-gray-500'}>Success Rate</TableHead>
+                <TableHead className={isDark ? 'text-zinc-400' : 'text-gray-500'}>Total Runs</TableHead>
+                <TableHead className={isDark ? 'text-zinc-400' : 'text-gray-500'}>Last Run</TableHead>
+                <TableHead className={isDark ? 'text-zinc-400' : 'text-gray-500'}>Avg Duration</TableHead>
+                <TableHead className={cn('text-right', isDark ? 'text-zinc-400' : 'text-gray-500')}>Status</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {loading ? (
                 [...Array(5)].map((_, i) => (
-                  <TableRow key={i} className="border-zinc-700">
+                  <TableRow key={i} className={isDark ? 'border-zinc-700' : 'border-gray-200'}>
                     {[...Array(7)].map((_, j) => (
                       <TableCell key={j}>
-                        <div className="h-5 bg-zinc-800 rounded animate-pulse" />
+                        <div className={cn('h-5 rounded animate-pulse', isDark ? 'bg-zinc-800' : 'bg-gray-200')} />
                       </TableCell>
                     ))}
                   </TableRow>
                 ))
               ) : workflows.length === 0 ? (
-                <TableRow className="border-zinc-700">
-                  <TableCell colSpan={7} className="text-center py-8 text-zinc-400">
+                <TableRow className={isDark ? 'border-zinc-700' : 'border-gray-200'}>
+                  <TableCell colSpan={7} className={cn('text-center py-8', isDark ? 'text-zinc-400' : 'text-gray-500')}>
                     No workflows configured
                   </TableCell>
                 </TableRow>
               ) : (
                 workflows.map((workflow) => (
-                  <TableRow key={workflow.key} className="border-zinc-700 hover:bg-zinc-800/50">
+                  <TableRow key={workflow.key} className={cn(
+                    isDark ? 'border-zinc-700 hover:bg-zinc-800/50' : 'border-gray-200 hover:bg-gray-50'
+                  )}>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <Zap className="h-4 w-4 text-zinc-400" />
-                        <span className="text-white font-medium">{workflow.title}</span>
+                        <Zap className={cn('h-4 w-4', isDark ? 'text-zinc-400' : 'text-gray-500')} />
+                        <span className={cn('font-medium', isDark ? 'text-white' : 'text-gray-900')}>{workflow.title}</span>
                       </div>
                     </TableCell>
                     <TableCell>
@@ -245,7 +270,7 @@ export function WorkflowMonitoring() {
                       <div className="flex items-center gap-2">
                         <Progress
                           value={workflow.success_rate}
-                          className="h-2 w-16 bg-zinc-700"
+                          className={cn('h-2 w-16', isDark ? 'bg-zinc-700' : 'bg-gray-200')}
                         />
                         <span
                           className={`text-sm ${workflow.success_rate >= 90
@@ -259,22 +284,24 @@ export function WorkflowMonitoring() {
                         </span>
                       </div>
                     </TableCell>
-                    <TableCell className="text-zinc-300">{workflow.total_runs}</TableCell>
-                    <TableCell className="text-zinc-400 text-sm">
+                    <TableCell className={isDark ? 'text-zinc-300' : 'text-gray-700'}>{workflow.total_runs}</TableCell>
+                    <TableCell className={cn('text-sm', isDark ? 'text-zinc-400' : 'text-gray-500')}>
                       {workflow.last_run_at
                         ? new Date(workflow.last_run_at).toLocaleString()
                         : 'Never'}
                     </TableCell>
-                    <TableCell className="text-zinc-400 text-sm">
+                    <TableCell className={cn('text-sm', isDark ? 'text-zinc-400' : 'text-gray-500')}>
                       {formatDuration(workflow.avg_duration_ms)}
                     </TableCell>
                     <TableCell className="text-right">
                       <Badge
-                        className={
+                        className={cn(
                           workflow.enabled
                             ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
-                            : 'bg-zinc-500/20 text-zinc-400 border-zinc-500/30'
-                        }
+                            : (isDark
+                              ? 'bg-zinc-500/20 text-zinc-400 border-zinc-500/30'
+                              : 'bg-gray-100 text-gray-500 border-gray-300')
+                        )}
                       >
                         {workflow.enabled ? (
                           <>
@@ -298,33 +325,43 @@ export function WorkflowMonitoring() {
       </Card>
 
       {/* Recent Runs */}
-      <Card className="border-zinc-700 overflow-hidden">
-        <CardHeader className="px-4 py-3 border-b border-zinc-700">
-          <CardTitle className="text-white font-medium text-base">Recent Executions</CardTitle>
+      <Card className={cn(
+        'overflow-hidden',
+        isDark ? 'border-zinc-700' : 'border-gray-200 shadow-sm'
+      )}>
+        <CardHeader className={cn(
+          'px-4 py-3 border-b',
+          isDark ? 'border-zinc-700' : 'border-gray-200'
+        )}>
+          <CardTitle className={cn('font-medium text-base', isDark ? 'text-white' : 'text-gray-900')}>Recent Executions</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           <Table>
             <TableHeader>
-              <TableRow className="border-zinc-700 hover:bg-transparent">
-                <TableHead className="text-zinc-400">Workflow</TableHead>
-                <TableHead className="text-zinc-400">Status</TableHead>
-                <TableHead className="text-zinc-400">Started</TableHead>
-                <TableHead className="text-zinc-400">Duration</TableHead>
-                <TableHead className="text-zinc-400">Trigger</TableHead>
-                <TableHead className="text-zinc-400 text-right">Actions</TableHead>
+              <TableRow className={cn(
+                isDark ? 'border-zinc-700 hover:bg-transparent' : 'border-gray-200 hover:bg-transparent'
+              )}>
+                <TableHead className={isDark ? 'text-zinc-400' : 'text-gray-500'}>Workflow</TableHead>
+                <TableHead className={isDark ? 'text-zinc-400' : 'text-gray-500'}>Status</TableHead>
+                <TableHead className={isDark ? 'text-zinc-400' : 'text-gray-500'}>Started</TableHead>
+                <TableHead className={isDark ? 'text-zinc-400' : 'text-gray-500'}>Duration</TableHead>
+                <TableHead className={isDark ? 'text-zinc-400' : 'text-gray-500'}>Trigger</TableHead>
+                <TableHead className={cn('text-right', isDark ? 'text-zinc-400' : 'text-gray-500')}>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {recentRuns.length === 0 ? (
-                <TableRow className="border-zinc-700">
-                  <TableCell colSpan={6} className="text-center py-8 text-zinc-400">
+                <TableRow className={isDark ? 'border-zinc-700' : 'border-gray-200'}>
+                  <TableCell colSpan={6} className={cn('text-center py-8', isDark ? 'text-zinc-400' : 'text-gray-500')}>
                     No recent workflow runs
                   </TableCell>
                 </TableRow>
               ) : (
                 recentRuns.map((run) => (
-                  <TableRow key={run.id} className="border-zinc-700 hover:bg-zinc-800/50">
-                    <TableCell className="text-white">{run.workflow_key}</TableCell>
+                  <TableRow key={run.id} className={cn(
+                    isDark ? 'border-zinc-700 hover:bg-zinc-800/50' : 'border-gray-200 hover:bg-gray-50'
+                  )}>
+                    <TableCell className={isDark ? 'text-white' : 'text-gray-900'}>{run.workflow_key}</TableCell>
                     <TableCell>
                       {run.status === 'completed' ? (
                         <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30">
@@ -343,13 +380,13 @@ export function WorkflowMonitoring() {
                         </Badge>
                       )}
                     </TableCell>
-                    <TableCell className="text-zinc-400 text-sm">
+                    <TableCell className={cn('text-sm', isDark ? 'text-zinc-400' : 'text-gray-500')}>
                       {new Date(run.started_at).toLocaleString()}
                     </TableCell>
-                    <TableCell className="text-zinc-400 text-sm">
+                    <TableCell className={cn('text-sm', isDark ? 'text-zinc-400' : 'text-gray-500')}>
                       {formatDuration(run.duration_ms)}
                     </TableCell>
-                    <TableCell className="text-zinc-400 text-sm">{run.trigger_type}</TableCell>
+                    <TableCell className={cn('text-sm', isDark ? 'text-zinc-400' : 'text-gray-500')}>{run.trigger_type}</TableCell>
                     <TableCell className="text-right">
                       <Button
                         variant="ghost"
@@ -358,7 +395,7 @@ export function WorkflowMonitoring() {
                           setSelectedRun(run)
                           setDetailsDialogOpen(true)
                         }}
-                        className="text-zinc-400 hover:text-white"
+                        className={cn(isDark ? 'text-zinc-400 hover:text-white' : 'text-gray-500 hover:text-gray-900')}
                       >
                         <Eye className="h-4 w-4" />
                       </Button>
@@ -372,20 +409,23 @@ export function WorkflowMonitoring() {
       </Card>
       {/* Run Details Dialog */}
       <Dialog open={detailsDialogOpen} onOpenChange={setDetailsDialogOpen}>
-        <DialogContent className="bg-zinc-900 border-zinc-700 max-w-2xl">
+        <DialogContent className={cn(
+          'max-w-2xl',
+          isDark ? 'bg-zinc-900 border-zinc-700' : 'bg-white border-gray-200'
+        )}>
           <DialogHeader>
-            <DialogTitle className="text-white">Workflow Run Details</DialogTitle>
-            <DialogDescription className="text-zinc-400">
+            <DialogTitle className={isDark ? 'text-white' : 'text-gray-900'}>Workflow Run Details</DialogTitle>
+            <DialogDescription className={isDark ? 'text-zinc-400' : 'text-gray-500'}>
               {selectedRun?.workflow_key} - {selectedRun?.id}
             </DialogDescription>
           </DialogHeader>
           {selectedRun && (
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
-                <div className="p-3 rounded-lg bg-zinc-800">
-                  <p className="text-xs text-zinc-400 mb-1">Status</p>
+                <div className={cn('p-3 rounded-lg', isDark ? 'bg-zinc-800' : 'bg-gray-100')}>
+                  <p className={cn('text-xs mb-1', isDark ? 'text-zinc-400' : 'text-gray-500')}>Status</p>
                   <p
-                    className={`text-white font-medium ${selectedRun.status === 'completed'
+                    className={`font-medium ${selectedRun.status === 'completed'
                       ? 'text-emerald-400'
                       : selectedRun.status === 'failed'
                         ? 'text-red-400'
@@ -395,26 +435,29 @@ export function WorkflowMonitoring() {
                     {selectedRun.status}
                   </p>
                 </div>
-                <div className="p-3 rounded-lg bg-zinc-800">
-                  <p className="text-xs text-zinc-400 mb-1">Duration</p>
-                  <p className="text-white font-medium">
+                <div className={cn('p-3 rounded-lg', isDark ? 'bg-zinc-800' : 'bg-gray-100')}>
+                  <p className={cn('text-xs mb-1', isDark ? 'text-zinc-400' : 'text-gray-500')}>Duration</p>
+                  <p className={cn('font-medium', isDark ? 'text-white' : 'text-gray-900')}>
                     {formatDuration(selectedRun.duration_ms)}
                   </p>
                 </div>
-                <div className="p-3 rounded-lg bg-zinc-800">
-                  <p className="text-xs text-zinc-400 mb-1">Started At</p>
-                  <p className="text-white text-sm">
+                <div className={cn('p-3 rounded-lg', isDark ? 'bg-zinc-800' : 'bg-gray-100')}>
+                  <p className={cn('text-xs mb-1', isDark ? 'text-zinc-400' : 'text-gray-500')}>Started At</p>
+                  <p className={cn('text-sm', isDark ? 'text-white' : 'text-gray-900')}>
                     {new Date(selectedRun.started_at).toLocaleString()}
                   </p>
                 </div>
-                <div className="p-3 rounded-lg bg-zinc-800">
-                  <p className="text-xs text-zinc-400 mb-1">Trigger Type</p>
-                  <p className="text-white font-medium">{selectedRun.trigger_type}</p>
+                <div className={cn('p-3 rounded-lg', isDark ? 'bg-zinc-800' : 'bg-gray-100')}>
+                  <p className={cn('text-xs mb-1', isDark ? 'text-zinc-400' : 'text-gray-500')}>Trigger Type</p>
+                  <p className={cn('font-medium', isDark ? 'text-white' : 'text-gray-900')}>{selectedRun.trigger_type}</p>
                 </div>
               </div>
 
               {selectedRun.error_message && (
-                <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/30">
+                <div className={cn(
+                  'p-4 rounded-lg border',
+                  isDark ? 'bg-red-500/10 border-red-500/30' : 'bg-red-50 border-red-200'
+                )}>
                   <div className="flex items-center gap-2 mb-2">
                     <AlertTriangle className="h-4 w-4 text-red-400" />
                     <span className="text-red-400 font-medium">Error Message</span>
@@ -430,7 +473,9 @@ export function WorkflowMonitoring() {
             <Button
               variant="outline"
               onClick={() => setDetailsDialogOpen(false)}
-              className="border-zinc-700 text-zinc-400"
+              className={cn(
+                isDark ? 'border-zinc-700 text-zinc-400' : 'border-gray-300 text-gray-600'
+              )}
             >
               Close
             </Button>

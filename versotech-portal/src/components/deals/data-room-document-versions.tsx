@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef, ChangeEvent } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -18,8 +18,9 @@ import {
 } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Download, FileText, Loader2 } from 'lucide-react'
+import { Download, FileText, Loader2, Upload } from 'lucide-react'
 import { format } from 'date-fns'
+import { toast } from 'sonner'
 
 interface DocumentVersionsProps {
   dealId: string
@@ -48,6 +49,41 @@ export function DataRoomDocumentVersions({
   const [versions, setVersions] = useState<DocumentVersion[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [uploading, setUploading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const handleUploadVersion = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setUploading(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+
+      const response = await fetch(`/api/deals/${dealId}/documents/${documentId}/versions`, {
+        method: 'POST',
+        body: formData
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || 'Failed to upload new version')
+      }
+
+      toast.success('New version uploaded successfully')
+      await loadVersions()
+    } catch (err) {
+      console.error('Error uploading version:', err)
+      toast.error(err instanceof Error ? err.message : 'Failed to upload new version')
+    } finally {
+      setUploading(false)
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
+    }
+  }
 
   const loadVersions = useCallback(async () => {
     setLoading(true)
@@ -87,10 +123,33 @@ export function DataRoomDocumentVersions({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-3xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <FileText className="h-5 w-5" />
-            Document Version History
-          </DialogTitle>
+          <div className="flex items-center justify-between">
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              Document Version History
+            </DialogTitle>
+            <div>
+              <Button
+                size="sm"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading || loading}
+              >
+                {uploading ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Upload className="h-4 w-4 mr-2" />
+                )}
+                {uploading ? 'Uploading...' : 'Upload New Version'}
+              </Button>
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleUploadVersion}
+                className="hidden"
+                accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv"
+              />
+            </div>
+          </div>
           <DialogDescription>
             View all versions of this document. The latest version is shown to investors.
           </DialogDescription>

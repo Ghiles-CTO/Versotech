@@ -94,6 +94,51 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 })
     }
 
+    // SAFEGUARD: Check for active agreements
+    const { data: activeAgreements } = await supabase
+      .from("introducer_agreements")
+      .select("id, status")
+      .eq("introducer_id", id)
+      .in("status", ["active", "pending_approval", "approved", "pending_ceo_signature", "pending_introducer_signature"])
+      .limit(1)
+
+    if (activeAgreements && activeAgreements.length > 0) {
+      return NextResponse.json(
+        { error: "Cannot delete introducer with active or pending agreements. Terminate agreements first." },
+        { status: 400 }
+      )
+    }
+
+    // SAFEGUARD: Check for pending introductions
+    const { data: pendingIntroductions } = await supabase
+      .from("introductions")
+      .select("id, status")
+      .eq("introducer_id", id)
+      .in("status", ["invited", "joined"])
+      .limit(1)
+
+    if (pendingIntroductions && pendingIntroductions.length > 0) {
+      return NextResponse.json(
+        { error: "Cannot delete introducer with pending introductions. Close introductions first." },
+        { status: 400 }
+      )
+    }
+
+    // SAFEGUARD: Check for unpaid commissions
+    const { data: unpaidCommissions } = await supabase
+      .from("introducer_commissions")
+      .select("id, status")
+      .eq("introducer_id", id)
+      .in("status", ["accrued", "invoiced"])
+      .limit(1)
+
+    if (unpaidCommissions && unpaidCommissions.length > 0) {
+      return NextResponse.json(
+        { error: "Cannot delete introducer with unpaid commissions. Settle commissions first." },
+        { status: 400 }
+      )
+    }
+
     const { error } = await supabase
       .from("introducers")
       .delete()

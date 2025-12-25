@@ -43,11 +43,26 @@ export interface SignatureTask {
   } | null
 }
 
+export interface ExpiredSignature {
+  id: string
+  signer_name: string
+  signer_email: string
+  document_type: string
+  token_expires_at: string
+  created_at: string
+  investor_id: string
+  investor?: {
+    display_name: string | null
+    legal_name: string | null
+  }
+}
+
 export interface SignatureGroup {
-  category: 'countersignatures' | 'follow_ups' | 'other'
+  category: 'countersignatures' | 'follow_ups' | 'other' | 'expired'
   title: string
   description: string
   tasks: SignatureTask[]
+  expiredSignatures?: ExpiredSignature[]
 }
 
 export default async function StaffSignaturesPage() {
@@ -66,6 +81,18 @@ export default async function StaffSignaturesPage() {
     .eq('owner_user_id', user.id)
     .in('kind', ['countersignature', 'subscription_pack_signature', 'other'])
     .order('due_at', { ascending: true, nullsFirst: false })
+
+  // Fetch expired signature requests
+  const { data: expiredSignatures } = await supabase
+    .from('signature_requests')
+    .select(`
+      id, signer_name, signer_email, document_type,
+      token_expires_at, created_at, investor_id,
+      investor:investors(display_name, legal_name)
+    `)
+    .eq('status', 'expired')
+    .order('token_expires_at', { ascending: false })
+    .limit(50)
 
   // Sort by priority (high → medium → low), then by due_at
   const priorityOrder: Record<string, number> = { high: 0, medium: 1, low: 2 }
@@ -107,6 +134,13 @@ export default async function StaffSignaturesPage() {
         (t.kind === 'countersignature' || t.kind === 'subscription_pack_signature') &&
         t.status === 'completed'
       ).slice(0, 10) // Show last 10 completed
+    },
+    {
+      category: 'expired',
+      title: 'Expired Signatures',
+      description: 'Signature requests that have expired - may need to be resent',
+      tasks: [],
+      expiredSignatures: (expiredSignatures as unknown as ExpiredSignature[]) || []
     }
   ]
 
@@ -123,7 +157,8 @@ export default async function StaffSignaturesPage() {
       t.status === 'pending' &&
       t.due_at &&
       new Date(t.due_at) < new Date()
-    ).length
+    ).length,
+    expired: (expiredSignatures || []).length
   }
 
   return (

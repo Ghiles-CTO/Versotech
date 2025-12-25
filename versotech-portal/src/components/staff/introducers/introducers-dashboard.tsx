@@ -33,6 +33,7 @@ import { useAddIntroducer } from '@/components/staff/introducers/add-introducer-
 import { EditIntroducerDialog } from '@/components/staff/introducers/edit-introducer-dialog'
 import { AddIntroductionDialog } from '@/components/staff/introducers/add-introduction-dialog'
 import { EditIntroductionDialog } from '@/components/staff/introducers/edit-introduction-dialog'
+import { InviteUserDialog } from '@/components/users/invite-user-dialog'
 
 export type IntroducersDashboardProps = {
   summary: {
@@ -90,6 +91,7 @@ export function IntroducersDashboard({ summary, introducers, recentIntroductions
   const [editingIntroducer, setEditingIntroducer] = useState<IntroducersDashboardProps['introducers'][number] | null>(null)
   const [editingIntroduction, setEditingIntroduction] = useState<IntroducersDashboardProps['recentIntroductions'][number] | null>(null)
   const [addIntroductionOpen, setAddIntroductionOpen] = useState(false)
+  const [inviteDialogIntroducer, setInviteDialogIntroducer] = useState<IntroducersDashboardProps['introducers'][number] | null>(null)
   const { setOpen } = useAddIntroducer()
 
   const filteredIntroducers = useMemo(() => {
@@ -210,6 +212,7 @@ export function IntroducersDashboard({ summary, introducers, recentIntroductions
                 key={introducer.id}
                 introducer={introducer}
                 onEdit={() => setEditingIntroducer(introducer)}
+                onInvite={() => setInviteDialogIntroducer(introducer)}
               />
             ))
           )}
@@ -258,6 +261,16 @@ export function IntroducersDashboard({ summary, introducers, recentIntroductions
         introducers={introducers.map((i) => ({ id: i.id, legalName: i.legalName }))}
         deals={deals}
       />
+
+      {inviteDialogIntroducer && (
+        <InviteUserDialog
+          open={!!inviteDialogIntroducer}
+          onOpenChange={(open) => !open && setInviteDialogIntroducer(null)}
+          entityType="introducer"
+          entityId={inviteDialogIntroducer.id}
+          entityName={inviteDialogIntroducer.legalName}
+        />
+      )}
     </div>
   )
 }
@@ -294,9 +307,11 @@ function DashboardStatCard({
 function IntroducerRow({
   introducer,
   onEdit,
+  onInvite,
 }: {
   introducer: IntroducersDashboardProps['introducers'][number]
   onEdit: () => void
+  onInvite: () => void
 }) {
   const statusStyles: Record<string, string> = {
     active: 'bg-green-100 text-green-800',
@@ -325,6 +340,14 @@ function IntroducerRow({
                 className="h-7 w-7 p-0"
               >
                 <Edit className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onInvite}
+                className="h-7 w-7 p-0"
+              >
+                <UserPlus className="h-4 w-4" />
               </Button>
             </div>
             <div className="text-sm text-muted-foreground">

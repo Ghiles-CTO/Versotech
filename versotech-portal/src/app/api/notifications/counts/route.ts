@@ -198,11 +198,13 @@ export async function GET() {
         serviceSupabase
           .from('request_tickets')
           .select('id', { count: 'exact', head: true })
-          .in('status', REQUEST_STATUSES),
+          .in('status', REQUEST_STATUSES)
+          .or(`assigned_to.eq.${user.id},assigned_to.is.null`),
         serviceSupabase
           .from('approvals')
           .select('id', { count: 'exact', head: true })
-          .in('status', APPROVAL_STATUSES),
+          .in('status', APPROVAL_STATUSES)
+          .or(`assigned_to.eq.${user.id},assigned_to.is.null`),
         // Signatures: pending signature tasks (countersignature + subscription_pack_signature)
         // Note: VersoSign uses the tasks table, not signature_requests (which doesn't exist)
         serviceSupabase

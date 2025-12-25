@@ -25,6 +25,7 @@ import {
   Upload,
   Link as LinkIcon,
   DollarSign,
+  UserPlus,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatCurrency, formatDate } from '@/lib/format'
@@ -32,6 +33,7 @@ import { useAddArranger } from '@/components/staff/arrangers/add-arranger-contex
 import { EditArrangerDialog } from '@/components/staff/arrangers/edit-arranger-dialog'
 import { ArrangerKYCDialog } from '@/components/staff/arrangers/arranger-kyc-dialog'
 import { ArrangerDocumentsDialog } from '@/components/staff/arrangers/arranger-documents-dialog'
+import { InviteUserDialog } from '@/components/users/invite-user-dialog'
 
 export type ArrangersDashboardProps = {
   summary: {
@@ -97,6 +99,7 @@ export function ArrangersDashboard({ summary, arrangers, deals = [], vehicles = 
   const [editingArranger, setEditingArranger] = useState<ArrangersDashboardProps['arrangers'][number] | null>(null)
   const [kycDialogArranger, setKycDialogArranger] = useState<ArrangersDashboardProps['arrangers'][number] | null>(null)
   const [documentsDialogArranger, setDocumentsDialogArranger] = useState<ArrangersDashboardProps['arrangers'][number] | null>(null)
+  const [inviteDialogArranger, setInviteDialogArranger] = useState<ArrangersDashboardProps['arrangers'][number] | null>(null)
   const { setOpen } = useAddArranger()
 
   const filteredArrangers = useMemo(() => {
@@ -220,6 +223,7 @@ export function ArrangersDashboard({ summary, arrangers, deals = [], vehicles = 
                 onEdit={() => setEditingArranger(arranger)}
                 onManageKYC={() => setKycDialogArranger(arranger)}
                 onManageDocuments={() => setDocumentsDialogArranger(arranger)}
+                onInvite={() => setInviteDialogArranger(arranger)}
               />
             ))
           )}
@@ -243,6 +247,16 @@ export function ArrangersDashboard({ summary, arrangers, deals = [], vehicles = 
         onOpenChange={(open) => !open && setDocumentsDialogArranger(null)}
         arranger={documentsDialogArranger}
       />
+
+      {inviteDialogArranger && (
+        <InviteUserDialog
+          open={!!inviteDialogArranger}
+          onOpenChange={(open) => !open && setInviteDialogArranger(null)}
+          entityType="arranger"
+          entityId={inviteDialogArranger.id}
+          entityName={inviteDialogArranger.legalName}
+        />
+      )}
     </div>
   )
 }
@@ -281,11 +295,13 @@ function ArrangerRow({
   onEdit,
   onManageKYC,
   onManageDocuments,
+  onInvite,
 }: {
   arranger: ArrangersDashboardProps['arrangers'][number]
   onEdit: () => void
   onManageKYC: () => void
   onManageDocuments: () => void
+  onInvite: () => void
 }) {
   const statusStyles: Record<string, string> = {
     active: 'bg-green-500/20 text-green-400 border-green-500/30',
@@ -373,6 +389,15 @@ function ArrangerRow({
             >
               <FileText className="h-3 w-3 mr-1" />
               Docs
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onInvite}
+              className="h-7 text-xs"
+            >
+              <UserPlus className="h-3 w-3 mr-1" />
+              Invite
             </Button>
           </div>
         </div>

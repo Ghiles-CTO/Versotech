@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { cn } from '@/lib/utils'
 import {
   Table,
   TableBody,
@@ -37,7 +38,11 @@ interface ComplianceAlert {
   created_at: string
 }
 
-export function ComplianceAlertsPanel() {
+interface ComplianceAlertsPanelProps {
+  isDark?: boolean
+}
+
+export function ComplianceAlertsPanel({ isDark = true }: ComplianceAlertsPanelProps) {
   const [alerts, setAlerts] = useState<ComplianceAlert[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<string>('all')
@@ -92,7 +97,10 @@ export function ComplianceAlertsPanel() {
         )
       case 'low':
         return (
-          <Badge className="bg-zinc-500/20 text-zinc-400 border-zinc-500/30">Low</Badge>
+          <Badge className={cn(
+            'border',
+            isDark ? 'bg-zinc-500/20 text-zinc-400 border-zinc-500/30' : 'bg-gray-100 text-gray-500 border-gray-300'
+          )}>Low</Badge>
         )
       default:
         return <Badge variant="outline">{severity}</Badge>
@@ -115,7 +123,7 @@ export function ComplianceAlertsPanel() {
   }
 
   const getDaysColor = (days: number | undefined) => {
-    if (days === undefined) return 'text-zinc-400'
+    if (days === undefined) return isDark ? 'text-zinc-400' : 'text-gray-500'
     if (days <= 7) return 'text-red-400'
     if (days <= 30) return 'text-amber-400'
     return 'text-emerald-400'
@@ -135,49 +143,66 @@ export function ComplianceAlertsPanel() {
     <div className="space-y-6">
       {/* Summary Cards */}
       <div className="grid grid-cols-4 gap-4">
-        <Card className="bg-zinc-800/50 border-zinc-700">
+        <Card className={cn(
+          isDark ? 'bg-zinc-800/50 border-zinc-700' : 'bg-white border-gray-200 shadow-sm'
+        )}>
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-2">
               <AlertTriangle className="h-4 w-4 text-red-400" />
-              <span className="text-sm text-zinc-400">Critical</span>
+              <span className={cn('text-sm', isDark ? 'text-zinc-400' : 'text-gray-500')}>Critical</span>
             </div>
             <span
-              className={`text-2xl font-bold ${criticalCount > 0 ? 'text-red-400' : 'text-zinc-500'}`}
+              className={cn(
+                'text-2xl font-bold',
+                criticalCount > 0 ? 'text-red-400' : (isDark ? 'text-zinc-500' : 'text-gray-400')
+              )}
             >
               {criticalCount}
             </span>
           </CardContent>
         </Card>
-        <Card className="bg-zinc-800/50 border-zinc-700">
+        <Card className={cn(
+          isDark ? 'bg-zinc-800/50 border-zinc-700' : 'bg-white border-gray-200 shadow-sm'
+        )}>
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-2">
               <Clock className="h-4 w-4 text-amber-400" />
-              <span className="text-sm text-zinc-400">High Priority</span>
+              <span className={cn('text-sm', isDark ? 'text-zinc-400' : 'text-gray-500')}>High Priority</span>
             </div>
             <span
-              className={`text-2xl font-bold ${highCount > 0 ? 'text-amber-400' : 'text-zinc-500'}`}
+              className={cn(
+                'text-2xl font-bold',
+                highCount > 0 ? 'text-amber-400' : (isDark ? 'text-zinc-500' : 'text-gray-400')
+              )}
             >
               {highCount}
             </span>
           </CardContent>
         </Card>
-        <Card className="bg-zinc-800/50 border-zinc-700">
+        <Card className={cn(
+          isDark ? 'bg-zinc-800/50 border-zinc-700' : 'bg-white border-gray-200 shadow-sm'
+        )}>
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-2">
               <Shield className="h-4 w-4 text-blue-400" />
-              <span className="text-sm text-zinc-400">KYC Expiring</span>
+              <span className={cn('text-sm', isDark ? 'text-zinc-400' : 'text-gray-500')}>KYC Expiring</span>
             </div>
             <span className="text-2xl font-bold text-blue-400">{kycExpiryCount}</span>
           </CardContent>
         </Card>
-        <Card className="bg-zinc-800/50 border-zinc-700">
+        <Card className={cn(
+          isDark ? 'bg-zinc-800/50 border-zinc-700' : 'bg-white border-gray-200 shadow-sm'
+        )}>
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-2">
               <UserX className="h-4 w-4 text-purple-400" />
-              <span className="text-sm text-zinc-400">AML Flags</span>
+              <span className={cn('text-sm', isDark ? 'text-zinc-400' : 'text-gray-500')}>AML Flags</span>
             </div>
             <span
-              className={`text-2xl font-bold ${amlFlagCount > 0 ? 'text-purple-400' : 'text-zinc-500'}`}
+              className={cn(
+                'text-2xl font-bold',
+                amlFlagCount > 0 ? 'text-purple-400' : (isDark ? 'text-zinc-500' : 'text-gray-400')
+              )}
             >
               {amlFlagCount}
             </span>
@@ -195,9 +220,11 @@ export function ComplianceAlertsPanel() {
                 variant={filter === filterType ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setFilter(filterType)}
-                className={
-                  filter !== filterType ? 'border-zinc-700 text-zinc-400 hover:text-white' : ''
-                }
+                className={cn(
+                  filter !== filterType && (isDark
+                    ? 'border-zinc-700 text-zinc-400 hover:text-white'
+                    : 'border-gray-300 text-gray-600 hover:text-gray-900')
+                )}
               >
                 {filterType === 'all'
                   ? 'All'
@@ -216,7 +243,9 @@ export function ComplianceAlertsPanel() {
           variant="outline"
           size="sm"
           onClick={fetchAlerts}
-          className="border-zinc-700 text-zinc-400"
+          className={cn(
+            isDark ? 'border-zinc-700 text-zinc-400' : 'border-gray-300 text-gray-600'
+          )}
         >
           <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
           Refresh
@@ -224,43 +253,49 @@ export function ComplianceAlertsPanel() {
       </div>
 
       {/* Alerts Table */}
-      <Card className="bg-zinc-900/50 border-zinc-700">
+      <Card className={cn(
+        isDark ? 'bg-zinc-900/50 border-zinc-700' : 'bg-white border-gray-200 shadow-sm'
+      )}>
         <CardContent className="p-0">
           <Table>
             <TableHeader>
-              <TableRow className="border-zinc-700 hover:bg-transparent">
-                <TableHead className="text-zinc-400">Type</TableHead>
-                <TableHead className="text-zinc-400">Investor</TableHead>
-                <TableHead className="text-zinc-400">Details</TableHead>
-                <TableHead className="text-zinc-400">Due Date</TableHead>
-                <TableHead className="text-zinc-400">Severity</TableHead>
-                <TableHead className="text-zinc-400 text-right">Action</TableHead>
+              <TableRow className={cn(
+                isDark ? 'border-zinc-700 hover:bg-transparent' : 'border-gray-200 hover:bg-transparent'
+              )}>
+                <TableHead className={isDark ? 'text-zinc-400' : 'text-gray-500'}>Type</TableHead>
+                <TableHead className={isDark ? 'text-zinc-400' : 'text-gray-500'}>Investor</TableHead>
+                <TableHead className={isDark ? 'text-zinc-400' : 'text-gray-500'}>Details</TableHead>
+                <TableHead className={isDark ? 'text-zinc-400' : 'text-gray-500'}>Due Date</TableHead>
+                <TableHead className={isDark ? 'text-zinc-400' : 'text-gray-500'}>Severity</TableHead>
+                <TableHead className={cn('text-right', isDark ? 'text-zinc-400' : 'text-gray-500')}>Action</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {loading ? (
                 [...Array(5)].map((_, i) => (
-                  <TableRow key={i} className="border-zinc-700">
+                  <TableRow key={i} className={isDark ? 'border-zinc-700' : 'border-gray-200'}>
                     {[...Array(6)].map((_, j) => (
                       <TableCell key={j}>
-                        <div className="h-5 bg-zinc-800 rounded animate-pulse" />
+                        <div className={cn('h-5 rounded animate-pulse', isDark ? 'bg-zinc-800' : 'bg-gray-200')} />
                       </TableCell>
                     ))}
                   </TableRow>
                 ))
               ) : filteredAlerts.length === 0 ? (
-                <TableRow className="border-zinc-700">
+                <TableRow className={isDark ? 'border-zinc-700' : 'border-gray-200'}>
                   <TableCell colSpan={6} className="text-center py-8">
                     <CheckCircle className="h-8 w-8 mx-auto text-emerald-400 mb-2" />
-                    <p className="text-white font-medium">All Clear</p>
-                    <p className="text-sm text-zinc-400">No compliance alerts at this time</p>
+                    <p className={cn('font-medium', isDark ? 'text-white' : 'text-gray-900')}>All Clear</p>
+                    <p className={cn('text-sm', isDark ? 'text-zinc-400' : 'text-gray-500')}>No compliance alerts at this time</p>
                   </TableCell>
                 </TableRow>
               ) : (
                 filteredAlerts.map((alert) => {
                   const Icon = getAlertIcon(alert.type)
                   return (
-                    <TableRow key={alert.id} className="border-zinc-700 hover:bg-zinc-800/50">
+                    <TableRow key={alert.id} className={cn(
+                      isDark ? 'border-zinc-700 hover:bg-zinc-800/50' : 'border-gray-200 hover:bg-gray-50'
+                    )}>
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <Icon
@@ -271,7 +306,7 @@ export function ComplianceAlertsPanel() {
                                   : 'text-blue-400'
                               }`}
                           />
-                          <span className="text-white text-sm">{getTypeLabel(alert.type)}</span>
+                          <span className={cn('text-sm', isDark ? 'text-white' : 'text-gray-900')}>{getTypeLabel(alert.type)}</span>
                         </div>
                       </TableCell>
                       <TableCell>
@@ -282,14 +317,14 @@ export function ComplianceAlertsPanel() {
                           {alert.investor_name}
                         </Link>
                       </TableCell>
-                      <TableCell className="text-zinc-300 text-sm max-w-xs truncate">
+                      <TableCell className={cn('text-sm max-w-xs truncate', isDark ? 'text-zinc-300' : 'text-gray-700')}>
                         {alert.details}
                       </TableCell>
                       <TableCell>
                         {alert.due_date ? (
                           <div className="flex items-center gap-2">
-                            <Calendar className="h-3 w-3 text-zinc-400" />
-                            <span className="text-zinc-400 text-sm">
+                            <Calendar className={cn('h-3 w-3', isDark ? 'text-zinc-400' : 'text-gray-500')} />
+                            <span className={cn('text-sm', isDark ? 'text-zinc-400' : 'text-gray-500')}>
                               {new Date(alert.due_date).toLocaleDateString()}
                             </span>
                             {alert.days_until_due !== undefined && (
@@ -304,7 +339,7 @@ export function ComplianceAlertsPanel() {
                             )}
                           </div>
                         ) : (
-                          <span className="text-zinc-500">-</span>
+                          <span className={isDark ? 'text-zinc-500' : 'text-gray-400'}>-</span>
                         )}
                       </TableCell>
                       <TableCell>{getSeverityBadge(alert.severity)}</TableCell>
@@ -313,7 +348,7 @@ export function ComplianceAlertsPanel() {
                           variant="ghost"
                           size="sm"
                           asChild
-                          className="text-zinc-400 hover:text-white"
+                          className={cn(isDark ? 'text-zinc-400 hover:text-white' : 'text-gray-500 hover:text-gray-900')}
                         >
                           <Link href={`/versotech/staff/investors/${alert.investor_id}`}>
                             View
@@ -331,22 +366,30 @@ export function ComplianceAlertsPanel() {
       </Card>
 
       {/* KYC Expiry Timeline */}
-      <Card className="bg-zinc-800/50 border-zinc-700">
+      <Card className={cn(
+        isDark ? 'bg-zinc-800/50 border-zinc-700' : 'bg-white border-gray-200 shadow-sm'
+      )}>
         <CardHeader>
-          <CardTitle className="text-base font-medium flex items-center gap-2">
-            <Calendar className="h-4 w-4 text-zinc-400" />
+          <CardTitle className={cn('text-base font-medium flex items-center gap-2', isDark ? 'text-white' : 'text-gray-900')}>
+            <Calendar className={cn('h-4 w-4', isDark ? 'text-zinc-400' : 'text-gray-500')} />
             KYC Expiry Timeline
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-3 gap-4">
-            <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/30">
+            <div className={cn(
+              'p-3 rounded-lg border',
+              isDark ? 'bg-red-500/10 border-red-500/30' : 'bg-red-50 border-red-200'
+            )}>
               <p className="text-red-400 text-sm font-medium">Next 7 Days</p>
               <p className="text-2xl font-bold text-red-400">
                 {alerts.filter((a) => a.type === 'kyc_expiry' && (a.days_until_due || 0) <= 7).length}
               </p>
             </div>
-            <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/30">
+            <div className={cn(
+              'p-3 rounded-lg border',
+              isDark ? 'bg-amber-500/10 border-amber-500/30' : 'bg-amber-50 border-amber-200'
+            )}>
               <p className="text-amber-400 text-sm font-medium">Next 30 Days</p>
               <p className="text-2xl font-bold text-amber-400">
                 {
@@ -359,7 +402,10 @@ export function ComplianceAlertsPanel() {
                 }
               </p>
             </div>
-            <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/30">
+            <div className={cn(
+              'p-3 rounded-lg border',
+              isDark ? 'bg-blue-500/10 border-blue-500/30' : 'bg-blue-50 border-blue-200'
+            )}>
               <p className="text-blue-400 text-sm font-medium">Next 90 Days</p>
               <p className="text-2xl font-bold text-blue-400">
                 {

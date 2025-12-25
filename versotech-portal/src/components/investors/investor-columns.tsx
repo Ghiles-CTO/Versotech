@@ -4,9 +4,24 @@ import { ColumnDef } from '@tanstack/react-table'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Button } from '@/components/ui/button'
-import { ArrowUpDown, Eye } from 'lucide-react'
+import { ArrowUpDown, Eye, MoreHorizontal, UserPlus, Users } from 'lucide-react'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import Link from 'next/link'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+
+export type InvestorUser = {
+  id: string
+  name: string
+  email: string
+  title: string
+}
 
 export type InvestorRow = {
   id: string
@@ -20,6 +35,12 @@ export type InvestorRow = {
   relationshipManager: string
   country: string
   riskRating: string
+  users: InvestorUser[]
+}
+
+// Custom event for invite action
+export const dispatchInvestorInvite = (investor: InvestorRow) => {
+  window.dispatchEvent(new CustomEvent('investor-invite', { detail: investor }))
 }
 
 function getKycStatusColor(status: string) {
@@ -219,6 +240,19 @@ export const investorColumns: ColumnDef<InvestorRow>[] = [
     ),
   },
   {
+    id: 'users',
+    header: 'Users',
+    cell: ({ row }) => {
+      const investor = row.original
+      return (
+        <div className="flex items-center gap-1.5">
+          <Users className="h-4 w-4 text-muted-foreground" />
+          <span className="text-sm font-medium">{investor.users?.length || 0}</span>
+        </div>
+      )
+    },
+  },
+  {
     id: 'actions',
     header: () => <div className="text-right">Actions</div>,
     cell: ({ row }) => {
@@ -226,17 +260,27 @@ export const investorColumns: ColumnDef<InvestorRow>[] = [
 
       return (
         <div className="text-right">
-          <Button
-            variant="outline"
-            size="sm"
-            asChild
-            className="bg-blue-600 text-white hover:bg-blue-700 border-blue-600 hover:border-blue-700"
-          >
-            <Link href={`/versotech/staff/investors/${investor.id}`}>
-              <Eye className="mr-2 h-4 w-4" />
-              View
-            </Link>
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8">
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => dispatchInvestorInvite(investor)}>
+                <UserPlus className="mr-2 h-4 w-4" />
+                Invite User
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href={`/versotech/staff/investors/${investor.id}`}>
+                  <Eye className="mr-2 h-4 w-4" />
+                  View Details
+                </Link>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       )
     },

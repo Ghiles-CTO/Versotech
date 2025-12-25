@@ -26,7 +26,9 @@ import {
   Timer,
   CircleDollarSign,
   Search,
-  Filter
+  Filter,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react'
 
 const statusColors = {
@@ -56,11 +58,14 @@ interface DealsListClientProps {
   basePath?: string // Base path for links (defaults to /versotech/staff)
 }
 
+const ITEMS_PER_PAGE = 10
+
 export function DealsListClient({ deals, summary, basePath = '/versotech/staff' }: DealsListClientProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [typeFilter, setTypeFilter] = useState('all')
   const [sortBy, setSortBy] = useState('created_at')
+  const [currentPage, setCurrentPage] = useState(1)
 
   // Filter and sort deals
   const filteredDeals = useMemo(() => {
@@ -103,6 +108,17 @@ export function DealsListClient({ deals, summary, basePath = '/versotech/staff' 
 
     return filtered
   }, [deals, searchQuery, statusFilter, typeFilter, sortBy])
+
+  // Reset to page 1 when filters change
+  const handleFilterChange = (setter: (value: string) => void, value: string) => {
+    setter(value)
+    setCurrentPage(1)
+  }
+
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredDeals.length / ITEMS_PER_PAGE)
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE
+  const paginatedDeals = filteredDeals.slice(startIndex, startIndex + ITEMS_PER_PAGE)
 
   return (
     <div className="p-6 space-y-6 text-foreground">
@@ -197,13 +213,13 @@ export function DealsListClient({ deals, summary, basePath = '/versotech/staff' 
               <Input
                 placeholder="Search deals, entities, companies..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1) }}
                 className="pl-10"
               />
             </div>
 
             {/* Status Filter */}
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <Select value={statusFilter} onValueChange={(v) => handleFilterChange(setStatusFilter, v)}>
               <SelectTrigger className="w-full md:w-[180px]">
                 <Filter className="h-4 w-4 mr-2" />
                 <SelectValue placeholder="Status" />
@@ -219,7 +235,7 @@ export function DealsListClient({ deals, summary, basePath = '/versotech/staff' 
             </Select>
 
             {/* Type Filter */}
-            <Select value={typeFilter} onValueChange={setTypeFilter}>
+            <Select value={typeFilter} onValueChange={(v) => handleFilterChange(setTypeFilter, v)}>
               <SelectTrigger className="w-full md:w-[180px]">
                 <SelectValue placeholder="Type" />
               </SelectTrigger>
@@ -233,7 +249,7 @@ export function DealsListClient({ deals, summary, basePath = '/versotech/staff' 
             </Select>
 
             {/* Sort */}
-            <Select value={sortBy} onValueChange={setSortBy}>
+            <Select value={sortBy} onValueChange={(v) => handleFilterChange(setSortBy, v)}>
               <SelectTrigger className="w-full md:w-[180px]">
                 <SelectValue placeholder="Sort by" />
               </SelectTrigger>
@@ -280,7 +296,7 @@ export function DealsListClient({ deals, summary, basePath = '/versotech/staff' 
             </div>
           ) : (
             <div className="space-y-4">
-              {filteredDeals.map((deal) => (
+              {paginatedDeals.map((deal) => (
                 <div
                   key={deal.id}
                   className="border border-white/10 rounded-lg p-5 bg-white/5 hover:bg-white/10 transition-colors"
@@ -341,6 +357,64 @@ export function DealsListClient({ deals, summary, basePath = '/versotech/staff' 
                   </div>
                 </div>
               ))}
+
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between pt-4 border-t border-white/10">
+                  <p className="text-sm text-muted-foreground">
+                    Showing {startIndex + 1}-{Math.min(startIndex + ITEMS_PER_PAGE, filteredDeals.length)} of {filteredDeals.length} deals
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                      disabled={currentPage === 1}
+                      className="border-white/20 text-foreground hover:bg-white/10"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                      Previous
+                    </Button>
+                    <div className="flex items-center gap-1">
+                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                        let pageNum: number
+                        if (totalPages <= 5) {
+                          pageNum = i + 1
+                        } else if (currentPage <= 3) {
+                          pageNum = i + 1
+                        } else if (currentPage >= totalPages - 2) {
+                          pageNum = totalPages - 4 + i
+                        } else {
+                          pageNum = currentPage - 2 + i
+                        }
+                        return (
+                          <Button
+                            key={pageNum}
+                            variant={currentPage === pageNum ? 'default' : 'outline'}
+                            size="sm"
+                            onClick={() => setCurrentPage(pageNum)}
+                            className={currentPage === pageNum
+                              ? 'bg-primary text-primary-foreground'
+                              : 'border-white/20 text-foreground hover:bg-white/10'}
+                          >
+                            {pageNum}
+                          </Button>
+                        )
+                      })}
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                      disabled={currentPage === totalPages}
+                      className="border-white/20 text-foreground hover:bg-white/10"
+                    >
+                      Next
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </CardContent>
@@ -382,8 +456,9 @@ export function DealsListClient({ deals, summary, basePath = '/versotech/staff' 
             <Button
               variant="outline"
               className="w-full border-white/20 text-foreground hover:bg-white/10"
+              asChild
             >
-              View Inventory
+              <Link href={`${basePath}/subscriptions`}>View Inventory</Link>
             </Button>
           </CardContent>
         </Card>

@@ -80,11 +80,11 @@ export async function POST(request: NextRequest) {
     }
 
     if (status === 'failed' && error_message) {
-      await supabase.from('notifications').insert({
+      await supabase.from('investor_notifications').insert({
         user_id: workflowRun.triggered_by,
+        investor_id: null, // Staff notification, not investor
         title: 'Workflow Failed',
         message: `${workflowRun.workflow_key} failed: ${error_message}`,
-        type: 'error',
         link: `/versotech/staff/workflows/${workflow_run_id}`
       })
     }

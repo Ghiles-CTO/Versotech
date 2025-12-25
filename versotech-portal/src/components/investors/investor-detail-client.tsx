@@ -67,10 +67,10 @@ export function InvestorDetailClient({ investor, capitalMetrics }: InvestorDetai
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Link href="/versotech/staff/investors">
+          <Link href="/versotech_main/users">
             <Button variant="ghost" size="sm" className="bg-gray-800 text-white hover:bg-gray-700">
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Investors
+              Back to Users
             </Button>
           </Link>
           <div>

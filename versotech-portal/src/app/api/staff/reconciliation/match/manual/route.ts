@@ -2,7 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { requireStaffAuth } from '@/lib/auth'
 import { NextResponse } from 'next/server'
 import { auditLogger, AuditActions, AuditEntities } from '@/lib/audit'
-import { triggerWorkflow } from '@/lib/trigger-workflow'
+import { triggerCertificateGeneration } from '@/lib/subscription/certificate-trigger'
 
 export const dynamic = 'force-dynamic'
 
@@ -460,91 +460,24 @@ export async function POST(req: Request) {
               }
 
               // AUTO-TRIGGER CERTIFICATE GENERATION when subscription becomes active
-              // Get investor and vehicle details for certificate
-              const { data: subDetails } = await supabase
-                .from('subscriptions')
-                .select(`
-                  id,
-                  commitment,
-                  funded_amount,
-                  subscription_date,
-                  num_shares,
-                  units,
-                  price_per_share,
-                  investor:investor_id (
-                    id,
-                    legal_name,
-                    email
-                  ),
-                  vehicle:vehicle_id (
-                    id,
-                    name,
-                    type,
-                    series
-                  )
-                `)
-                .eq('id', subscriptionId)
-                .single()
-
-              if (subDetails) {
-                // Trigger certificate workflow (non-blocking - don't fail if it doesn't work)
-                try {
-                  const certResult = await triggerWorkflow({
-                    workflowKey: 'generate-investment-certificate',
-                    payload: {
-                      subscription_id: subscriptionId,
-                      investor_id: (subDetails.investor as any)?.id,
-                      investor_name: (subDetails.investor as any)?.legal_name,
-                      investor_email: (subDetails.investor as any)?.email,
-                      vehicle_id: (subDetails.vehicle as any)?.id,
-                      vehicle_name: (subDetails.vehicle as any)?.name,
-                      vehicle_type: (subDetails.vehicle as any)?.type,
-                      vehicle_series: (subDetails.vehicle as any)?.series,
-                      commitment_amount: subDetails.commitment,
-                      funded_amount: subDetails.funded_amount,
-                      shares: subDetails.num_shares || subDetails.units,
-                      price_per_share: subDetails.price_per_share,
-                      subscription_date: subDetails.subscription_date,
-                      certificate_date: new Date().toISOString().split('T')[0],
-                      include_watermark: true
-                    },
-                    entityType: 'subscription',
-                    entityId: subscriptionId,
-                    user: {
-                      id: profile.id,
-                      email: profile.email || '',
-                      displayName: profile.displayName,
-                      role: profile.role,
-                      title: profile.title
-                    }
-                  })
-
-                  if (certResult.success) {
-                    console.log(`✅ Certificate generation triggered for subscription ${subscriptionId}`)
-
-                    // Audit log for certificate trigger
-                    await auditLogger.log({
-                      actor_user_id: profile.id,
-                      action: AuditActions.CREATE,
-                      entity: 'documents' as any,
-                      entity_id: subscriptionId,
-                      metadata: {
-                        type: 'certificate_generation_triggered',
-                        subscription_id: subscriptionId,
-                        investor_id: (subDetails.investor as any)?.id,
-                        vehicle_id: (subDetails.vehicle as any)?.id,
-                        workflow_run_id: certResult.workflow_run_id,
-                        triggered_by: 'subscription_funding_auto'
-                      }
-                    })
-                  } else {
-                    console.log(`ℹ️ Certificate workflow not configured for subscription ${subscriptionId} - skipping`)
-                  }
-                } catch (certError) {
-                  console.error(`⚠️ Certificate generation trigger failed for ${subscriptionId}:`, certError)
-                  // Don't fail the transaction - certificate generation is not critical
+              // Uses helper function that handles idempotency (activated_at check) and notifications
+              await triggerCertificateGeneration({
+                supabase,
+                subscriptionId,
+                investorId: subscription.investor_id,
+                vehicleId: subscription.vehicle_id,
+                commitment: toNumber(subscription.commitment),
+                fundedAmount: newFundedAmount,
+                shares: subscription.num_shares || subscription.units,
+                pricePerShare: subscription.price_per_share,
+                profile: {
+                  id: profile.id,
+                  email: profile.email,
+                  display_name: profile.displayName,
+                  role: profile.role,
+                  title: profile.title
                 }
-              }
+              })
             }
 
             // Audit log for subscription funding update

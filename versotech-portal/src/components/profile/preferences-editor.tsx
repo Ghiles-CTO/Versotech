@@ -5,7 +5,20 @@ import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Loader2, Save, Bell, ShieldCheck, Mail, Phone, MessageSquare } from 'lucide-react'
+import { Textarea } from '@/components/ui/textarea'
+import { Checkbox } from '@/components/ui/checkbox'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
+import { Loader2, Save, Bell, ShieldCheck, Mail, Phone, MessageSquare, Download, Trash2, Shield } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -18,6 +31,13 @@ export function PreferencesEditor({ onUpdate, variant = 'investor' }: Preference
   const isStaff = variant === 'staff'
   const [isLoading, setIsLoading] = useState(!isStaff)
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  // GDPR state
+  const [isExporting, setIsExporting] = useState(false)
+  const [isRequestingDeletion, setIsRequestingDeletion] = useState(false)
+  const [deletionReason, setDeletionReason] = useState('')
+  const [deletionConfirmed, setDeletionConfirmed] = useState(false)
+  const [hasPendingDeletion, setHasPendingDeletion] = useState(false)
 
   const [preferences, setPreferences] = useState({
     notification_settings: {
@@ -47,13 +67,99 @@ export function PreferencesEditor({ onUpdate, variant = 'investor' }: Preference
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // Check for pending deletion requests
+  const checkPendingDeletion = useCallback(async () => {
+    try {
+      const response = await fetch('/api/gdpr/deletion-request')
+      const data = await response.json()
+      if (response.ok && data.has_pending) {
+        setHasPendingDeletion(true)
+      }
+    } catch (error) {
+      console.error('Error checking pending deletion:', error)
+    }
+  }, [])
+
   useEffect(() => {
     if (isStaff) {
       setIsLoading(false)
       return
     }
     loadPreferences()
-  }, [isStaff, loadPreferences])
+    checkPendingDeletion()
+  }, [isStaff, loadPreferences, checkPendingDeletion])
+
+  // GDPR: Export data handler
+  const handleExportData = async () => {
+    setIsExporting(true)
+    try {
+      const response = await fetch('/api/gdpr/export', {
+        method: 'POST',
+      })
+
+      if (!response.ok) {
+        throw new Error('Export failed')
+      }
+
+      // Get the blob and download
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `verso-data-export-${new Date().toISOString().split('T')[0]}.json`
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      a.remove()
+
+      toast.success('Your data has been exported successfully')
+    } catch (error) {
+      console.error('Export error:', error)
+      toast.error('Failed to export your data. Please try again.')
+    } finally {
+      setIsExporting(false)
+    }
+  }
+
+  // GDPR: Request deletion handler
+  const handleRequestDeletion = async () => {
+    if (!deletionReason || deletionReason.length < 10) {
+      toast.error('Please provide a reason (at least 10 characters)')
+      return
+    }
+    if (!deletionConfirmed) {
+      toast.error('Please confirm you understand the consequences')
+      return
+    }
+
+    setIsRequestingDeletion(true)
+    try {
+      const response = await fetch('/api/gdpr/deletion-request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          reason: deletionReason,
+          confirm_understood: deletionConfirmed
+        })
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to submit request')
+      }
+
+      toast.success('Your deletion request has been submitted and will be reviewed within 30 days.')
+      setHasPendingDeletion(true)
+      setDeletionReason('')
+      setDeletionConfirmed(false)
+    } catch (error: any) {
+      console.error('Deletion request error:', error)
+      toast.error(error.message || 'Failed to submit deletion request')
+    } finally {
+      setIsRequestingDeletion(false)
+    }
+  }
 
   const handleNotificationChange = (key: string, value: boolean) => {
     setPreferences(prev => ({
@@ -166,6 +272,141 @@ export function PreferencesEditor({ onUpdate, variant = 'investor' }: Preference
             </Button>
           </CardContent>
         </Card>
+
+        {/* GDPR Data & Privacy Section for Staff */}
+        <Card className="bg-white/5 border-amber-500/30">
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Shield className="h-5 w-5 text-amber-400" />
+              <CardTitle className="text-white">Data & Privacy</CardTitle>
+            </div>
+            <CardDescription className="text-white/70">
+              Manage your personal data in accordance with GDPR regulations
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Export Data */}
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label className="text-white">Export Your Data</Label>
+                <p className="text-sm text-white/70">
+                  Download a copy of all your personal data stored in our system
+                </p>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                className="border-white/20 text-white hover:bg-white/10"
+                onClick={handleExportData}
+                disabled={isExporting}
+              >
+                {isExporting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Exporting...
+                  </>
+                ) : (
+                  <>
+                    <Download className="mr-2 h-4 w-4" />
+                    Export My Data
+                  </>
+                )}
+              </Button>
+            </div>
+
+            <div className="border-t border-white/10 pt-6">
+              {/* Request Account Deletion */}
+              <div className="space-y-4">
+                <div className="space-y-0.5">
+                  <Label className="text-red-400">Request Account Deletion</Label>
+                  <p className="text-sm text-white/70">
+                    Request permanent deletion of your account and all associated data.
+                    This action is irreversible and will be reviewed by our team.
+                  </p>
+                </div>
+
+                {hasPendingDeletion ? (
+                  <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-4">
+                    <p className="text-sm text-amber-300">
+                      You have a pending deletion request. Our team will review it within 30 days.
+                    </p>
+                  </div>
+                ) : (
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        className="w-full sm:w-auto"
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Request Account Deletion
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Request Account Deletion</AlertDialogTitle>
+                        <AlertDialogDescription asChild>
+                          <div className="space-y-4">
+                            <p>
+                              This will submit a request to permanently delete your account
+                              and all associated data. This action cannot be undone.
+                            </p>
+
+                            <div className="space-y-2">
+                              <Label htmlFor="staff-deletion-reason">
+                                Please tell us why you want to delete your account:
+                              </Label>
+                              <Textarea
+                                id="staff-deletion-reason"
+                                placeholder="Enter your reason (minimum 10 characters)"
+                                value={deletionReason}
+                                onChange={(e) => setDeletionReason(e.target.value)}
+                                className="min-h-[100px]"
+                              />
+                            </div>
+
+                            <div className="flex items-start space-x-2">
+                              <Checkbox
+                                id="staff-deletion-confirm"
+                                checked={deletionConfirmed}
+                                onCheckedChange={(checked) => setDeletionConfirmed(checked === true)}
+                              />
+                              <label
+                                htmlFor="staff-deletion-confirm"
+                                className="text-sm text-muted-foreground leading-tight"
+                              >
+                                I understand that this will permanently delete my account,
+                                all my data, and I will lose access to the platform.
+                              </label>
+                            </div>
+                          </div>
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={handleRequestDeletion}
+                          disabled={isRequestingDeletion || !deletionReason || deletionReason.length < 10 || !deletionConfirmed}
+                          className="bg-red-600 hover:bg-red-700"
+                        >
+                          {isRequestingDeletion ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              Submitting...
+                            </>
+                          ) : (
+                            'Submit Deletion Request'
+                          )}
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     )
   }
@@ -262,6 +503,140 @@ export function PreferencesEditor({ onUpdate, variant = 'investor' }: Preference
           )}
         </Button>
       </div>
+
+      {/* GDPR Data & Privacy Section */}
+      <Card className="border-amber-200">
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Shield className="h-5 w-5 text-amber-600" />
+            <CardTitle>Data & Privacy</CardTitle>
+          </div>
+          <CardDescription>
+            Manage your personal data in accordance with GDPR regulations
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Export Data */}
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label>Export Your Data</Label>
+              <p className="text-sm text-muted-foreground">
+                Download a copy of all your personal data stored in our system
+              </p>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleExportData}
+              disabled={isExporting}
+            >
+              {isExporting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Exporting...
+                </>
+              ) : (
+                <>
+                  <Download className="mr-2 h-4 w-4" />
+                  Export My Data
+                </>
+              )}
+            </Button>
+          </div>
+
+          <div className="border-t pt-6">
+            {/* Request Account Deletion */}
+            <div className="space-y-4">
+              <div className="space-y-0.5">
+                <Label className="text-destructive">Request Account Deletion</Label>
+                <p className="text-sm text-muted-foreground">
+                  Request permanent deletion of your account and all associated data.
+                  This action is irreversible and will be reviewed by our team.
+                </p>
+              </div>
+
+              {hasPendingDeletion ? (
+                <div className="rounded-lg border border-amber-300 bg-amber-50 p-4">
+                  <p className="text-sm text-amber-800">
+                    You have a pending deletion request. Our team will review it within 30 days.
+                  </p>
+                </div>
+              ) : (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      className="w-full sm:w-auto"
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Request Account Deletion
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Request Account Deletion</AlertDialogTitle>
+                      <AlertDialogDescription asChild>
+                        <div className="space-y-4">
+                          <p>
+                            This will submit a request to permanently delete your account
+                            and all associated data. This action cannot be undone.
+                          </p>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="deletion-reason">
+                              Please tell us why you want to delete your account:
+                            </Label>
+                            <Textarea
+                              id="deletion-reason"
+                              placeholder="Enter your reason (minimum 10 characters)"
+                              value={deletionReason}
+                              onChange={(e) => setDeletionReason(e.target.value)}
+                              className="min-h-[100px]"
+                            />
+                          </div>
+
+                          <div className="flex items-start space-x-2">
+                            <Checkbox
+                              id="deletion-confirm"
+                              checked={deletionConfirmed}
+                              onCheckedChange={(checked) => setDeletionConfirmed(checked === true)}
+                            />
+                            <label
+                              htmlFor="deletion-confirm"
+                              className="text-sm text-muted-foreground leading-tight"
+                            >
+                              I understand that this will permanently delete my account,
+                              all my data, and I will lose access to all investments and documents.
+                            </label>
+                          </div>
+                        </div>
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={handleRequestDeletion}
+                        disabled={isRequestingDeletion || !deletionReason || deletionReason.length < 10 || !deletionConfirmed}
+                        className="bg-destructive hover:bg-destructive/90"
+                      >
+                        {isRequestingDeletion ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Submitting...
+                          </>
+                        ) : (
+                          'Submit Deletion Request'
+                        )}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </form>
   )
 }

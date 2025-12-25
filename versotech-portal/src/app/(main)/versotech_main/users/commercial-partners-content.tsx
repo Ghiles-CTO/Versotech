@@ -34,11 +34,16 @@ import {
   Clock,
   XCircle,
   Shield,
-  FileText
+  FileText,
+  Plus,
+  UserPlus,
+  Users
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { format } from 'date-fns'
+import { AddCommercialPartnerModal } from '@/components/users/add-commercial-partner-modal'
+import { InviteUserDialog } from '@/components/users/invite-user-dialog'
 
 type CommercialPartnerUser = {
   id: string
@@ -131,104 +136,119 @@ export default function CommercialPartnersContent() {
   const [searchQuery, setSearchQuery] = useState('')
   const router = useRouter()
 
-  useEffect(() => {
-    async function fetchPartners() {
-      try {
-        setLoading(true)
-        const supabase = createClient()
+  // Modal states
+  const [showAddModal, setShowAddModal] = useState(false)
+  const [showInviteDialog, setShowInviteDialog] = useState(false)
+  const [selectedPartner, setSelectedPartner] = useState<CommercialPartner | null>(null)
 
-        const { data, error: fetchError } = await supabase
-          .from('commercial_partners')
-          .select(`
-            id,
-            name,
-            legal_name,
-            type,
-            cp_type,
-            status,
-            regulatory_status,
-            regulatory_number,
-            jurisdiction,
-            contact_name,
-            contact_email,
-            contact_phone,
-            website,
-            country,
-            payment_terms,
-            contract_start_date,
-            contract_end_date,
-            kyc_status,
-            created_at,
-            commercial_partner_users (
-              user_id,
-              role,
-              is_primary,
-              can_execute_for_clients,
-              profiles (
-                id,
-                display_name,
-                email
-              )
+  const handleInviteClick = (partner: CommercialPartner) => {
+    setSelectedPartner(partner)
+    setShowInviteDialog(true)
+  }
+
+  const refreshData = () => {
+    setLoading(true)
+    fetchPartners()
+  }
+
+  async function fetchPartners() {
+    try {
+      setLoading(true)
+      const supabase = createClient()
+
+      const { data, error: fetchError } = await supabase
+        .from('commercial_partners')
+        .select(`
+          id,
+          name,
+          legal_name,
+          type,
+          cp_type,
+          status,
+          regulatory_status,
+          regulatory_number,
+          jurisdiction,
+          contact_name,
+          contact_email,
+          contact_phone,
+          website,
+          country,
+          payment_terms,
+          contract_start_date,
+          contract_end_date,
+          kyc_status,
+          created_at,
+          commercial_partner_users (
+            user_id,
+            role,
+            is_primary,
+            can_execute_for_clients,
+            profiles (
+              id,
+              display_name,
+              email
             )
-          `)
-          .order('created_at', { ascending: false })
+          )
+        `)
+        .order('created_at', { ascending: false })
 
-        if (fetchError) throw fetchError
+      if (fetchError) throw fetchError
 
-        const processed: CommercialPartner[] = (data || []).map((cp: any) => {
-          const users: CommercialPartnerUser[] = (cp.commercial_partner_users || []).map((cpu: any) => {
-            const profile = Array.isArray(cpu.profiles) ? cpu.profiles[0] : cpu.profiles
-            return {
-              id: profile?.id || cpu.user_id,
-              name: profile?.display_name || 'Unknown User',
-              email: profile?.email || '',
-              role: cpu.role || 'member',
-              isPrimary: cpu.is_primary || false,
-              canExecuteForClients: cpu.can_execute_for_clients || false
-            }
-          })
-
+      const processed: CommercialPartner[] = (data || []).map((cp: any) => {
+        const users: CommercialPartnerUser[] = (cp.commercial_partner_users || []).map((cpu: any) => {
+          const profile = Array.isArray(cpu.profiles) ? cpu.profiles[0] : cpu.profiles
           return {
-            id: cp.id,
-            name: cp.name || 'Unnamed Partner',
-            legalName: cp.legal_name,
-            type: cp.type || 'entity',
-            cpType: cp.cp_type || 'other',
-            status: cp.status || 'pending',
-            regulatoryStatus: cp.regulatory_status,
-            regulatoryNumber: cp.regulatory_number,
-            jurisdiction: cp.jurisdiction,
-            contactName: cp.contact_name,
-            contactEmail: cp.contact_email,
-            contactPhone: cp.contact_phone,
-            website: cp.website,
-            country: cp.country,
-            paymentTerms: cp.payment_terms,
-            contractStartDate: cp.contract_start_date,
-            contractEndDate: cp.contract_end_date,
-            kycStatus: cp.kyc_status,
-            createdAt: cp.created_at,
-            users
+            id: profile?.id || cpu.user_id,
+            name: profile?.display_name || 'Unknown User',
+            email: profile?.email || '',
+            role: cpu.role || 'member',
+            isPrimary: cpu.is_primary || false,
+            canExecuteForClients: cpu.can_execute_for_clients || false
           }
         })
 
-        setPartners(processed)
-        setFilteredPartners(processed)
-        setStats({
-          total: processed.length,
-          active: processed.filter(p => p.status === 'active').length,
-          kycApproved: processed.filter(p => p.kycStatus === 'approved').length,
-          regulated: processed.filter(p => p.regulatoryStatus === 'regulated' || p.regulatoryNumber).length
-        })
-        setError(null)
-      } catch (err) {
-        console.error('[CommercialPartnersContent] Error:', err)
-        setError(err instanceof Error ? err.message : 'Failed to load commercial partners')
-      } finally {
-        setLoading(false)
-      }
-    }
+        return {
+          id: cp.id,
+          name: cp.name || 'Unnamed Partner',
+          legalName: cp.legal_name,
+          type: cp.type || 'entity',
+          cpType: cp.cp_type || 'other',
+          status: cp.status || 'pending',
+          regulatoryStatus: cp.regulatory_status,
+          regulatoryNumber: cp.regulatory_number,
+          jurisdiction: cp.jurisdiction,
+          contactName: cp.contact_name,
+          contactEmail: cp.contact_email,
+          contactPhone: cp.contact_phone,
+          website: cp.website,
+          country: cp.country,
+          paymentTerms: cp.payment_terms,
+          contractStartDate: cp.contract_start_date,
+          contractEndDate: cp.contract_end_date,
+          kycStatus: cp.kyc_status,
+          createdAt: cp.created_at,
+          users
+        }
+      })
 
+      setPartners(processed)
+      setFilteredPartners(processed)
+      setStats({
+        total: processed.length,
+        active: processed.filter(p => p.status === 'active').length,
+        kycApproved: processed.filter(p => p.kycStatus === 'approved').length,
+        regulated: processed.filter(p => p.regulatoryStatus === 'regulated' || p.regulatoryNumber).length
+      })
+      setError(null)
+    } catch (err) {
+      console.error('[CommercialPartnersContent] Error:', err)
+      setError(err instanceof Error ? err.message : 'Failed to load commercial partners')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
     fetchPartners()
   }, [])
 
@@ -329,14 +349,20 @@ export default function CommercialPartnersContent() {
 
       {/* Table */}
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Building2 className="h-5 w-5" />
-            All Commercial Partners ({filteredPartners.length})
-          </CardTitle>
-          <CardDescription>
-            Wealth managers, family offices, broker dealers, and institutional partners
-          </CardDescription>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <Building2 className="h-5 w-5" />
+              All Commercial Partners ({filteredPartners.length})
+            </CardTitle>
+            <CardDescription className="mt-1">
+              Wealth managers, family offices, broker dealers, and institutional partners
+            </CardDescription>
+          </div>
+          <Button onClick={() => setShowAddModal(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Add Commercial Partner
+          </Button>
         </CardHeader>
         <CardContent>
           <Table>
@@ -344,6 +370,7 @@ export default function CommercialPartnersContent() {
               <TableRow>
                 <TableHead>Partner</TableHead>
                 <TableHead>Type</TableHead>
+                <TableHead>Users</TableHead>
                 <TableHead>Jurisdiction</TableHead>
                 <TableHead>Contact</TableHead>
                 <TableHead>Contract</TableHead>
@@ -355,7 +382,7 @@ export default function CommercialPartnersContent() {
             <TableBody>
               {filteredPartners.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                     No commercial partners found
                   </TableCell>
                 </TableRow>
@@ -380,6 +407,12 @@ export default function CommercialPartnersContent() {
                       <Badge variant="outline" className="capitalize">
                         {formatCpType(partner.cpType)}
                       </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1.5">
+                        <Users className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm font-medium">{partner.users.length}</span>
+                      </div>
                     </TableCell>
                     <TableCell>
                       {partner.jurisdiction ? (
@@ -443,6 +476,10 @@ export default function CommercialPartnersContent() {
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
                           <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={() => handleInviteClick(partner)}>
+                            <UserPlus className="mr-2 h-4 w-4" />
+                            Invite User
+                          </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => router.push(`/versotech_main/commercial-partners/${partner.id}`)}>
                             <Eye className="mr-2 h-4 w-4" />
                             View Details
@@ -469,6 +506,25 @@ export default function CommercialPartnersContent() {
           </Table>
         </CardContent>
       </Card>
+
+      {/* Add Commercial Partner Modal */}
+      <AddCommercialPartnerModal
+        open={showAddModal}
+        onOpenChange={setShowAddModal}
+        onSuccess={refreshData}
+      />
+
+      {/* Invite User Dialog */}
+      {selectedPartner && (
+        <InviteUserDialog
+          open={showInviteDialog}
+          onOpenChange={setShowInviteDialog}
+          entityType="commercial_partner"
+          entityId={selectedPartner.id}
+          entityName={selectedPartner.name}
+          onSuccess={refreshData}
+        />
+      )}
     </div>
   )
 }

@@ -1,9 +1,25 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { VersoSignPageClient } from '@/app/(staff)/versotech/staff/versosign/versosign-page-client'
 import { AlertCircle } from 'lucide-react'
-import type { SignatureGroup, SignatureTask } from '@/app/(staff)/versotech/staff/versosign/page'
+import type { SignatureGroup, SignatureTask, ExpiredSignature } from '@/app/(staff)/versotech/staff/versosign/page'
+import { IntroducerAgreementSigningSection } from './introducer-agreement-signing-section'
 
 export const dynamic = 'force-dynamic'
+
+type IntroducerAgreementForSigning = {
+  id: string
+  status: string
+  default_commission_bps: number | null
+  introducer: {
+    id: string
+    legal_name: string
+    email: string | null
+  }
+  ceo_signature_request_id: string | null
+  introducer_signature_request_id: string | null
+  pdf_url: string | null
+  created_at: string
+}
 
 /**
  * VersoSign Page for Unified Portal (versotech_main)
@@ -42,6 +58,49 @@ export default async function VersoSignPage() {
 
   const isStaff = personas?.some((p: any) => p.persona_type === 'staff') || false
   const isLawyer = personas?.some((p: any) => p.persona_type === 'lawyer') || false
+  const isIntroducer = personas?.some((p: any) => p.persona_type === 'introducer') || false
+
+  // Get introducer IDs if user has introducer persona
+  let introducerIds: string[] = []
+  if (isIntroducer) {
+    const { data: introducerLinks } = await serviceSupabase
+      .from('introducer_users')
+      .select('introducer_id')
+      .eq('user_id', user.id)
+    introducerIds = introducerLinks?.map(link => link.introducer_id) || []
+  }
+
+  // Fetch introducer agreements pending signature
+  let introducerAgreementsForSigning: IntroducerAgreementForSigning[] = []
+
+  if (isStaff) {
+    // CEO/Staff: See agreements approved and waiting for CEO signature
+    const { data: agreementsData } = await serviceSupabase
+      .from('introducer_agreements')
+      .select(`
+        id, status, default_commission_bps, pdf_url, created_at,
+        ceo_signature_request_id, introducer_signature_request_id,
+        introducer:introducer_id (id, legal_name, email)
+      `)
+      .eq('status', 'approved')
+      .order('created_at', { ascending: false })
+
+    introducerAgreementsForSigning = (agreementsData as unknown as IntroducerAgreementForSigning[]) || []
+  } else if (isIntroducer && introducerIds.length > 0) {
+    // Introducer: See their agreements pending their signature
+    const { data: agreementsData } = await serviceSupabase
+      .from('introducer_agreements')
+      .select(`
+        id, status, default_commission_bps, pdf_url, created_at,
+        ceo_signature_request_id, introducer_signature_request_id,
+        introducer:introducer_id (id, legal_name, email)
+      `)
+      .in('introducer_id', introducerIds)
+      .eq('status', 'pending_introducer_signature')
+      .order('created_at', { ascending: false })
+
+    introducerAgreementsForSigning = (agreementsData as unknown as IntroducerAgreementForSigning[]) || []
+  }
 
   // Get investor IDs if user has investor persona
   let investorIds: string[] = []
@@ -76,9 +135,26 @@ export default async function VersoSignPage() {
   const { data: tasks } = await tasksQuery
     .order('due_at', { ascending: true, nullsFirst: false })
 
-  // If user has no signature tasks and is not staff/lawyer, show appropriate message
+  // Fetch expired signature requests (staff/CEO only)
+  let expiredSignatures: ExpiredSignature[] = []
+  if (isStaff) {
+    const { data: expiredData } = await serviceSupabase
+      .from('signature_requests')
+      .select(`
+        id, signer_name, signer_email, document_type,
+        token_expires_at, created_at, investor_id,
+        investor:investors(display_name, legal_name)
+      `)
+      .eq('status', 'expired')
+      .order('token_expires_at', { ascending: false })
+      .limit(50)
+    expiredSignatures = (expiredData as unknown as ExpiredSignature[]) || []
+  }
+
+  // If user has no signature tasks and no agreements to sign and is not staff/lawyer/introducer, show appropriate message
   const hasTasks = tasks && tasks.length > 0
-  if (!hasTasks && !isStaff && !isLawyer) {
+  const hasAgreementsToSign = introducerAgreementsForSigning.length > 0
+  if (!hasTasks && !hasAgreementsToSign && !isStaff && !isLawyer && !isIntroducer) {
     return (
       <div className="p-6">
         <div className="text-center py-16">
@@ -134,6 +210,13 @@ export default async function VersoSignPage() {
         (t.kind === 'countersignature' || t.kind === 'subscription_pack_signature') &&
         t.status === 'completed'
       ).slice(0, 10) // Show last 10 completed
+    },
+    {
+      category: 'expired',
+      title: 'Expired Signatures',
+      description: 'Signature requests that have expired - may need to be resent',
+      tasks: [],
+      expiredSignatures: expiredSignatures
     }
   ]
 
@@ -150,11 +233,21 @@ export default async function VersoSignPage() {
       t.status === 'pending' &&
       t.due_at &&
       new Date(t.due_at) < new Date()
-    ).length
+    ).length,
+    expired: expiredSignatures.length
   }
 
   return (
-    <div className="p-6">
+    <div className="p-6 space-y-6">
+      {/* Introducer Agreement Signing Section */}
+      {(isStaff || isIntroducer) && introducerAgreementsForSigning.length > 0 && (
+        <IntroducerAgreementSigningSection
+          agreements={introducerAgreementsForSigning}
+          isStaff={isStaff}
+        />
+      )}
+
+      {/* Standard VersaSign Tasks */}
       <VersoSignPageClient
         userId={user.id}
         signatureGroups={signatureGroups}

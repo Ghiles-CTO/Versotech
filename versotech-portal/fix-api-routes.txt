@@ -1,8 +1,0 @@
-src/app/api/requests/[id]/route.ts
-src/app/api/staff/documents/[id]/route.ts
-src/app/api/staff/investors/[id]/route.ts
-src/app/api/staff/investors/[id]/users/route.ts
-src/app/api/staff/investors/[id]/users/[userId]/route.ts
-src/app/api/staff/requests/route.ts
-src/app/api/staff/requests/stats/route.ts
-src/app/api/staff/requests/[id]/assign/route.ts

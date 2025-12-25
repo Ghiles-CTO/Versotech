@@ -5,8 +5,12 @@ import { MessagingClient } from '@/components/messaging/staff/messaging-client'
 import { normalizeConversation } from '@/lib/messaging/supabase'
 import { AlertCircle, Loader2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import { usePersona } from '@/contexts/persona-context'
 
 export default function MessagesContent() {
+  const { activePersona } = usePersona()
+  // Only staff can create new conversations (requires access to investor/staff directories)
+  const canCreateConversation = activePersona?.persona_type === 'staff'
   const [conversations, setConversations] = useState<any[]>([])
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -142,6 +146,10 @@ export default function MessagesContent() {
   }
 
   return (
-    <MessagingClient initialConversations={conversations} currentUserId={currentUserId} />
+    <MessagingClient
+      initialConversations={conversations}
+      currentUserId={currentUserId}
+      canCreateConversation={canCreateConversation}
+    />
   )
 }

@@ -9,6 +9,7 @@ const createDealSchema = z.object({
   name: z.string().min(1, 'Deal name is required'),
   vehicle_id: z.string().uuid().optional().nullable(),
   deal_type: z.enum(['equity_secondary', 'equity_primary', 'credit_trade_finance', 'other']).default('equity_secondary'),
+  stock_type: z.enum(['ordinary', 'preference', 'convertible']).optional().nullable().default('ordinary'),
   currency: z.string().default('USD'),
   company_logo_url: z.string().url('Invalid company logo URL').optional().nullable(),
   offer_unit_price: z.number().optional().nullable(),
@@ -309,4 +310,3 @@ export async function POST(request: Request) {
     )
   }
 }
-

@@ -1,6 +1,6 @@
 'use client'
 
-import { ReactNode } from 'react'
+import { ReactNode, useState, useEffect } from 'react'
 import { ThemeProvider, useTheme } from '@/components/theme-provider'
 import { GlobalKeyboardShortcuts } from './global-keyboard-shortcuts'
 import { PersonaSidebar } from './persona-sidebar'
@@ -26,8 +26,28 @@ interface UnifiedAppLayoutProps {
 
 // Theme toggle component
 function ThemeToggle() {
+  const [mounted, setMounted] = useState(false)
   const { theme, preference, setPreference } = useTheme()
   const isDark = theme === 'staff-dark'
+
+  // Wait for client-side hydration to complete
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  // Render placeholder until mounted to prevent Radix UI hydration mismatch
+  if (!mounted) {
+    return (
+      <Button
+        variant="ghost"
+        size="icon"
+        className={`${isDark ? 'text-zinc-400 hover:text-white hover:bg-white/10' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100'}`}
+      >
+        <Sun className="h-5 w-5" />
+        <span className="sr-only">Toggle theme</span>
+      </Button>
+    )
+  }
 
   return (
     <DropdownMenu>

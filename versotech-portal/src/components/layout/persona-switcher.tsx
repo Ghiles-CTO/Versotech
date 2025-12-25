@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { usePersona, Persona } from '@/contexts/persona-context'
 import { useTheme } from '@/components/theme-provider'
 import { Button } from '@/components/ui/button'
@@ -50,6 +50,7 @@ interface PersonaSwitcherProps {
 }
 
 export function PersonaSwitcher({ className }: PersonaSwitcherProps) {
+  const [mounted, setMounted] = useState(false)
   const { personas, activePersona, switchPersona } = usePersona()
   const [open, setOpen] = useState(false)
   const { theme } = useTheme()
@@ -57,11 +58,48 @@ export function PersonaSwitcher({ className }: PersonaSwitcherProps) {
   // Theme based on ACTIVE persona only
   const isDark = theme === 'staff-dark'
 
+  // Wait for client-side hydration to complete
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
   if (!activePersona || personas.length <= 1) {
     return null
   }
 
   const ActiveIcon = PERSONA_ICONS[activePersona.persona_type] || User
+
+  // Render placeholder until mounted to prevent Radix UI hydration mismatch
+  if (!mounted) {
+    return (
+      <Button
+        variant="ghost"
+        className={cn(
+          "flex items-center gap-2 px-3 py-2 h-auto",
+          isDark
+            ? "text-gray-300 hover:text-white hover:bg-white/10"
+            : "text-gray-700 hover:text-gray-900 hover:bg-gray-100",
+          className
+        )}
+      >
+        <ActiveIcon className="h-5 w-5" />
+        <div className="flex flex-col items-start text-left">
+          <span className="text-sm font-medium leading-none">
+            {activePersona.entity_name}
+          </span>
+          <span className={cn(
+            "text-xs leading-none mt-0.5",
+            isDark ? "text-gray-500" : "text-gray-500"
+          )}>
+            {activePersona.persona_type === 'staff'
+              ? activePersona.role_in_entity
+              : PERSONA_LABELS[activePersona.persona_type]}
+          </span>
+        </div>
+        <ChevronDown className="h-4 w-4" />
+      </Button>
+    )
+  }
 
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>

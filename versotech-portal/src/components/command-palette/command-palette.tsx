@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import {
   CommandDialog,
@@ -55,9 +55,15 @@ export function CommandPalette({ onQuickAddSubscription, brand = 'versotech' }: 
   const router = useRouter()
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
+  const [mounted, setMounted] = useState(false)
 
-  // Detect platform for keyboard shortcuts
-  const isMac = typeof window !== 'undefined' && navigator.platform.toUpperCase().indexOf('MAC') >= 0
+  // Wait for client-side hydration to complete before rendering Radix UI components
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  // Detect platform for keyboard shortcuts - only after mount to avoid hydration mismatch
+  const isMac = mounted && typeof navigator !== 'undefined' && navigator.platform.toUpperCase().indexOf('MAC') >= 0
   const modKey = isMac ? '⌘' : 'Ctrl'
 
   // Define commands based on brand
@@ -309,6 +315,11 @@ export function CommandPalette({ onQuickAddSubscription, brand = 'versotech' }: 
   // Group commands
   const navigationCommands = commands.filter(c => c.group === 'navigation')
   const actionCommands = commands.filter(c => c.group === 'actions')
+
+  // Don't render until mounted to prevent hydration mismatch with Radix UI IDs
+  if (!mounted) {
+    return null
+  }
 
   return (
     <CommandDialog open={open} onOpenChange={setOpen}>

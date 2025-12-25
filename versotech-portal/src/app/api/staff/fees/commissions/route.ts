@@ -18,6 +18,17 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Staff role check - only staff can list all commissions
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+
+    if (!(profile?.role?.startsWith('staff_') || profile?.role === 'ceo')) {
+      return NextResponse.json({ error: 'Forbidden - Staff only' }, { status: 403 });
+    }
+
     // Parse query parameters
     const searchParams = request.nextUrl.searchParams;
     const status = searchParams.get('status'); // accrued, invoiced, paid

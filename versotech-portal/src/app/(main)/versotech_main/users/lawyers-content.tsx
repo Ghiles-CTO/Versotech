@@ -33,10 +33,15 @@ import {
   Clock,
   XCircle,
   Briefcase,
-  MapPin
+  MapPin,
+  Plus,
+  UserPlus,
+  Users
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
+import { AddLawyerModal } from '@/components/users/add-lawyer-modal'
+import { InviteUserDialog } from '@/components/users/invite-user-dialog'
 
 type LawyerUser = {
   id: string
@@ -111,100 +116,115 @@ export default function LawyersContent() {
   const [searchQuery, setSearchQuery] = useState('')
   const router = useRouter()
 
-  useEffect(() => {
-    async function fetchLawyers() {
-      try {
-        setLoading(true)
-        const supabase = createClient()
+  // Modal states
+  const [showAddModal, setShowAddModal] = useState(false)
+  const [showInviteDialog, setShowInviteDialog] = useState(false)
+  const [selectedLawyer, setSelectedLawyer] = useState<Lawyer | null>(null)
 
-        const { data, error: fetchError } = await supabase
-          .from('lawyers')
-          .select(`
-            id,
-            firm_name,
-            display_name,
-            legal_entity_type,
-            registration_number,
-            tax_id,
-            primary_contact_name,
-            primary_contact_email,
-            primary_contact_phone,
-            city,
-            state_province,
-            country,
-            specializations,
-            is_active,
-            kyc_status,
-            onboarded_at,
-            created_at,
-            lawyer_users (
-              user_id,
-              role,
-              is_primary,
-              can_sign,
-              profiles (
-                id,
-                display_name,
-                email
-              )
+  const handleInviteClick = (lawyer: Lawyer) => {
+    setSelectedLawyer(lawyer)
+    setShowInviteDialog(true)
+  }
+
+  const refreshData = () => {
+    setLoading(true)
+    fetchLawyers()
+  }
+
+  async function fetchLawyers() {
+    try {
+      setLoading(true)
+      const supabase = createClient()
+
+      const { data, error: fetchError } = await supabase
+        .from('lawyers')
+        .select(`
+          id,
+          firm_name,
+          display_name,
+          legal_entity_type,
+          registration_number,
+          tax_id,
+          primary_contact_name,
+          primary_contact_email,
+          primary_contact_phone,
+          city,
+          state_province,
+          country,
+          specializations,
+          is_active,
+          kyc_status,
+          onboarded_at,
+          created_at,
+          lawyer_users (
+            user_id,
+            role,
+            is_primary,
+            can_sign,
+            profiles (
+              id,
+              display_name,
+              email
             )
-          `)
-          .order('created_at', { ascending: false })
+          )
+        `)
+        .order('created_at', { ascending: false })
 
-        if (fetchError) throw fetchError
+      if (fetchError) throw fetchError
 
-        const processed: Lawyer[] = (data || []).map((l: any) => {
-          const users: LawyerUser[] = (l.lawyer_users || []).map((lu: any) => {
-            const profile = Array.isArray(lu.profiles) ? lu.profiles[0] : lu.profiles
-            return {
-              id: profile?.id || lu.user_id,
-              name: profile?.display_name || 'Unknown User',
-              email: profile?.email || '',
-              role: lu.role || 'member',
-              isPrimary: lu.is_primary || false,
-              canSign: lu.can_sign || false
-            }
-          })
-
+      const processed: Lawyer[] = (data || []).map((l: any) => {
+        const users: LawyerUser[] = (l.lawyer_users || []).map((lu: any) => {
+          const profile = Array.isArray(lu.profiles) ? lu.profiles[0] : lu.profiles
           return {
-            id: l.id,
-            firmName: l.firm_name || 'Unnamed Firm',
-            displayName: l.display_name || l.firm_name || 'Unnamed',
-            legalEntityType: l.legal_entity_type,
-            registrationNumber: l.registration_number,
-            taxId: l.tax_id,
-            primaryContactName: l.primary_contact_name,
-            primaryContactEmail: l.primary_contact_email,
-            primaryContactPhone: l.primary_contact_phone,
-            city: l.city,
-            stateProvince: l.state_province,
-            country: l.country,
-            specializations: l.specializations,
-            isActive: l.is_active ?? true,
-            kycStatus: l.kyc_status,
-            onboardedAt: l.onboarded_at,
-            createdAt: l.created_at,
-            users
+            id: profile?.id || lu.user_id,
+            name: profile?.display_name || 'Unknown User',
+            email: profile?.email || '',
+            role: lu.role || 'member',
+            isPrimary: lu.is_primary || false,
+            canSign: lu.can_sign || false
           }
         })
 
-        setLawyers(processed)
-        setFilteredLawyers(processed)
-        setStats({
-          total: processed.length,
-          active: processed.filter(l => l.isActive).length,
-          kycApproved: processed.filter(l => l.kycStatus === 'approved').length,
-          onboarded: processed.filter(l => l.onboardedAt).length
-        })
-        setError(null)
-      } catch (err) {
-        console.error('[LawyersContent] Error:', err)
-        setError(err instanceof Error ? err.message : 'Failed to load lawyers')
-      } finally {
-        setLoading(false)
-      }
-    }
+        return {
+          id: l.id,
+          firmName: l.firm_name || 'Unnamed Firm',
+          displayName: l.display_name || l.firm_name || 'Unnamed',
+          legalEntityType: l.legal_entity_type,
+          registrationNumber: l.registration_number,
+          taxId: l.tax_id,
+          primaryContactName: l.primary_contact_name,
+          primaryContactEmail: l.primary_contact_email,
+          primaryContactPhone: l.primary_contact_phone,
+          city: l.city,
+          stateProvince: l.state_province,
+          country: l.country,
+          specializations: l.specializations,
+          isActive: l.is_active ?? true,
+          kycStatus: l.kyc_status,
+          onboardedAt: l.onboarded_at,
+          createdAt: l.created_at,
+          users
+        }
+      })
 
+      setLawyers(processed)
+      setFilteredLawyers(processed)
+      setStats({
+        total: processed.length,
+        active: processed.filter(l => l.isActive).length,
+        kycApproved: processed.filter(l => l.kycStatus === 'approved').length,
+        onboarded: processed.filter(l => l.onboardedAt).length
+      })
+      setError(null)
+    } catch (err) {
+      console.error('[LawyersContent] Error:', err)
+      setError(err instanceof Error ? err.message : 'Failed to load lawyers')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
     fetchLawyers()
   }, [])
 
@@ -306,14 +326,20 @@ export default function LawyersContent() {
 
       {/* Table */}
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Scale className="h-5 w-5" />
-            All Lawyers ({filteredLawyers.length})
-          </CardTitle>
-          <CardDescription>
-            Legal counsel for deals, escrow management, and regulatory compliance
-          </CardDescription>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <Scale className="h-5 w-5" />
+              All Lawyers ({filteredLawyers.length})
+            </CardTitle>
+            <CardDescription className="mt-1">
+              Legal counsel for deals, escrow management, and regulatory compliance
+            </CardDescription>
+          </div>
+          <Button onClick={() => setShowAddModal(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Add Law Firm
+          </Button>
         </CardHeader>
         <CardContent>
           <Table>
@@ -322,6 +348,7 @@ export default function LawyersContent() {
                 <TableHead>Firm</TableHead>
                 <TableHead>Specializations</TableHead>
                 <TableHead>Location</TableHead>
+                <TableHead>Users</TableHead>
                 <TableHead>Contact</TableHead>
                 <TableHead>KYC</TableHead>
                 <TableHead>Status</TableHead>
@@ -331,7 +358,7 @@ export default function LawyersContent() {
             <TableBody>
               {filteredLawyers.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                     No lawyers found
                   </TableCell>
                 </TableRow>
@@ -377,6 +404,12 @@ export default function LawyersContent() {
                       )}
                     </TableCell>
                     <TableCell>
+                      <div className="flex items-center gap-1.5">
+                        <Users className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm font-medium">{lawyer.users.length}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
                       {lawyer.primaryContactName ? (
                         <div>
                           <div className="text-sm text-foreground">{lawyer.primaryContactName}</div>
@@ -407,6 +440,10 @@ export default function LawyersContent() {
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
                           <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={() => handleInviteClick(lawyer)}>
+                            <UserPlus className="mr-2 h-4 w-4" />
+                            Invite User
+                          </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => router.push(`/versotech_main/lawyers/${lawyer.id}`)}>
                             <Eye className="mr-2 h-4 w-4" />
                             View Details
@@ -427,6 +464,25 @@ export default function LawyersContent() {
           </Table>
         </CardContent>
       </Card>
+
+      {/* Add Law Firm Modal */}
+      <AddLawyerModal
+        open={showAddModal}
+        onOpenChange={setShowAddModal}
+        onSuccess={refreshData}
+      />
+
+      {/* Invite User Dialog */}
+      {selectedLawyer && (
+        <InviteUserDialog
+          open={showInviteDialog}
+          onOpenChange={setShowInviteDialog}
+          entityType="lawyer"
+          entityId={selectedLawyer.id}
+          entityName={selectedLawyer.firmName}
+          onSuccess={refreshData}
+        />
+      )}
     </div>
   )
 }

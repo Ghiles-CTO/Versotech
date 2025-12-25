@@ -39,6 +39,7 @@ interface NotificationCenterProps {
 }
 
 export function NotificationCenter({ className }: NotificationCenterProps) {
+  const [mounted, setMounted] = useState(false)
   const [open, setOpen] = useState(false)
   const [notifications, setNotifications] = useState<NotificationItem[]>([])
   const [loading, setLoading] = useState(true)
@@ -47,10 +48,15 @@ export function NotificationCenter({ className }: NotificationCenterProps) {
 
   const isDark = theme === 'staff-dark'
 
+  // Wait for client-side hydration to complete
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
   // Fetch notifications from multiple sources
   useEffect(() => {
     async function fetchNotifications() {
-      if (!activePersona) return
+      if (!activePersona || !mounted) return
 
       setLoading(true)
       const supabase = createClient()
@@ -188,7 +194,7 @@ export function NotificationCenter({ className }: NotificationCenterProps) {
     }
 
     fetchNotifications()
-  }, [activePersona])
+  }, [activePersona, mounted])
 
   const unreadCount = notifications.filter(n => !n.read).length
 
@@ -214,6 +220,25 @@ export function NotificationCenter({ className }: NotificationCenterProps) {
     if (diffHours < 24) return `${diffHours}h ago`
     if (diffDays < 7) return `${diffDays}d ago`
     return date.toLocaleDateString()
+  }
+
+  // Render placeholder button until mounted to prevent Radix UI hydration mismatch
+  if (!mounted) {
+    return (
+      <Button
+        variant="ghost"
+        size="icon"
+        className={cn(
+          "relative",
+          isDark
+            ? "text-gray-400 hover:text-white hover:bg-white/10"
+            : "text-gray-600 hover:text-gray-900 hover:bg-gray-100",
+          className
+        )}
+      >
+        <Bell className="h-5 w-5" />
+      </Button>
+    )
   }
 
   return (

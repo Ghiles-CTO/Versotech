@@ -21,13 +21,32 @@ import {
   UserPlus,
   Clock,
   Percent,
+  FileSignature,
+  MoreHorizontal,
+  Eye,
+  Send,
+  PenLine,
+  Plus,
+  CheckCircle2,
+  XCircle,
+  AlertCircle,
 } from 'lucide-react'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { useState } from 'react'
 import { KYCDocumentsTab } from '@/components/shared/kyc-documents-tab'
 import { BankDetailsTab } from '@/components/shared/bank-details-tab'
 import { ActivityTimelineTab } from '@/components/shared/activity-timeline-tab'
 import { EditIntroducerDialog } from '@/components/staff/introducers/edit-introducer-dialog'
+import { CreateAgreementDialog } from '@/components/staff/introducers/create-agreement-dialog'
 import { InviteUserDialog } from '@/components/users/invite-user-dialog'
+import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 import { formatCurrency, formatBps, formatDate } from '@/lib/format'
 import { statusStyles, kycStyles, getStatusStyle } from '@/lib/status-styles'
 
@@ -64,13 +83,27 @@ type Commission = {
   status: string
   paid_at: string | null
   created_at: string
-  subscription?: {
-    id: string
-    commitment_amount: number
-    investor?: {
-      legal_name: string
-    } | null
+  deal_id: string | null
+  investor_id: string | null
+  investor?: {
+    legal_name: string
   } | null
+  deal?: {
+    name: string
+  } | null
+}
+
+type Agreement = {
+  id: string
+  status: string
+  default_commission_bps: number | null
+  agreement_date: string | null
+  effective_date: string | null
+  expiry_date: string | null
+  special_terms: string | null
+  signed_date: string | null
+  created_at: string
+  updated_at: string
 }
 
 type IntroducerMetrics = {
@@ -86,16 +119,21 @@ interface IntroducerDetailClientProps {
   metrics: IntroducerMetrics
   introductions: Introduction[]
   commissions: Commission[]
+  agreements: Agreement[]
 }
 
 export function IntroducerDetailClient({
   introducer,
   metrics,
   introductions,
-  commissions
+  commissions,
+  agreements
 }: IntroducerDetailClientProps) {
+  const router = useRouter()
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false)
+  const [createAgreementOpen, setCreateAgreementOpen] = useState(false)
+  const [sendingAgreement, setSendingAgreement] = useState<string | null>(null)
 
   const introStatusStyles: Record<string, string> = {
     allocated: 'bg-green-500/20 text-green-400',
@@ -109,6 +147,88 @@ export function IntroducerDetailClient({
     accrued: 'bg-yellow-500/20 text-yellow-400',
     invoiced: 'bg-blue-500/20 text-blue-400',
     cancelled: 'bg-red-500/20 text-red-400',
+  }
+
+  const agreementStatusStyles: Record<string, { bg: string; text: string; icon: React.ReactNode }> = {
+    draft: {
+      bg: 'bg-slate-500/20',
+      text: 'text-slate-400',
+      icon: <FileText className="h-3 w-3" />
+    },
+    sent: {
+      bg: 'bg-blue-500/20',
+      text: 'text-blue-400',
+      icon: <Send className="h-3 w-3" />
+    },
+    pending_approval: {
+      bg: 'bg-amber-500/20',
+      text: 'text-amber-400',
+      icon: <AlertCircle className="h-3 w-3" />
+    },
+    approved: {
+      bg: 'bg-indigo-500/20',
+      text: 'text-indigo-400',
+      icon: <CheckCircle2 className="h-3 w-3" />
+    },
+    pending_ceo_signature: {
+      bg: 'bg-purple-500/20',
+      text: 'text-purple-400',
+      icon: <PenLine className="h-3 w-3" />
+    },
+    pending_introducer_signature: {
+      bg: 'bg-cyan-500/20',
+      text: 'text-cyan-400',
+      icon: <PenLine className="h-3 w-3" />
+    },
+    active: {
+      bg: 'bg-emerald-500/20',
+      text: 'text-emerald-400',
+      icon: <CheckCircle2 className="h-3 w-3" />
+    },
+    expired: {
+      bg: 'bg-gray-500/20',
+      text: 'text-gray-400',
+      icon: <Clock className="h-3 w-3" />
+    },
+    rejected: {
+      bg: 'bg-red-500/20',
+      text: 'text-red-400',
+      icon: <XCircle className="h-3 w-3" />
+    },
+  }
+
+  const formatAgreementStatus = (status: string) => {
+    const mapping: Record<string, string> = {
+      draft: 'Draft',
+      sent: 'Sent',
+      pending_approval: 'Pending Approval',
+      approved: 'Approved',
+      pending_ceo_signature: 'Awaiting CEO Signature',
+      pending_introducer_signature: 'Awaiting Introducer Signature',
+      active: 'Active',
+      expired: 'Expired',
+      rejected: 'Rejected',
+    }
+    return mapping[status] || status
+  }
+
+  const handleSendAgreement = async (agreementId: string) => {
+    setSendingAgreement(agreementId)
+    try {
+      const response = await fetch(`/api/introducer-agreements/${agreementId}/send`, {
+        method: 'POST',
+      })
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to send agreement')
+      }
+      toast.success('Agreement sent to introducer for approval')
+      router.refresh()
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to send agreement')
+    } finally {
+      setSendingAgreement(null)
+    }
   }
 
   const formatPaymentTerms = (terms: string | null) => {
@@ -140,10 +260,10 @@ export function IntroducerDetailClient({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Link href="/versotech/staff/introducers">
+          <Link href="/versotech_main/users">
             <Button variant="ghost" size="sm" className="bg-gray-800 text-white hover:bg-gray-700">
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Introducers
+              Back to Users
             </Button>
           </Link>
           <div>
@@ -268,10 +388,14 @@ export function IntroducerDetailClient({
 
       {/* Tabbed Content */}
       <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6 lg:w-auto lg:inline-grid">
+        <TabsList className="grid w-full grid-cols-7 lg:w-auto lg:inline-grid">
           <TabsTrigger value="overview" className="gap-2">
             <Building2 className="h-4 w-4" />
             <span className="hidden sm:inline">Overview</span>
+          </TabsTrigger>
+          <TabsTrigger value="agreements" className="gap-2">
+            <FileSignature className="h-4 w-4" />
+            <span className="hidden sm:inline">Agreements</span>
           </TabsTrigger>
           <TabsTrigger value="introductions" className="gap-2">
             <TrendingUp className="h-4 w-4" />
@@ -283,11 +407,11 @@ export function IntroducerDetailClient({
           </TabsTrigger>
           <TabsTrigger value="kyc" className="gap-2">
             <FileText className="h-4 w-4" />
-            <span className="hidden sm:inline">KYC Documents</span>
+            <span className="hidden sm:inline">KYC</span>
           </TabsTrigger>
           <TabsTrigger value="bank" className="gap-2">
             <Banknote className="h-4 w-4" />
-            <span className="hidden sm:inline">Bank Details</span>
+            <span className="hidden sm:inline">Bank</span>
           </TabsTrigger>
           <TabsTrigger value="activity" className="gap-2">
             <Activity className="h-4 w-4" />
@@ -396,6 +520,166 @@ export function IntroducerDetailClient({
           )}
         </TabsContent>
 
+        {/* Agreements Tab */}
+        <TabsContent value="agreements">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+              <div>
+                <CardTitle>Fee Agreements</CardTitle>
+                <CardDescription>
+                  Manage commission agreements with {introducer.legal_name}
+                </CardDescription>
+              </div>
+              <Button
+                onClick={() => setCreateAgreementOpen(true)}
+                className="bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Create Agreement
+              </Button>
+            </CardHeader>
+            <CardContent>
+              {agreements.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <div className="p-4 rounded-2xl bg-gradient-to-br from-amber-500/10 to-orange-500/10 border border-amber-500/20 mb-4">
+                    <FileSignature className="h-10 w-10 text-amber-400/60" />
+                  </div>
+                  <p className="text-muted-foreground mb-1">No agreements yet</p>
+                  <p className="text-sm text-muted-foreground/70">
+                    Create a fee agreement to enable introductions
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {agreements.map((agreement) => {
+                    const statusStyle = agreementStatusStyles[agreement.status] || {
+                      bg: 'bg-gray-500/20',
+                      text: 'text-gray-400',
+                      icon: <FileText className="h-3 w-3" />
+                    }
+                    const isActive = agreement.status === 'active'
+                    const isDraft = agreement.status === 'draft'
+                    const canSign = agreement.status === 'pending_ceo_signature'
+
+                    return (
+                      <div
+                        key={agreement.id}
+                        className={`group relative flex items-center justify-between p-4 rounded-xl border transition-all duration-200 cursor-pointer
+                          ${isActive
+                            ? 'border-emerald-500/30 bg-gradient-to-r from-emerald-500/5 to-transparent hover:from-emerald-500/10'
+                            : 'border-white/10 hover:border-white/20 hover:bg-white/5'
+                          }`}
+                        onClick={() => router.push(`/versotech_main/introducer-agreements/${agreement.id}`)}
+                      >
+                        {/* Left side - Agreement info */}
+                        <div className="flex items-center gap-4">
+                          <div className={`p-2.5 rounded-lg ${statusStyle.bg}`}>
+                            <FileSignature className={`h-5 w-5 ${statusStyle.text}`} />
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium text-foreground">
+                                {formatBps(agreement.default_commission_bps || 0)} Commission
+                              </span>
+                              {isActive && (
+                                <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-medium">
+                                  Current
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-sm text-muted-foreground mt-0.5">
+                              {agreement.effective_date && (
+                                <>Effective {formatDate(agreement.effective_date)}</>
+                              )}
+                              {agreement.expiry_date && (
+                                <> • Expires {formatDate(agreement.expiry_date)}</>
+                              )}
+                              {!agreement.effective_date && !agreement.expiry_date && (
+                                <>Created {formatDate(agreement.created_at)}</>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Right side - Status and actions */}
+                        <div className="flex items-center gap-3">
+                          <Badge className={`${statusStyle.bg} ${statusStyle.text} gap-1.5 font-medium`}>
+                            {statusStyle.icon}
+                            {formatAgreementStatus(agreement.status)}
+                          </Badge>
+
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                              >
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-48">
+                              <DropdownMenuItem
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  router.push(`/versotech_main/introducer-agreements/${agreement.id}`)
+                                }}
+                              >
+                                <Eye className="h-4 w-4 mr-2" />
+                                View Details
+                              </DropdownMenuItem>
+                              {isDraft && (
+                                <>
+                                  <DropdownMenuItem
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      router.push(`/versotech_main/introducer-agreements/${agreement.id}?edit=true`)
+                                    }}
+                                  >
+                                    <Edit className="h-4 w-4 mr-2" />
+                                    Edit Agreement
+                                  </DropdownMenuItem>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      handleSendAgreement(agreement.id)
+                                    }}
+                                    disabled={sendingAgreement === agreement.id}
+                                    className="text-amber-400 focus:text-amber-400"
+                                  >
+                                    <Send className="h-4 w-4 mr-2" />
+                                    {sendingAgreement === agreement.id ? 'Sending...' : 'Send for Approval'}
+                                  </DropdownMenuItem>
+                                </>
+                              )}
+                              {canSign && (
+                                <>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      router.push(`/versotech_main/versosign?agreement=${agreement.id}`)
+                                    }}
+                                    className="text-purple-400 focus:text-purple-400"
+                                  >
+                                    <PenLine className="h-4 w-4 mr-2" />
+                                    Sign Agreement
+                                  </DropdownMenuItem>
+                                </>
+                              )}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         {/* Introductions Tab */}
         <TabsContent value="introductions">
           <Card>
@@ -463,9 +747,9 @@ export function IntroducerDetailClient({
                           {formatCurrency(comm.accrual_amount)}
                         </div>
                         <div className="text-sm text-muted-foreground">
-                          {comm.subscription?.investor?.legal_name || 'Unknown investor'}
-                          {comm.subscription && (
-                            <> • {formatCurrency(comm.subscription.commitment_amount)} commitment</>
+                          {comm.investor?.legal_name || 'Unknown investor'}
+                          {comm.deal && (
+                            <> • {comm.deal.name}</>
                           )}
                         </div>
                         <div className="text-xs text-muted-foreground">
@@ -525,6 +809,14 @@ export function IntroducerDetailClient({
         entityType="introducer"
         entityId={introducer.id}
         entityName={introducer.legal_name}
+      />
+
+      <CreateAgreementDialog
+        open={createAgreementOpen}
+        onOpenChange={setCreateAgreementOpen}
+        introducerId={introducer.id}
+        introducerName={introducer.legal_name}
+        defaultCommissionBps={introducer.default_commission_bps || 100}
       />
     </div>
   )

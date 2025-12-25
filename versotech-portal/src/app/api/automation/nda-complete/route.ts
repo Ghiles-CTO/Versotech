@@ -176,17 +176,37 @@ export async function POST(request: NextRequest) {
   }
 
   let ownerUserId: string | null = null
+  let allInvestorUserIds: string[] = []
   try {
     const { data: investorUsers } = await serviceSupabase
       .from('investor_users')
       .select('user_id')
       .eq('investor_id', investor_id)
       .order('created_at', { ascending: true })
-      .limit(1)
 
-    ownerUserId = investorUsers?.[0]?.user_id ?? null
+    allInvestorUserIds = investorUsers?.map(iu => iu.user_id) ?? []
+    ownerUserId = allInvestorUserIds[0] ?? null
   } catch (lookupError) {
     console.error('Failed to resolve investor user for NDA completion', lookupError)
+  }
+
+  // Update journey tracking in deal_memberships for all investor users
+  if (allInvestorUserIds.length > 0) {
+    const now = new Date().toISOString()
+    try {
+      for (const userId of allInvestorUserIds) {
+        await serviceSupabase
+          .from('deal_memberships')
+          .update({
+            nda_signed_at: now,
+            data_room_granted_at: now
+          })
+          .eq('deal_id', deal_id)
+          .eq('user_id', userId)
+      }
+    } catch (journeyError) {
+      console.error('Failed to update deal_memberships journey tracking', journeyError)
+    }
   }
 
   try {
