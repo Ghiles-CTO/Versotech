@@ -35,6 +35,10 @@ export interface CreateNotificationParams {
   extraMetadata?: Record<string, unknown>
   /** Whether to also send an email (default: true for important notifications) */
   sendEmailNotification?: boolean
+  /** User ID who triggered this notification (for "assigned by me" filtering) */
+  createdBy?: string
+  /** Related deal ID for deal-specific notifications */
+  dealId?: string
 }
 
 // Notification types that should trigger email notifications
@@ -64,13 +68,16 @@ const EMAIL_NOTIFICATION_TYPES: NotificationType[] = [
 export async function createInvestorNotification(params: CreateNotificationParams): Promise<void> {
   const supabase = createServiceClient()
 
-  // Create database notification
+  // Create database notification with all fields including new columns
   const { error } = await supabase.from('investor_notifications').insert({
     user_id: params.userId,
     investor_id: params.investorId ?? null,
     title: params.title,
     message: params.message,
-    link: params.link ?? null
+    link: params.link ?? null,
+    type: params.type,
+    created_by: params.createdBy ?? null,
+    deal_id: params.dealId ?? null
   })
 
   if (error) {

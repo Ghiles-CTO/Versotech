@@ -302,7 +302,10 @@ function InvestmentSkeleton() {
 
 export default function PortfolioPage() {
   const router = useRouter()
-  const { isInvestor } = usePersona()
+  const { isInvestor, isCommercialPartner } = usePersona()
+
+  // Allow access for investors OR commercial partners (MODE 1 CPs have investor_users links)
+  const hasPortfolioAccess = isInvestor || isCommercialPartner
   const [investments, setInvestments] = useState<Investment[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -348,11 +351,11 @@ export default function PortfolioPage() {
       }
     }
 
-    if (isInvestor) {
+    if (hasPortfolioAccess) {
       fetchPortfolio()
       fetchSaleRequests()
     }
-  }, [isInvestor, fetchSaleRequests])
+  }, [hasPortfolioAccess, fetchSaleRequests])
 
   // Handle sell button click
   const handleSellClick = (investment: Investment) => {
@@ -393,14 +396,14 @@ export default function PortfolioPage() {
   const totalFunded = activeInvestments.reduce((sum, i) => sum + (i.funded_amount || 0), 0)
   const totalNAV = activeInvestments.reduce((sum, i) => sum + (i.current_nav || 0), 0)
 
-  if (!isInvestor) {
+  if (!hasPortfolioAccess) {
     return (
       <div className="p-6">
         <Card className="max-w-lg mx-auto">
           <CardHeader>
-            <CardTitle>Investor Access Required</CardTitle>
+            <CardTitle>Portfolio Access Required</CardTitle>
             <CardDescription>
-              Please switch to an investor persona to view your portfolio.
+              Please switch to an investor or commercial partner persona to view your portfolio.
             </CardDescription>
           </CardHeader>
         </Card>

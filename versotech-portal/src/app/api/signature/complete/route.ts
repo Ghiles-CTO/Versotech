@@ -104,6 +104,11 @@ export async function POST(request: NextRequest) {
     await handleSubscriptionCompletion(supabase, signature_request_id, workflow_run_id)
   }
 
+  // Handle placement agreement signature completion
+  if (document_type === 'placement_agreement') {
+    await handlePlacementAgreementCompletion(supabase, signature_request_id)
+  }
+
   return NextResponse.json({ success: true })
 }
 
@@ -480,4 +485,166 @@ async function handleSubscriptionCompletion(
   }
 
   console.log('🎉 [SUBSCRIPTION] Subscription completion processing finished')
+}
+
+/**
+ * Handle placement agreement signature completion
+ * Updates agreement status to active when all parties have signed
+ */
+async function handlePlacementAgreementCompletion(
+  supabase: ReturnType<typeof createServiceClient>,
+  signatureRequestId: string
+) {
+  console.log('🔵 [PLACEMENT AGREEMENT] Handling completion for signature:', signatureRequestId)
+
+  // Get the signature request with placement agreement details
+  const { data: sigRequest } = await supabase
+    .from('signature_requests')
+    .select('id, placement_agreement_id, placement_id, signature_position, status')
+    .eq('id', signatureRequestId)
+    .single()
+
+  if (!sigRequest?.placement_agreement_id) {
+    console.log('⏭️ [PLACEMENT AGREEMENT] No placement_agreement_id - skipping')
+    return
+  }
+
+  const agreementId = sigRequest.placement_agreement_id
+  console.log('📋 [PLACEMENT AGREEMENT] Processing for agreement:', agreementId)
+
+  // Get the placement agreement with commercial partner
+  const { data: agreement } = await supabase
+    .from('placement_agreements')
+    .select(`
+      *,
+      commercial_partner:commercial_partner_id (
+        id,
+        legal_name,
+        display_name
+      )
+    `)
+    .eq('id', agreementId)
+    .single()
+
+  if (!agreement) {
+    console.error('❌ [PLACEMENT AGREEMENT] Agreement not found:', agreementId)
+    return
+  }
+
+  // Check which party signed
+  if (sigRequest.signature_position === 'party_a') {
+    // CEO signed - update status to pending CP signature
+    console.log('👔 [PLACEMENT AGREEMENT] CEO (party_a) signed')
+
+    await supabase
+      .from('placement_agreements')
+      .update({
+        status: 'pending_cp_signature',
+        ceo_signature_request_id: signatureRequestId,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', agreementId)
+
+    // Notify commercial partner users
+    const { data: cpUsers } = await supabase
+      .from('commercial_partner_users')
+      .select('user_id')
+      .eq('commercial_partner_id', agreement.commercial_partner_id)
+
+    if (cpUsers && cpUsers.length > 0) {
+      const notifications = cpUsers.map((cpu: any) => ({
+        user_id: cpu.user_id,
+        investor_id: null,
+        title: 'Placement Agreement Ready for Signature',
+        message: 'Your placement agreement has been signed by VERSO and is ready for your signature.',
+        link: `/versotech_main/placement-agreements/${agreementId}`,
+        type: 'placement_agreement',
+        deal_id: null
+      }))
+
+      await supabase.from('investor_notifications').insert(notifications)
+      console.log('✅ [PLACEMENT AGREEMENT] Notified CP users')
+    }
+
+  } else if (sigRequest.signature_position === 'party_b') {
+    // Commercial Partner signed - agreement is now active
+    console.log('🏢 [PLACEMENT AGREEMENT] CP (party_b) signed - activating agreement')
+
+    const now = new Date().toISOString()
+
+    await supabase
+      .from('placement_agreements')
+      .update({
+        status: 'active',
+        cp_signature_request_id: signatureRequestId,
+        signed_date: now.split('T')[0], // date type, not timestamptz
+        updated_at: now
+      })
+      .eq('id', agreementId)
+
+    // Notify CP users that agreement is active
+    const { data: cpUsers } = await supabase
+      .from('commercial_partner_users')
+      .select('user_id')
+      .eq('commercial_partner_id', agreement.commercial_partner_id)
+
+    const cpName = (agreement.commercial_partner as any)?.legal_name ||
+                   (agreement.commercial_partner as any)?.display_name ||
+                   'Commercial Partner'
+
+    if (cpUsers && cpUsers.length > 0) {
+      const notifications = cpUsers.map((cpu: any) => ({
+        user_id: cpu.user_id,
+        investor_id: null,
+        title: 'Placement Agreement Active',
+        message: 'Your placement agreement is now fully executed and active.',
+        link: `/versotech_main/placement-agreements/${agreementId}`,
+        type: 'placement_agreement',
+        deal_id: null
+      }))
+
+      await supabase.from('investor_notifications').insert(notifications)
+      console.log('✅ [PLACEMENT AGREEMENT] Notified CP users of activation')
+    }
+
+    // Notify staff_admin/CEO users
+    const { data: staffUsers } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('role', 'staff_admin')
+      .limit(5)
+
+    if (staffUsers && staffUsers.length > 0) {
+      const staffNotifications = staffUsers.map((staff: any) => ({
+        user_id: staff.id,
+        investor_id: null,
+        title: 'Placement Agreement Executed',
+        message: `Placement agreement with ${cpName} has been fully executed and is now active.`,
+        link: `/versotech_main/placement-agreements/${agreementId}`,
+        type: 'placement_agreement',
+        deal_id: null
+      }))
+
+      await supabase.from('investor_notifications').insert(staffNotifications)
+      console.log('✅ [PLACEMENT AGREEMENT] Notified staff users')
+    }
+
+    // Create audit log
+    await supabase.from('audit_logs').insert({
+      event_type: 'commercial_partner',
+      action: 'placement_agreement_activated',
+      entity_type: 'placement_agreement',
+      entity_id: agreementId,
+      actor_id: null,
+      action_details: {
+        description: 'Placement agreement fully executed and activated',
+        commercial_partner_id: agreement.commercial_partner_id,
+        agreement_id: agreementId,
+        signature_request_id: signatureRequestId
+      },
+      timestamp: now
+    })
+  }
+
+  console.log('🎉 [PLACEMENT AGREEMENT] Completion processing finished')
 }

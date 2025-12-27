@@ -13,6 +13,7 @@ import { IntroducerDashboard } from './introducer-dashboard'
 import { PartnerDashboard } from './partner-dashboard'
 import { LawyerDashboard } from './lawyer-dashboard'
 import { ArrangerDashboard } from './arranger-dashboard'
+import { CommercialPartnerDashboard } from './commercial-partner-dashboard'
 import {
   Building2,
   Users,
@@ -334,6 +335,17 @@ export function PersonaDashboard() {
     return (
       <ArrangerDashboard
         arrangerId={activePersona.entity_id}
+        userId={userId}
+        persona={activePersona}
+      />
+    )
+  }
+
+  // Route commercial partner personas to the commercial partner-specific dashboard
+  if (activePersona.persona_type === 'commercial_partner' && userId) {
+    return (
+      <CommercialPartnerDashboard
+        commercialPartnerId={activePersona.entity_id}
         userId={userId}
         persona={activePersona}
       />

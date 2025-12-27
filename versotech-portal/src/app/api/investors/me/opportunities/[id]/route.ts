@@ -7,6 +7,8 @@ interface RouteParams {
 /**
  * GET /api/investors/me/opportunities/:id
  * Fetch a single opportunity with full details, journey stages, and data room access
+ *
+ * For MODE 2 (commercial_partner_proxy): Pass ?client_investor_id=xxx to view client's dataroom
  */
 export async function GET(request: Request, { params }: RouteParams) {
   console.log('🔴 [opportunities/[id]] GET handler called')
@@ -14,6 +16,10 @@ export async function GET(request: Request, { params }: RouteParams) {
   console.log('🔴 [opportunities/[id]] dealId:', dealId)
   const supabase = await createClient()
   const serviceSupabase = createServiceClient()
+
+  // Get client_investor_id from query params for MODE 2 proxy access
+  const url = new URL(request.url)
+  const clientInvestorId = url.searchParams.get('client_investor_id')
 
   try {
     const { data: { user }, error: userError } = await supabase.auth.getUser()
@@ -38,8 +44,40 @@ export async function GET(request: Request, { params }: RouteParams) {
 
     const investorId = investorLinks?.[0]?.investor_id || null
 
-    // Use investor_id from membership if available, fallback to direct investor link
-    const effectiveInvestorId = membership?.investor_id || investorId
+    // MODE 2: For commercial_partner_proxy role, allow viewing client's dataroom
+    let effectiveInvestorId = membership?.investor_id || investorId
+    let isProxyMode = false
+    let proxyClientName: string | null = null
+
+    if (clientInvestorId && membership?.role === 'commercial_partner_proxy') {
+      // Validate that this user's CP has access to the client
+      const { data: cpLink } = await serviceSupabase
+        .from('commercial_partner_users')
+        .select('commercial_partner_id')
+        .eq('user_id', user.id)
+        .maybeSingle()
+
+      if (cpLink) {
+        // Check if client is linked to this CP
+        const { data: clientLink } = await serviceSupabase
+          .from('commercial_partner_clients')
+          .select('id, client_name, client_investor_id')
+          .eq('commercial_partner_id', cpLink.commercial_partner_id)
+          .eq('client_investor_id', clientInvestorId)
+          .eq('is_active', true)
+          .maybeSingle()
+
+        if (clientLink) {
+          // Valid client - use their investor_id for dataroom access
+          effectiveInvestorId = clientInvestorId
+          isProxyMode = true
+          proxyClientName = clientLink.client_name
+          console.log('🔵 [opportunities/[id]] MODE 2: Viewing as proxy for client:', proxyClientName)
+        } else {
+          return NextResponse.json({ error: 'Client not authorized for this commercial partner' }, { status: 403 })
+        }
+      }
+    }
 
     // Check if investor has access to this deal (must be a member or deal is public)
     const { data: deal, error: dealError } = await serviceSupabase
@@ -434,7 +472,17 @@ export async function GET(request: Request, { params }: RouteParams) {
       ),
       // Indicate if user is tracking-only (cannot invest)
       is_tracking_only: !!membership?.role && !['investor', 'partner_investor', 'introducer_investor', 'commercial_partner_investor', 'co_investor'].includes(membership.role),
-      can_sign_subscription: subscription?.pack_sent_at && !subscription?.signed_at
+      can_sign_subscription: subscription?.pack_sent_at && !subscription?.signed_at,
+
+      // MODE 2: Proxy mode info for commercial partners viewing on behalf of clients
+      proxy_mode: isProxyMode ? {
+        is_proxy: true,
+        client_name: proxyClientName,
+        client_investor_id: clientInvestorId
+      } : null,
+
+      // Indicate if user can use proxy mode (has commercial_partner_proxy role)
+      can_use_proxy_mode: membership?.role === 'commercial_partner_proxy'
     }
 
     return NextResponse.json({ opportunity })

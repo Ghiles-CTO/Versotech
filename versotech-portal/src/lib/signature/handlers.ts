@@ -1013,7 +1013,7 @@ export async function handleIntroducerAgreementSignature(
       .from('introducer_agreements')
       .update({
         status: 'active',
-        signed_date: new Date().toISOString(),
+        signed_date: new Date().toISOString().split('T')[0], // date type, not timestamptz
         introducer_signature_request_id: signatureRequest.id,
         signed_pdf_url: signedPdfPath, // Store fully signed PDF path
         updated_at: new Date().toISOString()
@@ -1259,7 +1259,7 @@ export async function handlePlacementAgreementSignature(
       .from('placement_agreements')
       .update({
         status: 'active',
-        signed_at: new Date().toISOString(),
+        signed_date: new Date().toISOString().split('T')[0], // date type, not timestamptz
         cp_signature_request_id: signatureRequest.id,
         signed_pdf_url: signedPdfPath,
         updated_at: new Date().toISOString()

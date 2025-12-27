@@ -357,25 +357,69 @@ export async function GET(request: Request) {
 
     const cpId = cpLinks[0].commercial_partner_id
 
-    // Get clients associated with this commercial partner
-    // (Clients are investors who have this CP as their commercial partner)
-    const { data: clients } = await serviceSupabase
+    // Get clients from commercial_partner_clients table (primary source)
+    const { data: cpClients } = await serviceSupabase
+      .from('commercial_partner_clients')
+      .select(`
+        id,
+        client_name,
+        client_email,
+        client_type,
+        client_investor_id,
+        is_active,
+        investor:client_investor_id (
+          id,
+          legal_name,
+          type,
+          kyc_status
+        )
+      `)
+      .eq('commercial_partner_id', cpId)
+      .eq('is_active', true)
+      .order('client_name')
+
+    // Also get legacy clients linked via investors.commercial_partner_id
+    const { data: legacyClients } = await serviceSupabase
       .from('investors')
       .select(`
         id,
         legal_name,
         type,
-        kyc_status,
-        entity_type
+        kyc_status
       `)
       .eq('commercial_partner_id', cpId)
       .eq('status', 'active')
       .order('legal_name')
 
+    // Combine and dedupe clients (client_investor_id from cpClients overlaps with legacyClients)
+    const clientInvestorIds = new Set((cpClients || []).map(c => c.client_investor_id).filter(Boolean))
+    const uniqueLegacyClients = (legacyClients || []).filter(lc => !clientInvestorIds.has(lc.id))
+
+    // Format clients for response
+    const formattedClients = [
+      // Clients from commercial_partner_clients with linked investors
+      ...(cpClients || [])
+        .filter(c => c.investor)
+        .map(c => ({
+          id: (c.investor as any).id,
+          legal_name: (c.investor as any).legal_name || c.client_name,
+          type: (c.investor as any).type || c.client_type,
+          kyc_status: (c.investor as any).kyc_status,
+          client_record_id: c.id // Include the client record ID for reference
+        })),
+      // Legacy clients directly linked to CP
+      ...uniqueLegacyClients.map(lc => ({
+        id: lc.id,
+        legal_name: lc.legal_name,
+        type: lc.type,
+        kyc_status: lc.kyc_status
+      }))
+    ]
+
     return NextResponse.json({
       commercial_partner_id: cpId,
       commercial_partner_name: (cpLinks[0].commercial_partners as any)?.name,
-      clients: clients || [],
+      clients: formattedClients,
       can_execute_for_clients: true
     })
   } catch (error) {
