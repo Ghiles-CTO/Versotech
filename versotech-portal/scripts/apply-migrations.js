@@ -3,14 +3,53 @@
 /**
  * Apply database migrations directly using Supabase service client
  * This script runs all the migration files in sequence
+ *
+ * SECURITY: This script reads credentials from environment variables.
+ * Never commit hardcoded credentials to version control.
  */
 
 const { createClient } = require('@supabase/supabase-js');
 const fs = require('fs').promises;
+const fsSync = require('fs');
 const path = require('path');
 
-const SUPABASE_URL = 'https://ipguxdssecfexudnvtia.supabase.co';
-const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlwZ3V4ZHNzZWNmZXh1ZG52dGlhIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODM2MTgzNywiZXhwIjoyMDczOTM3ODM3fQ.hs1lPI8D8iW5kWOQHRXBAy8JdgmpegzJgWTnIjRz8Qw';
+// Load environment variables from .env files
+function loadEnv(filePath) {
+  try {
+    const content = fsSync.readFileSync(filePath, 'utf-8');
+    content.split('\n').forEach(line => {
+      const trimmedLine = line.trim();
+      // Skip empty lines and comments
+      if (!trimmedLine || trimmedLine.startsWith('#')) return;
+      const [key, ...value] = trimmedLine.split('=');
+      if (key && value.length) {
+        // Only set if not already defined (env vars take precedence)
+        if (!process.env[key.trim()]) {
+          process.env[key.trim()] = value.join('=').trim();
+        }
+      }
+    });
+  } catch (e) {
+    // File doesn't exist, skip silently
+  }
+}
+
+// Try to load from various .env file locations
+loadEnv(path.join(__dirname, '..', '..', '.env'));
+loadEnv(path.join(__dirname, '..', '.env'));
+loadEnv(path.join(__dirname, '..', '.env.local'));
+
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+// Validate required environment variables
+if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
+  console.error('❌ Missing required environment variables:');
+  if (!SUPABASE_URL) console.error('   - NEXT_PUBLIC_SUPABASE_URL');
+  if (!SUPABASE_SERVICE_KEY) console.error('   - SUPABASE_SERVICE_ROLE_KEY');
+  console.error('\nPlease ensure these are set in your .env or .env.local file.');
+  process.exit(1);
+}
 
 // Create Supabase client with service role key
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {

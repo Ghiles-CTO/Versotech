@@ -45,6 +45,7 @@ import {
   Eye,
   PenTool,
   Wallet,
+  Download,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatCurrency, formatDate } from '@/lib/format'
@@ -174,6 +175,7 @@ export default function ClientTransactionsPage() {
     estimatedCommission: 0,
   })
   const [loading, setLoading] = useState(true)
+  const [exporting, setExporting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
@@ -284,22 +286,30 @@ export default function ClientTransactionsPage() {
           }
         }
 
-        // Check for dataroom access (deal memberships)
+        // Check for actual dataroom access (verified via deal_data_room_access table)
         const dealIds = (clientsData || [])
           .filter((c: any) => c.created_for_deal_id)
           .map((c: any) => c.created_for_deal_id)
 
         let dataroomAccessMap: Record<string, boolean> = {}
         if (dealIds.length > 0 && investorIds.length > 0) {
-          const { data: memberships } = await supabase
-            .from('deal_memberships')
-            .select('deal_id, user_id')
+          // Query actual dataroom access records - only active, non-revoked, non-expired
+          const { data: accessRecords } = await supabase
+            .from('deal_data_room_access')
+            .select('deal_id, investor_id')
             .in('deal_id', dealIds)
+            .in('investor_id', investorIds)
+            .is('revoked_at', null)
+            .or(`expires_at.is.null,expires_at.gte.${new Date().toISOString()}`)
 
-          // For simplicity, assume clients with deal_id have potential dataroom access
-          dealIds.forEach((dealId: string) => {
-            dataroomAccessMap[dealId] = true
-          })
+          // Build access map keyed by "dealId:investorId" for precise matching
+          if (accessRecords) {
+            accessRecords.forEach((record: any) => {
+              // Key by deal_id:investor_id to match specific client access
+              const key = `${record.deal_id}:${record.investor_id}`
+              dataroomAccessMap[key] = true
+            })
+          }
         }
 
         processClients(
@@ -380,7 +390,7 @@ export default function ClientTransactionsPage() {
             subscription_date: null,
             journey_stage: getJourneyStage(null, false),
             has_termsheet: !!client.created_for_deal_id,
-            has_dataroom_access: !!dataroomAccessMap[client.created_for_deal_id],
+            has_dataroom_access: !!(client.created_for_deal_id && client.client_investor_id && dataroomAccessMap[`${client.created_for_deal_id}:${client.client_investor_id}`]),
             estimated_commission: null,
             commission_rate_bps: commissionBps,
           })
@@ -407,7 +417,7 @@ export default function ClientTransactionsPage() {
               subscription_date: sub.subscription_date,
               journey_stage: getJourneyStage(sub.status, true),
               has_termsheet: true,
-              has_dataroom_access: true,
+              has_dataroom_access: !!(sub.deal_id && client.client_investor_id && dataroomAccessMap[`${sub.deal_id}:${client.client_investor_id}`]),
               estimated_commission: estimatedComm,
               commission_rate_bps: commissionBps,
             })
@@ -438,6 +448,36 @@ export default function ClientTransactionsPage() {
 
     fetchData()
   }, [])
+
+  // Export to CSV (only for CPs, not staff)
+  const handleExportCSV = async () => {
+    if (exporting || isStaffView) return
+    setExporting(true)
+    try {
+      const response = await fetch('/api/commercial-partners/me/clients/export')
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || 'Export failed')
+      }
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `client-transactions-${new Date().toISOString().split('T')[0]}.csv`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      window.URL.revokeObjectURL(url)
+    } catch (err) {
+      console.error('Export error:', err)
+      setError(err instanceof Error ? err.message : 'Export failed')
+    } finally {
+      setExporting(false)
+    }
+  }
+
+  // Determine if this is staff view (no partner info = viewing all clients as staff)
+  const isStaffView = partnerInfo === null
 
   // Filter clients
   const filteredClients = clients.filter(client => {
@@ -488,6 +528,22 @@ export default function ClientTransactionsPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
+          {/* Export button for commercial partners */}
+          {!isStaffView && partnerInfo && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExportCSV}
+              disabled={exporting || clients.length === 0}
+            >
+              {exporting ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Download className="h-4 w-4 mr-2" />
+              )}
+              Export CSV
+            </Button>
+          )}
           {placementAgreement && (
             <Badge variant="outline" className="text-green-600 border-green-200 bg-green-50">
               <Percent className="h-3 w-3 mr-1" />

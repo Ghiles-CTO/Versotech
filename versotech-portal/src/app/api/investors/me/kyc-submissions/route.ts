@@ -58,21 +58,9 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Get user profile
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', user.id)
-      .single()
-
-    if (!profile || profile.role !== 'investor') {
-      return NextResponse.json(
-        { error: 'Investor access required' },
-        { status: 403 }
-      )
-    }
-
     // Get investor IDs for this user
+    // Note: We check investor_users link rather than profile.role to support hybrid personas
+    // (e.g., partner_investor, introducer_investor, commercial_partner_investor)
     const { data: investorUsers } = await supabase
       .from('investor_users')
       .select('investor_id')

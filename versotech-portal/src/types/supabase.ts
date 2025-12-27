@@ -3885,6 +3885,7 @@ export type Database = {
       }
       fee_plans: {
         Row: {
+          commercial_partner_id: string | null
           created_at: string | null
           created_by: string | null
           created_by_arranger_id: string | null
@@ -3893,13 +3894,16 @@ export type Database = {
           effective_from: string
           effective_until: string | null
           id: string
+          introducer_id: string | null
           is_active: boolean
           is_default: boolean | null
           name: string
+          partner_id: string | null
           updated_at: string
           vehicle_id: string | null
         }
         Insert: {
+          commercial_partner_id?: string | null
           created_at?: string | null
           created_by?: string | null
           created_by_arranger_id?: string | null
@@ -3908,13 +3912,16 @@ export type Database = {
           effective_from?: string
           effective_until?: string | null
           id?: string
+          introducer_id?: string | null
           is_active?: boolean
           is_default?: boolean | null
           name: string
+          partner_id?: string | null
           updated_at?: string
           vehicle_id?: string | null
         }
         Update: {
+          commercial_partner_id?: string | null
           created_at?: string | null
           created_by?: string | null
           created_by_arranger_id?: string | null
@@ -3923,9 +3930,11 @@ export type Database = {
           effective_from?: string
           effective_until?: string | null
           id?: string
+          introducer_id?: string | null
           is_active?: boolean
           is_default?: boolean | null
           name?: string
+          partner_id?: string | null
           updated_at?: string
           vehicle_id?: string | null
         }
@@ -6488,6 +6497,7 @@ export type Database = {
         Row: {
           agreement_document_id: string | null
           agreement_type: string
+          arranger_id: string | null
           commercial_partner_id: string
           commission_cap_amount: number | null
           created_at: string
@@ -6507,6 +6517,7 @@ export type Database = {
         Insert: {
           agreement_document_id?: string | null
           agreement_type?: string
+          arranger_id?: string | null
           commercial_partner_id: string
           commission_cap_amount?: number | null
           created_at?: string
@@ -6526,6 +6537,7 @@ export type Database = {
         Update: {
           agreement_document_id?: string | null
           agreement_type?: string
+          arranger_id?: string | null
           commercial_partner_id?: string
           commission_cap_amount?: number | null
           created_at?: string

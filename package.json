@@ -10,5 +10,8 @@
     "docx": "^9.5.1",
     "shadcn": "^3.3.1",
     "supabase": "^2.48.3"
+  },
+  "scripts": {
+    "prepare": "husky"
   }
 }

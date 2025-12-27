@@ -236,11 +236,33 @@ export async function GET(request: Request, { params }: RouteParams) {
             unsigned_url: subUnsignedPath,
             signed_url: subSignedPath
           },
-          // Certificate - future feature, check if subscription is active
-          certificate: sub.activated_at ? {
-            status: 'available', // In future, check actual certificate generation
-            url: null // Would be fetched from certificate table
-          } : null
+          // Certificate - lookup from documents table if subscription is activated
+          certificate: await (async () => {
+            if (!sub.activated_at) return null
+
+            // Check for actual certificate document
+            const { data: certDoc } = await serviceSupabase
+              .from('documents')
+              .select('id, file_key')
+              .eq('subscription_id', sub.id)
+              .eq('type', 'certificate')
+              .maybeSingle()
+
+            if (certDoc) {
+              return {
+                status: 'available',
+                document_id: certDoc.id,
+                url: certDoc.file_key
+              }
+            }
+
+            // Certificate not yet generated
+            return {
+              status: 'generating',
+              document_id: null,
+              url: null
+            }
+          })()
         }
       }
     }
@@ -466,8 +488,9 @@ export async function GET(request: Request, { params }: RouteParams) {
       can_access_data_room: hasDataRoomAccess,
       // SECURITY FIX: Only allow subscription for roles that permit investing
       // commercial_partner_proxy has its own endpoint at /api/commercial-partners/proxy-subscribe
-      can_subscribe: !subscription && isDealOpen && (
-        !membership?.role || // Public deal without membership
+      // Must have an investor profile (effectiveInvestorId) to be able to subscribe
+      can_subscribe: effectiveInvestorId !== null && !subscription && isDealOpen && (
+        !membership?.role || // Public deal without membership (user still needs investor profile - checked above)
         ['investor', 'partner_investor', 'introducer_investor', 'commercial_partner_investor', 'co_investor'].includes(membership.role)
       ),
       // Indicate if user is tracking-only (cannot invest)

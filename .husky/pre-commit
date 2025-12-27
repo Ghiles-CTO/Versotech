@@ -1,0 +1,4 @@
+#!/bin/sh
+# Pre-commit hook: check for accidentally committed secrets
+
+node versotech-portal/scripts/check-secrets.js

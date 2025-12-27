@@ -187,7 +187,7 @@ export function ArrangerDashboard({ arrangerId, userId, persona }: ArrangerDashb
           lawyersCount = uniqueLawyers.size
         }
 
-        // Fetch pending agreements (introducer and placement)
+        // Fetch pending agreements (introducer and placement) - SCOPED TO THIS ARRANGER
         const { data: introducerAgreements } = await supabase
           .from('introducer_agreements')
           .select(`
@@ -196,6 +196,7 @@ export function ArrangerDashboard({ arrangerId, userId, persona }: ArrangerDashb
             created_at,
             introducers (id, display_name, legal_name)
           `)
+          .eq('arranger_id', arrangerId)
           .in('status', ['sent', 'pending_approval', 'approved', 'pending_ceo_signature', 'pending_introducer_signature'])
           .order('created_at', { ascending: false })
           .limit(5)
@@ -208,6 +209,7 @@ export function ArrangerDashboard({ arrangerId, userId, persona }: ArrangerDashb
             created_at,
             commercial_partners (id, display_name, legal_name)
           `)
+          .eq('arranger_id', arrangerId)
           .in('status', ['sent', 'pending_approval', 'approved', 'pending_ceo_signature', 'pending_cp_signature'])
           .order('created_at', { ascending: false })
           .limit(5)

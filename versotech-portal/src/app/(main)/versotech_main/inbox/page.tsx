@@ -102,12 +102,12 @@ function InboxPageContent() {
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) return
 
-        // Get unread messages count (simplified)
+        // Get unread conversations count (where user hasn't read the conversation)
         const { count: msgCount } = await supabase
           .from('conversation_participants')
           .select('*', { count: 'exact', head: true })
           .eq('user_id', user.id)
-          .not('last_read_at', 'is', null)
+          .is('last_read_at', null)
 
         // Get pending approvals count (scoped to user's assigned items or unassigned)
         const { count: approvalCount } = await supabase

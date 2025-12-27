@@ -35,6 +35,7 @@ export function ApprovalFilters({ onFilterChange, currentFilters }: ApprovalFilt
     { value: 'withdrawal', label: 'Withdrawals' },
     { value: 'profile_update', label: 'Profile Updates' },
     { value: 'document_access', label: 'Document Access' },
+    { value: 'gdpr_deletion_request', label: 'GDPR Deletion Requests' },
   ]
 
   const priorities: { value: ApprovalPriority; label: string; color: string }[] = [

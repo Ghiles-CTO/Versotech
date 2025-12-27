@@ -114,26 +114,65 @@ export default async function VersoSignPage() {
     investorIds = investorLinks?.map(link => link.investor_id) || []
   }
 
-  // Fetch signature tasks for this user
-  // Staff see all tasks, others see only tasks assigned to them (by user_id OR investor_id)
-  let tasksQuery = serviceSupabase
-    .from('tasks')
-    .select('*')
-    .in('kind', ['countersignature', 'subscription_pack_signature', 'other'])
-
-  // Build filter based on whether user has investor IDs
-  if (investorIds.length > 0) {
-    // For investors: tasks owned by user OR by their investor IDs
-    tasksQuery = tasksQuery.or(
-      `owner_user_id.eq.${user.id},owner_investor_id.in.(${investorIds.join(',')})`
-    )
-  } else {
-    // For non-investors: just tasks owned by the user directly
-    tasksQuery = tasksQuery.eq('owner_user_id', user.id)
+  // Get lawyer IDs if user has lawyer persona
+  let lawyerIds: string[] = []
+  if (isLawyer) {
+    const { data: lawyerLinks } = await serviceSupabase
+      .from('lawyer_users')
+      .select('lawyer_id')
+      .eq('user_id', user.id)
+    lawyerIds = lawyerLinks?.map(link => link.lawyer_id) || []
   }
 
-  const { data: tasks } = await tasksQuery
-    .order('due_at', { ascending: true, nullsFirst: false })
+  // Fetch signature tasks for this user
+  // Staff see all tasks, others see only tasks assigned to them (by user_id OR investor_id OR lawyer deal assignments)
+  let tasks: any[] = []
+
+  if (isStaff) {
+    // Staff see all signature tasks
+    const { data: staffTasks } = await serviceSupabase
+      .from('tasks')
+      .select('*')
+      .in('kind', ['countersignature', 'subscription_pack_signature', 'other'])
+      .order('due_at', { ascending: true, nullsFirst: false })
+    tasks = staffTasks || []
+  } else if (isLawyer && lawyerIds.length > 0) {
+    // Lawyers: See subscription_pack_signature tasks for deals they're assigned to
+    const { data: lawyerAssignments } = await serviceSupabase
+      .from('deal_lawyer_assignments')
+      .select('deal_id')
+      .in('lawyer_id', lawyerIds)
+
+    const assignedDealIds = lawyerAssignments?.map(a => a.deal_id) || []
+
+    if (assignedDealIds.length > 0) {
+      const { data: lawyerTasks } = await serviceSupabase
+        .from('tasks')
+        .select('*')
+        .eq('kind', 'subscription_pack_signature')
+        .in('related_deal_id', assignedDealIds)
+        .order('due_at', { ascending: true, nullsFirst: false })
+      tasks = lawyerTasks || []
+    }
+  } else if (investorIds.length > 0) {
+    // For investors: tasks owned by user OR by their investor IDs
+    const { data: investorTasks } = await serviceSupabase
+      .from('tasks')
+      .select('*')
+      .in('kind', ['countersignature', 'subscription_pack_signature', 'other'])
+      .or(`owner_user_id.eq.${user.id},owner_investor_id.in.(${investorIds.join(',')})`)
+      .order('due_at', { ascending: true, nullsFirst: false })
+    tasks = investorTasks || []
+  } else {
+    // For non-investors: just tasks owned by the user directly
+    const { data: userTasks } = await serviceSupabase
+      .from('tasks')
+      .select('*')
+      .in('kind', ['countersignature', 'subscription_pack_signature', 'other'])
+      .eq('owner_user_id', user.id)
+      .order('due_at', { ascending: true, nullsFirst: false })
+    tasks = userTasks || []
+  }
 
   // Fetch expired signature requests (staff/CEO only)
   let expiredSignatures: ExpiredSignature[] = []

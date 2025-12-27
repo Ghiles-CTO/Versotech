@@ -16,17 +16,49 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get investor ID for this user
-    const { data: investorLinks, error: linksError } = await serviceSupabase
+    // Get investor ID for this user - check both direct investor profile and CP client relationships
+    const { data: investorLinks } = await serviceSupabase
       .from('investor_users')
       .select('investor_id')
       .eq('user_id', user.id)
 
-    if (linksError || !investorLinks || investorLinks.length === 0) {
-      return NextResponse.json({ error: 'No investor profile found' }, { status: 404 })
+    let investorIds: string[] = []
+
+    if (investorLinks && investorLinks.length > 0) {
+      // User has direct investor profile(s)
+      investorIds = investorLinks.map(link => link.investor_id)
+    } else {
+      // Check if user is a Commercial Partner with client investors (MODE 2)
+      const { data: cpLinks } = await serviceSupabase
+        .from('commercial_partner_users')
+        .select('commercial_partner_id')
+        .eq('user_id', user.id)
+
+      if (cpLinks && cpLinks.length > 0) {
+        const cpIds = cpLinks.map(link => link.commercial_partner_id)
+
+        // Get client investor IDs managed by this CP
+        const { data: clientInvestors } = await serviceSupabase
+          .from('commercial_partner_clients')
+          .select('client_investor_id')
+          .in('commercial_partner_id', cpIds)
+          .eq('is_active', true)
+          .not('client_investor_id', 'is', null)
+
+        if (clientInvestors && clientInvestors.length > 0) {
+          investorIds = clientInvestors.map(c => c.client_investor_id).filter(Boolean) as string[]
+        }
+      }
     }
 
-    const investorId = investorLinks[0].investor_id
+    if (investorIds.length === 0) {
+      return NextResponse.json({
+        error: 'No investor profile found. If you are a Commercial Partner, you may need to register client investors first.'
+      }, { status: 404 })
+    }
+
+    // Use first investor for primary portfolio (future: could aggregate multiple)
+    const investorId = investorIds[0]
 
     // Fetch all subscriptions with vehicle and deal info
     const { data: subscriptions, error: subscriptionsError } = await serviceSupabase
