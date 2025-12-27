@@ -1,9 +1,22 @@
 'use client'
 
+import { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
 import {
   Building2,
   Mail,
@@ -17,6 +30,8 @@ import {
   AlertTriangle,
   Briefcase,
   User,
+  Edit,
+  Loader2,
 } from 'lucide-react'
 import { formatDate } from '@/lib/format'
 import { cn } from '@/lib/utils'
@@ -445,21 +460,139 @@ export function ArrangerProfileClient({
         </TabsContent>
       </Tabs>
 
-      {/* Help Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-sm">Need to Update Your Profile?</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">
-            To update your arranger profile, regulatory information, or KYC documents,
-            please contact the VERSO team or submit a request through the Messages section.
-          </p>
-          <Button variant="outline" size="sm" className="mt-3" asChild>
-            <a href="/versotech_main/messages">Contact VERSO Team</a>
-          </Button>
-        </CardContent>
-      </Card>
+      {/* Profile Update Request */}
+      <ProfileUpdateCard arrangerInfo={arrangerInfo} />
     </div>
+  )
+}
+
+function ProfileUpdateCard({ arrangerInfo }: { arrangerInfo: ArrangerInfo }) {
+  const [isOpen, setIsOpen] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitted, setSubmitted] = useState(false)
+  const [formData, setFormData] = useState({
+    email: arrangerInfo.email || '',
+    phone: arrangerInfo.phone || '',
+    address: arrangerInfo.address || '',
+    notes: '',
+  })
+
+  const handleSubmit = async () => {
+    setIsSubmitting(true)
+    try {
+      const response = await fetch('/api/arrangers/me/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to submit request')
+      }
+
+      setSubmitted(true)
+      setTimeout(() => {
+        setIsOpen(false)
+        setSubmitted(false)
+      }, 2000)
+    } catch (error) {
+      console.error('Error submitting profile update:', error)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-sm flex items-center gap-2">
+          <Edit className="h-4 w-4" />
+          Request Profile Update
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <p className="text-sm text-muted-foreground mb-4">
+          Need to update your contact information or profile details?
+          Submit a request and our team will review and process your changes.
+        </p>
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+          <DialogTrigger asChild>
+            <Button variant="default" size="sm">
+              Request Update
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Request Profile Update</DialogTitle>
+              <DialogDescription>
+                Submit your requested changes. Our team will review and process your request.
+              </DialogDescription>
+            </DialogHeader>
+            {submitted ? (
+              <div className="py-8 text-center">
+                <CheckCircle2 className="h-12 w-12 text-green-600 mx-auto mb-3" />
+                <p className="text-lg font-medium">Request Submitted!</p>
+                <p className="text-sm text-muted-foreground">
+                  Our team will review your request shortly.
+                </p>
+              </div>
+            ) : (
+              <>
+                <div className="grid gap-4 py-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      placeholder="contact@company.com"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="phone">Phone</Label>
+                    <Input
+                      id="phone"
+                      value={formData.phone}
+                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                      placeholder="+1 234 567 8900"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="address">Address</Label>
+                    <Textarea
+                      id="address"
+                      value={formData.address}
+                      onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                      placeholder="Enter full address"
+                      rows={3}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="notes">Additional Notes</Label>
+                    <Textarea
+                      id="notes"
+                      value={formData.notes}
+                      onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                      placeholder="Any additional changes or context..."
+                      rows={2}
+                    />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setIsOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button onClick={handleSubmit} disabled={isSubmitting}>
+                    {isSubmitting && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+                    Submit Request
+                  </Button>
+                </DialogFooter>
+              </>
+            )}
+          </DialogContent>
+        </Dialog>
+      </CardContent>
+    </Card>
   )
 }

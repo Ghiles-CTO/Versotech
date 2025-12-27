@@ -616,6 +616,9 @@ export async function middleware(request: NextRequest) {
         '/versotech_main/my-introducers',
         '/versotech_main/my-commercial-partners',
         '/versotech_main/my-lawyers',
+        '/versotech_main/fee-plans',
+        '/versotech_main/payment-requests',
+        '/versotech_main/arranger-profile',
       ]
 
       const introducerPaths = [
@@ -635,8 +638,13 @@ export async function middleware(request: NextRequest) {
 
       const lawyerPaths = [
         '/versotech_main/assigned-deals',
+      ]
+
+      // Paths accessible by both lawyers and arrangers
+      const lawyerAndArrangerPaths = [
         '/versotech_main/escrow',
         '/versotech_main/subscription-packs',
+        '/versotech_main/lawyer-reconciliation',
       ]
 
       if (matchesPrefix(ceoOnlyPaths) && !isCEO) {
@@ -672,6 +680,10 @@ export async function middleware(request: NextRequest) {
       }
 
       if (matchesPrefix(lawyerPaths) && !hasPersona('lawyer')) {
+        return NextResponse.redirect(new URL('/versotech_main/dashboard', request.url))
+      }
+
+      if (matchesPrefix(lawyerAndArrangerPaths) && !hasAnyPersona(['lawyer', 'arranger'])) {
         return NextResponse.redirect(new URL('/versotech_main/dashboard', request.url))
       }
 

@@ -27,17 +27,15 @@ export async function POST(
 
     const serviceSupabase = createServiceClient()
 
-    // Check if user is staff
+    // Check user personas
     const { data: personas } = await serviceSupabase.rpc('get_user_personas', {
       p_user_id: user.id,
     })
 
     const isStaff = personas?.some((p: any) => p.persona_type === 'staff')
-    if (!isStaff) {
-      return NextResponse.json({ error: 'Only staff can send agreements' }, { status: 403 })
-    }
+    const arrangerPersona = personas?.find((p: any) => p.persona_type === 'arranger')
 
-    // Get agreement with introducer info
+    // Get agreement with introducer info first to check ownership
     const { data: agreement, error: fetchError } = await serviceSupabase
       .from('introducer_agreements')
       .select(`
@@ -54,6 +52,12 @@ export async function POST(
 
     if (fetchError || !agreement) {
       return NextResponse.json({ error: 'Agreement not found' }, { status: 404 })
+    }
+
+    // Authorization: staff can send any agreement, arrangers can only send their own
+    const isArrangerOwner = arrangerPersona && agreement.arranger_id === arrangerPersona.entity_id
+    if (!isStaff && !isArrangerOwner) {
+      return NextResponse.json({ error: 'Only staff or the linked arranger can send agreements' }, { status: 403 })
     }
 
     if (agreement.status !== 'draft') {

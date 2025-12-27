@@ -3784,6 +3784,7 @@ export type Database = {
           investor_id: string | null
           invoice_id: string | null
           notes: string | null
+          payee_arranger_id: string | null
           payment_id: string | null
           period_end_date: string | null
           period_start_date: string | null
@@ -3809,6 +3810,7 @@ export type Database = {
           investor_id?: string | null
           invoice_id?: string | null
           notes?: string | null
+          payee_arranger_id?: string | null
           payment_id?: string | null
           period_end_date?: string | null
           period_start_date?: string | null
@@ -3834,6 +3836,7 @@ export type Database = {
           investor_id?: string | null
           invoice_id?: string | null
           notes?: string | null
+          payee_arranger_id?: string | null
           payment_id?: string | null
           period_end_date?: string | null
           period_start_date?: string | null
@@ -5005,32 +5008,41 @@ export type Database = {
       investor_notifications: {
         Row: {
           created_at: string
+          created_by: string | null
+          deal_id: string | null
           id: string
           investor_id: string | null
           link: string | null
           message: string
           read_at: string | null
           title: string
+          type: string | null
           user_id: string
         }
         Insert: {
           created_at?: string
+          created_by?: string | null
+          deal_id?: string | null
           id?: string
           investor_id?: string | null
           link?: string | null
           message: string
           read_at?: string | null
           title: string
+          type?: string | null
           user_id: string
         }
         Update: {
           created_at?: string
+          created_by?: string | null
+          deal_id?: string | null
           id?: string
           investor_id?: string | null
           link?: string | null
           message?: string
           read_at?: string | null
           title?: string
+          type?: string | null
           user_id?: string
         }
         Relationships: [
@@ -7025,8 +7037,12 @@ export type Database = {
           google_drive_file_id: string | null
           google_drive_url: string | null
           id: string
+          introducer_agreement_id: string | null
+          introducer_id: string | null
           investor_id: string | null
           member_id: string | null
+          placement_agreement_id: string | null
+          placement_id: string | null
           signature_data_url: string | null
           signature_ip_address: string | null
           signature_position: string
@@ -7058,8 +7074,12 @@ export type Database = {
           google_drive_file_id?: string | null
           google_drive_url?: string | null
           id?: string
+          introducer_agreement_id?: string | null
+          introducer_id?: string | null
           investor_id?: string | null
           member_id?: string | null
+          placement_agreement_id?: string | null
+          placement_id?: string | null
           signature_data_url?: string | null
           signature_ip_address?: string | null
           signature_position: string
@@ -7091,8 +7111,12 @@ export type Database = {
           google_drive_file_id?: string | null
           google_drive_url?: string | null
           id?: string
+          introducer_agreement_id?: string | null
+          introducer_id?: string | null
           investor_id?: string | null
           member_id?: string | null
+          placement_agreement_id?: string | null
+          placement_id?: string | null
           signature_data_url?: string | null
           signature_ip_address?: string | null
           signature_position?: string
