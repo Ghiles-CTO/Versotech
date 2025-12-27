@@ -1321,9 +1321,10 @@ async function handleEntityApproval(
         const arrangerEntityId = entityId
 
         // Build update object with only provided fields
+        // Note: arranger_entities uses email/phone/address (not contact_email/contact_phone)
         const arrangerUpdates: Record<string, any> = {}
-        if (requestedChanges.email) arrangerUpdates.contact_email = requestedChanges.email
-        if (requestedChanges.phone) arrangerUpdates.contact_phone = requestedChanges.phone
+        if (requestedChanges.email) arrangerUpdates.email = requestedChanges.email
+        if (requestedChanges.phone) arrangerUpdates.phone = requestedChanges.phone
         if (requestedChanges.address) arrangerUpdates.address = requestedChanges.address
 
         if (Object.keys(arrangerUpdates).length > 0) {

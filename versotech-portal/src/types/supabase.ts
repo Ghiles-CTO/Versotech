@@ -3887,6 +3887,7 @@ export type Database = {
         Row: {
           created_at: string | null
           created_by: string | null
+          created_by_arranger_id: string | null
           deal_id: string | null
           description: string | null
           effective_from: string
@@ -3901,6 +3902,7 @@ export type Database = {
         Insert: {
           created_at?: string | null
           created_by?: string | null
+          created_by_arranger_id?: string | null
           deal_id?: string | null
           description?: string | null
           effective_from?: string
@@ -3915,6 +3917,7 @@ export type Database = {
         Update: {
           created_at?: string | null
           created_by?: string | null
+          created_by_arranger_id?: string | null
           deal_id?: string | null
           description?: string | null
           effective_from?: string
@@ -3927,6 +3930,13 @@ export type Database = {
           vehicle_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "fee_plans_created_by_arranger_id_fkey"
+            columns: ["created_by_arranger_id"]
+            isOneToOne: false
+            referencedRelation: "arranger_entities"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "fee_plans_created_by_fkey"
             columns: ["created_by"]
