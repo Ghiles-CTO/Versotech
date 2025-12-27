@@ -100,9 +100,30 @@ export async function POST(
       await serviceSupabase.from('investor_notifications').insert(notifications)
     }
 
+    // Notify arranger if this agreement is linked to one
+    if (agreement.arranger_id) {
+      const { data: arrangerUsers } = await serviceSupabase
+        .from('arranger_users')
+        .select('user_id')
+        .eq('arranger_id', agreement.arranger_id)
+        .limit(5)
+
+      if (arrangerUsers && arrangerUsers.length > 0) {
+        const arrangerNotifications = arrangerUsers.map((au: any) => ({
+          user_id: au.user_id,
+          investor_id: null,
+          title: 'Introducer Agreement Approved',
+          message: `${introducer?.legal_name || 'Introducer'} approved the fee agreement. Ready for your signature.`,
+          link: `/versotech_main/my-introducers`,
+        }))
+
+        await serviceSupabase.from('investor_notifications').insert(arrangerNotifications)
+      }
+    }
+
     return NextResponse.json({
       data,
-      message: 'Agreement approved. Awaiting CEO signature.',
+      message: 'Agreement approved. Awaiting signature.',
     })
   } catch (error) {
     console.error('[introducer-agreements/approve] Unexpected error:', error)

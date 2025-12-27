@@ -1315,6 +1315,50 @@ async function handleEntityApproval(
           }
         }
 
+      case 'arranger_profile_update':
+        // Apply arranger profile update changes
+        const requestedChanges = metadata.requested_changes || {}
+        const arrangerEntityId = entityId
+
+        // Build update object with only provided fields
+        const arrangerUpdates: Record<string, any> = {}
+        if (requestedChanges.email) arrangerUpdates.contact_email = requestedChanges.email
+        if (requestedChanges.phone) arrangerUpdates.contact_phone = requestedChanges.phone
+        if (requestedChanges.address) arrangerUpdates.address = requestedChanges.address
+
+        if (Object.keys(arrangerUpdates).length > 0) {
+          arrangerUpdates.updated_at = new Date().toISOString()
+
+          const { error: arrangerUpdateError } = await supabase
+            .from('arranger_entities')
+            .update(arrangerUpdates)
+            .eq('id', arrangerEntityId)
+
+          if (arrangerUpdateError) {
+            console.error('Error updating arranger profile:', arrangerUpdateError)
+            return { success: false, error: 'Failed to update arranger profile' }
+          }
+        }
+
+        // Notify the arranger who requested the update
+        if (approval.requested_by) {
+          await supabase.from('investor_notifications').insert({
+            user_id: approval.requested_by,
+            investor_id: null,
+            title: 'Profile Update Approved',
+            message: 'Your profile update request has been approved and applied.',
+            link: '/versotech_main/arranger-profile',
+          })
+        }
+
+        return {
+          success: true,
+          notificationData: {
+            type: 'arranger_profile_updated',
+            arranger_id: arrangerEntityId
+          }
+        }
+
       default:
         console.log(`No specific approval handler for entity type: ${entityType}`)
     }
@@ -1406,6 +1450,19 @@ async function handleEntityRejection(
             rejection_reason: reason
           }
         })
+    }
+
+    if (entityType === 'arranger_profile_update') {
+      // Notify arranger their profile update was rejected
+      if (approval.requested_by) {
+        await supabase.from('investor_notifications').insert({
+          user_id: approval.requested_by,
+          investor_id: null,
+          title: 'Profile Update Rejected',
+          message: `Your profile update request was rejected. ${reason ? `Reason: ${reason}` : ''}`,
+          link: '/versotech_main/arranger-profile',
+        })
+      }
     }
   } catch (error) {
     console.error('Entity rejection handler error:', error)

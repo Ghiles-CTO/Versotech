@@ -120,6 +120,27 @@ export async function POST(
       await serviceSupabase.from('investor_notifications').insert(notifications)
     }
 
+    // Notify arranger if this agreement is linked to one
+    if (agreement.arranger_id) {
+      const { data: arrangerUsers } = await serviceSupabase
+        .from('arranger_users')
+        .select('user_id')
+        .eq('arranger_id', agreement.arranger_id)
+        .limit(5)
+
+      if (arrangerUsers && arrangerUsers.length > 0) {
+        const arrangerNotifications = arrangerUsers.map((au: any) => ({
+          user_id: au.user_id,
+          investor_id: null,
+          title: 'Introducer Agreement Rejected',
+          message: `${introducer?.legal_name || 'Introducer'} rejected the fee agreement.${reason ? ` Reason: ${reason}` : ''}`,
+          link: `/versotech_main/my-introducers`,
+        }))
+
+        await serviceSupabase.from('investor_notifications').insert(arrangerNotifications)
+      }
+    }
+
     return NextResponse.json({
       data,
       message: 'Agreement rejected.',

@@ -35,11 +35,13 @@ import {
   FileText,
   PenTool,
   Clock,
+  Plus,
 } from 'lucide-react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { formatCurrency, formatDate } from '@/lib/format'
 import { createClient } from '@/lib/supabase/client'
+import { CreateAgreementDialog } from '@/components/staff/introducers/create-agreement-dialog'
 
 type ArrangerInfo = {
   id: string
@@ -108,6 +110,8 @@ export default function MyIntroducersPage() {
   const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
+  const [createAgreementOpen, setCreateAgreementOpen] = useState(false)
+  const [selectedIntroducer, setSelectedIntroducer] = useState<Introducer | null>(null)
 
   useEffect(() => {
     async function fetchData() {
@@ -584,7 +588,22 @@ export default function MyIntroducersPage() {
                           <Badge variant="outline" className={cn('capitalize', STATUS_STYLES[introducer.status] || STATUS_STYLES.active)}>{introducer.status}</Badge>
                         </TableCell>
                         <TableCell className="text-right">
-                          <Button variant="ghost" size="sm" asChild><a href={`/versotech_main/users?type=introducer&id=${introducer.id}`}><ExternalLink className="h-4 w-4" /></a></Button>
+                          <div className="flex items-center justify-end gap-1">
+                            {arrangerInfo && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedIntroducer(introducer)
+                                  setCreateAgreementOpen(true)
+                                }}
+                              >
+                                <Plus className="h-4 w-4 mr-1" />
+                                Agreement
+                              </Button>
+                            )}
+                            <Button variant="ghost" size="sm" asChild><a href={`/versotech_main/users?type=introducer&id=${introducer.id}`}><ExternalLink className="h-4 w-4" /></a></Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     )
@@ -595,6 +614,20 @@ export default function MyIntroducersPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Create Agreement Dialog */}
+      {selectedIntroducer && (
+        <CreateAgreementDialog
+          open={createAgreementOpen}
+          onOpenChange={(open) => {
+            setCreateAgreementOpen(open)
+            if (!open) setSelectedIntroducer(null)
+          }}
+          introducerId={selectedIntroducer.id}
+          introducerName={selectedIntroducer.legal_name}
+          defaultCommissionBps={selectedIntroducer.default_commission_bps || 100}
+        />
+      )}
     </div>
   )
 }

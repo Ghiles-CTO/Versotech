@@ -281,6 +281,35 @@ export async function createFeeEvents(
 
     const currency = subscription?.currency || 'USD';
 
+    // Determine payee_arranger_id - first check fee_plan, then deal
+    let payeeArrangerId: string | null = null;
+
+    // Check if fee_plan was created by an arranger
+    if (feePlanId) {
+      const { data: feePlan } = await supabase
+        .from('fee_plans')
+        .select('created_by_arranger_id')
+        .eq('id', feePlanId)
+        .single();
+
+      if (feePlan?.created_by_arranger_id) {
+        payeeArrangerId = feePlan.created_by_arranger_id;
+      }
+    }
+
+    // If no arranger from fee_plan, check deal
+    if (!payeeArrangerId && dealId) {
+      const { data: deal } = await supabase
+        .from('deals')
+        .select('arranger_entity_id')
+        .eq('id', dealId)
+        .single();
+
+      if (deal?.arranger_entity_id) {
+        payeeArrangerId = deal.arranger_entity_id;
+      }
+    }
+
     // If we have a fee plan, fetch its components to link properly
     const componentMap: Record<string, string> = {};
     if (feePlanId) {
@@ -323,6 +352,7 @@ export async function createFeeEvents(
         currency: currency, // Use subscription currency
         status: 'accrued', // Ready to be invoiced
         notes: fe.description,
+        payee_arranger_id: payeeArrangerId, // Link to arranger for payment requests
       };
     });
 
