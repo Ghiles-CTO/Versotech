@@ -20,11 +20,12 @@ const createAgreementSchema = z.object({
   expiry_date: z.string().nullable().optional(),
   payment_terms: z.enum(['net_15', 'net_30', 'net_45', 'net_60']).nullable().optional(),
   notes: z.string().nullable().optional(),
+  arranger_id: z.string().uuid().nullable().optional(), // Optional arranger linking
 })
 
 /**
  * GET /api/introducer-agreements
- * List agreements - staff see all, introducers see their own
+ * List agreements - staff see all, arrangers see their own, introducers see their own
  */
 export async function GET(request: NextRequest) {
   try {
@@ -46,6 +47,7 @@ export async function GET(request: NextRequest) {
 
     const isStaff = personas?.some((p: any) => p.persona_type === 'staff')
     const introducerPersona = personas?.find((p: any) => p.persona_type === 'introducer')
+    const arrangerPersona = personas?.find((p: any) => p.persona_type === 'arranger')
 
     // Get query params
     const searchParams = request.nextUrl.searchParams
@@ -61,6 +63,11 @@ export async function GET(request: NextRequest) {
           legal_name,
           email,
           status
+        ),
+        arranger:arranger_id (
+          id,
+          legal_name,
+          company_name
         )
       `)
       .order('created_at', { ascending: false })
@@ -71,6 +78,9 @@ export async function GET(request: NextRequest) {
       if (introducerId) {
         query = query.eq('introducer_id', introducerId)
       }
+    } else if (arrangerPersona) {
+      // Arranger can see agreements they are linked to
+      query = query.eq('arranger_id', arrangerPersona.entity_id)
     } else if (introducerPersona) {
       // Introducer can only see their own agreements
       const { data: introducerUser } = await serviceSupabase
@@ -109,7 +119,7 @@ export async function GET(request: NextRequest) {
 
 /**
  * POST /api/introducer-agreements
- * Create new agreement - staff only
+ * Create new agreement - staff or arranger
  */
 export async function POST(request: NextRequest) {
   try {
@@ -124,14 +134,16 @@ export async function POST(request: NextRequest) {
 
     const serviceSupabase = createServiceClient()
 
-    // Check if user is staff
+    // Check user personas
     const { data: personas } = await serviceSupabase.rpc('get_user_personas', {
       p_user_id: user.id,
     })
 
     const isStaff = personas?.some((p: any) => p.persona_type === 'staff')
-    if (!isStaff) {
-      return NextResponse.json({ error: 'Only staff can create agreements' }, { status: 403 })
+    const arrangerPersona = personas?.find((p: any) => p.persona_type === 'arranger')
+
+    if (!isStaff && !arrangerPersona) {
+      return NextResponse.json({ error: 'Only staff or arrangers can create agreements' }, { status: 403 })
     }
 
     // Parse and validate body
@@ -147,11 +159,19 @@ export async function POST(request: NextRequest) {
 
     const agreementData = validation.data
 
+    // Auto-set arranger_id if user is an arranger
+    let finalArrangerId = agreementData.arranger_id
+    if (arrangerPersona && !isStaff) {
+      // Arranger creating the agreement - auto-link to their entity
+      finalArrangerId = arrangerPersona.entity_id
+    }
+
     // Create agreement with draft status
     const { data, error } = await serviceSupabase
       .from('introducer_agreements')
       .insert({
         ...agreementData,
+        arranger_id: finalArrangerId || null,
         status: 'draft',
         created_by: user.id,
       })
@@ -161,6 +181,11 @@ export async function POST(request: NextRequest) {
           id,
           legal_name,
           email
+        ),
+        arranger:arranger_id (
+          id,
+          legal_name,
+          company_name
         )
       `)
       .single()

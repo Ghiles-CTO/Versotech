@@ -234,7 +234,7 @@ export default function MyMandatesPage() {
             const subIds = subscriptions.map(s => s.id)
             const { data: sigRequests } = await supabase
               .from('signature_requests')
-              .select('id, subscription_id, status, signer_role, document_type, created_at, token_expires_at, token')
+              .select('id, subscription_id, status, signer_role, document_type, created_at, token_expires_at, signing_token')
               .in('subscription_id', subIds)
               .eq('status', 'pending')
               .eq('signer_role', 'arranger')
@@ -257,7 +257,7 @@ export default function MyMandatesPage() {
                   document_type: sig.document_type,
                   created_at: sig.created_at,
                   token_expires_at: sig.token_expires_at,
-                  signing_url: `/versotech_main/versosign/sign/${sig.token}`
+                  signing_url: `/versotech_main/versosign/sign/${sig.signing_token}`
                 })
               }
             }

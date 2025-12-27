@@ -164,14 +164,14 @@ export default function PlacementAgreementsPage() {
         if (agreementIds.length > 0) {
           const { data: signatureRequests } = await supabase
             .from('signature_requests')
-            .select('placement_agreement_id, token, status')
+            .select('placement_agreement_id, signing_token, status')
             .in('placement_agreement_id', agreementIds)
             .eq('signer_role', 'commercial_partner')
 
           for (const sig of signatureRequests || []) {
             if (sig.placement_agreement_id) {
               signatureMap[sig.placement_agreement_id] = {
-                token: sig.token,
+                token: sig.signing_token,
                 status: sig.status
               }
             }

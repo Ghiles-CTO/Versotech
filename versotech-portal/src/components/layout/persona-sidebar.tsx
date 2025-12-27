@@ -96,11 +96,13 @@ const PERSONA_NAV_ITEMS: Record<string, NavItem[]> = {
     { name: 'Escrow', href: '/versotech_main/escrow', icon: Lock, description: 'Escrow status' },
     { name: 'Reconciliation', href: '/versotech_main/lawyer-reconciliation', icon: Calculator, description: 'Financials' },
     { name: 'Fee Plans', href: '/versotech_main/fee-plans', icon: Calculator, description: 'Fee structures' },
+    { name: 'Payment Requests', href: '/versotech_main/payment-requests', icon: ClipboardList, description: 'Fee collection' },
     { name: 'My Partners', href: '/versotech_main/my-partners', icon: Users, description: 'Partner network' },
     { name: 'My Introducers', href: '/versotech_main/my-introducers', icon: UserPlus, description: 'Introducer network' },
     { name: 'My Commercial Partners', href: '/versotech_main/my-commercial-partners', icon: Building2, description: 'CP network' },
     { name: 'My Lawyers', href: '/versotech_main/my-lawyers', icon: Scale, description: 'Legal counsel' },
     { name: 'VERSOSign', href: '/versotech_main/versosign', icon: FileSignature, description: 'E-signatures' },
+    { name: 'Profile', href: '/versotech_main/arranger-profile', icon: UserCheck, description: 'Entity & KYC status' },
     { name: 'Messages', href: '/versotech_main/messages', icon: MessageSquare, description: 'Communications' },
   ],
 
@@ -125,8 +127,11 @@ const PERSONA_NAV_ITEMS: Record<string, NavItem[]> = {
   // Commercial Partner persona
   commercial_partner: [
     { name: 'Dashboard', href: '/versotech_main/dashboard', icon: LayoutDashboard, description: 'Overview' },
+    { name: 'Opportunities', href: '/versotech_main/opportunities', icon: TrendingUp, description: 'Investment opportunities' },
     { name: 'Client Transactions', href: '/versotech_main/client-transactions', icon: Users, description: 'Client investors' },
+    { name: 'Portfolio', href: '/versotech_main/portfolio', icon: Briefcase, description: 'My investments' },
     { name: 'Agreements', href: '/versotech_main/placement-agreements', icon: FileText, description: 'Placement agreements' },
+    { name: 'Notifications', href: '/versotech_main/notifications', icon: Bell, description: 'Alerts & updates' },
     { name: 'Messages', href: '/versotech_main/messages', icon: MessageSquare, description: 'Communications' },
   ],
 

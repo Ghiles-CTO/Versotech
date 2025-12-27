@@ -4080,6 +4080,9 @@ export type Database = {
         Row: {
           agreement_document_id: string | null
           agreement_type: string
+          arranger_id: string | null
+          arranger_signature_request_id: string | null
+          ceo_signature_request_id: string | null
           commission_cap_amount: number | null
           created_at: string
           created_by: string | null
@@ -4090,8 +4093,12 @@ export type Database = {
           expiry_date: string | null
           id: string
           introducer_id: string
+          introducer_signature_request_id: string | null
+          notes: string | null
           payment_terms: string | null
+          pdf_url: string | null
           signed_date: string | null
+          signed_pdf_url: string | null
           status: string
           territory: string | null
           updated_at: string
@@ -4099,6 +4106,9 @@ export type Database = {
         Insert: {
           agreement_document_id?: string | null
           agreement_type?: string
+          arranger_id?: string | null
+          arranger_signature_request_id?: string | null
+          ceo_signature_request_id?: string | null
           commission_cap_amount?: number | null
           created_at?: string
           created_by?: string | null
@@ -4109,8 +4119,12 @@ export type Database = {
           expiry_date?: string | null
           id?: string
           introducer_id: string
+          introducer_signature_request_id?: string | null
+          notes?: string | null
           payment_terms?: string | null
+          pdf_url?: string | null
           signed_date?: string | null
+          signed_pdf_url?: string | null
           status?: string
           territory?: string | null
           updated_at?: string
@@ -4118,6 +4132,9 @@ export type Database = {
         Update: {
           agreement_document_id?: string | null
           agreement_type?: string
+          arranger_id?: string | null
+          arranger_signature_request_id?: string | null
+          ceo_signature_request_id?: string | null
           commission_cap_amount?: number | null
           created_at?: string
           created_by?: string | null
@@ -4128,8 +4145,12 @@ export type Database = {
           expiry_date?: string | null
           id?: string
           introducer_id?: string
+          introducer_signature_request_id?: string | null
+          notes?: string | null
           payment_terms?: string | null
+          pdf_url?: string | null
           signed_date?: string | null
+          signed_pdf_url?: string | null
           status?: string
           territory?: string | null
           updated_at?: string

@@ -164,6 +164,105 @@ export async function POST(request: Request, { params }: RouteParams) {
       (investorLinks || []).map(l => [l.user_id, l.investor_id])
     )
 
+    // MODE 1: For commercial_partner_investor role, auto-create investor records if needed
+    if (role === 'commercial_partner_investor') {
+      const nowTs = new Date().toISOString()
+      // Get CP users that don't have investor links
+      const usersWithoutInvestorId = newUserIds.filter(uid => !investorIdMap.has(uid))
+
+      if (usersWithoutInvestorId.length > 0) {
+        // Get commercial partner data for these users
+        const { data: cpUsers } = await serviceSupabase
+          .from('commercial_partner_users')
+          .select(`
+            user_id,
+            commercial_partner_id,
+            commercial_partner:commercial_partner_id (
+              id,
+              legal_name,
+              display_name,
+              email,
+              type,
+              address_line_1,
+              city,
+              country,
+              postal_code,
+              kyc_status
+            )
+          `)
+          .in('user_id', usersWithoutInvestorId)
+
+        // Create investor records for each CP
+        for (const cpUser of cpUsers || []) {
+          const cp = cpUser.commercial_partner as any
+          if (!cp) continue
+
+          // Check if CP already has an investor record (avoid duplicates)
+          const { data: existingInvestor } = await serviceSupabase
+            .from('investors')
+            .select('id')
+            .eq('commercial_partner_id', cp.id)
+            .maybeSingle()
+
+          let investorId: string
+
+          if (existingInvestor) {
+            investorId = existingInvestor.id
+          } else {
+            // Create new investor record from CP data
+            const { data: newInvestor, error: createInvestorError } = await serviceSupabase
+              .from('investors')
+              .insert({
+                type: 'entity',
+                legal_name: cp.legal_name || cp.display_name,
+                display_name: cp.display_name || cp.legal_name,
+                email: cp.email,
+                address_line_1: cp.address_line_1,
+                city: cp.city,
+                country: cp.country,
+                postal_code: cp.postal_code,
+                kyc_status: cp.kyc_status === 'approved' ? 'verified' : 'pending',
+                commercial_partner_id: cp.id, // Link back to CP
+                created_at: nowTs,
+                updated_at: nowTs
+              })
+              .select('id')
+              .single()
+
+            if (createInvestorError || !newInvestor) {
+              console.error('Failed to create investor for CP:', createInvestorError)
+              continue
+            }
+
+            investorId = newInvestor.id
+          }
+
+          // Create investor_users link
+          const { data: existingLink } = await serviceSupabase
+            .from('investor_users')
+            .select('user_id')
+            .eq('user_id', cpUser.user_id)
+            .eq('investor_id', investorId)
+            .maybeSingle()
+
+          if (!existingLink) {
+            await serviceSupabase
+              .from('investor_users')
+              .insert({
+                user_id: cpUser.user_id,
+                investor_id: investorId,
+                role: 'signatory',
+                is_primary: true,
+                created_at: nowTs
+              })
+          }
+
+          // Update the map with the new investor ID
+          investorIdMap.set(cpUser.user_id, investorId)
+        }
+      }
+    }
+
     // Create memberships
     const now = new Date().toISOString()
     const membershipsToCreate = newUserIds.map(userId => ({
