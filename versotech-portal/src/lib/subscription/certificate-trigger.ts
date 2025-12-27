@@ -137,6 +137,68 @@ export async function triggerCertificateGeneration({
         console.log(`✅ Created ${notifications.length} notification(s) for investor ${investorId}`)
       }
     }
+
+    // NOTIFY ASSIGNED LAWYERS about certificate issuance
+    // First, get the deal_id from the subscription
+    const { data: subWithDeal, error: subDealError } = await supabase
+      .from('subscriptions')
+      .select('deal_id')
+      .eq('id', subscriptionId)
+      .single()
+
+    if (subDealError || !subWithDeal?.deal_id) {
+      console.warn(`⚠️ Could not get deal_id for lawyer notification:`, subDealError)
+    } else {
+      // Get lawyers assigned to this deal
+      const { data: lawyerAssignments, error: assignError } = await supabase
+        .from('deal_lawyer_assignments')
+        .select('lawyer_id')
+        .eq('deal_id', subWithDeal.deal_id)
+
+      if (assignError) {
+        console.error(`❌ Failed to fetch lawyer assignments:`, assignError)
+      } else if (lawyerAssignments && lawyerAssignments.length > 0) {
+        const lawyerIds = lawyerAssignments.map((a: any) => a.lawyer_id)
+
+        // Get lawyer users
+        const { data: lawyerUsers, error: lawyerUsersError } = await supabase
+          .from('lawyer_users')
+          .select('user_id, lawyer_id')
+          .in('lawyer_id', lawyerIds)
+
+        if (lawyerUsersError) {
+          console.error(`❌ Failed to fetch lawyer users:`, lawyerUsersError)
+        } else if (lawyerUsers && lawyerUsers.length > 0) {
+          // Get investor name for notification
+          const { data: investor } = await supabase
+            .from('investors')
+            .select('display_name, legal_name')
+            .eq('id', investorId)
+            .single()
+
+          const investorName = investor?.display_name || investor?.legal_name || 'An investor'
+
+          // Create notifications for lawyers
+          const lawyerNotifications = lawyerUsers.map((lu: any) => ({
+            user_id: lu.user_id,
+            investor_id: null,
+            title: 'Certificate Issued',
+            message: `Investment certificate issued for ${investorName}. The subscription is now fully active.`,
+            link: '/versotech_main/subscription-packs'
+          }))
+
+          const { error: lawyerNotifError } = await supabase
+            .from('investor_notifications')
+            .insert(lawyerNotifications)
+
+          if (lawyerNotifError) {
+            console.error(`❌ Failed to create lawyer notifications:`, lawyerNotifError)
+          } else {
+            console.log(`✅ Created ${lawyerNotifications.length} lawyer notification(s) for certificate issuance`)
+          }
+        }
+      }
+    }
   } catch (error) {
     console.error(`❌ Certificate trigger failed for subscription ${subscriptionId}:`, error)
     // Don't throw - this is a non-critical operation

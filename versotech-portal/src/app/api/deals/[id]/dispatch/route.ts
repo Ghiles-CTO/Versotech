@@ -10,6 +10,7 @@ const dispatchSchema = z.object({
   user_ids: z.array(z.string().uuid()).min(1, 'At least one user must be selected'),
   role: z.enum([
     'investor',
+    'partner',
     'partner_investor',
     'introducer_investor',
     'commercial_partner_investor',

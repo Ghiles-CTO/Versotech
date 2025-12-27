@@ -186,6 +186,19 @@ const statusBadges: Record<string, string> = {
   cancelled: 'bg-rose-100 text-rose-700'
 }
 
+const INVESTOR_ELIGIBLE_ROLES = new Set([
+  'investor',
+  'partner_investor',
+  'introducer_investor',
+  'commercial_partner_investor',
+  'co_investor'
+])
+
+function isInvestorEligibleRole(role: string | null | undefined) {
+  if (!role) return false
+  return INVESTOR_ELIGIBLE_ROLES.has(role)
+}
+
 const interestStatusMeta: Record<
   DealInterest['status'],
   { label: string; tone: string }
@@ -979,6 +992,9 @@ export function InvestorDealsListClient({
             const interest = interestByDeal.get(deal.id) ?? null
             const ndaAccess = accessByDeal.get(deal.id) ?? null
             const subscription = subscriptionByDeal.get(deal.id) ?? null
+            const membershipRole = deal.deal_memberships?.[0]?.role ?? null
+            const canInvest = isInvestorEligibleRole(membershipRole)
+            const isTrackingOnly = !!membershipRole && !canInvest
 
             const effectiveStatus = getEffectiveStatus(deal)
             const statusLabel =
@@ -1131,6 +1147,11 @@ export function InvestorDealsListClient({
                             Subscription {subscription.status.replace(/_/g, ' ')}
                           </Badge>
                         )}
+                        {isTrackingOnly && (
+                          <Badge variant="outline" className="border-amber-200 text-amber-700">
+                            Tracking only
+                          </Badge>
+                        )}
                         {hasDataRoomAccess && (
                           <Badge variant="outline" className="text-sky-600 border-sky-300">
                             Data room unlocked
@@ -1171,7 +1192,7 @@ export function InvestorDealsListClient({
                       </Link>
 
                       {/* Subscribe to Investment - primary CTA for investors with valid investor ID */}
-                      {!isClosed && primaryInvestorId && (
+                      {!isClosed && primaryInvestorId && canInvest && (
                         <SubscribeNowDialog
                           dealId={deal.id}
                           dealName={deal.name}
@@ -1186,7 +1207,7 @@ export function InvestorDealsListClient({
                       )}
 
                       {/* Submit Interest for Data Room - secondary CTA for investors with a valid investor ID */}
-                      {primaryInvestorId && (
+                      {primaryInvestorId && canInvest && (
                         <InterestModal
                           dealId={deal.id}
                           dealName={deal.name}

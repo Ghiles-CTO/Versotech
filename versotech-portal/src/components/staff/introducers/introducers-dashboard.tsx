@@ -328,7 +328,7 @@ function IntroducerRow({
           </div>
           <div className="space-y-1 flex-1">
             <div className="flex items-center gap-2">
-              <Link href={`/versotech/staff/introducers/${introducer.id}`}>
+              <Link href={`/versotech_main/introducers/${introducer.id}`}>
                 <h3 className="text-lg font-semibold text-foreground hover:text-primary transition-colors cursor-pointer">
                   {introducer.legalName}
                 </h3>

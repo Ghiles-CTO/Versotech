@@ -30,12 +30,13 @@ export async function middleware(request: NextRequest) {
   )
 
   try {
-    // Skip middleware for static files and API routes
+    // Skip middleware for static files, API routes, and public pages
     if (
       pathname.startsWith('/_next/static') ||
       pathname.startsWith('/_next/image') ||
       pathname.startsWith('/favicon.ico') ||
       pathname.startsWith('/api/') ||
+      pathname.startsWith('/invite/') || // Deal invite links - handles auth internally
       pathname === '/auth/callback' ||
       pathname.match(/\.(svg|png|jpg|jpeg|gif|webp)$/)
     ) {
@@ -303,6 +304,7 @@ export async function middleware(request: NextRequest) {
       '/versotech/login',
       '/versotech_main/login',
       '/versotech_main/set-password',
+      '/versotech_main/reset-password',
       '/logout'
     ]
 
@@ -531,7 +533,11 @@ export async function middleware(request: NextRequest) {
         console.warn('[middleware] Persona lookup failed, falling back to profile role:', personaError.message)
       } else if (Array.isArray(personas)) {
         personaTypes = new Set(personas.map((persona: any) => persona.persona_type))
-        // CEO check: staff persona with ceo or staff_admin role
+        // isCEO grants access to CEO-only sections (/versotech_admin, sensitive reports, etc.)
+        // DESIGN DECISION: Both 'ceo' AND 'staff_admin' roles get CEO-level access.
+        // This is intentional - staff_admin users are system administrators who need
+        // full platform access. If stricter separation is needed in the future,
+        // create a separate 'isSystemAdmin' check or restrict staff_admin from this check.
         isCEO = personas.some(
           (persona: any) => persona.persona_type === 'staff' &&
             (persona.role_in_entity === 'ceo' || persona.role_in_entity === 'staff_admin')
@@ -641,7 +647,11 @@ export async function middleware(request: NextRequest) {
         return NextResponse.redirect(new URL('/versotech_main/dashboard', request.url))
       }
 
-      if (matchesPrefix(investorAccessPaths) && !hasAnyPersona(['investor', 'partner', 'introducer', 'commercial_partner'])) {
+      // Allow all personas that need to view opportunities/deals:
+      // - investors, partners, introducers, commercial_partners (core investor personas)
+      // - lawyers (need to view deals for escrow/compliance)
+      // - arrangers (need to view deals they're managing)
+      if (matchesPrefix(investorAccessPaths) && !hasAnyPersona(['investor', 'partner', 'introducer', 'commercial_partner', 'lawyer', 'arranger'])) {
         return NextResponse.redirect(new URL('/versotech_main/dashboard', request.url))
       }
 

@@ -236,6 +236,7 @@ interface Opportunity {
   can_access_data_room: boolean
   can_subscribe: boolean
   can_sign_subscription: boolean
+  is_tracking_only?: boolean
 }
 
 function formatCurrency(amount: number | null, currency: string = 'USD'): string {
@@ -270,7 +271,7 @@ export default function OpportunityDetailPage() {
   const dealId = params.id as string
   const actionParam = searchParams.get('action')
 
-  const { hasAnyPersona, isLoading: personaLoading } = usePersona()
+  const { hasAnyPersona, isLoading: personaLoading, activePersona } = usePersona()
   const [opportunity, setOpportunity] = useState<Opportunity | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -281,6 +282,7 @@ export default function OpportunityDetailPage() {
   const [showSubscribeDialog, setShowSubscribeDialog] = useState(false)
   const [subscribeAmount, setSubscribeAmount] = useState('')
   const [actionLoading, setActionLoading] = useState(false)
+  const isPartnerPersona = activePersona?.persona_type === 'partner'
 
   useEffect(() => {
     async function fetchOpportunity() {
@@ -300,9 +302,10 @@ export default function OpportunityDetailPage() {
           throw new Error(data.error || `Failed to fetch opportunity (${response.status})`)
         }
         setOpportunity(data.opportunity)
+        const trackingOnlyForPersona = data.opportunity.is_tracking_only || (isPartnerPersona && !data.opportunity.membership?.role)
 
         // Handle action param
-        if (actionParam === 'subscribe' && data.opportunity.can_subscribe) {
+        if (actionParam === 'subscribe' && data.opportunity.can_subscribe && !trackingOnlyForPersona) {
           setShowSubscribeDialog(true)
         }
       } catch (err) {
@@ -316,7 +319,7 @@ export default function OpportunityDetailPage() {
     if (hasAnyPersona && dealId) {
       fetchOpportunity()
     }
-  }, [hasAnyPersona, dealId, actionParam])
+  }, [hasAnyPersona, dealId, actionParam, isPartnerPersona])
 
   const handleExpressInterest = async () => {
     try {
@@ -470,6 +473,15 @@ export default function OpportunityDetailPage() {
     )
   }
 
+  const isTrackingOnly = !!opportunity.is_tracking_only || (isPartnerPersona && !opportunity.membership?.role)
+  const canSubscribe = opportunity.can_subscribe && !isTrackingOnly
+  const canExpressInterest = opportunity.can_express_interest && !isTrackingOnly
+  const canSignNda = opportunity.can_sign_nda && !isTrackingOnly
+  const showActionChoices =
+    opportunity.status !== 'closed' &&
+    !opportunity.subscription &&
+    (canSubscribe || canExpressInterest)
+
   return (
     <div className="p-6 space-y-6">
       {/* Back button */}
@@ -479,17 +491,33 @@ export default function OpportunityDetailPage() {
       </Button>
 
       {/* Journey Progress Bar */}
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium text-muted-foreground">Investment Journey</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <InvestorJourneyBar
-            summary={opportunity.journey.summary}
-            currentStage={opportunity.journey.current_stage}
-          />
-        </CardContent>
-      </Card>
+      {!isTrackingOnly ? (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Investment Journey</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <InvestorJourneyBar
+              summary={opportunity.journey.summary}
+              currentStage={opportunity.journey.current_stage}
+            />
+          </CardContent>
+        </Card>
+      ) : (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Tracking Access</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-start gap-3 text-sm text-muted-foreground">
+              <AlertCircle className="h-4 w-4 mt-0.5" />
+              <span>
+                This deal is available for tracking only. Contact your relationship manager for investor access.
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Deal Timeline */}
       <DealTimelineCard
@@ -545,50 +573,56 @@ export default function OpportunityDetailPage() {
         {/* Action buttons */}
         <div className="flex flex-col gap-3 min-w-[280px]">
           {/* Two Investment Paths for Open Deals */}
-          {opportunity.status !== 'closed' && !opportunity.subscription && (
+          {showActionChoices && (
             <div className="space-y-3">
               {/* Primary: Subscribe Directly */}
-              <div className="relative">
+              {canSubscribe && (
+                <div className="relative">
+                  <Button
+                    className="w-full bg-emerald-600 hover:bg-emerald-700 h-auto py-3"
+                    onClick={() => setShowSubscribeDialog(true)}
+                  >
+                    <div className="flex items-center gap-2">
+                      <TrendingUp className="w-5 h-5" />
+                      <div className="text-left">
+                        <div className="font-semibold">Subscribe to Investment</div>
+                        <div className="text-xs opacity-90 font-normal">Direct path • NDA + Subscription</div>
+                      </div>
+                    </div>
+                  </Button>
+                </div>
+              )}
+
+              {/* OR Divider */}
+              {canSubscribe && canExpressInterest && (
+                <div className="relative flex items-center gap-3">
+                  <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
+                  <span className="text-xs text-muted-foreground font-medium px-2">OR</span>
+                  <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
+                </div>
+              )}
+
+              {/* Secondary: Data Room Interest */}
+              {canExpressInterest && (
                 <Button
-                  className="w-full bg-emerald-600 hover:bg-emerald-700 h-auto py-3"
-                  onClick={() => setShowSubscribeDialog(true)}
+                  variant="outline"
+                  className="w-full h-auto py-3 border-dashed"
+                  onClick={() => setShowInterestDialog(true)}
                 >
                   <div className="flex items-center gap-2">
-                    <TrendingUp className="w-5 h-5" />
+                    <FolderOpen className="w-5 h-5 text-amber-600" />
                     <div className="text-left">
-                      <div className="font-semibold">Subscribe to Investment</div>
-                      <div className="text-xs opacity-90 font-normal">Direct path • NDA + Subscription</div>
+                      <div className="font-medium">Request Data Room Access</div>
+                      <div className="text-xs text-muted-foreground font-normal">Review documents first</div>
                     </div>
                   </div>
                 </Button>
-              </div>
-
-              {/* OR Divider */}
-              <div className="relative flex items-center gap-3">
-                <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
-                <span className="text-xs text-muted-foreground font-medium px-2">OR</span>
-                <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
-              </div>
-
-              {/* Secondary: Data Room Interest */}
-              <Button
-                variant="outline"
-                className="w-full h-auto py-3 border-dashed"
-                onClick={() => setShowInterestDialog(true)}
-              >
-                <div className="flex items-center gap-2">
-                  <FolderOpen className="w-5 h-5 text-amber-600" />
-                  <div className="text-left">
-                    <div className="font-medium">Request Data Room Access</div>
-                    <div className="text-xs text-muted-foreground font-normal">Review documents first</div>
-                  </div>
-                </div>
-              </Button>
+              )}
             </div>
           )}
 
           {/* Show NDA button only when in NDA stage */}
-          {opportunity.can_sign_nda && (
+          {canSignNda && (
             <Button variant="outline" onClick={() => setShowNdaDialog(true)}>
               <FileSignature className="w-4 h-4 mr-2" />
               Sign NDA
@@ -652,9 +686,10 @@ export default function OpportunityDetailPage() {
                 currentStage={opportunity.journey.current_stage}
                 membership={opportunity.membership}
                 subscription={null}
-                canExpressInterest={opportunity.can_express_interest}
-                canSignNda={opportunity.can_sign_nda}
-                canSubscribe={opportunity.can_subscribe}
+                canExpressInterest={canExpressInterest}
+                canSignNda={canSignNda}
+                canSubscribe={canSubscribe}
+                isTrackingOnly={isTrackingOnly}
                 onExpressInterest={() => setShowInterestDialog(true)}
                 onSignNda={() => setShowNdaDialog(true)}
                 onSubscribe={() => setShowSubscribeDialog(true)}

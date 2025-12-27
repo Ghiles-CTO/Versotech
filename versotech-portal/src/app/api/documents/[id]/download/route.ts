@@ -37,7 +37,7 @@ export async function GET(
     const serviceSupabase = createServiceClient()
     const { data: document, error: docError } = await serviceSupabase
       .from('documents')
-      .select('id, name, file_key, mime_type, type, owner_investor_id, vehicle_id, deal_id')
+      .select('id, name, file_key, mime_type, type, owner_investor_id, vehicle_id, deal_id, subscription_id')
       .eq('id', documentId)
       .single()
 
@@ -48,57 +48,96 @@ export async function GET(
       )
     }
 
-    // Permission check: Staff can access all documents, investors can only access their own
+    // Permission check: Staff can access all documents, lawyers can access their deals, investors their own
     const isStaff = profile.role.startsWith('staff_') || profile.role === 'ceo'
 
     if (!isStaff) {
-      // Get investor IDs for this user
-      const { data: investorLinks } = await supabase
-        .from('investor_users')
-        .select('investor_id')
-        .eq('user_id', user.id)
-
-      const investorIds = investorLinks?.map(link => link.investor_id) || []
-
-      if (investorIds.length === 0) {
-        return NextResponse.json(
-          { error: 'Access denied - no investor profile found' },
-          { status: 403 }
-        )
-      }
-
       let hasAccess = false
 
-      // Check access via owner_investor_id
-      if (document.owner_investor_id && investorIds.includes(document.owner_investor_id)) {
-        hasAccess = true
-      }
+      // Check if user is a lawyer assigned to this document's deal
+      const { data: lawyerUser } = await serviceSupabase
+        .from('lawyer_users')
+        .select('lawyer_id')
+        .eq('user_id', user.id)
+        .maybeSingle()
 
-      // Check access via vehicle subscription
-      if (!hasAccess && document.vehicle_id) {
-        const { data: subscription } = await supabase
-          .from('subscriptions')
-          .select('id')
-          .eq('vehicle_id', document.vehicle_id)
-          .in('investor_id', investorIds)
-          .maybeSingle()
+      if (lawyerUser?.lawyer_id) {
+        let dealId = document.deal_id || null
 
-        if (subscription) {
-          hasAccess = true
+        if (!dealId && document.subscription_id) {
+          const { data: subscription } = await serviceSupabase
+            .from('subscriptions')
+            .select('deal_id')
+            .eq('id', document.subscription_id)
+            .maybeSingle()
+
+          dealId = subscription?.deal_id || null
+        }
+
+        if (dealId) {
+          const { data: assignment } = await serviceSupabase
+            .from('deal_lawyer_assignments')
+            .select('id')
+            .eq('deal_id', dealId)
+            .eq('lawyer_id', lawyerUser.lawyer_id)
+            .maybeSingle()
+
+          if (assignment) {
+            hasAccess = true
+          } else {
+            const { data: lawyer } = await serviceSupabase
+              .from('lawyers')
+              .select('assigned_deals')
+              .eq('id', lawyerUser.lawyer_id)
+              .maybeSingle()
+
+            if (lawyer?.assigned_deals?.includes(dealId)) {
+              hasAccess = true
+            }
+          }
         }
       }
 
-      // Check access via deal membership
-      if (!hasAccess && document.deal_id) {
-        const { data: dealMember } = await supabase
-          .from('deal_memberships')
-          .select('deal_id')
-          .eq('deal_id', document.deal_id)
-          .in('investor_id', investorIds)
-          .maybeSingle()
+      // If not a lawyer with access, check investor access
+      if (!hasAccess) {
+        const { data: investorLinks } = await supabase
+          .from('investor_users')
+          .select('investor_id')
+          .eq('user_id', user.id)
 
-        if (dealMember) {
+        const investorIds = investorLinks?.map(link => link.investor_id) || []
+
+        // Check access via owner_investor_id
+        if (document.owner_investor_id && investorIds.includes(document.owner_investor_id)) {
           hasAccess = true
+        }
+
+        // Check access via vehicle subscription
+        if (!hasAccess && document.vehicle_id && investorIds.length > 0) {
+          const { data: subscription } = await supabase
+            .from('subscriptions')
+            .select('id')
+            .eq('vehicle_id', document.vehicle_id)
+            .in('investor_id', investorIds)
+            .maybeSingle()
+
+          if (subscription) {
+            hasAccess = true
+          }
+        }
+
+        // Check access via deal membership
+        if (!hasAccess && document.deal_id && investorIds.length > 0) {
+          const { data: dealMember } = await supabase
+            .from('deal_memberships')
+            .select('deal_id')
+            .eq('deal_id', document.deal_id)
+            .in('investor_id', investorIds)
+            .maybeSingle()
+
+          if (dealMember) {
+            hasAccess = true
+          }
         }
       }
 

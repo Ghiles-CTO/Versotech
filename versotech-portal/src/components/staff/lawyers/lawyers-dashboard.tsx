@@ -229,7 +229,7 @@ export function LawyersDashboard({ summary, lawyers }: LawyersDashboardProps) {
               {filteredLawyers.map((lawyer) => (
                 <Link
                   key={lawyer.id}
-                  href={`/versotech/staff/lawyers/${lawyer.id}`}
+                  href={`/versotech_main/lawyers/${lawyer.id}`}
                   className="block"
                 >
                   <div className="flex items-center justify-between p-4 rounded-lg border border-white/10 hover:bg-white/5 transition-colors">

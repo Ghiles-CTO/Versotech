@@ -46,6 +46,8 @@ function UnifiedLoginContent() {
       setMessage({ type: 'error', text: errorMessage })
     } else if (messageParam === 'password_set') {
       setMessage({ type: 'success', text: 'Password set successfully! Please sign in with your new credentials.' })
+    } else if (messageParam === 'password_reset') {
+      setMessage({ type: 'success', text: 'Password reset successfully! Please sign in with your new password.' })
     } else if (messageParam === 'signed_out') {
       setMessage({ type: 'info', text: 'You have been signed out.' })
     }
@@ -71,8 +73,11 @@ function UnifiedLoginContent() {
         // Use 'investor' portal for generic sign-in - server will determine role and redirect
         const result = await signIn(email, password, 'investor')
         if (result?.success) {
-          // Always redirect to unified dashboard - layout handles persona routing
-          const redirectUrl = '/versotech_main/dashboard'
+          // Check for redirect param (e.g., from invite link), otherwise go to dashboard
+          const redirectParam = searchParams.get('redirect')
+          const redirectUrl = redirectParam && redirectParam.startsWith('/')
+            ? decodeURIComponent(redirectParam)
+            : '/versotech_main/dashboard'
           if ((result.user as any)?.demo) {
             window.location.href = redirectUrl
           } else {
@@ -202,7 +207,17 @@ function UnifiedLoginContent() {
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-zinc-500 uppercase">Password</Label>
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs font-semibold text-zinc-500 uppercase">Password</Label>
+                  {!isSignUp && (
+                    <Link
+                      href="/versotech_main/reset-password"
+                      className="text-xs text-zinc-500 hover:text-white transition-colors"
+                    >
+                      Forgot Password?
+                    </Link>
+                  )}
+                </div>
                 <div className="relative">
                   <Input
                     type={showPassword ? 'text' : 'password'}

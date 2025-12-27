@@ -2,8 +2,8 @@
  * Type definitions for the signature system
  */
 
-export type DocumentType = 'nda' | 'subscription' | 'amendment' | 'introducer_agreement' | 'other'
-export type SignerRole = 'investor' | 'admin' | 'arranger' | 'introducer'
+export type DocumentType = 'nda' | 'subscription' | 'amendment' | 'introducer_agreement' | 'placement_agreement' | 'other'
+export type SignerRole = 'investor' | 'admin' | 'arranger' | 'introducer' | 'commercial_partner'
 export type SignaturePosition = 'party_a' | 'party_b'
 export type SignatureStatus = 'pending' | 'signed' | 'expired' | 'cancelled'
 
@@ -34,6 +34,8 @@ export interface SignatureRequestRecord {
   document_id?: string // For manually uploaded documents
   introducer_id?: string // For introducer agreement signing
   introducer_agreement_id?: string // For introducer agreement signing
+  placement_id?: string // For placement agreement signing (commercial partner ID)
+  placement_agreement_id?: string // For placement agreement signing
   created_at: string
   updated_at: string
   created_by?: string
@@ -53,6 +55,8 @@ export interface CreateSignatureRequestParams {
   document_id?: string // For manually uploaded documents
   introducer_id?: string // For introducer agreement signing
   introducer_agreement_id?: string // For introducer agreement signing
+  placement_id?: string // For placement agreement signing (commercial partner ID)
+  placement_agreement_id?: string // For placement agreement signing
 }
 
 export interface CreateSignatureRequestResult {

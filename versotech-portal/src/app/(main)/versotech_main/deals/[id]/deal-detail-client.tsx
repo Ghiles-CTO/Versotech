@@ -182,6 +182,7 @@ function getStatusBadge(status: string) {
 function getRoleBadge(role: string) {
   const colors: Record<string, string> = {
     investor: 'bg-blue-500/20 text-blue-400',
+    partner: 'bg-emerald-500/20 text-emerald-400',
     partner_investor: 'bg-purple-500/20 text-purple-400',
     introducer_investor: 'bg-orange-500/20 text-orange-400',
     commercial_partner_investor: 'bg-teal-500/20 text-teal-400',
@@ -385,6 +386,7 @@ export function DealDetailClient({ deal, memberships, dispatchableUsers, current
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="investor">Investor</SelectItem>
+                      <SelectItem value="partner">Partner (Tracking Only)</SelectItem>
                       <SelectItem value="partner_investor">Partner Investor</SelectItem>
                       <SelectItem value="introducer_investor">Introducer Investor</SelectItem>
                       <SelectItem value="commercial_partner_investor">Commercial Partner</SelectItem>

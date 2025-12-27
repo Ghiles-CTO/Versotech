@@ -30,7 +30,9 @@ import {
   AlertCircle,
   ExternalLink,
   Building2,
+  Download,
 } from 'lucide-react'
+import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { formatCurrency, formatDate } from '@/lib/format'
 import { createClient } from '@/lib/supabase/client'
@@ -75,21 +77,79 @@ type Summary = {
   currency: string
 }
 
+type MembershipRow = {
+  id: string
+  role: string | null
+  created_at: string | null
+  deal_id: string | null
+  investor_id: string | null
+  investor: { id: string; legal_name: string | null } | { id: string; legal_name: string | null }[] | null
+  deal: { id: string; name: string | null; company_name: string | null; status: string | null } |
+    { id: string; name: string | null; company_name: string | null; status: string | null }[] | null
+}
+
+type SubscriptionRow = {
+  id: string
+  investor_id: string
+  deal_id: string
+  commitment: number | null
+  currency: string | null
+  status: string | null
+  committed_at: string | null
+  created_at: string | null
+}
+
+function normalizeJoin<T>(value: T | T[] | null): T | null {
+  if (!value) return null
+  return Array.isArray(value) ? value[0] || null : value
+}
+
+function getSubscriptionKey(investorId: string, dealId: string) {
+  return `${investorId}:${dealId}`
+}
+
+function getTimestamp(value: string | null | undefined): number {
+  if (!value) return 0
+  return new Date(value).getTime()
+}
+
+function buildSummary(transactions: PartnerTransaction[]): Summary {
+  const converted = transactions.filter(t =>
+    t.subscription?.status === 'committed' || t.subscription?.status === 'active'
+  ).length
+  const pending = transactions.filter(t => t.subscription?.status === 'pending').length
+
+  let totalValue = 0
+  for (const t of transactions) {
+    if (t.subscription && (t.subscription.status === 'committed' || t.subscription.status === 'active')) {
+      totalValue += t.subscription.commitment
+    }
+  }
+
+  const currency = transactions.find(t => t.subscription?.currency)?.subscription?.currency || 'USD'
+
+  return {
+    totalReferrals: transactions.length,
+    convertedCount: converted,
+    pendingCount: pending,
+    totalCommitmentValue: totalValue,
+    currency
+  }
+}
+
 const STATUS_STYLES: Record<string, string> = {
-  funded: 'bg-green-100 text-green-800 border-green-200',
-  approved: 'bg-blue-100 text-blue-800 border-blue-200',
+  active: 'bg-green-100 text-green-800 border-green-200',
+  committed: 'bg-blue-100 text-blue-800 border-blue-200',
   pending: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-  pending_approval: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-  rejected: 'bg-red-100 text-red-800 border-red-200',
   cancelled: 'bg-gray-100 text-gray-800 border-gray-200',
 }
 
 const STATUS_FILTERS = [
   { label: 'All Status', value: 'all' },
-  { label: 'Funded', value: 'funded' },
-  { label: 'Approved', value: 'approved' },
+  { label: 'Active', value: 'active' },
+  { label: 'Committed', value: 'committed' },
   { label: 'Pending', value: 'pending' },
-  { label: 'Rejected', value: 'rejected' },
+  { label: 'Cancelled', value: 'cancelled' },
 ]
 
 export default function PartnerTransactionsPage() {
@@ -106,12 +166,123 @@ export default function PartnerTransactionsPage() {
   const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
+  const [exporting, setExporting] = useState(false)
+
+  const handleExport = async () => {
+    if (!partnerInfo) {
+      toast.error('Export is only available for partner users')
+      return
+    }
+
+    try {
+      setExporting(true)
+      const response = await fetch('/api/partners/me/transactions/export')
+
+      if (response.status === 429) {
+        toast.error('Please wait 1 minute between export requests')
+        return
+      }
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Export failed')
+      }
+
+      // Download the CSV
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `partner-transactions-${new Date().toISOString().split('T')[0]}.csv`
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+
+      toast.success('Transactions exported successfully')
+    } catch (err) {
+      console.error('[PartnerTransactionsPage] Export error:', err)
+      toast.error(err instanceof Error ? err.message : 'Failed to export transactions')
+    } finally {
+      setExporting(false)
+    }
+  }
 
   useEffect(() => {
+    const supabase = createClient()
+
+    const hydrateTransactions = async (memberships: MembershipRow[]) => {
+      const investorIds = Array.from(new Set(
+        memberships.map(m => m.investor_id).filter((id): id is string => Boolean(id))
+      ))
+      const dealIds = Array.from(new Set(
+        memberships.map(m => m.deal_id).filter((id): id is string => Boolean(id))
+      ))
+
+      const subscriptionMap = new Map<string, SubscriptionRow>()
+
+      if (investorIds.length > 0 && dealIds.length > 0) {
+        const { data: subscriptions, error: subscriptionsError } = await supabase
+          .from('subscriptions')
+          .select('id, investor_id, deal_id, commitment, currency, status, committed_at, created_at')
+          .in('investor_id', investorIds)
+          .in('deal_id', dealIds)
+
+        if (subscriptionsError) throw subscriptionsError
+
+        for (const subscription of subscriptions || []) {
+          const key = getSubscriptionKey(subscription.investor_id, subscription.deal_id)
+          const existing = subscriptionMap.get(key)
+          const existingTimestamp = Math.max(
+            getTimestamp(existing?.committed_at),
+            getTimestamp(existing?.created_at)
+          )
+          const currentTimestamp = Math.max(
+            getTimestamp(subscription.committed_at),
+            getTimestamp(subscription.created_at)
+          )
+
+          if (!existing || currentTimestamp >= existingTimestamp) {
+            subscriptionMap.set(key, subscription)
+          }
+        }
+      }
+
+      return memberships.map((membership) => {
+        const investor = normalizeJoin(membership.investor)
+        const deal = normalizeJoin(membership.deal)
+        const subscription = membership.investor_id && membership.deal_id
+          ? subscriptionMap.get(getSubscriptionKey(membership.investor_id, membership.deal_id)) || null
+          : null
+
+        return {
+          id: membership.id,
+          investor: investor ? {
+            id: investor.id,
+            legal_name: investor.legal_name || 'Unknown',
+          } : null,
+          deal: deal ? {
+            id: deal.id,
+            name: deal.name || 'Unknown Deal',
+            company_name: deal.company_name ?? null,
+            status: deal.status || 'unknown',
+          } : null,
+          subscription: subscription ? {
+            id: subscription.id,
+            commitment: Number(subscription.commitment) || 0,
+            currency: subscription.currency || 'USD',
+            status: subscription.status || 'pending',
+            committed_at: subscription.committed_at,
+          } : null,
+          referred_at: membership.created_at,
+          role: membership.role || 'investor',
+        }
+      })
+    }
+
     async function fetchData() {
       try {
         setLoading(true)
-        const supabase = createClient()
 
         // Get current user
         const { data: { user } } = await supabase.auth.getUser()
@@ -129,7 +300,7 @@ export default function PartnerTransactionsPage() {
 
         if (partnerUserError || !partnerUser) {
           // Maybe they're staff - show all partner transactions
-          await fetchAllPartnerTransactions(supabase)
+          await fetchAllPartnerTransactions()
           return
         }
 
@@ -150,6 +321,8 @@ export default function PartnerTransactionsPage() {
             id,
             role,
             created_at,
+            deal_id,
+            investor_id,
             investor:investor_id (
               id,
               legal_name
@@ -167,76 +340,9 @@ export default function PartnerTransactionsPage() {
 
         if (membershipsError) throw membershipsError
 
-        // For each membership, try to find related subscription
-        const processedTransactions: PartnerTransaction[] = []
-
-        for (const membership of memberships || []) {
-          const investorData = membership.investor as any
-          const dealData = membership.deal as any
-
-          // Try to find subscription for this investor in vehicles associated with this deal
-          let subscriptionData = null
-          if (investorData?.id && dealData?.id) {
-            const { data: subs } = await supabase
-              .from('subscriptions')
-              .select('id, commitment, currency, status, committed_at')
-              .eq('investor_id', investorData.id)
-              .order('committed_at', { ascending: false })
-              .limit(1)
-
-            if (subs && subs.length > 0) {
-              subscriptionData = subs[0]
-            }
-          }
-
-          processedTransactions.push({
-            id: membership.id,
-            investor: investorData ? {
-              id: investorData.id,
-              legal_name: investorData.legal_name || 'Unknown',
-            } : null,
-            deal: dealData ? {
-              id: dealData.id,
-              name: dealData.name || 'Unknown Deal',
-              company_name: dealData.company_name,
-              status: dealData.status || 'unknown',
-            } : null,
-            subscription: subscriptionData ? {
-              id: subscriptionData.id,
-              commitment: Number(subscriptionData.commitment) || 0,
-              currency: subscriptionData.currency || 'USD',
-              status: subscriptionData.status || 'pending',
-              committed_at: subscriptionData.committed_at,
-            } : null,
-            referred_at: membership.created_at,
-            role: membership.role || 'investor',
-          })
-        }
-
+        const processedTransactions = await hydrateTransactions(memberships || [])
         setTransactions(processedTransactions)
-
-        // Calculate summary
-        const converted = processedTransactions.filter(t =>
-          t.subscription?.status === 'funded' || t.subscription?.status === 'approved'
-        ).length
-        const pending = processedTransactions.filter(t =>
-          t.subscription?.status === 'pending' || t.subscription?.status === 'pending_approval'
-        ).length
-
-        let totalValue = 0
-        for (const t of processedTransactions) {
-          if (t.subscription && (t.subscription.status === 'funded' || t.subscription.status === 'approved')) {
-            totalValue += t.subscription.commitment
-          }
-        }
-
-        setSummary({
-          totalReferrals: processedTransactions.length,
-          convertedCount: converted,
-          pendingCount: pending,
-          totalCommitmentValue: totalValue,
-          currency: 'USD',
-        })
+        setSummary(buildSummary(processedTransactions))
 
         setError(null)
       } catch (err) {
@@ -247,7 +353,7 @@ export default function PartnerTransactionsPage() {
       }
     }
 
-    async function fetchAllPartnerTransactions(supabase: any) {
+    async function fetchAllPartnerTransactions() {
       // Staff view - show all partner-referred transactions
       const { data: memberships, error: membershipsError } = await supabase
         .from('deal_memberships')
@@ -255,6 +361,8 @@ export default function PartnerTransactionsPage() {
           id,
           role,
           created_at,
+          deal_id,
+          investor_id,
           referred_by_entity_id,
           investor:investor_id (
             id,
@@ -273,32 +381,9 @@ export default function PartnerTransactionsPage() {
 
       if (membershipsError) throw membershipsError
 
-      const processedTransactions: PartnerTransaction[] = (memberships || []).map((m: any) => ({
-        id: m.id,
-        investor: m.investor ? {
-          id: m.investor.id,
-          legal_name: m.investor.legal_name || 'Unknown',
-        } : null,
-        deal: m.deal ? {
-          id: m.deal.id,
-          name: m.deal.name || 'Unknown Deal',
-          company_name: m.deal.company_name,
-          status: m.deal.status || 'unknown',
-        } : null,
-        subscription: null,
-        referred_at: m.created_at,
-        role: m.role || 'investor',
-      }))
-
+      const processedTransactions = await hydrateTransactions(memberships || [])
       setTransactions(processedTransactions)
-
-      setSummary({
-        totalReferrals: processedTransactions.length,
-        convertedCount: 0,
-        pendingCount: 0,
-        totalCommitmentValue: 0,
-        currency: 'USD',
-      })
+      setSummary(buildSummary(processedTransactions))
     }
 
     fetchData()
@@ -345,11 +430,27 @@ export default function PartnerTransactionsPage() {
               : 'View all partner-referred transactions across the platform'}
           </p>
         </div>
-        {partnerInfo && (
-          <Badge variant="outline" className="capitalize">
-            {partnerInfo.partner_type}
-          </Badge>
-        )}
+        <div className="flex items-center gap-2">
+          {partnerInfo && (
+            <>
+              <Button
+                variant="outline"
+                onClick={handleExport}
+                disabled={exporting || transactions.length === 0}
+              >
+                {exporting ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Download className="h-4 w-4 mr-2" />
+                )}
+                Export CSV
+              </Button>
+              <Badge variant="outline" className="capitalize">
+                {partnerInfo.partner_type}
+              </Badge>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Summary Cards */}

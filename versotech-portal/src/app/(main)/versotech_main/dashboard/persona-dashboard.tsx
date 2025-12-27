@@ -6,8 +6,13 @@ import { useTheme } from '@/components/theme-provider'
 import { createClient } from '@/lib/supabase/client'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { InvestorDashboard } from './investor-dashboard'
 import { IntroducerDashboard } from './introducer-dashboard'
+import { PartnerDashboard } from './partner-dashboard'
+import { LawyerDashboard } from './lawyer-dashboard'
+import { ArrangerDashboard } from './arranger-dashboard'
 import {
   Building2,
   Users,
@@ -18,7 +23,9 @@ import {
   TrendingUp,
   FileText,
   CheckSquare,
-  Loader2
+  Loader2,
+  Wallet,
+  ArrowLeftRight
 } from 'lucide-react'
 
 const PERSONA_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -45,11 +52,64 @@ const PERSONA_COLORS: Record<string, string> = {
  * Persona-aware dashboard for non-CEO users
  * Routes to persona-specific dashboards based on active persona type
  */
+// Check if a partner/introducer also has investments
+async function checkUserHasInvestments(userId: string): Promise<{
+  hasInvestments: boolean
+  investorId: string | null
+  investmentCount: number
+}> {
+  try {
+    const supabase = createClient()
+
+    // Check if user is linked to an investor entity
+    const { data: investorLinks } = await supabase
+      .from('investor_users')
+      .select('investor_id')
+      .eq('user_id', userId)
+      .limit(1)
+
+    if (!investorLinks || investorLinks.length === 0) {
+      // No investor entity - check if they have subscriptions via deal_memberships
+      const { data: subscriptions } = await supabase
+        .from('subscriptions')
+        .select('id')
+        .or(`investor_id.in.(select investor_id from investor_users where user_id=${userId})`)
+        .limit(1)
+
+      return { hasInvestments: false, investorId: null, investmentCount: 0 }
+    }
+
+    const investorId = investorLinks[0].investor_id
+
+    // Count active subscriptions for this investor
+    const { data: subscriptions, count } = await supabase
+      .from('subscriptions')
+      .select('id', { count: 'exact', head: true })
+      .eq('investor_id', investorId)
+      .in('status', ['active', 'signed', 'funded', 'pending'])
+
+    return {
+      hasInvestments: (count || 0) > 0,
+      investorId,
+      investmentCount: count || 0
+    }
+  } catch (error) {
+    console.error('Error checking investments:', error)
+    return { hasInvestments: false, investorId: null, investmentCount: 0 }
+  }
+}
+
 export function PersonaDashboard() {
   const { activePersona, personas, isCEO } = usePersona()
   const { theme } = useTheme()
   const [userId, setUserId] = useState<string | null>(null)
   const [loadingUser, setLoadingUser] = useState(true)
+  const [investmentInfo, setInvestmentInfo] = useState<{
+    hasInvestments: boolean
+    investorId: string | null
+    investmentCount: number
+  } | null>(null)
+  const [activeView, setActiveView] = useState<'partner' | 'investor'>('partner')
 
   // Fetch the current user ID on mount
   useEffect(() => {
@@ -61,6 +121,20 @@ export function PersonaDashboard() {
     }
     fetchUser()
   }, [])
+
+  // Check if partner/introducer has investments
+  useEffect(() => {
+    async function checkInvestments() {
+      if (!userId || !activePersona) return
+
+      // Only check for partners and introducers
+      if (activePersona.persona_type === 'partner' || activePersona.persona_type === 'introducer') {
+        const info = await checkUserHasInvestments(userId)
+        setInvestmentInfo(info)
+      }
+    }
+    checkInvestments()
+  }, [userId, activePersona])
 
   // Use actual theme system (user-controlled via toggle in header)
   const isDark = theme === 'staff-dark'
@@ -87,7 +161,75 @@ export function PersonaDashboard() {
   }
 
   // Route introducer personas to the introducer-specific dashboard
+  // If introducer also has investments, show a tabbed view
   if (activePersona.persona_type === 'introducer' && userId) {
+    // Introducer also has investments - show dual view
+    if (investmentInfo?.hasInvestments && investmentInfo.investorId) {
+      return (
+        <div className="space-y-4">
+          {/* View Switcher Banner */}
+          <div className={`p-4 rounded-lg ${isDark ? 'bg-gradient-to-r from-orange-900/50 to-amber-900/50 border border-orange-500/20' : 'bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200'}`}>
+            <div className="flex items-center justify-between flex-wrap gap-4">
+              <div className="flex items-center gap-3">
+                <div className={`h-10 w-10 rounded-full flex items-center justify-center ${isDark ? 'bg-orange-500/20' : 'bg-orange-100'}`}>
+                  <ArrowLeftRight className={`h-5 w-5 ${isDark ? 'text-orange-400' : 'text-orange-600'}`} />
+                </div>
+                <div>
+                  <p className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                    You have multiple roles
+                  </p>
+                  <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                    Introducer referrals & {investmentInfo.investmentCount} personal investment{investmentInfo.investmentCount !== 1 ? 's' : ''}
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant={activeView === 'partner' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setActiveView('partner')}
+                  className={activeView === 'partner' ? '' : isDark ? 'border-gray-700' : ''}
+                >
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Introducer View
+                </Button>
+                <Button
+                  variant={activeView === 'investor' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setActiveView('investor')}
+                  className={activeView === 'investor' ? '' : isDark ? 'border-gray-700' : ''}
+                >
+                  <Wallet className="h-4 w-4 mr-2" />
+                  My Investments
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          {/* Active Dashboard */}
+          {activeView === 'partner' ? (
+            <IntroducerDashboard
+              introducerId={activePersona.entity_id}
+              userId={userId}
+              persona={activePersona}
+            />
+          ) : (
+            <InvestorDashboard
+              investorId={investmentInfo.investorId}
+              userId={userId}
+              persona={{
+                ...activePersona,
+                persona_type: 'investor',
+                entity_id: investmentInfo.investorId,
+                entity_name: 'My Investments'
+              }}
+            />
+          )}
+        </div>
+      )
+    }
+
+    // Regular introducer view (no investments)
     return (
       <IntroducerDashboard
         introducerId={activePersona.entity_id}
@@ -97,9 +239,110 @@ export function PersonaDashboard() {
     )
   }
 
+  // Route partner personas to the partner-specific dashboard
+  // If partner also has investments, show a tabbed view
+  if (activePersona.persona_type === 'partner' && userId) {
+    // Partner also has investments - show dual view
+    if (investmentInfo?.hasInvestments && investmentInfo.investorId) {
+      return (
+        <div className="space-y-4">
+          {/* View Switcher Banner */}
+          <div className={`p-4 rounded-lg ${isDark ? 'bg-gradient-to-r from-indigo-900/50 to-purple-900/50 border border-indigo-500/20' : 'bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200'}`}>
+            <div className="flex items-center justify-between flex-wrap gap-4">
+              <div className="flex items-center gap-3">
+                <div className={`h-10 w-10 rounded-full flex items-center justify-center ${isDark ? 'bg-indigo-500/20' : 'bg-indigo-100'}`}>
+                  <ArrowLeftRight className={`h-5 w-5 ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`} />
+                </div>
+                <div>
+                  <p className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                    You have multiple roles
+                  </p>
+                  <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                    Partner referrals & {investmentInfo.investmentCount} personal investment{investmentInfo.investmentCount !== 1 ? 's' : ''}
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant={activeView === 'partner' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setActiveView('partner')}
+                  className={activeView === 'partner' ? '' : isDark ? 'border-gray-700' : ''}
+                >
+                  <Users className="h-4 w-4 mr-2" />
+                  Partner View
+                </Button>
+                <Button
+                  variant={activeView === 'investor' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setActiveView('investor')}
+                  className={activeView === 'investor' ? '' : isDark ? 'border-gray-700' : ''}
+                >
+                  <Wallet className="h-4 w-4 mr-2" />
+                  My Investments
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          {/* Active Dashboard */}
+          {activeView === 'partner' ? (
+            <PartnerDashboard
+              partnerId={activePersona.entity_id}
+              userId={userId}
+              persona={activePersona}
+            />
+          ) : (
+            <InvestorDashboard
+              investorId={investmentInfo.investorId}
+              userId={userId}
+              persona={{
+                ...activePersona,
+                persona_type: 'investor',
+                entity_id: investmentInfo.investorId,
+                entity_name: 'My Investments'
+              }}
+            />
+          )}
+        </div>
+      )
+    }
+
+    // Regular partner view (no investments)
+    return (
+      <PartnerDashboard
+        partnerId={activePersona.entity_id}
+        userId={userId}
+        persona={activePersona}
+      />
+    )
+  }
+
+  // Route lawyer personas to the lawyer-specific dashboard
+  if (activePersona.persona_type === 'lawyer' && userId) {
+    return (
+      <LawyerDashboard
+        lawyerId={activePersona.entity_id}
+        userId={userId}
+        persona={activePersona}
+      />
+    )
+  }
+
+  // Route arranger personas to the arranger-specific dashboard
+  if (activePersona.persona_type === 'arranger' && userId) {
+    return (
+      <ArrangerDashboard
+        arrangerId={activePersona.entity_id}
+        userId={userId}
+        persona={activePersona}
+      />
+    )
+  }
+
   const ActiveIcon = PERSONA_ICONS[activePersona.persona_type] || User
 
-  // Generic dashboard for other persona types (arranger, introducer, partner, etc.)
+  // Generic dashboard for other persona types (arranger, commercial_partner, lawyer, etc.)
   return (
     <div className="p-6 space-y-6">
       {/* Welcome Header */}

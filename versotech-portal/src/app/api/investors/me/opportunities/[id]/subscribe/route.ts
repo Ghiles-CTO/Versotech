@@ -75,7 +75,7 @@ export async function POST(request: Request, { params }: RouteParams) {
     const isEntityUser = entityPersonas?.some((p: { persona_type: string }) => entityTypes.includes(p.persona_type))
 
     if (isEntityUser) {
-      // Check if user has been dispatched to this deal
+      // Check if user has been dispatched to this deal WITH an investor role
       const { data: dispatchedMembership } = await serviceSupabase
         .from('deal_memberships')
         .select('dispatched_at, role')
@@ -87,6 +87,16 @@ export async function POST(request: Request, { params }: RouteParams) {
       if (!dispatchedMembership) {
         return NextResponse.json({
           error: 'You have not been authorized to invest in this deal. Please contact your relationship manager.'
+        }, { status: 403 })
+      }
+
+      // SECURITY FIX: Verify the role allows subscription
+      // commercial_partner_proxy has its own endpoint at /api/commercial-partners/proxy-subscribe
+      const investorRoles = ['investor', 'partner_investor', 'introducer_investor', 'commercial_partner_investor', 'co_investor']
+      if (!investorRoles.includes(dispatchedMembership.role)) {
+        return NextResponse.json({
+          error: 'Your role does not permit direct investment in this deal. You may have view-only access.',
+          role: dispatchedMembership.role
         }, { status: 403 })
       }
     }

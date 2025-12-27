@@ -426,7 +426,14 @@ export async function GET(request: Request, { params }: RouteParams) {
       can_express_interest: effectiveInvestorId !== null && !membership?.interest_confirmed_at,
       can_sign_nda: !!membership?.interest_confirmed_at && !membership?.nda_signed_at,
       can_access_data_room: hasDataRoomAccess,
-      can_subscribe: !subscription && isDealOpen,
+      // SECURITY FIX: Only allow subscription for roles that permit investing
+      // commercial_partner_proxy has its own endpoint at /api/commercial-partners/proxy-subscribe
+      can_subscribe: !subscription && isDealOpen && (
+        !membership?.role || // Public deal without membership
+        ['investor', 'partner_investor', 'introducer_investor', 'commercial_partner_investor', 'co_investor'].includes(membership.role)
+      ),
+      // Indicate if user is tracking-only (cannot invest)
+      is_tracking_only: !!membership?.role && !['investor', 'partner_investor', 'introducer_investor', 'commercial_partner_investor', 'co_investor'].includes(membership.role),
       can_sign_subscription: subscription?.pack_sent_at && !subscription?.signed_at
     }
 

@@ -30,7 +30,9 @@ import {
   Loader2,
   AlertCircle,
   ExternalLink,
+  Download,
 } from 'lucide-react'
+import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { formatCurrency, formatDate, formatBps } from '@/lib/format'
 import { createClient } from '@/lib/supabase/client'
@@ -106,6 +108,47 @@ export default function IntroductionsPage() {
   const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
+  const [exporting, setExporting] = useState(false)
+
+  const handleExport = async () => {
+    if (!introducerInfo) {
+      toast.error('Export is only available for introducer users')
+      return
+    }
+
+    try {
+      setExporting(true)
+      const response = await fetch('/api/introducers/me/introductions/export')
+
+      if (response.status === 429) {
+        toast.error('Please wait 1 minute between export requests')
+        return
+      }
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Export failed')
+      }
+
+      // Download the CSV
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `introductions-${new Date().toISOString().split('T')[0]}.csv`
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+
+      toast.success('Introductions exported successfully')
+    } catch (err) {
+      console.error('[IntroductionsPage] Export error:', err)
+      toast.error(err instanceof Error ? err.message : 'Failed to export introductions')
+    } finally {
+      setExporting(false)
+    }
+  }
 
   useEffect(() => {
     async function fetchData() {
@@ -337,6 +380,20 @@ export default function IntroductionsPage() {
               : 'View all introductions across the platform'}
           </p>
         </div>
+        {introducerInfo && (
+          <Button
+            variant="outline"
+            onClick={handleExport}
+            disabled={exporting || introductions.length === 0}
+          >
+            {exporting ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Download className="h-4 w-4 mr-2" />
+            )}
+            Export CSV
+          </Button>
+        )}
       </div>
 
       {/* Summary Cards */}

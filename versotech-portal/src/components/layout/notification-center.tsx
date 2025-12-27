@@ -157,30 +157,28 @@ export function NotificationCenter({ className }: NotificationCenterProps) {
           })
         }
 
-        // Fetch investor notifications (if investor persona)
+        // Fetch notifications for all personas (investor, lawyer, staff, etc.)
         // Notifications use read_at timestamp (null = unread)
-        if (activePersona.persona_type === 'investor') {
-          const { data: notifs } = await supabase
-            .from('investor_notifications')
-            .select('id, title, message, created_at, read_at')
-            .eq('user_id', userId)
-            .is('read_at', null)
-            .order('created_at', { ascending: false })
-            .limit(5)
+        const { data: notifs } = await supabase
+          .from('investor_notifications')
+          .select('id, title, message, created_at, read_at, link')
+          .eq('user_id', userId)
+          .is('read_at', null)
+          .order('created_at', { ascending: false })
+          .limit(5)
 
-          if (notifs) {
-            notifs.forEach((notif: any) => {
-              items.push({
-                id: `notif-${notif.id}`,
-                type: 'notification',
-                title: notif.title,
-                description: notif.message,
-                href: '/versotech_main/notifications',
-                read: notif.read_at !== null,
-                created_at: notif.created_at
-              })
+        if (notifs) {
+          notifs.forEach((notif: any) => {
+            items.push({
+              id: `notif-${notif.id}`,
+              type: 'notification',
+              title: notif.title,
+              description: notif.message,
+              href: notif.link || '/versotech_main/notifications',
+              read: notif.read_at !== null,
+              created_at: notif.created_at
             })
-          }
+          })
         }
 
         // Sort by date and take top 10

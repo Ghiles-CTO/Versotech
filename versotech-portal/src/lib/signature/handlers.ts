@@ -713,6 +713,59 @@ export async function handleSubscriptionSignature(
     }
   }
 
+  // 6b. NOTIFY ASSIGNED LAWYERS
+  console.log('\n👨‍⚖️ [SUBSCRIPTION HANDLER] Step 6b: Notifying assigned lawyers')
+
+  if (subscription.deal_id) {
+    const signerRole = signatureRequest.signer_role as string
+    const isAdminSigner = signerRole === 'admin' || signerRole === 'arranger'
+    const signerLabel = signerRole === 'arranger' ? 'Arranger' : 'CEO/Admin'
+
+    // Get lawyers assigned to this deal via deal_lawyer_assignments
+    const { data: assignments } = await supabase
+      .from('deal_lawyer_assignments')
+      .select('lawyer_id')
+      .eq('deal_id', subscription.deal_id)
+
+    const lawyerIds = (assignments || []).map((a: { lawyer_id: string }) => a.lawyer_id).filter(Boolean)
+
+    if (lawyerIds.length > 0) {
+      // Get lawyer users for notification
+      const { data: lawyerUsers } = await supabase
+        .from('lawyer_users')
+        .select('user_id, lawyer_id')
+        .in('lawyer_id', lawyerIds)
+
+      if (lawyerUsers && lawyerUsers.length > 0) {
+        const lawyerNotifications = lawyerUsers.map((lu: { user_id: string; lawyer_id: string }) => ({
+          user_id: lu.user_id,
+          investor_id: null,
+          title: isAdminSigner ? 'Subscription Pack Countersigned' : 'Subscription Pack Signed',
+          message: isAdminSigner
+            ? `${signerLabel} countersigned the subscription pack for ${subscription.investor?.display_name || subscription.investor?.legal_name || 'Investor'} (${subscription.vehicle?.name || 'the deal'}).`
+            : `${subscription.investor?.display_name || subscription.investor?.legal_name || 'Investor'} has signed the subscription pack for ${subscription.vehicle?.name || 'the deal'}.`,
+          link: '/versotech_main/subscription-packs'
+        }))
+
+        const { error: lawyerNotifError } = await supabase
+          .from('investor_notifications')
+          .insert(lawyerNotifications)
+
+        if (lawyerNotifError) {
+          console.error('❌ [SUBSCRIPTION HANDLER] Failed to notify lawyers:', lawyerNotifError)
+        } else {
+          console.log(`✅ [SUBSCRIPTION HANDLER] Notified ${lawyerUsers.length} lawyer(s)`)
+        }
+      } else {
+        console.log('ℹ️ [SUBSCRIPTION HANDLER] No lawyer users found for assigned lawyers')
+      }
+    } else {
+      console.log('ℹ️ [SUBSCRIPTION HANDLER] No lawyers assigned to this deal')
+    }
+  } else {
+    console.log('⚠️ [SUBSCRIPTION HANDLER] No deal_id - skipping lawyer notifications')
+  }
+
   // 7. CREATE AUDIT LOG ENTRY
   console.log('\n📝 [SUBSCRIPTION HANDLER] Step 7: Creating audit log entry')
   await supabase.from('audit_logs').insert({
@@ -985,6 +1038,226 @@ export async function handleIntroducerAgreementSignature(
 }
 
 /**
+ * Placement Agreement Post-Signature Handler
+ *
+ * Executes when a placement agreement is signed. This handler:
+ * - For CEO signature (party_a): Updates status, creates signature request for commercial partner
+ * - For Commercial Partner signature (party_b): Activates agreement, notifies CEO
+ */
+export async function handlePlacementAgreementSignature(
+  params: PostSignatureHandlerParams
+): Promise<void> {
+  console.log('\n🔵 [PLACEMENT AGREEMENT HANDLER] handlePlacementAgreementSignature() called')
+  const { signatureRequest, signedPdfPath, signedPdfBytes, supabase } = params
+
+  console.log('📋 [PLACEMENT AGREEMENT HANDLER] Signature request details:', {
+    id: signatureRequest.id,
+    placement_agreement_id: signatureRequest.placement_agreement_id,
+    placement_id: signatureRequest.placement_id,
+    signature_position: signatureRequest.signature_position,
+    signed_pdf_path: signedPdfPath
+  })
+
+  const agreementId = signatureRequest.placement_agreement_id
+
+  if (!agreementId) {
+    console.error('❌ [PLACEMENT AGREEMENT HANDLER] No placement_agreement_id found')
+    throw new Error('No placement_agreement_id in signature request')
+  }
+
+  // Get the agreement with commercial partner info
+  const { data: agreement, error: agreementError } = await supabase
+    .from('placement_agreements')
+    .select(`
+      *,
+      commercial_partner:commercial_partner_id (
+        id,
+        legal_name,
+        display_name,
+        email
+      )
+    `)
+    .eq('id', agreementId)
+    .single()
+
+  if (agreementError || !agreement) {
+    console.error('❌ [PLACEMENT AGREEMENT HANDLER] Agreement not found:', agreementError)
+    throw new Error('Placement agreement not found')
+  }
+
+  console.log('✅ [PLACEMENT AGREEMENT HANDLER] Agreement found:', {
+    agreement_id: agreement.id,
+    commercial_partner_id: agreement.commercial_partner_id,
+    current_status: agreement.status
+  })
+
+  // Check which signer just signed
+  if (signatureRequest.signature_position === 'party_a') {
+    // CEO signed first
+    console.log('👔 [PLACEMENT AGREEMENT HANDLER] CEO (party_a) signed - updating status')
+
+    // Update agreement status and store CEO signature request ID
+    const { error: updateError } = await supabase
+      .from('placement_agreements')
+      .update({
+        status: 'pending_cp_signature',
+        ceo_signature_request_id: signatureRequest.id,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', agreementId)
+
+    if (updateError) {
+      console.error('❌ [PLACEMENT AGREEMENT HANDLER] Failed to update agreement status:', updateError)
+      throw updateError
+    }
+
+    console.log('✅ [PLACEMENT AGREEMENT HANDLER] Status updated to pending_cp_signature')
+
+    // Get commercial partner user(s) to create signature request
+    const { data: cpUsers } = await supabase
+      .from('commercial_partner_users')
+      .select('user_id')
+      .eq('commercial_partner_id', agreement.commercial_partner_id)
+
+    const cp = agreement.commercial_partner as any
+    if (cpUsers && cpUsers.length > 0) {
+      const primaryCpUser = cpUsers[0]
+
+      // Get user email from profiles
+      const { data: userProfile } = await supabase
+        .from('profiles')
+        .select('email, full_name')
+        .eq('id', primaryCpUser.user_id)
+        .single()
+
+      // Generate token for CP's signature
+      const crypto = await import('crypto')
+      const signingToken = crypto.randomBytes(32).toString('hex')
+      const expiryDate = new Date()
+      expiryDate.setDate(expiryDate.getDate() + 14) // 14 days to sign
+
+      const { data: cpSignatureRequest, error: sigReqError } = await supabase
+        .from('signature_requests')
+        .insert({
+          document_type: 'placement_agreement',
+          placement_agreement_id: agreementId,
+          placement_id: agreement.commercial_partner_id,
+          investor_id: null, // Not an investor signature
+          signer_user_id: primaryCpUser.user_id,
+          signer_email: userProfile?.email || cp?.email || '',
+          signer_name: userProfile?.full_name || cp?.display_name || cp?.legal_name || '',
+          signer_role: 'commercial_partner',
+          signature_position: 'party_b',
+          status: 'pending',
+          signing_token: signingToken,
+          token_expires_at: expiryDate.toISOString(),
+          unsigned_pdf_path: signedPdfPath, // CEO-signed PDF becomes unsigned for CP
+        })
+        .select()
+        .single()
+
+      if (sigReqError) {
+        console.error('❌ [PLACEMENT AGREEMENT HANDLER] Failed to create CP signature request:', sigReqError)
+        // Roll back agreement status
+        await supabase
+          .from('placement_agreements')
+          .update({
+            status: 'approved',
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', agreementId)
+        console.log('⚠️ [PLACEMENT AGREEMENT HANDLER] Rolled back agreement status to approved')
+        throw new Error(`Failed to create CP signature request: ${sigReqError.message}`)
+      } else {
+        console.log('✅ [PLACEMENT AGREEMENT HANDLER] Created signature request for CP:', cpSignatureRequest.id)
+
+        // Update agreement with CP signature request ID
+        await supabase
+          .from('placement_agreements')
+          .update({ cp_signature_request_id: cpSignatureRequest.id })
+          .eq('id', agreementId)
+
+        // Create notifications for all CP users
+        const notifications = cpUsers.map((cpUser: any) => ({
+          user_id: cpUser.user_id,
+          investor_id: null,
+          title: 'Placement Agreement Ready for Signature',
+          message: 'Your placement agreement has been signed by the CEO and is ready for your signature.',
+          link: `/versotech_main/placement-agreements/${agreementId}`,
+        }))
+
+        await supabase.from('investor_notifications').insert(notifications)
+        console.log('✅ [PLACEMENT AGREEMENT HANDLER] Notifications sent to CP users')
+      }
+    } else {
+      console.warn('⚠️ [PLACEMENT AGREEMENT HANDLER] Commercial partner has no users - cannot create signature request')
+    }
+  } else {
+    // Commercial Partner signed (party_b) - agreement is now active
+    console.log('✍️ [PLACEMENT AGREEMENT HANDLER] CP (party_b) signed - activating agreement')
+
+    const { error: updateError } = await supabase
+      .from('placement_agreements')
+      .update({
+        status: 'active',
+        signed_at: new Date().toISOString(),
+        cp_signature_request_id: signatureRequest.id,
+        signed_pdf_url: signedPdfPath,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', agreementId)
+
+    if (updateError) {
+      console.error('❌ [PLACEMENT AGREEMENT HANDLER] Failed to activate agreement:', updateError)
+      throw updateError
+    }
+
+    console.log('✅ [PLACEMENT AGREEMENT HANDLER] Agreement activated')
+
+    // Notify CEO/staff_admin users
+    const { data: ceoUsers } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('role', 'staff_admin')
+      .limit(5)
+
+    const cp = agreement.commercial_partner as any
+    if (ceoUsers && ceoUsers.length > 0) {
+      const notifications = ceoUsers.map((ceo: any) => ({
+        user_id: ceo.id,
+        investor_id: null,
+        title: 'Placement Agreement Fully Signed',
+        message: `${cp?.display_name || cp?.legal_name || 'Commercial Partner'}'s placement agreement has been fully executed and is now active.`,
+        link: `/versotech_main/commercial-partners/${agreement.commercial_partner_id}?tab=agreements`,
+      }))
+
+      await supabase.from('investor_notifications').insert(notifications)
+      console.log('✅ [PLACEMENT AGREEMENT HANDLER] Notifications sent to CEO/staff')
+    }
+
+    // Create audit log
+    await supabase.from('audit_logs').insert({
+      event_type: 'commercial_partner',
+      action: 'placement_agreement_activated',
+      entity_type: 'placement_agreement',
+      entity_id: agreementId,
+      actor_id: null,
+      action_details: {
+        description: 'Placement agreement fully executed and activated',
+        commercial_partner_id: agreement.commercial_partner_id,
+        agreement_id: agreementId,
+        signature_request_id: signatureRequest.id
+      },
+      timestamp: new Date().toISOString()
+    })
+
+    console.log('✅ [PLACEMENT AGREEMENT HANDLER] Audit log created')
+  }
+
+  console.log('\n🎉 [PLACEMENT AGREEMENT HANDLER] handlePlacementAgreementSignature() completed')
+}
+
+/**
  * Amendment Post-Signature Handler
  *
  * Executes when an amendment is fully signed. This handler:
@@ -1035,6 +1308,8 @@ export async function routeSignatureHandler(
       return handleSubscriptionSignature(params)
     case 'introducer_agreement':
       return handleIntroducerAgreementSignature(params)
+    case 'placement_agreement':
+      return handlePlacementAgreementSignature(params)
     case 'amendment':
       return handleAmendmentSignature(params)
     case 'other':

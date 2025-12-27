@@ -34,6 +34,7 @@ interface InterestStatusCardProps {
   canExpressInterest: boolean
   canSignNda: boolean
   canSubscribe: boolean
+  isTrackingOnly: boolean
   onExpressInterest: () => void
   onSignNda: () => void
   onSubscribe: () => void
@@ -167,6 +168,7 @@ export function InterestStatusCard({
   canExpressInterest,
   canSignNda,
   canSubscribe,
+  isTrackingOnly,
   onExpressInterest,
   onSignNda,
   onSubscribe
@@ -178,12 +180,16 @@ export function InterestStatusCard({
 
   // Determine if we're in early stages where both options should be shown
   const isEarlyStage = currentStage <= 2 && !subscription
+  const showTrackingNotice = isTrackingOnly
+  const showSubscribeOption = canSubscribe && !showTrackingNotice
+  const showExpressOption = canExpressInterest && !showTrackingNotice
+  const showEarlyStageActions = isEarlyStage && (showSubscribeOption || showExpressOption)
 
   // Determine primary action based on stage
   const primaryAction: { label: string; onClick: () => void; icon: typeof Heart } | null =
-    canSignNda
+    !showTrackingNotice && canSignNda
       ? { label: 'Sign NDA', onClick: onSignNda, icon: FileSignature }
-      : canSubscribe
+      : !showTrackingNotice && canSubscribe
         ? { label: 'Subscribe Now', onClick: onSubscribe, icon: Rocket }
         : null
 
@@ -225,6 +231,15 @@ export function InterestStatusCard({
           <Progress value={progressPercentage} className="h-2" />
         </div>
 
+        {showTrackingNotice && (
+          <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-amber-900 dark:border-amber-900/40 dark:bg-amber-900/20 dark:text-amber-200">
+            <p className="text-sm font-medium">Tracking Only Access</p>
+            <p className="text-xs text-amber-700 dark:text-amber-300">
+              You can view this deal, but investment actions are disabled. Contact your relationship manager for investor access.
+            </p>
+          </div>
+        )}
+
         {/* Last Action */}
         {lastAction && (
           <div className="p-3 rounded-lg bg-gray-50 dark:bg-gray-800/50 text-sm">
@@ -239,55 +254,61 @@ export function InterestStatusCard({
         )}
 
         {/* Two-Path Actions for Early Stages */}
-        {isEarlyStage && (
+        {showEarlyStageActions && (
           <div className="space-y-4">
             {/* Primary Path: Subscribe Directly */}
-            <button
-              onClick={onSubscribe}
-              className="w-full p-4 rounded-lg border-2 border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/20 hover:border-emerald-400 dark:hover:border-emerald-600 transition-colors text-left group"
-            >
-              <div className="flex items-start gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white">
-                  <Rocket className="w-5 h-5" />
-                </div>
-                <div className="flex-1">
-                  <div className="font-semibold text-emerald-700 dark:text-emerald-300 flex items-center gap-2">
-                    Subscribe to Investment
-                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            {showSubscribeOption && (
+              <button
+                onClick={onSubscribe}
+                className="w-full p-4 rounded-lg border-2 border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/20 hover:border-emerald-400 dark:hover:border-emerald-600 transition-colors text-left group"
+              >
+                <div className="flex items-start gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white">
+                    <Rocket className="w-5 h-5" />
                   </div>
-                  <div className="text-sm text-emerald-600 dark:text-emerald-400 mt-0.5">
-                    Direct path • NDA + Subscription Pack
+                  <div className="flex-1">
+                    <div className="font-semibold text-emerald-700 dark:text-emerald-300 flex items-center gap-2">
+                      Subscribe to Investment
+                      <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                    </div>
+                    <div className="text-sm text-emerald-600 dark:text-emerald-400 mt-0.5">
+                      Direct path • NDA + Subscription Pack
+                    </div>
                   </div>
                 </div>
-              </div>
-            </button>
+              </button>
+            )}
 
             {/* OR Divider */}
-            <div className="relative flex items-center">
-              <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
-              <span className="px-3 text-xs text-muted-foreground font-medium bg-white dark:bg-gray-900">OR</span>
-              <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
-            </div>
+            {showSubscribeOption && showExpressOption && (
+              <div className="relative flex items-center">
+                <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
+                <span className="px-3 text-xs text-muted-foreground font-medium bg-white dark:bg-gray-900">OR</span>
+                <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
+              </div>
+            )}
 
             {/* Secondary Path: Data Room */}
-            <button
-              onClick={onExpressInterest}
-              className="w-full p-4 rounded-lg border border-dashed border-gray-300 dark:border-gray-700 hover:border-amber-400 dark:hover:border-amber-600 transition-colors text-left group"
-            >
-              <div className="flex items-start gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-600">
-                  <Heart className="w-5 h-5" />
-                </div>
-                <div className="flex-1">
-                  <div className="font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
-                    Request Data Room Access
+            {showExpressOption && (
+              <button
+                onClick={onExpressInterest}
+                className="w-full p-4 rounded-lg border border-dashed border-gray-300 dark:border-gray-700 hover:border-amber-400 dark:hover:border-amber-600 transition-colors text-left group"
+              >
+                <div className="flex items-start gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-600">
+                    <Heart className="w-5 h-5" />
                   </div>
-                  <div className="text-sm text-muted-foreground mt-0.5">
-                    Review documents before committing
+                  <div className="flex-1">
+                    <div className="font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                      Request Data Room Access
+                    </div>
+                    <div className="text-sm text-muted-foreground mt-0.5">
+                      Review documents before committing
+                    </div>
                   </div>
                 </div>
-              </div>
-            </button>
+              </button>
+            )}
           </div>
         )}
 

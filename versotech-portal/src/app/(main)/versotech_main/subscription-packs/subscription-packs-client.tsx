@@ -23,14 +23,15 @@ import {
 import {
   CheckCircle2,
   Clock,
-  ExternalLink,
+  DollarSign,
+  Download,
   FileText,
   Search,
-  XCircle,
+  Loader2,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatDate } from '@/lib/format'
-import Link from 'next/link'
+import { toast } from 'sonner'
 
 type LawyerInfo = {
   id: string
@@ -40,84 +41,139 @@ type LawyerInfo = {
   is_active: boolean
 }
 
-type SubscriptionSubmission = {
+type SignedSubscription = {
   id: string
   deal_id: string
   investor_id: string
   status: string
-  submitted_at: string
-  decided_at: string | null
+  commitment: number
+  currency: string
+  funded_amount: number
+  committed_at: string | null
+  funded_at: string | null
   deal_name: string
-  deal_currency: string | null
   investor_name: string
+  document_id: string | null
+  document_file_key: string | null
+  document_file_name: string | null
 }
 
 type SubscriptionPacksClientProps = {
   lawyerInfo: LawyerInfo | null
-  submissions: SubscriptionSubmission[]
+  subscriptions: SignedSubscription[]
 }
 
 const STATUS_STYLES: Record<string, string> = {
-  pending_review: 'bg-amber-100 text-amber-800 border-amber-200',
-  approved: 'bg-emerald-100 text-emerald-800 border-emerald-200',
-  rejected: 'bg-rose-100 text-rose-800 border-rose-200',
-  cancelled: 'bg-gray-100 text-gray-800 border-gray-200',
-  withdrawn: 'bg-slate-100 text-slate-800 border-slate-200',
+  committed: 'bg-blue-100 text-blue-800 border-blue-200',
+  partially_funded: 'bg-amber-100 text-amber-800 border-amber-200',
+  active: 'bg-emerald-100 text-emerald-800 border-emerald-200',
 }
 
 const STATUS_LABELS: Record<string, string> = {
-  pending_review: 'Pending Review',
-  approved: 'Approved',
-  rejected: 'Rejected',
-  cancelled: 'Cancelled',
-  withdrawn: 'Withdrawn',
+  committed: 'Signed',
+  partially_funded: 'Partially Funded',
+  active: 'Fully Funded',
 }
 
 const STATUS_FILTERS = [
   { label: 'All Statuses', value: 'all' },
-  { label: 'Pending Review', value: 'pending_review' },
-  { label: 'Approved', value: 'approved' },
-  { label: 'Rejected', value: 'rejected' },
-  { label: 'Cancelled', value: 'cancelled' },
-  { label: 'Withdrawn', value: 'withdrawn' },
+  { label: 'Signed (Awaiting Funding)', value: 'committed' },
+  { label: 'Partially Funded', value: 'partially_funded' },
+  { label: 'Fully Funded', value: 'active' },
 ]
 
-export function SubscriptionPacksClient({ lawyerInfo, submissions }: SubscriptionPacksClientProps) {
+function formatCurrency(amount: number, currency: string): string {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: currency,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount)
+}
+
+export function SubscriptionPacksClient({ lawyerInfo, subscriptions }: SubscriptionPacksClientProps) {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
+  const [downloadingId, setDownloadingId] = useState<string | null>(null)
 
   const summary = useMemo(() => {
-    const pending = submissions.filter(s => s.status === 'pending_review').length
-    const approved = submissions.filter(s => s.status === 'approved').length
-    const rejected = submissions.filter(s => s.status === 'rejected').length
+    const committed = subscriptions.filter(s => s.status === 'committed').length
+    const partiallyFunded = subscriptions.filter(s => s.status === 'partially_funded').length
+    const fullyFunded = subscriptions.filter(s => s.status === 'active').length
+
+    const totalCommitment = subscriptions.reduce((sum, s) => sum + s.commitment, 0)
+    const totalFunded = subscriptions.reduce((sum, s) => sum + s.funded_amount, 0)
 
     return {
-      total: submissions.length,
-      pending,
-      approved,
-      rejected,
+      total: subscriptions.length,
+      committed,
+      partiallyFunded,
+      fullyFunded,
+      totalCommitment,
+      totalFunded,
     }
-  }, [submissions])
+  }, [subscriptions])
 
-  const filteredSubmissions = useMemo(() => {
-    return submissions.filter(submission => {
-      const matchesStatus = statusFilter === 'all' || submission.status === statusFilter
+  const filteredSubscriptions = useMemo(() => {
+    return subscriptions.filter(subscription => {
+      const matchesStatus = statusFilter === 'all' || subscription.status === statusFilter
       const matchesSearch = !search ||
-        submission.deal_name.toLowerCase().includes(search.toLowerCase()) ||
-        submission.investor_name.toLowerCase().includes(search.toLowerCase())
+        subscription.deal_name.toLowerCase().includes(search.toLowerCase()) ||
+        subscription.investor_name.toLowerCase().includes(search.toLowerCase())
       return matchesStatus && matchesSearch
     })
-  }, [search, statusFilter, submissions])
+  }, [search, statusFilter, subscriptions])
+
+  const handleDownloadPdf = async (subscription: SignedSubscription) => {
+    if (!subscription.document_file_key || !subscription.document_id) {
+      toast.error('No signed document available for download')
+      return
+    }
+
+    setDownloadingId(subscription.id)
+    try {
+      // First, get the signed URL from the API
+      const response = await fetch(`/api/documents/${subscription.document_id}/download`)
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to get download link')
+      }
+
+      // Fetch the actual file from the signed URL
+      const fileResponse = await fetch(data.url)
+      if (!fileResponse.ok) {
+        throw new Error('Failed to download document file')
+      }
+
+      const blob = await fileResponse.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = subscription.document_file_name || data.fileName || `subscription-pack-${subscription.id}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+
+      toast.success('Document downloaded successfully')
+    } catch (error) {
+      console.error('Download error:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to download document')
+    } finally {
+      setDownloadingId(null)
+    }
+  }
 
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Subscription Packs</h1>
+          <h1 className="text-2xl font-bold text-foreground">Signed Subscription Packs</h1>
           <p className="text-muted-foreground mt-1">
             {lawyerInfo
-              ? `Review subscription packs as ${lawyerInfo.display_name}`
-              : 'Review subscription packs for assigned deals'}
+              ? `View signed subscription packs as ${lawyerInfo.display_name}`
+              : 'View signed subscription packs for assigned deals'}
           </p>
         </div>
         {lawyerInfo?.specializations?.length ? (
@@ -136,13 +192,13 @@ export function SubscriptionPacksClient({ lawyerInfo, submissions }: Subscriptio
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
               <FileText className="h-4 w-4" />
-              Total Packs
+              Total Signed
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{summary.total}</div>
             <p className="text-xs text-muted-foreground mt-1">
-              Submissions received
+              Subscription packs signed
             </p>
           </CardContent>
         </Card>
@@ -151,13 +207,28 @@ export function SubscriptionPacksClient({ lawyerInfo, submissions }: Subscriptio
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
               <Clock className="h-4 w-4" />
-              Pending Review
+              Awaiting Funding
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-amber-600">{summary.pending}</div>
+            <div className="text-2xl font-bold text-blue-600">{summary.committed}</div>
             <p className="text-xs text-muted-foreground mt-1">
-              Awaiting decision
+              Signed, pending escrow
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+              <DollarSign className="h-4 w-4" />
+              Partially Funded
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-amber-600">{summary.partiallyFunded}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Partial escrow received
             </p>
           </CardContent>
         </Card>
@@ -166,28 +237,13 @@ export function SubscriptionPacksClient({ lawyerInfo, submissions }: Subscriptio
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
               <CheckCircle2 className="h-4 w-4" />
-              Approved
+              Fully Funded
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-emerald-600">{summary.approved}</div>
+            <div className="text-2xl font-bold text-emerald-600">{summary.fullyFunded}</div>
             <p className="text-xs text-muted-foreground mt-1">
-              Ready for signing
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <XCircle className="h-4 w-4" />
-              Rejected
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-rose-600">{summary.rejected}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Declined submissions
+              Complete funding received
             </p>
           </CardContent>
         </Card>
@@ -208,7 +264,7 @@ export function SubscriptionPacksClient({ lawyerInfo, submissions }: Subscriptio
               </div>
             </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full md:w-48">
+              <SelectTrigger className="w-full md:w-56">
                 <SelectValue placeholder="Filter by status" />
               </SelectTrigger>
               <SelectContent>
@@ -225,19 +281,19 @@ export function SubscriptionPacksClient({ lawyerInfo, submissions }: Subscriptio
 
       <Card>
         <CardHeader>
-          <CardTitle>Submissions</CardTitle>
+          <CardTitle>Signed Subscriptions</CardTitle>
           <CardDescription>
-            {filteredSubmissions.length} submission{filteredSubmissions.length !== 1 ? 's' : ''} found
+            {filteredSubscriptions.length} signed subscription{filteredSubscriptions.length !== 1 ? 's' : ''} found
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {filteredSubmissions.length === 0 ? (
+          {filteredSubscriptions.length === 0 ? (
             <div className="border border-dashed border-muted rounded-lg py-12 flex flex-col items-center justify-center text-center space-y-2">
               <FileText className="h-10 w-10 text-muted-foreground" />
               <p className="text-sm text-muted-foreground">
                 {search || statusFilter !== 'all'
-                  ? 'No submissions match your filters'
-                  : 'No subscription packs assigned yet'}
+                  ? 'No subscriptions match your filters'
+                  : 'No signed subscription packs yet'}
               </p>
             </div>
           ) : (
@@ -247,49 +303,83 @@ export function SubscriptionPacksClient({ lawyerInfo, submissions }: Subscriptio
                   <TableRow>
                     <TableHead>Deal</TableHead>
                     <TableHead>Investor</TableHead>
+                    <TableHead>Commitment</TableHead>
+                    <TableHead>Funded</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead>Submitted</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead>Signed Date</TableHead>
+                    <TableHead className="text-right">Document</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredSubmissions.map((submission) => (
-                    <TableRow key={submission.id}>
-                      <TableCell>
-                        <div className="font-medium">{submission.deal_name}</div>
-                        <div className="text-xs text-muted-foreground">
-                          {submission.deal_currency || 'USD'}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="font-medium">{submission.investor_name}</div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant="outline"
-                          className={cn('capitalize', STATUS_STYLES[submission.status] || STATUS_STYLES.cancelled)}
-                        >
-                          {STATUS_LABELS[submission.status] || submission.status.replace('_', ' ')}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {submission.submitted_at ? (
-                          <div className="text-sm">
-                            {formatDate(submission.submitted_at)}
+                  {filteredSubscriptions.map((subscription) => {
+                    const fundingPercentage = subscription.commitment > 0
+                      ? Math.round((subscription.funded_amount / subscription.commitment) * 100)
+                      : 0
+
+                    return (
+                      <TableRow key={subscription.id}>
+                        <TableCell>
+                          <div className="font-medium">{subscription.deal_name}</div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="font-medium">{subscription.investor_name}</div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="font-medium">
+                            {formatCurrency(subscription.commitment, subscription.currency)}
                           </div>
-                        ) : (
-                          <span className="text-muted-foreground text-xs">Unknown</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button variant="ghost" size="sm" asChild>
-                          <Link href="/versotech_main/documents">
-                            <ExternalLink className="h-4 w-4" />
-                          </Link>
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                        </TableCell>
+                        <TableCell>
+                          <div className="space-y-1">
+                            <div className="font-medium">
+                              {formatCurrency(subscription.funded_amount, subscription.currency)}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              {fundingPercentage}% funded
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            variant="outline"
+                            className={cn('capitalize', STATUS_STYLES[subscription.status] || 'bg-gray-100 text-gray-800 border-gray-200')}
+                          >
+                            {STATUS_LABELS[subscription.status] || subscription.status.replace('_', ' ')}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {subscription.committed_at ? (
+                            <div className="text-sm">
+                              {formatDate(subscription.committed_at)}
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground text-xs">Unknown</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {subscription.document_file_key ? (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDownloadPdf(subscription)}
+                              disabled={downloadingId === subscription.id}
+                            >
+                              {downloadingId === subscription.id ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <>
+                                  <Download className="h-4 w-4 mr-1" />
+                                  PDF
+                                </>
+                              )}
+                            </Button>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">No document</span>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
                 </TableBody>
               </Table>
             </div>

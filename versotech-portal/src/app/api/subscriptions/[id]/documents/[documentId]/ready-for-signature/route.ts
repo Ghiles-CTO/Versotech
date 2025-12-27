@@ -2,10 +2,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { z } from 'zod'
 
-// Schema for multi-signatory support
+// Schema for multi-signatory support with optional arranger countersigning
 const requestSchema = z.object({
   signatory_member_ids: z.array(z.string().uuid()).optional(),
   // If no signatory_member_ids provided, falls back to investor email (backwards compatible)
+  countersigner_type: z.enum(['ceo', 'arranger']).optional().default('ceo'),
+  arranger_id: z.string().uuid().optional(),
+  // arranger_id is required when countersigner_type is 'arranger'
 }).optional()
 
 export async function POST(
@@ -34,7 +37,7 @@ export async function POST(
   }
 
   // Parse request body for signatory selection
-  let body: { signatory_member_ids?: string[] } = {}
+  let body: { signatory_member_ids?: string[]; countersigner_type?: 'ceo' | 'arranger'; arranger_id?: string } = {}
   try {
     const rawBody = await request.text()
     if (rawBody) {
@@ -46,6 +49,13 @@ export async function POST(
     }
   } catch {
     // Empty body is OK - use default behavior
+  }
+
+  // Validate arranger_id is provided when countersigner_type is 'arranger'
+  if (body.countersigner_type === 'arranger' && !body.arranger_id) {
+    return NextResponse.json({
+      error: 'arranger_id is required when countersigner_type is arranger'
+    }, { status: 400 })
   }
 
   const serviceSupabase = createServiceClient()
@@ -193,14 +203,56 @@ export async function POST(
       })
     }
 
-    // Staff/Admin signature request (countersignature)
+    // Staff/Admin or Arranger signature request (countersignature)
+    let countersignerEmail = 'cto@versoholdings.com'
+    let countersignerName = 'Julien Machot'
+    let signerRole: 'admin' | 'arranger' = 'admin'
+
+    // If arranger is selected as countersigner, fetch arranger details
+    if (body.countersigner_type === 'arranger' && body.arranger_id) {
+      // Get arranger details with primary user
+      const { data: arranger, error: arrangerError } = await serviceSupabase
+        .from('arranger_entities')
+        .select(`
+          id,
+          company_name,
+          arranger_users!inner(user_id)
+        `)
+        .eq('id', body.arranger_id)
+        .single()
+
+      if (arrangerError || !arranger) {
+        throw new Error(`Arranger not found: ${body.arranger_id}`)
+      }
+
+      // Get primary arranger user's profile
+      const primaryUserId = (arranger.arranger_users as any)?.[0]?.user_id
+      if (!primaryUserId) {
+        throw new Error('Arranger has no associated users')
+      }
+
+      const { data: arrangerProfile } = await serviceSupabase
+        .from('profiles')
+        .select('email, full_name')
+        .eq('id', primaryUserId)
+        .single()
+
+      if (!arrangerProfile?.email) {
+        throw new Error('Arranger user profile not found')
+      }
+
+      countersignerEmail = arrangerProfile.email
+      countersignerName = arrangerProfile.full_name || arranger.company_name
+      signerRole = 'arranger'
+    }
+
     const staffSigPayload = {
       investor_id: subscription.investor_id,
-      signer_email: 'cto@versoholdings.com',
-      signer_name: 'Julien Machot',
+      signer_email: countersignerEmail,
+      signer_name: countersignerName,
       document_type: 'subscription',
       google_drive_url: urlData.signedUrl,
-      signer_role: 'admin',
+      signer_role: signerRole,
       signature_position: 'party_b',
       subscription_id: subscriptionId,
       document_id: documentId
@@ -214,7 +266,7 @@ export async function POST(
 
     if (!staffSigResponse.ok) {
       const errorText = await staffSigResponse.text()
-      throw new Error(`Failed to create staff signature request: ${errorText}`)
+      throw new Error(`Failed to create ${signerRole} signature request: ${errorText}`)
     }
 
     const staffSigData = await staffSigResponse.json()
@@ -231,14 +283,17 @@ export async function POST(
     console.log('✅ Multi-signatory signature requests created for subscription pack:', {
       document_id: documentId,
       investor_requests: investorSignatureRequests.length,
-      staff_request: staffSigData.signature_request_id
+      countersigner_type: signerRole,
+      countersigner_request: staffSigData.signature_request_id
     })
 
     return NextResponse.json({
       success: true,
       investor_signature_requests: investorSignatureRequests,
-      staff_signature_request: staffSigData,
-      total_signatories: signatories.length + 1 // investors + staff
+      countersigner_request: staffSigData,
+      countersigner_type: signerRole,
+      countersigner_name: countersignerName,
+      total_signatories: signatories.length + 1 // investors + countersigner
     })
 
   } catch (error) {

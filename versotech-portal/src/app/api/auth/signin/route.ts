@@ -48,6 +48,20 @@ const deriveDisplayName = (user: { email?: string | null; user_metadata?: Record
   return 'User'
 }
 
+/**
+ * Resolves the default role for a new user during sign-in.
+ *
+ * DESIGN DECISION (Unified Portal - Phase 2):
+ * Staff auto-provisioning by company email is DISABLED in the unified portal.
+ * All staff members must be invited by administrators via the User Management UI.
+ * This provides better security and audit trails for staff account creation.
+ *
+ * The company email auto-provisioning logic below only works if portal='staff',
+ * but the unified portal login always sends portal='investor'. This is intentional.
+ *
+ * Staff can still sign in normally after being invited - this function only affects
+ * NEW users who don't have a profile yet.
+ */
 const resolveDefaultRole = (
   portal: string,
   metadataRole: string | null,
@@ -56,20 +70,20 @@ const resolveDefaultRole = (
   // SECURITY: Never trust metadataRole for staff roles
   // Staff roles should ONLY come from:
   // 1. Admin-created profiles (invitation flow)
-  // 2. Company email domain validation
+  // 2. Company email domain validation (legacy, disabled in unified portal)
 
   if (portal === 'staff') {
-    // For staff portal: require company email domain
-    // Non-company emails must have pre-existing profile from admin invitation
+    // Legacy staff portal: auto-provision by company email domain
+    // NOTE: This path is not used in the unified portal (portal is always 'investor')
     if (isStaffEmail(email)) {
       return 'staff_ops'
     }
     // DENY - non-company email trying to access staff portal
-    // They must have a pre-existing profile created by admin invitation
     return null
   }
 
-  // For investor portal: always default to investor
+  // Unified portal: always default to investor for new users
+  // Staff must be pre-invited by administrators
   return 'investor'
 }
 

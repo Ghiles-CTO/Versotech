@@ -33,6 +33,9 @@ import {
   Briefcase,
   Users,
   Building2,
+  PenTool,
+  Calendar,
+  Filter,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatCurrency, formatDate } from '@/lib/format'
@@ -57,7 +60,16 @@ type Mandate = {
   close_at: string | null
   created_at: string
   investor_count: number
+  pending_signatures: number
 }
+
+const DATE_FILTERS = [
+  { label: 'All Time', value: 'all' },
+  { label: 'Last 7 Days', value: '7d' },
+  { label: 'Last 30 Days', value: '30d' },
+  { label: 'Last 90 Days', value: '90d' },
+  { label: 'This Year', value: 'year' },
+]
 
 type ArrangerInfo = {
   id: string
@@ -107,6 +119,8 @@ export default function MyMandatesPage() {
   const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
+  const [dateFilter, setDateFilter] = useState('all')
+  const [totalPendingSignatures, setTotalPendingSignatures] = useState(0)
 
   useEffect(() => {
     async function fetchData() {
@@ -173,6 +187,7 @@ export default function MyMandatesPage() {
         // Get investor counts for each deal
         const dealIds = (deals || []).map(d => d.id)
         let investorCounts: Record<string, number> = {}
+        let pendingSignatures: Record<string, number> = {}
 
         if (dealIds.length > 0) {
           const { data: memberships } = await supabase
@@ -186,7 +201,33 @@ export default function MyMandatesPage() {
               investorCounts[m.deal_id] = (investorCounts[m.deal_id] || 0) + 1
             }
           }
+
+          // Get pending signature counts for each deal
+          const { data: subscriptions } = await supabase
+            .from('subscriptions')
+            .select('id, deal_id')
+            .in('deal_id', dealIds)
+
+          if (subscriptions && subscriptions.length > 0) {
+            const subIds = subscriptions.map(s => s.id)
+            const { data: sigRequests } = await supabase
+              .from('signature_requests')
+              .select('id, subscription_id, status, signer_role')
+              .in('subscription_id', subIds)
+              .eq('status', 'pending')
+              .eq('signer_role', 'arranger')
+
+            for (const sig of sigRequests || []) {
+              const sub = subscriptions.find(s => s.id === sig.subscription_id)
+              if (sub?.deal_id) {
+                pendingSignatures[sub.deal_id] = (pendingSignatures[sub.deal_id] || 0) + 1
+              }
+            }
+          }
         }
+
+        const totalPending = Object.values(pendingSignatures).reduce((sum, count) => sum + count, 0)
+        setTotalPendingSignatures(totalPending)
 
         const processedMandates: Mandate[] = (deals || []).map(deal => ({
           id: deal.id,
@@ -206,6 +247,7 @@ export default function MyMandatesPage() {
           close_at: deal.close_at,
           created_at: deal.created_at,
           investor_count: investorCounts[deal.id] || 0,
+          pending_signatures: pendingSignatures[deal.id] || 0,
         }))
 
         setMandates(processedMandates)
@@ -286,6 +328,7 @@ export default function MyMandatesPage() {
         close_at: deal.close_at,
         created_at: deal.created_at,
         investor_count: 0,
+        pending_signatures: 0,
       }))
 
       setMandates(processedMandates)
@@ -313,6 +356,23 @@ export default function MyMandatesPage() {
     fetchData()
   }, [])
 
+  // Date filter helper
+  const getDateFilterCutoff = (filter: string): Date | null => {
+    const now = new Date()
+    switch (filter) {
+      case '7d':
+        return new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+      case '30d':
+        return new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+      case '90d':
+        return new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000)
+      case 'year':
+        return new Date(now.getFullYear(), 0, 1)
+      default:
+        return null
+    }
+  }
+
   // Filter mandates
   const filteredMandates = mandates.filter(mandate => {
     const matchesStatus = statusFilter === 'all' || mandate.status === statusFilter
@@ -320,7 +380,12 @@ export default function MyMandatesPage() {
       mandate.name?.toLowerCase().includes(search.toLowerCase()) ||
       mandate.company_name?.toLowerCase().includes(search.toLowerCase()) ||
       mandate.sector?.toLowerCase().includes(search.toLowerCase())
-    return matchesStatus && matchesSearch
+
+    // Date filter
+    const cutoffDate = getDateFilterCutoff(dateFilter)
+    const matchesDate = !cutoffDate || new Date(mandate.created_at) >= cutoffDate
+
+    return matchesStatus && matchesSearch && matchesDate
   })
 
   const getProgressPercent = (raised: number, target: number) => {
@@ -430,6 +495,35 @@ export default function MyMandatesPage() {
         </Card>
       </div>
 
+      {/* Pending Signatures Alert */}
+      {totalPendingSignatures > 0 && (
+        <Card className="border-amber-500/30 bg-amber-50/50">
+          <CardContent className="py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-full bg-amber-500/20">
+                  <PenTool className="h-5 w-5 text-amber-600" />
+                </div>
+                <div>
+                  <p className="font-medium text-foreground">
+                    {totalPendingSignatures} Pending Signature{totalPendingSignatures !== 1 ? 's' : ''}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    You have subscription packs awaiting your countersignature
+                  </p>
+                </div>
+              </div>
+              <Button variant="outline" asChild>
+                <Link href="/versotech_main/versosign">
+                  <PenTool className="h-4 w-4 mr-2" />
+                  Go to VERSOSign
+                </Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Filters */}
       <Card>
         <CardContent className="pt-6">
@@ -446,11 +540,24 @@ export default function MyMandatesPage() {
               </div>
             </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full md:w-48">
+              <SelectTrigger className="w-full md:w-40">
                 <SelectValue placeholder="Filter by status" />
               </SelectTrigger>
               <SelectContent>
                 {STATUS_FILTERS.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={dateFilter} onValueChange={setDateFilter}>
+              <SelectTrigger className="w-full md:w-40">
+                <Calendar className="h-4 w-4 mr-2" />
+                <SelectValue placeholder="Filter by date" />
+              </SelectTrigger>
+              <SelectContent>
+                {DATE_FILTERS.map((option) => (
                   <SelectItem key={option.value} value={option.value}>
                     {option.label}
                   </SelectItem>
@@ -493,6 +600,7 @@ export default function MyMandatesPage() {
                     <TableHead>Status</TableHead>
                     <TableHead>Progress</TableHead>
                     <TableHead>Investors</TableHead>
+                    <TableHead>Pending</TableHead>
                     <TableHead>Timeline</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
@@ -554,6 +662,16 @@ export default function MyMandatesPage() {
                           <Users className="h-4 w-4 text-muted-foreground" />
                           <span className="font-medium">{mandate.investor_count}</span>
                         </div>
+                      </TableCell>
+                      <TableCell>
+                        {mandate.pending_signatures > 0 ? (
+                          <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
+                            <PenTool className="h-3 w-3 mr-1" />
+                            {mandate.pending_signatures}
+                          </Badge>
+                        ) : (
+                          <span className="text-muted-foreground text-xs">—</span>
+                        )}
                       </TableCell>
                       <TableCell>
                         <div className="text-sm">

@@ -11,12 +11,16 @@ import {
   DollarSign,
   FileSignature,
   TrendingUp,
+  TrendingDown,
   Clock,
   CheckCircle2,
   AlertTriangle,
   ArrowRight,
   Loader2,
   PenLine,
+  BarChart3,
+  Target,
+  Wallet,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { formatCurrency, formatDate } from '@/lib/format'
@@ -46,6 +50,13 @@ type IntroducerMetrics = {
   conversionRate: number
 }
 
+type PerformanceMetrics = {
+  thisMonthIntroductions: number
+  lastMonthIntroductions: number
+  introductionGrowth: number
+  avgCommissionPerIntro: number
+}
+
 type Agreement = {
   id: string
   status: string
@@ -72,6 +83,7 @@ export function IntroducerDashboard({ introducerId, userId, persona }: Introduce
 
   const [loading, setLoading] = useState(true)
   const [metrics, setMetrics] = useState<IntroducerMetrics | null>(null)
+  const [performance, setPerformance] = useState<PerformanceMetrics | null>(null)
   const [activeAgreement, setActiveAgreement] = useState<Agreement | null>(null)
   const [pendingAgreement, setPendingAgreement] = useState<Agreement | null>(null)
   const [recentIntroductions, setRecentIntroductions] = useState<RecentIntroduction[]>([])
@@ -113,6 +125,36 @@ export function IntroducerDashboard({ introducerId, userId, persona }: Introduce
           totalCommissionEarned: totalEarned,
           pendingCommission: pendingComm,
           conversionRate: intros.length > 0 ? (allocated.length / intros.length) * 100 : 0,
+        })
+
+        // Calculate performance metrics
+        const now = new Date()
+        const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+        const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+
+        const thisMonthIntroductions = intros.filter(i =>
+          i.introduced_at && new Date(i.introduced_at) >= startOfThisMonth
+        ).length
+
+        const lastMonthIntroductions = intros.filter(i =>
+          i.introduced_at &&
+          new Date(i.introduced_at) >= startOfLastMonth &&
+          new Date(i.introduced_at) < startOfThisMonth
+        ).length
+
+        const introductionGrowth = lastMonthIntroductions > 0
+          ? Math.round(((thisMonthIntroductions - lastMonthIntroductions) / lastMonthIntroductions) * 100)
+          : thisMonthIntroductions > 0 ? 100 : 0
+
+        const avgCommissionPerIntro = allocated.length > 0
+          ? Math.round(totalEarned / allocated.length)
+          : 0
+
+        setPerformance({
+          thisMonthIntroductions,
+          lastMonthIntroductions,
+          introductionGrowth,
+          avgCommissionPerIntro
         })
 
         // Map introductions to match expected type (deal is single object, not array)
@@ -317,6 +359,68 @@ export function IntroducerDashboard({ introducerId, userId, persona }: Introduce
           </CardContent>
         </Card>
       </div>
+
+      {/* Performance Analytics */}
+      {performance && (
+        <Card className={isDark ? 'bg-white/5 border-white/10' : ''}>
+          <CardHeader>
+            <CardTitle className={`flex items-center gap-2 ${isDark ? 'text-white' : ''}`}>
+              <BarChart3 className="h-5 w-5" />
+              Performance Analytics
+            </CardTitle>
+            <CardDescription>Your introduction performance trends</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className={`p-4 rounded-lg border ${isDark ? 'bg-white/5 border-white/10' : 'bg-muted/30'}`}>
+                <div className={`flex items-center gap-2 text-sm mb-1 ${isDark ? 'text-gray-400' : 'text-muted-foreground'}`}>
+                  {performance.introductionGrowth >= 0 ? (
+                    <TrendingUp className="h-4 w-4 text-green-500" />
+                  ) : (
+                    <TrendingDown className="h-4 w-4 text-red-500" />
+                  )}
+                  This Month
+                </div>
+                <div className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                  {performance.thisMonthIntroductions}
+                </div>
+                <p className={`text-xs mt-1 ${isDark ? 'text-gray-500' : 'text-muted-foreground'}`}>
+                  <span className={performance.introductionGrowth >= 0 ? 'text-green-500' : 'text-red-500'}>
+                    {performance.introductionGrowth >= 0 ? '+' : ''}{performance.introductionGrowth}%
+                  </span>
+                  {' '}vs last month ({performance.lastMonthIntroductions})
+                </p>
+              </div>
+
+              <div className={`p-4 rounded-lg border ${isDark ? 'bg-white/5 border-white/10' : 'bg-muted/30'}`}>
+                <div className={`flex items-center gap-2 text-sm mb-1 ${isDark ? 'text-gray-400' : 'text-muted-foreground'}`}>
+                  <Target className="h-4 w-4" />
+                  Conversion Rate
+                </div>
+                <div className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                  {metrics?.conversionRate.toFixed(1) || 0}%
+                </div>
+                <p className={`text-xs mt-1 ${isDark ? 'text-gray-500' : 'text-muted-foreground'}`}>
+                  {metrics?.allocatedIntroductions || 0} of {metrics?.totalIntroductions || 0} allocated
+                </p>
+              </div>
+
+              <div className={`p-4 rounded-lg border ${isDark ? 'bg-white/5 border-white/10' : 'bg-muted/30'}`}>
+                <div className={`flex items-center gap-2 text-sm mb-1 ${isDark ? 'text-gray-400' : 'text-muted-foreground'}`}>
+                  <Wallet className="h-4 w-4" />
+                  Avg Commission
+                </div>
+                <div className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                  {formatCurrency(performance.avgCommissionPerIntro)}
+                </div>
+                <p className={`text-xs mt-1 ${isDark ? 'text-gray-500' : 'text-muted-foreground'}`}>
+                  Per successful introduction
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Two Column Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

@@ -56,6 +56,44 @@ export async function POST(request: NextRequest) {
 
   const supabase = createServiceClient()
 
+  // Check for countersignature notifications (CEO/Arranger)
+  if (document_type === 'subscription') {
+    const { data: sigRequest } = await supabase
+      .from('signature_requests')
+      .select('id, subscription_id, deal_id, signer_role')
+      .eq('id', signature_request_id)
+      .maybeSingle()
+
+    const signerRole = sigRequest?.signer_role as string | undefined
+    const isCountersign = signerRole === 'admin' || signerRole === 'arranger'
+
+    if (isCountersign && sigRequest?.subscription_id) {
+      const { data: subscription } = await supabase
+        .from('subscriptions')
+        .select(`
+          id,
+          deal_id,
+          investor_id,
+          investors (display_name, legal_name),
+          deals (name)
+        `)
+        .eq('id', sigRequest.subscription_id)
+        .single()
+
+      const dealName = (subscription?.deals as any)?.name || 'the deal'
+      const investorName = (subscription?.investors as any)?.display_name || (subscription?.investors as any)?.legal_name || 'Investor'
+      const signerLabel = signerRole === 'arranger' ? 'Arranger' : 'CEO/Admin'
+
+      if (subscription?.deal_id) {
+        await notifyAssignedLawyers(supabase, subscription.deal_id, {
+          title: 'Subscription Pack Countersigned',
+          message: `${signerLabel} countersigned the subscription pack for ${investorName} (${dealName}).`,
+          link: '/versotech_main/subscription-packs'
+        })
+      }
+    }
+  }
+
   // Handle NDA signature completion (Direct Subscribe flow)
   if (document_type === 'nda') {
     await handleNDACompletion(supabase, signature_request_id, workflow_run_id)
@@ -67,6 +105,55 @@ export async function POST(request: NextRequest) {
   }
 
   return NextResponse.json({ success: true })
+}
+
+type LawyerNotificationPayload = {
+  title: string
+  message: string
+  link?: string | null
+}
+
+async function notifyAssignedLawyers(
+  supabase: ReturnType<typeof createServiceClient>,
+  dealId: string,
+  payload: LawyerNotificationPayload
+) {
+  // Primary: deal_lawyer_assignments
+  const { data: assignments } = await supabase
+    .from('deal_lawyer_assignments')
+    .select('lawyer_id')
+    .eq('deal_id', dealId)
+
+  let lawyerIds = (assignments || []).map((a: any) => a.lawyer_id).filter(Boolean)
+
+  // Fallback: lawyers.assigned_deals contains dealId
+  if (lawyerIds.length === 0) {
+    const { data: fallbackLawyers } = await supabase
+      .from('lawyers')
+      .select('id, assigned_deals')
+      .contains('assigned_deals', [dealId])
+
+    lawyerIds = (fallbackLawyers || []).map((lawyer: any) => lawyer.id).filter(Boolean)
+  }
+
+  if (lawyerIds.length === 0) return
+
+  const { data: lawyerUsers } = await supabase
+    .from('lawyer_users')
+    .select('user_id')
+    .in('lawyer_id', lawyerIds)
+
+  if (!lawyerUsers || lawyerUsers.length === 0) return
+
+  const notifications = lawyerUsers.map((lu: any) => ({
+    user_id: lu.user_id,
+    investor_id: null,
+    title: payload.title,
+    message: payload.message,
+    link: payload.link || '/versotech_main/subscription-packs'
+  }))
+
+  await supabase.from('investor_notifications').insert(notifications)
 }
 
 /**
@@ -365,7 +452,30 @@ async function handleSubscriptionCompletion(
           deal_id: subscription.deal_id
         }
       })
-      console.log('✅ [SUBSCRIPTION] Notification created')
+      console.log('✅ [SUBSCRIPTION] Investor notification created')
+    }
+
+    // Notify lawyers assigned to this deal
+    const { data: investor } = await supabase
+      .from('investors')
+      .select('display_name, legal_name')
+      .eq('id', subscription.investor_id)
+      .single()
+
+    const { data: vehicle } = await supabase
+      .from('vehicles')
+      .select('name')
+      .eq('id', subscription.vehicle_id)
+      .single()
+
+    const investorName = investor?.display_name || investor?.legal_name || 'An investor'
+
+    if (subscription.deal_id) {
+      await notifyAssignedLawyers(supabase, subscription.deal_id, {
+        title: 'Subscription Pack Signed',
+        message: `${investorName} has signed the subscription pack for ${vehicle?.name || 'the deal'}. Commitment: ${subscription.commitment.toLocaleString()} ${subscription.currency}`,
+        link: '/versotech_main/subscription-packs'
+      })
     }
   }
 

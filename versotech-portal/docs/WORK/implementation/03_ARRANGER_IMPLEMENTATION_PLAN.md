@@ -1,1041 +1,596 @@
 # Arranger Implementation Plan
 
 **User Type:** Arranger
-**Current Completion:** 15% (Audit-Verified: December 24, 2025)
-**Target Completion:** 90%
-**Estimated Hours:** 28 hours
-**Last Audit:** December 24, 2025 - Deep Surgical Audit Complete
+**Current Completion:** 45% (Audit-Verified: December 27, 2025 - Third Pass)
+**Target Completion:** 95%
+**Estimated Hours:** 29 hours
+**Last Audit:** December 27, 2025 - Third pass with schema sync verification
 
 ---
 
-## ⚠️ CRITICAL AUDIT FINDINGS
+## EXECUTIVE SUMMARY
 
-### 1. Fee Model CRUD: 0% Complete
+This plan has been corrected after TWO rounds of deep verification (code, database schema, actual data, and user stories).
 
-**Actual State (Verified via Codebase Search):**
+### Key Corrections
 
-| Component | Status | Notes |
-|-----------|--------|-------|
-| `/api/arrangers/partners/[partnerId]/fee-models/*` | ❌ MISSING | No routes exist |
-| `/api/arrangers/introducers/[introducerId]/fee-models/*` | ❌ MISSING | No routes exist |
-| `/api/arrangers/commercial-partners/[cpId]/fee-models/*` | ❌ MISSING | No routes exist |
-| `src/components/arranger/fee-model-form.tsx` | ❌ MISSING | No component |
-| `src/components/arranger/fee-model-list.tsx` | ❌ MISSING | No component |
+1. **My-* Pages are FULLY BUILT** - 5 pages totaling 2,500+ lines with real data
+2. **Introducer Agreement Workflow is STAFF-ONLY** - Works for staff + introducers, but arrangers have NO involvement
+3. **Fee model partner linkage does NOT work** - Column `partner_id` exists but is NEVER USED (0 of 14 fee plans have partner_id set; all use deal_id)
+4. **My Mandates is VIEW-ONLY** - Shows deal list, NO signing/notifications per user stories
+5. **Placement agreements are VIEW-ONLY** - No creation or signing APIs exist
+6. **No reminders exist** - Neither introducer agreements nor placement agreements have reminder functionality
 
-**Staff Fee Routes Exist But Are Different:**
-- `/api/staff/fees/*` - These are for STAFF managing all fees
-- Arranger needs SELF-SERVICE routes to manage THEIR fee models
+---
 
-### 2. My-* Pages: Placeholder Only
+## 1. VERIFIED STATUS (What's ACTUALLY Built)
 
-**Actual State:**
-| Page | Status |
-|------|--------|
-| `/versotech_main/my-partners` | File exists, minimal content |
-| `/versotech_main/my-introducers` | File exists, minimal content |
-| `/versotech_main/my-commercial-partners` | File exists, minimal content |
-| `/versotech_main/my-lawyers` | File exists, minimal content |
-| `/versotech_main/my-mandates` | File exists, minimal content |
+### 1.1 Pages - FULLY IMPLEMENTED ✅
 
-**These pages need REAL data integration.**
+| Page | Lines | Status | Features |
+|------|-------|--------|----------|
+| `/my-partners/page.tsx` | 577 | ✅ DONE | Real data, filters, tables, stats, partner referrals |
+| `/my-introducers/page.tsx` | 465 | ✅ DONE | Real data, agreement status, commission tracking |
+| `/my-commercial-partners/page.tsx` | 495 | ✅ DONE | Real data, client counts, placement values |
+| `/my-lawyers/page.tsx` | 459 | ✅ DONE | Real data, deal values, specializations |
+| `/my-mandates/page.tsx` | 592 | ✅ DONE | Real data, deal progress, investor counts |
 
-### 3. Agreement Workflow: 0% Complete
+**These pages work correctly for both arranger and staff views.**
 
-**Required for Introducer/CP:**
-- `/api/arrangers/send-introducer-agreement/route.ts` - ❌ MISSING
-- `/api/arrangers/send-placement-agreement/route.ts` - ❌ MISSING
-- VersaSign integration for dual-party signing - Uses existing pattern
+### 1.2 Introducer Agreement Workflow - STAFF-ONLY (No Arranger Involvement)
 
-### 4. What Actually Works
+| Component | Status | Note |
+|-----------|--------|------|
+| `/api/introducer-agreements/route.ts` (list/create) | ✅ EXISTS | Staff-only |
+| `/api/introducer-agreements/[id]/send/route.ts` | ✅ EXISTS | Staff-only |
+| `/api/introducer-agreements/[id]/approve/route.ts` | ✅ EXISTS | Introducer action |
+| `/api/introducer-agreements/[id]/reject/route.ts` | ✅ EXISTS | Introducer action |
+| `/api/introducer-agreements/[id]/sign/route.ts` | ✅ EXISTS | CEO + Introducer |
+| VersaSign integration | ✅ EXISTS | |
+| **Arranger involvement** | ❌ NONE | No arranger references in code |
+| **Automatic reminders** | ❌ NONE | Stories 2.3.1 Row 26, 30, 31 |
+
+**Current Signing Flow (Staff + Introducer ONLY):**
+1. **Staff** creates agreement
+2. **Staff** sends to introducer
+3. **Introducer** approves
+4. **CEO** signs first (status: `approved` → `pending_ceo_signature`)
+5. **Introducer** signs second (`pending_introducer_signature`)
+6. Agreement active
+
+**What's Missing for Arrangers:**
+- Story 2.3.1 Row 29: "Arranger digitally signs after approval" - NOT IMPLEMENTED
+- Stories 2.3.1 Row 26, 30, 31: Automatic reminders - NOT IMPLEMENTED
+- No `arranger_entity_id` or `arranger_id` references in introducer-agreements code
+
+### 1.3 Partner Fee Model Viewing - BROKEN + SCHEMA SYNC ISSUE ⚠️⚠️
+
+| Component | Status | Note |
+|-----------|--------|------|
+| `FeeModelView.tsx` component | ✅ EXISTS | Read-only UI |
+| `/api/partners/me/fee-models/route.ts` | ✅ EXISTS | Queries `partner_id` |
+| **Actual data with partner_id** | ❌ NONE | 0 of 14 fee_plans have partner_id set |
+| Staff fee creation uses partner_id | ❌ NO | Creates with deal_id only |
+
+**CRITICAL: Schema Sync Issue Detected**
+
+| Source | Has `partner_id` on fee_plans? |
+|--------|-------------------------------|
+| Live Database | ✅ YES (verified via SQL query) |
+| TypeScript types (`supabase.ts`) | ❌ NO - not in Row/Insert/Update |
+| Migration files | ❌ NO - no migration adds this column |
+
+**Root Cause:** The `partner_id` column was added directly to the database without a migration. The TypeScript types are out of sync with the actual schema.
+
+**Database Reality (Verified):**
+```sql
+-- Column EXISTS in live DB:
+SELECT column_name FROM information_schema.columns
+WHERE table_name = 'fee_plans' AND column_name = 'partner_id';
+-- Returns: partner_id
+
+-- But NO data uses it:
+SELECT COUNT(*) as total, COUNT(partner_id) as with_partner_id FROM fee_plans;
+-- Result: total=14, with_partner_id=0
+```
+
+**Implications:**
+1. TypeScript code can't safely use `partner_id` (type errors)
+2. The `/api/partners/me/fee-models/route.ts` queries `partner_id` but types don't support it
+3. Even if types were fixed, 0 records have partner_id populated
+
+**Required Fix:**
+1. Create migration to formalize `partner_id` column (or verify it exists)
+2. Regenerate TypeScript types: `npx supabase gen types typescript`
+3. Modify staff fee creation to populate `partner_id`
+4. Create arranger routes to use `partner_id`
+
+### 1.4 Placement Agreements - VIEW-ONLY (No Creation/Signing) ⚠️
+
+| Component | Status | Note |
+|-----------|--------|------|
+| `/placement-agreements/page.tsx` | ✅ EXISTS | View-only for CPs |
+| Placement agreement table | ✅ EXISTS | Database table |
+| `/api/**/placement*/**/*.ts` | ❌ NONE | No API routes exist |
+| Creation workflow | ❌ MISSING | Story 2.4.1 Row 44-45 |
+| Signing workflow | ❌ MISSING | Story 2.4.1 Row 49-52 |
+| Automatic reminders | ❌ MISSING | Story 2.4.1 Row 46, 50 |
+
+**What Exists:** Commercial partners can VIEW agreements in a table.
+**What's Missing:** Entire creation, approval, signing, and reminder workflow.
+
+### 1.5 Infrastructure - WORKING ✅
 
 | Feature | Status |
 |---------|--------|
 | Arranger persona detection | ✅ WORKS |
-| Navigation configured | ✅ WORKS |
-| Database tables exist | ✅ WORKS |
+| Navigation in `persona-sidebar.tsx` | ✅ WORKS |
+| Database tables (`arranger_entities`, `arranger_users`, etc.) | ✅ WORKS |
 | Profile page | ✅ WORKS |
 | Documents page | ✅ WORKS |
-| Inbox/VersaSign | ✅ WORKS |
+| VersaSign inbox | ✅ WORKS |
 
 ---
 
-## FEATURE TRUTH TABLE (Audit-Verified)
+## 2. WHAT'S ACTUALLY MISSING
 
-| Feature | Planned | Exists | Working | Priority |
-|---------|---------|--------|---------|----------|
-| Arranger Persona | ✓ | ✓ | ✓ | - |
-| Database Schema | ✓ | ✓ | ✓ | - |
-| Navigation | ✓ | ✓ | ✓ | - |
-| **Fee Model CRUD (Partners)** | **✓** | **✗** | **0%** | **P0** |
-| **Fee Model CRUD (Introducers)** | **✓** | **✗** | **0%** | **P0** |
-| **Fee Model CRUD (CPs)** | **✓** | **✗** | **0%** | **P0** |
-| **Introducer Agreement Workflow** | **✓** | **✗** | **0%** | **P0** |
-| **Placement Agreement Workflow** | **✓** | **✗** | **0%** | **P0** |
-| **Arranger Dashboard** | **✓** | **✗** | **0%** | **P1** |
-| My-* Pages (real data) | ✓ | PARTIAL | 20% | P1 |
-| Payment Request to Lawyer | ✓ | ✗ | 0% | P2 |
+### 2.1 Arranger Dashboard (story 2.1.4)
 
-**TRUE FUNCTIONAL COMPLETION: 15%**
-
----
-
-## 1. WHO IS THE ARRANGER?
-
-The Arranger structures deals and manages relationships with partners, introducers, commercial partners, and lawyers. From user stories (Section 2.Arranger, 86 rows):
-
-**Business Role:**
-- Manages their profile and company information
-- **CREATES and manages fee models** for Partners, Introducers, Commercial Partners
-- Sends fee models to these parties
-- Creates and manages Introducer Agreements
-- Signs placement agreements with Commercial Partners
-- Views and manages their Mandates (deals they're structuring)
-- Requests payment to lawyers for fee processing
-- Views escrow account funding status
-- Generates reconciliation reports
-
-**Key Distinction:**
-- Arranger has FULL CRUD on fee models (not just view)
-- Arranger works with deals at a structuring level
-- Different from CEO: CEO manages platform, Arranger manages deal relationships
-
----
-
-## 2. WHAT ALREADY EXISTS
-
-### 2.1 Database
-
-**Tables (All Exist):**
-- `arranger_entities` - Arranger accounts
-- `arranger_members` - Entity members
-- `arranger_users` - Links profiles to arranger entities
-- `fee_plans` - Fee plan definitions (exists, used by staff)
-- `fee_components` - Fee plan components
-- `introducer_agreements` - Introducer fee agreements
-- `placement_agreements` - CP placement agreements
-
-**Missing Fields:**
-- None - tables are complete
-
-### 2.2 Pages (Structure Exists, Content Limited)
-
-| Route | Status | Description |
-|-------|--------|-------------|
-| `/versotech_main/dashboard` | PARTIAL | Uses generic PersonaDashboard |
-| `/versotech_main/my-partners` | EXISTS | Page file exists, limited data |
-| `/versotech_main/my-introducers` | EXISTS | Page file exists, limited data |
-| `/versotech_main/my-commercial-partners` | EXISTS | Page file exists, limited data |
-| `/versotech_main/my-lawyers` | EXISTS | Page file exists, limited data |
-| `/versotech_main/my-mandates` | EXISTS | Page file exists, limited data |
-| `/versotech_main/profile` | BUILT | Profile page |
-| `/versotech_main/documents` | BUILT | Documents |
-| `/versotech_main/inbox` | BUILT | Inbox |
-
-**What's Limited:**
-- Pages exist but mostly show placeholder content
-- No fee model creation UI
-- No agreement workflow
-
-### 2.3 API Routes
-
-| Route | Status | Notes |
-|-------|--------|-------|
-| `/api/admin/arrangers/*` | BUILT | Admin routes for managing arrangers |
-| `/api/arrangers/*` | MISSING | No arranger self-service routes |
-| `/api/staff/fees/*` | BUILT | Staff fee routes (can be referenced) |
-
-### 2.4 Navigation
-
-**Configured in `persona-sidebar.tsx`:**
-```typescript
-arranger: [
-  { name: 'Dashboard', href: '/versotech_main/dashboard', icon: LayoutDashboard },
-  { name: 'My Mandates', href: '/versotech_main/my-mandates', icon: FileText },
-  { name: 'My Partners', href: '/versotech_main/my-partners', icon: Users },
-  { name: 'My Introducers', href: '/versotech_main/my-introducers', icon: UserPlus },
-  { name: 'My Commercial Partners', href: '/versotech_main/my-commercial-partners', icon: Building2 },
-  { name: 'My Lawyers', href: '/versotech_main/my-lawyers', icon: Scale },
-  { name: 'Documents', href: '/versotech_main/documents', icon: FileText },
-]
-```
-
----
-
-## 3. WHAT'S MISSING
-
-### 3.1 Fee Model CRUD (From User Stories)
-
-**Section 2.2 - My Partners:**
-
-| Row | Story | Status |
-|-----|-------|--------|
-| 11 | Create fees model for selected partners | MISSING |
-| 12 | Update fees model for selected partners | MISSING |
-| 13 | Send notification to Partners to send invoice | MISSING |
-| 14 | Receive notification when invoice received | MISSING |
-| 15 | View fees to pay to selected Partners | PARTIAL |
-| 16 | Request to proceed to Partner fee payment to Lawyer | MISSING |
-| 17 | Receive notification when payment completed | MISSING |
-
-**Section 2.3 - My Introducers:**
-
-| Row | Story | Status |
-|-----|-------|--------|
-| 22 | Create fees model for selected introducers | MISSING |
-| 23 | Update fees model for selected introducers | MISSING |
-| 24 | Send fees model to selected introducers | MISSING |
-| 25 | Update existing Introducer Agreement | MISSING |
-| 26 | Automatic reminder to approve Introducer Agreement | MISSING |
-| 27 | Receive notification of approval | MISSING |
-| 28 | Receive notification of rejection | MISSING |
-| 29 | Digitally sign approved Introducer Agreement | MISSING |
-| 30-32 | Reminders and signature confirmation | MISSING |
-
-**Section 2.4 - My Commercial Partners:**
-
-| Row | Story | Status |
-|-----|-------|--------|
-| 42 | Create fees model for Commercial Partners | MISSING |
-| 43 | Update fees model for Commercial Partners | MISSING |
-| 44 | Send fees model to Commercial Partners | MISSING |
-| 49 | Digitally sign approved Placement Agreement | MISSING |
-| 50-52 | Reminders and signature | MISSING |
-
-### 3.2 Arranger Dashboard
+**Status:** MISSING - `persona-dashboard.tsx` falls back to generic view for arrangers
 
 **Required Metrics:**
 - Active mandates count
 - Pending agreements (awaiting signature)
-- Pending payments (to partners/introducers/CPs)
+- Pending payments
 - Recent activity
 
-### 3.3 Payment Request Flow
+### 2.2 Arranger Profile Approval Flow (stories 2.1.1-2.1.3)
 
-**Section 2.2.2, 2.3.2, 2.4.2:**
-- Arranger requests lawyer to process payment
-- Notification when payment completed
+**Status:** MISSING
+
+| Story | Description | Status |
+|-------|-------------|--------|
+| 2.1.1 Row 2 | Complete profile for approval | ❌ MISSING |
+| 2.1.1 Row 3 | Update profile for re-approval | ❌ MISSING |
+| 2.1.3 Row 5 | Submit profile for approval | ❌ MISSING |
+| 2.1.3 Row 6 | Notification of approval | ❌ MISSING |
+| 2.1.3 Row 7 | Notification of rejection | ❌ MISSING |
+
+### 2.3 Fee Model CRUD for Arranger Self-Service
+
+**Status:** MISSING - Staff routes exist at `/api/staff/fees/*` but no arranger self-service
+
+**Database Schema Reality:**
+```sql
+-- fee_plans table has:
+partner_id UUID  -- ✅ EXISTS
+-- Does NOT have:
+-- introducer_id, commercial_partner_id, created_by_arranger_id
+```
+
+**Implication:** Arranger can create fee models for partners directly. For introducers/CPs, must use `deal_id` or extend schema.
+
+| Story | Description | Status |
+|-------|-------------|--------|
+| 2.2.1 Row 11 | Create fee model for partners | ❌ MISSING |
+| 2.2.1 Row 12 | Update fee model for partners | ❌ MISSING |
+| 2.3.1 Row 22 | Create fee model for introducers | ❌ MISSING (schema issue) |
+| 2.4.1 Row 42 | Create fee model for CPs | ❌ MISSING (schema issue) |
+
+### 2.4 Subscription Pack Arranger Signing (stories 2.6.1)
+
+**Status:** MISSING - Current signing assigns countersignature to hardcoded admin
+
+| Story | Description | Status |
+|-------|-------------|--------|
+| 2.6.1 Row 64 | Notification subscription pack rejected | ❌ MISSING |
+| 2.6.1 Row 65 | Sign subscription pack after CEO notification | ❌ MISSING |
+| 2.6.1 Row 66 | Notify lawyer after signing | ❌ MISSING |
+| 2.6.1 Row 69 | Access signed packs between dates | ❌ MISSING |
+
+### 2.5 Escrow Funding Status View (story 2.5.2)
+
+**Status:** MISSING - Arranger cannot see escrow funding status
+
+| Story | Description | Status |
+|-------|-------------|--------|
+| 2.5.2 Row 63 | View escrow account funding status | ❌ MISSING |
+
+### 2.6 Reconciliation Report Access (stories 2.6.3)
+
+**Status:** MISSING - Currently restricted to CEO routes
+
+| Story | Description | Status |
+|-------|-------------|--------|
+| 2.6.3 Row 74 | View reconciliation per opportunity | ❌ MISSING |
+| 2.6.3 Row 75 | Generate reconciliation per opportunity | ❌ MISSING |
+| 2.6.3 Row 76 | View reconciliation per compartment | ❌ MISSING |
+| 2.6.3 Row 77 | Generate reconciliation per compartment | ❌ MISSING |
+
+### 2.7 Invoice/Payment Request Flows (stories 2.2.2, 2.3.2, 2.4.2)
+
+**Status:** MISSING
+
+| Story | Description | Status |
+|-------|-------------|--------|
+| 2.2.2 Row 13 | Send notification to Partners to send invoice | ❌ MISSING |
+| 2.2.2 Row 14 | Receive notification invoice received | ❌ MISSING |
+| 2.2.2 Row 16 | Request Partner fee payment to Lawyer | ❌ MISSING |
+| 2.2.2 Row 17 | Notification when payment completed | ❌ MISSING |
+| 2.3.2 Row 33-37 | Same for introducers | ❌ MISSING |
+| 2.4.2 Row 53-57 | Same for commercial partners | ❌ MISSING |
+
+### 2.8 Arranger Agreement Countersigning
+
+**Status:** MISSING - Story 2.3.1 Row 29 says "arranger signs after approval"
+
+Current flow is CEO-driven. Need arranger countersigning option.
 
 ---
 
-## 4. IMPLEMENTATION TASKS
+## 3. IMPLEMENTATION TASKS
 
-### Task 1: Fee Model CRUD for Partners (6 hours)
+### Task 1: Arranger Dashboard (3 hours)
 
-**Files to Create:**
+**Create:** `src/app/(main)/versotech_main/dashboard/arranger-dashboard.tsx`
 
+**Metrics:**
+- Active mandates (deals where `arranger_entity_id` = current arranger)
+- Pending introducer agreements
+- Pending placement agreements
+- Partners/introducers/CPs in network
+- Recent fee events
+
+**Modify:** `persona-dashboard.tsx` to route arranger personas to dedicated dashboard
+
+### Task 2: Fee Model CRUD for Partners (5 hours)
+
+**Problems Found:**
+1. The `partner_id` column exists in LIVE DB but is NOT in TypeScript types or migrations
+2. All 14 existing fee plans use `deal_id` linkage only (0 use `partner_id`)
+3. Staff fee creation doesn't set `partner_id`
+
+**Step 1: Fix Schema Sync (Required First)**
+```bash
+# Create migration to formalize the column (even if it exists, this documents it)
+# supabase/migrations/20251227000002_formalize_fee_plans_partner_id.sql
+
+ALTER TABLE fee_plans ADD COLUMN IF NOT EXISTS partner_id UUID REFERENCES partners(id);
+CREATE INDEX IF NOT EXISTS idx_fee_plans_partner_id ON fee_plans(partner_id);
+
+# Then regenerate types:
+npx supabase gen types typescript --project-id <id> > src/types/supabase.ts
 ```
-src/app/api/arrangers/partners/[partnerId]/fee-models/route.ts
-src/components/arranger/fee-model-form.tsx
-src/components/arranger/fee-model-list.tsx
-```
 
-**API Routes:**
+**Step 2: Solution Options**
+1. **Option A (Recommended):** Modify staff fee creation to also set `partner_id` when creating deal-level plans for a partner's deal
+2. **Option B:** Create arranger-specific fee plans that use `partner_id` directly (separate from deal plans)
+
+**Step 3: Create API Route:** `src/app/api/arrangers/me/fee-models/route.ts`
 
 ```typescript
-// GET /api/arrangers/partners/[partnerId]/fee-models
-// Returns all fee models for this partner created by current arranger
-
-// POST /api/arrangers/partners/[partnerId]/fee-models
-// Body: {
-//   name: string,
-//   deal_id?: string,
-//   components: [
-//     { fee_type: 'subscription' | 'management' | 'performance', rate_bps: number, ... }
-//   ]
-// }
-
-// PATCH /api/arrangers/partners/[partnerId]/fee-models/[modelId]
-// Update fee model
-
-// DELETE /api/arrangers/partners/[partnerId]/fee-models/[modelId]
-// Delete fee model
+// Must ACTUALLY populate partner_id (currently no code does this)
+// GET - List fee models where partner_id is set (AND arranger has access)
+// POST - Create fee model WITH partner_id populated
+// PATCH - Update existing
+// DELETE - Soft delete (set is_active = false)
 ```
 
-**Fee Model Form:**
-- Name
-- Associated deal (optional)
-- Fee components:
-  - Subscription fee (one-time, % of investment)
-  - Management fee (annual, % of AUM)
-  - Performance fee (% of gains, with hurdle)
-- Preview calculations
+**Step 4: Also Modify:** `src/app/api/staff/fees/plans/route.ts` to populate `partner_id` when applicable
 
-**Integration:**
-- Add to `/versotech_main/my-partners` page
-- Each partner card has "Manage Fee Models" button
-- Opens modal or dedicated page
+**Current Schema (DB has column, types don't):**
+```typescript
+// fee_plans in LIVE DB:
+{
+  id, deal_id, name, description, is_default, is_active,
+  effective_from, effective_until, vehicle_id,
+  partner_id,  // EXISTS in DB, NOT in supabase.ts types
+  created_by, created_at, updated_at
+}
 
-### Task 2: Fee Model CRUD for Introducers (4 hours)
-
-**Files to Create:**
-
-```
-src/app/api/arrangers/introducers/[introducerId]/fee-models/route.ts
+// fee_components uses 'kind' not 'fee_type':
+{
+  id, fee_plan_id, kind,  // 'subscription', 'management', 'performance'
+  rate_bps, flat_amount, calc_method, frequency, ...
+}
 ```
 
-**Same pattern as partners, slightly different:**
-- Introducer fee models focus on commission
-- `default_commission_bps` field
-- Commission cap amount
+**UI Component:** `src/components/arranger/fee-model-manager.tsx`
 
-### Task 3: Fee Model CRUD for Commercial Partners (4 hours)
+### Task 3: Introducer/CP Fee Model Schema Extension (2 hours)
 
-**Files to Create:**
+**Decision Required:** Either:
+1. Add `introducer_id` and `commercial_partner_id` columns to `fee_plans`
+2. Use `deal_id` + lookup for all entity types
+3. Create separate `introducer_fee_models` and `cp_fee_models` tables
 
+**Recommended:** Option 1 - Add columns via migration
+
+**Migration:**
+```sql
+-- 20251227000001_add_fee_plan_entity_columns.sql
+ALTER TABLE fee_plans ADD COLUMN IF NOT EXISTS introducer_id UUID REFERENCES introducers(id);
+ALTER TABLE fee_plans ADD COLUMN IF NOT EXISTS commercial_partner_id UUID REFERENCES commercial_partners(id);
+ALTER TABLE fee_plans ADD COLUMN IF NOT EXISTS created_by_arranger_entity_id UUID REFERENCES arranger_entities(id);
 ```
-src/app/api/arrangers/commercial-partners/[cpId]/fee-models/route.ts
-```
 
-**Same pattern, with:**
-- Placement fee focus
-- Tiered fee structures possible
+### Task 4: Subscription Pack Arranger Signing Flow (3 hours)
 
-### Task 4: Send Fee Model Notification (2 hours)
+**Modify:** Subscription pack signing to support arranger countersigning
 
-**Files to Create:**
+**Files to modify:**
+- `src/lib/signature/handlers.ts` - Add arranger signing support
+- `src/app/api/subscriptions/[id]/documents/[documentId]/ready-for-signature/route.ts`
 
-```
-src/app/api/arrangers/send-fee-model/route.ts
-src/lib/notifications/fee-model-sent.ts
-```
+**Logic change:**
+- When deal has `arranger_entity_id`, arranger can countersign after CEO
+- Create notification for arranger when CEO signs
+- Arranger signing triggers notification to lawyer
+
+### Task 5: Escrow Funding Status View (2 hours)
+
+**Create:** `src/app/api/arrangers/me/escrow-status/route.ts`
+
+**Returns:**
+- Deals managed by arranger
+- Per-deal funding status from escrow/payment tables
+- Aggregated funding totals
+
+**UI:** Add escrow status section to arranger dashboard or My Mandates page
+
+### Task 6: Reconciliation Report Access (2 hours)
+
+**Create:** `src/app/api/arrangers/me/reconciliation/route.ts`
+
+**Extend existing CEO reconciliation routes to allow arranger access for their deals only.**
+
+**Logic:** Filter by `arranger_entity_id` = current arranger
+
+### Task 7: Invoice/Payment Request Flow (2 hours)
+
+**Create:**
+- `src/app/api/arrangers/payment-request/route.ts`
+- `src/components/arranger/payment-request-dialog.tsx`
 
 **Flow:**
-1. Arranger creates fee model
-2. Clicks "Send to Partner/Introducer/CP"
-3. Creates notification for recipient
-4. Creates task if needed
-5. Recipient sees fee model in their portal
+1. Arranger selects partner/introducer/CP
+2. Enters invoice reference and amount
+3. Assigns lawyer
+4. Creates task for lawyer
+5. Creates notification for CEO
+6. Arranger notified when payment completed
 
-### Task 5: Introducer Agreement Workflow (4 hours)
+### Task 8: Agreement Reminders (3 hours)
 
-**Files to Modify:**
+**Status:** NO reminders exist for introducer or placement agreements
 
-```
-src/app/(main)/versotech_main/my-introducers/page.tsx
-```
+**User Stories:**
+- 2.3.1 Row 26: Automatic reminder to approve Introducer Agreement
+- 2.3.1 Row 30: Automatic reminder to sign Introducer Agreement
+- 2.3.1 Row 31: Manual reminder to sign Introducer Agreement
+- 2.4.1 Row 46: Automatic reminder to approve Placement Agreement
+- 2.4.1 Row 50: Automatic reminder to sign Placement Agreement
 
-**Files to Create:**
+**Create:**
+- `src/app/api/cron/agreement-reminders/route.ts` - Cron job for auto reminders
+- `src/app/api/arrangers/agreements/[id]/remind/route.ts` - Manual reminder endpoint
 
-```
-src/app/api/arrangers/send-introducer-agreement/route.ts
-src/components/arranger/introducer-agreement-modal.tsx
-```
+**Logic:**
+- Check agreements with status 'sent' or 'approved' older than X days
+- Send reminder notification to relevant party
+- Log reminder in audit trail
 
-**Flow:**
-1. Arranger creates/updates fee model for introducer
-2. Arranger clicks "Send Agreement"
-3. System generates agreement document with fee terms
-4. Introducer receives notification
-5. Introducer approves → Arranger notified → Arranger signs via VersaSign
-6. Introducer signs via VersaSign
-7. Agreement active
+### Task 9: Placement Agreement Full Workflow (4 hours)
 
-### Task 6: Payment Request to Lawyer (2 hours)
+**Status:** Only VIEW exists, no creation/signing APIs
 
-**Files to Create:**
+**Create:**
+- `src/app/api/placement-agreements/route.ts` - List/Create
+- `src/app/api/placement-agreements/[id]/route.ts` - Get/Update
+- `src/app/api/placement-agreements/[id]/send/route.ts`
+- `src/app/api/placement-agreements/[id]/approve/route.ts`
+- `src/app/api/placement-agreements/[id]/sign/route.ts`
 
-```
-src/app/api/arrangers/request-payment/route.ts
-src/components/arranger/request-payment-modal.tsx
-```
+**Follow same pattern as introducer-agreements but for commercial partners.**
 
-**Request includes:**
-- Partner/Introducer/CP ID
-- Invoice reference
-- Amount
-- Lawyer to assign
+### Task 10: My Mandates Signing/Notification Features (3 hours)
 
-**Creates:**
-- Task for lawyer
-- Notification for CEO
-- Audit log entry
+**Status:** My Mandates page only shows deal list, no signing or notification features
 
-### Task 7: Arranger Dashboard (4 hours)
+**User Stories:**
+- 2.6.1 Row 64: Notification when subscription pack rejected
+- 2.6.1 Row 67: Notification when subscription pack sent for signature
+- 2.6.1 Row 68: Notification when signature completed
+- 2.6.1 Row 69: Access signed packs between dates
 
-**Files to Create:**
-
-```
-src/components/dashboard/arranger-dashboard.tsx
-```
-
-**Metrics to Show:**
-- Active Mandates: Count of deals where arranger is assigned
-- Pending Agreements: Introducer/Placement agreements awaiting action
-- Pending Payments: Partner/Introducer/CP payments awaiting processing
-- Recent Transactions: Latest activity
-
-**Data Sources:**
-- `deals` WHERE arranger_id = current_arranger
-- `introducer_agreements` WHERE status = 'pending'
-- `placement_agreements` WHERE status = 'pending'
-- Fee events for recent activity
-
-### Task 8: Enhance My-* Pages (2 hours)
-
-**Files to Modify:**
-
-```
-src/app/(main)/versotech_main/my-partners/page.tsx
-src/app/(main)/versotech_main/my-introducers/page.tsx
-src/app/(main)/versotech_main/my-commercial-partners/page.tsx
-src/app/(main)/versotech_main/my-lawyers/page.tsx
-src/app/(main)/versotech_main/my-mandates/page.tsx
-```
-
-**Each page needs:**
-- Real data from database
-- Actions: View, Edit Fee Model, Send Agreement
-- Status indicators
+**Modify:** `src/app/(main)/versotech_main/my-mandates/page.tsx`
+- Add subscription pack status column
+- Add signing actions
+- Add notification indicators
+- Add date range filter for signed packs
 
 ---
 
-## 5. USER STORIES COVERAGE CHECK
+## 4. DEPENDENCIES & CROSS-USER ALIGNMENT
 
-### Will Be Implemented
+### 4.1 Partner Dashboard Expects Fee Models
 
-| Section | Stories | Task |
-|---------|---------|------|
-| 2.2.1 Create Partner Fee Models | Rows 11-12 | Task 1 |
-| 2.2.2 Payment | Rows 13-17 | Task 6 |
-| 2.2.3 View | Rows 18-19 | Task 8 |
-| 2.2.4 Partner Performance | Rows 20-21 | Existing reports |
-| 2.3.1 Create Introducer Fee Models | Rows 22-32 | Tasks 2, 5 |
-| 2.3.2 Payment | Rows 33-37 | Task 6 |
-| 2.3.3-4 View & Performance | Rows 38-41 | Task 8, existing |
-| 2.4.1 Create CP Fee Models | Rows 42-52 | Task 3, 5 |
-| 2.4.2-4 Payment, View, Performance | Rows 53-61 | Task 6, 8 |
-| 2.5 My Lawyers | Rows 62-63 | Task 8 |
-| 2.6 My Mandates | Rows 64-77 | Task 8 |
+**Files:**
+- `src/app/api/partners/me/dashboard/route.ts`
+- `src/components/partner/FeeModelView.tsx`
 
-### Deferred
+**Requirement:** Arranger fee model CRUD must write to same `fee_plans` table with correct `partner_id`
 
-| Section | Stories | Reason |
-|---------|---------|--------|
-| 2.7 GDPR | Rows 78-87 | See CEO plan |
+### 4.2 Introducer Dashboard Uses Existing Tables
 
----
+**Files:**
+- `src/app/(main)/versotech_main/dashboard/introducer-dashboard.tsx`
 
-## 6. TESTING CHECKLIST
+**Tables:**
+- `introducer_agreements`
+- `introducer_commissions`
 
-### Arranger Flow Tests
+**Requirement:** Extend existing tables, don't create parallel system
 
-- [ ] Login as arranger → Arranger dashboard shows
-- [ ] Dashboard shows correct metrics
-- [ ] Navigate to My Partners → List of partners displays
-- [ ] Click partner → See fee models
-- [ ] Create new fee model → Success
-- [ ] Update fee model → Changes saved
-- [ ] Delete fee model → Removed
-- [ ] Send fee model to partner → Partner notified
-- [ ] Create introducer agreement → Sent for approval
-- [ ] Introducer approves → Arranger can sign
-- [ ] Both sign → Agreement active
-- [ ] Request payment to lawyer → Lawyer receives task
-- [ ] View My Mandates → Deals assigned display
+### 4.3 Agreement Signing Workflow
+
+**Existing pattern in:** `src/lib/signature/handlers.ts`
+
+**Requirement:** Arranger signing should follow same pattern, not duplicate
 
 ---
 
-## 7. DEPENDENCIES
+## 5. REVISED FEATURE TRUTH TABLE
 
-**Requires Before Implementation:**
-- VersaSign (for agreement signing) - ALREADY BUILT
+| Feature | User Stories | Code Exists | Working | Note |
+|---------|-------------|-------------|---------|------|
+| My Partners Page (view) | 2.2.3 | ✅ DONE | ✅ 100% | View/filter works |
+| My Introducers Page (view) | 2.3.3 | ✅ DONE | ✅ 100% | View/filter works |
+| My Commercial Partners Page (view) | 2.4.3 | ✅ DONE | ✅ 100% | View/filter works |
+| My Lawyers Page (view) | 2.5.1 | ✅ DONE | ✅ 100% | View/filter works |
+| **My Mandates Page** | 2.6.1-2.6.2 | ⚠️ PARTIAL | 40% | VIEW-ONLY, no signing/notifications |
+| **Introducer Agreement (Arranger)** | 2.3.1 | ❌ MISSING | 0% | Staff-only, no arranger flow |
+| **Placement Agreements** | 2.4.1 | ⚠️ VIEW | 20% | No creation/signing APIs |
+| **Fee Model Linkage (Partners)** | 2.2.1-2.2.4 | ⚠️ BROKEN | 0% | Code exists but 0 data uses partner_id |
+| **Arranger Dashboard** | 2.1.4 | ❌ MISSING | 0% | Task 1 |
+| **Arranger Profile Approval** | 2.1.1-2.1.3 | ❌ MISSING | 0% | Needs scoping |
+| **Fee Model CRUD (all entities)** | 2.2.1, 2.3.1, 2.4.1 | ❌ MISSING | 0% | Task 2-3 |
+| **Subscription Pack Arranger Sign** | 2.6.1 Row 65 | ❌ MISSING | 0% | Task 4 |
+| **Escrow Status View** | 2.5.2 | ❌ MISSING | 0% | Task 5 |
+| **Reconciliation Access** | 2.6.3 | ❌ MISSING | 0% | Task 6 |
+| **Invoice/Payment Request** | 2.2.2, 2.3.2, 2.4.2 | ❌ MISSING | 0% | Task 7 |
+| **Agreement Reminders** | 2.3.1, 2.4.1 | ❌ MISSING | 0% | Task 8 |
 
-**Blocks Other Features:**
-- Introducers need agreements before introducing
-- CPs need placement agreements
+**TRUE COMPLETION: 45%** (View pages work, but core arranger workflows missing)
 
 ---
 
-## 8. FILES SUMMARY
+## 6. FILES SUMMARY
 
-### To Create (13 files)
-
-```
-src/app/api/arrangers/partners/[partnerId]/fee-models/route.ts
-src/app/api/arrangers/introducers/[introducerId]/fee-models/route.ts
-src/app/api/arrangers/commercial-partners/[cpId]/fee-models/route.ts
-src/app/api/arrangers/send-fee-model/route.ts
-src/app/api/arrangers/send-introducer-agreement/route.ts
-src/app/api/arrangers/request-payment/route.ts
-
-src/components/arranger/fee-model-form.tsx
-src/components/arranger/fee-model-list.tsx
-src/components/arranger/introducer-agreement-modal.tsx
-src/components/arranger/request-payment-modal.tsx
-src/components/dashboard/arranger-dashboard.tsx
-
-src/lib/notifications/fee-model-sent.ts
-src/lib/notifications/agreement-sent.ts
-```
-
-### To Modify (6 files)
+### Files ALREADY BUILT (No Changes Needed)
 
 ```
-src/app/(main)/versotech_main/my-partners/page.tsx
-src/app/(main)/versotech_main/my-introducers/page.tsx
-src/app/(main)/versotech_main/my-commercial-partners/page.tsx
-src/app/(main)/versotech_main/my-lawyers/page.tsx
-src/app/(main)/versotech_main/my-mandates/page.tsx
-src/app/(main)/versotech_main/dashboard/page.tsx (add arranger dashboard)
+src/app/(main)/versotech_main/my-partners/page.tsx         ✅ 577 lines
+src/app/(main)/versotech_main/my-introducers/page.tsx      ✅ 465 lines
+src/app/(main)/versotech_main/my-commercial-partners/page.tsx ✅ 495 lines
+src/app/(main)/versotech_main/my-lawyers/page.tsx          ✅ 459 lines
+src/app/(main)/versotech_main/my-mandates/page.tsx         ✅ 592 lines
+src/app/api/introducer-agreements/*                        ✅ Full CRUD
+src/components/partner/FeeModelView.tsx                    ✅ Read-only view
+```
+
+### Files to CREATE (15 files)
+
+```
+# Dashboard
+src/app/(main)/versotech_main/dashboard/arranger-dashboard.tsx
+
+# Fee Model CRUD
+src/app/api/arrangers/me/fee-models/route.ts
+src/components/arranger/fee-model-manager.tsx
+
+# Placement Agreements (Full Workflow)
+src/app/api/placement-agreements/route.ts
+src/app/api/placement-agreements/[id]/route.ts
+src/app/api/placement-agreements/[id]/send/route.ts
+src/app/api/placement-agreements/[id]/approve/route.ts
+src/app/api/placement-agreements/[id]/sign/route.ts
+
+# Other APIs
+src/app/api/arrangers/me/escrow-status/route.ts
+src/app/api/arrangers/me/reconciliation/route.ts
+src/app/api/arrangers/payment-request/route.ts
+src/app/api/cron/agreement-reminders/route.ts
+src/app/api/arrangers/agreements/[id]/remind/route.ts
+
+# UI Components
+src/components/arranger/payment-request-dialog.tsx
+```
+
+### Files to MODIFY (5 files)
+
+```
+src/app/(main)/versotech_main/dashboard/persona-dashboard.tsx  (add arranger routing)
+src/app/(main)/versotech_main/my-mandates/page.tsx             (add signing/notifications)
+src/app/api/staff/fees/plans/route.ts                          (fix partner_id population)
+src/lib/signature/handlers.ts                                   (add arranger countersign)
+supabase/migrations/2025XXXX_add_fee_plan_entity_columns.sql   (schema extension)
 ```
 
 ---
 
-## 9. ACCEPTANCE CRITERIA
+## 7. TESTING CHECKLIST
 
-1. **Fee Model CRUD:**
-   - [ ] Arranger can create fee model for partner
-   - [ ] Arranger can create fee model for introducer
-   - [ ] Arranger can create fee model for commercial partner
-   - [ ] Fee model includes subscription, management, performance components
-   - [ ] Arranger can update and delete fee models
-   - [ ] Arranger can send fee model to recipient (notification created)
+### Phase 1: Dashboard & Fee Models
+- [ ] Login as arranger → Arranger-specific dashboard shows
+- [ ] Dashboard shows: mandates count, pending agreements, partners count
+- [ ] Click "My Partners" → Full partner list with real data
+- [ ] Create fee model for partner → Saved to `fee_plans` with `partner_id`
+- [ ] Partner can view fee model in their portal
 
-2. **Agreements:**
-   - [ ] Arranger can send introducer agreement
-   - [ ] Introducer receives notification to approve
-   - [ ] After approval, both can sign via VersaSign
-   - [ ] Signed agreement stored in documents
+### Phase 2: Signing & Payments
+- [ ] Subscription pack signing includes arranger countersign option (if deal has arranger)
+- [ ] Arranger receives notification when CEO signs
+- [ ] Arranger can request payment to lawyer
+- [ ] Lawyer receives task
+- [ ] Arranger notified when payment completed
 
-3. **Payments:**
-   - [ ] Arranger can request payment to lawyer
-   - [ ] Lawyer receives task
-   - [ ] CEO receives notification
-   - [ ] Arranger notified when payment completed
-
-4. **Dashboard:**
-   - [ ] Shows active mandates count
-   - [ ] Shows pending agreements
-   - [ ] Shows pending payments
-   - [ ] Links to relevant pages
+### Phase 3: Reporting
+- [ ] Arranger can view escrow funding status for their deals
+- [ ] Arranger can access reconciliation reports for their deals
+- [ ] Reconciliation filtered to arranger's `arranger_entity_id` only
 
 ---
 
-## 10. DEVELOPER-READY IMPLEMENTATION CODE
-
-### 10.1 Fee Model CRUD API for Partners
-
-**File: `src/app/api/arrangers/partners/[partnerId]/fee-models/route.ts`**
-
-```typescript
-/**
- * Arranger Fee Model CRUD for Partners
- * GET - List fee models for a partner
- * POST - Create fee model for a partner
- */
-
-import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
-import { z } from 'zod';
-
-const feeModelSchema = z.object({
-  name: z.string().min(3),
-  deal_id: z.string().uuid().optional(),
-  components: z.array(z.object({
-    fee_type: z.enum(['subscription', 'management', 'performance']),
-    rate_bps: z.number().min(0).max(10000), // basis points 0-100%
-    calculation_basis: z.string().optional(),
-    notes: z.string().optional()
-  })).min(1)
-});
-
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { partnerId: string } }
-) {
-  try {
-    const supabase = await createClient();
-
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Verify user is an arranger
-    const { data: arrangerUser } = await supabase
-      .from('arranger_users')
-      .select('arranger_id')
-      .eq('user_id', user.id)
-      .single();
-
-    if (!arrangerUser) {
-      return NextResponse.json({ error: 'Not an arranger' }, { status: 403 });
-    }
-
-    // Get fee models for this partner created by this arranger
-    const { data: feeModels, error } = await supabase
-      .from('fee_plans')
-      .select('*, components:fee_components(*)')
-      .eq('partner_id', params.partnerId)
-      .eq('created_by_arranger_id', arrangerUser.arranger_id)
-      .eq('is_active', true)
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('Error fetching fee models:', error);
-      return NextResponse.json({ error: 'Failed to fetch fee models' }, { status: 500 });
-    }
-
-    return NextResponse.json({ data: feeModels || [] });
-
-  } catch (error) {
-    console.error('Fee models GET error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-  }
-}
-
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { partnerId: string } }
-) {
-  try {
-    const supabase = await createClient();
-
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Verify user is an arranger
-    const { data: arrangerUser } = await supabase
-      .from('arranger_users')
-      .select('arranger_id')
-      .eq('user_id', user.id)
-      .single();
-
-    if (!arrangerUser) {
-      return NextResponse.json({ error: 'Not an arranger' }, { status: 403 });
-    }
-
-    // Verify partner exists
-    const { data: partner } = await supabase
-      .from('partners')
-      .select('id, legal_name')
-      .eq('id', params.partnerId)
-      .single();
-
-    if (!partner) {
-      return NextResponse.json({ error: 'Partner not found' }, { status: 404 });
-    }
-
-    const body = await request.json();
-    const validation = feeModelSchema.safeParse(body);
-
-    if (!validation.success) {
-      return NextResponse.json({
-        error: 'Validation failed',
-        details: validation.error.issues
-      }, { status: 400 });
-    }
-
-    const { components, ...planData } = validation.data;
-
-    // Create fee plan
-    const { data: feePlan, error: planError } = await supabase
-      .from('fee_plans')
-      .insert({
-        ...planData,
-        partner_id: params.partnerId,
-        created_by: user.id,
-        created_by_arranger_id: arrangerUser.arranger_id,
-        is_active: true,
-        plan_type: 'partner'
-      })
-      .select()
-      .single();
-
-    if (planError) {
-      console.error('Error creating fee plan:', planError);
-      return NextResponse.json({ error: 'Failed to create fee model' }, { status: 500 });
-    }
-
-    // Create fee components
-    const componentInserts = components.map((comp) => ({
-      ...comp,
-      fee_plan_id: feePlan.id
-    }));
-
-    const { data: createdComponents, error: compError } = await supabase
-      .from('fee_components')
-      .insert(componentInserts)
-      .select();
-
-    if (compError) {
-      // Rollback
-      await supabase.from('fee_plans').delete().eq('id', feePlan.id);
-      console.error('Error creating components:', compError);
-      return NextResponse.json({ error: 'Failed to create fee components' }, { status: 500 });
-    }
-
-    // Audit log
-    await supabase.from('audit_logs').insert({
-      event_type: 'fee_model',
-      action: 'created',
-      entity_type: 'fee_plan',
-      entity_id: feePlan.id,
-      actor_id: user.id,
-      action_details: {
-        partner_id: params.partnerId,
-        partner_name: partner.legal_name,
-        plan_name: planData.name,
-        component_count: components.length
-      },
-      timestamp: new Date().toISOString()
-    });
-
-    return NextResponse.json({
-      data: { ...feePlan, components: createdComponents }
-    }, { status: 201 });
-
-  } catch (error) {
-    console.error('Fee model POST error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-  }
-}
-```
-
-### 10.2 Fee Model Form Component
-
-**File: `src/components/arranger/fee-model-form.tsx`**
-
-```typescript
-'use client'
-
-import { useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Plus, Trash2, Loader2 } from 'lucide-react'
-import { toast } from 'sonner'
-
-interface FeeComponent {
-  fee_type: 'subscription' | 'management' | 'performance'
-  rate_bps: number
-  calculation_basis?: string
-  notes?: string
-}
-
-interface FeeModelFormProps {
-  entityType: 'partner' | 'introducer' | 'commercial_partner'
-  entityId: string
-  entityName: string
-  dealId?: string
-  onSuccess?: () => void
-}
-
-export function FeeModelForm({
-  entityType,
-  entityId,
-  entityName,
-  dealId,
-  onSuccess
-}: FeeModelFormProps) {
-  const [loading, setLoading] = useState(false)
-  const [name, setName] = useState('')
-  const [components, setComponents] = useState<FeeComponent[]>([
-    { fee_type: 'subscription', rate_bps: 0 }
-  ])
-
-  function addComponent() {
-    setComponents([...components, { fee_type: 'management', rate_bps: 0 }])
-  }
-
-  function removeComponent(index: number) {
-    setComponents(components.filter((_, i) => i !== index))
-  }
-
-  function updateComponent(index: number, updates: Partial<FeeComponent>) {
-    const newComponents = [...components]
-    newComponents[index] = { ...newComponents[index], ...updates }
-    setComponents(newComponents)
-  }
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-
-    if (!name.trim()) {
-      toast.error('Please enter a name for the fee model')
-      return
-    }
-
-    if (components.length === 0) {
-      toast.error('Please add at least one fee component')
-      return
-    }
-
-    setLoading(true)
-    try {
-      const endpoint = `/api/arrangers/${entityType}s/${entityId}/fee-models`
-
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name,
-          deal_id: dealId,
-          components
-        })
-      })
-
-      if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data.error || 'Failed to create fee model')
-      }
-
-      toast.success('Fee model created successfully')
-      onSuccess?.()
-    } catch (error) {
-      console.error('Create fee model error:', error)
-      toast.error(error instanceof Error ? error.message : 'Failed to create fee model')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Create Fee Model for {entityName}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-2">
-            <Label htmlFor="name">Fee Model Name</Label>
-            <Input
-              id="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="e.g., Standard Partner Terms"
-              required
-            />
-          </div>
-
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <Label>Fee Components</Label>
-              <Button type="button" variant="outline" size="sm" onClick={addComponent}>
-                <Plus className="h-4 w-4 mr-1" /> Add Component
-              </Button>
-            </div>
-
-            {components.map((comp, index) => (
-              <div key={index} className="flex gap-3 items-end p-3 border rounded-lg">
-                <div className="flex-1 space-y-2">
-                  <Label>Type</Label>
-                  <Select
-                    value={comp.fee_type}
-                    onValueChange={(v) => updateComponent(index, { fee_type: v as FeeComponent['fee_type'] })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="subscription">Subscription Fee (one-time)</SelectItem>
-                      <SelectItem value="management">Management Fee (annual)</SelectItem>
-                      <SelectItem value="performance">Performance Fee</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="w-32 space-y-2">
-                  <Label>Rate (bps)</Label>
-                  <Input
-                    type="number"
-                    min="0"
-                    max="10000"
-                    value={comp.rate_bps}
-                    onChange={(e) => updateComponent(index, { rate_bps: parseInt(e.target.value) || 0 })}
-                    placeholder="100 = 1%"
-                  />
-                </div>
-
-                <div className="w-24 text-sm text-muted-foreground">
-                  = {(comp.rate_bps / 100).toFixed(2)}%
-                </div>
-
-                {components.length > 1 && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => removeComponent(index)}
-                  >
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
-                )}
-              </div>
-            ))}
-          </div>
-
-          <Button type="submit" disabled={loading}>
-            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Create Fee Model
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
-  )
-}
-```
-
-### 10.3 Arranger Dashboard Component
-
-**File: `src/components/dashboard/arranger-dashboard.tsx`**
-
-```typescript
-'use client'
-
-import { useEffect, useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { FileText, Users, Handshake, Clock, ArrowRight } from 'lucide-react'
-import Link from 'next/link'
-import { createClient } from '@/lib/supabase/client'
-
-interface DashboardMetrics {
-  activeMandates: number
-  pendingAgreements: number
-  pendingPayments: number
-  totalPartners: number
-}
-
-export function ArrangerDashboard() {
-  const [metrics, setMetrics] = useState<DashboardMetrics>({
-    activeMandates: 0,
-    pendingAgreements: 0,
-    pendingPayments: 0,
-    totalPartners: 0
-  })
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    async function fetchMetrics() {
-      const supabase = createClient()
-
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
-
-      // Get arranger_id
-      const { data: arrangerUser } = await supabase
-        .from('arranger_users')
-        .select('arranger_id')
-        .eq('user_id', user.id)
-        .single()
-
-      if (!arrangerUser) return
-
-      // Fetch metrics in parallel
-      const [mandates, agreements, partners] = await Promise.all([
-        supabase
-          .from('deals')
-          .select('id', { count: 'exact', head: true })
-          .eq('arranger_id', arrangerUser.arranger_id)
-          .eq('status', 'active'),
-        supabase
-          .from('introducer_agreements')
-          .select('id', { count: 'exact', head: true })
-          .eq('arranger_id', arrangerUser.arranger_id)
-          .eq('status', 'pending'),
-        supabase
-          .from('partners')
-          .select('id', { count: 'exact', head: true })
-      ])
-
-      setMetrics({
-        activeMandates: mandates.count || 0,
-        pendingAgreements: agreements.count || 0,
-        pendingPayments: 0, // TODO: implement payment tracking
-        totalPartners: partners.count || 0
-      })
-      setLoading(false)
-    }
-
-    fetchMetrics()
-  }, [])
-
-  const cards = [
-    {
-      title: 'Active Mandates',
-      value: metrics.activeMandates,
-      icon: FileText,
-      href: '/versotech_main/my-mandates',
-      color: 'text-blue-500'
-    },
-    {
-      title: 'Pending Agreements',
-      value: metrics.pendingAgreements,
-      icon: Handshake,
-      href: '/versotech_main/my-introducers',
-      color: 'text-amber-500',
-      badge: metrics.pendingAgreements > 0
-    },
-    {
-      title: 'Partners',
-      value: metrics.totalPartners,
-      icon: Users,
-      href: '/versotech_main/my-partners',
-      color: 'text-emerald-500'
-    },
-    {
-      title: 'Pending Payments',
-      value: metrics.pendingPayments,
-      icon: Clock,
-      href: '/versotech_main/fees',
-      color: 'text-purple-500'
-    }
-  ]
-
-  return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Arranger Dashboard</h1>
-        <p className="text-muted-foreground">Manage your deals, partners, and agreements</p>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {cards.map((card) => (
-          <Link key={card.title} href={card.href}>
-            <Card className="hover:bg-muted/50 transition-colors cursor-pointer">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  {card.title}
-                </CardTitle>
-                <card.icon className={`h-4 w-4 ${card.color}`} />
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-between">
-                  <div className="text-2xl font-bold">
-                    {loading ? '...' : card.value}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {card.badge && (
-                      <Badge variant="secondary">Action needed</Badge>
-                    )}
-                    <ArrowRight className="h-4 w-4 text-muted-foreground" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
-        ))}
-      </div>
-    </div>
-  )
-}
-```
+## 8. ACCEPTANCE CRITERIA
+
+1. **Dashboard:** Arranger sees dedicated dashboard with relevant metrics
+2. **Fee Models:** Arranger can CRUD fee models for partners (and introducers/CPs after schema extension)
+3. **Signing:** Arranger can countersign subscription packs for their deals
+4. **Escrow:** Arranger can view funding status for their deals
+5. **Reconciliation:** Arranger can generate reports for their deals
+6. **Payments:** Arranger can request fee payments to lawyers
 
 ---
 
-**Total Estimated Hours: 28**
-- Fee Model CRUD (3 entity types): 14 hours
-- Send Notifications: 2 hours
-- Introducer Agreement Workflow: 4 hours
-- Payment Request: 2 hours
-- Dashboard: 4 hours
-- Page Enhancements: 2 hours
+## 9. PRIORITY ORDER
 
-**Priority: HIGH (Arranger required for January 10 per client)**
-**Risk: Medium (Multiple integrations)**
-**Last Updated:** December 24, 2025 (Developer-Ready)
+| Priority | Task | Hours | Why |
+|----------|------|-------|-----|
+| P0 | Task 2: Partner Fee Model + Schema Sync | 5 | Fix types, create migration, then CRUD |
+| P0 | Task 1: Arranger Dashboard | 3 | Entry point for arranger experience |
+| P0 | Task 9: Placement Agreement Full Workflow | 4 | Required by 2.4.1 - only view exists |
+| P1 | Task 4: Subscription Pack Arranger Signing | 3 | Required by story 2.6.1 Row 65 |
+| P1 | Task 10: My Mandates Signing/Notifications | 3 | My Mandates is view-only, needs signing |
+| P1 | Task 7: Invoice/Payment Request | 2 | Required by stories 2.2.2, 2.3.2, 2.4.2 |
+| P2 | Task 3: Schema Extension (introducer/CP) | 2 | Enables introducer/CP fee models |
+| P2 | Task 8: Agreement Reminders | 3 | Stories 2.3.1, 2.4.1 reminders |
+| P2 | Task 5: Escrow Status View | 2 | Story 2.5.2 |
+| P2 | Task 6: Reconciliation Access | 2 | Story 2.6.3 |
+
+**Total: 29 hours** (includes 1 hour for schema sync/migration work)
+
+---
+
+## 10. CRITICAL NOTES FOR IMPLEMENTATION
+
+1. **Schema Sync Issue:** The `partner_id` column EXISTS in live database but is NOT in TypeScript types (`supabase.ts`) and has NO migration. Must create migration and regenerate types before any fee model work.
+
+2. **Fee Model Linkage is Broken:** Even after fixing types, the `partner_id` column has 0 data. Staff routes don't populate it. Must fix staff routes AND create arranger routes.
+
+3. **Introducer Agreements are Staff-Only:** Arranger has ZERO involvement in current flow. Story 2.3.1 requires arranger signing.
+
+4. **Placement Agreements Need Full Workflow:** Only viewing exists. Need complete CRUD + signing like introducer-agreements.
+
+5. **My Mandates is View-Only:** Shows deals but no subscription pack signing, notifications, or date filtering per user stories.
+
+6. **No Reminders Anywhere:** Neither introducer nor placement agreement flows have reminder functionality.
+
+---
+
+**Last Updated:** December 27, 2025 (Third Pass - Schema Sync Issue Added)
+**Verified By:** Deep code audit + schema verification + actual data validation + TypeScript types check + user story cross-reference
+**Issues Found:**
+- fee_plans.partner_id: EXISTS in DB, NOT in types, 0 records use it
+- placement_agreement API routes: none exist
+- introducer-agreements: no arranger references in code

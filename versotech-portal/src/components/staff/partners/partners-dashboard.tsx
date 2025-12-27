@@ -266,7 +266,7 @@ export function PartnersDashboard({ summary, partners }: PartnersDashboardProps)
               {filteredPartners.map((partner) => (
                 <Link
                   key={partner.id}
-                  href={`/versotech/staff/partners/${partner.id}`}
+                  href={`/versotech_main/partners/${partner.id}`}
                   className="block"
                 >
                   <div className="flex items-center justify-between p-4 rounded-lg border border-white/10 hover:bg-white/5 transition-colors">

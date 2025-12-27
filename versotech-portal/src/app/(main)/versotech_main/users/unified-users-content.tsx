@@ -50,6 +50,7 @@ import {
   Download
 } from 'lucide-react'
 import type { UnifiedUser, UnifiedUsersResponse } from '@/app/api/admin/unified-users/route'
+import { BatchInviteDialog, type EntityType } from '@/components/users/batch-invite-dialog'
 
 const ENTITY_TYPE_CONFIG = {
   investor: { label: 'Investor', icon: Users, color: 'bg-blue-500/20 text-blue-400 border-blue-500/30' },
@@ -93,6 +94,7 @@ export default function UnifiedUsersContent() {
   const [searchQuery, setSearchQuery] = useState('')
   const [typeFilter, setTypeFilter] = useState<string>('all')
   const [statusFilter, setStatusFilter] = useState<string>('all')
+  const [batchInviteOpen, setBatchInviteOpen] = useState(false)
 
   const fetchUsers = async () => {
     try {
@@ -298,6 +300,11 @@ export default function UnifiedUsersContent() {
                 Export
               </Button>
 
+              <Button onClick={() => setBatchInviteOpen(true)}>
+                <UserPlus className="h-4 w-4 mr-2" />
+                Batch Invite
+              </Button>
+
               <Button variant="outline" onClick={fetchUsers}>
                 <RefreshCw className="h-4 w-4" />
               </Button>
@@ -433,6 +440,13 @@ export default function UnifiedUsersContent() {
           </Table>
         </CardContent>
       </Card>
+
+      {/* Batch Invite Dialog */}
+      <BatchInviteDialog
+        open={batchInviteOpen}
+        onOpenChange={setBatchInviteOpen}
+        onSuccess={fetchUsers}
+      />
     </div>
   )
 }

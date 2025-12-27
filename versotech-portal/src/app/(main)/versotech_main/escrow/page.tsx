@@ -44,12 +44,20 @@ import {
 import { cn } from '@/lib/utils'
 import { formatCurrency, formatDate } from '@/lib/format'
 import { createClient } from '@/lib/supabase/client'
+import { EscrowConfirmModal } from '@/components/lawyer/escrow-confirm-modal'
 
 type LawyerInfo = {
   id: string
   firm_name: string
   display_name: string
   specializations: string[] | null
+  is_active: boolean
+}
+
+type ArrangerInfo = {
+  id: string
+  company_name: string
+  legal_name: string
   is_active: boolean
 }
 
@@ -88,6 +96,26 @@ type PendingSettlement = {
   days_overdue: number
 }
 
+type FeeEvent = {
+  id: string
+  deal_id: string
+  deal_name: string
+  investor_name: string
+  subscription_id: string | null
+  fee_type: string | null
+  base_amount: number | null
+  computed_amount: number
+  currency: string
+  status: string
+  event_date: string
+  invoice_id: string | null
+  invoice_number: string | null
+  invoice_status: string | null
+  invoice_due_date: string | null
+  default_payment_type?: 'introducer' | 'commercial_partner' | 'partner' | 'seller'
+  default_recipient_id?: string | null
+}
+
 type Summary = {
   totalDeals: number
   pendingSettlements: number
@@ -103,6 +131,16 @@ const STATUS_STYLES: Record<string, string> = {
   cancelled: 'bg-gray-100 text-gray-800 border-gray-200',
 }
 
+const FEE_STATUS_STYLES: Record<string, string> = {
+  accrued: 'bg-blue-100 text-blue-800 border-blue-200',
+  invoiced: 'bg-amber-100 text-amber-800 border-amber-200',
+  paid: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+  waived: 'bg-gray-100 text-gray-800 border-gray-200',
+  cancelled: 'bg-gray-100 text-gray-800 border-gray-200',
+  disputed: 'bg-red-100 text-red-800 border-red-200',
+  voided: 'bg-gray-100 text-gray-800 border-gray-200'
+}
+
 const STATUS_FILTERS = [
   { label: 'All Status', value: 'all' },
   { label: 'Pending', value: 'pending' },
@@ -113,8 +151,10 @@ const STATUS_FILTERS = [
 
 export default function EscrowPage() {
   const [lawyerInfo, setLawyerInfo] = useState<LawyerInfo | null>(null)
+  const [arrangerInfo, setArrangerInfo] = useState<ArrangerInfo | null>(null)
   const [escrowDeals, setEscrowDeals] = useState<EscrowDeal[]>([])
   const [pendingSettlements, setPendingSettlements] = useState<PendingSettlement[]>([])
+  const [feeEvents, setFeeEvents] = useState<FeeEvent[]>([])
   const [summary, setSummary] = useState<Summary>({
     totalDeals: 0,
     pendingSettlements: 0,
@@ -126,6 +166,31 @@ export default function EscrowPage() {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [activeTab, setActiveTab] = useState('deals')
+
+  // Modal state for escrow confirmations
+  const [confirmModalOpen, setConfirmModalOpen] = useState(false)
+  const [confirmMode, setConfirmMode] = useState<'funding' | 'payment'>('funding')
+  const [selectedSettlement, setSelectedSettlement] = useState<PendingSettlement | null>(null)
+  const [selectedFeeEvent, setSelectedFeeEvent] = useState<FeeEvent | null>(null)
+
+  const handleOpenConfirmFunding = (settlement: PendingSettlement) => {
+    setConfirmMode('funding')
+    setSelectedSettlement(settlement)
+    setSelectedFeeEvent(null)
+    setConfirmModalOpen(true)
+  }
+
+  const handleOpenConfirmPayment = (event: FeeEvent) => {
+    setConfirmMode('payment')
+    setSelectedFeeEvent(event)
+    setSelectedSettlement(null)
+    setConfirmModalOpen(true)
+  }
+
+  const handleConfirmSuccess = () => {
+    // Refresh data after successful confirmation
+    window.location.reload()
+  }
 
   useEffect(() => {
     async function fetchData() {
@@ -145,26 +210,49 @@ export default function EscrowPage() {
           .from('lawyer_users')
           .select('lawyer_id')
           .eq('user_id', user.id)
-          .single()
+          .maybeSingle()
 
-        if (lawyerUserError || !lawyerUser) {
-          // Staff view - show all escrow data
-          await fetchAllEscrowData(supabase)
-          return
+        if (lawyerUser) {
+          // Fetch lawyer info
+          const { data: lawyer, error: lawyerError } = await supabase
+            .from('lawyers')
+            .select('id, firm_name, display_name, specializations, is_active, assigned_deals')
+            .eq('id', lawyerUser.lawyer_id)
+            .single()
+
+          if (!lawyerError && lawyer) {
+            setLawyerInfo(lawyer)
+            // Fetch deals assigned to this lawyer
+            await fetchLawyerEscrowData(supabase, lawyer.id, lawyer.assigned_deals)
+            return
+          }
         }
 
-        // Fetch lawyer info
-        const { data: lawyer, error: lawyerError } = await supabase
-          .from('lawyers')
-          .select('id, firm_name, display_name, specializations, is_active')
-          .eq('id', lawyerUser.lawyer_id)
-          .single()
+        // Check if user is an arranger
+        const { data: arrangerUser, error: arrangerUserError } = await supabase
+          .from('arranger_users')
+          .select('arranger_id')
+          .eq('user_id', user.id)
+          .maybeSingle()
 
-        if (lawyerError) throw lawyerError
-        setLawyerInfo(lawyer)
+        if (arrangerUser) {
+          // Fetch arranger info
+          const { data: arranger, error: arrangerError } = await supabase
+            .from('arranger_entities')
+            .select('id, company_name, legal_name, is_active')
+            .eq('id', arrangerUser.arranger_id)
+            .single()
 
-        // Fetch deals where this lawyer firm is legal counsel
-        await fetchLawyerEscrowData(supabase, lawyer.firm_name, lawyer.display_name)
+          if (!arrangerError && arranger) {
+            setArrangerInfo(arranger)
+            // Fetch deals managed by this arranger
+            await fetchArrangerEscrowData(supabase, arranger.id)
+            return
+          }
+        }
+
+        // Staff view - show all escrow data
+        await fetchAllEscrowData(supabase)
 
         setError(null)
       } catch (err) {
@@ -175,8 +263,22 @@ export default function EscrowPage() {
       }
     }
 
-    async function fetchLawyerEscrowData(supabase: any, firmName: string, displayName: string) {
-      // Get deal fee structures where this firm is legal counsel
+    async function fetchArrangerEscrowData(supabase: any, arrangerId: string) {
+      // Get deals managed by this arranger (where arranger_entity_id matches)
+      const { data: managedDeals, error: dealsError } = await supabase
+        .from('deals')
+        .select('id')
+        .eq('arranger_entity_id', arrangerId)
+
+      const dealIds = (managedDeals || []).map((d: any) => d.id)
+
+      if (dealIds.length === 0) {
+        // No deals managed by this arranger
+        await processEscrowData(supabase, [])
+        return
+      }
+
+      // Get deal fee structures for managed deals
       const { data: feeStructures, error: feeError } = await supabase
         .from('deal_fee_structures')
         .select(`
@@ -199,7 +301,59 @@ export default function EscrowPage() {
             status
           )
         `)
-        .or(`legal_counsel.ilike.%${firmName}%,legal_counsel.ilike.%${displayName}%`)
+        .in('deal_id', dealIds)
+        .eq('status', 'published')
+        .order('created_at', { ascending: false })
+
+      if (feeError) throw feeError
+
+      await processEscrowData(supabase, feeStructures || [])
+    }
+
+    async function fetchLawyerEscrowData(supabase: any, lawyerId: string, lawyerAssignedDeals: string[] | null) {
+      // Get deals assigned to this lawyer via deal_lawyer_assignments table
+      const { data: assignments, error: assignmentsError } = await supabase
+        .from('deal_lawyer_assignments')
+        .select('deal_id')
+        .eq('lawyer_id', lawyerId)
+
+      let dealIds = (assignments || []).map((a: any) => a.deal_id)
+
+      // Fallback to lawyers.assigned_deals array if no assignments found
+      if ((!dealIds.length || assignmentsError) && lawyerAssignedDeals?.length) {
+        dealIds = lawyerAssignedDeals
+      }
+
+      if (dealIds.length === 0) {
+        // No deals assigned
+        await processEscrowData(supabase, [])
+        return
+      }
+
+      // Get deal fee structures for assigned deals
+      const { data: feeStructures, error: feeError } = await supabase
+        .from('deal_fee_structures')
+        .select(`
+          id,
+          deal_id,
+          status,
+          legal_counsel,
+          wire_escrow_agent,
+          wire_bank_name,
+          wire_account_holder,
+          wire_iban,
+          wire_bic,
+          escrow_fee_text,
+          deal:deal_id (
+            id,
+            name,
+            company_name,
+            target_amount,
+            currency,
+            status
+          )
+        `)
+        .in('deal_id', dealIds)
         .eq('status', 'published')
         .order('created_at', { ascending: false })
 
@@ -246,6 +400,7 @@ export default function EscrowPage() {
       if (feeStructures.length === 0) {
         setEscrowDeals([])
         setPendingSettlements([])
+        setFeeEvents([])
         setSummary({
           totalDeals: 0,
           pendingSettlements: 0,
@@ -264,6 +419,8 @@ export default function EscrowPage() {
           id,
           deal_id,
           investor_id,
+          introducer_id,
+          proxy_commercial_partner_id,
           commitment,
           funded_amount,
           outstanding_amount,
@@ -277,7 +434,7 @@ export default function EscrowPage() {
           )
         `)
         .in('deal_id', dealIds)
-        .in('status', ['approved', 'funded', 'active', 'partially_funded'])
+        .in('status', ['committed', 'approved', 'funded', 'active', 'partially_funded'])
         .order('created_at', { ascending: false })
 
       if (subError) throw subError
@@ -345,6 +502,16 @@ export default function EscrowPage() {
 
       setPendingSettlements(settlements)
 
+      const subscriptionMetaById = new Map<string, { introducer_id: string | null; proxy_commercial_partner_id: string | null }>()
+      ;(subscriptions || []).forEach((sub: any) => {
+        if (sub?.id) {
+          subscriptionMetaById.set(sub.id, {
+            introducer_id: sub.introducer_id || null,
+            proxy_commercial_partner_id: sub.proxy_commercial_partner_id || null
+          })
+        }
+      })
+
       // Calculate summary
       const overdueCount = settlements.filter(s => s.days_overdue > 0).length
       const totalPending = settlements.reduce((sum, s) => sum + s.outstanding_amount, 0)
@@ -355,6 +522,84 @@ export default function EscrowPage() {
         totalPendingValue: totalPending,
         overdueSettlements: overdueCount,
       })
+
+      // Fetch fee events for assigned deals (payment confirmations)
+      const { data: feeEventsData, error: feeEventsError } = await supabase
+        .from('fee_events')
+        .select(`
+          id,
+          deal_id,
+          investor_id,
+          fee_type,
+          base_amount,
+          computed_amount,
+          currency,
+          status,
+          event_date,
+          invoice_id,
+          allocation_id,
+          investors (
+            display_name,
+            legal_name
+          ),
+          invoices:invoice_id (
+            invoice_number,
+            status,
+            due_date
+          )
+        `)
+        .in('deal_id', dealIds)
+        .order('event_date', { ascending: false })
+
+      if (feeEventsError) {
+        console.error('[EscrowPage] Failed to load fee events:', feeEventsError)
+        setFeeEvents([])
+      } else {
+        const dealNameById = new Map<string, string>()
+        feeStructures.forEach((fs: any) => {
+          if (fs?.deal_id && fs?.deal?.name) {
+            dealNameById.set(fs.deal_id, fs.deal.name)
+          }
+        })
+
+        const mappedFeeEvents: FeeEvent[] = (feeEventsData || []).map((event: any) => {
+          const investor = Array.isArray(event.investors) ? event.investors[0] : event.investors
+          const invoice = Array.isArray(event.invoices) ? event.invoices[0] : event.invoices
+          const subscriptionMeta = event.allocation_id ? subscriptionMetaById.get(event.allocation_id) : null
+          let defaultPaymentType: FeeEvent['default_payment_type']
+          let defaultRecipientId: string | null = null
+
+          if (subscriptionMeta?.introducer_id) {
+            defaultPaymentType = 'introducer'
+            defaultRecipientId = subscriptionMeta.introducer_id
+          } else if (subscriptionMeta?.proxy_commercial_partner_id) {
+            defaultPaymentType = 'commercial_partner'
+            defaultRecipientId = subscriptionMeta.proxy_commercial_partner_id
+          }
+
+          return {
+            id: event.id,
+            deal_id: event.deal_id,
+            deal_name: dealNameById.get(event.deal_id) || 'Unknown Deal',
+            investor_name: investor?.display_name || investor?.legal_name || 'Unknown Investor',
+            subscription_id: event.allocation_id || null,
+            fee_type: event.fee_type || null,
+            base_amount: event.base_amount ?? null,
+            computed_amount: Number(event.computed_amount || 0),
+            currency: event.currency || 'USD',
+            status: event.status || 'accrued',
+            event_date: event.event_date,
+            invoice_id: event.invoice_id || null,
+            invoice_number: invoice?.invoice_number || null,
+            invoice_status: invoice?.status || null,
+            invoice_due_date: invoice?.due_date || null,
+            default_payment_type: defaultPaymentType,
+            default_recipient_id: defaultRecipientId
+          }
+        })
+
+        setFeeEvents(mappedFeeEvents)
+      }
     }
 
     fetchData()
@@ -376,6 +621,14 @@ export default function EscrowPage() {
       deal.deal_name?.toLowerCase().includes(search.toLowerCase()) ||
       deal.company_name?.toLowerCase().includes(search.toLowerCase()) ||
       deal.wire_escrow_agent?.toLowerCase().includes(search.toLowerCase())
+    return matchesSearch
+  })
+
+  // Filter fee events
+  const filteredFeeEvents = feeEvents.filter(event => {
+    const matchesSearch = !search ||
+      event.deal_name.toLowerCase().includes(search.toLowerCase()) ||
+      event.investor_name.toLowerCase().includes(search.toLowerCase())
     return matchesSearch
   })
 
@@ -406,7 +659,9 @@ export default function EscrowPage() {
           <p className="text-muted-foreground mt-1">
             {lawyerInfo
               ? `Manage escrow accounts and settlements for ${lawyerInfo.display_name}`
-              : 'Monitor all escrow accounts and pending settlements'}
+              : arrangerInfo
+                ? `View escrow status for deals managed by ${arrangerInfo.company_name || arrangerInfo.legal_name}`
+                : 'Monitor all escrow accounts and pending settlements'}
           </p>
         </div>
         {lawyerInfo && lawyerInfo.specializations && lawyerInfo.specializations.length > 0 && (
@@ -417,6 +672,12 @@ export default function EscrowPage() {
               </Badge>
             ))}
           </div>
+        )}
+        {arrangerInfo && (
+          <Badge variant="secondary" className="flex items-center gap-1">
+            <Building2 className="h-3 w-3" />
+            Arranger View
+          </Badge>
         )}
       </div>
 
@@ -529,6 +790,10 @@ export default function EscrowPage() {
             <BanknoteIcon className="h-4 w-4" />
             Pending Settlements ({pendingSettlements.length})
           </TabsTrigger>
+          <TabsTrigger value="payments" className="flex items-center gap-2">
+            <CreditCard className="h-4 w-4" />
+            Fee Payments ({feeEvents.length})
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="deals">
@@ -548,7 +813,9 @@ export default function EscrowPage() {
                       ? 'No escrow accounts match your search'
                       : lawyerInfo
                         ? 'No deals with you as legal counsel'
-                        : 'No deals with escrow accounts found'}
+                        : arrangerInfo
+                          ? 'No deals managed by your arranger entity'
+                          : 'No deals with escrow accounts found'}
                   </p>
                 </div>
               ) : (
@@ -665,6 +932,7 @@ export default function EscrowPage() {
                         <TableHead>Outstanding</TableHead>
                         <TableHead>Due Date</TableHead>
                         <TableHead>Status</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -728,6 +996,125 @@ export default function EscrowPage() {
                               {settlement.status.replace('_', ' ')}
                             </Badge>
                           </TableCell>
+                          <TableCell className="text-right">
+                            {settlement.status !== 'funded' && lawyerInfo && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleOpenConfirmFunding(settlement)}
+                              >
+                                <CheckCircle2 className="h-4 w-4 mr-1" />
+                                Confirm Funding
+                              </Button>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="payments">
+          <Card>
+            <CardHeader>
+              <CardTitle>Fee Payments</CardTitle>
+              <CardDescription>
+                {filteredFeeEvents.length} fee event{filteredFeeEvents.length !== 1 ? 's' : ''} for assigned deals
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {filteredFeeEvents.length === 0 ? (
+                <div className="border border-dashed border-muted rounded-lg py-12 flex flex-col items-center justify-center text-center space-y-2">
+                  <CreditCard className="h-10 w-10 text-muted-foreground" />
+                  <p className="text-sm text-muted-foreground">
+                    {search ? 'No fee events match your filters' : 'No fee events to display'}
+                  </p>
+                </div>
+              ) : (
+                <div className="rounded-md border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Deal</TableHead>
+                        <TableHead>Investor</TableHead>
+                        <TableHead>Fee Type</TableHead>
+                        <TableHead>Amount</TableHead>
+                        <TableHead>Invoice</TableHead>
+                        <TableHead>Due Date</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredFeeEvents.map((event) => (
+                        <TableRow key={event.id}>
+                          <TableCell>
+                            <div className="font-medium">{event.deal_name}</div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="font-medium">{event.investor_name}</div>
+                          </TableCell>
+                          <TableCell className="capitalize">
+                            {(event.fee_type || 'fee').replace('_', ' ')}
+                          </TableCell>
+                          <TableCell>
+                            <div className="font-medium">
+                              {formatCurrency(event.computed_amount, event.currency)}
+                            </div>
+                            {event.base_amount != null && (
+                              <div className="text-xs text-muted-foreground">
+                                Base: {formatCurrency(event.base_amount, event.currency)}
+                              </div>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {event.invoice_number ? (
+                              <div>
+                                <div className="text-sm font-medium">{event.invoice_number}</div>
+                                {event.invoice_status && (
+                                  <div className="text-xs text-muted-foreground capitalize">
+                                    {event.invoice_status.replace('_', ' ')}
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">Not issued</span>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {event.invoice_due_date ? (
+                              <div className="text-sm">{formatDate(event.invoice_due_date)}</div>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">Not set</span>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <Badge
+                              variant="outline"
+                              className={cn('capitalize', FEE_STATUS_STYLES[event.status] || 'bg-gray-100 text-gray-800 border-gray-200')}
+                            >
+                              {event.status.replace('_', ' ')}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {['accrued', 'invoiced'].includes(event.status) && event.subscription_id && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleOpenConfirmPayment(event)}
+                              >
+                                <CheckCircle2 className="h-4 w-4 mr-1" />
+                                Confirm Payment
+                              </Button>
+                            )}
+                            {['accrued', 'invoiced'].includes(event.status) && !event.subscription_id && (
+                              <span className="text-xs text-muted-foreground">No subscription</span>
+                            )}
+                          </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -738,6 +1125,26 @@ export default function EscrowPage() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Escrow Confirmation Modal */}
+      {(selectedSettlement || selectedFeeEvent) && (
+        <EscrowConfirmModal
+          open={confirmModalOpen}
+          onOpenChange={setConfirmModalOpen}
+          mode={confirmMode}
+          subscriptionId={selectedSettlement?.id || selectedFeeEvent?.subscription_id || ''}
+          investorName={selectedSettlement?.investor_name || selectedFeeEvent?.investor_name || 'Recipient'}
+          dealName={selectedSettlement?.deal_name || selectedFeeEvent?.deal_name || 'Deal'}
+          commitment={selectedSettlement?.commitment_amount || 0}
+          fundedAmount={selectedSettlement?.funded_amount || 0}
+          currency={selectedSettlement?.currency || selectedFeeEvent?.currency || 'USD'}
+          feeEventId={selectedFeeEvent?.id || null}
+          defaultAmount={selectedFeeEvent?.computed_amount || null}
+          defaultPaymentType={selectedFeeEvent?.default_payment_type}
+          defaultRecipientId={selectedFeeEvent?.default_recipient_id || null}
+          onSuccess={handleConfirmSuccess}
+        />
+      )}
     </div>
   )
 }

@@ -76,6 +76,7 @@ export default async function SubscriptionPacksPage() {
     .eq('id', lawyerUser.lawyer_id)
     .maybeSingle()
 
+  // Get deals assigned to this lawyer
   const { data: assignments, error: assignmentsError } = await serviceSupabase
     .from('deal_lawyer_assignments')
     .select('deal_id')
@@ -83,6 +84,7 @@ export default async function SubscriptionPacksPage() {
 
   let dealIds = (assignments || []).map((assignment: any) => assignment.deal_id)
 
+  // Fallback to lawyers.assigned_deals array if no assignments found
   if ((!dealIds.length || assignmentsError) && lawyer?.assigned_deals?.length) {
     dealIds = lawyer.assigned_deals
   }
@@ -97,47 +99,81 @@ export default async function SubscriptionPacksPage() {
           specializations: lawyer.specializations ?? null,
           is_active: lawyer.is_active
         } : null}
-        submissions={[]}
+        subscriptions={[]}
       />
     )
   }
 
-  const { data: submissionsData } = await serviceSupabase
-    .from('deal_subscription_submissions')
+  // Fetch SIGNED subscriptions (committed, partially_funded, active) for assigned deals
+  const { data: subscriptionsData } = await serviceSupabase
+    .from('subscriptions')
     .select(`
       id,
       deal_id,
       investor_id,
       status,
-      submitted_at,
-      decided_at,
+      commitment,
+      currency,
+      funded_amount,
+      committed_at,
+      funded_at,
       deals (
         id,
-        name,
-        currency
+        name
       ),
       investors (
         id,
-        legal_name
+        legal_name,
+        display_name
       )
     `)
     .in('deal_id', dealIds)
-    .order('submitted_at', { ascending: false })
+    .in('status', ['committed', 'partially_funded', 'active'])
+    .order('committed_at', { ascending: false })
 
-  const submissions = (submissionsData || []).map((submission: any) => {
-    const deal = Array.isArray(submission.deals) ? submission.deals[0] : submission.deals
-    const investor = Array.isArray(submission.investors) ? submission.investors[0] : submission.investors
+  const subscriptionIds = (subscriptionsData || []).map((s: any) => s.id)
+
+  // Fetch signed documents for these subscriptions
+  let documentsMap: Record<string, any> = {}
+  if (subscriptionIds.length > 0) {
+    const { data: documents } = await serviceSupabase
+      .from('documents')
+      .select('id, subscription_id, file_key, name, created_at, status, type')
+      .in('subscription_id', subscriptionIds)
+      .eq('status', 'published')
+      .or('type.eq.subscription,type.eq.subscription_pack,type.is.null')
+      .order('created_at', { ascending: false })
+
+    // Group documents by subscription_id (take first/latest for each)
+    if (documents) {
+      for (const doc of documents) {
+        if (doc.subscription_id && !documentsMap[doc.subscription_id]) {
+          documentsMap[doc.subscription_id] = doc
+        }
+      }
+    }
+  }
+
+  const subscriptions = (subscriptionsData || []).map((sub: any) => {
+    const deal = Array.isArray(sub.deals) ? sub.deals[0] : sub.deals
+    const investor = Array.isArray(sub.investors) ? sub.investors[0] : sub.investors
+    const document = documentsMap[sub.id]
 
     return {
-      id: submission.id,
-      deal_id: submission.deal_id,
-      investor_id: submission.investor_id,
-      status: submission.status,
-      submitted_at: submission.submitted_at,
-      decided_at: submission.decided_at,
+      id: sub.id,
+      deal_id: sub.deal_id,
+      investor_id: sub.investor_id,
+      status: sub.status,
+      commitment: sub.commitment,
+      currency: sub.currency || 'USD',
+      funded_amount: sub.funded_amount || 0,
+      committed_at: sub.committed_at,
+      funded_at: sub.funded_at,
       deal_name: deal?.name || 'Unknown deal',
-      deal_currency: deal?.currency || null,
-      investor_name: investor?.legal_name || 'Unknown investor'
+      investor_name: investor?.display_name || investor?.legal_name || 'Unknown investor',
+      document_id: document?.id || null,
+      document_file_key: document?.file_key || null,
+      document_file_name: document?.name || null
     }
   })
 
@@ -150,7 +186,7 @@ export default async function SubscriptionPacksPage() {
         specializations: lawyer.specializations ?? null,
         is_active: lawyer.is_active
       } : null}
-      submissions={submissions}
+      subscriptions={subscriptions}
     />
   )
 }
