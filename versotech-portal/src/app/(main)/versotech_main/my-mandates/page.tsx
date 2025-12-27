@@ -63,6 +63,18 @@ type Mandate = {
   pending_signatures: number
 }
 
+type PendingSignature = {
+  id: string
+  deal_id: string
+  deal_name: string
+  investor_name: string
+  subscription_id: string
+  document_type: string
+  created_at: string
+  token_expires_at: string
+  signing_url: string
+}
+
 const DATE_FILTERS = [
   { label: 'All Time', value: 'all' },
   { label: 'Last 7 Days', value: '7d' },
@@ -121,6 +133,8 @@ export default function MyMandatesPage() {
   const [statusFilter, setStatusFilter] = useState('all')
   const [dateFilter, setDateFilter] = useState('all')
   const [totalPendingSignatures, setTotalPendingSignatures] = useState(0)
+  const [pendingSignaturesList, setPendingSignaturesList] = useState<PendingSignature[]>([])
+  const [showPendingList, setShowPendingList] = useState(false)
 
   useEffect(() => {
     async function fetchData() {
@@ -205,24 +219,50 @@ export default function MyMandatesPage() {
           // Get pending signature counts for each deal
           const { data: subscriptions } = await supabase
             .from('subscriptions')
-            .select('id, deal_id')
+            .select(`
+              id,
+              deal_id,
+              investor:investor_id (
+                id,
+                legal_name,
+                display_name
+              )
+            `)
             .in('deal_id', dealIds)
 
           if (subscriptions && subscriptions.length > 0) {
             const subIds = subscriptions.map(s => s.id)
             const { data: sigRequests } = await supabase
               .from('signature_requests')
-              .select('id, subscription_id, status, signer_role')
+              .select('id, subscription_id, status, signer_role, document_type, created_at, token_expires_at, token')
               .in('subscription_id', subIds)
               .eq('status', 'pending')
               .eq('signer_role', 'arranger')
+              .order('created_at', { ascending: false })
+
+            const pendingSigList: PendingSignature[] = []
 
             for (const sig of sigRequests || []) {
-              const sub = subscriptions.find(s => s.id === sig.subscription_id)
+              const sub = subscriptions.find(s => s.id === sig.subscription_id) as any
               if (sub?.deal_id) {
                 pendingSignatures[sub.deal_id] = (pendingSignatures[sub.deal_id] || 0) + 1
+
+                const deal = (deals || []).find((d: any) => d.id === sub.deal_id)
+                pendingSigList.push({
+                  id: sig.id,
+                  deal_id: sub.deal_id,
+                  deal_name: deal?.name || 'Unknown Deal',
+                  investor_name: sub.investor?.legal_name || sub.investor?.display_name || 'Unknown Investor',
+                  subscription_id: sig.subscription_id,
+                  document_type: sig.document_type,
+                  created_at: sig.created_at,
+                  token_expires_at: sig.token_expires_at,
+                  signing_url: `/versotech_main/versosign/sign/${sig.token}`
+                })
               }
             }
+
+            setPendingSignaturesList(pendingSigList)
           }
         }
 
@@ -513,13 +553,62 @@ export default function MyMandatesPage() {
                   </p>
                 </div>
               </div>
-              <Button variant="outline" asChild>
-                <Link href="/versotech_main/versosign">
-                  <PenTool className="h-4 w-4 mr-2" />
-                  Go to VERSOSign
-                </Link>
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowPendingList(!showPendingList)}
+                >
+                  {showPendingList ? 'Hide List' : 'Show List'}
+                </Button>
+                <Button variant="outline" asChild>
+                  <Link href="/versotech_main/versosign">
+                    <PenTool className="h-4 w-4 mr-2" />
+                    Go to VERSOSign
+                  </Link>
+                </Button>
+              </div>
             </div>
+
+            {/* Expanded Pending Signatures List */}
+            {showPendingList && pendingSignaturesList.length > 0 && (
+              <div className="mt-4 pt-4 border-t border-amber-300/30">
+                <div className="space-y-2">
+                  {pendingSignaturesList.map((sig) => {
+                    const expiresAt = new Date(sig.token_expires_at)
+                    const isExpiring = expiresAt.getTime() - Date.now() < 48 * 60 * 60 * 1000 // 48 hours
+
+                    return (
+                      <div
+                        key={sig.id}
+                        className="flex items-center justify-between p-3 bg-white/50 rounded-lg border border-amber-200/50"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-foreground truncate">
+                            {sig.deal_name}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            {sig.investor_name} • {sig.document_type.replace('_', ' ')}
+                          </p>
+                          <p className={cn(
+                            "text-xs mt-1",
+                            isExpiring ? "text-red-600 font-medium" : "text-muted-foreground"
+                          )}>
+                            {isExpiring ? '⚠️ ' : ''}Expires: {formatDate(sig.token_expires_at)}
+                          </p>
+                        </div>
+                        <Button size="sm" className="ml-4 bg-amber-600 hover:bg-amber-700" asChild>
+                          <Link href={sig.signing_url}>
+                            <PenTool className="h-4 w-4 mr-1" />
+                            Sign Now
+                          </Link>
+                        </Button>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}

@@ -19,6 +19,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { Button } from '@/components/ui/button'
 import {
   FileText,
   Clock,
@@ -32,10 +33,13 @@ import {
   Percent,
   AlertTriangle,
   Building2,
+  PenTool,
+  ExternalLink,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatDate } from '@/lib/format'
 import { createClient } from '@/lib/supabase/client'
+import Link from 'next/link'
 
 type Agreement = {
   id: string
@@ -51,6 +55,8 @@ type Agreement = {
   exclusivity_level: string | null
   status: string
   created_at: string
+  signature_token: string | null // For pending signature requests
+  signature_status: string | null
 }
 
 type CommercialPartnerInfo = {
@@ -151,7 +157,28 @@ export default function PlacementAgreementsPage() {
 
         if (agreementsError) throw agreementsError
 
-        processAgreements(agreementsData || [])
+        // Fetch pending signature requests for these agreements
+        const agreementIds = (agreementsData || []).map((a: any) => a.id)
+        let signatureMap: Record<string, { token: string; status: string }> = {}
+
+        if (agreementIds.length > 0) {
+          const { data: signatureRequests } = await supabase
+            .from('signature_requests')
+            .select('placement_agreement_id, token, status')
+            .in('placement_agreement_id', agreementIds)
+            .eq('signer_role', 'commercial_partner')
+
+          for (const sig of signatureRequests || []) {
+            if (sig.placement_agreement_id) {
+              signatureMap[sig.placement_agreement_id] = {
+                token: sig.token,
+                status: sig.status
+              }
+            }
+          }
+        }
+
+        processAgreements(agreementsData || [], signatureMap)
         setError(null)
       } catch (err) {
         console.error('[PlacementAgreementsPage] Error:', err)
@@ -178,28 +205,33 @@ export default function PlacementAgreementsPage() {
         .limit(100)
 
       if (agreementsError) throw agreementsError
-      processAgreements(agreementsData || [])
+      processAgreements(agreementsData || [], {})
     }
 
-    function processAgreements(data: any[]) {
+    function processAgreements(data: any[], signatureMap: Record<string, { token: string; status: string }>) {
       const now = new Date()
       const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)
 
-      const processed: Agreement[] = data.map((agreement) => ({
-        id: agreement.id,
-        agreement_type: agreement.agreement_type || 'placement',
-        signed_date: agreement.signed_date,
-        effective_date: agreement.effective_date,
-        expiry_date: agreement.expiry_date,
-        default_commission_bps: agreement.default_commission_bps || 0,
-        commission_cap_amount: agreement.commission_cap_amount,
-        payment_terms: agreement.payment_terms,
-        territory: agreement.territory,
-        deal_types: agreement.deal_types,
-        exclusivity_level: agreement.exclusivity_level,
-        status: agreement.status || 'draft',
-        created_at: agreement.created_at,
-      }))
+      const processed: Agreement[] = data.map((agreement) => {
+        const sigInfo = signatureMap[agreement.id]
+        return {
+          id: agreement.id,
+          agreement_type: agreement.agreement_type || 'placement',
+          signed_date: agreement.signed_date,
+          effective_date: agreement.effective_date,
+          expiry_date: agreement.expiry_date,
+          default_commission_bps: agreement.default_commission_bps || 0,
+          commission_cap_amount: agreement.commission_cap_amount,
+          payment_terms: agreement.payment_terms,
+          territory: agreement.territory,
+          deal_types: agreement.deal_types,
+          exclusivity_level: agreement.exclusivity_level,
+          status: agreement.status || 'draft',
+          created_at: agreement.created_at,
+          signature_token: sigInfo?.token || null,
+          signature_status: sigInfo?.status || null,
+        }
+      })
 
       setAgreements(processed)
 
@@ -422,6 +454,7 @@ export default function PlacementAgreementsPage() {
                     <TableHead>Effective</TableHead>
                     <TableHead>Expires</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -499,6 +532,36 @@ export default function PlacementAgreementsPage() {
                         >
                           {agreement.status}
                         </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          {/* Sign button for pending agreements with signature requests */}
+                          {agreement.signature_token && agreement.signature_status === 'pending' && (
+                            <Button
+                              size="sm"
+                              className="bg-amber-600 hover:bg-amber-700"
+                              asChild
+                            >
+                              <Link href={`/versotech_main/versosign/sign/${agreement.signature_token}`}>
+                                <PenTool className="h-4 w-4 mr-1" />
+                                Sign
+                              </Link>
+                            </Button>
+                          )}
+                          {/* Signed badge for completed signatures */}
+                          {agreement.signature_status === 'signed' && (
+                            <Badge variant="outline" className="bg-green-100 text-green-800">
+                              <CheckCircle2 className="h-3 w-3 mr-1" />
+                              Signed
+                            </Badge>
+                          )}
+                          {/* View VERSOSign for any status */}
+                          <Button variant="ghost" size="sm" asChild>
+                            <Link href="/versotech_main/versosign">
+                              <ExternalLink className="h-4 w-4" />
+                            </Link>
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}

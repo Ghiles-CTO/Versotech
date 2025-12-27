@@ -33,18 +33,23 @@ export async function GET(
 
   const serviceSupabase = createServiceClient()
 
-  // Get subscription with investor details
+  // Get subscription with investor and deal details
   const { data: subscription, error: subError } = await serviceSupabase
     .from('subscriptions')
     .select(`
       id,
       investor_id,
+      deal_id,
       investor:investors(
         id,
         legal_name,
         display_name,
         email,
         type
+      ),
+      deal:deals(
+        id,
+        arranger_entity_id
       )
     `)
     .eq('id', subscriptionId)
@@ -52,6 +57,28 @@ export async function GET(
 
   if (subError || !subscription) {
     return NextResponse.json({ error: 'Subscription not found' }, { status: 404 })
+  }
+
+  // Fetch arranger info if deal has an arranger
+  let arranger = null
+  const dealData = Array.isArray(subscription.deal)
+    ? subscription.deal[0]
+    : subscription.deal
+
+  if (dealData?.arranger_entity_id) {
+    const { data: arrangerEntity } = await serviceSupabase
+      .from('arranger_entities')
+      .select('id, company_name, legal_name')
+      .eq('id', dealData.arranger_entity_id)
+      .single()
+
+    if (arrangerEntity) {
+      arranger = {
+        id: arrangerEntity.id,
+        company_name: arrangerEntity.company_name,
+        legal_name: arrangerEntity.legal_name
+      }
+    }
   }
 
   // Supabase may return array for joined relations - extract first item
@@ -82,7 +109,8 @@ export async function GET(
         is_primary: true
       }],
       investor_type: investor?.type || 'individual',
-      requires_multi_signatory: false
+      requires_multi_signatory: false,
+      arranger
     })
   }
 
@@ -132,6 +160,7 @@ export async function GET(
     signatories,
     investor_type: investor?.type,
     requires_multi_signatory: isEntityInvestor && authorizedSignatories.length > 1,
-    has_designated_signatories: hasDesignatedSignatories
+    has_designated_signatories: hasDesignatedSignatories,
+    arranger
   })
 }

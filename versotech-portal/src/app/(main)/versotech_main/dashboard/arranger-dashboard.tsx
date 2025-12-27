@@ -140,25 +140,44 @@ export function ArrangerDashboard({ arrangerId, userId, persona }: ArrangerDashb
           )
         }
 
-        // Count related entities - Use RPC or fallback queries
-        // Partners count
-        const { count: partnersCount } = await supabase
-          .from('partners')
-          .select('id', { count: 'exact', head: true })
-
-        // Introducers count
-        const { count: introducersCount } = await supabase
-          .from('introducers')
-          .select('id', { count: 'exact', head: true })
-
-        // Commercial partners count
-        const { count: cpCount } = await supabase
-          .from('commercial_partners')
-          .select('id', { count: 'exact', head: true })
-
-        // Lawyers count (assigned to arranger's deals)
+        // Count related entities - SCOPED TO ARRANGER'S DEALS
+        let partnersCount = 0
+        let introducersCount = 0
+        let cpCount = 0
         let lawyersCount = 0
+
         if (dealIds.length > 0) {
+          // Get subscriptions on arranger's deals for relationship tracking
+          const { data: dealSubscriptions } = await supabase
+            .from('subscriptions')
+            .select('id, investor_id, introducer_id, partner_id, commercial_partner_id')
+            .in('deal_id', dealIds)
+
+          // Count unique introducers who have introduced to arranger's deals
+          const introducerIds = new Set(
+            (dealSubscriptions || [])
+              .filter((s: any) => s.introducer_id)
+              .map((s: any) => s.introducer_id)
+          )
+          introducersCount = introducerIds.size
+
+          // Count unique partners who have referred to arranger's deals
+          const partnerIds = new Set(
+            (dealSubscriptions || [])
+              .filter((s: any) => s.partner_id)
+              .map((s: any) => s.partner_id)
+          )
+          partnersCount = partnerIds.size
+
+          // Count unique commercial partners on arranger's deals
+          const cpIds = new Set(
+            (dealSubscriptions || [])
+              .filter((s: any) => s.commercial_partner_id)
+              .map((s: any) => s.commercial_partner_id)
+          )
+          cpCount = cpIds.size
+
+          // Lawyers assigned to arranger's deals
           const { data: lawyerAssignments } = await supabase
             .from('deal_lawyer_assignments')
             .select('lawyer_id')
@@ -381,7 +400,7 @@ export function ArrangerDashboard({ arrangerId, userId, persona }: ArrangerDashb
         <Card className={isDark ? 'bg-white/5 border-white/10' : ''}>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className={`text-sm font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-              Network Size
+              Active Network
             </CardTitle>
             <Users className={`h-4 w-4 ${isDark ? 'text-gray-500' : 'text-gray-400'}`} />
           </CardHeader>
@@ -390,7 +409,7 @@ export function ArrangerDashboard({ arrangerId, userId, persona }: ArrangerDashb
               {(metrics?.totalPartners || 0) + (metrics?.totalIntroducers || 0) + (metrics?.totalCommercialPartners || 0)}
             </div>
             <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-              Partners, introducers & CPs
+              On your mandates
             </p>
           </CardContent>
         </Card>

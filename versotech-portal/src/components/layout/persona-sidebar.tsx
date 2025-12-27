@@ -92,10 +92,14 @@ const PERSONA_NAV_ITEMS: Record<string, NavItem[]> = {
   arranger: [
     { name: 'Dashboard', href: '/versotech_main/dashboard', icon: LayoutDashboard, description: 'Overview' },
     { name: 'My Mandates', href: '/versotech_main/my-mandates', icon: FileSignature, description: 'Deals I manage' },
+    { name: 'Subscription Packs', href: '/versotech_main/subscription-packs', icon: FileText, description: 'Pack review' },
+    { name: 'Escrow', href: '/versotech_main/escrow', icon: Lock, description: 'Escrow status' },
+    { name: 'Reconciliation', href: '/versotech_main/lawyer-reconciliation', icon: Calculator, description: 'Financials' },
     { name: 'My Partners', href: '/versotech_main/my-partners', icon: Users, description: 'Partner network' },
     { name: 'My Introducers', href: '/versotech_main/my-introducers', icon: UserPlus, description: 'Introducer network' },
     { name: 'My Commercial Partners', href: '/versotech_main/my-commercial-partners', icon: Building2, description: 'CP network' },
     { name: 'My Lawyers', href: '/versotech_main/my-lawyers', icon: Scale, description: 'Legal counsel' },
+    { name: 'VERSOSign', href: '/versotech_main/versosign', icon: FileSignature, description: 'E-signatures' },
     { name: 'Messages', href: '/versotech_main/messages', icon: MessageSquare, description: 'Communications' },
   ],
 

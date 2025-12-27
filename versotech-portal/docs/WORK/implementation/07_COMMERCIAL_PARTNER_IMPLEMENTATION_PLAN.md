@@ -1,10 +1,10 @@
 # Commercial Partner Implementation Plan
 
 **User Type:** Commercial Partner
-**Current Completion:** 30% (Corrected after 2nd review: December 27, 2025)
+**Current Completion:** 35% (Corrected after 4th review: December 27, 2025)
 **Target Completion:** 95%
-**Estimated Hours:** 54 hours
-**Last Audit:** December 27, 2025 - 2nd Review Corrections Applied (10 total fixes)
+**Estimated Hours:** 63 hours
+**Last Audit:** December 27, 2025 - 4th Review Corrections Applied (17 total fixes)
 
 ---
 
@@ -22,17 +22,20 @@ The Commercial Partner (CP) is an **institutional intermediary** (bank, wealth m
 ## USER STORIES REFERENCE
 
 **Source:** `docs/planning/user_stories_mobile_v6_extracted.md` - Section 7.Commercial Partner
-**Total Rows:** 111 user stories
+**Total Rows:** 111 user stories (100 valid, 11 #REF)
 
-| Section | Rows | Description |
-|---------|------|-------------|
-| 7.1 My Profile | 2-14 | Account creation, login, profile approval |
-| 7.2 My Opportunities | 15-46 | View/invest in deals (MODE 1 & MODE 2) |
-| 7.3 My Investments | 47-51 | Track own investments (MODE 1) |
-| 7.4 Notifications | 63-65 | Transaction notifications |
-| 7.5 Investment Sales | 66-70 | Resell/redemption (MODE 1) |
-| 7.6 My Transactions (as CP) | 71-102 | Client tracking, placement agreements, fees |
-| 7.7 GDPR | 103-112 | Data privacy (deferred to CEO plan) |
+| Section | Rows | Description | Status |
+|---------|------|-------------|--------|
+| 7.1 My Profile | 2-14 | Account creation, login, profile approval | Valid |
+| 7.2 My Opportunities | 15-46 | View/invest in deals (MODE 1 & MODE 2) | Valid |
+| 7.3 My Investments | 47-51 | Track own investments (MODE 1) | Valid |
+| 7.3.6-7.3.7 | **52-62** | **#REF! - Invalid references** | **N/A** |
+| 7.4 Notifications | 63-65 | Transaction notifications | Valid |
+| 7.5 Investment Sales | 66-70 | Resell/redemption (MODE 1) | Valid |
+| 7.6 My Transactions (as CP) | 71-102 | Client tracking, placement agreements, fees | Valid |
+| 7.7 GDPR | 103-112 | Data privacy (deferred to CEO plan) | Valid |
+
+**Note:** Rows 52-62 contain `#REF!` errors in source spreadsheet (broken cell references). These are excluded from scope.
 
 ---
 
@@ -221,9 +224,198 @@ Current `investor-deals-list-client.tsx` filters (lines 713-753):
 
 **Action:** Expand Task 4 to include journey stage bucket filters OR add new Task 13.
 
+### Correction 11: Task 12 Cannot Be Implemented - Notification Schema Missing Fields (3rd Review) - CRITICAL
+
+**Original Claim:** Task 12 says add type filter and "assigned by me" view to notifications
+
+**Reality:** The `investor_notifications` table schema (`20251102130500_create_investor_notifications.sql`) is:
+```sql
+CREATE TABLE investor_notifications (
+  id uuid PRIMARY KEY,
+  user_id uuid NOT NULL,
+  investor_id uuid,
+  title text NOT NULL,
+  message text NOT NULL,
+  link text,
+  read_at timestamptz,
+  created_at timestamptz DEFAULT now()
+);
+```
+
+**Missing columns:**
+- `type` - NO column to store notification type
+- `created_by` - NO column for who created it
+- `deal_id` - NO column for deal reference
+
+**Additionally:** `createInvestorNotification()` in `notifications.ts` accepts `type` parameter but does NOT persist it:
+```typescript
+// Line 68-74: No type in insert!
+await supabase.from('investor_notifications').insert({
+  user_id, investor_id, title, message, link
+  // NO type field!
+})
+```
+
+**Direct inserts bypass helper:** `proxy-subscribe/route.ts` (lines 279-293) inserts with `metadata: { type: ... }` but `metadata` column doesn't exist either!
+
+**Action:** Add new Task 14 for notification schema migration + update all insert callsites.
+
+### Correction 12: Task 10 Webhook Route Not Updated (3rd Review) - HIGH
+
+**Original Claim:** Task 10 says update `handlers.ts` only
+
+**Reality:** `signature/complete/route.ts` has its OWN handling that doesn't use `handlers.ts`:
+- Line 98-100: `if (document_type === 'nda')` → calls `handleNDACompletion()`
+- Line 103-105: `if (document_type === 'subscription')` → calls `handleSubscriptionCompletion()`
+- **NO handling for `document_type === 'placement_agreement'`**
+
+The `handlers.ts` file is used by the INTERNAL `/api/signature/submit` flow, but the WEBHOOK flow goes directly through `complete/route.ts`.
+
+**Options:**
+1. Add `placement_agreement` handling to BOTH files
+2. Lock placement agreements to internal VersaSign flow only (no external webhook)
+
+**Action:** Update Task 10 to specify BOTH files must be modified.
+
+### Correction 13: Task 10 Schema Linkage Problem (3rd Review) - MEDIUM
+
+**Original Claim:** Task 10 handler says "Get placement_agreement_id from signature request"
+
+**Reality:** `signature_requests` table has NO `placement_agreement_id` column:
+```
+signature_requests columns: deal_id, subscription_id, investor_id, member_id, document_id
+// NO placement_agreement_id!
+```
+
+`placement_agreements` table has NO signature_request columns:
+```
+placement_agreements columns: agreement_document_id, status, commercial_partner_id, ...
+// NO ceo_signature_request_id or cp_signature_request_id!
+```
+
+**Resolution Options:**
+1. Add `placement_agreement_id` to `signature_requests` (migration)
+2. Reverse lookup via `placement_agreements.agreement_document_id` → `documents` → `signature_requests.document_id`
+3. Use metadata/context passed in webhook payload
+
+**Action:** Update Task 10 to include schema decision and migration if needed.
+
+### Correction 14: Proxy-Mode Dataroom Access Broken (3rd Review) - MEDIUM
+
+**Original Claim:** Task 11 fixes MODE 1, but MODE 2 is also broken
+
+**Reality:** `opportunities/[id]/route.ts` uses `effectiveInvestorId` for data room:
+```typescript
+// Line 42: effectiveInvestorId = membership?.investor_id || investorId
+// Line 79: .eq('investor_id', effectiveInvestorId)
+```
+
+For CP MODE 2 (Proxy):
+- CP user has `commercial_partner_proxy` role in deal_memberships
+- CP user does NOT have investor_users entry
+- `investorId = null`, `membership?.investor_id = null`
+- `effectiveInvestorId = null`
+- Data room access check returns nothing
+
+**The CP is acting on behalf of CLIENT investor. Data room should show CLIENT's access, not CP's.**
+
+**Action:** Expand Task 11 to handle MODE 2 dataroom context switching.
+
+### Correction 15: Correction 7 Was WRONG - Handler Already Exists (4th Review) - CRITICAL
+
+**Original Claim (Correction 7):** "NO `placement_agreement` case exists!" in handlers.ts
+
+**Reality:** The handler ALREADY EXISTS:
+- `handlePlacementAgreementSignature()` at `handlers.ts:1047`
+- `routeSignatureHandler()` routes `placement_agreement` at `handlers.ts:1311-1312`
+- The handler is complete with CEO/CP flow, notifications, audit logging
+
+**My previous correction was factually wrong.** Task 10 was mis-scoped.
+
+**What's ACTUALLY missing:**
+- Webhook handling in `signature/complete/route.ts` (separate from handlers.ts)
+- Schema column `signature_requests.placement_agreement_id` (see Correction 16)
+
+**Action:** Rescope Task 10 to only add webhook route handling + schema fix.
+
+### Correction 16: Schema Partially Complete - Code is Currently Broken (4th Review) - HIGH
+
+**Original Claim (Correction 13):** "signature_requests has NO placement_agreement_id column"
+
+**Reality - DB Schema verified via Supabase:**
+```
+placement_agreements table HAS:
+  - ceo_signature_request_id ✓ (EXISTS)
+  - cp_signature_request_id ✓ (EXISTS)
+
+signature_requests table:
+  - introducer_agreement_id ✓ (EXISTS)
+  - placement_agreement_id ✗ (DOES NOT EXIST!)
+```
+
+**The code is currently broken:**
+- `placement-agreements/[id]/sign/route.ts:101` inserts `placement_agreement_id: agreement.id`
+- But this column DOESN'T EXIST in `signature_requests`!
+- The insert will fail at runtime
+
+**What needs to happen:**
+- Migration to add `placement_agreement_id` to `signature_requests` table
+- Then the existing handler will work
+
+**Action:** Task 10 needs migration ONLY for `signature_requests.placement_agreement_id`, plus webhook route.
+
+### Correction 17: Rows 52-62 Are #REF - Must Be Marked N/A (4th Review) - MEDIUM
+
+**Original Claim:** Plan covers "111 rows"
+
+**Reality:** Section 7.3.6-7.3.7 (rows 52-62) in user_stories_mobile_v6_extracted.md are all `#REF!`:
+```
+- (Row 52) #REF!
+- (Row 53) #REF!
+...
+- (Row 62) #REF!
+```
+
+These are broken Excel cell references from the source spreadsheet.
+
+**Action:** Mark rows 52-62 as N/A in scope. Actual valid rows = 100.
+
 ---
 
-## 1. DATABASE SCHEMA (100% COMPLETE)
+## OPEN QUESTIONS (3rd Review)
+
+### Question 1: Should CP users gain investor persona automatically?
+
+**Context:** Task 11 proposes auto-creating investor record when CP dispatched as MODE 1.
+
+**Question:** Should this auto-grant the `investor` persona in `get_user_personas()` RPC?
+
+**Impact:** If yes:
+- CP nav would show both CP items AND investor items
+- May cause UI confusion or permission overlap
+- `isInvestor` checks would return true for these users
+
+**Recommendation:** NO - Create investor record but don't auto-grant investor persona. Instead:
+- Portfolio page should check `commercial_partner_investor` role in deal_memberships
+- Or create CP-specific portfolio route that doesn't require investor persona
+
+### Question 2: What is "passed" in 7.2.1 row 17?
+
+**Context:** User story row 17: "display the list of opportunities I have passed"
+
+**Question:** Is "passed" mapped to:
+- `interest.status = 'withdrawn'` (investor withdrew interest)
+- `interest.status = 'rejected'` (staff rejected investor)
+- A new `passed` status on deal_memberships
+
+**Recommendation:** Map "passed" to `withdrawn` interest status, since:
+- `rejected` implies staff action, not investor choice
+- No need for new column
+- Matches user intent "I chose to pass on this"
+
+---
+
+## 1. DATABASE SCHEMA (95% COMPLETE - NEEDS MIGRATIONS)
 
 ### 1.1 Tables Verified via Supabase MCP
 
@@ -511,42 +703,73 @@ src/app/api/commercial-partners/me/invoice/route.ts
 - Invoice creation UI
 - Invoice notification workflow
 
-### Task 10: Placement Agreement Signature Webhook Handler (4 hours) - P0 BLOCKER
+### Task 10: Placement Agreement Signature Completion (3 hours) - P0 BLOCKER
 
-**NEW TASK (2nd Review) - Correction 7**
+**UPDATED (4th Review) - Corrections 15, 16**
 
-**Files to Modify:**
+**HANDLER ALREADY EXISTS (Correction 15):**
+- `handlePlacementAgreementSignature()` at `handlers.ts:1047` ✓
+- `routeSignatureHandler()` routes `placement_agreement` at line 1311-1312 ✓
+- Handler includes CEO/CP flow, notifications, audit logging ✓
+
+**WHAT'S ACTUALLY NEEDED:**
+
+1. **Schema Migration (Correction 16) - CODE IS CURRENTLY BROKEN:**
+```sql
+-- placement-agreements/[id]/sign/route.ts:101 tries to insert this column but it doesn't exist!
+ALTER TABLE signature_requests
+ADD COLUMN placement_agreement_id uuid REFERENCES placement_agreements(id);
+
+CREATE INDEX idx_signature_requests_placement_agreement
+ON signature_requests(placement_agreement_id);
 ```
-src/lib/signature/handlers.ts
-  - Add handlePlacementAgreementSignature() function
-  - Add 'placement_agreement' case to routeSignatureHandler()
-```
 
-**Handler Requirements:**
+2. **Webhook Handler in complete/route.ts:**
 ```typescript
-export async function handlePlacementAgreementSignature(params: PostSignatureHandlerParams): Promise<void> {
-  // 1. Get placement_agreement_id from signature request
-  // 2. Check if all required signatories have signed (CEO + CP)
+// Add after subscription handling (around line 106):
+if (document_type === 'placement_agreement') {
+  await handlePlacementAgreementCompletion(supabase, signature_request_id)
+}
+
+async function handlePlacementAgreementCompletion(supabase, signatureRequestId) {
+  // 1. Get signature request with placement_agreement_id
+  // 2. Check if all signatories signed (CEO + CP)
   // 3. Update placement_agreements.status = 'active'
-  // 4. Set placement_agreements.signed_date = now
+  // 4. Set signed_date timestamp
   // 5. Store signed PDF path
-  // 6. Notify CP user that agreement is active
-  // 7. Notify staff_admin that agreement was executed
-  // 8. Create audit log entry
+  // 6. Notify CP that agreement is active
+  // 7. Notify staff_admin that agreement executed
 }
 ```
 
-**CRITICAL:** Without this, placement agreements will NEVER become 'active' after signing.
+**Files to Modify:**
+```
+supabase/migrations/YYYYMMDD_add_placement_agreement_id_to_signature_requests.sql
+  - Add placement_agreement_id column (REQUIRED - code is broken without it!)
 
-### Task 11: MODE 1 investor_users Resolution (4 hours) - P0 BLOCKER
+src/app/api/signature/complete/route.ts
+  - Add placement_agreement document_type handling
+  - This file has SEPARATE webhook handling from handlers.ts
+```
 
-**NEW TASK (2nd Review) - Correction 8**
+**DO NOT modify handlers.ts - it's already complete!**
 
-**Problem:** CP with `commercial_partner_investor` role cannot use:
+**CRITICAL:** The sign route will FAIL until migration is applied.
+
+### Task 11: MODE 1/2 investor_users Resolution + Dataroom Fix (6 hours) - P0 BLOCKER
+
+**UPDATED (3rd Review) - Corrections 8, 14**
+
+**Problem 1 (MODE 1):** CP with `commercial_partner_investor` role cannot use:
 - `/api/investors/me/portfolio` → 404 "No investor profile found"
 - `/api/investors/me/opportunities/[id]/subscribe` → 404 "No investor profile found"
 
-**Solution Options:**
+**Problem 2 (MODE 2 - 3rd Review Fix):** CP with `commercial_partner_proxy` role cannot view client dataroom:
+- `opportunities/[id]/route.ts` uses `effectiveInvestorId` for data room access
+- CP proxy users have `effectiveInvestorId = null` (no investor_users entry)
+- Dataroom should show CLIENT's access, not CP's non-existent access
+
+**Solution for MODE 1:**
 
 **Option A: Auto-create investor profile for MODE 1 CP (Recommended)**
 ```
@@ -555,29 +778,46 @@ src/app/api/deals/[id]/dispatch/route.ts
     1. Create investor record (type: 'corporate_cp')
     2. Create investor_users link
     3. Copy relevant data from commercial_partners table
+    4. DO NOT auto-grant investor persona (see Open Question 1)
 ```
 
-**Option B: Create CP-specific APIs**
+**Solution for MODE 2 (3rd Review):**
 ```
-src/app/api/commercial-partners/me/portfolio/route.ts
-src/app/api/commercial-partners/me/subscribe/route.ts
+src/app/api/investors/me/opportunities/[id]/route.ts
+  - Add client context for proxy mode:
+    1. If role === 'commercial_partner_proxy', accept client_investor_id query param
+    2. Use client_investor_id as effectiveInvestorId for data room access
+    3. Validate CP has access to this client via commercial_partner_clients table
+
+src/app/(main)/versotech_main/opportunities/[id]/page.tsx
+  - Add client selector dropdown for proxy mode
+  - Pass selected client to API calls
 ```
-
-**Recommendation:** Option A is cleaner - reuses existing investor journey infrastructure.
-
-### Task 12: CP Notification Enhancements for 7.4 (4 hours) - P1
-
-**NEW TASK (2nd Review) - Correction 9 - Rows 63-65**
 
 **Files to Modify:**
+```
+src/app/api/deals/[id]/dispatch/route.ts
+src/app/api/investors/me/opportunities/[id]/route.ts
+src/app/(main)/versotech_main/opportunities/[id]/page.tsx
+```
+
+### Task 12: CP Notification Enhancements for 7.4 (4 hours) - P1 - BLOCKED
+
+**UPDATED (3rd Review) - Correction 9, 11 - Rows 63-65**
+
+**⚠️ BLOCKED BY Task 14** - Cannot implement type/created_by filters without schema columns
+
+**PREREQUISITE:** Task 14 must be completed first (notification schema migration)
+
+**Files to Modify (after Task 14):**
 ```
 src/components/layout/persona-sidebar.tsx
   - Add Notifications link to CP nav
 
 src/components/notifications/investor-notifications-client.tsx
-  - Add notification_type filter (metadata.type field)
-  - Add "assigned by me" filter (check who created the notification)
-  - Group notifications by opportunity when filtered
+  - Add notification type filter (using new `type` column)
+  - Add "assigned by me" filter (using new `created_by` column)
+  - Group notifications by opportunity (using new `deal_id` column)
 ```
 
 **Required Features:**
@@ -614,52 +854,111 @@ const journeyStageFilter = {
 
 **Note:** This benefits ALL personas (investors, partners, introducers), not just CP.
 
+### Task 14: Notification Schema Migration (4 hours) - P0 BLOCKER
+
+**NEW TASK (3rd Review) - Correction 11 - CRITICAL**
+
+**Problem:** `investor_notifications` table missing required columns:
+```sql
+-- Current schema (incomplete):
+CREATE TABLE investor_notifications (
+  id, user_id, investor_id, title, message, link, read_at, created_at
+);
+-- MISSING: type, created_by, deal_id
+```
+
+**Migration Required:**
+```
+supabase/migrations/YYYYMMDD_enhance_investor_notifications.sql
+```
+
+```sql
+-- Add missing columns
+ALTER TABLE investor_notifications
+ADD COLUMN IF NOT EXISTS type text,
+ADD COLUMN IF NOT EXISTS created_by uuid REFERENCES profiles(id),
+ADD COLUMN IF NOT EXISTS deal_id uuid REFERENCES deals(id);
+
+-- Add index for type filtering
+CREATE INDEX IF NOT EXISTS idx_investor_notifications_type
+ON investor_notifications(user_id, type);
+
+-- Add index for created_by filtering
+CREATE INDEX IF NOT EXISTS idx_investor_notifications_created_by
+ON investor_notifications(created_by);
+```
+
+**Files to Update After Migration:**
+```
+src/lib/notifications.ts
+  - Update createInvestorNotification() to persist type, created_by, deal_id
+  - Line 68-74: Add new fields to insert
+
+src/app/api/commercial-partners/proxy-subscribe/route.ts
+  - Line 279-293: Replace metadata with proper columns
+
+All other direct inserts throughout codebase:
+  - Search: .from('investor_notifications').insert(
+  - Update each to include type field
+```
+
+**CRITICAL:** Task 12 is BLOCKED until this migration is complete.
+
 ---
 
-## 5. PRIORITY MATRIX (UPDATED - 2nd Review)
+## 5. PRIORITY MATRIX (UPDATED - 3rd Review)
 
 | Priority | Task | Hours | Blocker? | Status |
 |----------|------|-------|----------|--------|
 | **P0** | Task 1: Client CRUD | 6 | YES | Pending |
 | **P0** | Task 2: Placement Agreement Signing | 8 | YES | Pending |
-| **P0** | Task 10: Placement Agreement Webhook | 4 | **YES - CRITICAL** | Pending |
-| **P0** | Task 11: MODE 1 investor_users Fix | 4 | **YES - CRITICAL** | Pending |
+| **P0** | Task 10: Placement Agreement Webhook | 3 | **YES - CRITICAL** (handler exists) | Pending |
+| **P0** | Task 11: MODE 1/2 investor_users + Dataroom | 6 | **YES - CRITICAL** | Pending |
+| **P0** | Task 14: Notification Schema Migration | 4 | **YES - CRITICAL** | Pending |
 | **P1** | Task 3: CP Dashboard | 4 | No | Pending |
 | **P1** | Task 4: Opportunities Nav + MODE Detection | 3 | No | Pending |
 | **P1** | Task 6: Fix Proxy Subscribe GET | 2 | No | Pending |
 | **P1** | Task 7: Enhanced Transaction View (7.6.1) | 6 | No | Pending |
 | **P1** | Task 8: Portfolio Access for MODE 1 | 4 | No | Pending |
-| **P1** | Task 12: CP Notification Enhancements | 4 | No | Pending |
+| **P1** | Task 12: CP Notification Enhancements | 4 | Blocked by Task 14 | Pending |
 | **P1** | Task 13: Journey Stage Bucket Filters | 3 | No | Pending |
 | **P2** | Task 9: Reporting/Invoicing (7.6.4) | 6 | No | Pending |
 
-**Total: 54 hours** (was 39, increased by 15 hours for 4 new tasks from 2nd review)
+**Total: 63 hours** (was 66, reduced by 3 hours - Task 10 handler already exists)
+
+**Hours Changes:**
+- Task 10: 6 → 3 hours (4th Review: handler already exists! Only need migration + webhook)
+- Task 11: 4 → 6 hours (MODE 2 dataroom fix added)
+- Task 14: +4 hours (new migration task)
 
 **Removed Tasks:**
 - ~~Task 5: Access Check Utility~~ - DUPLICATE (use existing `can-invest.ts`)
 
+**Blocked Tasks:**
+- Task 12 blocked by Task 14 (notification schema migration required first)
+
 ---
 
-## 6. COMPLETION BREAKDOWN (CORRECTED - 2nd Review)
+## 6. COMPLETION BREAKDOWN (CORRECTED - 3rd Review)
 
 | Component | Current | Target | Notes |
 |-----------|---------|--------|-------|
-| Database | 100% | 100% | All tables, RLS, FKs complete |
+| Database | 90% | 100% | **Needs 2 migrations:** notification columns + signature linkage |
 | API Routes | 25% | 90% | Need client CRUD, agreement CRUD, reporting, webhook handler |
 | UI Pages | 30% | 90% | Need dashboard, client mgmt, enhanced transactions, notification filters |
-| Signature Webhook | 0% | 100% | **CRITICAL** - placement_agreement handler missing |
+| Signature Webhook | 0% | 100% | **CRITICAL** - placement_agreement handler missing in BOTH files |
 | MODE 1 Access | 10% | 90% | **BLOCKED** - APIs 404 without investor_users link |
-| Proxy Mode | 85% | 95% | Banner works, GET needs fix |
-| MODE 2 | 55% | 95% | Clients + full flow needed |
-| Notifications | 20% | 80% | Missing type filters, "assigned by me" view |
+| MODE 2 Dataroom | 0% | 90% | **BLOCKED** - effectiveInvestorId = null for proxy users |
+| Notifications Schema | 60% | 100% | **BLOCKED** - missing type, created_by, deal_id columns |
+| Notifications UI | 20% | 80% | Blocked by schema migration |
 | Journey Filters | 40% | 90% | Missing notified/passed/funded buckets |
 | Reporting | 0% | 80% | All new |
 
-**Overall: 30% → 95%** (was 35%, reduced due to 2nd review blockers)
+**Overall: 25% → 95%** (was 30%, reduced due to 3rd review blockers)
 
 ---
 
-## 7. FILES SUMMARY (UPDATED - 2nd Review)
+## 7. FILES SUMMARY (UPDATED - 3rd Review)
 
 ### To Create (15 files)
 
@@ -689,26 +988,53 @@ src/components/commercial-partner/placement-agreement-detail.tsx
 src/components/dashboard/cp-dashboard.tsx
 ```
 
-### To Modify (9 files - increased from 5)
+### Migrations to Create (2 files - 3rd Review)
+
+```
+supabase/migrations/YYYYMMDD_enhance_investor_notifications.sql
+  - Add type, created_by, deal_id columns
+  - Add indexes for filtering
+  - Task 14
+
+supabase/migrations/YYYYMMDD_add_placement_agreement_signature_link.sql
+  - Add placement_agreement_id to signature_requests
+  - Task 10
+```
+
+### To Modify (11 files - increased from 9)
 
 ```
 src/lib/signature/handlers.ts
   - Add handlePlacementAgreementSignature() function
   - Add 'placement_agreement' case to routeSignatureHandler()
-  - CRITICAL for Task 10
+  - Task 10
+
+src/app/api/signature/complete/route.ts  <-- 3rd REVIEW ADD
+  - Add 'placement_agreement' handling in webhook flow
+  - Task 10 - BOTH this file AND handlers.ts must be updated!
 
 src/app/api/deals/[id]/dispatch/route.ts
   - Auto-create investor profile when dispatching CP as MODE 1
-  - CRITICAL for Task 11
+  - Task 11
+
+src/app/api/investors/me/opportunities/[id]/route.ts  <-- 3rd REVIEW ADD
+  - Add client context switching for proxy mode dataroom
+  - Task 11
+
+src/lib/notifications.ts  <-- 3rd REVIEW ADD
+  - Update createInvestorNotification() to persist type, created_by, deal_id
+  - Task 14
 
 src/components/layout/persona-sidebar.tsx
   - Add Opportunities + Portfolio + Notifications links to CP nav
 
 src/app/(main)/versotech_main/opportunities/[id]/page.tsx
   - Handle CP modes using existing canPartnerInvestInDeal()
+  - Add client selector for proxy mode
 
 src/app/api/commercial-partners/proxy-subscribe/route.ts
   - Fix GET to use commercial_partner_clients
+  - Update notification insert to use new columns
 
 src/app/(main)/versotech_main/client-transactions/page.tsx
   - Add status buckets, termsheet, dataroom, fee model
@@ -717,7 +1043,7 @@ src/app/(main)/versotech_main/portfolio/page.tsx
   - Allow CP MODE 1 access (commercial_partner_investor role)
 
 src/components/notifications/investor-notifications-client.tsx
-  - Add notification type filter
+  - Add notification type filter (after Task 14 migration)
   - Add "assigned by me" filter
   - Task 12
 
@@ -735,23 +1061,32 @@ src/lib/commercial-partner/can-invest.ts  <-- DO NOT CREATE
 
 ---
 
-## 8. TESTING CHECKLIST (UPDATED - 2nd Review)
+## 8. TESTING CHECKLIST (UPDATED - 3rd Review)
 
 ### CRITICAL BLOCKERS (Must Pass First)
 
-#### Task 10: Placement Agreement Webhook
-- [ ] Signing placement_agreement triggers webhook
-- [ ] `handlePlacementAgreementSignature()` is called
+#### Task 14: Notification Schema Migration
+- [ ] Migration adds `type`, `created_by`, `deal_id` columns
+- [ ] Indexes created for filtering
+- [ ] `createInvestorNotification()` persists all new fields
+- [ ] Direct inserts updated throughout codebase
+
+#### Task 10: Placement Agreement Webhook (Updated 4th Review)
+- [ ] Migration adds `placement_agreement_id` to `signature_requests` (REQUIRED - code is broken without it!)
+- [ ] `signature/complete/route.ts` handles `placement_agreement` document type
+- [x] `handlers.ts` has `handlePlacementAgreementSignature()` function ✓ ALREADY EXISTS at line 1047
 - [ ] `placement_agreements.status` updates to 'active'
 - [ ] `placement_agreements.signed_date` is set
 - [ ] CP receives "Agreement Active" notification
 - [ ] staff_admin receives "Agreement Executed" notification
 
-#### Task 11: MODE 1 investor_users
+#### Task 11: MODE 1 + MODE 2 investor_users
 - [ ] Dispatching CP as `commercial_partner_investor` creates investor record
 - [ ] `investor_users` link is created for CP user
 - [ ] CP can access `/api/investors/me/portfolio` (no 404)
 - [ ] CP can access `/api/investors/me/opportunities/[id]/subscribe` (no 404)
+- [ ] **MODE 2:** CP proxy can select client from dropdown
+- [ ] **MODE 2:** Dataroom shows CLIENT's access, not CP's
 
 ### MODE 1 (Direct Investment)
 - [ ] CP nav includes "Opportunities" link
@@ -766,6 +1101,7 @@ src/lib/commercial-partner/can-invest.ts  <-- DO NOT CREATE
 ### MODE 2 (Proxy Mode)
 - [ ] CP with `commercial_partner_proxy` role sees proxy banner
 - [ ] Can select client from dropdown
+- [ ] Selected client's dataroom access is displayed
 - [ ] Subscription created for client investor
 - [ ] Transaction in Client Transactions with correct status
 
@@ -788,7 +1124,7 @@ src/lib/commercial-partner/can-invest.ts  <-- DO NOT CREATE
 - [ ] Can access dataroom
 - [ ] Can see applicable fee model per opportunity
 
-### Notifications (7.4 - Task 12)
+### Notifications (7.4 - Task 12) - After Task 14
 - [ ] CP nav includes "Notifications" link
 - [ ] Can filter by notification type (subscription_pending, funding_pending, etc.)
 - [ ] Can filter for NEW (unread) only
@@ -798,7 +1134,7 @@ src/lib/commercial-partner/can-invest.ts  <-- DO NOT CREATE
 ### Journey Stage Filters (7.2.1 - Task 13)
 - [ ] "notified" filter shows dispatched deals without interest
 - [ ] "interested" filter shows deals with submitted interest
-- [ ] "passed" filter shows deals with withdrawn/declined interest
+- [ ] "passed" filter shows deals with withdrawn interest (see Open Question 2)
 - [ ] "approved" filter shows deals with NDA access
 - [ ] "signed" filter shows deals with committed subscription
 - [ ] "funded" filter shows deals with funded subscription
@@ -818,6 +1154,10 @@ src/lib/commercial-partner/can-invest.ts  <-- DO NOT CREATE
 ---
 
 **Last Updated:** December 27, 2025
-**Review Corrections Applied:** All 10 findings verified and incorporated (6 from 1st review + 4 from 2nd review)
+**Review Corrections Applied:** All 14 findings verified and incorporated (6 from 1st review + 4 from 2nd review + 4 from 3rd review)
 **Author:** Audit by Claude Code
-**Status:** NOT READY - 2 CRITICAL BLOCKERS (Tasks 10 + 11)
+**Status:** NOT READY - 5 P0 BLOCKERS (Tasks 1, 2, 10, 11, 14)
+
+**Open Questions Requiring Decision:**
+1. Should CP users gain investor persona automatically when linked via investor_users?
+2. What does "passed" map to: `withdrawn` or `rejected` interest status?

@@ -183,7 +183,11 @@ export function SubscriptionDocumentsTab({ subscriptionId }: SubscriptionDocumen
     setSignatoryDialogOpen(true)
   }
 
-  const handleSendForSignature = async (signatoryIds: string[]) => {
+  const handleSendForSignature = async (
+    signatoryIds: string[],
+    countersignerType?: 'ceo' | 'arranger',
+    arrangerId?: string
+  ) => {
     if (!selectedDocumentForSignature) return
 
     setSendingForSignature(selectedDocumentForSignature.id)
@@ -197,7 +201,9 @@ export function SubscriptionDocumentsTab({ subscriptionId }: SubscriptionDocumen
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            signatory_member_ids: memberIds.length > 0 ? memberIds : undefined
+            signatory_member_ids: memberIds.length > 0 ? memberIds : undefined,
+            countersigner_type: countersignerType,
+            arranger_id: arrangerId
           })
         }
       )
@@ -208,7 +214,10 @@ export function SubscriptionDocumentsTab({ subscriptionId }: SubscriptionDocumen
       }
 
       const data = await response.json()
-      toast.success(`Document sent to ${data.total_signatories} signatories for signature`)
+      const countersignerLabel = data.countersigner_type === 'arranger'
+        ? `arranger (${data.countersigner_name})`
+        : 'CEO'
+      toast.success(`Document sent to ${data.total_signatories} signatories for signature. Countersigner: ${countersignerLabel}`)
       console.log('Signature requests created:', data)
       fetchDocuments()
     } catch (error) {
