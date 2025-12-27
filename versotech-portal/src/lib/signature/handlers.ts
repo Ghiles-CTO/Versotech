@@ -835,8 +835,12 @@ export async function handleSubscriptionSignature(
  * Introducer Agreement Post-Signature Handler
  *
  * Executes when an introducer agreement is signed. This handler:
- * - For CEO signature (party_a): Updates status, creates signature request for introducer
- * - For Introducer signature (party_b): Activates agreement, notifies CEO
+ * - For Arranger/CEO signature (party_a): Updates status, creates signature request for introducer
+ * - For Introducer signature (party_b): Activates agreement, notifies relevant parties
+ *
+ * Flow options:
+ * - With arranger: Arranger (party_a) → Introducer (party_b)
+ * - Without arranger: CEO (party_a) → Introducer (party_b)
  */
 export async function handleIntroducerAgreementSignature(
   params: PostSignatureHandlerParams
@@ -849,6 +853,7 @@ export async function handleIntroducerAgreementSignature(
     introducer_agreement_id: signatureRequest.introducer_agreement_id,
     introducer_id: signatureRequest.introducer_id,
     signature_position: signatureRequest.signature_position,
+    signer_role: signatureRequest.signer_role,
     signed_pdf_path: signedPdfPath
   })
 
@@ -859,7 +864,7 @@ export async function handleIntroducerAgreementSignature(
     throw new Error('No introducer_agreement_id in signature request')
   }
 
-  // Get the agreement with introducer info
+  // Get the agreement with introducer and arranger info
   const { data: agreement, error: agreementError } = await supabase
     .from('introducer_agreements')
     .select(`
@@ -879,25 +884,49 @@ export async function handleIntroducerAgreementSignature(
     throw new Error('Introducer agreement not found')
   }
 
+  // Get arranger info if applicable
+  let arrangerEntity = null
+  if (agreement.arranger_id) {
+    const { data: arranger } = await supabase
+      .from('arranger_entities')
+      .select('id, legal_name, company_name')
+      .eq('id', agreement.arranger_id)
+      .single()
+    arrangerEntity = arranger
+  }
+
+  const hasArranger = !!agreement.arranger_id
+  const isArrangerSigner = signatureRequest.signer_role === 'arranger'
+
   console.log('✅ [INTRODUCER AGREEMENT HANDLER] Agreement found:', {
     agreement_id: agreement.id,
     introducer_id: agreement.introducer_id,
+    arranger_id: agreement.arranger_id,
+    has_arranger: hasArranger,
     current_status: agreement.status
   })
 
   // Check which signer just signed
   if (signatureRequest.signature_position === 'party_a') {
-    // CEO signed first
-    console.log('👔 [INTRODUCER AGREEMENT HANDLER] CEO (party_a) signed - updating status')
+    // Party A signed (either Arranger or CEO)
+    const signerType = isArrangerSigner ? 'Arranger' : 'CEO'
+    console.log(`👔 [INTRODUCER AGREEMENT HANDLER] ${signerType} (party_a) signed - updating status`)
 
-    // Update agreement status and store CEO signature request ID
+    // Update agreement status based on who signed
+    const updateData: any = {
+      status: 'pending_introducer_signature',
+      updated_at: new Date().toISOString()
+    }
+
+    if (isArrangerSigner) {
+      updateData.arranger_signature_request_id = signatureRequest.id
+    } else {
+      updateData.ceo_signature_request_id = signatureRequest.id
+    }
+
     const { error: updateError } = await supabase
       .from('introducer_agreements')
-      .update({
-        status: 'pending_introducer_signature',
-        ceo_signature_request_id: signatureRequest.id,
-        updated_at: new Date().toISOString()
-      })
+      .update(updateData)
       .eq('id', agreementId)
 
     if (updateError) {
@@ -931,7 +960,7 @@ export async function handleIntroducerAgreementSignature(
           status: 'pending',
           signing_token: signingToken,
           token_expires_at: expiryDate.toISOString(),
-          unsigned_pdf_path: signedPdfPath, // CEO-signed PDF becomes unsigned for introducer
+          unsigned_pdf_path: signedPdfPath, // Signed PDF becomes unsigned for introducer
         })
         .select()
         .single()
@@ -939,15 +968,15 @@ export async function handleIntroducerAgreementSignature(
       if (sigReqError) {
         console.error('❌ [INTRODUCER AGREEMENT HANDLER] Failed to create introducer signature request:', sigReqError)
         // CRITICAL: Roll back agreement status since signature request failed
-        // Otherwise agreement shows "pending_signature" but introducer cannot sign
+        const rollbackStatus = isArrangerSigner ? 'pending_arranger_signature' : 'approved'
         await supabase
           .from('introducer_agreements')
           .update({
-            status: 'approved', // Roll back to previous status
+            status: rollbackStatus,
             updated_at: new Date().toISOString()
           })
           .eq('id', agreementId)
-        console.log('⚠️ [INTRODUCER AGREEMENT HANDLER] Rolled back agreement status to approved due to signature request failure')
+        console.log(`⚠️ [INTRODUCER AGREEMENT HANDLER] Rolled back agreement status to ${rollbackStatus} due to signature request failure`)
         throw new Error(`Failed to create introducer signature request: ${sigReqError.message}`)
       } else {
         console.log('✅ [INTRODUCER AGREEMENT HANDLER] Created signature request for introducer:', introducerSignatureRequest.id)
@@ -959,11 +988,15 @@ export async function handleIntroducerAgreementSignature(
           .eq('id', agreementId)
 
         // Create notification for introducer
+        const notificationMessage = isArrangerSigner
+          ? `Your fee agreement has been signed by ${arrangerEntity?.company_name || arrangerEntity?.legal_name || 'the Arranger'} and is ready for your signature.`
+          : 'Your fee agreement has been signed by the CEO and is ready for your signature.'
+
         await supabase.from('investor_notifications').insert({
           user_id: introducer.user_id,
           investor_id: null, // Introducer notification, not investor
           title: 'Agreement Ready for Signature',
-          message: 'Your fee agreement has been signed by the CEO and is ready for your signature.',
+          message: notificationMessage,
           link: `/versotech_main/introducer-agreements/${agreementId}`,
         })
 
@@ -994,19 +1027,43 @@ export async function handleIntroducerAgreementSignature(
 
     console.log('✅ [INTRODUCER AGREEMENT HANDLER] Agreement activated')
 
-    // Notify CEO/staff_admin users
+    const introducer = agreement.introducer as any
+
+    // Notify relevant parties based on signing flow
+    if (hasArranger && arrangerEntity) {
+      // Notify arranger users
+      const { data: arrangerUsers } = await supabase
+        .from('arranger_users')
+        .select('user_id')
+        .eq('arranger_id', agreement.arranger_id)
+        .limit(5)
+
+      if (arrangerUsers && arrangerUsers.length > 0) {
+        const notifications = arrangerUsers.map((au: any) => ({
+          user_id: au.user_id,
+          investor_id: null,
+          title: 'Introducer Agreement Fully Signed',
+          message: `${introducer?.legal_name || 'Introducer'}'s fee agreement has been fully executed and is now active.`,
+          link: `/versotech_main/my-introducers`,
+        }))
+
+        await supabase.from('investor_notifications').insert(notifications)
+        console.log('✅ [INTRODUCER AGREEMENT HANDLER] Notifications sent to arranger users')
+      }
+    }
+
+    // Always notify CEO/staff_admin users
     const { data: ceoUsers } = await supabase
       .from('profiles')
       .select('id')
       .eq('role', 'staff_admin')
       .limit(5)
 
-    const introducer = agreement.introducer as any
     if (ceoUsers && ceoUsers.length > 0) {
       const notifications = ceoUsers.map((ceo: any) => ({
         user_id: ceo.id,
-        investor_id: null, // Staff notification, not investor
-        title: 'Agreement Fully Signed',
+        investor_id: null,
+        title: 'Introducer Agreement Fully Signed',
         message: `${introducer?.legal_name || 'Introducer'}'s fee agreement has been fully executed and is now active.`,
         link: `/versotech_main/introducers/${agreement.introducer_id}?tab=agreements`,
       }))
@@ -1025,6 +1082,8 @@ export async function handleIntroducerAgreementSignature(
       action_details: {
         description: 'Introducer agreement fully executed and activated',
         introducer_id: agreement.introducer_id,
+        arranger_id: agreement.arranger_id,
+        signed_by_arranger: hasArranger,
         agreement_id: agreementId,
         signature_request_id: signatureRequest.id
       },

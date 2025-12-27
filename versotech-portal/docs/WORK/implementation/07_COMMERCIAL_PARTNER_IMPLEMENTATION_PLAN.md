@@ -1,10 +1,10 @@
 # Commercial Partner Implementation Plan
 
 **User Type:** Commercial Partner
-**Current Completion:** 35% (Corrected after 4th review: December 27, 2025)
+**Current Completion:** 35% (Corrected after 5th review: December 27, 2025)
 **Target Completion:** 95%
 **Estimated Hours:** 63 hours
-**Last Audit:** December 27, 2025 - 4th Review Corrections Applied (17 total fixes)
+**Last Audit:** December 27, 2025 - 5th Review Corrections Applied (18 total fixes)
 
 ---
 
@@ -354,15 +354,14 @@ signature_requests table:
 ```
 
 **The code is currently broken:**
-- `placement-agreements/[id]/sign/route.ts:101` inserts `placement_agreement_id: agreement.id`
-- But this column DOESN'T EXIST in `signature_requests`!
+- `placement-agreements/[id]/sign/route.ts:100-101` inserts BOTH columns that don't exist
 - The insert will fail at runtime
 
 **What needs to happen:**
 - Migration to add `placement_agreement_id` to `signature_requests` table
-- Then the existing handler will work
+- **UPDATE (5th Review):** Also need `placement_id` - see Correction 18
 
-**Action:** Task 10 needs migration ONLY for `signature_requests.placement_agreement_id`, plus webhook route.
+**Action:** Task 10 migration must add BOTH columns. See Correction 18 for complete requirements.
 
 ### Correction 17: Rows 52-62 Are #REF - Must Be Marked N/A (4th Review) - MEDIUM
 
@@ -379,6 +378,37 @@ signature_requests table:
 These are broken Excel cell references from the source spreadsheet.
 
 **Action:** Mark rows 52-62 as N/A in scope. Actual valid rows = 100.
+
+### Correction 18: Task 10 Migration Missing placement_id Column (5th Review) - CRITICAL
+
+**Original Claim (Correction 16):** Migration only needs `placement_agreement_id`
+
+**Reality - Verified via live DB + code:**
+```typescript
+// placement-agreements/[id]/sign/route.ts lines 100-101:
+.insert({
+  placement_id: agreement.commercial_partner_id,     // ❌ COLUMN DOESN'T EXIST
+  placement_agreement_id: agreement.id,              // ❌ COLUMN DOESN'T EXIST
+  ...
+})
+```
+
+**Live DB schema for signature_requests:**
+- `placement_id` - ❌ DOES NOT EXIST
+- `placement_agreement_id` - ❌ DOES NOT EXIST
+
+**placement_agreements signature columns - ALL EXIST:**
+- `ceo_signature_request_id` ✅
+- `cp_signature_request_id` ✅
+- `pdf_url` ✅
+- `signed_pdf_url` ✅
+
+**Action:** Task 10 migration must add BOTH columns to signature_requests:
+```sql
+ALTER TABLE signature_requests
+ADD COLUMN placement_id uuid REFERENCES commercial_partners(id),
+ADD COLUMN placement_agreement_id uuid REFERENCES placement_agreements(id);
+```
 
 ---
 
@@ -705,7 +735,7 @@ src/app/api/commercial-partners/me/invoice/route.ts
 
 ### Task 10: Placement Agreement Signature Completion (3 hours) - P0 BLOCKER
 
-**UPDATED (4th Review) - Corrections 15, 16**
+**UPDATED (5th Review) - Corrections 15, 16, 18**
 
 **HANDLER ALREADY EXISTS (Correction 15):**
 - `handlePlacementAgreementSignature()` at `handlers.ts:1047` ✓
@@ -714,11 +744,15 @@ src/app/api/commercial-partners/me/invoice/route.ts
 
 **WHAT'S ACTUALLY NEEDED:**
 
-1. **Schema Migration (Correction 16) - CODE IS CURRENTLY BROKEN:**
+1. **Schema Migration (Corrections 16, 18) - CODE IS CURRENTLY BROKEN:**
 ```sql
--- placement-agreements/[id]/sign/route.ts:101 tries to insert this column but it doesn't exist!
+-- placement-agreements/[id]/sign/route.ts:100-101 inserts BOTH columns that don't exist!
 ALTER TABLE signature_requests
+ADD COLUMN placement_id uuid REFERENCES commercial_partners(id),
 ADD COLUMN placement_agreement_id uuid REFERENCES placement_agreements(id);
+
+CREATE INDEX idx_signature_requests_placement_id
+ON signature_requests(placement_id);
 
 CREATE INDEX idx_signature_requests_placement_agreement
 ON signature_requests(placement_agreement_id);
@@ -1071,8 +1105,10 @@ src/lib/commercial-partner/can-invest.ts  <-- DO NOT CREATE
 - [ ] `createInvestorNotification()` persists all new fields
 - [ ] Direct inserts updated throughout codebase
 
-#### Task 10: Placement Agreement Webhook (Updated 4th Review)
-- [ ] Migration adds `placement_agreement_id` to `signature_requests` (REQUIRED - code is broken without it!)
+#### Task 10: Placement Agreement Webhook (Updated 5th Review)
+- [ ] Migration adds `placement_id` to `signature_requests` (FK to commercial_partners)
+- [ ] Migration adds `placement_agreement_id` to `signature_requests` (FK to placement_agreements)
+- [ ] Both columns have indexes for query performance
 - [ ] `signature/complete/route.ts` handles `placement_agreement` document type
 - [x] `handlers.ts` has `handlePlacementAgreementSignature()` function ✓ ALREADY EXISTS at line 1047
 - [ ] `placement_agreements.status` updates to 'active'

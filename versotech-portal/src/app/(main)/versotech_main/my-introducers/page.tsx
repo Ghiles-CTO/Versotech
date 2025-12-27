@@ -33,7 +33,10 @@ import {
   Handshake,
   Percent,
   FileText,
+  PenTool,
+  Clock,
 } from 'lucide-react'
+import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { formatCurrency, formatDate } from '@/lib/format'
 import { createClient } from '@/lib/supabase/client'
@@ -67,6 +70,16 @@ type Summary = {
   totalCommissions: number
 }
 
+type PendingAgreement = {
+  id: string
+  introducer_name: string
+  introducer_id: string
+  agreement_type: string
+  created_at: string
+  status: string
+  signing_url: string | null
+}
+
 const STATUS_STYLES: Record<string, string> = {
   active: 'bg-green-100 text-green-800 border-green-200',
   pending: 'bg-yellow-100 text-yellow-800 border-yellow-200',
@@ -84,6 +97,7 @@ const STATUS_FILTERS = [
 export default function MyIntroducersPage() {
   const [arrangerInfo, setArrangerInfo] = useState<ArrangerInfo | null>(null)
   const [introducers, setIntroducers] = useState<Introducer[]>([])
+  const [pendingAgreements, setPendingAgreements] = useState<PendingAgreement[]>([])
   const [summary, setSummary] = useState<Summary>({
     totalIntroducers: 0,
     activeIntroducers: 0,
@@ -126,6 +140,52 @@ export default function MyIntroducersPage() {
 
         if (arrangerError) throw arrangerError
         setArrangerInfo(arranger)
+
+        // Fetch pending introducer agreements for this arranger
+        const { data: pendingAgreementsData } = await supabase
+          .from('introducer_agreements')
+          .select(`
+            id,
+            agreement_type,
+            status,
+            created_at,
+            arranger_signature_request_id,
+            introducer:introducer_id (id, legal_name)
+          `)
+          .eq('arranger_id', arrangerUser.arranger_id)
+          .in('status', ['approved', 'pending_arranger_signature'])
+          .order('created_at', { ascending: false })
+
+        const pendingList: PendingAgreement[] = []
+        for (const agreement of pendingAgreementsData || []) {
+          const introducer = Array.isArray(agreement.introducer) ? agreement.introducer[0] : agreement.introducer
+          let signingUrl = null
+
+          // If there's a pending arranger signature request, get the token
+          if (agreement.arranger_signature_request_id) {
+            const { data: sigReq } = await supabase
+              .from('signature_requests')
+              .select('signing_token, status, token_expires_at')
+              .eq('id', agreement.arranger_signature_request_id)
+              .eq('status', 'pending')
+              .single()
+
+            if (sigReq && new Date(sigReq.token_expires_at) > new Date()) {
+              signingUrl = `/versotech_main/versosign/sign/${sigReq.signing_token}`
+            }
+          }
+
+          pendingList.push({
+            id: agreement.id,
+            introducer_name: introducer?.legal_name || 'Unknown Introducer',
+            introducer_id: introducer?.id || '',
+            agreement_type: agreement.agreement_type,
+            created_at: agreement.created_at,
+            status: agreement.status,
+            signing_url: signingUrl,
+          })
+        }
+        setPendingAgreements(pendingList)
 
         const { data: deals, error: dealsError } = await supabase
           .from('deals')
@@ -307,6 +367,81 @@ export default function MyIntroducersPage() {
           </p>
         </div>
       </div>
+
+      {/* Pending Agreements Section */}
+      {pendingAgreements.length > 0 && (
+        <Card className="border-amber-500/30 bg-amber-500/5">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Clock className="h-5 w-5 text-amber-500" />
+              Agreements Awaiting Your Signature ({pendingAgreements.length})
+            </CardTitle>
+            <CardDescription>
+              Review and sign these introducer agreements to activate them
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {pendingAgreements.map((agreement) => (
+                <div
+                  key={agreement.id}
+                  className="flex items-center justify-between p-3 rounded-lg border border-amber-500/20 bg-background"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-lg bg-amber-500/10 flex items-center justify-center">
+                      <FileText className="h-5 w-5 text-amber-500" />
+                    </div>
+                    <div>
+                      <div className="font-medium">{agreement.introducer_name}</div>
+                      <div className="text-sm text-muted-foreground capitalize">
+                        {agreement.agreement_type.replace(/_/g, ' ')} • Created {formatDate(agreement.created_at)}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {agreement.signing_url ? (
+                      <Button asChild size="sm" className="bg-amber-500 hover:bg-amber-600">
+                        <Link href={agreement.signing_url}>
+                          <PenTool className="h-4 w-4 mr-1" />
+                          Sign Now
+                        </Link>
+                      </Button>
+                    ) : (
+                      <Button
+                        size="sm"
+                        onClick={async () => {
+                          try {
+                            const res = await fetch(`/api/introducer-agreements/${agreement.id}/sign`, {
+                              method: 'POST'
+                            })
+                            if (res.ok) {
+                              const data = await res.json()
+                              if (data.signing_url) {
+                                window.location.href = data.signing_url
+                              }
+                            }
+                          } catch (err) {
+                            console.error('Failed to initiate signing:', err)
+                          }
+                        }}
+                        className="bg-amber-500 hover:bg-amber-600"
+                      >
+                        <PenTool className="h-4 w-4 mr-1" />
+                        Initiate Signing
+                      </Button>
+                    )}
+                    <Button variant="outline" size="sm" asChild>
+                      <Link href={`/versotech_main/introducer-agreements/${agreement.id}`}>
+                        View
+                      </Link>
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
