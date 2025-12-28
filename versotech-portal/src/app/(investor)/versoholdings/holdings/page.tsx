@@ -155,8 +155,7 @@ export default async function InvestorHoldings() {
 
   return (
     <AppLayout brand="versoholdings">
-      <HoldingsPage initialData={initialData} />
+      <HoldingsPage initialData={initialData} positionsOnly />
     </AppLayout>
   )
 }
-

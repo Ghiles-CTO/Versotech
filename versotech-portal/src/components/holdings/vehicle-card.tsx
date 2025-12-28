@@ -89,7 +89,15 @@ const getStatusStyles = (status: string) => {
   }
 }
 
-export function VehicleCard({ holding }: { holding: EnhancedHolding }) {
+interface VehicleCardProps {
+  holding: EnhancedHolding
+  detailsBasePath?: string
+}
+
+export function VehicleCard({
+  holding,
+  detailsBasePath = '/versoholdings/vehicle'
+}: VehicleCardProps) {
   const router = useRouter()
   const hasPosition = holding.position && holding.position.currentValue > 0
   const isPositive = holding.position?.unrealizedGainPct ? holding.position.unrealizedGainPct >= 0 : false
@@ -102,7 +110,7 @@ export function VehicleCard({ holding }: { holding: EnhancedHolding }) {
   const statusLabel = status.replace(/_/g, ' ').toUpperCase()
 
   const handleViewDetails = () => {
-    router.push(`/versoholdings/vehicle/${holding.id}`)
+    router.push(`${detailsBasePath}/${holding.id}`)
   }
 
   const handleDownloadDocument = async (doc: DocumentInfo) => {

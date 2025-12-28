@@ -94,9 +94,19 @@ interface HoldingsPageProps {
     asOfDate: string
     vehicleBreakdown?: any[]
   }
+  detailsBasePath?: string
+  holdingsPath?: string
+  dealsPath?: string
+  positionsOnly?: boolean
 }
 
-export function HoldingsPage({ initialData }: HoldingsPageProps) {
+export function HoldingsPage({
+  initialData,
+  detailsBasePath = '/versoholdings/vehicle',
+  holdingsPath = '/versoholdings/holdings',
+  dealsPath = '/versoholdings/deals',
+  positionsOnly = false
+}: HoldingsPageProps) {
   // State management
   const [holdings, setHoldings] = useState<EnhancedHolding[]>([])
   // Removed dealHoldings - only showing holdings per user request
@@ -201,13 +211,17 @@ export function HoldingsPage({ initialData }: HoldingsPageProps) {
         }
       })
 
-      setHoldings(normalized)
+      const filteredHoldings = positionsOnly
+        ? normalized.filter(holding => (holding.position?.units ?? 0) > 0)
+        : normalized
+
+      setHoldings(filteredHoldings)
       // No longer tracking deals
     } catch (err) {
       console.error('Holdings fetch error:', err)
       throw err
     }
-  }, [])
+  }, [positionsOnly])
 
   // Initial data load
   useEffect(() => {
@@ -608,6 +622,7 @@ export function HoldingsPage({ initialData }: HoldingsPageProps) {
       investorIds={investorIds}
       onDataUpdate={() => handleRefresh()}
       enableNotifications={true}
+      holdingsPath={holdingsPath}
     >
       <div className="min-h-screen bg-background">
         <div className="p-4 sm:p-6 lg:p-8 space-y-6">
@@ -623,7 +638,7 @@ export function HoldingsPage({ initialData }: HoldingsPageProps) {
               <Button 
                 variant="default" 
                 size="sm"
-                onClick={() => window.location.href = '/versoholdings/deals'}
+                onClick={() => window.location.href = dealsPath}
               >
                 <Target className="h-4 w-4 mr-2" />
                 Explore Active Deals
@@ -695,7 +710,11 @@ export function HoldingsPage({ initialData }: HoldingsPageProps) {
             ) : (
               <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
                 {filteredHoldings.map((holding) => (
-                  <VehicleCard key={holding.id} holding={holding} />
+                  <VehicleCard
+                    key={holding.id}
+                    holding={holding}
+                    detailsBasePath={detailsBasePath}
+                  />
                 ))}
               </div>
             )}

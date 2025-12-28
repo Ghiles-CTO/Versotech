@@ -17,13 +17,15 @@ interface RealtimeHoldingsProviderProps {
   investorIds: string[]
   onDataUpdate?: (update: RealtimeUpdate) => void
   enableNotifications?: boolean
+  holdingsPath?: string
 }
 
 export function RealtimeHoldingsProvider({
   children,
   investorIds,
   onDataUpdate,
-  enableNotifications = true
+  enableNotifications = true,
+  holdingsPath = '/versoholdings/holdings'
 }: RealtimeHoldingsProviderProps) {
   const [isConnected, setIsConnected] = useState(false)
   const [lastUpdate, setLastUpdate] = useState<string | null>(null)
@@ -77,7 +79,7 @@ export function RealtimeHoldingsProvider({
               duration: 10000,
               action: {
                 label: 'View Details',
-                onClick: () => router.push('/versoholdings/holdings')
+                onClick: () => router.push(holdingsPath)
               }
             })
             break
@@ -87,7 +89,7 @@ export function RealtimeHoldingsProvider({
               duration: 8000,
               action: {
                 label: 'View Details',
-                onClick: () => router.push('/versoholdings/holdings')
+                onClick: () => router.push(holdingsPath)
               }
             })
             break
@@ -100,7 +102,7 @@ export function RealtimeHoldingsProvider({
         }
       }
     }, 2000),
-    [onDataUpdate, enableNotifications, router]
+    [onDataUpdate, enableNotifications, holdingsPath, router]
   )
 
   // Set up realtime subscriptions
