@@ -112,7 +112,7 @@ export function DeleteEntityDialog({ open, onClose, entityId, entityName }: Dele
       }
 
       toast.success(`Entity "${entityName}" deleted successfully`)
-      router.push('/versotech/staff/entities')
+      router.push('/versotech_main/entities')
       router.refresh()
     } catch (error) {
       console.error('Failed to delete entity:', error)

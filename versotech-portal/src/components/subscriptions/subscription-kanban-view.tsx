@@ -158,7 +158,7 @@ export function SubscriptionKanbanView({
                     </div>
 
                     {/* View Button */}
-                    <Link href={`/versotech/staff/subscriptions/${sub.id}`}>
+                    <Link href={`/versotech_main/subscriptions/${sub.id}`}>
                       <Button
                         variant="outline"
                         size="sm"

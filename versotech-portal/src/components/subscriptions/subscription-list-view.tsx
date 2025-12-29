@@ -166,7 +166,7 @@ export function SubscriptionListView({ subscriptions }: SubscriptionListViewProp
 
                 {/* Action Button */}
                 <div className="ml-4">
-                  <Link href={`/versotech/staff/subscriptions/${sub.id}`}>
+                  <Link href={`/versotech_main/subscriptions/${sub.id}`}>
                     <Button
                       variant="outline"
                       size="sm"

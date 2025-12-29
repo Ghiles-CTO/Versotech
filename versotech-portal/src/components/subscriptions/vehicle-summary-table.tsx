@@ -127,7 +127,7 @@ export function VehicleSummaryTable({ summaries }: VehicleSummaryTableProps) {
 
   const handleViewDetails = (vehicleId: string) => {
     // Navigate to subscriptions page filtered by this vehicle
-    router.push(`/versotech/staff/subscriptions?vehicle=${vehicleId}`)
+    router.push(`/versotech_main/subscriptions?vehicle=${vehicleId}`)
   }
 
   return (

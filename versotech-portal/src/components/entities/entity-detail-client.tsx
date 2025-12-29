@@ -211,7 +211,7 @@ export function EntityDetailClient({ entity: initialEntity, directors: initialDi
     <div className="p-6 space-y-6">
       <div className="flex items-start justify-between">
         <div className="space-y-4">
-          <Link href="/versotech/staff/entities" className="inline-flex">
+          <Link href="/versotech_main/entities" className="inline-flex">
             <Button variant="ghost" size="sm" className="gap-2 text-foreground hover:text-emerald-200 hover:bg-white/10">
               <ArrowLeft className="h-4 w-4" />
               Back to Entities
@@ -406,7 +406,7 @@ export function EntityDetailClient({ entity: initialEntity, directors: initialDi
                         </p>
                       </div>
                       <Button variant="outline" size="sm" asChild>
-                        <Link href={`/versotech/staff/deals/${deal.id}`}>View Deal</Link>
+                        <Link href={`/versotech_main/deals/${deal.id}`}>View Deal</Link>
                       </Button>
                     </div>
                   ))}
@@ -541,7 +541,7 @@ export function EntityDetailClient({ entity: initialEntity, directors: initialDi
                         </p>
                       </div>
                       <Button variant="outline" size="sm" asChild>
-                        <Link href={`/versotech/staff/deals/${deal.id}`}>Open Deal</Link>
+                        <Link href={`/versotech_main/deals/${deal.id}`}>Open Deal</Link>
                       </Button>
                     </div>
                   ))}

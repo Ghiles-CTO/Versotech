@@ -136,121 +136,121 @@ const investorNavItems: SidebarItem[] = [
 const staffNavItems: SidebarItem[] = [
   {
     name: 'Dashboard',
-    href: '/versotech/staff',
+    href: '/versotech_main',
     icon: LayoutDashboard,
     description: 'Overview'
   },
   {
     name: 'Messages',
-    href: '/versotech/staff/messages',
+    href: '/versotech_main/messages',
     icon: MessageSquare,
     notificationKey: 'messages',
     description: 'Inbox'
   },
   {
     name: 'Approvals',
-    href: '/versotech/staff/approvals',
+    href: '/versotech_main/approvals',
     icon: UserCheck,
     notificationKey: 'approvals',
     description: 'Pending approvals'
   },
   {
     name: 'Deals',
-    href: '/versotech/staff/deals',
+    href: '/versotech_main/deals',
     icon: Activity,
     description: 'Deal management'
   },
   {
     name: 'Entities',
-    href: '/versotech/staff/entities',
+    href: '/versotech_main/entities',
     icon: Building2,
     description: 'Legal entities'
   },
   {
     name: 'Investors',
-    href: '/versotech/staff/investors',
+    href: '/versotech_main/investors',
     icon: Users,
     description: 'Investor relations'
   },
   {
     name: 'KYC Review',
-    href: '/versotech/staff/kyc-review',
+    href: '/versotech_main/kyc-review',
     icon: UserCheck,
     description: 'KYC compliance review'
   },
   {
     name: 'Subscriptions',
-    href: '/versotech/staff/subscriptions',
+    href: '/versotech_main/subscriptions',
     icon: FileText,
     description: 'Subscription tracking'
   },
   {
     name: 'Processes',
-    href: '/versotech/staff/processes',
+    href: '/versotech_main/processes',
     icon: Workflow,
     description: 'Workflows'
   },
   {
     name: 'Requests',
-    href: '/versotech/staff/requests',
+    href: '/versotech_main/requests',
     icon: ClipboardList,
     notificationKey: 'requests',
     description: 'Service requests'
   },
   {
     name: 'Documents',
-    href: '/versotech/staff/documents',
+    href: '/versotech_main/documents',
     icon: FileText,
     description: 'Document center'
   },
   {
     name: 'VersoSign',
-    href: '/versotech/staff/versosign',
+    href: '/versotech_main/versosign',
     icon: FileSignature,
     notificationKey: 'signatures',
     description: 'E-signatures'
   },
   {
     name: 'Introducers',
-    href: '/versotech/staff/introducers',
+    href: '/versotech_main/introducers',
     icon: HandHeart,
     description: 'Partners'
   },
   {
     name: 'Arrangers',
-    href: '/versotech/staff/arrangers',
+    href: '/versotech_main/arrangers',
     icon: Briefcase,
     description: 'Regulated entities'
   },
   {
     name: 'Fees',
-    href: '/versotech/staff/fees',
+    href: '/versotech_main/fees',
     icon: Calculator,
     notificationKey: 'fees',
     description: 'Billing'
   },
   {
     name: 'Reconciliation',
-    href: '/versotech/staff/reconciliation',
+    href: '/versotech_main/reconciliation',
     icon: CreditCard,
     notificationKey: 'reconciliation',
     description: 'Payments'
   },
   {
     name: 'Calendar',
-    href: '/versotech/staff/calendar',
+    href: '/versotech_main/calendar',
     icon: Calendar,
     description: 'Schedule'
   },
   {
     name: 'Audit',
-    href: '/versotech/staff/audit',
+    href: '/versotech_main/audit',
     icon: Shield,
     description: 'Compliance logs'
   },
   {
     name: 'Admin',
-    href: '/versotech/staff/admin',
+    href: '/versotech_main/admin',
     icon: Database,
     description: 'System settings',
     requiredPermission: 'super_admin'

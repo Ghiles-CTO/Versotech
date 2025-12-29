@@ -123,7 +123,7 @@ export function EntitiesPageClient({ entities }: EntitiesPageClientProps) {
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" className="gap-2" asChild>
-            <Link href="/versotech/staff/documents">
+            <Link href="/versotech_main/documents">
               <FileText className="h-4 w-4" />
               Documents Workspace
             </Link>
@@ -249,7 +249,7 @@ export function EntitiesPageClient({ entities }: EntitiesPageClientProps) {
                     <TableRow
                       key={entity.id}
                       className="cursor-pointer hover:bg-white/10"
-                      onClick={() => router.push(`/versotech/staff/entities/${entity.id}`)}
+                      onClick={() => router.push(`/versotech_main/entities/${entity.id}`)}
                     >
                       <TableCell>
                         {entity.entity_code ? (
@@ -319,7 +319,7 @@ export function EntitiesPageClient({ entities }: EntitiesPageClientProps) {
                             className="gap-2"
                             onClick={(event) => {
                               event.stopPropagation()
-                              router.push(`/versotech/staff/entities/${entity.id}`)
+                              router.push(`/versotech_main/entities/${entity.id}`)
                             }}
                           >
                             <Eye className="h-4 w-4" />

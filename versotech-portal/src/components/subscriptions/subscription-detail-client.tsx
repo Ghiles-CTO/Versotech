@@ -80,7 +80,7 @@ export function SubscriptionDetailClient({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Link href="/versotech/staff/subscriptions">
+          <Link href="/versotech_main/subscriptions">
             <Button variant="outline" size="sm" className="bg-gray-800 text-white border-gray-700 hover:bg-gray-700">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Subscriptions
@@ -287,7 +287,7 @@ export function SubscriptionDetailClient({
                   <div className="flex-1">
                     <div className="text-sm text-gray-400">Legal Name</div>
                     <Link
-                      href={`/versotech/staff/investors/${subscription.investor.id}`}
+                      href={`/versotech_main/investors/${subscription.investor.id}`}
                       className="text-sm font-semibold text-white hover:underline"
                     >
                       {subscription.investor.legal_name}

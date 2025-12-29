@@ -360,7 +360,7 @@ export const transactionColumns: ColumnDef<BankTransactionRow>[] = [
       const transaction = row.original
 
       return (
-        <Link href={`/versotech/staff/reconciliation/${transaction.id}`}>
+        <Link href={`/versotech_main/reconciliation/${transaction.id}`}>
           <Button variant="ghost" size="sm" className="hover:bg-white/5">
             <Eye className="h-4 w-4 mr-2" />
             View

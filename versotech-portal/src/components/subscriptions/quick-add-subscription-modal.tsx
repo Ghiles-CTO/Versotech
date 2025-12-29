@@ -163,7 +163,7 @@ export function QuickAddSubscriptionModal({
         description: `Created subscription for ${investors.find(i => i.id === investorId)?.legal_name}`,
         action: {
           label: 'View',
-          onClick: () => router.push(`/versotech/staff/subscriptions`)
+          onClick: () => router.push(`/versotech_main/subscriptions`)
         }
       })
 

@@ -116,7 +116,7 @@ export function EntitiesPageEnhanced({ entities: initialEntities }: EntitiesPage
   )
 
   const handleEntityClick = (id: string) => {
-    router.push(`/versotech/staff/entities/${id}`)
+    router.push(`/versotech_main/entities/${id}`)
   }
 
   const handleEntityEdit = (entity: Entity) => {
@@ -166,7 +166,7 @@ export function EntitiesPageEnhanced({ entities: initialEntities }: EntitiesPage
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" className="gap-2" asChild>
-            <Link href="/versotech/staff/documents">
+            <Link href="/versotech_main/documents">
               <FileText className="h-4 w-4" />
               Documents Workspace
             </Link>

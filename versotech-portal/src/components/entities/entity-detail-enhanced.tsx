@@ -1165,7 +1165,7 @@ export function EntityDetailEnhanced({
     <div className="p-6 space-y-6">
       <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
         <div className="space-y-4 max-w-3xl">
-          <Link href="/versotech/staff/entities" className="inline-flex">
+          <Link href="/versotech_main/entities" className="inline-flex">
             <Button
               variant="ghost"
               size="sm"
@@ -2247,7 +2247,7 @@ export function EntityDetailEnhanced({
                   {deals.map((deal) => (
                     <Link
                       key={deal.id}
-                      href={`/versotech/staff/deals/${deal.id}`}
+                      href={`/versotech_main/deals/${deal.id}`}
                       className="flex items-center justify-between rounded-lg border border-white/10 bg-white/5 px-4 py-3 transition-all hover:bg-white/10 hover:border-emerald-400/30 cursor-pointer group"
                     >
                       <div className="flex items-start gap-3 flex-1">

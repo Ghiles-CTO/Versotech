@@ -75,7 +75,7 @@ export function CommandPalette({ onQuickAddSubscription, brand = 'versotech' }: 
       description: 'Operations overview',
       icon: LayoutDashboard,
       keywords: ['home', 'overview', 'metrics'],
-      action: () => router.push('/versotech/staff'),
+      action: () => router.push('/versotech_main'),
       group: 'navigation'
     },
     {
@@ -84,7 +84,7 @@ export function CommandPalette({ onQuickAddSubscription, brand = 'versotech' }: 
       description: 'Manage investor accounts',
       icon: Users,
       keywords: ['clients', 'kyc', 'accounts'],
-      action: () => router.push('/versotech/staff/investors'),
+      action: () => router.push('/versotech_main/investors'),
       group: 'navigation'
     },
     {
@@ -93,7 +93,7 @@ export function CommandPalette({ onQuickAddSubscription, brand = 'versotech' }: 
       description: 'Manage subscriptions',
       icon: FileText,
       keywords: ['commitments', 'deals'],
-      action: () => router.push('/versotech/staff/subscriptions'),
+      action: () => router.push('/versotech_main/subscriptions'),
       group: 'navigation'
     },
     {
@@ -102,7 +102,7 @@ export function CommandPalette({ onQuickAddSubscription, brand = 'versotech' }: 
       description: 'Manage vehicles and entities',
       icon: Building2,
       keywords: ['vehicles', 'funds', 'spvs'],
-      action: () => router.push('/versotech/staff/entities'),
+      action: () => router.push('/versotech_main/entities'),
       group: 'navigation'
     },
     {
@@ -111,7 +111,7 @@ export function CommandPalette({ onQuickAddSubscription, brand = 'versotech' }: 
       description: 'Manage deal inventory',
       icon: Activity,
       keywords: ['opportunities', 'investments'],
-      action: () => router.push('/versotech/staff/deals'),
+      action: () => router.push('/versotech_main/deals'),
       group: 'navigation'
     },
     {
@@ -120,7 +120,7 @@ export function CommandPalette({ onQuickAddSubscription, brand = 'versotech' }: 
       description: 'Review and approve',
       icon: UserCheck,
       keywords: ['review', 'approve', 'pending'],
-      action: () => router.push('/versotech/staff/approvals'),
+      action: () => router.push('/versotech_main/approvals'),
       group: 'navigation'
     },
     {
@@ -129,7 +129,7 @@ export function CommandPalette({ onQuickAddSubscription, brand = 'versotech' }: 
       description: 'Investor communication',
       icon: MessageSquare,
       keywords: ['chat', 'inbox', 'communication'],
-      action: () => router.push('/versotech/staff/messages'),
+      action: () => router.push('/versotech_main/messages'),
       group: 'navigation'
     },
     {
@@ -138,7 +138,7 @@ export function CommandPalette({ onQuickAddSubscription, brand = 'versotech' }: 
       description: 'Deadlines and schedule',
       icon: Calendar,
       keywords: ['schedule', 'deadlines', 'events'],
-      action: () => router.push('/versotech/staff/calendar'),
+      action: () => router.push('/versotech_main/calendar'),
       group: 'navigation'
     },
     {
@@ -147,7 +147,7 @@ export function CommandPalette({ onQuickAddSubscription, brand = 'versotech' }: 
       description: 'Workflow automation',
       icon: Workflow,
       keywords: ['automation', 'workflows'],
-      action: () => router.push('/versotech/staff/processes'),
+      action: () => router.push('/versotech_main/processes'),
       group: 'navigation'
     },
     {
@@ -156,7 +156,7 @@ export function CommandPalette({ onQuickAddSubscription, brand = 'versotech' }: 
       description: 'Investor requests',
       icon: ClipboardList,
       keywords: ['tickets', 'support'],
-      action: () => router.push('/versotech/staff/requests'),
+      action: () => router.push('/versotech_main/requests'),
       group: 'navigation'
     },
     {
@@ -165,7 +165,7 @@ export function CommandPalette({ onQuickAddSubscription, brand = 'versotech' }: 
       description: 'Manage introducers',
       icon: HandHeart,
       keywords: ['referrals', 'partners'],
-      action: () => router.push('/versotech/staff/introducers'),
+      action: () => router.push('/versotech_main/introducers'),
       group: 'navigation'
     },
     {
@@ -174,7 +174,7 @@ export function CommandPalette({ onQuickAddSubscription, brand = 'versotech' }: 
       description: 'Fee management',
       icon: Calculator,
       keywords: ['billing', 'charges'],
-      action: () => router.push('/versotech/staff/fees'),
+      action: () => router.push('/versotech_main/fees'),
       group: 'navigation'
     },
     {
@@ -183,7 +183,7 @@ export function CommandPalette({ onQuickAddSubscription, brand = 'versotech' }: 
       description: 'Bank reconciliation',
       icon: CreditCard,
       keywords: ['payments', 'banking'],
-      action: () => router.push('/versotech/staff/reconciliation'),
+      action: () => router.push('/versotech_main/reconciliation'),
       group: 'navigation'
     },
     {
@@ -192,7 +192,7 @@ export function CommandPalette({ onQuickAddSubscription, brand = 'versotech' }: 
       description: 'Audit logs',
       icon: Shield,
       keywords: ['compliance', 'logs', 'security'],
-      action: () => router.push('/versotech/staff/audit'),
+      action: () => router.push('/versotech_main/audit'),
       group: 'navigation'
     },
     {
@@ -201,7 +201,7 @@ export function CommandPalette({ onQuickAddSubscription, brand = 'versotech' }: 
       description: 'System administration',
       icon: Database,
       keywords: ['settings', 'config'],
-      action: () => router.push('/versotech/staff/admin'),
+      action: () => router.push('/versotech_main/admin'),
       group: 'navigation'
     },
     {
@@ -210,7 +210,7 @@ export function CommandPalette({ onQuickAddSubscription, brand = 'versotech' }: 
       description: 'Account settings',
       icon: Settings,
       keywords: ['preferences', 'profile'],
-      action: () => router.push('/versotech/settings'),
+      action: () => router.push('/versotech_main/settings'),
       group: 'navigation'
     },
 
@@ -234,7 +234,7 @@ export function CommandPalette({ onQuickAddSubscription, brand = 'versotech' }: 
       description: 'Find an investor',
       icon: Search,
       keywords: ['find', 'investor', 'search'],
-      action: () => router.push('/versotech/staff/investors'),
+      action: () => router.push('/versotech_main/investors'),
       group: 'actions'
     }
   ]

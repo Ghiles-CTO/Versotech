@@ -506,7 +506,7 @@ export function LawyerDashboard({ lawyerId, userId, persona }: LawyerDashboardPr
                 {assignedDeals.map((deal) => (
                   <Link
                     key={deal.id}
-                    href={`/versotech_main/assigned-deals/${deal.id}`}
+                    href={`/versotech_main/opportunities/${deal.id}`}
                     className={`flex items-center justify-between p-3 rounded-lg transition-colors ${
                       isDark ? 'bg-white/5 hover:bg-white/10' : 'bg-gray-50 hover:bg-gray-100'
                     }`}

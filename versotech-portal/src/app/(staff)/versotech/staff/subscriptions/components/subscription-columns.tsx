@@ -174,7 +174,7 @@ export const subscriptionColumns: ColumnDef<SubscriptionRow>[] = [
       return (
         <div className="flex flex-col">
           <Link
-            href={`/versotech/staff/investors/${investor.id}`}
+            href={`/versotech_main/investors/${investor.id}`}
             className="font-semibold hover:underline"
           >
             {investor.legal_name}
@@ -850,7 +850,7 @@ export const subscriptionColumns: ColumnDef<SubscriptionRow>[] = [
 
       return (
         <div className="flex justify-center">
-          <Link href={`/versotech/staff/subscriptions/${subscription.id}`}>
+          <Link href={`/versotech_main/subscriptions/${subscription.id}`}>
             <Button
               variant="outline"
               size="icon"

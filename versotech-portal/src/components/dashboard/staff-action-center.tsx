@@ -122,42 +122,42 @@ export const StaffActionCenter = React.memo(function StaffActionCenter({
       items: [
         {
           label: 'New Deal',
-          href: '/versotech/staff/deals/new',
+          href: '/versotech_main/deals/new',
           icon: PlusCircle,
           description: 'Create opportunity',
           variant: 'success'
         },
         {
           label: 'KYC Review',
-          href: '/versotech/staff/kyc-review',
+          href: '/versotech_main/kyc-review',
           icon: UserCheck,
           description: 'Pending reviews',
           variant: 'warning'
         },
         {
           label: 'Messages',
-          href: '/versotech/staff/messages',
+          href: '/versotech_main/messages',
           icon: MessageCircle,
           description: 'Investor comms',
           variant: 'info'
         },
         {
           label: 'Reconciliation',
-          href: '/versotech/staff/reconciliation',
+          href: '/versotech_main/reconciliation',
           icon: Calculator,
           description: 'Match transactions',
           variant: 'default'
         },
         {
           label: 'Documents',
-          href: '/versotech/staff/documents',
+          href: '/versotech_main/documents',
           icon: Upload,
           description: 'Document library',
           variant: 'default'
         },
         {
           label: 'Approvals',
-          href: '/versotech/staff/approvals',
+          href: '/versotech_main/approvals',
           icon: CheckCircle,
           description: 'Pending approvals',
           variant: 'warning'
@@ -170,37 +170,37 @@ export const StaffActionCenter = React.memo(function StaffActionCenter({
       items: [
         {
           label: 'Deal Pipeline',
-          href: '/versotech/staff/deals',
+          href: '/versotech_main/deals',
           icon: Building2,
           description: 'Active deals'
         },
         {
           label: 'Investors',
-          href: '/versotech/staff/investors',
+          href: '/versotech_main/investors',
           icon: Users,
           description: 'LP management'
         },
         {
           label: 'Subscriptions',
-          href: '/versotech/staff/subscriptions',
+          href: '/versotech_main/subscriptions',
           icon: FileSignature,
           description: 'Commitments'
         },
         {
           label: 'Entities',
-          href: '/versotech/staff/entities',
+          href: '/versotech_main/entities',
           icon: Building,
           description: 'Entity registry'
         },
         {
           label: 'Introducers',
-          href: '/versotech/staff/introducers',
+          href: '/versotech_main/introducers',
           icon: Briefcase,
           description: 'Source tracking'
         },
         {
           label: 'Requests',
-          href: '/versotech/staff/requests',
+          href: '/versotech_main/requests',
           icon: ClipboardList,
           description: 'Service tickets'
         }
@@ -212,25 +212,25 @@ export const StaffActionCenter = React.memo(function StaffActionCenter({
       items: [
         {
           label: 'Approvals',
-          href: '/versotech/staff/approvals',
+          href: '/versotech_main/approvals',
           icon: CheckCircle,
           description: 'Pending approvals'
         },
         {
           label: 'Audit Trail',
-          href: '/versotech/staff/audit',
+          href: '/versotech_main/audit',
           icon: FileSearch,
           description: 'Activity logs'
         },
         {
           label: 'KYC Processing',
-          href: '/versotech/staff/kyc-review',
+          href: '/versotech_main/kyc-review',
           icon: UserCheck,
           description: 'Verification queue'
         },
         {
           label: 'Documents',
-          href: '/versotech/staff/documents',
+          href: '/versotech_main/documents',
           icon: FolderOpen,
           description: 'Document library'
         }
@@ -242,19 +242,19 @@ export const StaffActionCenter = React.memo(function StaffActionCenter({
       items: [
         {
           label: 'Fee Management',
-          href: '/versotech/staff/fees',
+          href: '/versotech_main/fees',
           icon: Receipt,
           description: 'Calculate fees'
         },
         {
           label: 'Reconciliation',
-          href: '/versotech/staff/reconciliation',
+          href: '/versotech_main/reconciliation',
           icon: GitPullRequest,
           description: 'Bank matching'
         },
         {
           label: 'Vehicle Summary',
-          href: '/versotech/staff/subscriptions/vehicle-summary',
+          href: '/versotech_main/subscriptions/vehicle-summary',
           icon: BarChart3,
           description: 'Fund overview'
         }
@@ -266,7 +266,7 @@ export const StaffActionCenter = React.memo(function StaffActionCenter({
       items: [
         {
           label: 'Trigger Workflows',
-          href: '/versotech/staff/processes',
+          href: '/versotech_main/processes',
           icon: PlayCircle,
           description: 'n8n automation'
         },
@@ -308,13 +308,13 @@ export const StaffActionCenter = React.memo(function StaffActionCenter({
       items: [
         {
           label: 'Request Analytics',
-          href: '/versotech/staff/requests/analytics',
+          href: '/versotech_main/requests/analytics',
           icon: TrendingUp,
           description: 'SLA metrics'
         },
         {
           label: 'Audit Trail',
-          href: '/versotech/staff/audit',
+          href: '/versotech_main/audit',
           icon: FileSearch,
           description: 'Activity logs'
         }
@@ -326,13 +326,13 @@ export const StaffActionCenter = React.memo(function StaffActionCenter({
       items: [
         {
           label: 'Admin Panel',
-          href: '/versotech/staff/admin',
+          href: '/versotech_main/admin',
           icon: Settings,
           description: 'System config'
         },
         {
           label: 'My Profile',
-          href: '/versotech/staff/profile',
+          href: '/versotech_main/profile',
           icon: User,
           description: 'Account settings'
         }

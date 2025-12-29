@@ -219,4 +219,3 @@ export default async function EntityDetailPage({ params }: { params: Promise<{ i
       />
     )
 }
-
