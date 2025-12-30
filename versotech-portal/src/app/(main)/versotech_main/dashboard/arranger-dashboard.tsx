@@ -20,7 +20,10 @@ import {
   AlertCircle,
   TrendingUp,
   FileSignature,
+  Wallet,
+  Receipt,
 } from 'lucide-react'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { createClient } from '@/lib/supabase/client'
 import { formatCurrency, formatDate } from '@/lib/format'
 import { useTheme } from '@/components/theme-provider'
@@ -69,6 +72,30 @@ type PendingAgreement = {
   created_at: string
 }
 
+// New metrics types for User Story compliance (2.5.2, 2.6.1, 2.2.4/2.3.4/2.4.4)
+type EscrowMetrics = {
+  totalExpected: number      // SUM(commitment) for committed subscriptions
+  totalFunded: number        // SUM(funded_amount)
+  totalOutstanding: number   // SUM(outstanding_amount)
+  fundingRate: number        // percentage
+  pendingInvestors: number   // COUNT where funded_amount < commitment
+}
+
+type SubscriptionPackMetrics = {
+  awaitingInvestorSignature: number
+  awaitingArrangerSignature: number
+  awaitingCEOSignature: number
+  signedThisMonth: number
+  totalPending: number
+}
+
+type FeeMetrics = {
+  totalAccrued: number       // status = 'accrued'
+  totalInvoiced: number      // status = 'invoiced'
+  totalPaid: number          // status = 'paid'
+  feePipeline: number        // accrued + invoiced (not yet paid)
+}
+
 export function ArrangerDashboard({ arrangerId, userId, persona }: ArrangerDashboardProps) {
   const { theme } = useTheme()
   const isDark = theme === 'staff-dark'
@@ -82,6 +109,10 @@ export function ArrangerDashboard({ arrangerId, userId, persona }: ArrangerDashb
   } | null>(null)
   const [recentMandates, setRecentMandates] = useState<RecentMandate[]>([])
   const [pendingAgreements, setPendingAgreements] = useState<PendingAgreement[]>([])
+  // New state for User Story compliance metrics
+  const [escrowMetrics, setEscrowMetrics] = useState<EscrowMetrics | null>(null)
+  const [subPackMetrics, setSubPackMetrics] = useState<SubscriptionPackMetrics | null>(null)
+  const [feeMetrics, setFeeMetrics] = useState<FeeMetrics | null>(null)
 
   useEffect(() => {
     async function fetchData() {
@@ -250,6 +281,128 @@ export function ArrangerDashboard({ arrangerId, userId, persona }: ArrangerDashb
           new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
         )
         setPendingAgreements(allPendingAgreements.slice(0, 5))
+
+        // ========== NEW METRICS: User Story Compliance ==========
+
+        // 1. ESCROW/FUNDING METRICS (User Story 2.5.2)
+        if (dealIds.length > 0) {
+          const { data: fundingData } = await supabase
+            .from('subscriptions')
+            .select('commitment, funded_amount, outstanding_amount, status, investor_id')
+            .in('deal_id', dealIds)
+            .in('status', ['committed', 'partially_funded', 'active', 'signed'])
+
+          const totalExpected = (fundingData || []).reduce((sum: number, s: any) => sum + (s.commitment || 0), 0)
+          const totalFunded = (fundingData || []).reduce((sum: number, s: any) => sum + (s.funded_amount || 0), 0)
+          const totalOutstanding = (fundingData || []).reduce((sum: number, s: any) => sum + (s.outstanding_amount || 0), 0)
+          const pendingInvestors = (fundingData || []).filter((s: any) => (s.funded_amount || 0) < (s.commitment || 0)).length
+
+          setEscrowMetrics({
+            totalExpected,
+            totalFunded,
+            totalOutstanding,
+            fundingRate: totalExpected > 0 ? (totalFunded / totalExpected) * 100 : 0,
+            pendingInvestors,
+          })
+
+          // 2. SUBSCRIPTION PACK PIPELINE METRICS (User Story 2.6.1)
+          // Query documents with subscription pack type and their signature requests
+          const { data: subDocs } = await supabase
+            .from('documents')
+            .select(`
+              id,
+              subscription_id,
+              status,
+              ready_for_signature,
+              signature_requests(id, signer_role, status)
+            `)
+            .not('subscription_id', 'is', null)
+            .in('status', ['published', 'pending_signature'])
+
+          // Filter to only documents for this arranger's deals
+          // We need to check which subscriptions belong to this arranger's deals
+          const { data: arrangerSubscriptions } = await supabase
+            .from('subscriptions')
+            .select('id')
+            .in('deal_id', dealIds)
+
+          const arrangerSubIds = new Set((arrangerSubscriptions || []).map((s: any) => s.id))
+
+          // Filter documents to only those for arranger's subscriptions
+          const arrangerDocs = (subDocs || []).filter((doc: any) => arrangerSubIds.has(doc.subscription_id))
+
+          let awaitingInvestor = 0
+          let awaitingArranger = 0
+          let awaitingCEO = 0
+
+          arrangerDocs.forEach((doc: any) => {
+            if (doc.status !== 'pending_signature') return
+            const requests = doc.signature_requests || []
+            const hasPendingInvestor = requests.some((r: any) => r.signer_role === 'investor' && r.status === 'pending')
+            const hasPendingArranger = requests.some((r: any) => r.signer_role === 'arranger' && r.status === 'pending')
+            const hasPendingCEO = requests.some((r: any) => r.signer_role === 'admin' && r.status === 'pending')
+
+            if (hasPendingInvestor) awaitingInvestor++
+            if (hasPendingArranger) awaitingArranger++
+            if (hasPendingCEO) awaitingCEO++
+          })
+
+          // Get signed this month count
+          const startOfMonth = new Date()
+          startOfMonth.setDate(1)
+          startOfMonth.setHours(0, 0, 0, 0)
+
+          const { count: signedThisMonth } = await supabase
+            .from('subscriptions')
+            .select('id', { count: 'exact', head: true })
+            .in('deal_id', dealIds)
+            .not('signed_at', 'is', null)
+            .gte('signed_at', startOfMonth.toISOString())
+
+          setSubPackMetrics({
+            awaitingInvestorSignature: awaitingInvestor,
+            awaitingArrangerSignature: awaitingArranger,
+            awaitingCEOSignature: awaitingCEO,
+            signedThisMonth: signedThisMonth || 0,
+            totalPending: awaitingInvestor + awaitingArranger + awaitingCEO,
+          })
+        } else {
+          // No deals - set empty metrics
+          setEscrowMetrics({
+            totalExpected: 0,
+            totalFunded: 0,
+            totalOutstanding: 0,
+            fundingRate: 0,
+            pendingInvestors: 0,
+          })
+          setSubPackMetrics({
+            awaitingInvestorSignature: 0,
+            awaitingArrangerSignature: 0,
+            awaitingCEOSignature: 0,
+            signedThisMonth: 0,
+            totalPending: 0,
+          })
+        }
+
+        // 3. FEE METRICS (User Story 2.2.4, 2.3.4, 2.4.4)
+        const { data: feeData } = await supabase
+          .from('fee_events')
+          .select('computed_amount, status')
+          .eq('payee_arranger_id', arrangerId)
+
+        const validFees = (feeData || []).filter((f: any) => f.status !== 'voided' && f.status !== 'cancelled')
+        const totalAccrued = validFees.filter((f: any) => f.status === 'accrued').reduce((s: number, f: any) => s + (f.computed_amount || 0), 0)
+        const totalInvoiced = validFees.filter((f: any) => f.status === 'invoiced').reduce((s: number, f: any) => s + (f.computed_amount || 0), 0)
+        const totalPaid = validFees.filter((f: any) => f.status === 'paid').reduce((s: number, f: any) => s + (f.computed_amount || 0), 0)
+
+        setFeeMetrics({
+          totalAccrued,
+          totalInvoiced,
+          totalPaid,
+          feePipeline: totalAccrued + totalInvoiced,
+        })
+
+        // ========== END NEW METRICS ==========
 
         setMetrics({
           totalMandates: mandates.length,
@@ -458,6 +611,115 @@ export function ArrangerDashboard({ arrangerId, userId, persona }: ArrangerDashb
           </CardContent>
         </Card>
       </div>
+
+      {/* NEW: Escrow & Fee Metrics Row (User Story 2.5.2, 2.2.4/2.3.4/2.4.4) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Escrow Funding Status Card */}
+        <Card className={isDark ? 'bg-white/5 border-white/10' : ''}>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className={`text-sm font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+              Escrow Funding Status
+            </CardTitle>
+            <Wallet className={`h-4 w-4 ${isDark ? 'text-gray-500' : 'text-gray-400'}`} />
+          </CardHeader>
+          <CardContent>
+            <div className={`text-2xl font-bold ${(escrowMetrics?.fundingRate || 0) >= 75 ? 'text-green-500' : 'text-amber-500'}`}>
+              {(escrowMetrics?.fundingRate || 0).toFixed(0)}% Funded
+            </div>
+            <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
+              {formatCurrency(escrowMetrics?.totalFunded || 0)} of {formatCurrency(escrowMetrics?.totalExpected || 0)}
+            </p>
+            {/* Progress bar */}
+            <div className={`mt-2 h-2 ${isDark ? 'bg-gray-700' : 'bg-gray-200'} rounded-full overflow-hidden`}>
+              <div
+                className="h-full bg-green-500 transition-all duration-300"
+                style={{ width: `${Math.min(escrowMetrics?.fundingRate || 0, 100)}%` }}
+              />
+            </div>
+            {(escrowMetrics?.pendingInvestors || 0) > 0 && (
+              <p className="text-xs text-amber-400 mt-2">
+                {escrowMetrics?.pendingInvestors} investor(s) pending funding
+              </p>
+            )}
+            <div className="mt-3 pt-3 border-t border-gray-700/50 flex justify-between text-xs">
+              <span className={isDark ? 'text-gray-400' : 'text-gray-500'}>Outstanding:</span>
+              <span className="text-amber-400 font-medium">{formatCurrency(escrowMetrics?.totalOutstanding || 0)}</span>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Fee Pipeline Card */}
+        <Card className={isDark ? 'bg-white/5 border-white/10' : ''}>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className={`text-sm font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+              Fee Pipeline
+            </CardTitle>
+            <Receipt className={`h-4 w-4 ${isDark ? 'text-gray-500' : 'text-gray-400'}`} />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-500">
+              {formatCurrency(feeMetrics?.feePipeline || 0)}
+            </div>
+            <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
+              Pending collection
+            </p>
+            <div className="mt-3 space-y-2 text-xs">
+              <div className="flex justify-between items-center">
+                <span className={isDark ? 'text-gray-400' : 'text-gray-500'}>Accrued:</span>
+                <span className="text-amber-400 font-medium">{formatCurrency(feeMetrics?.totalAccrued || 0)}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className={isDark ? 'text-gray-400' : 'text-gray-500'}>Invoiced:</span>
+                <span className="text-blue-400 font-medium">{formatCurrency(feeMetrics?.totalInvoiced || 0)}</span>
+              </div>
+              <div className="flex justify-between items-center pt-2 border-t border-gray-700/50">
+                <span className={isDark ? 'text-gray-400' : 'text-gray-500'}>Total Paid:</span>
+                <span className="text-green-400 font-medium">{formatCurrency(feeMetrics?.totalPaid || 0)}</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* NEW: Subscription Pack Pipeline (User Story 2.6.1) */}
+      <Card className={isDark ? 'bg-white/5 border-white/10' : ''}>
+        <CardHeader>
+          <CardTitle className={isDark ? 'text-white' : ''}>Subscription Pack Pipeline</CardTitle>
+          <CardDescription>Document signing status across your mandates</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className={`text-center p-4 rounded-lg ${isDark ? 'bg-amber-500/10' : 'bg-amber-50'}`}>
+              <p className="text-2xl font-bold text-amber-500">{subPackMetrics?.awaitingInvestorSignature || 0}</p>
+              <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Awaiting Investor</p>
+            </div>
+            <div className={`text-center p-4 rounded-lg ${isDark ? 'bg-purple-500/10' : 'bg-purple-50'}`}>
+              <p className="text-2xl font-bold text-purple-500">{subPackMetrics?.awaitingArrangerSignature || 0}</p>
+              <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Awaiting Your Signature</p>
+            </div>
+            <div className={`text-center p-4 rounded-lg ${isDark ? 'bg-blue-500/10' : 'bg-blue-50'}`}>
+              <p className="text-2xl font-bold text-blue-500">{subPackMetrics?.awaitingCEOSignature || 0}</p>
+              <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Awaiting CEO</p>
+            </div>
+            <div className={`text-center p-4 rounded-lg ${isDark ? 'bg-green-500/10' : 'bg-green-50'}`}>
+              <p className="text-2xl font-bold text-green-500">{subPackMetrics?.signedThisMonth || 0}</p>
+              <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Signed This Month</p>
+            </div>
+          </div>
+          {/* Action alert if arranger has docs to sign */}
+          {(subPackMetrics?.awaitingArrangerSignature || 0) > 0 && (
+            <Alert className={`mt-4 border-purple-500/30 ${isDark ? 'bg-purple-500/10' : 'bg-purple-50'}`}>
+              <FileSignature className="h-4 w-4 text-purple-500" />
+              <AlertDescription className={`flex items-center justify-between ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                <span>You have {subPackMetrics?.awaitingArrangerSignature} document(s) awaiting your signature.</span>
+                <Button variant="link" asChild className="p-0 h-auto text-purple-500">
+                  <Link href="/versotech_main/versosign">Sign Now →</Link>
+                </Button>
+              </AlertDescription>
+            </Alert>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Entity Breakdown */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
