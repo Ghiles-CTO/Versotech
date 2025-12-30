@@ -174,6 +174,36 @@ export async function POST(
       await supabase.from('investor_notifications').insert(notifications)
     }
 
+    // === NOTIFY ARRANGER USERS ===
+    // Get the deal's arranger entity
+    const { data: dealWithArranger } = await supabase
+      .from('deals')
+      .select('arranger_entity_id')
+      .eq('id', subscription.deal_id)
+      .single()
+
+    if (dealWithArranger?.arranger_entity_id) {
+      // Get all users linked to this arranger
+      const { data: arrangerUsers } = await supabase
+        .from('arranger_users')
+        .select('user_id')
+        .eq('arranger_id', dealWithArranger.arranger_entity_id)
+
+      if (arrangerUsers && arrangerUsers.length > 0) {
+        const arrangerNotifications = arrangerUsers.map((au: any) => ({
+          user_id: au.user_id,
+          investor_id: null,  // Important: null for non-investor personas
+          title: 'Escrow Funding Confirmed',
+          message: `${amount.toLocaleString()} ${subscription.currency || 'USD'} confirmed for ${dealName}. Status: ${newStatus}`,
+          link: `/versotech_main/my-mandates/${subscription.deal_id}`,
+          deal_id: subscription.deal_id,
+          type: 'deal'
+        }))
+
+        await supabase.from('investor_notifications').insert(arrangerNotifications)
+      }
+    }
+
     // Audit log
     await auditLogger.log({
       actor_user_id: user.id,
