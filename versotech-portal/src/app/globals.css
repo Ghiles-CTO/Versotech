@@ -149,19 +149,156 @@
 }
 
 @layer utilities {
+  /* Glass utilities - theme aware */
   .glass-panel {
     @apply bg-white/95 border border-slate-200 shadow-lg;
+  }
+  .staff-dark .glass-panel {
+    @apply bg-zinc-900/95 border-white/10 shadow-2xl;
   }
 
   .glass-card {
     @apply bg-white/90 border border-slate-200 shadow-sm hover:shadow-md transition-all duration-300;
   }
+  .staff-dark .glass-card {
+    @apply bg-zinc-900/90 border-white/10 shadow-lg hover:shadow-xl;
+  }
 
+  /* Text gradients - theme aware */
   .text-gradient-gold {
     @apply bg-clip-text text-transparent bg-gradient-to-r from-amber-600 to-amber-400;
+  }
+  .staff-dark .text-gradient-gold {
+    @apply from-amber-400 to-amber-300;
   }
 
   .text-gradient-navy {
     @apply bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-700;
+  }
+  .staff-dark .text-gradient-navy {
+    @apply from-slate-200 to-slate-400;
+  }
+
+  /* Theme-aware gradient card utilities */
+  .gradient-card-blue {
+    @apply bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200;
+  }
+  .staff-dark .gradient-card-blue {
+    @apply from-blue-900/50 to-blue-800/30 border-blue-700;
+  }
+
+  .gradient-card-green {
+    @apply bg-gradient-to-br from-green-50 to-green-100 border border-green-200;
+  }
+  .staff-dark .gradient-card-green {
+    @apply from-green-900/50 to-green-800/30 border-green-700;
+  }
+
+  .gradient-card-purple {
+    @apply bg-gradient-to-br from-purple-50 to-purple-100 border border-purple-200;
+  }
+  .staff-dark .gradient-card-purple {
+    @apply from-purple-900/50 to-purple-800/30 border-purple-700;
+  }
+
+  .gradient-card-orange {
+    @apply bg-gradient-to-br from-orange-50 to-orange-100 border border-orange-200;
+  }
+  .staff-dark .gradient-card-orange {
+    @apply from-orange-900/50 to-orange-800/30 border-orange-700;
+  }
+
+  .gradient-card-red {
+    @apply bg-gradient-to-br from-red-50 to-red-100 border border-red-200;
+  }
+  .staff-dark .gradient-card-red {
+    @apply from-red-900/50 to-red-800/30 border-red-700;
+  }
+
+  .gradient-card-emerald {
+    @apply bg-gradient-to-br from-emerald-50 to-emerald-100 border border-emerald-200;
+  }
+  .staff-dark .gradient-card-emerald {
+    @apply from-emerald-900/50 to-emerald-800/30 border-emerald-700;
+  }
+
+  .gradient-card-cyan {
+    @apply bg-gradient-to-br from-cyan-50 to-cyan-100 border border-cyan-200;
+  }
+  .staff-dark .gradient-card-cyan {
+    @apply from-cyan-900/50 to-cyan-800/30 border-cyan-700;
+  }
+
+  .gradient-card-indigo {
+    @apply bg-gradient-to-br from-indigo-50 to-indigo-100 border border-indigo-200;
+  }
+  .staff-dark .gradient-card-indigo {
+    @apply from-indigo-900/50 to-indigo-800/30 border-indigo-700;
+  }
+
+  /* ===========================================
+   * App Layout Theme Utilities (SSR-safe)
+   * These respond to .staff-dark on html element,
+   * avoiding React hydration flash issues.
+   * =========================================== */
+
+  /* Main app container background */
+  .app-main-bg {
+    background: linear-gradient(to bottom right,
+      rgb(249 250 251),
+      rgba(239 246 255 / 0.3),
+      rgba(238 242 255 / 0.2)
+    );
+  }
+  .staff-dark .app-main-bg {
+    background: #0a0a0a;
+  }
+
+  /* App header */
+  .app-header {
+    @apply bg-white/80 backdrop-blur-sm border-b border-gray-200;
+  }
+  .staff-dark .app-header {
+    @apply bg-[#0a0a0a] border-white/10;
+  }
+
+  /* App content area */
+  .app-content {
+    @apply bg-transparent;
+  }
+  .staff-dark .app-content {
+    @apply bg-[#0a0a0a];
+  }
+
+  /* App content inner wrapper */
+  .app-content-inner {
+    @apply bg-white/60 backdrop-blur-sm;
+  }
+  .staff-dark .app-content-inner {
+    @apply bg-transparent backdrop-blur-none;
+  }
+
+  /* Loading screen */
+  .app-loading-bg {
+    @apply bg-gray-50;
+  }
+  .staff-dark .app-loading-bg {
+    @apply bg-[#0a0a0a];
+  }
+
+  /* Loading spinner */
+  .app-loading-spinner {
+    @apply border-blue-600;
+  }
+  .staff-dark .app-loading-spinner {
+    @apply border-blue-400;
+  }
+
+  /* Header text */
+  .app-header-text {
+    @apply text-gray-900;
+  }
+  .staff-dark .app-header-text {
+    @apply text-white;
   }
 }

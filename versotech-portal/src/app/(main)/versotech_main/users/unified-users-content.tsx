@@ -47,10 +47,12 @@ import {
   CheckCircle2,
   Clock,
   XCircle,
-  Download
+  Download,
+  Plus
 } from 'lucide-react'
 import type { UnifiedUser, UnifiedUsersResponse } from '@/app/api/admin/unified-users/route'
 import { BatchInviteDialog, type EntityType } from '@/components/users/batch-invite-dialog'
+import { AddAccountModal } from '@/components/users/add-account-modal'
 
 const ENTITY_TYPE_CONFIG = {
   investor: { label: 'Investor', icon: Users, color: 'bg-blue-500/20 text-blue-400 border-blue-500/30' },
@@ -95,6 +97,7 @@ export default function UnifiedUsersContent() {
   const [typeFilter, setTypeFilter] = useState<string>('all')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [batchInviteOpen, setBatchInviteOpen] = useState(false)
+  const [addAccountOpen, setAddAccountOpen] = useState(false)
 
   const fetchUsers = async () => {
     try {
@@ -300,7 +303,12 @@ export default function UnifiedUsersContent() {
                 Export
               </Button>
 
-              <Button onClick={() => setBatchInviteOpen(true)}>
+              <Button onClick={() => setAddAccountOpen(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Account
+              </Button>
+
+              <Button variant="outline" onClick={() => setBatchInviteOpen(true)}>
                 <UserPlus className="h-4 w-4 mr-2" />
                 Batch Invite
               </Button>
@@ -440,6 +448,13 @@ export default function UnifiedUsersContent() {
           </Table>
         </CardContent>
       </Card>
+
+      {/* Add Account Modal */}
+      <AddAccountModal
+        open={addAccountOpen}
+        onOpenChange={setAddAccountOpen}
+        onSuccess={fetchUsers}
+      />
 
       {/* Batch Invite Dialog */}
       <BatchInviteDialog

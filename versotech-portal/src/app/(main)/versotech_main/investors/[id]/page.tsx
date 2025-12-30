@@ -107,7 +107,7 @@ export default async function InvestorDetailPage({
       ),
       investor_users (
         user_id,
-        profiles (
+        profiles:profiles!investor_users_user_id_fkey (
           id,
           display_name,
           email,

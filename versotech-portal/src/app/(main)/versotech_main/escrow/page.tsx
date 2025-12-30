@@ -56,9 +56,8 @@ type LawyerInfo = {
 
 type ArrangerInfo = {
   id: string
-  company_name: string
   legal_name: string
-  is_active: boolean
+  status: string  // 'active' | 'inactive' - arranger_entities uses status not is_active
 }
 
 type EscrowDeal = {
@@ -237,9 +236,10 @@ export default function EscrowPage() {
 
         if (arrangerUser) {
           // Fetch arranger info
+          // Note: arranger_entities uses 'status' not 'is_active', and has no 'company_name'
           const { data: arranger, error: arrangerError } = await supabase
             .from('arranger_entities')
-            .select('id, company_name, legal_name, is_active')
+            .select('id, legal_name, status')
             .eq('id', arrangerUser.arranger_id)
             .single()
 
@@ -660,7 +660,7 @@ export default function EscrowPage() {
             {lawyerInfo
               ? `Manage escrow accounts and settlements for ${lawyerInfo.display_name}`
               : arrangerInfo
-                ? `View escrow status for deals managed by ${arrangerInfo.company_name || arrangerInfo.legal_name}`
+                ? `View escrow status for deals managed by ${arrangerInfo.legal_name}`
                 : 'Monitor all escrow accounts and pending settlements'}
           </p>
         </div>

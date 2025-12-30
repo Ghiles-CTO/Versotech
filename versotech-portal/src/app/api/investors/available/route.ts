@@ -17,12 +17,23 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Verify user is staff
+    // Verify user is staff or arranger
     const userRole = user.user_metadata?.role || user.role
     const isStaff = ['staff_admin', 'staff_ops', 'staff_rm', 'ceo'].includes(userRole)
-    
+
+    // Check if user is an arranger
+    let isArranger = false
     if (!isStaff) {
-      return NextResponse.json({ error: 'Forbidden - Staff access only' }, { status: 403 })
+      const { data: arrangerUser } = await supabase
+        .from('arranger_users')
+        .select('arranger_id')
+        .eq('user_id', user.id)
+        .maybeSingle()
+      isArranger = !!arrangerUser
+    }
+
+    if (!isStaff && !isArranger) {
+      return NextResponse.json({ error: 'Forbidden - Staff or arranger access only' }, { status: 403 })
     }
 
     // Get all investor users with their entities

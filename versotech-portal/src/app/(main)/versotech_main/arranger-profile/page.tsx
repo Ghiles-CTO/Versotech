@@ -52,7 +52,7 @@ export default async function ArrangerProfilePage() {
   // Get arranger user info
   const { data: arrangerUser } = await serviceSupabase
     .from('arranger_users')
-    .select('arranger_id, role, is_active')
+    .select('arranger_id, role, is_primary')
     .eq('user_id', user.id)
     .maybeSingle()
 
@@ -82,7 +82,7 @@ export default async function ArrangerProfilePage() {
   // Get user profile info
   const { data: profile } = await serviceSupabase
     .from('profiles')
-    .select('full_name, email, avatar_url')
+    .select('display_name, email, avatar_url')
     .eq('id', user.id)
     .maybeSingle()
 
@@ -96,14 +96,14 @@ export default async function ArrangerProfilePage() {
     <ArrangerProfileClient
       userEmail={user.email || ''}
       profile={profile ? {
-        full_name: profile.full_name,
+        full_name: profile.display_name,
         email: profile.email || user.email || '',
         avatar_url: profile.avatar_url
       } : null}
       arrangerInfo={arranger ? {
         id: arranger.id,
         legal_name: arranger.legal_name,
-        company_name: arranger.company_name,
+        company_name: arranger.legal_name, // Use legal_name as company_name doesn't exist
         registration_number: arranger.registration_number,
         tax_id: arranger.tax_id,
         regulator: arranger.regulator,
@@ -117,12 +117,13 @@ export default async function ArrangerProfilePage() {
         kyc_approved_at: arranger.kyc_approved_at,
         kyc_expires_at: arranger.kyc_expires_at,
         status: arranger.status,
-        is_active: arranger.is_active,
-        created_at: arranger.created_at
+        is_active: arranger.status === 'active', // Derive from status
+        created_at: arranger.created_at,
+        logo_url: arranger.logo_url, // Pass logo URL for display and upload
       } : null}
       arrangerUserInfo={{
         role: arrangerUser.role,
-        is_active: arrangerUser.is_active
+        is_active: true // arranger_users doesn't have is_active, assume active
       }}
       dealCount={dealCount || 0}
     />

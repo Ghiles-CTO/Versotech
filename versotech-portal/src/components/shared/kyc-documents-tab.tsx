@@ -96,7 +96,16 @@ export function KYCDocumentsTab({ entityType, entityId, entityName, readOnly = f
     setLoading(true)
     try {
       // Build the query parameter based on entity type
-      const paramName = entityType === 'arranger' ? 'arranger_entity_id' : `${entityType}_id`
+      // Map entity types to their correct API parameter names
+      const paramMapping: Record<string, string> = {
+        investor: 'owner_investor_id',
+        arranger: 'arranger_entity_id',
+        introducer: 'introducer_id',
+        lawyer: 'lawyer_id',
+        partner: 'partner_id',
+        commercial_partner: 'commercial_partner_id',
+      }
+      const paramName = paramMapping[entityType] || `${entityType}_id`
       const response = await fetch(`/api/documents?${paramName}=${entityId}&limit=100`)
       if (!response.ok) throw new Error('Failed to fetch documents')
 

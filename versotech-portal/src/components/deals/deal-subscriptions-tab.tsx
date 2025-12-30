@@ -110,7 +110,7 @@ export function DealSubscriptionsTab({ dealId }: DealSubscriptionsTabProps) {
   const handleViewDetails = (subscription: SubscriptionWithDocuments) => {
     // First try to open the formal subscription if it exists
     if ((subscription as any).subscription_id) {
-      window.open(`/versotech/staff/subscriptions/${(subscription as any).subscription_id}`, '_blank')
+      window.open(`/versotech_main/subscriptions/${(subscription as any).subscription_id}`, '_blank')
     } else if (subscription.pack_document_id) {
       // Otherwise, if there's a subscription pack, download it
       window.open(`/api/documents/${subscription.pack_document_id}/download`, '_blank')

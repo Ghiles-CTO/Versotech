@@ -169,7 +169,7 @@ export function StaffAnalyticsDashboard() {
       </div>
 
       {/* Analytics Modules Tabs */}
-      <Tabs defaultValue="vehicles" className="space-y-6">
+      <Tabs defaultValue="vehicles" className="space-y-6" id="staff-analytics-tabs">
         <TabsList className="bg-black/40 border border-white/10 p-1 h-auto flex-wrap justify-start">
           <TabsTrigger value="vehicles">Vehicles</TabsTrigger>
           <TabsTrigger value="investors">Investors</TabsTrigger>

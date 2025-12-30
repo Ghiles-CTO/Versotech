@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import Image from 'next/image'
@@ -185,14 +185,21 @@ function mergeNavItems(personas: Persona[]): NavItem[] {
 export function PersonaSidebar() {
   const [collapsed, setCollapsed] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [mounted, setMounted] = useState(false)
   const pathname = usePathname()
   const router = useRouter()
 
   const { personas, activePersona } = usePersona()
   const { theme } = useTheme()
 
+  // Hydration fix: Only apply theme after component mounts to avoid SSR mismatch
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
   // Determine if dark mode based on ACTIVE persona only
-  const isDark = theme === 'staff-dark'
+  // Use mounted check to prevent hydration mismatch (server renders light, client may have dark)
+  const isDark = mounted && theme === 'staff-dark'
 
   // Build navigation based on active persona or all personas
   const navItems = useMemo(() => {
@@ -280,23 +287,6 @@ export function PersonaSidebar() {
           {collapsed ? <ChevronRight className="h-3 w-3" /> : <ChevronLeft className="h-3 w-3" />}
         </Button>
       </div>
-
-      {/* Active Persona Indicator */}
-      {!collapsed && activePersona && (
-        <div className={cn(
-          "mx-4 mb-4 px-3 py-2 rounded-lg text-xs",
-          isDark ? "bg-white/5 border border-white/10" : "bg-gray-50 border border-gray-100"
-        )}>
-          <div className={cn("font-medium", isDark ? "text-white" : "text-gray-900")}>
-            {activePersona.entity_name}
-          </div>
-          <div className={cn("text-xs mt-0.5", isDark ? "text-gray-500" : "text-gray-500")}>
-            {activePersona.persona_type === 'staff'
-              ? (activePersona.role_in_entity === 'staff_admin' || activePersona.role_in_entity === 'ceo' ? 'CEO' : activePersona.role_in_entity?.toUpperCase())
-              : activePersona.persona_type.replace('_', ' ').toUpperCase()}
-          </div>
-        </div>
-      )}
 
       {/* Search */}
       {!collapsed && (

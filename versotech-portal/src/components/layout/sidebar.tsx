@@ -75,58 +75,58 @@ interface SidebarProps {
 const investorNavItems: SidebarItem[] = [
   {
     name: 'Dashboard',
-    href: '/versoholdings/dashboard',
+    href: '/versotech_main/dashboard',
     icon: LayoutDashboard,
     description: 'Portfolio overview'
   },
   {
     name: 'Active Deals',
-    href: '/versoholdings/deals',
+    href: '/versotech_main/opportunities',
     icon: Activity,
     notificationKey: 'deals',
     description: 'Investment opportunities'
   },
   {
     name: 'Portfolio',
-    href: '/versoholdings/holdings',
+    href: '/versotech_main/portfolio',
     icon: Briefcase,
     description: 'My investments'
   },
   {
     name: 'Data Rooms',
-    href: '/versoholdings/data-rooms',
+    href: '/versotech_main/data-rooms',
     icon: FileText,
     description: 'Documents & Due Diligence'
   },
   {
     name: 'Calendar',
-    href: '/versoholdings/calendar',
+    href: '/versotech_main/calendar',
     icon: Calendar,
     description: 'Schedule'
   },
   {
     name: 'Reports',
-    href: '/versoholdings/reports',
+    href: '/versotech_main/documents',
     icon: TrendingUp,
     description: 'Performance reports'
   },
   {
     name: 'Tasks',
-    href: '/versoholdings/tasks',
+    href: '/versotech_main/tasks',
     icon: CheckSquare,
     notificationKey: 'tasks',
     description: 'Action items'
   },
   {
     name: 'Messages',
-    href: '/versoholdings/messages',
+    href: '/versotech_main/messages',
     icon: MessageSquare,
     notificationKey: 'messages',
     description: 'Communications'
   },
   {
     name: 'Notifications',
-    href: '/versoholdings/notifications',
+    href: '/versotech_main/notifications',
     icon: Bell,
     notificationKey: 'notifications',
     description: 'Alerts'
@@ -282,7 +282,7 @@ export function Sidebar({ brand, userProfile }: SidebarProps) {
     try {
       const supabase = createClient()
       await supabase.auth.signOut()
-      router.push(brand === 'versoholdings' ? '/versoholdings/login' : '/versotech/login')
+      router.push('/login')
     } catch (error) {
       console.error('Sign out error:', error)
     }

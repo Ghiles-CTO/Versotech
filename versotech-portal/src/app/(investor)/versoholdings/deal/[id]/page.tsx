@@ -41,7 +41,7 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
   const { data: { user }, error: userError } = await clientSupabase.auth.getUser()
 
   if (!user || userError) {
-    redirect('/versoholdings/login')
+    redirect('/login')
   }
 
   const serviceSupabase = createServiceClient()
@@ -53,7 +53,7 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
     .eq('user_id', user.id)
 
   if (!investorLinks || investorLinks.length === 0) {
-    redirect('/versoholdings/deals')
+    redirect('/versotech_main/opportunities')
   }
 
   const investorId = investorLinks[0].investor_id
@@ -88,7 +88,7 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
           <div className="text-center py-12">
             <h2 className="text-xl font-semibold text-gray-900 mb-2">Deal not found</h2>
             <p className="text-gray-600">The requested deal could not be found or you don&apos;t have access to it.</p>
-            <Link href="/versoholdings/deals">
+            <Link href="/versotech_main/opportunities">
               <Button className="mt-4">Back to Deals</Button>
             </Link>
           </div>
@@ -197,7 +197,7 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
     <AppLayout brand="versoholdings">
       <div className="p-6 space-y-6">
         {/* Back button */}
-        <Link href="/versoholdings/deals">
+        <Link href="/versotech_main/opportunities">
           <Button variant="ghost" className="gap-2">
             <ArrowLeft className="h-4 w-4" />
             Back to Deals
@@ -671,7 +671,7 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
                 )}
 
                 {hasDataRoomAccess && (
-                  <Link href="/versoholdings/data-rooms">
+                  <Link href="/versotech_main/data-rooms">
                     <Button variant="outline" className="w-full gap-2">
                       <ShieldCheck className="h-4 w-4" />
                       Access Data Room

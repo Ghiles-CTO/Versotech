@@ -173,7 +173,7 @@ export function SubscriptionEditDialog({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <Tabs defaultValue="basic" className="w-full">
+          <Tabs defaultValue="basic" className="w-full" id={`subscription-edit-tabs-${subscription.id}`}>
             <TabsList className="grid w-full grid-cols-7 bg-gray-800">
               <TabsTrigger value="basic" className="text-xs">Basic</TabsTrigger>
               <TabsTrigger value="financial" className="text-xs">Financial</TabsTrigger>

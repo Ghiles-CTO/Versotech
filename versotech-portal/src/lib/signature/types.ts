@@ -51,6 +51,7 @@ export interface CreateSignatureRequestParams {
   google_drive_url?: string
   signer_role: SignerRole
   signature_position: SignaturePosition
+  deal_id?: string // Direct deal reference for VERSOSign arranger/lawyer queries
   subscription_id?: string // For manually uploaded subscription packs
   document_id?: string // For manually uploaded documents
   introducer_id?: string // For introducer agreement signing

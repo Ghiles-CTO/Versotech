@@ -190,7 +190,7 @@ export async function POST(
             investorId: submission.investor.id,
             title: 'KYC Documents Approved',
             message: 'Your KYC documents have been reviewed and approved. Thank you for completing your verification.',
-            link: '/versoholdings/documents',
+            link: '/versotech_main/documents',
             type: 'kyc_status',
             extraMetadata: {
               submission_id: submissionId,
@@ -203,7 +203,7 @@ export async function POST(
             investorId: submission.investor.id,
             title: 'Additional Information Requested',
             message: `Our compliance team has requested additional information for your ${submission.document_type.replace(/_/g, ' ')} submission. Please review and provide the requested details.`,
-            link: '/versoholdings/documents',
+            link: '/versotech_main/documents',
             type: 'kyc_status',
             extraMetadata: {
               submission_id: submissionId,
@@ -217,7 +217,7 @@ export async function POST(
             investorId: submission.investor.id,
             title: 'KYC Submission Requires Attention',
             message: `Your ${submission.document_type.replace(/_/g, ' ')} submission requires attention. Please review and resubmit.`,
-            link: '/versoholdings/documents',
+            link: '/versotech_main/documents',
             type: 'kyc_status',
             extraMetadata: {
               submission_id: submissionId,

@@ -34,6 +34,10 @@ export async function POST(request: NextRequest) {
     const vehicleId = formData.get('vehicle_id') as string
     const entityId = formData.get('entity_id') as string
     const arrangerEntityId = formData.get('arranger_entity_id') as string
+    const introducerId = formData.get('introducer_id') as string
+    const lawyerId = formData.get('lawyer_id') as string
+    const partnerId = formData.get('partner_id') as string
+    const commercialPartnerId = formData.get('commercial_partner_id') as string
     const folderId = formData.get('folder_id') as string
     const tags = formData.get('tags') as string
     const isConfidential = formData.get('confidential') === 'true'
@@ -126,6 +130,10 @@ export async function POST(request: NextRequest) {
         vehicle_id: vehicleId || null,
         entity_id: entityId || null,
         arranger_entity_id: arrangerEntityId || null,
+        introducer_id: introducerId || null,
+        lawyer_id: lawyerId || null,
+        partner_id: partnerId || null,
+        commercial_partner_id: commercialPartnerId || null,
         file_size_bytes: file.size,
         mime_type: file.type,
         current_version: 1,
@@ -179,7 +187,11 @@ export async function POST(request: NextRequest) {
         confidential: isConfidential,
         owner_investor_id: ownerInvestorId,
         vehicle_id: vehicleId,
-        arranger_entity_id: arrangerEntityId
+        arranger_entity_id: arrangerEntityId,
+        introducer_id: introducerId,
+        lawyer_id: lawyerId,
+        partner_id: partnerId,
+        commercial_partner_id: commercialPartnerId
       }
     })
 

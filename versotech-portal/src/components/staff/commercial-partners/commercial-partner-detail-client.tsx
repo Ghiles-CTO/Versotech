@@ -206,7 +206,7 @@ export function CommercialPartnerDetailClient({
       </div>
 
       {/* Tabs */}
-      <Tabs defaultValue="overview" className="space-y-6">
+      <Tabs defaultValue="overview" className="space-y-6" id={`commercial-partner-tabs-${partner.id}`}>
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="kyc-documents">KYC Documents</TabsTrigger>

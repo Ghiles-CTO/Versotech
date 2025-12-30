@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -9,32 +9,37 @@ import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog'
-import {
   Building2,
   Mail,
   Phone,
   MapPin,
   FileText,
   Shield,
-  Calendar,
   CheckCircle2,
   Clock,
   AlertTriangle,
   Briefcase,
-  User,
   Edit,
   Loader2,
+  PenTool,
+  Lock,
+  Settings,
+  Save,
+  X,
+  Camera,
+  Upload,
 } from 'lucide-react'
 import { formatDate } from '@/lib/format'
 import { cn } from '@/lib/utils'
+import { toast } from 'sonner'
+import Image from 'next/image'
+
+// Import profile components
+import { SignatureSpecimenTab } from '@/components/profile/signature-specimen-tab'
+import { PasswordChangeForm } from '@/components/profile/password-change-form'
+import { PreferencesEditor } from '@/components/profile/preferences-editor'
+import { GDPRControls } from '@/components/profile/gdpr-controls'
+import { ArrangerKYCDocumentsTab } from '@/components/profile/arranger-kyc-documents-tab'
 
 type ArrangerInfo = {
   id: string
@@ -55,6 +60,7 @@ type ArrangerInfo = {
   status: string
   is_active: boolean
   created_at: string | null
+  logo_url?: string | null
 }
 
 type ArrangerUserInfo = {
@@ -91,13 +97,111 @@ const STATUS_STYLES: Record<string, string> = {
   suspended: 'bg-red-100 text-red-800 border-red-200',
 }
 
+// Editable field component
+function EditableField({
+  label,
+  value,
+  field,
+  isEditing,
+  editValue,
+  onChange,
+  type = 'text',
+  multiline = false,
+  icon: Icon,
+  className,
+}: {
+  label: string
+  value: string | null
+  field: string
+  isEditing: boolean
+  editValue: string
+  onChange: (field: string, value: string) => void
+  type?: 'text' | 'email' | 'tel' | 'date'
+  multiline?: boolean
+  icon?: React.ComponentType<{ className?: string }>
+  className?: string
+}) {
+  if (isEditing) {
+    return (
+      <div className={cn("space-y-1.5", className)}>
+        <Label htmlFor={field} className="text-sm font-medium text-muted-foreground">
+          {label}
+        </Label>
+        {multiline ? (
+          <Textarea
+            id={field}
+            value={editValue}
+            onChange={(e) => onChange(field, e.target.value)}
+            placeholder={`Enter ${label.toLowerCase()}`}
+            rows={3}
+            className="mt-1"
+          />
+        ) : (
+          <Input
+            id={field}
+            type={type}
+            value={editValue}
+            onChange={(e) => onChange(field, e.target.value)}
+            placeholder={`Enter ${label.toLowerCase()}`}
+            className="mt-1"
+          />
+        )}
+      </div>
+    )
+  }
+
+  return (
+    <div className={cn("flex items-start gap-3", className)}>
+      {Icon && <Icon className="h-5 w-5 text-muted-foreground mt-0.5 flex-shrink-0" />}
+      <div className="min-w-0">
+        <label className="text-sm font-medium text-muted-foreground">{label}</label>
+        <p className={cn(
+          "text-foreground mt-1",
+          type === 'date' || field.includes('number') || field.includes('id') ? 'font-mono' : '',
+          multiline && 'whitespace-pre-line'
+        )}>
+          {value || <span className="text-muted-foreground italic">Not set</span>}
+        </p>
+      </div>
+    </div>
+  )
+}
+
 export function ArrangerProfileClient({
   userEmail,
   profile,
-  arrangerInfo,
+  arrangerInfo: initialArrangerInfo,
   arrangerUserInfo,
   dealCount,
 }: ArrangerProfileClientProps) {
+  const [arrangerInfo, setArrangerInfo] = useState(initialArrangerInfo)
+  const [isEditingEntity, setIsEditingEntity] = useState(false)
+  const [isEditingRegulatory, setIsEditingRegulatory] = useState(false)
+  const [isEditingContact, setIsEditingContact] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false)
+  const logoInputRef = useRef<HTMLInputElement>(null)
+
+  // Edit form data
+  const [entityForm, setEntityForm] = useState({
+    legal_name: arrangerInfo?.legal_name || '',
+    registration_number: arrangerInfo?.registration_number || '',
+    tax_id: arrangerInfo?.tax_id || '',
+  })
+
+  const [regulatoryForm, setRegulatoryForm] = useState({
+    regulator: arrangerInfo?.regulator || '',
+    license_number: arrangerInfo?.license_number || '',
+    license_type: arrangerInfo?.license_type || '',
+    license_expiry_date: arrangerInfo?.license_expiry_date || '',
+  })
+
+  const [contactForm, setContactForm] = useState({
+    email: arrangerInfo?.email || '',
+    phone: arrangerInfo?.phone || '',
+    address: arrangerInfo?.address || '',
+  })
+
   if (!arrangerInfo) {
     return (
       <div className="p-6">
@@ -135,17 +239,195 @@ export function ArrangerProfileClient({
     return expiryDate <= thirtyDaysFromNow && expiryDate > new Date()
   }
 
+  // Save handlers
+  const handleSaveEntity = async () => {
+    setIsSaving(true)
+    try {
+      const response = await fetch('/api/arrangers/me/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(entityForm),
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || 'Failed to save')
+      }
+
+      setArrangerInfo(prev => prev ? { ...prev, ...entityForm } : null)
+      setIsEditingEntity(false)
+      toast.success('Entity details updated successfully')
+    } catch (error: any) {
+      console.error('Error saving entity:', error)
+      toast.error(error.message || 'Failed to save entity details')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const handleSaveRegulatory = async () => {
+    setIsSaving(true)
+    try {
+      const response = await fetch('/api/arrangers/me/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(regulatoryForm),
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || 'Failed to save')
+      }
+
+      setArrangerInfo(prev => prev ? { ...prev, ...regulatoryForm } : null)
+      setIsEditingRegulatory(false)
+      toast.success('Regulatory information updated successfully')
+    } catch (error: any) {
+      console.error('Error saving regulatory:', error)
+      toast.error(error.message || 'Failed to save regulatory information')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const handleSaveContact = async () => {
+    setIsSaving(true)
+    try {
+      const response = await fetch('/api/arrangers/me/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(contactForm),
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || 'Failed to save')
+      }
+
+      setArrangerInfo(prev => prev ? { ...prev, ...contactForm } : null)
+      setIsEditingContact(false)
+      toast.success('Contact information updated successfully')
+    } catch (error: any) {
+      console.error('Error saving contact:', error)
+      toast.error(error.message || 'Failed to save contact information')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  // Cancel handlers
+  const handleCancelEntity = () => {
+    setEntityForm({
+      legal_name: arrangerInfo.legal_name || '',
+      registration_number: arrangerInfo.registration_number || '',
+      tax_id: arrangerInfo.tax_id || '',
+    })
+    setIsEditingEntity(false)
+  }
+
+  const handleCancelRegulatory = () => {
+    setRegulatoryForm({
+      regulator: arrangerInfo.regulator || '',
+      license_number: arrangerInfo.license_number || '',
+      license_type: arrangerInfo.license_type || '',
+      license_expiry_date: arrangerInfo.license_expiry_date || '',
+    })
+    setIsEditingRegulatory(false)
+  }
+
+  const handleCancelContact = () => {
+    setContactForm({
+      email: arrangerInfo.email || '',
+      phone: arrangerInfo.phone || '',
+      address: arrangerInfo.address || '',
+    })
+    setIsEditingContact(false)
+  }
+
+  // Logo upload handler
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // Validate file type
+    if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) {
+      toast.error('Please upload a PNG, JPEG, or WebP image')
+      return
+    }
+
+    // Validate file size (2MB max)
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('File size must be less than 2MB')
+      return
+    }
+
+    setIsUploadingLogo(true)
+    try {
+      const formData = new FormData()
+      formData.append('logo', file)
+
+      const response = await fetch('/api/arrangers/me/logo', {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || 'Failed to upload logo')
+      }
+
+      const data = await response.json()
+      setArrangerInfo(prev => prev ? { ...prev, logo_url: data.logo_url } : null)
+      toast.success('Logo uploaded successfully')
+    } catch (error: any) {
+      console.error('Error uploading logo:', error)
+      toast.error(error.message || 'Failed to upload logo')
+    } finally {
+      setIsUploadingLogo(false)
+      if (logoInputRef.current) {
+        logoInputRef.current.value = ''
+      }
+    }
+  }
+
   return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
+    <div className="p-6 space-y-6 max-w-6xl mx-auto">
+      {/* Header with Logo Upload */}
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-4">
-          <div className="h-16 w-16 rounded-xl bg-primary/10 flex items-center justify-center">
-            <Building2 className="h-8 w-8 text-primary" />
+          <div
+            className="relative h-16 w-16 rounded-xl bg-primary/10 flex items-center justify-center cursor-pointer group overflow-hidden"
+            onClick={() => logoInputRef.current?.click()}
+          >
+            {arrangerInfo.logo_url ? (
+              <Image
+                src={arrangerInfo.logo_url}
+                alt={arrangerInfo.legal_name}
+                fill
+                className="object-cover"
+              />
+            ) : (
+              <Building2 className="h-8 w-8 text-primary" />
+            )}
+            <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+              {isUploadingLogo ? (
+                <Loader2 className="h-5 w-5 text-white animate-spin" />
+              ) : (
+                <Camera className="h-5 w-5 text-white" />
+              )}
+            </div>
+            <input
+              ref={logoInputRef}
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              className="hidden"
+              onChange={handleLogoUpload}
+              disabled={isUploadingLogo}
+            />
           </div>
           <div>
             <h1 className="text-2xl font-bold text-foreground">
-              {arrangerInfo.company_name || arrangerInfo.legal_name}
+              {arrangerInfo.legal_name}
             </h1>
             <p className="text-muted-foreground">
               {profile?.full_name || userEmail} - {arrangerUserInfo.role || 'Member'}
@@ -287,43 +569,100 @@ export function ArrangerProfileClient({
 
       {/* Profile Details Tabs */}
       <Tabs defaultValue="details" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="details">Entity Details</TabsTrigger>
-          <TabsTrigger value="regulatory">Regulatory Info</TabsTrigger>
-          <TabsTrigger value="contact">Contact</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-4 md:grid-cols-8 h-auto p-1 gap-1">
+          <TabsTrigger value="details" className="flex items-center gap-2 text-xs sm:text-sm">
+            <Building2 className="h-4 w-4" />
+            <span className="hidden sm:inline">Entity</span>
+          </TabsTrigger>
+          <TabsTrigger value="regulatory" className="flex items-center gap-2 text-xs sm:text-sm">
+            <FileText className="h-4 w-4" />
+            <span className="hidden sm:inline">Regulatory</span>
+          </TabsTrigger>
+          <TabsTrigger value="contact" className="flex items-center gap-2 text-xs sm:text-sm">
+            <Mail className="h-4 w-4" />
+            <span className="hidden sm:inline">Contact</span>
+          </TabsTrigger>
+          <TabsTrigger value="documents" className="flex items-center gap-2 text-xs sm:text-sm">
+            <Shield className="h-4 w-4" />
+            <span className="hidden sm:inline">KYC</span>
+          </TabsTrigger>
+          <TabsTrigger value="signature" className="flex items-center gap-2 text-xs sm:text-sm">
+            <PenTool className="h-4 w-4" />
+            <span className="hidden sm:inline">Signature</span>
+          </TabsTrigger>
+          <TabsTrigger value="security" className="flex items-center gap-2 text-xs sm:text-sm">
+            <Lock className="h-4 w-4" />
+            <span className="hidden sm:inline">Security</span>
+          </TabsTrigger>
+          <TabsTrigger value="preferences" className="flex items-center gap-2 text-xs sm:text-sm">
+            <Settings className="h-4 w-4" />
+            <span className="hidden sm:inline">Preferences</span>
+          </TabsTrigger>
+          <TabsTrigger value="privacy" className="flex items-center gap-2 text-xs sm:text-sm">
+            <Shield className="h-4 w-4" />
+            <span className="hidden sm:inline">Privacy</span>
+          </TabsTrigger>
         </TabsList>
 
+        {/* Entity Details Tab - EDITABLE */}
         <TabsContent value="details">
           <Card>
             <CardHeader>
-              <CardTitle>Entity Details</CardTitle>
-              <CardDescription>Legal and registration information</CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Entity Details</CardTitle>
+                  <CardDescription>Legal and registration information</CardDescription>
+                </div>
+                {!isEditingEntity ? (
+                  <Button variant="outline" size="sm" onClick={() => setIsEditingEntity(true)}>
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit
+                  </Button>
+                ) : (
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" onClick={handleCancelEntity} disabled={isSaving}>
+                      <X className="h-4 w-4 mr-2" />
+                      Cancel
+                    </Button>
+                    <Button size="sm" onClick={handleSaveEntity} disabled={isSaving}>
+                      {isSaving ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <Save className="h-4 w-4 mr-2" />
+                      )}
+                      Save
+                    </Button>
+                  </div>
+                )}
+              </div>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">Legal Name</label>
-                  <p className="text-foreground mt-1">{arrangerInfo.legal_name}</p>
-                </div>
-                {arrangerInfo.company_name && (
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">Company Name</label>
-                    <p className="text-foreground mt-1">{arrangerInfo.company_name}</p>
-                  </div>
-                )}
-                {arrangerInfo.registration_number && (
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">Registration Number</label>
-                    <p className="text-foreground mt-1 font-mono">{arrangerInfo.registration_number}</p>
-                  </div>
-                )}
-                {arrangerInfo.tax_id && (
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">Tax ID</label>
-                    <p className="text-foreground mt-1 font-mono">{arrangerInfo.tax_id}</p>
-                  </div>
-                )}
-                {arrangerInfo.created_at && (
+                <EditableField
+                  label="Legal Name"
+                  value={arrangerInfo.legal_name}
+                  field="legal_name"
+                  isEditing={isEditingEntity}
+                  editValue={entityForm.legal_name}
+                  onChange={(_, v) => setEntityForm(f => ({ ...f, legal_name: v }))}
+                />
+                <EditableField
+                  label="Registration Number"
+                  value={arrangerInfo.registration_number}
+                  field="registration_number"
+                  isEditing={isEditingEntity}
+                  editValue={entityForm.registration_number}
+                  onChange={(_, v) => setEntityForm(f => ({ ...f, registration_number: v }))}
+                />
+                <EditableField
+                  label="Tax ID"
+                  value={arrangerInfo.tax_id}
+                  field="tax_id"
+                  isEditing={isEditingEntity}
+                  editValue={entityForm.tax_id}
+                  onChange={(_, v) => setEntityForm(f => ({ ...f, tax_id: v }))}
+                />
+                {arrangerInfo.created_at && !isEditingEntity && (
                   <div>
                     <label className="text-sm font-medium text-muted-foreground">Member Since</label>
                     <p className="text-foreground mt-1">{formatDate(arrangerInfo.created_at)}</p>
@@ -334,50 +673,78 @@ export function ArrangerProfileClient({
           </Card>
         </TabsContent>
 
+        {/* Regulatory Tab - EDITABLE (except KYC) */}
         <TabsContent value="regulatory">
           <Card>
             <CardHeader>
-              <CardTitle>Regulatory Information</CardTitle>
-              <CardDescription>Licensing and compliance details</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {arrangerInfo.regulator && (
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">Regulator</label>
-                    <p className="text-foreground mt-1">{arrangerInfo.regulator}</p>
-                  </div>
-                )}
-                {arrangerInfo.license_number && (
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">License Number</label>
-                    <p className="text-foreground mt-1 font-mono">{arrangerInfo.license_number}</p>
-                  </div>
-                )}
-                {arrangerInfo.license_type && (
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">License Type</label>
-                    <p className="text-foreground mt-1">{arrangerInfo.license_type}</p>
-                  </div>
-                )}
-                {arrangerInfo.license_expiry_date && (
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">License Expiry</label>
-                    <p className={cn(
-                      "mt-1",
-                      isLicenseExpired() ? "text-red-600 font-medium" :
-                      isLicenseExpiringSoon() ? "text-amber-600 font-medium" :
-                      "text-foreground"
-                    )}>
-                      {formatDate(arrangerInfo.license_expiry_date)}
-                    </p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Regulatory Information</CardTitle>
+                  <CardDescription>Licensing and compliance details</CardDescription>
+                </div>
+                {!isEditingRegulatory ? (
+                  <Button variant="outline" size="sm" onClick={() => setIsEditingRegulatory(true)}>
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit
+                  </Button>
+                ) : (
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" onClick={handleCancelRegulatory} disabled={isSaving}>
+                      <X className="h-4 w-4 mr-2" />
+                      Cancel
+                    </Button>
+                    <Button size="sm" onClick={handleSaveRegulatory} disabled={isSaving}>
+                      {isSaving ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <Save className="h-4 w-4 mr-2" />
+                      )}
+                      Save
+                    </Button>
                   </div>
                 )}
               </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <EditableField
+                  label="Regulator"
+                  value={arrangerInfo.regulator}
+                  field="regulator"
+                  isEditing={isEditingRegulatory}
+                  editValue={regulatoryForm.regulator}
+                  onChange={(_, v) => setRegulatoryForm(f => ({ ...f, regulator: v }))}
+                />
+                <EditableField
+                  label="License Number"
+                  value={arrangerInfo.license_number}
+                  field="license_number"
+                  isEditing={isEditingRegulatory}
+                  editValue={regulatoryForm.license_number}
+                  onChange={(_, v) => setRegulatoryForm(f => ({ ...f, license_number: v }))}
+                />
+                <EditableField
+                  label="License Type"
+                  value={arrangerInfo.license_type}
+                  field="license_type"
+                  isEditing={isEditingRegulatory}
+                  editValue={regulatoryForm.license_type}
+                  onChange={(_, v) => setRegulatoryForm(f => ({ ...f, license_type: v }))}
+                />
+                <EditableField
+                  label="License Expiry"
+                  value={arrangerInfo.license_expiry_date ? formatDate(arrangerInfo.license_expiry_date) : null}
+                  field="license_expiry_date"
+                  isEditing={isEditingRegulatory}
+                  editValue={regulatoryForm.license_expiry_date}
+                  onChange={(_, v) => setRegulatoryForm(f => ({ ...f, license_expiry_date: v }))}
+                  type="date"
+                />
+              </div>
 
-              {/* KYC Details */}
+              {/* KYC Details - READ ONLY */}
               <div className="border-t pt-4 mt-4">
-                <h4 className="font-medium text-foreground mb-3">KYC Verification</h4>
+                <h4 className="font-medium text-foreground mb-3">KYC Verification (Read-only)</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="text-sm font-medium text-muted-foreground">Status</label>
@@ -413,186 +780,121 @@ export function ArrangerProfileClient({
           </Card>
         </TabsContent>
 
+        {/* Contact Tab - EDITABLE */}
         <TabsContent value="contact">
           <Card>
             <CardHeader>
-              <CardTitle>Contact Information</CardTitle>
-              <CardDescription>How to reach the arranger entity</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {arrangerInfo.email && (
-                  <div className="flex items-start gap-3">
-                    <Mail className="h-5 w-5 text-muted-foreground mt-0.5" />
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Email</label>
-                      <p className="text-foreground">{arrangerInfo.email}</p>
-                    </div>
-                  </div>
-                )}
-                {arrangerInfo.phone && (
-                  <div className="flex items-start gap-3">
-                    <Phone className="h-5 w-5 text-muted-foreground mt-0.5" />
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Phone</label>
-                      <p className="text-foreground">{arrangerInfo.phone}</p>
-                    </div>
-                  </div>
-                )}
-                {arrangerInfo.address && (
-                  <div className="flex items-start gap-3 md:col-span-2">
-                    <MapPin className="h-5 w-5 text-muted-foreground mt-0.5" />
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Address</label>
-                      <p className="text-foreground whitespace-pre-line">{arrangerInfo.address}</p>
-                    </div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Contact Information</CardTitle>
+                  <CardDescription>How to reach the arranger entity</CardDescription>
+                </div>
+                {!isEditingContact ? (
+                  <Button variant="outline" size="sm" onClick={() => setIsEditingContact(true)}>
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit
+                  </Button>
+                ) : (
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" onClick={handleCancelContact} disabled={isSaving}>
+                      <X className="h-4 w-4 mr-2" />
+                      Cancel
+                    </Button>
+                    <Button size="sm" onClick={handleSaveContact} disabled={isSaving}>
+                      {isSaving ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <Save className="h-4 w-4 mr-2" />
+                      )}
+                      Save
+                    </Button>
                   </div>
                 )}
               </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <EditableField
+                  label="Email"
+                  value={arrangerInfo.email}
+                  field="email"
+                  isEditing={isEditingContact}
+                  editValue={contactForm.email}
+                  onChange={(_, v) => setContactForm(f => ({ ...f, email: v }))}
+                  type="email"
+                  icon={isEditingContact ? undefined : Mail}
+                />
+                <EditableField
+                  label="Phone"
+                  value={arrangerInfo.phone}
+                  field="phone"
+                  isEditing={isEditingContact}
+                  editValue={contactForm.phone}
+                  onChange={(_, v) => setContactForm(f => ({ ...f, phone: v }))}
+                  type="tel"
+                  icon={isEditingContact ? undefined : Phone}
+                />
+                <EditableField
+                  label="Address"
+                  value={arrangerInfo.address}
+                  field="address"
+                  isEditing={isEditingContact}
+                  editValue={contactForm.address}
+                  onChange={(_, v) => setContactForm(f => ({ ...f, address: v }))}
+                  multiline
+                  icon={isEditingContact ? undefined : MapPin}
+                  className="md:col-span-2"
+                />
+              </div>
 
-              {!arrangerInfo.email && !arrangerInfo.phone && !arrangerInfo.address && (
+              {!arrangerInfo.email && !arrangerInfo.phone && !arrangerInfo.address && !isEditingContact && (
                 <div className="text-center py-8 text-muted-foreground">
-                  No contact information on file.
+                  No contact information on file. Click Edit to add.
                 </div>
               )}
             </CardContent>
           </Card>
         </TabsContent>
+
+        {/* KYC Documents Tab */}
+        <TabsContent value="documents">
+          <ArrangerKYCDocumentsTab
+            arrangerId={arrangerInfo.id}
+            arrangerName={arrangerInfo.legal_name}
+            kycStatus={arrangerInfo.kyc_status}
+          />
+        </TabsContent>
+
+        {/* Signature Tab */}
+        <TabsContent value="signature">
+          <SignatureSpecimenTab />
+        </TabsContent>
+
+        {/* Security Tab */}
+        <TabsContent value="security">
+          <Card>
+            <CardHeader>
+              <CardTitle>Security Settings</CardTitle>
+              <CardDescription>
+                Manage your account security and password
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <PasswordChangeForm />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Preferences Tab */}
+        <TabsContent value="preferences">
+          <PreferencesEditor variant="arranger" />
+        </TabsContent>
+
+        {/* Privacy Tab */}
+        <TabsContent value="privacy">
+          <GDPRControls variant="light" />
+        </TabsContent>
       </Tabs>
-
-      {/* Profile Update Request */}
-      <ProfileUpdateCard arrangerInfo={arrangerInfo} />
     </div>
-  )
-}
-
-function ProfileUpdateCard({ arrangerInfo }: { arrangerInfo: ArrangerInfo }) {
-  const [isOpen, setIsOpen] = useState(false)
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [submitted, setSubmitted] = useState(false)
-  const [formData, setFormData] = useState({
-    email: arrangerInfo.email || '',
-    phone: arrangerInfo.phone || '',
-    address: arrangerInfo.address || '',
-    notes: '',
-  })
-
-  const handleSubmit = async () => {
-    setIsSubmitting(true)
-    try {
-      const response = await fetch('/api/arrangers/me/profile', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to submit request')
-      }
-
-      setSubmitted(true)
-      setTimeout(() => {
-        setIsOpen(false)
-        setSubmitted(false)
-      }, 2000)
-    } catch (error) {
-      console.error('Error submitting profile update:', error)
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-sm flex items-center gap-2">
-          <Edit className="h-4 w-4" />
-          Request Profile Update
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <p className="text-sm text-muted-foreground mb-4">
-          Need to update your contact information or profile details?
-          Submit a request and our team will review and process your changes.
-        </p>
-        <Dialog open={isOpen} onOpenChange={setIsOpen}>
-          <DialogTrigger asChild>
-            <Button variant="default" size="sm">
-              Request Update
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>Request Profile Update</DialogTitle>
-              <DialogDescription>
-                Submit your requested changes. Our team will review and process your request.
-              </DialogDescription>
-            </DialogHeader>
-            {submitted ? (
-              <div className="py-8 text-center">
-                <CheckCircle2 className="h-12 w-12 text-green-600 mx-auto mb-3" />
-                <p className="text-lg font-medium">Request Submitted!</p>
-                <p className="text-sm text-muted-foreground">
-                  Our team will review your request shortly.
-                </p>
-              </div>
-            ) : (
-              <>
-                <div className="grid gap-4 py-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      placeholder="contact@company.com"
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="phone">Phone</Label>
-                    <Input
-                      id="phone"
-                      value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      placeholder="+1 234 567 8900"
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="address">Address</Label>
-                    <Textarea
-                      id="address"
-                      value={formData.address}
-                      onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                      placeholder="Enter full address"
-                      rows={3}
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="notes">Additional Notes</Label>
-                    <Textarea
-                      id="notes"
-                      value={formData.notes}
-                      onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                      placeholder="Any additional changes or context..."
-                      rows={2}
-                    />
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setIsOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button onClick={handleSubmit} disabled={isSubmitting}>
-                    {isSubmitting && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-                    Submit Request
-                  </Button>
-                </DialogFooter>
-              </>
-            )}
-          </DialogContent>
-        </Dialog>
-      </CardContent>
-    </Card>
   )
 }

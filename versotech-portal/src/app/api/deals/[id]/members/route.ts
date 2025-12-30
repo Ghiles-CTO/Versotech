@@ -20,10 +20,21 @@ const addMemberSchema = z.object({
     'viewer',
     'verso_staff'
   ]),
-  send_notification: z.boolean().default(true)
+  send_notification: z.boolean().default(true),
+  // Referral tracking - who referred this investor to the deal
+  referred_by_entity_id: z.string().uuid().optional(),
+  referred_by_entity_type: z.enum(['partner', 'introducer', 'commercial_partner']).optional()
 }).refine(
   (data) => data.user_id || data.investor_id || data.email,
   { message: 'Must provide user_id, investor_id, or email' }
+).refine(
+  (data) => {
+    // If one referral field is provided, both must be provided
+    const hasEntityId = !!data.referred_by_entity_id
+    const hasEntityType = !!data.referred_by_entity_type
+    return hasEntityId === hasEntityType
+  },
+  { message: 'Both referred_by_entity_id and referred_by_entity_type must be provided together' }
 )
 
 export async function GET(
@@ -192,7 +203,10 @@ export async function POST(
         investor_id: resolvedInvestorId,
         role: validatedData.role,
         invited_by: user.id,
-        accepted_at: new Date().toISOString() // Auto-accept for staff-added members
+        accepted_at: new Date().toISOString(), // Auto-accept for staff-added members
+        // Referral tracking - who referred this investor to the deal
+        referred_by_entity_id: validatedData.referred_by_entity_id || null,
+        referred_by_entity_type: validatedData.referred_by_entity_type || null
       })
       .select(`
         *,
@@ -233,7 +247,7 @@ export async function POST(
           investorId: resolvedInvestorId ?? undefined,
           title: 'Deal Invitation',
           message: `You've been invited to view ${dealName}. Review the deal details and data room.`,
-          link: `/versoholdings/deals/${dealId}`,
+          link: `/versotech_main/opportunities/${dealId}`,
           type: 'deal_invite',
           extraMetadata: {
             deal_id: dealId,
@@ -255,7 +269,9 @@ export async function POST(
       metadata: {
         added_user_id: resolvedUserId,
         role: validatedData.role,
-        investor_id: resolvedInvestorId
+        investor_id: resolvedInvestorId,
+        referred_by_entity_id: validatedData.referred_by_entity_id || null,
+        referred_by_entity_type: validatedData.referred_by_entity_type || null
       }
     })
 

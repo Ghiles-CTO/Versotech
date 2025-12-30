@@ -887,9 +887,10 @@ export async function handleIntroducerAgreementSignature(
   // Get arranger info if applicable
   let arrangerEntity = null
   if (agreement.arranger_id) {
+    // Note: arranger_entities has no 'company_name' - use legal_name only
     const { data: arranger } = await supabase
       .from('arranger_entities')
-      .select('id, legal_name, company_name')
+      .select('id, legal_name')
       .eq('id', agreement.arranger_id)
       .single()
     arrangerEntity = arranger
@@ -989,7 +990,7 @@ export async function handleIntroducerAgreementSignature(
 
         // Create notification for introducer
         const notificationMessage = isArrangerSigner
-          ? `Your fee agreement has been signed by ${arrangerEntity?.company_name || arrangerEntity?.legal_name || 'the Arranger'} and is ready for your signature.`
+          ? `Your fee agreement has been signed by ${arrangerEntity?.legal_name || 'the Arranger'} and is ready for your signature.`
           : 'Your fee agreement has been signed by the CEO and is ready for your signature.'
 
         await supabase.from('investor_notifications').insert({
@@ -1183,9 +1184,10 @@ export async function handlePlacementAgreementSignature(
       const primaryCpUser = cpUsers[0]
 
       // Get user email from profiles
+      // Note: profiles has 'display_name' not 'full_name'
       const { data: userProfile } = await supabase
         .from('profiles')
-        .select('email, full_name')
+        .select('email, display_name')
         .eq('id', primaryCpUser.user_id)
         .single()
 

@@ -251,7 +251,7 @@ export async function middleware(request: NextRequest) {
 
     // Processes
     if (pathname === '/versotech/staff/processes') {
-      return createLegacyRedirect('/versotech_main/processes')
+      return createLegacyRedirect('/versotech_admin/processes')
     }
 
     // =========================================================================
@@ -591,7 +591,6 @@ export async function middleware(request: NextRequest) {
         '/versotech_main/audit',
         '/versotech_main/users',
         '/versotech_main/admin',
-        '/versotech_main/processes',
       ]
 
       const staffPaths = [

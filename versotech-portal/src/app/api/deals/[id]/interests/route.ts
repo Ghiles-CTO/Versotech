@@ -230,7 +230,7 @@ export async function POST(
         message: is_post_close
           ? `We will notify you when similar opportunities to ${dealRecord?.name ?? 'this deal'} become available.`
           : `Thanks for sharing your interest in ${dealRecord?.name ?? 'this deal'}. The VERSO team will review and respond shortly.`,
-        link: '/versoholdings/deals',
+        link: '/versotech_main/opportunities',
         metadata: {
           type: is_post_close ? 'closed_deal_interest' : 'deal_interest_submitted',
           deal_id: dealId,

@@ -17,9 +17,8 @@ export default async function KYCReviewPage() {
     redirect('/versotech_main/login')
   }
 
-  // Only CEO/staff can access KYC review
-  const isCEO = user.role === 'staff_admin' || user.role === 'ceo' ||
-                user.role === 'staff_ops' || user.role === 'staff_rm'
+  // Only CEO/staff_admin can access KYC review
+  const isCEO = user.role === 'staff_admin' || user.role === 'ceo'
 
   if (!isCEO) {
     redirect('/versotech_main/dashboard')

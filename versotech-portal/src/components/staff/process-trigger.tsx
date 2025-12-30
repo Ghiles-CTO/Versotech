@@ -188,7 +188,7 @@ export function ProcessTrigger({
         description: `Workflow run ID: ${result.workflow_run_id}`,
         action: {
           label: 'View',
-          onClick: () => window.open(`/versotech/staff/workflows/${result.workflow_run_id}`, '_blank')
+          onClick: () => window.open(`/versotech_main/workflows/${result.workflow_run_id}`, '_blank')
         }
       })
 

@@ -54,7 +54,7 @@ export function AskQuestionButton({ dealId, dealName, className }: AskQuestionBu
       const { conversation } = await response.json()
 
       // Navigate to messages page with the new conversation
-      router.push(`/versoholdings/messages?conversation=${conversation.id}`)
+      router.push(`/versotech_main/messages?conversation=${conversation.id}`)
     } catch (err) {
       console.error('Failed to create conversation:', err)
       setError(err instanceof Error ? err.message : 'Failed to start conversation')

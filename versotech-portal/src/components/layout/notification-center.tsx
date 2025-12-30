@@ -46,12 +46,13 @@ export function NotificationCenter({ className }: NotificationCenterProps) {
   const { activePersona } = usePersona()
   const { theme } = useTheme()
 
-  const isDark = theme === 'staff-dark'
-
-  // Wait for client-side hydration to complete
+  // Hydration fix: Only apply theme after component mounts to avoid SSR mismatch
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  // Use mounted check to prevent hydration mismatch (server renders light, client may have dark)
+  const isDark = mounted && theme === 'staff-dark'
 
   // Fetch notifications from multiple sources
   useEffect(() => {

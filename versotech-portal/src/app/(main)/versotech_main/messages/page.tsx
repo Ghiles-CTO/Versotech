@@ -32,14 +32,15 @@ export default async function MessagesPage() {
     )
   }
 
-  // Check if user has staff/CEO persona for full access
+  // Check if user has staff/CEO/arranger persona for full access
   const serviceSupabase = createServiceClient()
   const { data: personas } = await serviceSupabase.rpc('get_user_personas', {
     p_user_id: user.id
   })
 
+  // Staff and arrangers get elevated messaging access
   const hasStaffAccess = personas?.some(
-    (p: any) => p.persona_type === 'staff'
+    (p: any) => p.persona_type === 'staff' || p.persona_type === 'arranger'
   ) || false
 
   let conversationData: any[] = []

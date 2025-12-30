@@ -66,16 +66,17 @@ export async function GET(
     : subscription.deal
 
   if (dealData?.arranger_entity_id) {
+    // Note: arranger_entities has no 'company_name' column - use legal_name only
     const { data: arrangerEntity } = await serviceSupabase
       .from('arranger_entities')
-      .select('id, company_name, legal_name')
+      .select('id, legal_name')
       .eq('id', dealData.arranger_entity_id)
       .single()
 
     if (arrangerEntity) {
       arranger = {
         id: arrangerEntity.id,
-        company_name: arrangerEntity.company_name,
+        company_name: arrangerEntity.legal_name, // Map legal_name to company_name for backward compat
         legal_name: arrangerEntity.legal_name
       }
     }

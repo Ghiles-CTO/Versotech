@@ -26,7 +26,7 @@ const ENTITY_TABLES: Record<string, string> = {
 // Entity type to ID column mapping in junction tables
 const ENTITY_ID_COLUMNS: Record<string, string> = {
   investor: 'investor_id',
-  arranger: 'arranger_entity_id',
+  arranger: 'arranger_id',
   lawyer: 'lawyer_id',
   introducer: 'introducer_id',
   partner: 'partner_id',

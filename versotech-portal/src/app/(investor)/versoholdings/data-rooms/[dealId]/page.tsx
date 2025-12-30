@@ -177,7 +177,7 @@ export default async function DataRoomDetailPage({ params }: PageProps) {
       <div className="p-4 max-w-[1600px] mx-auto space-y-4">
         {/* Back button */}
         <Link
-          href="/versoholdings/data-rooms"
+          href="/versotech_main/data-rooms"
           className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 font-medium"
         >
           <ArrowLeft className="h-4 w-4" />

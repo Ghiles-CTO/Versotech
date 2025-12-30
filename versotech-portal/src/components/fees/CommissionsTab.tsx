@@ -271,7 +271,7 @@ export default function CommissionsTab() {
                   <div>
                     <CardTitle className="text-lg text-white flex items-center gap-2">
                       {group.introducer.legal_name}
-                      <Link href={`/versotech/staff/introducers/${group.introducer.id}`}>
+                      <Link href={`/versotech_main/introducers/${group.introducer.id}`}>
                         <Button variant="ghost" size="sm" className="h-6 px-2">
                           <ExternalLink className="h-3 w-3" />
                         </Button>

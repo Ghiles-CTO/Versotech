@@ -210,7 +210,7 @@ export function PartnerDetailClient({ partner, metrics }: PartnerDetailClientPro
       </div>
 
       {/* Tabbed Content */}
-      <Tabs defaultValue="overview" className="space-y-6">
+      <Tabs defaultValue="overview" className="space-y-6" id={`partner-tabs-${partner.id}`}>
         <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:inline-grid">
           <TabsTrigger value="overview" className="gap-2">
             <Briefcase className="h-4 w-4" />

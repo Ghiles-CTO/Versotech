@@ -274,7 +274,7 @@ export function PositionDetailModal({
           )}
 
           {!loading && !error && (
-            <Tabs defaultValue="cashflows" className="h-full flex flex-col">
+            <Tabs defaultValue="cashflows" className="h-full flex flex-col" id={`position-tabs-${holdingId}`}>
               <div className="flex-shrink-0 px-6 py-3 border-b bg-white">
                 <TabsList className="grid w-full grid-cols-4 bg-gray-100 p-1">
                   <TabsTrigger value="cashflows" className="gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm transition-all">

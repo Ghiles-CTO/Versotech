@@ -102,7 +102,7 @@ export function RequestAnalyticsClient() {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => router.push('/versotech/staff/requests')}
+                onClick={() => router.push('/versotech_main/requests')}
                 className="gap-2 text-white hover:text-white"
               >
                 <ArrowLeft className="h-4 w-4" />

@@ -35,6 +35,14 @@ export async function POST(
     return NextResponse.json({ error: 'No file provided' }, { status: 400 })
   }
 
+  const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')
+  if (documentType === 'subscription_pack' && !isPdf) {
+    return NextResponse.json(
+      { error: 'Only PDF files can be uploaded for final subscription packs' },
+      { status: 400 }
+    )
+  }
+
   // Get subscription details
   const serviceSupabase = createServiceClient()
   const { data: subscription } = await serviceSupabase
@@ -119,6 +127,15 @@ export async function POST(
     // Cleanup: remove the uploaded file
     await serviceSupabase.storage.from('deal-documents').remove([fileKey])
     return NextResponse.json({ error: 'Failed to create document record' }, { status: 500 })
+  }
+
+  if (documentType === 'subscription_pack') {
+    const now = new Date().toISOString()
+    await serviceSupabase
+      .from('subscriptions')
+      .update({ pack_generated_at: now })
+      .eq('id', subscriptionId)
+      .is('pack_generated_at', null)
   }
 
   console.log('✅ Final subscription pack uploaded:', document.id)

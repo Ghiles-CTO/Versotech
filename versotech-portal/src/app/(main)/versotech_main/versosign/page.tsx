@@ -59,6 +59,17 @@ export default async function VersoSignPage() {
   const isStaff = personas?.some((p: any) => p.persona_type === 'staff') || false
   const isLawyer = personas?.some((p: any) => p.persona_type === 'lawyer') || false
   const isIntroducer = personas?.some((p: any) => p.persona_type === 'introducer') || false
+  const isArranger = personas?.some((p: any) => p.persona_type === 'arranger') || false
+
+  // Get arranger IDs if user has arranger persona
+  let arrangerIds: string[] = []
+  if (isArranger) {
+    const { data: arrangerLinks } = await serviceSupabase
+      .from('arranger_users')
+      .select('arranger_id')
+      .eq('user_id', user.id)
+    arrangerIds = arrangerLinks?.map(link => link.arranger_id) || []
+  }
 
   // Get introducer IDs if user has introducer persona
   let introducerIds: string[] = []
@@ -163,6 +174,25 @@ export default async function VersoSignPage() {
       .or(`owner_user_id.eq.${user.id},owner_investor_id.in.(${investorIds.join(',')})`)
       .order('due_at', { ascending: true, nullsFirst: false })
     tasks = investorTasks || []
+  } else if (isArranger && arrangerIds.length > 0) {
+    // Arrangers: See signature tasks for their mandates (deals with their arranger_entity_id)
+    const { data: arrangerDeals } = await serviceSupabase
+      .from('deals')
+      .select('id')
+      .in('arranger_entity_id', arrangerIds)
+
+    const arrangerDealIds = arrangerDeals?.map(d => d.id) || []
+
+    if (arrangerDealIds.length > 0) {
+      // Fetch tasks for arranger's deals - tasks assigned to them or for their mandates
+      const { data: arrangerTasks } = await serviceSupabase
+        .from('tasks')
+        .select('*')
+        .in('kind', ['countersignature', 'subscription_pack_signature'])
+        .or(`owner_user_id.eq.${user.id},related_deal_id.in.(${arrangerDealIds.join(',')})`)
+        .order('due_at', { ascending: true, nullsFirst: false })
+      tasks = arrangerTasks || []
+    }
   } else {
     // For non-investors: just tasks owned by the user directly
     const { data: userTasks } = await serviceSupabase
@@ -190,10 +220,10 @@ export default async function VersoSignPage() {
     expiredSignatures = (expiredData as unknown as ExpiredSignature[]) || []
   }
 
-  // If user has no signature tasks and no agreements to sign and is not staff/lawyer/introducer, show appropriate message
+  // If user has no signature tasks and no agreements to sign and is not staff/lawyer/introducer/arranger, show appropriate message
   const hasTasks = tasks && tasks.length > 0
   const hasAgreementsToSign = introducerAgreementsForSigning.length > 0
-  if (!hasTasks && !hasAgreementsToSign && !isStaff && !isLawyer && !isIntroducer) {
+  if (!hasTasks && !hasAgreementsToSign && !isStaff && !isLawyer && !isIntroducer && !isArranger) {
     return (
       <div className="p-6">
         <div className="text-center py-16">

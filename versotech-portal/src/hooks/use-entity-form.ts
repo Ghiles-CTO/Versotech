@@ -67,7 +67,7 @@ export function useEntityForm({
 
       // If creating, redirect to the new entity
       if (mode === 'create' && result.vehicle?.id) {
-        router.push(`/versotech/staff/entities/${result.vehicle.id}`)
+        router.push(`/versotech_main/entities/${result.vehicle.id}`)
       }
     } catch (error) {
       console.error(`Failed to ${mode} entity:`, error)

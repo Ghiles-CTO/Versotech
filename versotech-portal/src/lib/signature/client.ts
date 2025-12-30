@@ -212,8 +212,32 @@ export async function createSignatureRequest(
     }
 
     // Include subscription_id and document_id if provided (for manual uploads)
+    // Also look up deal_id from subscription for task linking
+    let deal_id: string | null = params.deal_id ?? null
+
+    // If deal_id provided directly, use it
+    if (params.deal_id) {
+      insertData.deal_id = params.deal_id
+      console.log('📋 [SIGNATURE] Using provided deal_id:', deal_id)
+    }
+
     if (params.subscription_id) {
       insertData.subscription_id = params.subscription_id
+
+      // Look up deal_id from subscription if not already provided
+      if (!deal_id) {
+        const { data: subscription } = await supabase
+          .from('subscriptions')
+          .select('deal_id')
+          .eq('id', params.subscription_id)
+          .single()
+
+        if (subscription?.deal_id) {
+          deal_id = subscription.deal_id
+          insertData.deal_id = deal_id  // Also set on signature_request
+          console.log('📋 [SIGNATURE] Found deal_id from subscription:', deal_id)
+        }
+      }
     }
     if (params.document_id) {
       insertData.document_id = params.document_id
@@ -298,6 +322,7 @@ export async function createSignatureRequest(
           priority: 'high',
           related_entity_type: 'signature_request',
           related_entity_id: signatureRequest.id,
+          related_deal_id: deal_id,  // Link task to deal for VERSOSign queries
           instructions: {
             type: 'signature',
             action_url: signing_url,
@@ -366,6 +391,7 @@ export async function createSignatureRequest(
           priority: 'high',
           related_entity_type: 'signature_request',
           related_entity_id: signatureRequest.id,
+          related_deal_id: deal_id,  // Link task to deal for VERSOSign queries
           due_at: token_expires_at.toISOString(),
           instructions: {
             type: 'signature',
@@ -402,7 +428,7 @@ export async function createSignatureRequest(
             type: 'signature_required',
             title: `${document_type.toUpperCase()} Ready for Signature`,
             message: `Your ${document_type} document is ready for signature. Please sign within ${Math.floor((token_expires_at.getTime() - Date.now()) / (24 * 60 * 60 * 1000))} days.`,
-            action_url: `/versoholdings/tasks`,
+            action_url: `/versotech_main/tasks`,
             metadata: {
               signature_request_id: signatureRequest.id,
               document_type: document_type
@@ -439,6 +465,7 @@ export async function createSignatureRequest(
             priority: 'high',
             related_entity_type: 'signature_request',
             related_entity_id: signatureRequest.id,
+            related_deal_id: deal_id,  // Link task to deal for VERSOSign queries
             instructions: {
               type: 'manual_follow_up',
               action_url: signing_url,

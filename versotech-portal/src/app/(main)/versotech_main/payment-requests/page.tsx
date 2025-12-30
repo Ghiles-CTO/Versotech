@@ -39,7 +39,6 @@ import { createClient } from '@/lib/supabase/client'
 type ArrangerInfo = {
   id: string
   legal_name: string
-  company_name: string | null
 }
 
 type FeeEvent = {
@@ -132,7 +131,7 @@ export default function PaymentRequestsPage() {
         // Fetch arranger info
         const { data: arranger, error: arrangerError } = await supabase
           .from('arranger_entities')
-          .select('id, legal_name, company_name')
+          .select('id, legal_name')
           .eq('id', arrangerUser.arranger_id)
           .single()
 
@@ -321,7 +320,7 @@ export default function PaymentRequestsPage() {
           <h1 className="text-2xl font-bold text-foreground">Payment Requests</h1>
           <p className="text-muted-foreground mt-1">
             {arrangerInfo
-              ? `Manage fee collections for ${arrangerInfo.company_name || arrangerInfo.legal_name}`
+              ? `Manage fee collections for ${arrangerInfo.legal_name}`
               : 'Manage your fee collections and payment requests'}
           </p>
         </div>

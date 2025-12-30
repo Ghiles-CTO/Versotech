@@ -4,6 +4,7 @@ import { auditLogger, AuditActions } from '@/lib/audit'
 import { NextResponse } from 'next/server'
 import { triggerWorkflow } from '@/lib/trigger-workflow'
 import { createSignatureRequest } from '@/lib/signature/client'
+import { getCeoSigner } from '@/lib/staff/ceo-signer'
 
 /**
  * Generate subscription pack filename with standardized format:
@@ -441,6 +442,14 @@ async function handleEntityApproval(
             })
 
             if (investorData && dealData && user) {
+              const ceoSigner = await getCeoSigner(supabase)
+              if (!ceoSigner) {
+                console.warn('[approvals] No CEO signer found, defaulting to approver profile')
+              }
+
+              const countersignerName = ceoSigner?.displayName || user.displayName || user.email?.split('@')[0] || 'Authorized Signatory'
+              const countersignerTitle = ceoSigner?.title || 'Authorized Signatory'
+
               // Prepare NDA payload with all required fields
               const ndaPayload = {
                 series_number: dealData.vehicle?.entity_code || 'VC206',
@@ -458,8 +467,8 @@ async function handleEntityApproval(
                 party_b_name: dealData.vehicle?.name || 'VERSO Capital 2 SCSP Series 206 ("VC206")',
                 party_b_registered_address: '2, Avenue Charles de Gaulle – L-1653',
                 party_b_city_country: dealData.vehicle?.domicile || 'Luxembourg, LU',
-                party_b_representative_name: 'Julien Machot',
-                party_b_representative_title: 'Managing Partner',
+                party_b_representative_name: countersignerName,
+                party_b_representative_title: countersignerTitle,
 
                 // Execution details
                 dataroom_email: investorData.email || 'email@required.com',
@@ -509,6 +518,7 @@ async function handleEntityApproval(
                     const investorSigPayload = {
                       workflow_run_id: result.workflow_run_id,
                       investor_id: investorData.id,
+                      deal_id: dealInterest.deal_id,  // Link to deal for VERSOSign queries
                       signer_email: investorData.email,
                       signer_name: investorData.legal_name || investorData.display_name,
                       document_type: 'nda' as const,
@@ -536,8 +546,9 @@ async function handleEntityApproval(
                     const adminSigPayload = {
                       workflow_run_id: result.workflow_run_id,
                       investor_id: investorData.id,
-                      signer_email: 'cto@versoholdings.com',
-                      signer_name: 'Julien Machot',
+                      deal_id: dealInterest.deal_id,  // Link to deal for VERSOSign queries
+                      signer_email: ceoSigner?.email || user.email,
+                      signer_name: countersignerName,
                       document_type: 'nda' as const,
                       google_drive_file_id: googleDriveFile.id,
                       google_drive_url: googleDriveFile.webContentLink || googleDriveFile.webViewLink,
@@ -1116,6 +1127,13 @@ async function handleEntityApproval(
                           console.error('❌ Failed to create document record:', docError)
                         } else {
                           console.log('✅ Subscription pack document created:', docRecord.id)
+
+                          const packGeneratedAt = new Date().toISOString()
+                          await supabase
+                            .from('subscriptions')
+                            .update({ pack_generated_at: packGeneratedAt })
+                            .eq('id', subscriptionId)
+                            .is('pack_generated_at', null)
 
                           // Update workflow_run with document_id in output_data
                           await supabase

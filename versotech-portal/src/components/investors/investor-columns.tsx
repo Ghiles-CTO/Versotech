@@ -274,7 +274,7 @@ export const investorColumns: ColumnDef<InvestorRow>[] = [
                 Invite User
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link href={`/versotech/staff/investors/${investor.id}`}>
+                <Link href={`/versotech_main/investors/${investor.id}`}>
                   <Eye className="mr-2 h-4 w-4" />
                   View Details
                 </Link>

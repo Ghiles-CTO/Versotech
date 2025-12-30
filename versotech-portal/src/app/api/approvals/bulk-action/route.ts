@@ -32,13 +32,13 @@ function checkApprovalAuthority(
 ): { canApprove: boolean; reason?: string } {
   const { role } = profile
 
-  // Admins can approve anything
-  if (role === 'staff_admin') {
+  // CEO/staff_admin can approve anything
+  if (role === 'staff_admin' || role === 'ceo') {
     return { canApprove: true }
   }
 
   // Must be assigned to the approval or have senior role
-  if (approval.assigned_to !== profile.id && role !== 'staff_admin') {
+  if (approval.assigned_to !== profile.id && role !== 'staff_admin' && role !== 'ceo') {
     return { canApprove: false, reason: 'Not assigned to this approval' }
   }
 

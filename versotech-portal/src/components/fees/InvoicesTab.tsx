@@ -237,7 +237,7 @@ export default function InvoicesTab() {
           </div>
         </div>
 
-        <Tabs defaultValue="uninvoiced" className="w-full">
+        <Tabs defaultValue="uninvoiced" className="w-full" id="invoices-tab-tabs">
           <TabsList>
             <TabsTrigger value="uninvoiced">
               Uninvoiced Fees

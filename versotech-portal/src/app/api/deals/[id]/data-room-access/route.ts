@@ -210,7 +210,7 @@ export async function POST(
         investorId: investor_id,
         title: 'Data Room Access Granted',
         message: `You have been granted access to the data room for ${dealName}. Review the deal documents now.`,
-        link: `/versoholdings/deals/${dealId}`,
+        link: `/versotech_main/opportunities/${dealId}`,
         type: 'deal_access',
         extraMetadata: {
           deal_id: dealId,

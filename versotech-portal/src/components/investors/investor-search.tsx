@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { Input } from '@/components/ui/input'
 import { Search, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -10,24 +10,42 @@ export function InvestorSearch() {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
-  const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || '')
+  const currentQ = searchParams.get('q') || ''
+  const [searchTerm, setSearchTerm] = useState(currentQ)
   const [isSearching, setIsSearching] = useState(false)
+  const isInitialMount = useRef(true)
+
+  // Memoized function to build and navigate
+  const navigateWithSearch = useCallback((term: string) => {
+    const params = new URLSearchParams(searchParams.toString())
+
+    if (term.trim()) {
+      params.set('q', term.trim())
+    } else {
+      params.delete('q')
+    }
+
+    // Reset to page 1 when searching
+    params.set('page', '1')
+
+    router.push(`${pathname}?${params.toString()}`)
+  }, [router, pathname, searchParams])
 
   useEffect(() => {
+    // Skip the initial mount to prevent unnecessary navigation
+    if (isInitialMount.current) {
+      isInitialMount.current = false
+      return
+    }
+
+    // Don't navigate if the search term hasn't actually changed from URL
+    if (searchTerm === currentQ) {
+      return
+    }
+
     setIsSearching(true)
     const timer = setTimeout(() => {
-      const params = new URLSearchParams(searchParams.toString())
-
-      if (searchTerm.trim()) {
-        params.set('q', searchTerm.trim())
-      } else {
-        params.delete('q')
-      }
-
-      // Reset to page 1 when searching
-      params.set('page', '1')
-
-      router.push(`${pathname}?${params.toString()}`)
+      navigateWithSearch(searchTerm)
       setIsSearching(false)
     }, 300) // 300ms debounce
 
@@ -35,7 +53,14 @@ export function InvestorSearch() {
       clearTimeout(timer)
       setIsSearching(false)
     }
-  }, [searchTerm, router, pathname, searchParams])
+  }, [searchTerm]) // Only depend on searchTerm - intentionally exclude others to prevent loop
+
+  // Sync local state if URL changes externally (e.g., browser back/forward)
+  useEffect(() => {
+    if (currentQ !== searchTerm && !isSearching) {
+      setSearchTerm(currentQ)
+    }
+  }, [currentQ]) // Only sync when URL query changes
 
   const clearSearch = () => {
     setSearchTerm('')

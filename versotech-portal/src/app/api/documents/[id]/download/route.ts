@@ -98,7 +98,45 @@ export async function GET(
         }
       }
 
-      // If not a lawyer with access, check investor access
+      // If not a lawyer with access, check arranger access
+      if (!hasAccess) {
+        const { data: arrangerUser } = await serviceSupabase
+          .from('arranger_users')
+          .select('arranger_id')
+          .eq('user_id', user.id)
+          .maybeSingle()
+
+        if (arrangerUser?.arranger_id) {
+          let dealId = document.deal_id || null
+
+          // Get deal_id from subscription if not directly on document
+          if (!dealId && document.subscription_id) {
+            const { data: subscription } = await serviceSupabase
+              .from('subscriptions')
+              .select('deal_id')
+              .eq('id', document.subscription_id)
+              .maybeSingle()
+
+            dealId = subscription?.deal_id || null
+          }
+
+          // Check if this deal is managed by the arranger
+          if (dealId) {
+            const { data: managedDeal } = await serviceSupabase
+              .from('deals')
+              .select('id')
+              .eq('id', dealId)
+              .eq('arranger_entity_id', arrangerUser.arranger_id)
+              .maybeSingle()
+
+            if (managedDeal) {
+              hasAccess = true
+            }
+          }
+        }
+      }
+
+      // If not a lawyer or arranger with access, check investor access
       if (!hasAccess) {
         const { data: investorLinks } = await supabase
           .from('investor_users')

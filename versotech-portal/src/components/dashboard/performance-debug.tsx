@@ -122,7 +122,7 @@ export function PerformanceDebug({ className }: PerformanceDebugProps) {
       </CardHeader>
 
       <CardContent>
-        <Tabs defaultValue="cache" className="space-y-4">
+        <Tabs defaultValue="cache" className="space-y-4" id="performance-debug-tabs">
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="cache">Cache</TabsTrigger>
             <TabsTrigger value="performance">Performance</TabsTrigger>

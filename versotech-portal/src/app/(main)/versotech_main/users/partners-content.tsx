@@ -169,7 +169,7 @@ export default function PartnersContent() {
             user_id,
             role,
             is_primary,
-            profiles (
+            profiles:profiles!partner_users_user_fk (
               id,
               display_name,
               email

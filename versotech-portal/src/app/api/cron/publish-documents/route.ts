@@ -58,7 +58,7 @@ async function handleCronRequest(request: NextRequest) {
               investorId,
               title: 'New Document Available',
               message,
-              link: '/versoholdings/documents',
+              link: '/versotech_main/documents',
               type: 'document',
               extraMetadata: {
                 document_count: docInfo.count,

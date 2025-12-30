@@ -96,7 +96,7 @@ interface VehicleCardProps {
 
 export function VehicleCard({
   holding,
-  detailsBasePath = '/versoholdings/vehicle'
+  detailsBasePath = '/versotech_main/portfolio'
 }: VehicleCardProps) {
   const router = useRouter()
   const hasPosition = holding.position && holding.position.currentValue > 0

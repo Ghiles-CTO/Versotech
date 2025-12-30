@@ -260,6 +260,7 @@ export async function POST(request: NextRequest) {
           priority: 'medium',
           related_entity_type: 'deal',
           related_entity_id: deal_id,
+          related_deal_id: deal_id,  // Direct deal reference for VERSOSign queries
           due_at: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
           instructions: {
             type: 'subscription_prepare',
@@ -288,7 +289,7 @@ export async function POST(request: NextRequest) {
         investor_id,
         title: 'Data room unlocked',
         message: `Your NDA for ${dealName} is complete. The data room is now available for review.`,
-        link: '/versoholdings/data-rooms',
+        link: '/versotech_main/data-rooms',
         metadata: {
           type: 'nda_complete',
           deal_id,

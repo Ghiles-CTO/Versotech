@@ -36,5 +36,6 @@
   "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
     "supabase"
-  ]
+  ],
+  "outputStyle": "Explanatory"
 }

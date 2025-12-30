@@ -32,7 +32,7 @@ export default async function InvestorCalendarPage() {
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) {
-    redirect('/versoholdings/login')
+    redirect('/login')
   }
 
   const { data: investorLinks } = await supabase

@@ -88,12 +88,12 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
 
   if (vehicleError) {
     console.error('[VehicleDetailPage] Vehicle query error:', vehicleError)
-    redirect('/versoholdings/holdings')
+    redirect('/versotech_main/portfolio')
   }
 
   if (!vehicle) {
     console.warn('[VehicleDetailPage] Vehicle not found:', vehicleId)
-    redirect('/versoholdings/holdings')
+    redirect('/versotech_main/portfolio')
   }
 
   // Get investor IDs for this user
@@ -103,7 +103,7 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
     .eq('user_id', user.id)
 
   if (!investorLinks || investorLinks.length === 0) {
-    redirect('/versoholdings/holdings')
+    redirect('/versotech_main/portfolio')
   }
 
   const investorIds = investorLinks.map(link => link.investor_id)
@@ -118,12 +118,12 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
 
   if (subscriptionError) {
     console.error('[VehicleDetailPage] Subscription query error:', subscriptionError)
-    redirect('/versoholdings/holdings')
+    redirect('/versotech_main/portfolio')
   }
 
   if (!subscription) {
     console.warn('[VehicleDetailPage] No subscription found for vehicle:', vehicleId, 'investorIds:', investorIds)
-    redirect('/versoholdings/holdings')
+    redirect('/versotech_main/portfolio')
   }
 
   // Get additional data
@@ -239,7 +239,7 @@ export default async function VehicleDetailPage({ params }: { params: Promise<{ 
         {/* Enhanced Header */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <Link href="/versoholdings/holdings">
+            <Link href="/versotech_main/portfolio">
               <Button variant="ghost" size="sm" className="gap-2">
                 <ArrowLeft className="h-4 w-4" />
                 Back to Holdings

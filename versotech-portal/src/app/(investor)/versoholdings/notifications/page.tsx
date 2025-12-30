@@ -10,7 +10,7 @@ export default async function InvestorNotificationsPage() {
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) {
-    redirect('/versoholdings/login')
+    redirect('/login')
   }
 
   return (

@@ -1,0 +1,196 @@
+{
+  "main": {
+    "id": "74afc0796b5340b9",
+    "type": "split",
+    "children": [
+      {
+        "id": "151af9ec9387bcbf",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "3e117a3b32dcf196",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "ARRANGER_AUDIT_REPORT.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "ARRANGER_AUDIT_REPORT"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "c54beb1bf2f8dad9",
+    "type": "split",
+    "children": [
+      {
+        "id": "f5fb68ad4e55024d",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "fa32b80b5b7a6b50",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Files"
+            }
+          },
+          {
+            "id": "a88a8b5c17d60e33",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Search"
+            }
+          },
+          {
+            "id": "37607cd919d5f571",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "Bookmarks"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "bfa3bd3a436ffa8c",
+    "type": "split",
+    "children": [
+      {
+        "id": "8100d9fc33b0b211",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "6356f36fc787ea89",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "PERSONA_TESTING_GUIDE.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks for PERSONA_TESTING_GUIDE"
+            }
+          },
+          {
+            "id": "58403af4e7940ad8",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "PERSONA_TESTING_GUIDE.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Outgoing links from PERSONA_TESTING_GUIDE"
+            }
+          },
+          {
+            "id": "b3c4f3ad51701d9d",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "id": "b5fb0d1bc1523d82",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "All properties"
+            }
+          },
+          {
+            "id": "7c5fda3e22af6cbf",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "PERSONA_TESTING_GUIDE.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Outline of PERSONA_TESTING_GUIDE"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false,
+      "bases:Create new base": false
+    }
+  },
+  "active": "3e117a3b32dcf196",
+  "lastOpenFiles": [
+    "TESTING_GUIDE_V3.md",
+    "~$RANGER_AUDIT_REPORT.md",
+    "ARRANGER_AUDIT_REPORT.md",
+    "PERSONA_TESTING_GUIDE.md",
+    "Nir meeting.md",
+    "Welcome.md",
+    "create a link.md"
+  ]
+}

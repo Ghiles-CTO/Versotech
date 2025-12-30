@@ -38,7 +38,7 @@ export function InvestorFilters() {
     // Reset to page 1 when filtering
     params.set('page', '1')
 
-    router.push(`/versotech/staff/investors?${params.toString()}`)
+    router.push(`/versotech_main/investors?${params.toString()}`)
 
     // Reset loading state after navigation starts
     setTimeout(() => setIsApplying(false), 500)
@@ -50,7 +50,7 @@ export function InvestorFilters() {
     params.delete('status')
     params.delete('type')
     params.set('page', '1')
-    router.push(`/versotech/staff/investors?${params.toString()}`)
+    router.push(`/versotech_main/investors?${params.toString()}`)
     setTimeout(() => setIsApplying(false), 500)
   }
 

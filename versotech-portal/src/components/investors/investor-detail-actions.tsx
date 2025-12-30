@@ -52,7 +52,7 @@ export function InvestorDetailActions({ investor }: InvestorDetailActionsProps) 
 
       <Button
         className="bg-green-600 text-white hover:bg-green-700"
-        onClick={() => router.push('/versotech/staff/subscriptions')}
+        onClick={() => router.push('/versotech_main/subscriptions')}
       >
         <List className="h-4 w-4 mr-2" />
         Manage Subscriptions

@@ -21,7 +21,12 @@ export const formatDate = (value: string | Date | null | undefined) => {
   if (!value) return '—'
   const date = typeof value === 'string' ? new Date(value) : value
   if (Number.isNaN(date?.getTime?.())) return '—'
-  return date.toLocaleDateString()
+  // Use explicit locale to prevent hydration mismatch between server/client
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  })
 }
 
 

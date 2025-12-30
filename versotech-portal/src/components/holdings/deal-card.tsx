@@ -59,15 +59,15 @@ export function CleanDealCard({ deal }: { deal: DealHolding }) {
   const isPending = deal.allocation.status === 'pending'
   
   const handleViewDeal = () => {
-    router.push(`/versoholdings/deal/${deal.dealId}`)
+    router.push(`/versotech_main/opportunities/${deal.dealId}`)
   }
 
   const handleViewDocuments = () => {
-    router.push(`/versoholdings/documents?deal=${deal.dealId}`)
+    router.push(`/versotech_main/documents?deal=${deal.dealId}`)
   }
 
   const handleTrackStatus = () => {
-    router.push(`/versoholdings/deals?status=pending`)
+    router.push(`/versotech_main/opportunities?status=pending`)
   }
 
   const statusVariants = {

@@ -139,7 +139,7 @@ export async function POST(request: Request) {
                 investorId: subscription.investor_id,
                 title: 'Capital Call Issued',
                 message: `A capital call for ${vehicle.name} has been issued. Amount: ${data.call_pct}% of commitment. Due: ${dueDate}.`,
-                link: '/versoholdings/tasks',
+                link: '/versotech_main/tasks',
                 type: 'capital_call',
                 extraMetadata: {
                   capital_call_id: capitalCall.id,

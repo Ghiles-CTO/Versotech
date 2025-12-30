@@ -172,7 +172,7 @@ export function ApprovalDetailDrawer({
       })
 
       // Navigate to the conversation
-      router.push(`/versotech/staff/messages?conversation=${data.conversation.id}`)
+      router.push(`/versotech_main/messages?conversation=${data.conversation.id}`)
       onOpenChange(false)
     } catch (error) {
       console.error('Error creating conversation:', error)
@@ -288,7 +288,7 @@ export function ApprovalDetailDrawer({
 
         <Separator className="my-6" />
 
-        <Tabs defaultValue="overview" className="w-full">
+        <Tabs defaultValue="overview" className="w-full" id={`approval-tabs-${approval?.id || 'new'}`}>
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="timeline">Timeline</TabsTrigger>
@@ -310,7 +310,7 @@ export function ApprovalDetailDrawer({
                     <div>
                       <p className="text-sm text-slate-400">Deal Name</p>
                       <Link
-                        href={`/versotech/staff/deals/${approval.related_deal.id}`}
+                        href={`/versotech_main/deals/${approval.related_deal.id}`}
                         className="font-medium text-white hover:underline flex items-center gap-1"
                       >
                         {approval.related_deal.name}

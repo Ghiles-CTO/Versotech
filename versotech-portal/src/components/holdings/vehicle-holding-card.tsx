@@ -279,7 +279,7 @@ export function VehicleHoldingCard({ holding }: VehicleHoldingCardProps) {
             className="flex-1 transition-all duration-300 hover:scale-105 hover:shadow-md" 
             variant="outline"
           >
-            <Link href={`/versoholdings/vehicle/${holding.id}`}>
+            <Link href={`/versotech_main/portfolio/${holding.id}`}>
               View Page
               <ArrowRight className="h-4 w-4 ml-2 transition-transform duration-300 group-hover:translate-x-1" />
             </Link>

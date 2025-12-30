@@ -26,85 +26,186 @@ export default async function SubscriptionPacksPage() {
 
   const serviceSupabase = createServiceClient()
 
-  const { data: personas } = await serviceSupabase.rpc('get_user_personas', {
+  // Check user personas for access level
+  const { data: personas, error: personasError } = await serviceSupabase.rpc('get_user_personas', {
     p_user_id: user.id
   })
 
+  // Handle RPC errors gracefully
+  if (personasError) {
+    console.error('Failed to fetch user personas:', personasError)
+    return (
+      <div className="p-6">
+        <div className="text-center py-16">
+          <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-foreground mb-2">
+            Service Temporarily Unavailable
+          </h3>
+          <p className="text-muted-foreground">
+            Failed to load your profile. Please refresh the page or try again later.
+          </p>
+        </div>
+      </div>
+    )
+  }
+
   const isLawyer = personas?.some((p: any) => p.persona_type === 'lawyer') || false
+  const isArranger = personas?.some((p: any) => p.persona_type === 'arranger') || false
 
-  if (!isLawyer) {
+  // Allow access for both lawyers and arrangers
+  if (!isLawyer && !isArranger) {
     return (
       <div className="p-6">
         <div className="text-center py-16">
           <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-foreground mb-2">
-            Lawyer Access Required
+            Access Restricted
           </h3>
           <p className="text-muted-foreground">
-            This section is available only to assigned legal counsel.
+            This section is available to arrangers and assigned legal counsel.
           </p>
         </div>
       </div>
     )
   }
 
-  const { data: lawyerUser } = await serviceSupabase
-    .from('lawyer_users')
-    .select('lawyer_id')
-    .eq('user_id', user.id)
-    .maybeSingle()
+  // ===== LAWYER DATA FETCHING =====
+  let lawyerUser: { lawyer_id: string } | null = null
+  let lawyer: {
+    id: string
+    firm_name: string | null
+    display_name: string | null
+    specializations: string[] | null
+    is_active: boolean
+    assigned_deals: string[] | null
+  } | null = null
 
-  if (!lawyerUser?.lawyer_id) {
+  if (isLawyer) {
+    const { data: lu } = await serviceSupabase
+      .from('lawyer_users')
+      .select('lawyer_id')
+      .eq('user_id', user.id)
+      .maybeSingle()
+
+    lawyerUser = lu
+
+    if (lawyerUser?.lawyer_id) {
+      const { data: l } = await serviceSupabase
+        .from('lawyers')
+        .select('id, firm_name, display_name, specializations, is_active, assigned_deals')
+        .eq('id', lawyerUser.lawyer_id)
+        .maybeSingle()
+
+      lawyer = l
+    }
+  }
+
+  // ===== ARRANGER DATA FETCHING =====
+  let arrangerUser: { arranger_id: string } | null = null
+  let arrangerEntity: {
+    id: string
+    legal_name: string
+    status: string
+  } | null = null
+
+  if (isArranger) {
+    const { data: au } = await serviceSupabase
+      .from('arranger_users')
+      .select('arranger_id')
+      .eq('user_id', user.id)
+      .maybeSingle()
+
+    arrangerUser = au
+
+    if (arrangerUser?.arranger_id) {
+      const { data: ae } = await serviceSupabase
+        .from('arranger_entities')
+        .select('id, legal_name, status')
+        .eq('id', arrangerUser.arranger_id)
+        .maybeSingle()
+
+      arrangerEntity = ae
+    }
+  }
+
+  // Check if user has valid entity link
+  const hasLawyerAccess = isLawyer && lawyerUser?.lawyer_id
+  const hasArrangerAccess = isArranger && arrangerUser?.arranger_id
+
+  if (!hasLawyerAccess && !hasArrangerAccess) {
     return (
       <div className="p-6">
         <div className="text-center py-16">
           <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-foreground mb-2">
-            No Lawyer Profile Linked
+            No Profile Linked
           </h3>
           <p className="text-muted-foreground">
-            Please contact the VERSO team to link your lawyer profile.
+            Please contact the VERSO team to link your profile.
           </p>
         </div>
       </div>
     )
   }
 
-  const { data: lawyer } = await serviceSupabase
-    .from('lawyers')
-    .select('id, firm_name, display_name, specializations, is_active, assigned_deals')
-    .eq('id', lawyerUser.lawyer_id)
-    .maybeSingle()
+  // ===== GET DEAL IDs BASED ON PERSONA =====
+  let dealIds: string[] = []
 
-  // Get deals assigned to this lawyer
-  const { data: assignments, error: assignmentsError } = await serviceSupabase
-    .from('deal_lawyer_assignments')
-    .select('deal_id')
-    .eq('lawyer_id', lawyerUser.lawyer_id)
+  if (hasLawyerAccess && lawyerUser?.lawyer_id) {
+    // Lawyer: Get deals from assignments table
+    const { data: assignments, error: assignmentsError } = await serviceSupabase
+      .from('deal_lawyer_assignments')
+      .select('deal_id')
+      .eq('lawyer_id', lawyerUser.lawyer_id)
 
-  let dealIds = (assignments || []).map((assignment: any) => assignment.deal_id)
+    dealIds = (assignments || []).map((assignment: any) => assignment.deal_id)
 
-  // Fallback to lawyers.assigned_deals array if no assignments found
-  if ((!dealIds.length || assignmentsError) && lawyer?.assigned_deals?.length) {
-    dealIds = lawyer.assigned_deals
+    // Fallback to lawyers.assigned_deals array if no assignments found
+    if ((!dealIds.length || assignmentsError) && lawyer?.assigned_deals?.length) {
+      dealIds = lawyer.assigned_deals
+    }
+  } else if (hasArrangerAccess && arrangerUser?.arranger_id) {
+    // Arranger: Get deals where arranger_entity_id matches
+    const { data: arrangerDeals } = await serviceSupabase
+      .from('deals')
+      .select('id')
+      .eq('arranger_entity_id', arrangerUser.arranger_id)
+
+    dealIds = (arrangerDeals || []).map((d: any) => d.id)
   }
 
+  // ===== CREATE ENTITY INFO OBJECT =====
+  const entityInfo = hasLawyerAccess && lawyer
+    ? {
+        id: lawyer.id,
+        firm_name: lawyer.firm_name,
+        display_name: lawyer.display_name,
+        specializations: lawyer.specializations ?? null,
+        is_active: lawyer.is_active,
+        entity_type: 'lawyer' as const
+      }
+    : hasArrangerAccess && arrangerEntity
+    ? {
+        id: arrangerEntity.id,
+        firm_name: arrangerEntity.legal_name,
+        display_name: arrangerEntity.legal_name,
+        specializations: null,
+        is_active: arrangerEntity.status === 'active',
+        entity_type: 'arranger' as const
+      }
+    : null
+
+  // If no deals found, show empty state
   if (!dealIds.length) {
     return (
       <SubscriptionPacksClient
-        lawyerInfo={lawyer ? {
-          id: lawyer.id,
-          firm_name: lawyer.firm_name,
-          display_name: lawyer.display_name,
-          specializations: lawyer.specializations ?? null,
-          is_active: lawyer.is_active
-        } : null}
+        entityInfo={entityInfo}
         subscriptions={[]}
       />
     )
   }
 
-  // Fetch SIGNED subscriptions (committed, partially_funded, active) for assigned deals
+  // Fetch SIGNED subscriptions (committed, partially_funded, active) for relevant deals
   const { data: subscriptionsData } = await serviceSupabase
     .from('subscriptions')
     .select(`
@@ -138,7 +239,7 @@ export default async function SubscriptionPacksPage() {
   if (subscriptionIds.length > 0) {
     const { data: documents } = await serviceSupabase
       .from('documents')
-      .select('id, subscription_id, file_key, name, created_at, status, type')
+      .select('id, subscription_id, file_key, name, created_at, status, type, mime_type, file_size_bytes')
       .in('subscription_id', subscriptionIds)
       .eq('status', 'published')
       .or('type.eq.subscription,type.eq.subscription_pack,type.is.null')
@@ -155,9 +256,18 @@ export default async function SubscriptionPacksPage() {
   }
 
   const subscriptions = (subscriptionsData || []).map((sub: any) => {
+    // PostgREST returns single object for many-to-one relationships (not arrays)
     const deal = Array.isArray(sub.deals) ? sub.deals[0] : sub.deals
     const investor = Array.isArray(sub.investors) ? sub.investors[0] : sub.investors
     const document = documentsMap[sub.id]
+
+    // Log missing data for debugging (helps identify data integrity issues)
+    if (!deal) {
+      console.warn(`Subscription ${sub.id} missing deal data (deal_id: ${sub.deal_id})`)
+    }
+    if (!investor) {
+      console.warn(`Subscription ${sub.id} missing investor data (investor_id: ${sub.investor_id})`)
+    }
 
     return {
       id: sub.id,
@@ -169,23 +279,21 @@ export default async function SubscriptionPacksPage() {
       funded_amount: sub.funded_amount || 0,
       committed_at: sub.committed_at,
       funded_at: sub.funded_at,
-      deal_name: deal?.name || 'Unknown deal',
-      investor_name: investor?.display_name || investor?.legal_name || 'Unknown investor',
+      // Improved null safety: Show ID as fallback to help staff lookup missing records
+      deal_name: deal?.name || `Unknown (ID: ${sub.deal_id?.slice(0, 8) || 'N/A'})`,
+      investor_name: investor?.display_name || investor?.legal_name || `Unknown (ID: ${sub.investor_id?.slice(0, 8) || 'N/A'})`,
       document_id: document?.id || null,
       document_file_key: document?.file_key || null,
-      document_file_name: document?.name || null
+      document_file_name: document?.name || null,
+      document_mime_type: document?.mime_type || null,
+      document_file_size: document?.file_size_bytes || null,
+      document_type: document?.type || null
     }
   })
 
   return (
     <SubscriptionPacksClient
-      lawyerInfo={lawyer ? {
-        id: lawyer.id,
-        firm_name: lawyer.firm_name,
-        display_name: lawyer.display_name,
-        specializations: lawyer.specializations ?? null,
-        is_active: lawyer.is_active
-      } : null}
+      entityInfo={entityInfo}
       subscriptions={subscriptions}
     />
   )

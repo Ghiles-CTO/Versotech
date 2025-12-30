@@ -19,7 +19,7 @@ export async function AppLayout({ children, brand }: AppLayoutProps) {
   const profile = await getProfile()
 
   if (!profile) {
-    const loginUrl = brand === 'versoholdings' ? '/versoholdings/login' : '/versotech/login'
+    const loginUrl = '/login'
     redirect(loginUrl)
   }
 
@@ -35,12 +35,12 @@ export async function AppLayout({ children, brand }: AppLayoutProps) {
 
   if (brand === 'versoholdings' && profile.role !== 'investor') {
     console.log('[AppLayout] Redirecting non-investor from versoholdings')
-    redirect('/versotech/staff')
+    redirect('/versotech_main')
   }
 
   if (brand === 'versotech' && !isStaffRole) {
     console.log('[AppLayout] Redirecting non-staff from versotech')
-    redirect('/versoholdings/dashboard')
+    redirect('/versotech_main/dashboard')
   }
 
   console.log('[AppLayout] Access granted for', profile.email, 'to', brand)

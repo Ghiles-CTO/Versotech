@@ -53,10 +53,19 @@ export default async function CreateDealPage() {
     .select('id, name, type, currency, legal_jurisdiction, formation_date, logo_url, website_url')
     .order('name')
 
+  // Fetch active arranger entities for assignment
+  // Note: arranger_entities has no 'company_name' - use legal_name only
+  const { data: arrangerEntities } = await serviceClient
+    .from('arranger_entities')
+    .select('id, legal_name')
+    .eq('status', 'active')
+    .order('legal_name')
+
   return (
     <div className="p-6 max-w-5xl mx-auto">
       <CreateDealForm
         entities={entities || []}
+        arrangerEntities={arrangerEntities || []}
         basePath="/versotech_main"
       />
     </div>

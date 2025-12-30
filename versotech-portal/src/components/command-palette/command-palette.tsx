@@ -247,7 +247,7 @@ export function CommandPalette({ onQuickAddSubscription, brand = 'versotech' }: 
       description: 'Portfolio overview',
       icon: LayoutDashboard,
       keywords: ['home', 'overview'],
-      action: () => router.push('/versoholdings/dashboard'),
+      action: () => router.push('/versotech_main/dashboard'),
       group: 'navigation'
     },
     {
@@ -256,7 +256,7 @@ export function CommandPalette({ onQuickAddSubscription, brand = 'versotech' }: 
       description: 'Investment opportunities',
       icon: Activity,
       keywords: ['investments', 'opportunities'],
-      action: () => router.push('/versoholdings/deals'),
+      action: () => router.push('/versotech_main/opportunities'),
       group: 'navigation'
     },
     {
@@ -265,7 +265,7 @@ export function CommandPalette({ onQuickAddSubscription, brand = 'versotech' }: 
       description: 'My investments',
       icon: TrendingUp,
       keywords: ['investments', 'positions'],
-      action: () => router.push('/versoholdings/holdings'),
+      action: () => router.push('/versotech_main/portfolio'),
       group: 'navigation'
     },
     {
@@ -274,7 +274,7 @@ export function CommandPalette({ onQuickAddSubscription, brand = 'versotech' }: 
       description: 'Deadlines and events',
       icon: Calendar,
       keywords: ['schedule', 'deadlines'],
-      action: () => router.push('/versoholdings/calendar'),
+      action: () => router.push('/versotech_main/calendar'),
       group: 'navigation'
     },
     {
@@ -283,7 +283,7 @@ export function CommandPalette({ onQuickAddSubscription, brand = 'versotech' }: 
       description: 'Communication',
       icon: MessageSquare,
       keywords: ['chat', 'inbox'],
-      action: () => router.push('/versoholdings/messages'),
+      action: () => router.push('/versotech_main/messages'),
       group: 'navigation'
     },
     {
@@ -292,7 +292,7 @@ export function CommandPalette({ onQuickAddSubscription, brand = 'versotech' }: 
       description: 'Account settings',
       icon: Settings,
       keywords: ['preferences', 'profile'],
-      action: () => router.push('/versoholdings/settings'),
+      action: () => router.push('/versotech_main/profile'),
       group: 'navigation'
     }
   ]

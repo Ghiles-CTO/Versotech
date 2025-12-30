@@ -274,7 +274,7 @@ export function DealHoldingCard({ deal }: DealHoldingCardProps) {
             Allocation Details
           </Button>
 
-          <Link href={`/versoholdings/deal/${deal.dealId}`} className="flex-1">
+          <Link href={`/versotech_main/opportunities/${deal.dealId}`} className="flex-1">
             <Button className="w-full transition-all duration-300 hover:scale-105 hover:shadow-md" variant="outline">
               View Page
               <ArrowRight className="h-4 w-4 ml-2 transition-transform duration-300 group-hover:translate-x-1" />

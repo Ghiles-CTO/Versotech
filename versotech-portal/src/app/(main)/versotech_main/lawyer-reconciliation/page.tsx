@@ -90,9 +90,10 @@ export default async function LawyerReconciliationPage() {
 
     if (arrangerUser?.arranger_id) {
       // Get arranger details
+      // Note: arranger_entities uses 'legal_name' (no company_name) and 'status' (no is_active)
       const { data: arranger } = await serviceSupabase
         .from('arranger_entities')
-        .select('id, company_name, legal_name, is_active')
+        .select('id, legal_name, status')
         .eq('id', arrangerUser.arranger_id)
         .maybeSingle()
 
@@ -105,12 +106,13 @@ export default async function LawyerReconciliationPage() {
       const dealIds = (managedDeals || []).map((d: any) => d.id)
 
       // Create a lawyer-compatible info object for the arranger
+      // Map arranger_entities fields to lawyer-compatible structure
       const arrangerAsLawyerInfo = arranger ? {
         id: arranger.id,
-        firm_name: arranger.company_name,
-        display_name: arranger.company_name || arranger.legal_name,
+        firm_name: arranger.legal_name,
+        display_name: arranger.legal_name,
         specializations: ['Arranger'] as string[],
-        is_active: arranger.is_active
+        is_active: arranger.status === 'active'
       } : null
 
       return await renderReconciliationPage(serviceSupabase, dealIds, arrangerAsLawyerInfo)

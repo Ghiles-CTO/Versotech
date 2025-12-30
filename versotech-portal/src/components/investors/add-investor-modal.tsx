@@ -113,7 +113,7 @@ export function AddInvestorModal() {
       setOpen(false)
       
       // Force a hard navigation to refresh server component
-      window.location.href = '/versotech/staff/investors'
+      window.location.href = '/versotech_main/investors'
     } catch (error: any) {
       console.error('[AddInvestor] Error:', error)
       toast.error(error.message || 'Failed to create investor')

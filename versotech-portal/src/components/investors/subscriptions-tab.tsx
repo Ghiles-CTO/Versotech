@@ -269,7 +269,7 @@ export function SubscriptionsTab({ investorId }: { investorId: string }) {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => router.push('/versotech/staff/subscriptions')}
+                              onClick={() => router.push('/versotech_main/subscriptions')}
                             >
                               View Details
                               <ArrowRight className="h-4 w-4 ml-2" />

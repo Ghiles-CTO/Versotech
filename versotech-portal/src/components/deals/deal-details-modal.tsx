@@ -554,7 +554,7 @@ export function DealDetailsModal({ deal, investorId, children }: DealDetailsModa
               </div>
               <div className="flex flex-wrap items-center gap-3">
                 <Link
-                  href={`/versoholdings/messages?deal=${deal.id}`}
+                  href={`/versotech_main/messages?deal=${deal.id}`}
                   className="inline-flex items-center gap-2 rounded-md border border-gray-200 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
                 >
                   <MessageSquare className="h-4 w-4" />

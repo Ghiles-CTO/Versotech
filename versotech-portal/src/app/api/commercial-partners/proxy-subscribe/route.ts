@@ -281,7 +281,7 @@ export async function POST(request: Request) {
         investor_id: client_investor_id,
         title: 'Subscription Submitted',
         message: `${commercialPartner?.name} has submitted a subscription of ${commitment.toLocaleString()} for ${deal.name} on your behalf.`,
-        link: '/versoholdings/tasks',
+        link: '/versotech_main/tasks',
         metadata: {
           type: 'proxy_subscription',
           subscription_id: subscription.id,

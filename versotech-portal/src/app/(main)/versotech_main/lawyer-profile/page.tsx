@@ -80,9 +80,10 @@ export default async function LawyerProfilePage() {
     .maybeSingle()
 
   // Get user profile info
+  // Note: profiles has 'display_name' not 'full_name'
   const { data: profile } = await serviceSupabase
     .from('profiles')
-    .select('full_name, email, avatar_url')
+    .select('display_name, email, avatar_url')
     .eq('id', user.id)
     .maybeSingle()
 
@@ -90,7 +91,7 @@ export default async function LawyerProfilePage() {
     <LawyerProfileClient
       userEmail={user.email || ''}
       profile={profile ? {
-        full_name: profile.full_name,
+        full_name: profile.display_name, // Map display_name to full_name for client compat
         email: profile.email || user.email || '',
         avatar_url: profile.avatar_url
       } : null}

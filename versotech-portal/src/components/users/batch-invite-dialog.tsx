@@ -330,7 +330,7 @@ export function BatchInviteDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs defaultValue="manual" className="w-full">
+        <Tabs defaultValue="manual" className="w-full" id="batch-invite-tabs">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="manual">Manual Entry</TabsTrigger>
             <TabsTrigger value="csv">CSV Import</TabsTrigger>

@@ -283,7 +283,7 @@ export function PerformanceTrends({ investorIds, selectedDealId, className }: Pe
           </div>
         </div>
 
-        <Tabs defaultValue="nav-growth" className="space-y-4">
+        <Tabs defaultValue="nav-growth" className="space-y-4" id="performance-trends-tabs">
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="nav-growth">NAV Growth</TabsTrigger>
             <TabsTrigger value="multiples">DPI / TVPI</TabsTrigger>

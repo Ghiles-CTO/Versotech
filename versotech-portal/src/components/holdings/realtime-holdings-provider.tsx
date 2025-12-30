@@ -25,7 +25,7 @@ export function RealtimeHoldingsProvider({
   investorIds,
   onDataUpdate,
   enableNotifications = true,
-  holdingsPath = '/versoholdings/holdings'
+  holdingsPath = '/versotech_main/portfolio'
 }: RealtimeHoldingsProviderProps) {
   const [isConnected, setIsConnected] = useState(false)
   const [lastUpdate, setLastUpdate] = useState<string | null>(null)

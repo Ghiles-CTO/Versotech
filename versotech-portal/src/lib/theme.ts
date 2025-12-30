@@ -12,19 +12,19 @@ export const theme = {
   }
 }
 
-// Brand configuration for dual-brand entry points
+// Brand configuration for unified portal
 export const brands = {
   versoholdings: {
     name: 'VERSO',
-    loginPath: '/versoholdings/login',
-    dashboardPath: '/versoholdings/dashboard',
+    loginPath: '/login',
+    dashboardPath: '/versotech_main/dashboard',
     primary: theme.colors.blue,
     // Investor-focused branding
   },
   versotech: {
     name: 'VERSO Tech',
-    loginPath: '/versotech/login', 
-    dashboardPath: '/versotech/staff',
+    loginPath: '/login',
+    dashboardPath: '/versotech_main',
     primary: theme.colors.blue,
     // Staff-focused branding
   }

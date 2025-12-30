@@ -149,7 +149,7 @@ export function ProfilePageClient({ profile: initialProfile, variant = 'investor
 
       {/* Right Column - Tabs */}
       <div className="lg:col-span-2">
-        <Tabs defaultValue={defaultTab} className="w-full">
+        <Tabs defaultValue={defaultTab} className="w-full" id={`profile-tabs-${profile.id}`}>
           <TabsList className={isStaff ? "grid w-full grid-cols-3 bg-white/5 border border-white/10" : `grid w-full ${isEntityInvestor ? 'grid-cols-7' : 'grid-cols-6'}`}>
             <TabsTrigger
               value="profile"

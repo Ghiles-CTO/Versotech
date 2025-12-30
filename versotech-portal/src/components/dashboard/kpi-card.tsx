@@ -1,3 +1,4 @@
+import type { KeyboardEvent } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -39,6 +40,18 @@ export function KPICard({
   additionalInfo
 }: KPICardProps) {
   const isClickable = interactive && (onDrillDown || hasDetails)
+  const displayValue = typeof value === 'number' ? value.toString() : value
+
+  const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (!isClickable || !onDrillDown) {
+      return
+    }
+
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault()
+      onDrillDown()
+    }
+  }
 
   return (
     <Card
@@ -48,6 +61,10 @@ export function KPICard({
         className
       )}
       onClick={isClickable ? onDrillDown : undefined}
+      onKeyDown={isClickable ? handleKeyDown : undefined}
+      role={isClickable ? 'button' : undefined}
+      tabIndex={isClickable ? 0 : undefined}
+      aria-label={isClickable ? `${title}: ${displayValue}` : undefined}
     >
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium text-muted-foreground group-hover:text-gray-700 transition-colors">
@@ -62,15 +79,7 @@ export function KPICard({
       </CardHeader>
       <CardContent>
         <div className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent group-hover:from-blue-900 group-hover:to-blue-700 transition-all duration-300">
-          {typeof value === 'number' 
-            ? new Intl.NumberFormat('en-US', {
-                style: 'currency',
-                currency: 'USD',
-                minimumFractionDigits: 0,
-                maximumFractionDigits: 0
-              }).format(value)
-            : value
-          }
+          {displayValue}
         </div>
         {(subtitle || description) && (
           <p className="text-xs text-muted-foreground">
@@ -142,4 +151,3 @@ export function KPICard({
     </Card>
   )
 }
-

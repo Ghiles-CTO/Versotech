@@ -62,7 +62,7 @@ export function DealInterestTab({ dealId, interests, subscriptions }: DealIntere
             </CardDescription>
           </div>
           <Link
-            href={`/versotech/staff/approvals?entity=deal_interest&deal=${dealId}`}
+            href={`/versotech_main/approvals?entity=deal_interest&deal=${dealId}`}
             className="text-sm font-medium text-sky-300 hover:text-sky-200"
           >
             View related approvals ➜
@@ -89,7 +89,7 @@ export function DealInterestTab({ dealId, interests, subscriptions }: DealIntere
             </CardDescription>
           </div>
           <Link
-            href={`/versotech/staff/approvals?entity=deal_subscription&deal=${dealId}`}
+            href={`/versotech_main/approvals?entity=deal_subscription&deal=${dealId}`}
             className="text-sm font-medium text-sky-300 hover:text-sky-200"
           >
             View related approvals ➜

@@ -377,7 +377,7 @@ export function InvestorDealsListClient({
   subscriptionByDeal,
   primaryInvestorId,
   summary,
-  detailUrlBase = '/versoholdings/deal'
+  detailUrlBase = '/versotech_main/opportunities'
 }: InvestorDealsListClientProps) {
   const [mounted, setMounted] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')

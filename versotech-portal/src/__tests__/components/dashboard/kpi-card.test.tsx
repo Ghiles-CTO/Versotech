@@ -1,5 +1,5 @@
-import { describe, it, expect, vi } from 'vitest'
-import { render, screen, fireEvent } from '@/tests/utils/test-utils'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { render, screen, fireEvent } from '@/__tests__/utils/test-utils'
 import { KPICard } from '@/components/dashboard/kpi-card'
 import { TrendingUp, TrendingDown, DollarSign } from 'lucide-react'
 
@@ -39,7 +39,7 @@ describe('KPICard Component', () => {
   })
 
   it('displays icon when provided', () => {
-    render(
+    const { container } = render(
       <KPICard
         title="Revenue"
         value="$1,000,000"
@@ -49,7 +49,7 @@ describe('KPICard Component', () => {
 
     expect(screen.getByText('Revenue')).toBeInTheDocument()
     // Icon should be rendered (as SVG element)
-    const iconElement = screen.getByRole('img', { hidden: true })
+    const iconElement = container.querySelector('svg.lucide-dollar-sign')
     expect(iconElement).toBeInTheDocument()
   })
 
@@ -161,8 +161,9 @@ describe('KPICard Component', () => {
     const card = screen.getByRole('button')
     expect(card).toBeInTheDocument()
 
-    // Should show drill-down indicator
-    expect(screen.getByText('View Details')).toBeInTheDocument()
+    // Should show drill-down indicator dot
+    const indicator = card.querySelector('.bg-blue-400')
+    expect(indicator).toBeInTheDocument()
   })
 
   it('calls onDrillDown when interactive card is clicked', () => {
@@ -229,7 +230,7 @@ describe('KPICard Component', () => {
       />
     )
 
-    const card = screen.getByText('Custom Style').closest('div')
+    const card = screen.getByText('Custom Style').closest('[data-slot="card"]')
     expect(card).toHaveClass('custom-kpi-class')
   })
 
@@ -244,7 +245,7 @@ describe('KPICard Component', () => {
     )
 
     const card = screen.getByRole('button')
-    expect(card).toHaveClass('hover:shadow-md')
+    expect(card).toHaveClass('hover:shadow-xl')
   })
 
   it('displays loading state when value is empty', () => {
@@ -328,7 +329,7 @@ describe('KPICard Component', () => {
   })
 
   it('shows drill-down indicator only when hasDetails is true', () => {
-    const { rerender } = render(
+    const { container, rerender } = render(
       <KPICard
         title="Details Test"
         value="$500,000"
@@ -338,7 +339,7 @@ describe('KPICard Component', () => {
       />
     )
 
-    expect(screen.getByText('View Details')).toBeInTheDocument()
+    expect(container.querySelector('.bg-blue-400')).toBeInTheDocument()
 
     rerender(
       <KPICard
@@ -350,7 +351,7 @@ describe('KPICard Component', () => {
       />
     )
 
-    expect(screen.queryByText('View Details')).not.toBeInTheDocument()
+    expect(container.querySelector('.bg-blue-400')).not.toBeInTheDocument()
   })
 
   it('maintains accessibility attributes', () => {

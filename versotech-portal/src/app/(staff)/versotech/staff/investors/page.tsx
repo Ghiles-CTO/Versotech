@@ -231,7 +231,7 @@ export default async function InvestorsPage({
         ),
         investor_users (
           user_id,
-          profiles (
+          profiles:profiles!investor_users_user_id_fkey (
             id,
             display_name,
             email,

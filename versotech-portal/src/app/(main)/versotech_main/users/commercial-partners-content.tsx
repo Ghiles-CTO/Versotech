@@ -183,7 +183,7 @@ export default function CommercialPartnersContent() {
             role,
             is_primary,
             can_execute_for_clients,
-            profiles (
+            profiles:profiles!commercial_partner_users_user_fk (
               id,
               display_name,
               email

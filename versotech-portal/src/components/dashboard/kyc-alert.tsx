@@ -34,7 +34,7 @@ export function KYCAlert({ status }: KYCAlertProps) {
                         Your KYC application was rejected. Please review the feedback and update your information.
                     </span>
                     <Button variant="outline" size="sm" className="w-full sm:w-auto bg-background text-foreground hover:bg-accent" asChild>
-                        <Link href="/versoholdings/profile?tab=kyc">
+                        <Link href="/versotech_main/profile?tab=kyc">
                             Update Information
                             <ArrowRight className="ml-2 h-4 w-4" />
                         </Link>
@@ -54,7 +54,7 @@ export function KYCAlert({ status }: KYCAlertProps) {
                     To access all investment features, please complete your Know Your Customer (KYC) verification.
                 </span>
                 <Button size="sm" className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white border-0" asChild>
-                    <Link href="/versoholdings/profile?tab=kyc">
+                    <Link href="/versotech_main/profile?tab=kyc">
                         Complete Now
                         <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>

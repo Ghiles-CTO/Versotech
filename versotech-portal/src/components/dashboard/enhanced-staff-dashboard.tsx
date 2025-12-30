@@ -380,7 +380,7 @@ export function EnhancedStaffDashboard({
 
     // Memoize handlers
     const handleWorkflowTrigger = useCallback((workflowKey: string) => {
-        router.push(`/versotech/staff/processes?workflow=${workflowKey}`)
+        router.push(`/versotech_main/processes?workflow=${workflowKey}`)
         toast.info('Initiating Process', {
             description: `Workflow sequence ${workflowKey} started.`
         })

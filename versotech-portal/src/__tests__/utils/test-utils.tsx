@@ -1,76 +1,77 @@
 import React, { ReactElement } from 'react'
 import { render, RenderOptions } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { vi } from 'vitest'
 
 // Mock Supabase client
 export const mockSupabaseClient = {
-  from: jest.fn().mockReturnValue({
-    select: jest.fn().mockReturnValue({
-      eq: jest.fn().mockReturnValue({
-        single: jest.fn().mockReturnValue({
+  from: vi.fn().mockReturnValue({
+    select: vi.fn().mockReturnValue({
+      eq: vi.fn().mockReturnValue({
+        single: vi.fn().mockReturnValue({
           data: null,
           error: null
         })
       }),
-      in: jest.fn().mockReturnValue({
-        order: jest.fn().mockReturnValue({
-          limit: jest.fn().mockReturnValue({
+      in: vi.fn().mockReturnValue({
+        order: vi.fn().mockReturnValue({
+          limit: vi.fn().mockReturnValue({
             data: [],
             error: null
           })
         })
       }),
-      order: jest.fn().mockReturnValue({
-        limit: jest.fn().mockReturnValue({
+      order: vi.fn().mockReturnValue({
+        limit: vi.fn().mockReturnValue({
           data: [],
           error: null
         })
       })
     }),
-    insert: jest.fn().mockReturnValue({
+    insert: vi.fn().mockReturnValue({
       data: null,
       error: null
     }),
-    update: jest.fn().mockReturnValue({
+    update: vi.fn().mockReturnValue({
       data: null,
       error: null
     }),
-    delete: jest.fn().mockReturnValue({
+    delete: vi.fn().mockReturnValue({
       data: null,
       error: null
     })
   }),
-  channel: jest.fn().mockReturnValue({
-    on: jest.fn().mockReturnThis(),
-    subscribe: jest.fn().mockReturnValue('SUBSCRIBED')
+  channel: vi.fn().mockReturnValue({
+    on: vi.fn().mockReturnThis(),
+    subscribe: vi.fn().mockReturnValue('SUBSCRIBED')
   }),
-  removeChannel: jest.fn()
+  removeChannel: vi.fn()
 }
 
 // Mock the Supabase client module
-jest.mock('@/lib/supabase/client', () => ({
+vi.mock('@/lib/supabase/client', () => ({
   createClient: () => mockSupabaseClient
 }))
 
 // Mock the cache module
 export const mockCache = {
-  get: jest.fn(),
-  set: jest.fn(),
-  delete: jest.fn(),
-  clear: jest.fn(),
-  has: jest.fn(),
-  size: jest.fn().mockReturnValue(0)
+  get: vi.fn(),
+  set: vi.fn(),
+  delete: vi.fn(),
+  clear: vi.fn(),
+  has: vi.fn(),
+  size: vi.fn().mockReturnValue(0)
 }
 
-jest.mock('@/lib/cache', () => ({
+vi.mock('@/lib/cache', () => ({
   cache: mockCache,
   CacheKeys: {
-    dashboardData: jest.fn(),
-    performanceTrends: jest.fn(),
-    smartInsights: jest.fn(),
-    aiRecommendations: jest.fn(),
-    dealList: jest.fn(),
-    activityFeed: jest.fn()
+    dashboardData: vi.fn().mockReturnValue('dashboard-data'),
+    performanceTrends: vi.fn().mockReturnValue('performance-trends'),
+    smartInsights: vi.fn().mockReturnValue('smart-insights'),
+    aiRecommendations: vi.fn().mockReturnValue('ai-recommendations'),
+    dealList: vi.fn().mockReturnValue('deal-list'),
+    activityFeed: vi.fn().mockReturnValue('activity-feed')
   },
   CacheTTL: {
     DASHBOARD_DATA: 120000,
@@ -80,28 +81,28 @@ jest.mock('@/lib/cache', () => ({
     DEAL_LIST: 1800000,
     ACTIVITY_FEED: 60000
   },
-  generateDataHash: jest.fn().mockReturnValue('test-hash')
+  generateDataHash: vi.fn().mockReturnValue('test-hash')
 }))
 
 // Mock performance monitor
 export const mockPerformanceMonitor = {
-  startTiming: jest.fn(),
-  endTiming: jest.fn(),
-  recordMetric: jest.fn(),
-  getDashboardMetrics: jest.fn().mockReturnValue({
+  startTiming: vi.fn(),
+  endTiming: vi.fn(),
+  recordMetric: vi.fn(),
+  getDashboardMetrics: vi.fn().mockReturnValue({
     componentRenders: 5,
     dataFetches: 3,
     cacheHits: 2,
     averageRenderTime: 25.5,
     averageFetchTime: 150.2
   }),
-  getMemoryUsage: jest.fn().mockReturnValue({
+  getMemoryUsage: vi.fn().mockReturnValue({
     used: 50000000,
     total: 100000000,
     limit: 200000000,
     percentage: 50
   }),
-  getCoreWebVitals: jest.fn().mockReturnValue({
+  getCoreWebVitals: vi.fn().mockReturnValue({
     FCP: 1200,
     LCP: 2100,
     FID: 50,
@@ -109,18 +110,18 @@ export const mockPerformanceMonitor = {
   })
 }
 
-jest.mock('@/lib/performance-monitor', () => ({
+vi.mock('@/lib/performance-monitor', () => ({
   performanceMonitor: mockPerformanceMonitor,
-  usePerformanceMonitoring: jest.fn().mockReturnValue({
+  usePerformanceMonitoring: vi.fn().mockReturnValue({
     renderCount: 1,
-    startOperation: jest.fn(),
-    endOperation: jest.fn(),
-    recordMetric: jest.fn()
+    startOperation: vi.fn(),
+    endOperation: vi.fn(),
+    recordMetric: vi.fn()
   }),
   CachePerformance: {
-    recordHit: jest.fn(),
-    recordMiss: jest.fn(),
-    recordEviction: jest.fn()
+    recordHit: vi.fn(),
+    recordMiss: vi.fn(),
+    recordEviction: vi.fn()
   }
 }))
 
@@ -192,7 +193,7 @@ export const waitForLoadingToFinish = async () => {
 
 export const mockConsoleError = () => {
   const originalError = console.error
-  console.error = jest.fn()
+  console.error = vi.fn()
   return () => {
     console.error = originalError
   }
@@ -200,7 +201,7 @@ export const mockConsoleError = () => {
 
 export const mockConsoleLog = () => {
   const originalLog = console.log
-  console.log = jest.fn()
+  console.log = vi.fn()
   return () => {
     console.log = originalLog
   }

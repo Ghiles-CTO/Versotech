@@ -781,7 +781,7 @@ export default function MyMandatesPage() {
                       </TableCell>
                       <TableCell className="text-right">
                         <Button variant="ghost" size="sm" asChild>
-                          <Link href={`/versotech_main/opportunities/${mandate.id}`}>
+                          <Link href={`/versotech_main/my-mandates/${mandate.id}`}>
                             <ExternalLink className="h-4 w-4" />
                           </Link>
                         </Button>

@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
+import { cn } from '@/lib/utils'
 import {
   ArrowUpRight,
   Building2,
@@ -60,9 +61,15 @@ function formatVehicleMeta(vehicle: PortfolioVehicle) {
 }
 
 function DashboardSkeleton() {
+  const { theme } = useTheme()
+  const isDark = theme === 'staff-dark'
+
   return (
     <div className="space-y-8 animate-pulse">
-      <div className="rounded-3xl border border-slate-200/80 bg-white p-8">
+      <div className={cn(
+        "rounded-3xl border p-8",
+        isDark ? "border-white/10 bg-white/5" : "border-slate-200/80 bg-white"
+      )}>
         <div className="grid gap-8 lg:grid-cols-[1.9fr,1fr]">
           <div className="space-y-6">
             <div className="flex items-center gap-4">
@@ -92,19 +99,35 @@ function DashboardSkeleton() {
 }
 
 function HoldingsSnapshot({ vehicles }: { vehicles: PortfolioVehicle[] }) {
+  const { theme } = useTheme()
+  const isDark = theme === 'staff-dark'
   const displayed = vehicles.slice(0, 4)
 
   return (
-    <Card className="h-full overflow-hidden rounded-2xl border border-slate-200/80 shadow-sm">
+    <Card className={cn(
+      "h-full overflow-hidden rounded-2xl border shadow-sm",
+      isDark ? "border-white/10 bg-card" : "border-slate-200/80"
+    )}>
       <CardHeader className="space-y-1.5 border-b p-6">
-        <CardTitle className="text-base font-semibold text-slate-900">Portfolio snapshot</CardTitle>
-        <CardDescription className="text-sm text-slate-600">
+        <CardTitle className={cn(
+          "text-base font-semibold",
+          isDark ? "text-white" : "text-slate-900"
+        )}>Portfolio snapshot</CardTitle>
+        <CardDescription className={cn(
+          "text-sm",
+          isDark ? "text-gray-400" : "text-slate-600"
+        )}>
           At-a-glance view of the vehicles you&apos;re currently allocated to.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4 p-6">
         {displayed.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-slate-200/80 bg-slate-50/80 p-6 text-center text-sm text-slate-500">
+          <div className={cn(
+            "rounded-xl border border-dashed p-6 text-center text-sm",
+            isDark
+              ? "border-white/10 bg-white/5 text-gray-400"
+              : "border-slate-200/80 bg-slate-50/80 text-slate-500"
+          )}>
             No active holdings yet. Allocations will appear here once your onboarding is complete.
           </div>
         ) : (
@@ -113,11 +136,22 @@ function HoldingsSnapshot({ vehicles }: { vehicles: PortfolioVehicle[] }) {
               <Link
                 key={vehicle.id}
                 href={`/versotech_main/opportunities?vehicle=${vehicle.id}`}
-                className="flex items-center justify-between gap-4 rounded-xl border border-slate-200/80 bg-white/90 p-4 transition-all hover:border-primary/40 hover:bg-primary/5"
+                className={cn(
+                  "flex items-center justify-between gap-4 rounded-xl border p-4 transition-all hover:border-primary/40 hover:bg-primary/5",
+                  isDark
+                    ? "border-white/10 bg-white/5"
+                    : "border-slate-200/80 bg-white/90"
+                )}
               >
                 <div className="space-y-1">
-                  <p className="text-sm font-semibold text-slate-900">{vehicle.name}</p>
-                  <p className="text-xs text-slate-500">{formatVehicleMeta(vehicle)}</p>
+                  <p className={cn(
+                    "text-sm font-semibold",
+                    isDark ? "text-white" : "text-slate-900"
+                  )}>{vehicle.name}</p>
+                  <p className={cn(
+                    "text-xs",
+                    isDark ? "text-gray-400" : "text-slate-500"
+                  )}>{formatVehicleMeta(vehicle)}</p>
                 </div>
                 <ArrowUpRight className="h-4 w-4 text-primary" />
               </Link>
@@ -126,7 +160,12 @@ function HoldingsSnapshot({ vehicles }: { vehicles: PortfolioVehicle[] }) {
         )}
       </CardContent>
       <CardFooter className="flex flex-wrap items-center justify-between gap-3 border-t p-6">
-        <Badge variant="outline" className="rounded-full border-slate-200/80 bg-slate-50 text-slate-600">
+        <Badge variant="outline" className={cn(
+          "rounded-full",
+          isDark
+            ? "border-white/10 bg-white/5 text-gray-300"
+            : "border-slate-200/80 bg-slate-50 text-slate-600"
+        )}>
           {vehicles.length} vehicle{vehicles.length === 1 ? '' : 's'} tracked
         </Badge>
         <Link href="/versotech_main/opportunities">
@@ -141,35 +180,67 @@ function HoldingsSnapshot({ vehicles }: { vehicles: PortfolioVehicle[] }) {
 }
 
 function VersoServicesCard() {
+  const { theme } = useTheme()
+  const isDark = theme === 'staff-dark'
+
   return (
-    <Card className="h-full overflow-hidden rounded-2xl border border-slate-200/80 shadow-sm">
+    <Card className={cn(
+      "h-full overflow-hidden rounded-2xl border shadow-sm",
+      isDark ? "border-white/10 bg-card" : "border-slate-200/80"
+    )}>
       <CardHeader className="space-y-1.5 border-b p-6">
-        <CardTitle className="text-base font-semibold text-slate-900">VERSO concierge</CardTitle>
-        <CardDescription className="text-sm text-slate-600">
+        <CardTitle className={cn(
+          "text-base font-semibold",
+          isDark ? "text-white" : "text-slate-900"
+        )}>VERSO concierge</CardTitle>
+        <CardDescription className={cn(
+          "text-sm",
+          isDark ? "text-gray-400" : "text-slate-600"
+        )}>
           Direct access to deal rooms, bespoke reporting, and support.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3 p-6">
         <Link href="/versotech_main/opportunities">
-          <Button className="w-full justify-start rounded-xl border border-slate-200/80 bg-white/80 text-slate-700 hover:border-primary/40 hover:bg-primary/5" variant="outline">
+          <Button className={cn(
+            "w-full justify-start rounded-xl border hover:border-primary/40 hover:bg-primary/5",
+            isDark
+              ? "border-white/10 bg-white/5 text-gray-200"
+              : "border-slate-200/80 bg-white/80 text-slate-700"
+          )} variant="outline">
             <Layers className="mr-2 h-4 w-4" />
             Concluder™ Deal Room
           </Button>
         </Link>
         <Link href="/versotech_main/opportunities">
-          <Button className="w-full justify-start rounded-xl border border-slate-200/80 bg-white/80 text-slate-700 hover:border-primary/40 hover:bg-primary/5" variant="outline">
+          <Button className={cn(
+            "w-full justify-start rounded-xl border hover:border-primary/40 hover:bg-primary/5",
+            isDark
+              ? "border-white/10 bg-white/5 text-gray-200"
+              : "border-slate-200/80 bg-white/80 text-slate-700"
+          )} variant="outline">
             <Target className="mr-2 h-4 w-4" />
             Off-market opportunities
           </Button>
         </Link>
         <Link href="/versotech_main/documents">
-          <Button className="w-full justify-start rounded-xl border border-slate-200/80 bg-white/80 text-slate-700 hover:border-primary/40 hover:bg-primary/5" variant="outline">
+          <Button className={cn(
+            "w-full justify-start rounded-xl border hover:border-primary/40 hover:bg-primary/5",
+            isDark
+              ? "border-white/10 bg-white/5 text-gray-200"
+              : "border-slate-200/80 bg-white/80 text-slate-700"
+          )} variant="outline">
             <FileText className="mr-2 h-4 w-4" />
             Request position statement
           </Button>
         </Link>
         <Link href="/versotech_main/inbox">
-          <Button className="w-full justify-start rounded-xl border border-slate-200/80 bg-white/80 text-slate-700 hover:border-primary/40 hover:bg-primary/5" variant="outline">
+          <Button className={cn(
+            "w-full justify-start rounded-xl border hover:border-primary/40 hover:bg-primary/5",
+            isDark
+              ? "border-white/10 bg-white/5 text-gray-200"
+              : "border-slate-200/80 bg-white/80 text-slate-700"
+          )} variant="outline">
             <MessageSquare className="mr-2 h-4 w-4" />
             Custom analytics request
           </Button>
@@ -180,6 +251,9 @@ function VersoServicesCard() {
 }
 
 function WelcomePanel() {
+  const { theme } = useTheme()
+  const isDark = theme === 'staff-dark'
+
   const highlights = [
     {
       id: 'fund',
@@ -202,20 +276,35 @@ function WelcomePanel() {
   ]
 
   return (
-    <section className="rounded-3xl border border-slate-200/80 bg-white px-8 py-10 shadow-sm">
+    <section className={cn(
+      "rounded-3xl border px-8 py-10 shadow-sm",
+      isDark ? "border-white/10 bg-card" : "border-slate-200/80 bg-white"
+    )}>
       <div className="mx-auto flex max-w-4xl flex-col gap-8">
         <div className="flex flex-col items-center gap-6 text-center sm:flex-row sm:items-start sm:text-left">
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-900 text-white shadow-sm">
+          <div className={cn(
+            "flex h-16 w-16 items-center justify-center rounded-2xl shadow-sm",
+            isDark ? "bg-white/10 text-white" : "bg-slate-900 text-white"
+          )}>
             <Building2 className="h-7 w-7" />
           </div>
           <div className="space-y-3">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+            <p className={cn(
+              "text-[11px] font-semibold uppercase tracking-wider",
+              isDark ? "text-gray-400" : "text-slate-500"
+            )}>
               Investor onboarding
             </p>
-            <h2 className="text-3xl font-semibold text-slate-900">
+            <h2 className={cn(
+              "text-3xl font-semibold",
+              isDark ? "text-white" : "text-slate-900"
+            )}>
               Welcome to VERSO Holdings
             </h2>
-            <p className="text-sm text-slate-600">
+            <p className={cn(
+              "text-sm",
+              isDark ? "text-gray-400" : "text-slate-600"
+            )}>
               Complete your onboarding steps to unlock performance analytics, live deal access, and bespoke reporting matched to your mandate.
             </p>
           </div>
@@ -225,13 +314,29 @@ function WelcomePanel() {
           {highlights.map((highlight) => (
             <Card
               key={highlight.id}
-              className="rounded-2xl border border-slate-200/80 bg-slate-50/60 p-6 text-left shadow-sm"
+              className={cn(
+                "rounded-2xl border p-6 text-left shadow-sm",
+                isDark
+                  ? "border-white/10 bg-white/5"
+                  : "border-slate-200/80 bg-slate-50/60"
+              )}
             >
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white text-slate-900 shadow-sm">
+              <div className={cn(
+                "flex h-12 w-12 items-center justify-center rounded-xl shadow-sm",
+                isDark
+                  ? "bg-white/10 text-white"
+                  : "bg-white text-slate-900"
+              )}>
                 {highlight.icon}
               </div>
-              <h3 className="mt-4 text-sm font-semibold text-slate-900">{highlight.title}</h3>
-              <p className="mt-1 text-xs text-slate-600">{highlight.description}</p>
+              <h3 className={cn(
+                "mt-4 text-sm font-semibold",
+                isDark ? "text-white" : "text-slate-900"
+              )}>{highlight.title}</h3>
+              <p className={cn(
+                "mt-1 text-xs",
+                isDark ? "text-gray-400" : "text-slate-600"
+              )}>{highlight.description}</p>
             </Card>
           ))}
         </div>
@@ -254,6 +359,8 @@ function WelcomePanel() {
 }
 
 export function InvestorDashboard({ investorId, userId, persona }: InvestorDashboardProps) {
+  const { theme } = useTheme()
+  const isDark = theme === 'staff-dark'
   const [data, setData] = useState<InvestorDashboardData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -457,12 +564,20 @@ export function InvestorDashboard({ investorId, userId, persona }: InvestorDashb
   return (
     <div className="space-y-12 px-0 pb-16 pt-2">
       {/* Welcome Header Section */}
-      <section className="rounded-3xl border border-slate-200/80 bg-white p-8 shadow-sm">
+      <section className={cn(
+        "rounded-3xl border p-8 shadow-sm",
+        isDark ? "border-white/10 bg-card" : "border-slate-200/80 bg-white"
+      )}>
         <div className="grid gap-8 lg:grid-cols-[1.9fr,1fr]">
           <div className="space-y-6">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-4">
-                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-slate-100 to-slate-200 border border-slate-200 shadow-sm overflow-hidden">
+                <div className={cn(
+                  "flex h-16 w-16 items-center justify-center rounded-full border shadow-sm overflow-hidden",
+                  isDark
+                    ? "bg-gradient-to-br from-white/10 to-white/5 border-white/10"
+                    : "bg-gradient-to-br from-slate-100 to-slate-200 border-slate-200"
+                )}>
                   {data.profile?.avatarUrl ? (
                     <Image
                       src={data.profile.avatarUrl}
@@ -482,17 +597,29 @@ export function InvestorDashboard({ investorId, userId, persona }: InvestorDashb
                       priority
                     />
                   ) : (
-                    <UserIcon className="h-8 w-8 text-slate-400" />
+                    <UserIcon className={cn(
+                      "h-8 w-8",
+                      isDark ? "text-gray-400" : "text-slate-400"
+                    )} />
                   )}
                 </div>
                 <div className="space-y-1">
-                  <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                  <p className={cn(
+                    "text-[11px] font-semibold uppercase tracking-wide",
+                    isDark ? "text-gray-400" : "text-slate-500"
+                  )}>
                     Investor portal
                   </p>
-                  <h1 className="text-3xl font-semibold text-slate-900">
+                  <h1 className={cn(
+                    "text-3xl font-semibold",
+                    isDark ? "text-white" : "text-slate-900"
+                  )}>
                     Welcome, {firstName}
                   </h1>
-                  <p className="text-sm text-slate-600">
+                  <p className={cn(
+                    "text-sm",
+                    isDark ? "text-gray-400" : "text-slate-600"
+                  )}>
                     VERSO Holdings • Merchant Banking Group • Since 1958
                   </p>
                 </div>
@@ -503,25 +630,57 @@ export function InvestorDashboard({ investorId, userId, persona }: InvestorDashb
               {summaryTiles.map((tile) => (
                 <div
                   key={tile.label}
-                  className="rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4 shadow-sm"
+                  className={cn(
+                    "rounded-2xl border p-4 shadow-sm",
+                    isDark
+                      ? "border-white/10 bg-white/5"
+                      : "border-slate-200/80 bg-slate-50/70"
+                  )}
                 >
-                  <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                  <p className={cn(
+                    "text-[11px] font-semibold uppercase tracking-wide",
+                    isDark ? "text-gray-400" : "text-slate-500"
+                  )}>
                     {tile.label}
                   </p>
-                  <p className="mt-2 text-2xl font-semibold text-slate-900">{tile.value}</p>
-                  <p className="mt-1 text-xs text-slate-600">{tile.helper}</p>
+                  <p className={cn(
+                    "mt-2 text-2xl font-semibold",
+                    isDark ? "text-white" : "text-slate-900"
+                  )}>{tile.value}</p>
+                  <p className={cn(
+                    "mt-1 text-xs",
+                    isDark ? "text-gray-400" : "text-slate-600"
+                  )}>{tile.helper}</p>
                 </div>
               ))}
             </div>
 
-            <div className="flex flex-wrap items-center gap-2 text-xs font-medium text-slate-600">
-              <Badge variant="outline" className="rounded-full border-slate-200/80 bg-slate-50 text-slate-600">
+            <div className={cn(
+              "flex flex-wrap items-center gap-2 text-xs font-medium",
+              isDark ? "text-gray-400" : "text-slate-600"
+            )}>
+              <Badge variant="outline" className={cn(
+                "rounded-full",
+                isDark
+                  ? "border-white/10 bg-white/5 text-gray-300"
+                  : "border-slate-200/80 bg-slate-50 text-slate-600"
+              )}>
                 <MapPin className="mr-1 h-3 w-3" /> Luxembourg HQ
               </Badge>
-              <Badge variant="outline" className="rounded-full border-slate-200/80 bg-slate-50 text-slate-600">
+              <Badge variant="outline" className={cn(
+                "rounded-full",
+                isDark
+                  ? "border-white/10 bg-white/5 text-gray-300"
+                  : "border-slate-200/80 bg-slate-50 text-slate-600"
+              )}>
                 <Building2 className="mr-1 h-3 w-3" /> BVI Professional Fund
               </Badge>
-              <Badge variant="outline" className="rounded-full border-slate-200/80 bg-slate-50 text-slate-600">
+              <Badge variant="outline" className={cn(
+                "rounded-full",
+                isDark
+                  ? "border-white/10 bg-white/5 text-gray-300"
+                  : "border-slate-200/80 bg-slate-50 text-slate-600"
+              )}>
                 <Target className="mr-1 h-3 w-3" /> PE • VC • Real Estate
               </Badge>
             </div>
@@ -542,15 +701,29 @@ export function InvestorDashboard({ investorId, userId, persona }: InvestorDashb
             </div>
           </div>
 
-          <div className="rounded-2xl border border-slate-200/80 bg-slate-50/70 p-6 shadow-sm">
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+          <div className={cn(
+            "rounded-2xl border p-6 shadow-sm",
+            isDark
+              ? "border-white/10 bg-white/5"
+              : "border-slate-200/80 bg-slate-50/70"
+          )}>
+            <p className={cn(
+              "text-[11px] font-semibold uppercase tracking-wide",
+              isDark ? "text-gray-400" : "text-slate-500"
+            )}>
               Portal snapshot
             </p>
-            <p className="mt-3 text-2xl font-semibold text-slate-900">
+            <p className={cn(
+              "mt-3 text-2xl font-semibold",
+              isDark ? "text-white" : "text-slate-900"
+            )}>
               {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
             </p>
             <Separator className="my-4" />
-            <p className="text-sm text-slate-600">
+            <p className={cn(
+              "text-sm",
+              isDark ? "text-gray-400" : "text-slate-600"
+            )}>
               Your investment dashboard with key metrics and upcoming deadlines.
             </p>
             <Link

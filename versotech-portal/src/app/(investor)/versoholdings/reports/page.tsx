@@ -19,7 +19,7 @@ export default async function ReportsPage({
   const profile = await getProfile()
 
   if (!profile) {
-    redirect('/versoholdings/login')
+    redirect('/login')
   }
 
   const serviceSupabase = createServiceClient()

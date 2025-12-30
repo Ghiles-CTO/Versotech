@@ -24,12 +24,13 @@ import { toast } from 'sonner'
 
 interface PreferencesEditorProps {
   onUpdate?: () => void
-  variant?: 'investor' | 'staff'
+  variant?: 'investor' | 'staff' | 'arranger'
 }
 
 export function PreferencesEditor({ onUpdate, variant = 'investor' }: PreferencesEditorProps) {
   const isStaff = variant === 'staff'
-  const [isLoading, setIsLoading] = useState(!isStaff)
+  const isArranger = variant === 'arranger'
+  const [isLoading, setIsLoading] = useState(!isStaff && !isArranger)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   // GDPR state
@@ -81,13 +82,13 @@ export function PreferencesEditor({ onUpdate, variant = 'investor' }: Preference
   }, [])
 
   useEffect(() => {
-    if (isStaff) {
+    if (isStaff || isArranger) {
       setIsLoading(false)
       return
     }
     loadPreferences()
     checkPendingDeletion()
-  }, [isStaff, loadPreferences, checkPendingDeletion])
+  }, [isStaff, isArranger, loadPreferences, checkPendingDeletion])
 
   // GDPR: Export data handler
   const handleExportData = async () => {
@@ -200,6 +201,95 @@ export function PreferencesEditor({ onUpdate, variant = 'investor' }: Preference
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  // Arranger-specific notifications
+  if (isArranger) {
+    const arrangerChannels: {
+      label: string
+      description: string
+      icon: LucideIcon
+      configurable: boolean
+    }[] = [
+      {
+        label: 'Mandate Updates',
+        description: 'Notifications about new mandates, status changes, and investor activity on your deals.',
+        icon: Mail,
+        configurable: true
+      },
+      {
+        label: 'Subscription Packs',
+        description: 'Alerts when subscription packs require your signature or have status updates.',
+        icon: MessageSquare,
+        configurable: true
+      },
+      {
+        label: 'Payment Requests',
+        description: 'Notifications about fee events, invoice submissions, and payment confirmations.',
+        icon: Bell,
+        configurable: true
+      },
+      {
+        label: 'Compliance Alerts',
+        description: 'License expiry reminders, KYC renewal notices, and regulatory updates.',
+        icon: ShieldCheck,
+        configurable: false
+      }
+    ]
+
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Bell className="h-5 w-5 text-primary" />
+              <CardTitle>Notification Preferences</CardTitle>
+            </div>
+            <CardDescription>
+              Manage how you receive updates about your mandates and business activities
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {arrangerChannels.map(channel => (
+              <div
+                key={channel.label}
+                className="flex items-start justify-between gap-4 rounded-lg border p-4"
+              >
+                <div className="flex items-start gap-3">
+                  <channel.icon className="mt-1 h-4 w-4 text-muted-foreground" />
+                  <div>
+                    <p className="text-sm font-semibold">{channel.label}</p>
+                    <p className="text-sm text-muted-foreground">{channel.description}</p>
+                  </div>
+                </div>
+                {channel.configurable ? (
+                  <Switch defaultChecked />
+                ) : (
+                  <span className="text-xs text-emerald-600 font-medium bg-emerald-50 px-2 py-1 rounded">
+                    Always on
+                  </span>
+                )}
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        <Card className="border-blue-200 bg-blue-50/50">
+          <CardContent className="py-4">
+            <div className="flex gap-3">
+              <ShieldCheck className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+              <div className="text-sm">
+                <p className="font-medium text-blue-900">Compliance Notifications</p>
+                <p className="text-blue-700 mt-1">
+                  Some notifications cannot be disabled as they are required for regulatory compliance.
+                  These include license expiry warnings and mandatory KYC renewal reminders.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
 
   if (isStaff) {

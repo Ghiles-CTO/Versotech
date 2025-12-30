@@ -19,6 +19,11 @@ export async function GET(request: NextRequest) {
     const entity_id = searchParams.get('entity_id')
     const deal_id = searchParams.get('deal_id')
     const arranger_entity_id = searchParams.get('arranger_entity_id')
+    const introducer_id = searchParams.get('introducer_id')
+    const owner_investor_id = searchParams.get('owner_investor_id')
+    const lawyer_id = searchParams.get('lawyer_id')
+    const partner_id = searchParams.get('partner_id')
+    const commercial_partner_id = searchParams.get('commercial_partner_id')
     const from_date = searchParams.get('from_date')
     const to_date = searchParams.get('to_date')
     const search = searchParams.get('search')
@@ -42,14 +47,22 @@ export async function GET(request: NextRequest) {
         entity_id,
         deal_id,
         arranger_entity_id,
+        introducer_id,
         owner_investor_id,
+        lawyer_id,
+        partner_id,
+        commercial_partner_id,
         folder_id,
         created_by_profile:created_by(display_name, email),
         investors:owner_investor_id(id, legal_name),
         vehicles:vehicle_id(id, name, type),
         entity:entity_id(id, name, type),
         deals:deal_id(id, name, status),
-        arranger_entity:arranger_entity_id(id, legal_name)
+        arranger_entity:arranger_entity_id(id, legal_name),
+        introducer:introducer_id(id, legal_name),
+        lawyer:lawyer_id(id, firm_name),
+        partner:partner_id(id, name),
+        commercial_partner:commercial_partner_id(id, name)
       `, { count: 'exact' })
 
     // Apply filters
@@ -58,6 +71,11 @@ export async function GET(request: NextRequest) {
     if (entity_id) query = query.eq('entity_id', entity_id)
     if (deal_id) query = query.eq('deal_id', deal_id)
     if (arranger_entity_id) query = query.eq('arranger_entity_id', arranger_entity_id)
+    if (introducer_id) query = query.eq('introducer_id', introducer_id)
+    if (owner_investor_id) query = query.eq('owner_investor_id', owner_investor_id)
+    if (lawyer_id) query = query.eq('lawyer_id', lawyer_id)
+    if (partner_id) query = query.eq('partner_id', partner_id)
+    if (commercial_partner_id) query = query.eq('commercial_partner_id', commercial_partner_id)
     if (from_date) query = query.gte('created_at', from_date)
     if (to_date) query = query.lte('created_at', to_date)
     if (search) {
@@ -91,6 +109,10 @@ export async function GET(request: NextRequest) {
       if (doc.entity) scope.entity = doc.entity
       if (doc.deals) scope.deal = doc.deals
       if (doc.arranger_entity) scope.arranger_entity = doc.arranger_entity
+      if (doc.introducer) scope.introducer = doc.introducer
+      if (doc.lawyer) scope.lawyer = doc.lawyer
+      if (doc.partner) scope.partner = doc.partner
+      if (doc.commercial_partner) scope.commercial_partner = doc.commercial_partner
 
       return {
         id: doc.id,
@@ -129,6 +151,11 @@ export async function GET(request: NextRequest) {
         entity_id: entity_id || undefined,
         deal_id: deal_id || undefined,
         arranger_entity_id: arranger_entity_id || undefined,
+        introducer_id: introducer_id || undefined,
+        owner_investor_id: owner_investor_id || undefined,
+        lawyer_id: lawyer_id || undefined,
+        partner_id: partner_id || undefined,
+        commercial_partner_id: commercial_partner_id || undefined,
         date_range: from_date || to_date ? {
           from: from_date || undefined,
           to: to_date || undefined

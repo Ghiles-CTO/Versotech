@@ -1,4 +1,4 @@
-import '@testing-library/jest-dom'
+import '@testing-library/jest-dom/vitest'
 import { beforeAll, afterEach, afterAll } from 'vitest'
 import { cleanup } from '@testing-library/react'
 import { server } from './mocks/server'
@@ -40,6 +40,19 @@ global.IntersectionObserver = class IntersectionObserver {
   observe() {}
   unobserve() {}
   disconnect() {}
+}
+
+// Polyfill pointer capture APIs used by Radix Select in tests.
+if (!('hasPointerCapture' in HTMLElement.prototype)) {
+  Object.defineProperty(HTMLElement.prototype, 'hasPointerCapture', {
+    value: () => false,
+  })
+  Object.defineProperty(HTMLElement.prototype, 'setPointerCapture', {
+    value: () => {},
+  })
+  Object.defineProperty(HTMLElement.prototype, 'releasePointerCapture', {
+    value: () => {},
+  })
 }
 
 // Mock matchMedia

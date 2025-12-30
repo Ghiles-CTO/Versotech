@@ -60,7 +60,7 @@ export default async function TasksPage() {
   const { data: { user }, error: userError } = await supabase.auth.getUser()
 
   if (userError || !user) {
-    redirect('/versoholdings/login')
+    redirect('/login')
   }
 
   // Get investor IDs

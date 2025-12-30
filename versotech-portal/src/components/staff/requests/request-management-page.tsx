@@ -426,7 +426,7 @@ function PageHeader({ onRefresh, isRefreshing }: { onRefresh: () => void; isRefr
         </Button>
         <Button 
           className="gap-2"
-          onClick={() => router.push('/versotech/staff/requests/analytics')}
+          onClick={() => router.push('/versotech_main/requests/analytics')}
         >
           <TrendingUp className="h-4 w-4" />
           Analytics
@@ -993,7 +993,7 @@ function RequestDetails({ request, onUpdate, currentUserId }: {
         const convId = result?.conversation?.id
         if (convId) {
           toast.success('Conversation created')
-          window.location.href = `/versotech/staff/messages/${convId}`
+          window.location.href = `/versotech_main/messages/${convId}`
         }
       } else {
         throw new Error('Failed to create conversation')

@@ -1,18 +1,28 @@
 /**
  * Arranger Profile API
  * GET /api/arrangers/me/profile - Get arranger's own profile
- * PUT /api/arrangers/me/profile - Request profile update (creates approval request)
+ * PUT /api/arrangers/me/profile - Update profile directly (self-service)
  */
 
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 
+// Schema allows all editable fields - KYC fields are NOT included (read-only)
 const profileUpdateSchema = z.object({
-  email: z.string().email().optional(),
+  // Entity fields
+  legal_name: z.string().min(1).max(255).optional(),
+  registration_number: z.string().max(100).optional(),
+  tax_id: z.string().max(100).optional(),
+  // Regulatory fields
+  regulator: z.string().max(255).optional(),
+  license_number: z.string().max(100).optional(),
+  license_type: z.string().max(100).optional(),
+  license_expiry_date: z.string().optional().nullable(),
+  // Contact fields
+  email: z.string().email().max(255).optional(),
   phone: z.string().max(50).optional(),
   address: z.string().max(500).optional(),
-  notes: z.string().max(1000).optional(),
 })
 
 /**
@@ -30,9 +40,10 @@ export async function GET() {
     }
 
     // Find arranger entity for current user
+    // Note: arranger_users has no 'is_active' column - derive from arranger_entities.status
     const { data: arrangerUser, error: arrangerUserError } = await serviceSupabase
       .from('arranger_users')
-      .select('arranger_id, role, is_active')
+      .select('arranger_id, role')
       .eq('user_id', user.id)
       .maybeSingle()
 
@@ -41,6 +52,7 @@ export async function GET() {
     }
 
     // Get arranger entity details
+    // Note: arranger_entities has 'status' not 'is_active', and 'legal_name' not 'company_name'
     const { data: arranger, error: arrangerError } = await serviceSupabase
       .from('arranger_entities')
       .select('*')
@@ -52,9 +64,10 @@ export async function GET() {
     }
 
     // Get user profile info
+    // Note: profiles has 'display_name' not 'full_name'
     const { data: profile } = await serviceSupabase
       .from('profiles')
-      .select('full_name, email, avatar_url')
+      .select('display_name, email, avatar_url')
       .eq('id', user.id)
       .maybeSingle()
 
@@ -62,7 +75,8 @@ export async function GET() {
       arranger,
       arrangerUser: {
         role: arrangerUser.role,
-        is_active: arrangerUser.is_active,
+        // Derive is_active from arranger_entities.status for backward compatibility
+        is_active: arranger.status === 'active',
       },
       profile,
     })
@@ -74,7 +88,8 @@ export async function GET() {
 
 /**
  * PUT /api/arrangers/me/profile
- * Request a profile update - creates an approval request for staff to review
+ * Update profile directly - self-service for arrangers
+ * Note: KYC status fields are NOT updateable via this endpoint (managed by staff)
  */
 export async function PUT(request: NextRequest) {
   const supabase = await createClient()
@@ -110,60 +125,36 @@ export async function PUT(request: NextRequest) {
 
     const updateData = validation.data
 
-    // Get current arranger info for the request
-    const { data: arranger } = await serviceSupabase
-      .from('arranger_entities')
-      .select('legal_name, company_name')
-      .eq('id', arrangerUser.arranger_id)
-      .single()
+    // Filter out empty/undefined values and build update object
+    const updateFields: Record<string, string | null> = {}
+    for (const [key, value] of Object.entries(updateData)) {
+      if (value !== undefined) {
+        // Convert empty strings to null for optional fields
+        updateFields[key] = value === '' ? null : value
+      }
+    }
 
-    // Create approval request for staff to review
-    const { data: approval, error: approvalError } = await serviceSupabase
-      .from('approvals')
-      .insert({
-        entity_type: 'arranger_profile_update',
-        entity_id: arrangerUser.arranger_id,
-        action: 'update',
-        status: 'pending',
-        requested_by: user.id,
-        request_reason: updateData.notes || 'Profile update request',
-        entity_metadata: {
-          arranger_name: arranger?.company_name || arranger?.legal_name,
-          requested_changes: updateData,
-          current_email: arranger?.company_name,
-        },
-        priority: 'normal',
-      })
+    // Check there's something to update
+    if (Object.keys(updateFields).length === 0) {
+      return NextResponse.json({ error: 'No fields to update' }, { status: 400 })
+    }
+
+    // Directly update the arranger entity
+    const { data: updatedArranger, error: updateError } = await serviceSupabase
+      .from('arranger_entities')
+      .update(updateFields)
+      .eq('id', arrangerUser.arranger_id)
       .select()
       .single()
 
-    if (approvalError) {
-      console.error('Error creating approval request:', approvalError)
-      return NextResponse.json({ error: 'Failed to submit update request' }, { status: 500 })
-    }
-
-    // Notify staff about the request
-    const { data: staffUsers } = await serviceSupabase
-      .from('profiles')
-      .select('id')
-      .in('role', ['staff_admin', 'staff_ops', 'ceo'])
-      .limit(5)
-
-    if (staffUsers && staffUsers.length > 0) {
-      const notifications = staffUsers.map((staff: { id: string }) => ({
-        user_id: staff.id,
-        investor_id: null,
-        title: 'Arranger Profile Update Request',
-        message: `${arranger?.company_name || arranger?.legal_name} has requested a profile update.`,
-        link: `/versotech_main/approvals?id=${approval.id}`,
-      }))
-
-      await serviceSupabase.from('investor_notifications').insert(notifications)
+    if (updateError) {
+      console.error('Error updating arranger profile:', updateError)
+      return NextResponse.json({ error: 'Failed to update profile' }, { status: 500 })
     }
 
     return NextResponse.json({
-      message: 'Profile update request submitted for approval',
-      approval_id: approval.id,
+      message: 'Profile updated successfully',
+      arranger: updatedArranger,
     })
   } catch (error) {
     console.error('Unexpected error in PUT /api/arrangers/me/profile:', error)

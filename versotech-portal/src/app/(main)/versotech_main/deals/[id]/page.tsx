@@ -1,6 +1,6 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { notFound, redirect } from 'next/navigation'
-import { DealDetailClient } from './deal-detail-client'
+import { DealDetailClient } from '@/components/deals/deal-detail-client'
 
 export const dynamic = 'force-dynamic'
 
@@ -13,9 +13,8 @@ interface PageParams {
  *
  * CEO/Staff view for managing a deal including:
  * - Deal overview and metadata
- * - Member list with 10-stage journey tracking
- * - Dispatch functionality to add new members
- * - Subscription status tracking
+ * - 11 tabs: Overview, Term Sheet, Interests, Data Room, Inventory, Members, Fees, Subscriptions, Documents, FAQ, Activity
+ * - Full investor journey tracking
  */
 export default async function DealDetailPage({ params }: PageParams) {
   const { id: dealId } = await params
@@ -28,7 +27,7 @@ export default async function DealDetailPage({ params }: PageParams) {
 
   const serviceSupabase = createServiceClient()
 
-  // Check staff access
+  // Check staff access via personas
   const { data: personas } = await serviceSupabase.rpc('get_user_personas', {
     p_user_id: user.id
   })
@@ -41,6 +40,23 @@ export default async function DealDetailPage({ params }: PageParams) {
     redirect('/versotech_main/deals')
   }
 
+  // Get user profile for role
+  const { data: userProfile } = await clientSupabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
+  const userRole = userProfile?.role || 'staff_ops'
+
+  // Fetch arranger entities for edit dropdown
+  // Note: arranger_entities has no 'company_name' - use legal_name only
+  const { data: arrangerEntities } = await serviceSupabase
+    .from('arranger_entities')
+    .select('id, legal_name')
+    .eq('status', 'active')
+    .order('legal_name')
+
   // Fetch deal with all related data
   const { data: deal, error: dealError } = await serviceSupabase
     .from('deals')
@@ -50,12 +66,80 @@ export default async function DealDetailPage({ params }: PageParams) {
         id,
         name,
         type,
-        status
+        currency
       ),
-      arranger_entities (
+      arranger_entities:arranger_entity_id (
+        id,
+        legal_name
+      ),
+      deal_memberships (
+        user_id,
+        investor_id,
+        role,
+        invited_at,
+        accepted_at,
+        dispatched_at,
+        viewed_at,
+        interest_confirmed_at,
+        nda_signed_at,
+        data_room_granted_at,
+        profiles:user_id (
+          id,
+          display_name,
+          email
+        ),
+        investors:investor_id (
+          id,
+          legal_name,
+          type,
+          kyc_status
+        ),
+        invited_by_profile:invited_by (
+          display_name,
+          email
+        )
+      ),
+      fee_plans (
         id,
         name,
-        type
+        description,
+        is_default,
+        is_active,
+        fee_components (
+          id,
+          kind,
+          calc_method,
+          rate_bps,
+          flat_amount,
+          frequency,
+          payment_schedule,
+          duration_periods,
+          duration_unit,
+          hurdle_rate_bps,
+          has_catchup,
+          catchup_rate_bps,
+          has_high_water_mark,
+          tier_threshold_multiplier,
+          base_calculation,
+          notes
+        )
+      ),
+      share_lots (
+        id,
+        source_id,
+        units_total,
+        unit_cost,
+        units_remaining,
+        currency,
+        acquired_at,
+        lockup_until,
+        status,
+        share_sources:source_id (
+          id,
+          kind,
+          counterparty_name,
+          notes
+        )
       )
     `)
     .eq('id', dealId)
@@ -65,41 +149,81 @@ export default async function DealDetailPage({ params }: PageParams) {
     notFound()
   }
 
-  // Fetch deal memberships with user/investor details
-  const { data: memberships } = await serviceSupabase
-    .from('deal_memberships')
+  // Fetch inventory summary
+  const { data: inventorySummary } = await serviceSupabase
+    .rpc('fn_deal_inventory_summary', { p_deal_id: dealId })
+
+  // Fetch deal-scoped documents
+  const { data: documents } = await serviceSupabase
+    .from('deal_data_room_documents')
     .select(`
-      deal_id,
-      user_id,
-      investor_id,
-      role,
-      invited_by,
-      invited_at,
-      accepted_at,
-      dispatched_at,
-      viewed_at,
-      interest_confirmed_at,
-      nda_signed_at,
-      data_room_granted_at,
-      referred_by_entity_id,
-      referred_by_entity_type,
-      profiles:user_id (
-        id,
-        display_name,
-        email
-      ),
-      investors:investor_id (
-        id,
-        legal_name,
-        type,
-        kyc_status
+      id,
+      file_key,
+      created_at,
+      created_by,
+      created_by_profile:created_by (
+        display_name
       )
     `)
     .eq('deal_id', dealId)
-    .order('dispatched_at', { ascending: false, nullsFirst: false })
+    .order('created_at', { ascending: false })
 
-  // Fetch subscriptions for this deal to get pack/signing status
-  const { data: subscriptions } = await serviceSupabase
+  // Fetch term sheet versions
+  const { data: termSheets } = await serviceSupabase
+    .from('deal_fee_structures')
+    .select('*')
+    .eq('deal_id', dealId)
+    .order('created_at', { ascending: false })
+
+  // Fetch investor interest submissions
+  const { data: interests } = await serviceSupabase
+    .from('investor_deal_interest')
+    .select(`
+      *,
+      investors (
+        id,
+        legal_name
+      )
+    `)
+    .eq('deal_id', dealId)
+    .order('submitted_at', { ascending: false })
+
+  // Fetch data room access records
+  const { data: dataRoomAccess } = await serviceSupabase
+    .from('deal_data_room_access')
+    .select(`
+      *,
+      investors (
+        id,
+        legal_name
+      )
+    `)
+    .eq('deal_id', dealId)
+    .order('granted_at', { ascending: false })
+
+  // Fetch data room documents
+  const { data: dataRoomDocuments } = await serviceSupabase
+    .from('deal_data_room_documents')
+    .select('*')
+    .eq('deal_id', dealId)
+    .order('folder', { ascending: true })
+    .order('created_at', { ascending: true })
+
+  // Fetch subscription submissions (for Subscriptions tab)
+  const { data: subscriptionSubmissions } = await serviceSupabase
+    .from('deal_subscription_submissions')
+    .select(`
+      *,
+      investors (
+        id,
+        legal_name
+      )
+    `)
+    .eq('deal_id', dealId)
+    .order('submitted_at', { ascending: false })
+
+  // Fetch subscriptions with journey tracking fields (for Members tab journey)
+  const { data: subscriptionsForJourney } = await serviceSupabase
     .from('subscriptions')
     .select(`
       id,
@@ -114,43 +238,45 @@ export default async function DealDetailPage({ params }: PageParams) {
     `)
     .eq('deal_id', dealId)
 
-  // Create a map of investor_id to subscription for quick lookup
-  const subscriptionMap = new Map(
-    (subscriptions || []).map(s => [s.investor_id, s])
-  )
+  // Fetch activity events for summary (last 90 days)
+  const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString()
 
-  // Enhance memberships with subscription data and flatten Supabase array returns
-  const enhancedMemberships = (memberships || []).map(m => ({
-    ...m,
-    // Supabase returns joined relations as arrays - extract first item
-    profiles: Array.isArray(m.profiles) ? m.profiles[0] || null : m.profiles,
-    investors: Array.isArray(m.investors) ? m.investors[0] || null : m.investors,
-    // Map.get returns undefined if not found, convert to null for type compatibility
-    subscription: m.investor_id ? (subscriptionMap.get(m.investor_id) ?? null) : null
-  }))
+  const { data: activityEvents } = await serviceSupabase
+    .from('deal_activity_events')
+    .select('event_type, occurred_at')
+    .eq('deal_id', dealId)
+    .gte('occurred_at', ninetyDaysAgo)
 
-  // Fetch available users for dispatch (investors, partners, introducers, etc.)
-  const { data: availableUsers } = await serviceSupabase
-    .from('profiles')
-    .select(`
-      id,
-      display_name,
-      email,
-      role
-    `)
-    .in('role', ['investor', 'partner', 'introducer', 'commercial_partner', 'lawyer'])
-    .order('display_name')
+  const activitySummary = (activityEvents ?? []).reduce<Record<string, number>>((acc, event) => {
+    acc[event.event_type] = (acc[event.event_type] ?? 0) + 1
+    return acc
+  }, {})
 
-  // Filter out users already in the deal
-  const existingUserIds = new Set((memberships || []).map(m => m.user_id))
-  const dispatchableUsers = (availableUsers || []).filter(u => !existingUserIds.has(u.id))
+  // Filter only active fee plans
+  const dealWithActiveFeePlans = {
+    ...deal,
+    fee_plans: (deal.fee_plans || []).filter((plan: any) => plan.is_active !== false)
+  }
 
   return (
     <DealDetailClient
-      deal={deal}
-      memberships={enhancedMemberships}
-      dispatchableUsers={dispatchableUsers}
-      currentUserId={user.id}
+      deal={dealWithActiveFeePlans}
+      inventorySummary={inventorySummary?.[0] || {
+        total_units: 0,
+        available_units: 0,
+        reserved_units: 0,
+        allocated_units: 0
+      }}
+      documents={documents || []}
+      termSheets={termSheets || []}
+      interests={interests || []}
+      dataRoomAccess={dataRoomAccess || []}
+      dataRoomDocuments={dataRoomDocuments || []}
+      subscriptions={subscriptionSubmissions || []}
+      subscriptionsForJourney={subscriptionsForJourney || []}
+      activitySummary={activitySummary}
+      userProfile={{ role: userRole }}
+      arrangerEntities={arrangerEntities || []}
     />
   )
 }

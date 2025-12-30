@@ -74,7 +74,7 @@ export async function GET(): Promise<NextResponse<UnifiedUsersResponse>> {
         role,
         is_primary,
         can_sign,
-        profiles (
+        profiles:profiles!investor_users_user_id_fkey (
           id,
           display_name,
           email
@@ -169,7 +169,7 @@ export async function GET(): Promise<NextResponse<UnifiedUsersResponse>> {
         role,
         is_primary,
         can_sign,
-        profiles (id, display_name, email)
+        profiles:profiles!lawyer_users_user_fk (id, display_name, email)
       `)
 
     const lawyerUsersMap = new Map<string, any[]>()
@@ -251,7 +251,7 @@ export async function GET(): Promise<NextResponse<UnifiedUsersResponse>> {
         role,
         is_primary,
         can_sign,
-        profiles (id, display_name, email)
+        profiles:profiles!partner_users_user_fk (id, display_name, email)
       `)
 
     const partnerUsersMap = new Map<string, any[]>()
@@ -333,7 +333,7 @@ export async function GET(): Promise<NextResponse<UnifiedUsersResponse>> {
         role,
         is_primary,
         can_sign,
-        profiles (id, display_name, email)
+        profiles:profiles!commercial_partner_users_user_fk (id, display_name, email)
       `)
 
     const cpUsersMap = new Map<string, any[]>()

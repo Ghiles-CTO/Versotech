@@ -71,8 +71,15 @@ interface DealDetailClientProps {
   dataRoomAccess: any[]
   dataRoomDocuments: any[]
   subscriptions: any[]
+  subscriptionsForJourney?: any[] // Subscriptions with journey tracking fields
   activitySummary: Record<string, number>
   userProfile: { role: string }
+  /** Arranger entities available for assignment */
+  arrangerEntities?: Array<{
+    id: string
+    legal_name: string
+    company_name?: string | null
+  }>
 }
 
 export function DealDetailClient({
@@ -84,8 +91,10 @@ export function DealDetailClient({
   dataRoomAccess,
   dataRoomDocuments,
   subscriptions,
+  subscriptionsForJourney = [],
   activitySummary,
-  userProfile
+  userProfile,
+  arrangerEntities = []
 }: DealDetailClientProps) {
   const [activeTab, setActiveTab] = useState('overview')
   const [editDialogOpen, setEditDialogOpen] = useState(false)
@@ -109,7 +118,8 @@ export function DealDetailClient({
     target_amount: deal?.target_amount || '',
     minimum_investment: deal?.minimum_investment || '',
     maximum_investment: deal?.maximum_investment || '',
-    currency: deal?.currency || 'USD'
+    currency: deal?.currency || 'USD',
+    arranger_entity_id: deal?.arranger_entity_id || ''
   })
   const router = useRouter()
 
@@ -162,7 +172,8 @@ export function DealDetailClient({
           offer_unit_price: editFormData.offer_unit_price ? parseFloat(editFormData.offer_unit_price as string) : null,
           target_amount: editFormData.target_amount ? parseFloat(editFormData.target_amount as string) : null,
           minimum_investment: editFormData.minimum_investment ? parseFloat(editFormData.minimum_investment as string) : null,
-          maximum_investment: editFormData.maximum_investment ? parseFloat(editFormData.maximum_investment as string) : null
+          maximum_investment: editFormData.maximum_investment ? parseFloat(editFormData.maximum_investment as string) : null,
+          arranger_entity_id: editFormData.arranger_entity_id === 'none' || !editFormData.arranger_entity_id ? null : editFormData.arranger_entity_id
         })
       })
 
@@ -345,7 +356,7 @@ export function DealDetailClient({
         </Card>
       </div>
 
-      <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab}>
+      <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab} id={`deal-tabs-${deal.id}`}>
         <TabsList className="flex flex-wrap gap-2">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="term-sheet">Term Sheets</TabsTrigger>
@@ -361,7 +372,11 @@ export function DealDetailClient({
         </TabsList>
 
         <TabsContent value="overview">
-          <DealOverviewTab deal={deal} />
+          <DealOverviewTab
+            deal={deal}
+            memberships={deal.deal_memberships || []}
+            subscriptionsForJourney={subscriptionsForJourney}
+          />
         </TabsContent>
 
         <TabsContent value="term-sheet">
@@ -391,7 +406,7 @@ export function DealDetailClient({
         </TabsContent>
 
         <TabsContent value="members">
-          <DealMembersTab dealId={deal.id} members={deal.deal_memberships || []} />
+          <DealMembersTab dealId={deal.id} members={deal.deal_memberships || []} subscriptions={subscriptionsForJourney} />
         </TabsContent>
 
         <TabsContent value="fees">
@@ -557,6 +572,29 @@ export function DealDetailClient({
                     <SelectItem value="GBP">GBP</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-arranger">Arranger (Mandate)</Label>
+                <Select
+                  value={editFormData.arranger_entity_id || 'none'}
+                  onValueChange={(value) => setEditFormData({ ...editFormData, arranger_entity_id: value === 'none' ? '' : value })}
+                >
+                  <SelectTrigger id="edit-arranger">
+                    <SelectValue placeholder="Select arranger" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">No Arranger</SelectItem>
+                    {arrangerEntities.map((arranger) => (
+                      <SelectItem key={arranger.id} value={arranger.id}>
+                        {arranger.company_name || arranger.legal_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Assign an arranger to manage this deal as their mandate
+                </p>
               </div>
 
               <div className="space-y-2">

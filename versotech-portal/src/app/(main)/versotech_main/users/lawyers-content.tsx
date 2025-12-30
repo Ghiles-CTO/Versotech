@@ -161,7 +161,7 @@ export default function LawyersContent() {
             role,
             is_primary,
             can_sign,
-            profiles (
+            profiles:profiles!lawyer_users_user_fk (
               id,
               display_name,
               email

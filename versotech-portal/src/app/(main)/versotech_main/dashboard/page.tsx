@@ -13,9 +13,8 @@ export default async function UnifiedDashboardPage() {
     redirect('/versotech_main/login')
   }
 
-  // CEO users (staff_admin or ceo role) get the full executive dashboard
-  const isCEO = user.role === 'staff_admin' || user.role === 'ceo' ||
-                user.role === 'staff_ops' || user.role === 'staff_rm'
+  // CEO users (ceo or staff_admin) get the full executive dashboard
+  const isCEO = user.role === 'staff_admin' || user.role === 'ceo'
 
   if (isCEO) {
     // Fetch real dashboard data for CEO users

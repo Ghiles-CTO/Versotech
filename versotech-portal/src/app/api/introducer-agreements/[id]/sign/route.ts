@@ -48,11 +48,12 @@ export async function POST(
     }
 
     // Get arranger info if applicable
+    // Note: arranger_entities has no 'company_name' - use legal_name only
     let arrangerEntity = null
     if (agreement.arranger_id) {
       const { data: arranger } = await serviceSupabase
         .from('arranger_entities')
-        .select('id, legal_name, company_name')
+        .select('id, legal_name')
         .eq('id', agreement.arranger_id)
         .single()
       arrangerEntity = arranger
@@ -107,7 +108,7 @@ export async function POST(
       const signingToken = crypto.randomUUID()
       const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days
 
-      const arrangerName = arrangerEntity?.company_name || arrangerEntity?.legal_name || 'Arranger'
+      const arrangerName = arrangerEntity?.legal_name || 'Arranger'
 
       const { data: signatureRequest, error: createError } = await serviceSupabase
         .from('signature_requests')

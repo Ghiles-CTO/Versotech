@@ -414,7 +414,7 @@ function HoldingsSnapshot({ vehicles }: { vehicles: PortfolioVehicle[] }) {
             {displayed.map((vehicle) => (
               <Link
                 key={vehicle.id}
-                href={`/versoholdings/vehicle/${vehicle.id}`}
+                href={`/versotech_main/portfolio/${vehicle.id}`}
                 className="flex items-center justify-between gap-4 rounded-xl border border-slate-200/80 bg-white/90 p-4 transition-all hover:border-primary/40 hover:bg-primary/5"
               >
                 <div className="space-y-1">
@@ -431,7 +431,7 @@ function HoldingsSnapshot({ vehicles }: { vehicles: PortfolioVehicle[] }) {
         <Badge variant="outline" className="rounded-full border-slate-200/80 bg-slate-50 text-slate-600">
           {vehicles.length} vehicle{vehicles.length === 1 ? '' : 's'} tracked
         </Badge>
-        <Link href="/versoholdings/holdings">
+        <Link href="/versotech_main/portfolio">
           <Button variant="outline" size="sm">
             Open holdings workspace
             <ArrowUpRight className="h-4 w-4" />
@@ -464,7 +464,7 @@ function VersoServicesCard() {
           <FileText className="mr-2 h-4 w-4" />
           Request position statement
         </Button>
-        <Link href="/versoholdings/reports">
+        <Link href="/versotech_main/documents">
           <Button className="w-full justify-start rounded-xl border border-slate-200/80 bg-white/80 text-slate-700 hover:border-primary/40 hover:bg-primary/5" variant="outline">
             <MessageSquare className="mr-2 h-4 w-4" />
             Custom analytics request
@@ -533,12 +533,12 @@ function WelcomePanel() {
         </div>
 
         <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-end">
-          <Link href="/versoholdings/tasks" className="w-full sm:w-auto">
+          <Link href="/versotech_main/tasks" className="w-full sm:w-auto">
             <Button size="lg" className="w-full sm:w-auto">
               Complete onboarding
             </Button>
           </Link>
-          <Link href="/versoholdings/messages" className="w-full sm:w-auto">
+          <Link href="/versotech_main/messages" className="w-full sm:w-auto">
             <Button variant="outline" size="lg" className="w-full sm:w-auto">
               Contact VERSO team
             </Button>
@@ -560,7 +560,7 @@ function ScheduleHighlights({ items }: { items: UpcomingHighlight[] }) {
           </CardDescription>
         </CardHeader>
         <CardFooter className="border-t p-6">
-          <Link href="/versoholdings/calendar" className="w-full">
+          <Link href="/versotech_main/calendar" className="w-full">
             <Button variant="outline" className="w-full">
               Open calendar
               <ArrowUpRight className="ml-2 h-4 w-4" />
@@ -611,7 +611,7 @@ function ScheduleHighlights({ items }: { items: UpcomingHighlight[] }) {
         ))}
       </CardContent>
       <CardFooter className="border-t p-6">
-        <Link href="/versoholdings/calendar" className="w-full">
+        <Link href="/versotech_main/calendar" className="w-full">
           <Button variant="outline" className="w-full">
             Open calendar
             <ArrowUpRight className="ml-2 h-4 w-4" />
@@ -639,7 +639,7 @@ function buildUpcomingHighlights(deals: FeaturedDeal[], tasks: DashboardTask[]):
       label: 'Deal close',
       description: `${nextDeal.name} closes ${dueDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`,
       date: dueDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-      href: `/versoholdings/deal/${nextDeal.id}`,
+      href: `/versotech_main/opportunities/${nextDeal.id}`,
       accent: 'blue'
     })
   }
@@ -656,7 +656,7 @@ function buildUpcomingHighlights(deals: FeaturedDeal[], tasks: DashboardTask[]):
       label: 'Action item',
       description: nextTask.title,
       date: dueDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-      href: '/versoholdings/tasks',
+      href: '/versotech_main/tasks',
       accent: 'amber'
     })
   }
@@ -763,13 +763,13 @@ export default async function InvestorDashboard() {
               </div>
 
               <div className="flex flex-col gap-3 pt-2 sm:flex-row">
-                <Link href="/versoholdings/holdings" className="w-full sm:w-auto">
+                <Link href="/versotech_main/portfolio" className="w-full sm:w-auto">
                   <Button size="sm" className="w-full sm:w-auto">
                     View holdings
                     <ArrowUpRight className="ml-2 h-4 w-4" />
                   </Button>
                 </Link>
-                <Link href="/versoholdings/calendar" className="w-full sm:w-auto">
+                <Link href="/versotech_main/calendar" className="w-full sm:w-auto">
                   <Button size="sm" variant="outline" className="w-full sm:w-auto">
                     Calendar & deadlines
                     <CalendarClock className="ml-2 h-4 w-4" />
@@ -790,7 +790,7 @@ export default async function InvestorDashboard() {
                 Your investment dashboard with key metrics and upcoming deadlines.
               </p>
               <Link
-                href="/versoholdings/tasks"
+                href="/versotech_main/tasks"
                 className="mt-4 inline-flex items-center gap-2 text-xs font-semibold text-primary hover:underline"
               >
                 Review action centre

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { z } from 'zod'
+import { getCeoSigner } from '@/lib/staff/ceo-signer'
 
 // Schema for multi-signatory support with optional arranger countersigning
 const requestSchema = z.object({
@@ -204,18 +205,41 @@ export async function POST(
     }
 
     // Staff/Admin or Arranger signature request (countersignature)
-    let countersignerEmail = 'cto@versoholdings.com'
-    let countersignerName = 'Julien Machot'
+    const ceoSigner = await getCeoSigner(serviceSupabase)
+
+    // Graceful fallback: If no CEO signer found and not using arranger, use the current staff user
+    // This allows signature workflows to proceed even when no CEO profile exists
+    const useStaffFallback = body.countersigner_type !== 'arranger' && !ceoSigner
+    if (useStaffFallback) {
+      console.warn('[ready-for-signature] No CEO signer found, falling back to current staff user:', {
+        user_id: user.id,
+        email: profile?.email,
+        display_name: profile?.display_name
+      })
+    }
+
+    // Use CEO if available, otherwise fall back to current staff user
+    let countersignerEmail = ceoSigner?.email || (useStaffFallback ? profile?.email : '') || ''
+    let countersignerName = ceoSigner?.displayName || (useStaffFallback ? profile?.display_name : '') || 'Staff Admin'
     let signerRole: 'admin' | 'arranger' = 'admin'
+
+    // If still no countersigner after fallback, return error
+    if (!countersignerEmail && body.countersigner_type !== 'arranger') {
+      return NextResponse.json(
+        { error: 'No countersigner available. Please configure a CEO profile or use arranger countersigning.' },
+        { status: 400 }
+      )
+    }
 
     // If arranger is selected as countersigner, fetch arranger details
     if (body.countersigner_type === 'arranger' && body.arranger_id) {
       // Get arranger details with primary user
+      // Note: arranger_entities has no 'company_name' - use legal_name
       const { data: arranger, error: arrangerError } = await serviceSupabase
         .from('arranger_entities')
         .select(`
           id,
-          company_name,
+          legal_name,
           arranger_users!inner(user_id)
         `)
         .eq('id', body.arranger_id)
@@ -231,9 +255,10 @@ export async function POST(
         throw new Error('Arranger has no associated users')
       }
 
+      // Note: profiles has 'display_name' not 'full_name'
       const { data: arrangerProfile } = await serviceSupabase
         .from('profiles')
-        .select('email, full_name')
+        .select('email, display_name')
         .eq('id', primaryUserId)
         .single()
 
@@ -242,7 +267,7 @@ export async function POST(
       }
 
       countersignerEmail = arrangerProfile.email
-      countersignerName = arrangerProfile.full_name || arranger.company_name
+      countersignerName = arrangerProfile.display_name || arranger.legal_name
       signerRole = 'arranger'
     }
 
@@ -279,6 +304,18 @@ export async function POST(
         status: 'pending_signature'
       })
       .eq('id', documentId)
+
+    const now = new Date().toISOString()
+    await serviceSupabase
+      .from('subscriptions')
+      .update({ pack_sent_at: now })
+      .eq('id', subscriptionId)
+      .is('pack_sent_at', null)
+    await serviceSupabase
+      .from('subscriptions')
+      .update({ pack_generated_at: now })
+      .eq('id', subscriptionId)
+      .is('pack_generated_at', null)
 
     console.log('✅ Multi-signatory signature requests created for subscription pack:', {
       document_id: documentId,

@@ -579,7 +579,7 @@ export function RealtimeDashboard({ initialData, investorIds, userId }: Realtime
               }
             </CardDescription>
           </div>
-          <Link href="/versoholdings/holdings">
+          <Link href="/versotech_main/portfolio">
             <Button variant="outline" size="sm">
               View All Holdings
               <ChevronRight className="ml-2 h-4 w-4" />
@@ -589,7 +589,7 @@ export function RealtimeDashboard({ initialData, investorIds, userId }: Realtime
         <CardContent>
           <div className="space-y-4">
             {data.vehicles.slice(0, 3).map((vehicle) => (
-              <Link key={vehicle.id} href={`/versoholdings/vehicle/${vehicle.id}`}>
+              <Link key={vehicle.id} href={`/versotech_main/portfolio/${vehicle.id}`}>
                 <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
                   <div className="flex items-center gap-3">
                     <div className="w-3 h-3 rounded-full bg-blue-600"></div>
@@ -635,7 +635,7 @@ export function RealtimeDashboard({ initialData, investorIds, userId }: Realtime
               <FileText className="mr-2 h-4 w-4" />
               Request Position Statement
             </Button>
-            <Link href="/versoholdings/reports">
+            <Link href="/versotech_main/documents">
               <Button className="w-full justify-start" variant="outline">
                 <Plus className="mr-2 h-4 w-4" />
                 Custom Report Request
@@ -701,7 +701,7 @@ export function RealtimeDashboard({ initialData, investorIds, userId }: Realtime
             </div>
 
             <div className="mt-4 pt-4 border-t">
-              <Link href="/versoholdings/messages">
+              <Link href="/versotech_main/messages">
                 <Button variant="ghost" size="sm" className="w-full">
                   <MessageSquare className="mr-2 h-4 w-4" />
                   View All Communications

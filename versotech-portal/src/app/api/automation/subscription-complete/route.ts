@@ -152,6 +152,7 @@ export async function POST(request: NextRequest) {
         priority: 'high',
         related_entity_type: 'deal',
         related_entity_id: deal_id,
+        related_deal_id: deal_id,  // Direct deal reference for VERSOSign queries
         due_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
         instructions: {
           type: 'funding_preparation',
@@ -167,7 +168,7 @@ export async function POST(request: NextRequest) {
           investor_id,
           title: 'Subscription confirmed',
           message: `Your allocation for ${deal_id} has been confirmed. Review the funding instructions to proceed.`,
-          link: `/versoholdings/data-rooms`
+          link: `/versotech_main/data-rooms`
         })
       } catch (notificationError) {
         console.error('Failed to create investor notification', notificationError)

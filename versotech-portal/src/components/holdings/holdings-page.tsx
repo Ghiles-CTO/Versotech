@@ -102,9 +102,9 @@ interface HoldingsPageProps {
 
 export function HoldingsPage({
   initialData,
-  detailsBasePath = '/versoholdings/vehicle',
-  holdingsPath = '/versoholdings/holdings',
-  dealsPath = '/versoholdings/deals',
+  detailsBasePath = '/versotech_main/portfolio',
+  holdingsPath = '/versotech_main/portfolio',
+  dealsPath = '/versotech_main/opportunities',
   positionsOnly = false
 }: HoldingsPageProps) {
   // State management

@@ -56,7 +56,7 @@ type RecentMandate = {
   id: string
   name: string
   status: string
-  target_size: number | null
+  target_amount: number | null
   currency: string
   created_at: string
 }
@@ -106,19 +106,20 @@ export function ArrangerDashboard({ arrangerId, userId, persona }: ArrangerDashb
         // Fetch deals where this arranger is assigned (mandates)
         const { data: deals } = await supabase
           .from('deals')
-          .select('id, name, status, target_size, currency, created_at')
+          .select('id, name, status, target_amount, currency, created_at')
           .eq('arranger_entity_id', arrangerId)
           .order('created_at', { ascending: false })
 
         const mandates = deals || []
-        const activeMandates = mandates.filter((d: any) => d.status === 'active')
-        const pendingMandates = mandates.filter((d: any) => d.status === 'draft' || d.status === 'pending')
+        // Deal statuses: draft, open, allocation_pending, closed, cancelled
+        const activeMandates = mandates.filter((d: any) => d.status === 'open' || d.status === 'allocation_pending')
+        const pendingMandates = mandates.filter((d: any) => d.status === 'draft')
 
         setRecentMandates(mandates.slice(0, 5).map((d: any) => ({
           id: d.id,
           name: d.name,
           status: d.status,
-          target_size: d.target_size,
+          target_amount: d.target_amount,
           currency: d.currency || 'USD',
           created_at: d.created_at,
         })))
@@ -150,7 +151,7 @@ export function ArrangerDashboard({ arrangerId, userId, persona }: ArrangerDashb
           // Get subscriptions on arranger's deals for relationship tracking
           const { data: dealSubscriptions } = await supabase
             .from('subscriptions')
-            .select('id, investor_id, introducer_id, partner_id, commercial_partner_id')
+            .select('id, investor_id, introducer_id, proxy_commercial_partner_id')
             .in('deal_id', dealIds)
 
           // Count unique introducers who have introduced to arranger's deals
@@ -161,19 +162,25 @@ export function ArrangerDashboard({ arrangerId, userId, persona }: ArrangerDashb
           )
           introducersCount = introducerIds.size
 
-          // Count unique partners who have referred to arranger's deals
-          const partnerIds = new Set(
-            (dealSubscriptions || [])
-              .filter((s: any) => s.partner_id)
-              .map((s: any) => s.partner_id)
-          )
-          partnersCount = partnerIds.size
+          // Count unique partners who have referred investors to arranger's deals
+          // Partners are tracked via deal_memberships.referred_by_entity_id (not subscriptions)
+          const { data: partnerReferrals } = await supabase
+            .from('deal_memberships')
+            .select('referred_by_entity_id')
+            .in('deal_id', dealIds)
+            .eq('referred_by_entity_type', 'partner')
+            .not('referred_by_entity_id', 'is', null)
 
-          // Count unique commercial partners on arranger's deals
+          const uniquePartnerIds = new Set(
+            (partnerReferrals || []).map((r: any) => r.referred_by_entity_id)
+          )
+          partnersCount = uniquePartnerIds.size
+
+          // Count unique commercial partners on arranger's deals (via subscriptions)
           const cpIds = new Set(
             (dealSubscriptions || [])
-              .filter((s: any) => s.commercial_partner_id)
-              .map((s: any) => s.commercial_partner_id)
+              .filter((s: any) => s.proxy_commercial_partner_id)
+              .map((s: any) => s.proxy_commercial_partner_id)
           )
           cpCount = cpIds.size
 
@@ -274,10 +281,11 @@ export function ArrangerDashboard({ arrangerId, userId, persona }: ArrangerDashb
     )
   }
 
+  // Deal status enum: draft, open, allocation_pending, closed, cancelled
   const dealStatusStyles: Record<string, string> = {
-    active: 'bg-green-500/20 text-green-400',
     draft: 'bg-gray-500/20 text-gray-400',
-    pending: 'bg-amber-500/20 text-amber-400',
+    open: 'bg-green-500/20 text-green-400',
+    allocation_pending: 'bg-amber-500/20 text-amber-400',
     closed: 'bg-purple-500/20 text-purple-400',
     cancelled: 'bg-red-500/20 text-red-400',
   }
@@ -544,8 +552,8 @@ export function ArrangerDashboard({ arrangerId, userId, persona }: ArrangerDashb
                         {mandate.name}
                       </p>
                       <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                        {mandate.target_size
-                          ? `${formatCurrency(mandate.target_size, mandate.currency)} target`
+                        {mandate.target_amount
+                          ? `${formatCurrency(mandate.target_amount, mandate.currency)} target`
                           : 'No target set'}
                       </p>
                     </div>

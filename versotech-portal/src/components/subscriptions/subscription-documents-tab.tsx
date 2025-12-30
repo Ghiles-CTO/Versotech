@@ -136,9 +136,9 @@ export function SubscriptionDocumentsTab({ subscriptionId }: SubscriptionDocumen
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (file) {
-      // Validate file type
-      if (!file.name.endsWith('.docx') && !file.name.endsWith('.pdf')) {
-        toast.error('Please upload a .docx or .pdf file')
+      const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')
+      if (!isPdf) {
+        toast.error('Please upload a PDF file')
         return
       }
       setSelectedFile(file)
@@ -271,7 +271,7 @@ export function SubscriptionDocumentsTab({ subscriptionId }: SubscriptionDocumen
                 <DialogHeader>
                   <DialogTitle className="text-foreground">Upload Final Subscription Pack</DialogTitle>
                   <DialogDescription>
-                    Upload the edited and finalized subscription pack document (DOCX or PDF)
+                    Upload the edited and finalized subscription pack PDF
                   </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 py-4">
@@ -280,7 +280,7 @@ export function SubscriptionDocumentsTab({ subscriptionId }: SubscriptionDocumen
                     <Input
                       id="file"
                       type="file"
-                      accept=".docx,.pdf"
+                      accept=".pdf"
                       onChange={handleFileSelect}
                       className="bg-white/5 border-white/10 text-foreground"
                     />
@@ -454,7 +454,7 @@ export function SubscriptionDocumentsTab({ subscriptionId }: SubscriptionDocumen
               <div>
                 <p className="font-medium text-foreground">Staff Review & Edit</p>
                 <p className="text-muted-foreground">
-                  Download draft, work with lawyers to finalize, then upload final version
+                  Download draft, work with lawyers to finalize, then upload the final PDF
                 </p>
               </div>
             </div>

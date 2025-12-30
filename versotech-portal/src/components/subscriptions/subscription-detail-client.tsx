@@ -184,7 +184,7 @@ export function SubscriptionDetailClient({
       </div>
 
       {/* Main Content Tabs */}
-      <Tabs defaultValue="details" className="w-full">
+      <Tabs defaultValue="details" className="w-full" id={`subscription-tabs-${subscription.id}`}>
         <TabsList className="bg-gray-900 border-gray-800">
           <TabsTrigger value="details" className="data-[state=active]:bg-gray-800 text-white">
             Details

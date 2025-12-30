@@ -27,11 +27,17 @@ interface CreateDealFormProps {
     logo_url?: string | null
     website_url?: string | null
   }>
+  /** Arranger entities available for assignment */
+  arrangerEntities?: Array<{
+    id: string
+    legal_name: string
+    company_name?: string | null
+  }>
   /** Base path for navigation (e.g., '/versotech/staff' or '/versotech_main') */
   basePath?: string
 }
 
-export function CreateDealForm({ entities, basePath = '/versotech/staff' }: CreateDealFormProps) {
+export function CreateDealForm({ entities, arrangerEntities = [], basePath = '/versotech/staff' }: CreateDealFormProps) {
   const router = useRouter()
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
@@ -44,6 +50,7 @@ export function CreateDealForm({ entities, basePath = '/versotech/staff' }: Crea
     deal_type: 'equity_secondary',
     stock_type: 'ordinary',
     vehicle_id: '',
+    arranger_entity_id: '',
     sector: '',
     stage: '',
     location: '',
@@ -118,6 +125,7 @@ export function CreateDealForm({ entities, basePath = '/versotech/staff' }: Crea
         deal_type: formData.deal_type,
         stock_type: formData.stock_type || null,
         vehicle_id: formData.vehicle_id || null,
+        arranger_entity_id: formData.arranger_entity_id || null,
         sector: formData.sector.trim() || null,
         stage: formData.stage.trim() || null,
         location: formData.location.trim() || null,
@@ -302,6 +310,29 @@ export function CreateDealForm({ entities, basePath = '/versotech/staff' }: Crea
                     <Link href={`${basePath}/entities`} className="text-emerald-300 hover:text-emerald-200 underline">
                       Entities
                     </Link>
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="arranger_entity_id" className="text-foreground">Arranger (Optional)</Label>
+                  <Select
+                    value={formData.arranger_entity_id || 'none'}
+                    onValueChange={(v) => updateField('arranger_entity_id', v === 'none' ? '' : v)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select arranger or skip" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">No Arranger</SelectItem>
+                      {arrangerEntities.map((arranger) => (
+                        <SelectItem key={arranger.id} value={arranger.id}>
+                          {arranger.company_name || arranger.legal_name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    Assign an arranger to manage this deal (mandate)
                   </p>
                 </div>
 

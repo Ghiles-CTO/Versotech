@@ -254,7 +254,7 @@ export function CapitalActivityTable({
 
   return (
     <>
-      <Tabs defaultValue="cashflows" className="w-full">
+      <Tabs defaultValue="cashflows" className="w-full" id={`capital-activity-tabs-${vehicleId}-${investorId}`}>
         <TabsList className="bg-gray-800">
           <TabsTrigger value="cashflows" className="data-[state=active]:bg-gray-700 text-white">
             Cashflows ({cashflows.length})
