@@ -28,7 +28,10 @@ import {
   Download,
   Filter,
   History,
-  AlertCircle
+  AlertCircle,
+  ScrollText,
+  HandCoins,
+  ExternalLink
 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import Link from 'next/link'
@@ -273,6 +276,10 @@ export function MandateDetailClient({
             <Users className="h-4 w-4 mr-2" />
             Investors ({enhancedMembers.length})
           </TabsTrigger>
+          <TabsTrigger value="termsheets" className="data-[state=active]:bg-white/10">
+            <ScrollText className="h-4 w-4 mr-2" />
+            Term Sheets ({termSheets.length})
+          </TabsTrigger>
           <TabsTrigger value="dataroom" className="data-[state=active]:bg-white/10">
             <FolderOpen className="h-4 w-4 mr-2" />
             Data Room ({dataRoomDocuments.length})
@@ -479,6 +486,127 @@ export function MandateDetailClient({
           )}
         </TabsContent>
 
+        {/* Term Sheets Tab */}
+        <TabsContent value="termsheets" className="space-y-6">
+          <Card className="border border-white/10 bg-white/5">
+            <CardHeader>
+              <CardTitle className="text-foreground flex items-center gap-2">
+                <ScrollText className="h-5 w-5" />
+                Term Sheets
+              </CardTitle>
+              <CardDescription>
+                Fee structures and deal terms for this mandate
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {termSheets.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  No term sheets created yet
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {termSheets.map((sheet: any) => (
+                    <Card key={sheet.id} className={`border ${sheet.status === 'published' ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-white/10 bg-white/[0.02]'}`}>
+                      <CardContent className="py-4">
+                        <div className="flex items-start justify-between mb-4">
+                          <div>
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="font-medium text-foreground">
+                                Version {sheet.version || 1}
+                              </span>
+                              <Badge className={
+                                sheet.status === 'published'
+                                  ? 'bg-emerald-500/20 text-emerald-200 border-emerald-400/30'
+                                  : sheet.status === 'draft'
+                                    ? 'bg-amber-500/20 text-amber-200 border-amber-400/30'
+                                    : 'bg-white/10 text-foreground border-white/20'
+                              }>
+                                {sheet.status}
+                              </Badge>
+                            </div>
+                            <p className="text-sm text-muted-foreground">
+                              {sheet.term_sheet_date ? formatDate(sheet.term_sheet_date) : 'No date set'}
+                            </p>
+                          </div>
+                          {sheet.term_sheet_attachment_key && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDocumentAction(sheet.term_sheet_attachment_key, `term-sheet-v${sheet.version || 1}.pdf`, 'preview')}
+                              className="border-white/20"
+                            >
+                              <ExternalLink className="h-4 w-4 mr-1" />
+                              View PDF
+                            </Button>
+                          )}
+                        </div>
+
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                          <div>
+                            <label className="text-muted-foreground">Transaction Type</label>
+                            <p className="text-foreground font-medium">{sheet.transaction_type || '—'}</p>
+                          </div>
+                          <div>
+                            <label className="text-muted-foreground">Min Ticket</label>
+                            <p className="text-foreground font-medium">
+                              {sheet.minimum_ticket ? `${deal.currency} ${Number(sheet.minimum_ticket).toLocaleString()}` : '—'}
+                            </p>
+                          </div>
+                          <div>
+                            <label className="text-muted-foreground">Max Ticket</label>
+                            <p className="text-foreground font-medium">
+                              {sheet.maximum_ticket ? `${deal.currency} ${Number(sheet.maximum_ticket).toLocaleString()}` : '—'}
+                            </p>
+                          </div>
+                          <div>
+                            <label className="text-muted-foreground">Interest Deadline</label>
+                            <p className="text-foreground font-medium">
+                              {sheet.interest_confirmation_deadline ? formatDate(sheet.interest_confirmation_deadline) : '—'}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Fee Structure */}
+                        <div className="mt-4 pt-4 border-t border-white/10">
+                          <label className="text-sm text-muted-foreground mb-2 block">Fee Structure</label>
+                          <div className="grid grid-cols-3 gap-4 text-sm">
+                            <div className="bg-white/5 rounded-lg p-3 text-center">
+                              <p className="text-lg font-semibold text-foreground">
+                                {sheet.subscription_fee_percent != null ? `${sheet.subscription_fee_percent}%` : '—'}
+                              </p>
+                              <p className="text-xs text-muted-foreground">Subscription Fee</p>
+                            </div>
+                            <div className="bg-white/5 rounded-lg p-3 text-center">
+                              <p className="text-lg font-semibold text-foreground">
+                                {sheet.management_fee_percent != null ? `${sheet.management_fee_percent}%` : '—'}
+                              </p>
+                              <p className="text-xs text-muted-foreground">Management Fee</p>
+                            </div>
+                            <div className="bg-white/5 rounded-lg p-3 text-center">
+                              <p className="text-lg font-semibold text-foreground">
+                                {sheet.carried_interest_percent != null ? `${sheet.carried_interest_percent}%` : '—'}
+                              </p>
+                              <p className="text-xs text-muted-foreground">Carried Interest</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Summary if available */}
+                        {sheet.opportunity_summary && (
+                          <div className="mt-4 pt-4 border-t border-white/10">
+                            <label className="text-sm text-muted-foreground mb-1 block">Opportunity Summary</label>
+                            <p className="text-sm text-foreground whitespace-pre-wrap">{sheet.opportunity_summary}</p>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         {/* Investors Tab - Names visible, amounts hidden */}
         <TabsContent value="investors" className="space-y-6">
           <Card className="border border-white/10 bg-white/5">
@@ -567,6 +695,65 @@ export function MandateDetailClient({
                           ) : (
                             <Clock className="h-4 w-4 text-muted-foreground/30 mx-auto" />
                           )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Investor Interests Section */}
+          <Card className="border border-white/10 bg-white/5">
+            <CardHeader>
+              <CardTitle className="text-foreground flex items-center gap-2">
+                <HandCoins className="h-5 w-5 text-blue-400" />
+                Interest Submissions ({interests.length})
+              </CardTitle>
+              <CardDescription>
+                Investors who have expressed interest in this deal
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {interests.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  No interest submissions yet
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow className="border-white/10 hover:bg-transparent">
+                      <TableHead className="text-muted-foreground">Investor</TableHead>
+                      <TableHead className="text-muted-foreground">Submitted</TableHead>
+                      <TableHead className="text-muted-foreground">Status</TableHead>
+                      <TableHead className="text-muted-foreground">Notes</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {interests.map((interest: any) => (
+                      <TableRow key={interest.id} className="border-white/10">
+                        <TableCell className="font-medium text-foreground">
+                          {interest.investors?.legal_name || 'Unknown Investor'}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {interest.submitted_at ? formatDate(interest.submitted_at) : '—'}
+                        </TableCell>
+                        <TableCell>
+                          <Badge className={
+                            interest.status === 'approved'
+                              ? 'bg-emerald-500/20 text-emerald-200 border-emerald-400/30'
+                              : interest.status === 'pending'
+                                ? 'bg-amber-500/20 text-amber-200 border-amber-400/30'
+                                : interest.status === 'rejected'
+                                  ? 'bg-red-500/20 text-red-200 border-red-400/30'
+                                  : 'bg-white/10 text-foreground border-white/20'
+                          }>
+                            {interest.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground max-w-[200px] truncate">
+                          {interest.notes || '—'}
                         </TableCell>
                       </TableRow>
                     ))}
