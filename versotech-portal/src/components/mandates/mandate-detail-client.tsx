@@ -132,8 +132,6 @@ export function MandateDetailClient({
     return Math.round((journeyStages[idx].count / prev) * 100)
   }
 
-  const publishedTermSheet = termSheets.find((sheet: any) => sheet.status === 'published')
-
   // Filter signature history by date range (User Story Row 69)
   const filteredSignatures = signatureHistory.filter((sig: any) => {
     const sigDate = sig.signature_timestamp || sig.created_at
