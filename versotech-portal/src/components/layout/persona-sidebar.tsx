@@ -94,7 +94,7 @@ const PERSONA_NAV_ITEMS: Record<string, NavItem[]> = {
     { name: 'My Mandates', href: '/versotech_main/my-mandates', icon: FileSignature, description: 'Deals I manage' },
     { name: 'Subscription Packs', href: '/versotech_main/subscription-packs', icon: FileText, description: 'Pack review' },
     { name: 'Escrow', href: '/versotech_main/escrow', icon: Lock, description: 'Escrow status' },
-    { name: 'Reconciliation', href: '/versotech_main/lawyer-reconciliation', icon: Calculator, description: 'Financials' },
+    { name: 'Reconciliation', href: '/versotech_main/arranger-reconciliation', icon: Calculator, description: 'Financials' },
     { name: 'Fee Plans', href: '/versotech_main/fee-plans', icon: Calculator, description: 'Fee structures' },
     { name: 'Payment Requests', href: '/versotech_main/payment-requests', icon: ClipboardList, description: 'Fee collection' },
     { name: 'My Partners', href: '/versotech_main/my-partners', icon: Users, description: 'Partner network' },

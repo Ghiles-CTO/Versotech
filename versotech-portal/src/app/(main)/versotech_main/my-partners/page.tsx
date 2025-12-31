@@ -23,25 +23,44 @@ import {
 import {
   Users,
   Building2,
-  TrendingUp,
   CheckCircle2,
   Search,
   Loader2,
   AlertCircle,
-  ExternalLink,
   Globe,
   Mail,
-  Phone,
   Handshake,
+  FileText,
+  DollarSign,
+  ChevronRight,
+  TrendingUp,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { formatCurrency, formatDate } from '@/lib/format'
+import { formatCurrency } from '@/lib/format'
 import { createClient } from '@/lib/supabase/client'
+import Link from 'next/link'
+import { PartnerDetailDrawer } from '@/components/partners/partner-detail-drawer'
+import {
+  PartnerCommissionSummary,
+  type CommissionSummary,
+} from '@/components/partners/partner-commission-summary'
 
 type ArrangerInfo = {
   id: string
   legal_name: string
   status: string
+}
+
+type Deal = {
+  id: string
+  name: string
+  company_name: string | null
+}
+
+type FeePlan = {
+  id: string
+  name: string
+  is_active: boolean
 }
 
 type Partner = {
@@ -60,6 +79,8 @@ type Partner = {
   referrals_count: number
   total_referral_value: number
   last_activity: string | null
+  fee_plans: FeePlan[]
+  commission_summary: CommissionSummary
 }
 
 type Summary = {
@@ -67,6 +88,8 @@ type Summary = {
   activePartners: number
   totalReferrals: number
   totalReferralValue: number
+  totalOwed: number
+  totalPaid: number
 }
 
 const STATUS_STYLES: Record<string, string> = {
@@ -92,17 +115,31 @@ const STATUS_FILTERS = [
 
 export default function MyPartnersPage() {
   const [arrangerInfo, setArrangerInfo] = useState<ArrangerInfo | null>(null)
+  const [arrangerId, setArrangerId] = useState<string | null>(null)
   const [partners, setPartners] = useState<Partner[]>([])
+  const [deals, setDeals] = useState<Deal[]>([])
   const [summary, setSummary] = useState<Summary>({
     totalPartners: 0,
     activePartners: 0,
     totalReferrals: 0,
     totalReferralValue: 0,
+    totalOwed: 0,
+    totalPaid: 0,
   })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
+  const [dealFilter, setDealFilter] = useState('all')
+
+  // Detail drawer state
+  const [selectedPartnerId, setSelectedPartnerId] = useState<string | null>(null)
+  const [drawerOpen, setDrawerOpen] = useState(false)
+
+  const handlePartnerClick = (partnerId: string) => {
+    setSelectedPartnerId(partnerId)
+    setDrawerOpen(true)
+  }
 
   useEffect(() => {
     async function fetchData() {
@@ -130,6 +167,8 @@ export default function MyPartnersPage() {
           return
         }
 
+        setArrangerId(arrangerUser.arranger_id)
+
         // Fetch arranger info
         const { data: arranger, error: arrangerError } = await supabase
           .from('arranger_entities')
@@ -140,42 +179,62 @@ export default function MyPartnersPage() {
         if (arrangerError) throw arrangerError
         setArrangerInfo(arranger)
 
-        // Get deals for this arranger
-        const { data: deals, error: dealsError } = await supabase
+        // Get deals for this arranger (for filter dropdown)
+        const { data: arrangerDeals, error: dealsError } = await supabase
           .from('deals')
-          .select('id')
+          .select('id, name, company_name')
           .eq('arranger_entity_id', arrangerUser.arranger_id)
+          .order('name')
 
         if (dealsError) throw dealsError
+        setDeals(arrangerDeals || [])
 
-        if (!deals || deals.length === 0) {
+        if (!arrangerDeals || arrangerDeals.length === 0) {
           setPartners([])
-          setSummary({ totalPartners: 0, activePartners: 0, totalReferrals: 0, totalReferralValue: 0 })
+          setSummary({
+            totalPartners: 0,
+            activePartners: 0,
+            totalReferrals: 0,
+            totalReferralValue: 0,
+            totalOwed: 0,
+            totalPaid: 0,
+          })
           return
         }
 
-        const dealIds = deals.map(d => d.id)
+        const dealIds = arrangerDeals.map(d => d.id)
 
-        // Get partner referrals on these deals
-        const { data: referrals, error: refError } = await supabase
-          .from('deal_memberships')
+        // CORRECT APPROACH: Get partners via fee_plans (partner assignment to deals)
+        // Partners are linked to deals when CEO dispatches with a fee model
+        const { data: feePlansWithPartners, error: fpError } = await supabase
+          .from('fee_plans')
           .select(`
-            referred_by_entity_id,
-            investor_id,
-            deal:deal_id (id, name, currency, created_at)
+            id,
+            name,
+            is_active,
+            partner_id,
+            deal_id,
+            created_at,
+            deal:deals(id, name, currency, created_at)
           `)
           .in('deal_id', dealIds)
-          .eq('referred_by_entity_type', 'partner')
-          .not('referred_by_entity_id', 'is', null)
+          .not('partner_id', 'is', null)
 
-        if (refError) throw refError
+        if (fpError) throw fpError
 
-        // Get unique partner IDs
-        const partnerIds = [...new Set((referrals || []).map(r => r.referred_by_entity_id))]
+        // Get unique partner IDs from fee_plans
+        const partnerIds = [...new Set((feePlansWithPartners || []).map(fp => fp.partner_id).filter(Boolean))]
 
         if (partnerIds.length === 0) {
           setPartners([])
-          setSummary({ totalPartners: 0, activePartners: 0, totalReferrals: 0, totalReferralValue: 0 })
+          setSummary({
+            totalPartners: 0,
+            activePartners: 0,
+            totalReferrals: 0,
+            totalReferralValue: 0,
+            totalOwed: 0,
+            totalPaid: 0,
+          })
           return
         }
 
@@ -188,38 +247,61 @@ export default function MyPartnersPage() {
 
         if (partnersError) throw partnersError
 
-        // Get subscription values for referrals
-        const investorIds = [...new Set((referrals || []).filter(r => r.investor_id).map(r => r.investor_id))]
-        const { data: subs } = await supabase
-          .from('subscriptions')
-          .select('investor_id, commitment')
-          .in('investor_id', investorIds)
+        // Build fee plans by partner
+        const feePlansByPartner = new Map<string, FeePlan[]>()
+        const dealsByPartner = new Map<string, Set<string>>()
+        ;(feePlansWithPartners || []).forEach((fp: any) => {
+          if (!fp.partner_id) return
+          const existing = feePlansByPartner.get(fp.partner_id) || []
+          existing.push({ id: fp.id, name: fp.name, is_active: fp.is_active })
+          feePlansByPartner.set(fp.partner_id, existing)
 
-        const subsByInvestor = new Map<string, number>()
-        ;(subs || []).forEach((s: any) => {
-          const current = subsByInvestor.get(s.investor_id) || 0
-          subsByInvestor.set(s.investor_id, current + (Number(s.commitment) || 0))
+          // Track which deals this partner is assigned to
+          const dealSet = dealsByPartner.get(fp.partner_id) || new Set()
+          if (fp.deal_id) dealSet.add(fp.deal_id)
+          dealsByPartner.set(fp.partner_id, dealSet)
+        })
+
+        // Get commissions for these partners
+        const { data: commissions } = await supabase
+          .from('partner_commissions')
+          .select('partner_id, status, accrual_amount, currency')
+          .in('partner_id', partnerIds)
+          .eq('arranger_id', arrangerUser.arranger_id)
+
+        // Build commission summaries by partner
+        const commissionsByPartner = new Map<string, CommissionSummary>()
+        partnerIds.forEach(pid => {
+          commissionsByPartner.set(pid, {
+            accrued: 0,
+            invoice_requested: 0,
+            invoiced: 0,
+            paid: 0,
+            cancelled: 0,
+            total_owed: 0,
+            currency: 'USD',
+          })
+        })
+
+        ;(commissions || []).forEach((c: any) => {
+          const summary = commissionsByPartner.get(c.partner_id)
+          if (!summary) return
+          const amount = Number(c.accrual_amount) || 0
+          if (c.status === 'accrued') summary.accrued += amount
+          else if (c.status === 'invoice_requested') summary.invoice_requested += amount
+          else if (c.status === 'invoiced') summary.invoiced += amount
+          else if (c.status === 'paid') summary.paid += amount
+          else if (c.status === 'cancelled') summary.cancelled += amount
+          if (['accrued', 'invoice_requested', 'invoiced'].includes(c.status)) {
+            summary.total_owed += amount
+          }
+          if (c.currency) summary.currency = c.currency
         })
 
         // Process partners with stats
         const processedPartners: Partner[] = (partnersData || []).map((p: any) => {
-          const partnerRefs = (referrals || []).filter(r => r.referred_by_entity_id === p.id)
-          const dealsInvolved = [...new Set(partnerRefs.map(r => {
-            const deal = Array.isArray(r.deal) ? r.deal[0] : r.deal
-            return deal?.id
-          }).filter(Boolean))]
-          const totalValue = partnerRefs.reduce((sum, r) => {
-            if (r.investor_id) {
-              return sum + (subsByInvestor.get(r.investor_id) || 0)
-            }
-            return sum
-          }, 0)
-          const lastRef = partnerRefs.sort((a: any, b: any) => {
-            const aDeal = Array.isArray(a.deal) ? a.deal[0] : a.deal
-            const bDeal = Array.isArray(b.deal) ? b.deal[0] : b.deal
-            return new Date(bDeal?.created_at || 0).getTime() - new Date(aDeal?.created_at || 0).getTime()
-          })[0]
-          const lastRefDeal = lastRef ? (Array.isArray(lastRef.deal) ? lastRef.deal[0] : lastRef.deal) : null
+          const partnerFeePlans = feePlansByPartner.get(p.id) || []
+          const partnerDealIds = dealsByPartner.get(p.id) || new Set()
 
           return {
             id: p.id,
@@ -233,10 +315,20 @@ export default function MyPartnersPage() {
             country: p.country,
             logo_url: p.logo_url,
             kyc_status: p.kyc_status,
-            deals_count: dealsInvolved.length,
-            referrals_count: partnerRefs.length,
-            total_referral_value: totalValue,
-            last_activity: lastRefDeal?.created_at || null,
+            deals_count: partnerDealIds.size,
+            referrals_count: 0, // Will be populated if we track referrals separately
+            total_referral_value: 0, // Will be populated if we track referrals separately
+            last_activity: null,
+            fee_plans: partnerFeePlans,
+            commission_summary: commissionsByPartner.get(p.id) || {
+              accrued: 0,
+              invoice_requested: 0,
+              invoiced: 0,
+              paid: 0,
+              cancelled: 0,
+              total_owed: 0,
+              currency: 'USD',
+            },
           }
         })
 
@@ -245,12 +337,16 @@ export default function MyPartnersPage() {
         const active = processedPartners.filter(p => p.status === 'active').length
         const totalRefs = processedPartners.reduce((sum, p) => sum + p.referrals_count, 0)
         const totalVal = processedPartners.reduce((sum, p) => sum + p.total_referral_value, 0)
+        const totalOwed = processedPartners.reduce((sum, p) => sum + p.commission_summary.total_owed, 0)
+        const totalPaid = processedPartners.reduce((sum, p) => sum + p.commission_summary.paid, 0)
 
         setSummary({
           totalPartners: processedPartners.length,
           activePartners: active,
           totalReferrals: totalRefs,
           totalReferralValue: totalVal,
+          totalOwed,
+          totalPaid,
         })
 
         setError(null)
@@ -272,6 +368,16 @@ export default function MyPartnersPage() {
 
       if (partnersError) throw partnersError
 
+      const emptyCommission: CommissionSummary = {
+        accrued: 0,
+        invoice_requested: 0,
+        invoiced: 0,
+        paid: 0,
+        cancelled: 0,
+        total_owed: 0,
+        currency: 'USD',
+      }
+
       const processedPartners: Partner[] = (partnersData || []).map((p: any) => ({
         id: p.id,
         name: p.name || p.legal_name || 'Unknown Partner',
@@ -288,6 +394,8 @@ export default function MyPartnersPage() {
         referrals_count: 0,
         total_referral_value: 0,
         last_activity: null,
+        fee_plans: [],
+        commission_summary: emptyCommission,
       }))
 
       setPartners(processedPartners)
@@ -296,6 +404,8 @@ export default function MyPartnersPage() {
         activePartners: processedPartners.filter(p => p.status === 'active').length,
         totalReferrals: 0,
         totalReferralValue: 0,
+        totalOwed: 0,
+        totalPaid: 0,
       })
     }
 
@@ -310,7 +420,13 @@ export default function MyPartnersPage() {
       partner.legal_name?.toLowerCase().includes(search.toLowerCase()) ||
       partner.contact_name?.toLowerCase().includes(search.toLowerCase()) ||
       partner.country?.toLowerCase().includes(search.toLowerCase())
-    return matchesStatus && matchesSearch
+
+    // Deal filter - only applies if we have deal data
+    // Note: This is a simplified filter. For a real deal filter, you'd need
+    // to store which deals each partner has referrals on.
+    const matchesDeal = dealFilter === 'all' // TODO: Implement deal-specific filtering
+
+    return matchesStatus && matchesSearch && matchesDeal
   })
 
   if (loading) {
@@ -343,10 +459,16 @@ export default function MyPartnersPage() {
               : 'View all distribution partners'}
           </p>
         </div>
+        <Link href="/versotech_main/fee-plans">
+          <Button variant="outline" size="sm">
+            <FileText className="h-4 w-4 mr-2" />
+            Fee Plans
+          </Button>
+        </Link>
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
@@ -404,7 +526,41 @@ export default function MyPartnersPage() {
               {formatCurrency(summary.totalReferralValue, 'USD')}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              Total commitment value
+              Total commitments
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+              <DollarSign className="h-4 w-4" />
+              Fees Owed
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-yellow-600">
+              {formatCurrency(summary.totalOwed, 'USD')}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Pending payment
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+              <CheckCircle2 className="h-4 w-4" />
+              Fees Paid
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-600">
+              {formatCurrency(summary.totalPaid, 'USD')}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Total paid out
             </p>
           </CardContent>
         </Card>
@@ -437,6 +593,21 @@ export default function MyPartnersPage() {
                 ))}
               </SelectContent>
             </Select>
+            {deals.length > 0 && (
+              <Select value={dealFilter} onValueChange={setDealFilter}>
+                <SelectTrigger className="w-full md:w-56">
+                  <SelectValue placeholder="Filter by deal" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Deals</SelectItem>
+                  {deals.map((deal) => (
+                    <SelectItem key={deal.id} value={deal.id}>
+                      {deal.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -447,6 +618,7 @@ export default function MyPartnersPage() {
           <CardTitle>Partners</CardTitle>
           <CardDescription>
             {filteredPartners.length} partner{filteredPartners.length !== 1 ? 's' : ''} found
+            {arrangerInfo && ' • Click a row to view details'}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -467,15 +639,22 @@ export default function MyPartnersPage() {
                     <TableHead>Partner</TableHead>
                     <TableHead>Type</TableHead>
                     <TableHead>Contact</TableHead>
-                    <TableHead>Deals</TableHead>
+                    <TableHead>Fee Plans</TableHead>
                     <TableHead>Referrals</TableHead>
+                    <TableHead>Payments</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead className="w-10"></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredPartners.map((partner) => (
-                    <TableRow key={partner.id}>
+                    <TableRow
+                      key={partner.id}
+                      className={cn(
+                        arrangerInfo && 'cursor-pointer hover:bg-muted/50 transition-colors'
+                      )}
+                      onClick={() => arrangerInfo && handlePartnerClick(partner.id)}
+                    >
                       <TableCell>
                         <div className="flex items-center gap-3">
                           {partner.logo_url ? (
@@ -523,9 +702,26 @@ export default function MyPartnersPage() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge variant="outline">
-                          {partner.deals_count} deal{partner.deals_count !== 1 ? 's' : ''}
-                        </Badge>
+                        {partner.fee_plans.length > 0 ? (
+                          <div className="flex flex-wrap gap-1">
+                            {partner.fee_plans.slice(0, 2).map((fp) => (
+                              <Badge
+                                key={fp.id}
+                                variant={fp.is_active ? 'default' : 'secondary'}
+                                className="text-xs"
+                              >
+                                {fp.name}
+                              </Badge>
+                            ))}
+                            {partner.fee_plans.length > 2 && (
+                              <Badge variant="outline" className="text-xs">
+                                +{partner.fee_plans.length - 2}
+                              </Badge>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground text-xs">No fee plans</span>
+                        )}
                       </TableCell>
                       <TableCell>
                         <div>
@@ -536,6 +732,12 @@ export default function MyPartnersPage() {
                             </div>
                           )}
                         </div>
+                      </TableCell>
+                      <TableCell>
+                        <PartnerCommissionSummary
+                          summary={partner.commission_summary}
+                          variant="inline"
+                        />
                       </TableCell>
                       <TableCell>
                         <div className="space-y-1">
@@ -557,12 +759,10 @@ export default function MyPartnersPage() {
                           )}
                         </div>
                       </TableCell>
-                      <TableCell className="text-right">
-                        <Button variant="ghost" size="sm" asChild>
-                          <a href={`/versotech_main/users?type=partner&id=${partner.id}`}>
-                            <ExternalLink className="h-4 w-4" />
-                          </a>
-                        </Button>
+                      <TableCell>
+                        {arrangerInfo && (
+                          <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                        )}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -572,6 +772,13 @@ export default function MyPartnersPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Partner Detail Drawer */}
+      <PartnerDetailDrawer
+        partnerId={selectedPartnerId}
+        open={drawerOpen}
+        onOpenChange={setDrawerOpen}
+      />
     </div>
   )
 }

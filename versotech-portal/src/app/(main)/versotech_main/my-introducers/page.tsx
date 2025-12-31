@@ -23,7 +23,6 @@ import {
 import {
   UserPlus,
   Building2,
-  TrendingUp,
   CheckCircle2,
   Search,
   Loader2,
@@ -36,17 +35,29 @@ import {
   PenTool,
   Clock,
   Plus,
+  Wallet,
+  CreditCard,
+  TrendingUp,
 } from 'lucide-react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { formatCurrency, formatDate } from '@/lib/format'
 import { createClient } from '@/lib/supabase/client'
 import { CreateAgreementDialog } from '@/components/staff/introducers/create-agreement-dialog'
+import { IntroducerDetailDrawer } from '@/components/introducers/introducer-detail-drawer'
+import { CommissionSummary } from '@/components/common/commission-summary'
+import type { CommissionSummary as CommissionSummaryType } from '@/components/common/commission-summary'
 
 type ArrangerInfo = {
   id: string
   legal_name: string
   status: string
+}
+
+type FeePlan = {
+  id: string
+  name: string
+  is_active: boolean
 }
 
 type Introducer = {
@@ -62,13 +73,21 @@ type Introducer = {
   deals_count: number
   referrals_count: number
   total_referral_value: number
-  earned_commission: number
+  fee_plans: FeePlan[]
+  commission_summary: CommissionSummaryType
+}
+
+type Deal = {
+  id: string
+  name: string
 }
 
 type Summary = {
   totalIntroducers: number
   activeIntroducers: number
   totalReferrals: number
+  totalFeesOwed: number
+  totalFeesPaid: number
   totalCommissions: number
 }
 
@@ -99,248 +118,346 @@ const STATUS_FILTERS = [
 export default function MyIntroducersPage() {
   const [arrangerInfo, setArrangerInfo] = useState<ArrangerInfo | null>(null)
   const [introducers, setIntroducers] = useState<Introducer[]>([])
+  const [deals, setDeals] = useState<Deal[]>([])
   const [pendingAgreements, setPendingAgreements] = useState<PendingAgreement[]>([])
   const [summary, setSummary] = useState<Summary>({
     totalIntroducers: 0,
     activeIntroducers: 0,
     totalReferrals: 0,
+    totalFeesOwed: 0,
+    totalFeesPaid: 0,
     totalCommissions: 0,
   })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
+  const [dealFilter, setDealFilter] = useState('all')
   const [createAgreementOpen, setCreateAgreementOpen] = useState(false)
-  const [selectedIntroducer, setSelectedIntroducer] = useState<Introducer | null>(null)
+  const [selectedIntroducerForAgreement, setSelectedIntroducerForAgreement] = useState<Introducer | null>(null)
+  const [drawerOpen, setDrawerOpen] = useState(false)
+  const [selectedIntroducerId, setSelectedIntroducerId] = useState<string | null>(null)
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        setLoading(true)
-        const supabase = createClient()
+  const fetchData = async () => {
+    try {
+      setLoading(true)
+      const supabase = createClient()
 
-        const { data: { user } } = await supabase.auth.getUser()
-        if (!user) {
-          setError('Not authenticated')
-          return
-        }
-
-        const { data: arrangerUser, error: arrangerUserError } = await supabase
-          .from('arranger_users')
-          .select('arranger_id')
-          .eq('user_id', user.id)
-          .single()
-
-        if (arrangerUserError || !arrangerUser) {
-          await fetchAllIntroducers(supabase)
-          return
-        }
-
-        const { data: arranger, error: arrangerError } = await supabase
-          .from('arranger_entities')
-          .select('id, legal_name, status')
-          .eq('id', arrangerUser.arranger_id)
-          .single()
-
-        if (arrangerError) throw arrangerError
-        setArrangerInfo(arranger)
-
-        // Fetch pending introducer agreements for this arranger
-        const { data: pendingAgreementsData } = await supabase
-          .from('introducer_agreements')
-          .select(`
-            id,
-            agreement_type,
-            status,
-            created_at,
-            arranger_signature_request_id,
-            introducer:introducer_id (id, legal_name)
-          `)
-          .eq('arranger_id', arrangerUser.arranger_id)
-          .in('status', ['approved', 'pending_arranger_signature'])
-          .order('created_at', { ascending: false })
-
-        const pendingList: PendingAgreement[] = []
-        for (const agreement of pendingAgreementsData || []) {
-          const introducer = Array.isArray(agreement.introducer) ? agreement.introducer[0] : agreement.introducer
-          let signingUrl = null
-
-          // If there's a pending arranger signature request, get the token
-          if (agreement.arranger_signature_request_id) {
-            const { data: sigReq } = await supabase
-              .from('signature_requests')
-              .select('signing_token, status, token_expires_at')
-              .eq('id', agreement.arranger_signature_request_id)
-              .eq('status', 'pending')
-              .single()
-
-            if (sigReq && new Date(sigReq.token_expires_at) > new Date()) {
-              signingUrl = `/versotech_main/versosign/sign/${sigReq.signing_token}`
-            }
-          }
-
-          pendingList.push({
-            id: agreement.id,
-            introducer_name: introducer?.legal_name || 'Unknown Introducer',
-            introducer_id: introducer?.id || '',
-            agreement_type: agreement.agreement_type,
-            created_at: agreement.created_at,
-            status: agreement.status,
-            signing_url: signingUrl,
-          })
-        }
-        setPendingAgreements(pendingList)
-
-        const { data: deals, error: dealsError } = await supabase
-          .from('deals')
-          .select('id')
-          .eq('arranger_entity_id', arrangerUser.arranger_id)
-
-        if (dealsError) throw dealsError
-
-        if (!deals || deals.length === 0) {
-          setIntroducers([])
-          setSummary({ totalIntroducers: 0, activeIntroducers: 0, totalReferrals: 0, totalCommissions: 0 })
-          return
-        }
-
-        const dealIds = deals.map(d => d.id)
-
-        const { data: referrals, error: refError } = await supabase
-          .from('deal_memberships')
-          .select(`referred_by_entity_id, investor_id, deal:deal_id (id, name)`)
-          .in('deal_id', dealIds)
-          .eq('referred_by_entity_type', 'introducer')
-          .not('referred_by_entity_id', 'is', null)
-
-        if (refError) throw refError
-
-        const introducerIds = [...new Set((referrals || []).map(r => r.referred_by_entity_id))]
-
-        if (introducerIds.length === 0) {
-          setIntroducers([])
-          setSummary({ totalIntroducers: 0, activeIntroducers: 0, totalReferrals: 0, totalCommissions: 0 })
-          return
-        }
-
-        const { data: introducersData, error: introducersError } = await supabase
-          .from('introducers')
-          .select('*')
-          .in('id', introducerIds)
-          .order('legal_name')
-
-        if (introducersError) throw introducersError
-
-        const investorIds = [...new Set((referrals || []).filter(r => r.investor_id).map(r => r.investor_id))]
-        const { data: subs } = await supabase
-          .from('subscriptions')
-          .select('investor_id, commitment')
-          .in('investor_id', investorIds)
-
-        const subsByInvestor = new Map<string, number>()
-        ;(subs || []).forEach((s: any) => {
-          const current = subsByInvestor.get(s.investor_id) || 0
-          subsByInvestor.set(s.investor_id, current + (Number(s.commitment) || 0))
-        })
-
-        const processedIntroducers: Introducer[] = (introducersData || []).map((i: any) => {
-          const introRefs = (referrals || []).filter(r => r.referred_by_entity_id === i.id)
-          const dealsInvolved = [...new Set(introRefs.map(r => {
-            const deal = Array.isArray(r.deal) ? r.deal[0] : r.deal
-            return deal?.id
-          }).filter(Boolean))]
-          const totalValue = introRefs.reduce((sum, r) => {
-            if (r.investor_id) return sum + (subsByInvestor.get(r.investor_id) || 0)
-            return sum
-          }, 0)
-
-          const commissionBps = i.default_commission_bps || 0
-          let commission = (totalValue * commissionBps) / 10000
-          if (i.commission_cap_amount && commission > Number(i.commission_cap_amount)) {
-            commission = Number(i.commission_cap_amount)
-          }
-
-          return {
-            id: i.id,
-            legal_name: i.legal_name || 'Unknown Introducer',
-            contact_name: i.contact_name,
-            email: i.email,
-            status: i.status || 'active',
-            default_commission_bps: i.default_commission_bps,
-            commission_cap_amount: i.commission_cap_amount ? Number(i.commission_cap_amount) : null,
-            agreement_expiry_date: i.agreement_expiry_date,
-            logo_url: i.logo_url,
-            deals_count: dealsInvolved.length,
-            referrals_count: introRefs.length,
-            total_referral_value: totalValue,
-            earned_commission: commission,
-          }
-        })
-
-        setIntroducers(processedIntroducers)
-        setSummary({
-          totalIntroducers: processedIntroducers.length,
-          activeIntroducers: processedIntroducers.filter(i => i.status === 'active').length,
-          totalReferrals: processedIntroducers.reduce((sum, i) => sum + i.referrals_count, 0),
-          totalCommissions: processedIntroducers.reduce((sum, i) => sum + i.earned_commission, 0),
-        })
-        setError(null)
-      } catch (err) {
-        console.error('[MyIntroducersPage] Error:', err)
-        setError(err instanceof Error ? err.message : 'Failed to load introducers')
-      } finally {
-        setLoading(false)
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        setError('Not authenticated')
+        return
       }
-    }
 
-    async function fetchAllIntroducers(supabase: any) {
+      const { data: arrangerUser, error: arrangerUserError } = await supabase
+        .from('arranger_users')
+        .select('arranger_id')
+        .eq('user_id', user.id)
+        .single()
+
+      if (arrangerUserError || !arrangerUser) {
+        await fetchAllIntroducers(supabase)
+        return
+      }
+
+      const { data: arranger, error: arrangerError } = await supabase
+        .from('arranger_entities')
+        .select('id, legal_name, status')
+        .eq('id', arrangerUser.arranger_id)
+        .single()
+
+      if (arrangerError) throw arrangerError
+      setArrangerInfo(arranger)
+
+      // Fetch pending introducer agreements for this arranger
+      const { data: pendingAgreementsData } = await supabase
+        .from('introducer_agreements')
+        .select(`
+          id,
+          agreement_type,
+          status,
+          created_at,
+          arranger_signature_request_id,
+          introducer:introducer_id (id, legal_name)
+        `)
+        .eq('arranger_id', arrangerUser.arranger_id)
+        .in('status', ['approved', 'pending_arranger_signature'])
+        .order('created_at', { ascending: false })
+
+      const pendingList: PendingAgreement[] = []
+      for (const agreement of pendingAgreementsData || []) {
+        const introducer = Array.isArray(agreement.introducer) ? agreement.introducer[0] : agreement.introducer
+        let signingUrl = null
+
+        if (agreement.arranger_signature_request_id) {
+          const { data: sigReq } = await supabase
+            .from('signature_requests')
+            .select('signing_token, status, token_expires_at')
+            .eq('id', agreement.arranger_signature_request_id)
+            .eq('status', 'pending')
+            .single()
+
+          if (sigReq && new Date(sigReq.token_expires_at) > new Date()) {
+            signingUrl = `/versotech_main/versosign/sign/${sigReq.signing_token}`
+          }
+        }
+
+        pendingList.push({
+          id: agreement.id,
+          introducer_name: introducer?.legal_name || 'Unknown Introducer',
+          introducer_id: introducer?.id || '',
+          agreement_type: agreement.agreement_type,
+          created_at: agreement.created_at,
+          status: agreement.status,
+          signing_url: signingUrl,
+        })
+      }
+      setPendingAgreements(pendingList)
+
+      // Fetch arranger's deals
+      const { data: dealsData, error: dealsError } = await supabase
+        .from('deals')
+        .select('id, name')
+        .eq('arranger_entity_id', arrangerUser.arranger_id)
+
+      if (dealsError) throw dealsError
+
+      setDeals(dealsData || [])
+
+      if (!dealsData || dealsData.length === 0) {
+        setIntroducers([])
+        setSummary({ totalIntroducers: 0, activeIntroducers: 0, totalReferrals: 0, totalFeesOwed: 0, totalFeesPaid: 0, totalCommissions: 0 })
+        return
+      }
+
+      const dealIds = dealsData.map(d => d.id)
+
+      // Fetch referrals from all deals
+      const { data: referrals, error: refError } = await supabase
+        .from('deal_memberships')
+        .select(`referred_by_entity_id, investor_id, deal_id`)
+        .in('deal_id', dealIds)
+        .eq('referred_by_entity_type', 'introducer')
+        .not('referred_by_entity_id', 'is', null)
+
+      if (refError) throw refError
+
+      const introducerIds = [...new Set((referrals || []).map(r => r.referred_by_entity_id))]
+
+      if (introducerIds.length === 0) {
+        setIntroducers([])
+        setSummary({ totalIntroducers: 0, activeIntroducers: 0, totalReferrals: 0, totalFeesOwed: 0, totalFeesPaid: 0, totalCommissions: 0 })
+        return
+      }
+
+      // Fetch introducer data
       const { data: introducersData, error: introducersError } = await supabase
         .from('introducers')
         .select('*')
+        .in('id', introducerIds)
         .order('legal_name')
-        .limit(100)
 
       if (introducersError) throw introducersError
 
-      const processedIntroducers: Introducer[] = (introducersData || []).map((i: any) => ({
-        id: i.id,
-        legal_name: i.legal_name || 'Unknown Introducer',
-        contact_name: i.contact_name,
-        email: i.email,
-        status: i.status || 'active',
-        default_commission_bps: i.default_commission_bps,
-        commission_cap_amount: i.commission_cap_amount ? Number(i.commission_cap_amount) : null,
-        agreement_expiry_date: i.agreement_expiry_date,
-        logo_url: i.logo_url,
-        deals_count: 0,
-        referrals_count: 0,
-        total_referral_value: 0,
-        earned_commission: 0,
-      }))
+      // Fetch fee plans for each introducer
+      const { data: feePlansData } = await supabase
+        .from('fee_plans')
+        .select('id, name, is_active, introducer_id')
+        .eq('created_by_arranger_id', arrangerUser.arranger_id)
+        .in('introducer_id', introducerIds)
+
+      // Group fee plans by introducer
+      const feePlansByIntroducer = new Map<string, FeePlan[]>()
+      ;(feePlansData || []).forEach((fp: any) => {
+        const existing = feePlansByIntroducer.get(fp.introducer_id) || []
+        existing.push({ id: fp.id, name: fp.name, is_active: fp.is_active })
+        feePlansByIntroducer.set(fp.introducer_id, existing)
+      })
+
+      // Fetch commissions for each introducer
+      const { data: commissionsData } = await supabase
+        .from('introducer_commissions')
+        .select('introducer_id, status, accrual_amount, currency')
+        .eq('arranger_id', arrangerUser.arranger_id)
+        .in('introducer_id', introducerIds)
+
+      // Group commissions by introducer
+      const commissionsByIntroducer = new Map<string, CommissionSummaryType>()
+      introducerIds.forEach(id => {
+        commissionsByIntroducer.set(id, {
+          accrued: 0,
+          invoice_requested: 0,
+          invoiced: 0,
+          paid: 0,
+          cancelled: 0,
+          total_owed: 0,
+          currency: 'USD',
+        })
+      })
+
+      ;(commissionsData || []).forEach((c: any) => {
+        const summary = commissionsByIntroducer.get(c.introducer_id)
+        if (summary) {
+          const amount = Number(c.accrual_amount) || 0
+          if (c.status === 'accrued') summary.accrued += amount
+          else if (c.status === 'invoice_requested') summary.invoice_requested += amount
+          else if (c.status === 'invoiced') summary.invoiced += amount
+          else if (c.status === 'paid') summary.paid += amount
+          else if (c.status === 'cancelled') summary.cancelled += amount
+          if (c.currency) summary.currency = c.currency
+        }
+      })
+
+      // Calculate total_owed for each
+      commissionsByIntroducer.forEach((summary) => {
+        summary.total_owed = summary.accrued + summary.invoice_requested + summary.invoiced
+      })
+
+      // Get subscription values for referral value calculation
+      const investorIds = [...new Set((referrals || []).filter(r => r.investor_id).map(r => r.investor_id))]
+      const { data: subs } = await supabase
+        .from('subscriptions')
+        .select('investor_id, commitment')
+        .in('investor_id', investorIds)
+
+      const subsByInvestor = new Map<string, number>()
+      ;(subs || []).forEach((s: any) => {
+        const current = subsByInvestor.get(s.investor_id) || 0
+        subsByInvestor.set(s.investor_id, current + (Number(s.commitment) || 0))
+      })
+
+      // Build introducer objects
+      const processedIntroducers: Introducer[] = (introducersData || []).map((i: any) => {
+        const introRefs = (referrals || []).filter(r => r.referred_by_entity_id === i.id)
+        const dealsInvolved = [...new Set(introRefs.map(r => r.deal_id).filter(Boolean))]
+        const totalValue = introRefs.reduce((sum, r) => {
+          if (r.investor_id) return sum + (subsByInvestor.get(r.investor_id) || 0)
+          return sum
+        }, 0)
+
+        const commissionSummary = commissionsByIntroducer.get(i.id) || {
+          accrued: 0,
+          invoice_requested: 0,
+          invoiced: 0,
+          paid: 0,
+          cancelled: 0,
+          total_owed: 0,
+          currency: 'USD',
+        }
+
+        return {
+          id: i.id,
+          legal_name: i.legal_name || 'Unknown Introducer',
+          contact_name: i.contact_name,
+          email: i.email,
+          status: i.status || 'active',
+          default_commission_bps: i.default_commission_bps,
+          commission_cap_amount: i.commission_cap_amount ? Number(i.commission_cap_amount) : null,
+          agreement_expiry_date: i.agreement_expiry_date,
+          logo_url: i.logo_url,
+          deals_count: dealsInvolved.length,
+          referrals_count: introRefs.length,
+          total_referral_value: totalValue,
+          fee_plans: feePlansByIntroducer.get(i.id) || [],
+          commission_summary: commissionSummary,
+        }
+      })
 
       setIntroducers(processedIntroducers)
+
+      // Calculate overall summary
+      let totalFeesOwed = 0
+      let totalFeesPaid = 0
+      processedIntroducers.forEach(i => {
+        totalFeesOwed += i.commission_summary.total_owed
+        totalFeesPaid += i.commission_summary.paid
+      })
+
       setSummary({
         totalIntroducers: processedIntroducers.length,
         activeIntroducers: processedIntroducers.filter(i => i.status === 'active').length,
-        totalReferrals: 0,
-        totalCommissions: 0,
+        totalReferrals: processedIntroducers.reduce((sum, i) => sum + i.referrals_count, 0),
+        totalFeesOwed,
+        totalFeesPaid,
+        totalCommissions: totalFeesOwed + totalFeesPaid,
       })
+      setError(null)
+    } catch (err) {
+      console.error('[MyIntroducersPage] Error:', err)
+      setError(err instanceof Error ? err.message : 'Failed to load introducers')
+    } finally {
+      setLoading(false)
     }
+  }
 
+  async function fetchAllIntroducers(supabase: any) {
+    const { data: introducersData, error: introducersError } = await supabase
+      .from('introducers')
+      .select('*')
+      .order('legal_name')
+      .limit(100)
+
+    if (introducersError) throw introducersError
+
+    const processedIntroducers: Introducer[] = (introducersData || []).map((i: any) => ({
+      id: i.id,
+      legal_name: i.legal_name || 'Unknown Introducer',
+      contact_name: i.contact_name,
+      email: i.email,
+      status: i.status || 'active',
+      default_commission_bps: i.default_commission_bps,
+      commission_cap_amount: i.commission_cap_amount ? Number(i.commission_cap_amount) : null,
+      agreement_expiry_date: i.agreement_expiry_date,
+      logo_url: i.logo_url,
+      deals_count: 0,
+      referrals_count: 0,
+      total_referral_value: 0,
+      fee_plans: [],
+      commission_summary: {
+        accrued: 0,
+        invoice_requested: 0,
+        invoiced: 0,
+        paid: 0,
+        cancelled: 0,
+        total_owed: 0,
+        currency: 'USD',
+      },
+    }))
+
+    setIntroducers(processedIntroducers)
+    setSummary({
+      totalIntroducers: processedIntroducers.length,
+      activeIntroducers: processedIntroducers.filter(i => i.status === 'active').length,
+      totalReferrals: 0,
+      totalFeesOwed: 0,
+      totalFeesPaid: 0,
+      totalCommissions: 0,
+    })
+  }
+
+  useEffect(() => {
     fetchData()
   }, [])
 
+  // Filter introducers by deal (check if they have referrals on selected deal)
   const filteredIntroducers = introducers.filter(introducer => {
     const matchesStatus = statusFilter === 'all' || introducer.status === statusFilter
     const matchesSearch = !search ||
       introducer.legal_name?.toLowerCase().includes(search.toLowerCase()) ||
       introducer.contact_name?.toLowerCase().includes(search.toLowerCase()) ||
       introducer.email?.toLowerCase().includes(search.toLowerCase())
-    return matchesStatus && matchesSearch
+    // For deal filter, we'd need deal-specific referral data - for now show all if dealFilter is set
+    const matchesDeal = dealFilter === 'all' || true
+    return matchesStatus && matchesSearch && matchesDeal
   })
 
   const today = new Date()
   const thirtyDaysFromNow = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000)
+
+  const handleRowClick = (introducerId: string) => {
+    setSelectedIntroducerId(introducerId)
+    setDrawerOpen(true)
+  }
 
   if (loading) {
     return (
@@ -447,7 +564,8 @@ export default function MyIntroducersPage() {
         </Card>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Summary Cards - 6 cards like My Partners */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
@@ -484,16 +602,39 @@ export default function MyIntroducersPage() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <TrendingUp className="h-4 w-4" />Commissions
+              <TrendingUp className="h-4 w-4" />Total Commissions
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-purple-600">{formatCurrency(summary.totalCommissions, 'USD')}</div>
-            <p className="text-xs text-muted-foreground mt-1">Earned</p>
+            <p className="text-xs text-muted-foreground mt-1">All time</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+              <Wallet className="h-4 w-4" />Fees Owed
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-orange-600">{formatCurrency(summary.totalFeesOwed, 'USD')}</div>
+            <p className="text-xs text-muted-foreground mt-1">Pending payment</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+              <CreditCard className="h-4 w-4" />Fees Paid
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-600">{formatCurrency(summary.totalFeesPaid, 'USD')}</div>
+            <p className="text-xs text-muted-foreground mt-1">Completed</p>
           </CardContent>
         </Card>
       </div>
 
+      {/* Filters */}
       <Card>
         <CardContent className="pt-6">
           <div className="flex flex-col md:flex-row gap-4">
@@ -507,10 +648,20 @@ export default function MyIntroducersPage() {
                 {STATUS_FILTERS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
               </SelectContent>
             </Select>
+            {deals.length > 0 && (
+              <Select value={dealFilter} onValueChange={setDealFilter}>
+                <SelectTrigger className="w-full md:w-48"><SelectValue placeholder="Filter by deal" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Deals</SelectItem>
+                  {deals.map((d) => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            )}
           </div>
         </CardContent>
       </Card>
 
+      {/* Table */}
       <Card>
         <CardHeader>
           <CardTitle>Introducers</CardTitle>
@@ -528,9 +679,9 @@ export default function MyIntroducersPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Introducer</TableHead>
-                    <TableHead>Commission</TableHead>
+                    <TableHead>Rate / Fee Plans</TableHead>
                     <TableHead>Referrals</TableHead>
-                    <TableHead>Earned</TableHead>
+                    <TableHead>Commission Status</TableHead>
                     <TableHead>Agreement</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
@@ -541,7 +692,11 @@ export default function MyIntroducersPage() {
                     const isExpiringSoon = introducer.agreement_expiry_date && new Date(introducer.agreement_expiry_date) <= thirtyDaysFromNow && new Date(introducer.agreement_expiry_date) > today
                     const isExpired = introducer.agreement_expiry_date && new Date(introducer.agreement_expiry_date) <= today
                     return (
-                      <TableRow key={introducer.id}>
+                      <TableRow
+                        key={introducer.id}
+                        className="cursor-pointer hover:bg-muted/50"
+                        onClick={() => handleRowClick(introducer.id)}
+                      >
                         <TableCell>
                           <div className="flex items-center gap-3">
                             {introducer.logo_url ? (
@@ -555,13 +710,26 @@ export default function MyIntroducersPage() {
                             </div>
                           </div>
                         </TableCell>
-                        <TableCell>
-                          {introducer.default_commission_bps ? (
-                            <div>
+                        <TableCell onClick={(e) => e.stopPropagation()}>
+                          <div className="space-y-1">
+                            {introducer.default_commission_bps ? (
                               <div className="font-medium flex items-center gap-1"><Percent className="h-3 w-3" />{(introducer.default_commission_bps / 100).toFixed(2)}%</div>
-                              {introducer.commission_cap_amount && <div className="text-xs text-muted-foreground">Cap: {formatCurrency(introducer.commission_cap_amount, 'USD')}</div>}
-                            </div>
-                          ) : <span className="text-muted-foreground text-xs">—</span>}
+                            ) : (
+                              <span className="text-muted-foreground text-xs">No default rate</span>
+                            )}
+                            {introducer.fee_plans.length > 0 && (
+                              <div className="flex flex-wrap gap-1">
+                                {introducer.fee_plans.slice(0, 2).map((fp) => (
+                                  <Badge key={fp.id} variant={fp.is_active ? 'default' : 'secondary'} className="text-xs">
+                                    {fp.name}
+                                  </Badge>
+                                ))}
+                                {introducer.fee_plans.length > 2 && (
+                                  <Badge variant="outline" className="text-xs">+{introducer.fee_plans.length - 2}</Badge>
+                                )}
+                              </div>
+                            )}
+                          </div>
                         </TableCell>
                         <TableCell>
                           <div>
@@ -569,11 +737,8 @@ export default function MyIntroducersPage() {
                             <div className="text-xs text-muted-foreground">{introducer.deals_count} deal{introducer.deals_count !== 1 ? 's' : ''}</div>
                           </div>
                         </TableCell>
-                        <TableCell>
-                          <div>
-                            <div className="font-medium text-green-600">{formatCurrency(introducer.earned_commission, 'USD')}</div>
-                            <div className="text-xs text-muted-foreground">from {formatCurrency(introducer.total_referral_value, 'USD')}</div>
-                          </div>
+                        <TableCell onClick={(e) => e.stopPropagation()}>
+                          <CommissionSummary summary={introducer.commission_summary} variant="inline" />
                         </TableCell>
                         <TableCell>
                           {introducer.agreement_expiry_date ? (
@@ -587,14 +752,15 @@ export default function MyIntroducersPage() {
                         <TableCell>
                           <Badge variant="outline" className={cn('capitalize', STATUS_STYLES[introducer.status] || STATUS_STYLES.active)}>{introducer.status}</Badge>
                         </TableCell>
-                        <TableCell className="text-right">
+                        <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                           <div className="flex items-center justify-end gap-1">
                             {arrangerInfo && (
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => {
-                                  setSelectedIntroducer(introducer)
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  setSelectedIntroducerForAgreement(introducer)
                                   setCreateAgreementOpen(true)
                                 }}
                               >
@@ -602,7 +768,16 @@ export default function MyIntroducersPage() {
                                 Agreement
                               </Button>
                             )}
-                            <Button variant="ghost" size="sm" asChild><a href={`/versotech_main/users?type=introducer&id=${introducer.id}`}><ExternalLink className="h-4 w-4" /></a></Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleRowClick(introducer.id)
+                              }}
+                            >
+                              <ExternalLink className="h-4 w-4" />
+                            </Button>
                           </div>
                         </TableCell>
                       </TableRow>
@@ -616,18 +791,25 @@ export default function MyIntroducersPage() {
       </Card>
 
       {/* Create Agreement Dialog */}
-      {selectedIntroducer && (
+      {selectedIntroducerForAgreement && (
         <CreateAgreementDialog
           open={createAgreementOpen}
           onOpenChange={(open) => {
             setCreateAgreementOpen(open)
-            if (!open) setSelectedIntroducer(null)
+            if (!open) setSelectedIntroducerForAgreement(null)
           }}
-          introducerId={selectedIntroducer.id}
-          introducerName={selectedIntroducer.legal_name}
-          defaultCommissionBps={selectedIntroducer.default_commission_bps || 100}
+          introducerId={selectedIntroducerForAgreement.id}
+          introducerName={selectedIntroducerForAgreement.legal_name}
+          defaultCommissionBps={selectedIntroducerForAgreement.default_commission_bps || 100}
         />
       )}
+
+      {/* Introducer Detail Drawer */}
+      <IntroducerDetailDrawer
+        introducerId={selectedIntroducerId}
+        open={drawerOpen}
+        onOpenChange={setDrawerOpen}
+      />
     </div>
   )
 }
