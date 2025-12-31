@@ -766,6 +766,57 @@ export async function handleSubscriptionSignature(
     console.log('⚠️ [SUBSCRIPTION HANDLER] No deal_id - skipping lawyer notifications')
   }
 
+  // 6c. NOTIFY ARRANGER USERS (if deal has an arranger)
+  console.log('\n👔 [SUBSCRIPTION HANDLER] Step 6c: Notifying arranger users')
+
+  if (subscription.deal_id) {
+    // Get the deal's arranger_entity_id
+    const { data: deal } = await supabase
+      .from('deals')
+      .select('arranger_entity_id')
+      .eq('id', subscription.deal_id)
+      .single()
+
+    if (deal?.arranger_entity_id) {
+      // Get arranger users for notification
+      const { data: arrangerUsers } = await supabase
+        .from('arranger_users')
+        .select('user_id')
+        .eq('arranger_id', deal.arranger_entity_id)
+
+      if (arrangerUsers && arrangerUsers.length > 0) {
+        const signerRole = signatureRequest.signer_role as string
+        const isAdminSigner = signerRole === 'admin' || signerRole === 'arranger'
+
+        const arrangerNotifications = arrangerUsers.map((au: { user_id: string }) => ({
+          user_id: au.user_id,
+          investor_id: null,
+          title: isAdminSigner ? 'Subscription Pack Fully Executed' : 'Subscription Pack Signed by Investor',
+          message: isAdminSigner
+            ? `The subscription pack for ${subscription.investor?.display_name || subscription.investor?.legal_name || 'Investor'} (${subscription.vehicle?.name || 'your mandate'}) is now fully executed.`
+            : `${subscription.investor?.display_name || subscription.investor?.legal_name || 'Investor'} has signed the subscription pack for ${subscription.vehicle?.name || 'your mandate'}.`,
+          link: '/versotech_main/versosign'
+        }))
+
+        const { error: arrangerNotifError } = await supabase
+          .from('investor_notifications')
+          .insert(arrangerNotifications)
+
+        if (arrangerNotifError) {
+          console.error('❌ [SUBSCRIPTION HANDLER] Failed to notify arrangers:', arrangerNotifError)
+        } else {
+          console.log(`✅ [SUBSCRIPTION HANDLER] Notified ${arrangerUsers.length} arranger user(s)`)
+        }
+      } else {
+        console.log('ℹ️ [SUBSCRIPTION HANDLER] No arranger users found for this deal')
+      }
+    } else {
+      console.log('ℹ️ [SUBSCRIPTION HANDLER] Deal has no arranger_entity_id - skipping arranger notifications')
+    }
+  } else {
+    console.log('⚠️ [SUBSCRIPTION HANDLER] No deal_id - skipping arranger notifications')
+  }
+
   // 7. CREATE AUDIT LOG ENTRY
   console.log('\n📝 [SUBSCRIPTION HANDLER] Step 7: Creating audit log entry')
   await supabase.from('audit_logs').insert({
@@ -1152,18 +1203,29 @@ export async function handlePlacementAgreementSignature(
   })
 
   // Check which signer just signed
-  if (signatureRequest.signature_position === 'party_a') {
-    // CEO signed first
-    console.log('👔 [PLACEMENT AGREEMENT HANDLER] CEO (party_a) signed - updating status')
+  const isArrangerSigner = signatureRequest.signer_role === 'arranger'
+  const hasArranger = !!agreement.arranger_id
 
-    // Update agreement status and store CEO signature request ID
+  if (signatureRequest.signature_position === 'party_a') {
+    // CEO or Arranger signed first
+    const signerType = isArrangerSigner ? 'Arranger' : 'CEO'
+    console.log(`👔 [PLACEMENT AGREEMENT HANDLER] ${signerType} (party_a) signed - updating status`)
+
+    // Update agreement status and store appropriate signature request ID
+    const updateData: any = {
+      status: 'pending_cp_signature',
+      updated_at: new Date().toISOString()
+    }
+
+    if (isArrangerSigner) {
+      updateData.arranger_signature_request_id = signatureRequest.id
+    } else {
+      updateData.ceo_signature_request_id = signatureRequest.id
+    }
+
     const { error: updateError } = await supabase
       .from('placement_agreements')
-      .update({
-        status: 'pending_cp_signature',
-        ceo_signature_request_id: signatureRequest.id,
-        updated_at: new Date().toISOString()
-      })
+      .update(updateData)
       .eq('id', agreementId)
 
     if (updateError) {
@@ -1239,11 +1301,12 @@ export async function handlePlacementAgreementSignature(
           .eq('id', agreementId)
 
         // Create notifications for all CP users
+        const signerLabel = isArrangerSigner ? 'Arranger' : 'CEO'
         const notifications = cpUsers.map((cpUser: any) => ({
           user_id: cpUser.user_id,
           investor_id: null,
           title: 'Placement Agreement Ready for Signature',
-          message: 'Your placement agreement has been signed by the CEO and is ready for your signature.',
+          message: `Your placement agreement has been signed by the ${signerLabel} and is ready for your signature.`,
           link: `/versotech_main/placement-agreements/${agreementId}`,
         }))
 
@@ -1294,6 +1357,27 @@ export async function handlePlacementAgreementSignature(
 
       await supabase.from('investor_notifications').insert(notifications)
       console.log('✅ [PLACEMENT AGREEMENT HANDLER] Notifications sent to CEO/staff')
+    }
+
+    // Notify arranger users if this agreement was for their mandate
+    if (hasArranger && agreement.arranger_id) {
+      const { data: arrangerUsers } = await supabase
+        .from('arranger_users')
+        .select('user_id')
+        .eq('arranger_id', agreement.arranger_id)
+
+      if (arrangerUsers && arrangerUsers.length > 0) {
+        const arrangerNotifications = arrangerUsers.map((au: any) => ({
+          user_id: au.user_id,
+          investor_id: null,
+          title: 'Placement Agreement Fully Signed',
+          message: `${cp?.display_name || cp?.legal_name || 'Commercial Partner'}'s placement agreement for your mandate is now active.`,
+          link: `/versotech_main/my-commercial-partners`,
+        }))
+
+        await supabase.from('investor_notifications').insert(arrangerNotifications)
+        console.log('✅ [PLACEMENT AGREEMENT HANDLER] Notifications sent to arranger users')
+      }
     }
 
     // Create audit log

@@ -12,6 +12,9 @@ const addMemberSchema = z.object({
   role: z.enum([
     'investor',
     'co_investor',
+    'partner_investor',
+    'introducer_investor',
+    'commercial_partner_investor',
     'spouse',
     'advisor',
     'lawyer',

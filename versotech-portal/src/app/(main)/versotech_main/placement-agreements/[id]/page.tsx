@@ -54,6 +54,7 @@ const STATUS_STYLES: Record<string, { bg: string; icon: React.ComponentType<{ cl
   active: { bg: 'bg-green-100 text-green-800', icon: CheckCircle2 },
   pending_signature: { bg: 'bg-yellow-100 text-yellow-800', icon: Clock },
   pending_ceo_signature: { bg: 'bg-blue-100 text-blue-800', icon: PenTool },
+  pending_arranger_signature: { bg: 'bg-purple-100 text-purple-800', icon: PenTool },
   pending_cp_signature: { bg: 'bg-orange-100 text-orange-800', icon: FileSignature },
   approved: { bg: 'bg-blue-100 text-blue-800', icon: CheckCircle2 },
   draft: { bg: 'bg-gray-100 text-gray-800', icon: FileText },
@@ -392,6 +393,22 @@ export default function PlacementAgreementDetailPage() {
             </Card>
           )}
 
+          {agreement.status === 'pending_arranger_signature' && (
+            <Card className="border-purple-200 bg-purple-50">
+              <CardContent className="pt-6">
+                <div className="flex items-start gap-3">
+                  <Clock className="h-5 w-5 text-purple-600 mt-0.5" />
+                  <div>
+                    <p className="font-medium text-purple-900">Awaiting Arranger Signature</p>
+                    <p className="text-sm text-purple-700 mt-1">
+                      The Arranger must sign this agreement before you can add your signature.
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {agreement.status === 'pending_cp_signature' && (
             <Card className="border-orange-200 bg-orange-50">
               <CardContent className="pt-6">
@@ -400,7 +417,7 @@ export default function PlacementAgreementDetailPage() {
                   <div>
                     <p className="font-medium text-orange-900">Your Signature Required</p>
                     <p className="text-sm text-orange-700 mt-1">
-                      The CEO has signed. Click "Sign Agreement" to complete the signing process.
+                      This agreement has been signed and is ready for your signature. Click &quot;Sign Agreement&quot; to complete the signing process.
                     </p>
                   </div>
                 </div>

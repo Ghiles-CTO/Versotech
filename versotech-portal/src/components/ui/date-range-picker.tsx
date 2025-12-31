@@ -19,6 +19,7 @@ interface DateRangePickerProps {
   onChange?: (range: DateRange | undefined) => void
   className?: string
   disabled?: boolean
+  variant?: 'default' | 'dark'
 }
 
 export function DateRangePicker({
@@ -26,7 +27,9 @@ export function DateRangePicker({
   onChange,
   className,
   disabled,
+  variant = 'default',
 }: DateRangePickerProps) {
+  const isDark = variant === 'dark'
   const [date, setDate] = React.useState<DateRange | undefined>(value)
 
   React.useEffect(() => {
@@ -47,7 +50,10 @@ export function DateRangePicker({
             variant="outline"
             disabled={disabled}
             className={cn(
-              'justify-start text-left font-normal bg-black/40 border-white/10 text-slate-200 hover:bg-white/10',
+              'justify-start text-left font-normal',
+              isDark
+                ? 'bg-black/40 border-white/10 text-slate-200 hover:bg-white/10'
+                : 'bg-background border-input hover:bg-accent hover:text-accent-foreground',
               !date && 'text-muted-foreground'
             )}
           >
@@ -66,7 +72,13 @@ export function DateRangePicker({
             )}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-auto p-0 bg-[#0A1628] border-white/10" align="start">
+        <PopoverContent
+          className={cn(
+            'w-auto p-0',
+            isDark ? 'bg-[#0A1628] border-white/10' : 'bg-popover border-border'
+          )}
+          align="start"
+        >
           <Calendar
             initialFocus
             mode="range"

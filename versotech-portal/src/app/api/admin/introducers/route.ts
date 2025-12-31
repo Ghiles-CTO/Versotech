@@ -2,26 +2,16 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { z } from 'zod'
 
-const createPartnerSchema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters'),
-  legal_name: z.string().optional(),
-  type: z.enum(['entity', 'individual']),
-  partner_type: z.enum(['co-investor', 'syndicate-lead', 'family-office', 'other']),
-  status: z.enum(['active', 'pending', 'inactive']).default('active'),
-  accreditation_status: z.string().optional(),
+const createIntroducerSchema = z.object({
+  legal_name: z.string().min(2, 'Legal name must be at least 2 characters'),
+  type: z.enum(['individual', 'entity']).default('individual'),
+  status: z.enum(['active', 'pending', 'inactive', 'suspended']).default('active'),
   contact_name: z.string().optional(),
   contact_email: z.string().email().optional().or(z.literal('')),
   contact_phone: z.string().optional(),
-  website: z.string().url().optional().or(z.literal('')),
-  address_line_1: z.string().optional(),
-  address_line_2: z.string().optional(),
-  city: z.string().optional(),
-  postal_code: z.string().optional(),
-  country: z.string().optional(),
-  typical_investment_min: z.number().optional(),
-  typical_investment_max: z.number().optional(),
-  preferred_sectors: z.array(z.string()).optional(),
-  preferred_geographies: z.array(z.string()).optional(),
+  default_commission_bps: z.number().optional(),
+  commission_cap_amount: z.number().optional(),
+  payment_terms: z.string().optional(),
   notes: z.string().optional(),
 })
 
@@ -51,7 +41,7 @@ export async function POST(request: NextRequest) {
 
     // Parse and validate request body
     const body = await request.json()
-    const validatedData = createPartnerSchema.parse(body)
+    const validatedData = createIntroducerSchema.parse(body)
 
     // Clean up empty strings
     const cleanedData = Object.fromEntries(
@@ -61,45 +51,43 @@ export async function POST(request: NextRequest) {
       ])
     )
 
-    // Create the partner
-    const { data: partner, error: partnerError } = await supabase
-      .from('partners')
+    // Create the introducer
+    const { data: introducer, error: introducerError } = await supabase
+      .from('introducers')
       .insert({
         ...cleanedData,
-        created_by: user.id,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       })
       .select()
       .single()
 
-    if (partnerError) {
-      console.error('Partner creation error:', partnerError)
-      return NextResponse.json({ error: 'Failed to create partner' }, { status: 500 })
+    if (introducerError) {
+      console.error('Introducer creation error:', introducerError)
+      return NextResponse.json({ error: 'Failed to create introducer' }, { status: 500 })
     }
 
     // Log the action
     await supabase.from('audit_logs').insert({
       event_type: 'entity_management',
       actor_id: user.id,
-      action: 'partner_created',
-      entity_type: 'partner',
-      entity_id: partner.id,
+      action: 'introducer_created',
+      entity_type: 'introducer',
+      entity_id: introducer.id,
       action_details: {
-        name: partner.name,
-        type: partner.type,
-        partner_type: partner.partner_type,
+        legal_name: introducer.legal_name,
+        type: introducer.type,
       },
       timestamp: new Date().toISOString()
     })
 
     return NextResponse.json({
       success: true,
-      id: partner.id,
-      message: 'Partner created successfully',
+      id: introducer.id,
+      message: 'Introducer created successfully',
     })
   } catch (error) {
-    console.error('Partner creation error:', error)
+    console.error('Introducer creation error:', error)
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.issues[0].message }, { status: 400 })
     }
@@ -132,15 +120,14 @@ export async function GET(request: NextRequest) {
     // Get query params
     const { searchParams } = new URL(request.url)
     const status = searchParams.get('status')
-    const partnerType = searchParams.get('partner_type')
     const search = searchParams.get('search')
 
     // Build query
     let query = supabase
-      .from('partners')
+      .from('introducers')
       .select(`
         *,
-        partner_users (
+        introducer_users (
           user_id,
           role,
           is_primary,
@@ -153,29 +140,26 @@ export async function GET(request: NextRequest) {
           )
         )
       `)
-      .order('name', { ascending: true })
+      .order('legal_name', { ascending: true })
 
     if (status) {
       query = query.eq('status', status)
     }
-    if (partnerType) {
-      query = query.eq('partner_type', partnerType)
-    }
-    // Add search filter - search in name, legal_name, or contact_email
+    // Add search filter - search in legal_name, contact_name, or contact_email
     if (search) {
-      query = query.or(`name.ilike.%${search}%,legal_name.ilike.%${search}%,contact_email.ilike.%${search}%`)
+      query = query.or(`legal_name.ilike.%${search}%,contact_name.ilike.%${search}%,contact_email.ilike.%${search}%`)
     }
 
-    const { data: partners, error } = await query
+    const { data: introducers, error } = await query
 
     if (error) {
-      console.error('Partners fetch error:', error)
-      return NextResponse.json({ error: 'Failed to fetch partners' }, { status: 500 })
+      console.error('Introducers fetch error:', error)
+      return NextResponse.json({ error: 'Failed to fetch introducers' }, { status: 500 })
     }
 
-    return NextResponse.json({ partners })
+    return NextResponse.json({ introducers })
   } catch (error) {
-    console.error('Partners fetch error:', error)
+    console.error('Introducers fetch error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

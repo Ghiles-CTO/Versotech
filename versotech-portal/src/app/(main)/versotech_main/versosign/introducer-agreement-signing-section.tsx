@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
   Table,
@@ -25,7 +24,6 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { formatDate } from '@/lib/format'
-import { cn } from '@/lib/utils'
 import { SignatureCanvasWidget } from '@/components/signature/signature-canvas-widget'
 import { InlinePdfViewer } from '@/components/signature/inline-pdf-viewer'
 
@@ -40,6 +38,8 @@ type IntroducerAgreementForSigning = {
   }
   ceo_signature_request_id: string | null
   introducer_signature_request_id: string | null
+  arranger_signature_request_id: string | null
+  arranger_id: string | null
   pdf_url: string | null
   created_at: string
 }
@@ -47,11 +47,13 @@ type IntroducerAgreementForSigning = {
 interface IntroducerAgreementSigningSectionProps {
   agreements: IntroducerAgreementForSigning[]
   isStaff: boolean
+  isArranger?: boolean
 }
 
 export function IntroducerAgreementSigningSection({
   agreements,
   isStaff,
+  isArranger = false,
 }: IntroducerAgreementSigningSectionProps) {
   const router = useRouter()
   const [signingAgreementId, setSigningAgreementId] = useState<string | null>(null)
@@ -205,11 +207,17 @@ export function IntroducerAgreementSigningSection({
           </div>
           <div>
             <CardTitle className="text-lg">
-              {isStaff ? 'Introducer Agreements Awaiting Your Signature' : 'Your Pending Agreement Signatures'}
+              {isStaff
+                ? 'Introducer Agreements Awaiting Your Signature'
+                : isArranger
+                ? 'My Mandates - Introducer Fee Agreements'
+                : 'Your Pending Agreement Signatures'}
             </CardTitle>
             <CardDescription>
               {isStaff
                 ? 'These agreements have been approved and are ready for CEO signature'
+                : isArranger
+                ? 'Introducer fee agreements for your mandates requiring your signature'
                 : 'These agreements are ready for your countersignature'}
             </CardDescription>
           </div>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -40,11 +40,14 @@ import {
   AlertTriangle,
   CreditCard,
   BanknoteIcon,
+  Download,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatCurrency, formatDate } from '@/lib/format'
 import { createClient } from '@/lib/supabase/client'
 import { EscrowConfirmModal } from '@/components/lawyer/escrow-confirm-modal'
+import { DateRangePicker } from '@/components/ui/date-range-picker'
+import type { DateRange } from 'react-day-picker'
 
 type LawyerInfo = {
   id: string
@@ -165,6 +168,8 @@ export default function EscrowPage() {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [activeTab, setActiveTab] = useState('deals')
+  const [refreshKey, setRefreshKey] = useState(0)
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined)
 
   // Modal state for escrow confirmations
   const [confirmModalOpen, setConfirmModalOpen] = useState(false)
@@ -186,10 +191,10 @@ export default function EscrowPage() {
     setConfirmModalOpen(true)
   }
 
-  const handleConfirmSuccess = () => {
-    // Refresh data after successful confirmation
-    window.location.reload()
-  }
+  const handleConfirmSuccess = useCallback(() => {
+    // Refresh data after successful confirmation without full page reload
+    setRefreshKey(prev => prev + 1)
+  }, [])
 
   useEffect(() => {
     async function fetchData() {
@@ -603,7 +608,7 @@ export default function EscrowPage() {
     }
 
     fetchData()
-  }, [])
+  }, [refreshKey])
 
   // Filter settlements
   const filteredSettlements = pendingSettlements.filter(settlement => {
@@ -612,7 +617,18 @@ export default function EscrowPage() {
       settlement.investor_name?.toLowerCase().includes(search.toLowerCase()) ||
       settlement.deal_name?.toLowerCase().includes(search.toLowerCase()) ||
       settlement.investor_entity?.toLowerCase().includes(search.toLowerCase())
-    return matchesStatus && matchesSearch
+
+    // Date range filter
+    let matchesDateRange = true
+    if (dateRange?.from && settlement.funding_due_at) {
+      const dueDate = new Date(settlement.funding_due_at)
+      matchesDateRange = dueDate >= dateRange.from
+      if (dateRange.to) {
+        matchesDateRange = matchesDateRange && dueDate <= dateRange.to
+      }
+    }
+
+    return matchesStatus && matchesSearch && matchesDateRange
   })
 
   // Filter deals
@@ -629,8 +645,50 @@ export default function EscrowPage() {
     const matchesSearch = !search ||
       event.deal_name.toLowerCase().includes(search.toLowerCase()) ||
       event.investor_name.toLowerCase().includes(search.toLowerCase())
-    return matchesSearch
+
+    // Date range filter
+    let matchesDateRange = true
+    if (dateRange?.from && event.event_date) {
+      const eventDate = new Date(event.event_date)
+      matchesDateRange = eventDate >= dateRange.from
+      if (dateRange.to) {
+        matchesDateRange = matchesDateRange && eventDate <= dateRange.to
+      }
+    }
+
+    return matchesSearch && matchesDateRange
   })
+
+  // Export to CSV function
+  const exportToCSV = useCallback(() => {
+    const headers = ['Deal', 'Investor', 'Entity', 'Commitment', 'Funded', 'Outstanding', 'Status', 'Due Date']
+    const rows = filteredSettlements.map(s => [
+      s.deal_name,
+      s.investor_name,
+      s.investor_entity || '',
+      s.commitment_amount.toString(),
+      s.funded_amount.toString(),
+      s.outstanding_amount.toString(),
+      s.status.replace('_', ' '),
+      s.funding_due_at || ''
+    ])
+
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => `"${cell.replace(/"/g, '""')}"`).join(','))
+    ].join('\n')
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const link = document.createElement('a')
+    const url = URL.createObjectURL(blob)
+    link.setAttribute('href', url)
+    link.setAttribute('download', `escrow-settlements-${new Date().toISOString().split('T')[0]}.csv`)
+    link.style.visibility = 'hidden'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+  }, [filteredSettlements])
 
   if (loading) {
     return (
@@ -664,21 +722,29 @@ export default function EscrowPage() {
                 : 'Monitor all escrow accounts and pending settlements'}
           </p>
         </div>
-        {lawyerInfo && lawyerInfo.specializations && lawyerInfo.specializations.length > 0 && (
-          <div className="flex gap-1">
-            {lawyerInfo.specializations.slice(0, 2).map((spec, idx) => (
-              <Badge key={idx} variant="outline" className="capitalize">
-                {spec}
-              </Badge>
-            ))}
-          </div>
-        )}
-        {arrangerInfo && (
-          <Badge variant="secondary" className="flex items-center gap-1">
-            <Building2 className="h-3 w-3" />
-            Arranger View
-          </Badge>
-        )}
+        <div className="flex items-center gap-2">
+          {pendingSettlements.length > 0 && (
+            <Button variant="outline" size="sm" onClick={exportToCSV}>
+              <Download className="h-4 w-4 mr-2" />
+              Export CSV
+            </Button>
+          )}
+          {lawyerInfo && lawyerInfo.specializations && lawyerInfo.specializations.length > 0 && (
+            <div className="flex gap-1">
+              {lawyerInfo.specializations.slice(0, 2).map((spec, idx) => (
+                <Badge key={idx} variant="outline" className="capitalize">
+                  {spec}
+                </Badge>
+              ))}
+            </div>
+          )}
+          {arrangerInfo && (
+            <Badge variant="secondary" className="flex items-center gap-1">
+              <Building2 className="h-3 w-3" />
+              Arranger View
+            </Badge>
+          )}
+        </div>
       </div>
 
       {/* Summary Cards */}
@@ -774,6 +840,13 @@ export default function EscrowPage() {
                   ))}
                 </SelectContent>
               </Select>
+            )}
+            {(activeTab === 'settlements' || activeTab === 'payments') && (
+              <DateRangePicker
+                value={dateRange}
+                onChange={setDateRange}
+                className="w-full md:w-auto"
+              />
             )}
           </div>
         </CardContent>
@@ -1101,7 +1174,7 @@ export default function EscrowPage() {
                             </Badge>
                           </TableCell>
                           <TableCell className="text-right">
-                            {['accrued', 'invoiced'].includes(event.status) && event.subscription_id && (
+                            {['accrued', 'invoiced'].includes(event.status) && event.subscription_id && lawyerInfo && (
                               <Button
                                 variant="outline"
                                 size="sm"
@@ -1111,7 +1184,7 @@ export default function EscrowPage() {
                                 Confirm Payment
                               </Button>
                             )}
-                            {['accrued', 'invoiced'].includes(event.status) && !event.subscription_id && (
+                            {['accrued', 'invoiced'].includes(event.status) && !event.subscription_id && lawyerInfo && (
                               <span className="text-xs text-muted-foreground">No subscription</span>
                             )}
                           </TableCell>

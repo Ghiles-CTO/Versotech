@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { format } from 'date-fns'
+import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -25,7 +26,12 @@ import {
   Wallet,
   Users,
   Trash2,
-  MoreHorizontal
+  MoreHorizontal,
+  Building2,
+  Briefcase,
+  Loader2,
+  UserPlus,
+  UserCircle
 } from 'lucide-react'
 import {
   DropdownMenu,
@@ -35,8 +41,29 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
-import { AddMemberModal } from './add-member-modal'
+import { AddParticipantModal } from './add-participant-modal'
 import { GenerateInviteLinkModal } from './generate-invite-link-modal'
+
+// Partner assignment types
+interface PartnerAssignment {
+  fee_plan_id: string
+  fee_plan_name: string
+  fee_plan_status: string
+  is_active: boolean
+  created_at: string
+  entity_type: 'partner' | 'introducer' | 'commercial_partner'
+  entity_id: string
+  entity_name: string
+  entity_status: string
+  entity_email: string | null
+  fee_components: Array<{
+    id: string
+    kind: string
+    rate_bps: number | null
+    flat_amount: number | null
+    currency: string
+  }>
+}
 
 // Journey stages configuration - 9-stage investor journey
 const JOURNEY_STAGES = [
@@ -119,7 +146,14 @@ function JourneyProgressBar({ member }: { member: any }) {
 }
 
 export function DealMembersTab({ dealId, members: initialMembers, subscriptions = [] }: DealMembersTabProps) {
+  const router = useRouter()
   const [members, setMembers] = useState(initialMembers)
+
+  // Partner assignment state
+  const [partnerAssignments, setPartnerAssignments] = useState<PartnerAssignment[]>([])
+  const [loadingAssignments, setLoadingAssignments] = useState(true)
+  const [assignmentsError, setAssignmentsError] = useState<string | null>(null)
+  const [removingId, setRemovingId] = useState<string | null>(null)
 
   // Create subscription map for quick lookup
   const subscriptionMap = new Map(
@@ -136,6 +170,83 @@ export function DealMembersTab({ dealId, members: initialMembers, subscriptions 
   useEffect(() => {
     setMembers(initialMembers)
   }, [initialMembers])
+
+  // Fetch partner assignments
+  const fetchAssignments = async () => {
+    setLoadingAssignments(true)
+    setAssignmentsError(null)
+    try {
+      const response = await fetch(`/api/deals/${dealId}/partners`)
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || 'Failed to load partner assignments')
+      }
+      const data = await response.json()
+      setPartnerAssignments(data.data || [])
+    } catch (err) {
+      console.error('Failed to fetch partner assignments:', err)
+      setAssignmentsError(err instanceof Error ? err.message : 'Failed to load partner assignments')
+    } finally {
+      setLoadingAssignments(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchAssignments()
+  }, [dealId])
+
+  const handleRemoveAssignment = async (feePlanId: string) => {
+    if (!confirm('Are you sure you want to remove this partner from this deal?')) {
+      return
+    }
+
+    setRemovingId(feePlanId)
+    try {
+      const response = await fetch(`/api/deals/${dealId}/partners?fee_plan_id=${feePlanId}`, {
+        method: 'DELETE',
+      })
+
+      if (response.ok) {
+        await fetchAssignments()
+        router.refresh()
+      } else {
+        const data = await response.json()
+        alert(data.error || 'Failed to remove partner')
+      }
+    } catch (err) {
+      console.error('Failed to remove partner:', err)
+      alert('Failed to remove partner')
+    } finally {
+      setRemovingId(null)
+    }
+  }
+
+  const getEntityIcon = (type: string) => {
+    switch (type) {
+      case 'partner': return <Building2 className="h-4 w-4" />
+      case 'introducer': return <Users className="h-4 w-4" />
+      case 'commercial_partner': return <Briefcase className="h-4 w-4" />
+      default: return <Building2 className="h-4 w-4" />
+    }
+  }
+
+  const getEntityTypeLabel = (type: string) => {
+    switch (type) {
+      case 'partner': return 'Partner'
+      case 'introducer': return 'Introducer'
+      case 'commercial_partner': return 'Commercial Partner'
+      default: return type
+    }
+  }
+
+  const feeKindLabels: Record<string, string> = {
+    subscription: 'Subscription Fee',
+    management: 'Management Fee',
+    performance: 'Performance Fee',
+    spread_markup: 'Spread Markup',
+    flat: 'Flat Fee',
+    other: 'Other'
+  }
 
   const refreshMembers = async () => {
     try {
@@ -236,27 +347,41 @@ export function DealMembersTab({ dealId, members: initialMembers, subscriptions 
         </CardContent>
       </Card>
 
-      {/* Members Table */}
+      {/* All Participants Header */}
       <Card className="border border-white/10 bg-white/5">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="text-foreground flex items-center gap-2">
                 <Users className="h-5 w-5" />
-                Deal Members ({enhancedMembers.length})
+                Deal Participants ({enhancedMembers.length + partnerAssignments.length})
               </CardTitle>
-              <CardDescription>Manage access and track investor journey progress</CardDescription>
+              <CardDescription>
+                Investors, partners, introducers, and other participants in this deal
+              </CardDescription>
             </div>
             <div className="flex items-center gap-2">
               <GenerateInviteLinkModal dealId={dealId} />
-              <AddMemberModal dealId={dealId} onMemberAdded={refreshMembers} />
+              <AddParticipantModal
+                dealId={dealId}
+                onParticipantAdded={() => {
+                  refreshMembers()
+                  fetchAssignments()
+                }}
+              />
             </div>
           </div>
         </CardHeader>
-        <CardContent>
-          {!enhancedMembers || enhancedMembers.length === 0 ? (
-            <div className="text-center py-8 text-gray-400">
-              No members added yet. Click "Add Member" to invite participants.
+        <CardContent className="space-y-6">
+          {/* Investors Section */}
+          <div>
+            <h3 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
+              <UserCircle className="h-4 w-4" />
+              Investors ({enhancedMembers.length})
+            </h3>
+          {enhancedMembers.length === 0 ? (
+            <div className="text-center py-6 text-gray-400 border border-dashed border-white/10 rounded-lg">
+              No investors added yet. Click "Add Participant" to invite investors.
             </div>
           ) : (
             <Table>
@@ -353,6 +478,85 @@ export function DealMembersTab({ dealId, members: initialMembers, subscriptions 
               </TableBody>
             </Table>
           )}
+          </div>
+
+          {/* Partners & Intermediaries Section */}
+          <div>
+            <h3 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
+              <UserPlus className="h-4 w-4" />
+              Partners & Intermediaries ({partnerAssignments.length})
+            </h3>
+            {loadingAssignments ? (
+              <div className="flex items-center justify-center py-6">
+                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+              </div>
+            ) : assignmentsError ? (
+              <div className="text-center py-6 text-red-400 border border-dashed border-red-500/20 rounded-lg bg-red-500/5">
+                {assignmentsError}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={fetchAssignments}
+                  className="ml-2 text-red-400 hover:text-red-300"
+                >
+                  Retry
+                </Button>
+              </div>
+            ) : partnerAssignments.length === 0 ? (
+              <div className="text-center py-6 text-gray-400 border border-dashed border-white/10 rounded-lg">
+                No partners assigned yet. Click "Add Participant" to add partners, introducers, or commercial partners.
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {partnerAssignments.map((assignment) => (
+                  <div
+                    key={assignment.fee_plan_id}
+                    className="p-3 rounded-lg border border-white/10 bg-white/5"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-start gap-3">
+                        <div className="p-2 rounded-lg bg-primary/10">
+                          {getEntityIcon(assignment.entity_type)}
+                        </div>
+                        <div>
+                          <div className="font-medium text-sm">{assignment.entity_name}</div>
+                          <div className="flex items-center gap-2 mt-1">
+                            <Badge variant="outline" className="text-xs">
+                              {getEntityTypeLabel(assignment.entity_type)}
+                            </Badge>
+                          </div>
+                          <div className="text-xs text-muted-foreground mt-1">
+                            {assignment.fee_components.length > 0 ? (
+                              assignment.fee_components.map((fc) => (
+                                <span key={fc.id} className="mr-2">
+                                  {feeKindLabels[fc.kind] || fc.kind}: {fc.rate_bps !== null && fc.rate_bps !== undefined ? `${fc.rate_bps / 100}%` : fc.flat_amount !== null && fc.flat_amount !== undefined ? `$${fc.flat_amount}` : '—'}
+                                </span>
+                              ))
+                            ) : (
+                              <span className="italic">No fees defined</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleRemoveAssignment(assignment.fee_plan_id)}
+                        disabled={removingId === assignment.fee_plan_id}
+                        className="text-destructive hover:text-destructive h-7 w-7"
+                      >
+                        {removingId === assignment.fee_plan_id ? (
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                        ) : (
+                          <Trash2 className="h-3 w-3" />
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </CardContent>
       </Card>
     </div>

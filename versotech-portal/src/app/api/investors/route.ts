@@ -30,13 +30,14 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '100')
     const offset = parseInt(searchParams.get('offset') || '0')
     const hasUsers = searchParams.get('has_users') === 'true'
+    const search = searchParams.get('search')
 
     let investors: any[] = []
     let error: any = null
 
     if (hasUsers) {
       // Fetch only investors that have linked user accounts
-      const result = await supabase
+      let query = supabase
         .from('investors')
         .select(`
           id,
@@ -58,16 +59,28 @@ export async function GET(request: NextRequest) {
         .order('legal_name')
         .range(offset, offset + limit - 1)
 
+      // Add search filter - search in legal_name, display_name, or email
+      if (search) {
+        query = query.or(`legal_name.ilike.%${search}%,display_name.ilike.%${search}%,email.ilike.%${search}%`)
+      }
+
+      const result = await query
       investors = result.data || []
       error = result.error
     } else {
       // Fetch all investors with more fields
-      const result = await supabase
+      let query = supabase
         .from('investors')
         .select('id, legal_name, display_name, email, type, kyc_status')
         .order('legal_name')
         .range(offset, offset + limit - 1)
 
+      // Add search filter
+      if (search) {
+        query = query.or(`legal_name.ilike.%${search}%,display_name.ilike.%${search}%,email.ilike.%${search}%`)
+      }
+
+      const result = await query
       investors = result.data || []
       error = result.error
     }

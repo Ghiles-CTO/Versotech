@@ -252,7 +252,7 @@ export function EscrowConfirmModal({
               type="number"
               step="0.01"
               min="0"
-              placeholder={mode === 'funding' ? `e.g., ${remainingAmount}` : 'Enter amount'}
+              placeholder={mode === 'funding' ? `e.g., ${remainingAmount.toLocaleString()}` : 'Enter amount'}
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
             />

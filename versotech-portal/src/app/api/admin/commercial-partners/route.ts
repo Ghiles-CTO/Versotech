@@ -132,6 +132,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const status = searchParams.get('status')
     const cpType = searchParams.get('cp_type')
+    const search = searchParams.get('search')
 
     // Build query
     let query = supabase
@@ -158,6 +159,10 @@ export async function GET(request: NextRequest) {
     }
     if (cpType) {
       query = query.eq('cp_type', cpType)
+    }
+    // Add search filter - search in name, legal_name, or contact_email
+    if (search) {
+      query = query.or(`name.ilike.%${search}%,legal_name.ilike.%${search}%,contact_email.ilike.%${search}%`)
     }
 
     const { data: partners, error } = await query
