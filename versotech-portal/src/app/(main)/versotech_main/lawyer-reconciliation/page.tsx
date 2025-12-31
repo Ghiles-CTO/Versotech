@@ -147,6 +147,7 @@ async function renderReconciliationPage(
         deals={[]}
         subscriptions={[]}
         feeEvents={[]}
+        introducerCommissions={[]}
       />
     )
   }
@@ -216,6 +217,24 @@ async function renderReconciliationPage(
     .in('deal_id', dealIds)
     .order('created_at', { ascending: false })
 
+  // Fetch introducer commissions awaiting payment (status = 'invoiced')
+  const { data: introducerCommissionsData } = await serviceSupabase
+    .from('introducer_commissions')
+    .select(`
+      id,
+      status,
+      accrual_amount,
+      currency,
+      invoice_id,
+      created_at,
+      deal_id,
+      introducer:introducers(id, legal_name),
+      deal:deals(id, name)
+    `)
+    .in('deal_id', dealIds)
+    .eq('status', 'invoiced')
+    .order('created_at', { ascending: false })
+
   // Process deals data
   const deals = (dealsData || []).map((deal: any) => ({
     id: deal.id,
@@ -278,12 +297,31 @@ async function renderReconciliationPage(
     }
   })
 
+  // Process introducer commissions data
+  const introducerCommissions = (introducerCommissionsData || []).map((ic: any) => {
+    const introducer = Array.isArray(ic.introducer) ? ic.introducer[0] : ic.introducer
+    const deal = Array.isArray(ic.deal) ? ic.deal[0] : ic.deal
+
+    return {
+      id: ic.id,
+      introducer_name: introducer?.legal_name || 'Unknown Introducer',
+      deal_id: ic.deal_id,
+      deal_name: deal?.name || null,
+      accrual_amount: ic.accrual_amount,
+      currency: ic.currency || 'USD',
+      status: ic.status,
+      invoice_id: ic.invoice_id,
+      created_at: ic.created_at,
+    }
+  })
+
   return (
     <LawyerReconciliationClient
       lawyerInfo={entityInfo}
       deals={deals}
       subscriptions={subscriptions}
       feeEvents={feeEvents}
+      introducerCommissions={introducerCommissions}
     />
   )
 }

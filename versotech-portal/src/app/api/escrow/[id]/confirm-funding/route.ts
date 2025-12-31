@@ -204,6 +204,125 @@ export async function POST(
       }
     }
 
+    // === AUTO-CREATE INTRODUCER COMMISSIONS ===
+    // Only when subscription becomes fully funded (active)
+    if (newStatus === 'active') {
+      try {
+        // 1. Check deal_memberships for referral by introducer
+        const { data: dealMembership } = await supabase
+          .from('deal_memberships')
+          .select('referred_by_entity_id, referred_by_entity_type')
+          .eq('deal_id', subscription.deal_id)
+          .eq('investor_id', subscription.investor_id)
+          .maybeSingle()
+
+        if (dealMembership?.referred_by_entity_type === 'introducer' && dealMembership.referred_by_entity_id) {
+          const introducerId = dealMembership.referred_by_entity_id
+
+          // 2. Check for existing commission (prevent duplicates)
+          const { data: existingCommission } = await supabase
+            .from('introducer_commissions')
+            .select('id')
+            .eq('introducer_id', introducerId)
+            .eq('deal_id', subscription.deal_id)
+            .eq('investor_id', subscription.investor_id)
+            .maybeSingle()
+
+          if (!existingCommission) {
+            // 3. Get introducer details
+            const { data: introducer } = await supabase
+              .from('introducers')
+              .select('id, legal_name, default_commission_bps')
+              .eq('id', introducerId)
+              .single()
+
+            if (introducer) {
+              // 4. Try to find active fee plan for this introducer
+              let rateBps = 0
+              let feePlanId: string | null = null
+
+              const { data: feePlan } = await supabase
+                .from('fee_plans')
+                .select('id, fee_components(id, kind, rate_bps)')
+                .eq('introducer_id', introducerId)
+                .eq('is_active', true)
+                .or(`deal_id.eq.${subscription.deal_id},deal_id.is.null`)
+                .limit(1)
+                .maybeSingle()
+
+              if (feePlan?.fee_components && (feePlan.fee_components as any[]).length > 0) {
+                const components = feePlan.fee_components as any[]
+                const comp = components.find(
+                  (c: any) => c.kind === 'introducer' || c.kind === 'referral' || c.kind === 'commission'
+                )
+                if (comp?.rate_bps) {
+                  rateBps = comp.rate_bps
+                  feePlanId = feePlan.id
+                }
+              }
+
+              // Fallback to introducer's default rate
+              if (!rateBps && introducer.default_commission_bps) {
+                rateBps = introducer.default_commission_bps
+              }
+
+              // 5. Create commission if rate > 0
+              if (rateBps > 0) {
+                const baseAmount = newFundedAmount
+                const commissionAmount = (baseAmount * rateBps) / 10000
+
+                await supabase.from('introducer_commissions').insert({
+                  introducer_id: introducerId,
+                  deal_id: subscription.deal_id,
+                  investor_id: subscription.investor_id,
+                  arranger_id: dealWithArranger?.arranger_entity_id || null,
+                  fee_plan_id: feePlanId,
+                  basis_type: 'invested_amount',
+                  rate_bps: rateBps,
+                  base_amount: baseAmount,
+                  accrual_amount: commissionAmount,
+                  currency: subscription.currency || 'USD',
+                  status: 'accrued',
+                  created_at: new Date().toISOString(),
+                })
+
+                // 6. Notify arranger about new commission
+                if (dealWithArranger?.arranger_entity_id) {
+                  const { data: arrangerUsersForCommission } = await supabase
+                    .from('arranger_users')
+                    .select('user_id')
+                    .eq('arranger_id', dealWithArranger.arranger_entity_id)
+
+                  if (arrangerUsersForCommission && arrangerUsersForCommission.length > 0) {
+                    const commissionNotifications = arrangerUsersForCommission.map((au: any) => ({
+                      user_id: au.user_id,
+                      investor_id: null,
+                      title: 'Introducer Commission Accrued',
+                      message: `Commission of ${commissionAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })} ${subscription.currency || 'USD'} accrued for ${introducer.legal_name} on ${dealName}.`,
+                      link: `/versotech_main/my-introducers`,
+                      type: 'info',
+                    }))
+
+                    await supabase.from('investor_notifications').insert(commissionNotifications)
+                  }
+                }
+
+                console.log('[confirm-funding] Auto-created introducer commission:', {
+                  introducer_id: introducerId,
+                  introducer_name: introducer.legal_name,
+                  amount: commissionAmount,
+                  rate_bps: rateBps,
+                })
+              }
+            }
+          }
+        }
+      } catch (commissionError) {
+        // Log but don't fail the main operation
+        console.error('[confirm-funding] Auto-commission error:', commissionError)
+      }
+    }
+
     // Audit log
     await auditLogger.log({
       actor_user_id: user.id,

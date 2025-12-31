@@ -93,10 +93,10 @@ export async function PUT(
       return NextResponse.json({ error: 'Not an arranger' }, { status: 403 })
     }
 
-    // Verify ownership
+    // Verify ownership and check if already sent
     const { data: existingPlan, error: fetchError } = await serviceSupabase
       .from('fee_plans')
-      .select('id, created_by_arranger_id')
+      .select('id, created_by_arranger_id, status')
       .eq('id', id)
       .single()
 
@@ -106,6 +106,14 @@ export async function PUT(
 
     if (existingPlan.created_by_arranger_id !== arrangerUser.arranger_id) {
       return NextResponse.json({ error: 'Not authorized to modify this fee plan' }, { status: 403 })
+    }
+
+    // Prevent modification of sent fee plans
+    if (existingPlan.status === 'sent') {
+      return NextResponse.json(
+        { error: 'Cannot modify a fee plan that has already been sent. Create a new plan instead.' },
+        { status: 400 }
+      )
     }
 
     // Parse and validate request body

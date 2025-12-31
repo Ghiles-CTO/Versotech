@@ -22,28 +22,44 @@ import {
 } from '@/components/ui/table'
 import {
   Building2,
-  TrendingUp,
   CheckCircle2,
   Search,
   Loader2,
   AlertCircle,
-  ExternalLink,
   Mail,
-  Phone,
-  Handshake,
   Globe,
   Users,
   FileText,
-  ShieldCheck,
+  DollarSign,
+  Handshake,
+  ChevronRight,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatCurrency, formatDate } from '@/lib/format'
 import { createClient } from '@/lib/supabase/client'
+import Link from 'next/link'
+import { CommercialPartnerDetailDrawer } from '@/components/commercial-partners/commercial-partner-detail-drawer'
+import {
+  PartnerCommissionSummary,
+  type CommissionSummary,
+} from '@/components/partners/partner-commission-summary'
 
 type ArrangerInfo = {
   id: string
   legal_name: string
   status: string
+}
+
+type Deal = {
+  id: string
+  name: string
+  company_name: string | null
+}
+
+type FeePlan = {
+  id: string
+  name: string
+  is_active: boolean
 }
 
 type CommercialPartner = {
@@ -64,6 +80,9 @@ type CommercialPartner = {
   deals_count: number
   clients_count: number
   total_placement_value: number
+  fee_plans: FeePlan[]
+  commission_summary: CommissionSummary
+  deal_ids: string[] // Added for deal filtering
 }
 
 type Summary = {
@@ -71,6 +90,8 @@ type Summary = {
   activeCPs: number
   totalClients: number
   totalPlacementValue: number
+  totalOwed: number
+  totalPaid: number
 }
 
 const STATUS_STYLES: Record<string, string> = {
@@ -96,17 +117,31 @@ const STATUS_FILTERS = [
 
 export default function MyCommercialPartnersPage() {
   const [arrangerInfo, setArrangerInfo] = useState<ArrangerInfo | null>(null)
+  const [arrangerId, setArrangerId] = useState<string | null>(null)
   const [commercialPartners, setCommercialPartners] = useState<CommercialPartner[]>([])
+  const [deals, setDeals] = useState<Deal[]>([])
   const [summary, setSummary] = useState<Summary>({
     totalCPs: 0,
     activeCPs: 0,
     totalClients: 0,
     totalPlacementValue: 0,
+    totalOwed: 0,
+    totalPaid: 0,
   })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
+  const [dealFilter, setDealFilter] = useState('all')
+
+  // Detail drawer state
+  const [selectedCPId, setSelectedCPId] = useState<string | null>(null)
+  const [drawerOpen, setDrawerOpen] = useState(false)
+
+  const handleCPClick = (cpId: string) => {
+    setSelectedCPId(cpId)
+    setDrawerOpen(true)
+  }
 
   useEffect(() => {
     async function fetchData() {
@@ -131,6 +166,8 @@ export default function MyCommercialPartnersPage() {
           return
         }
 
+        setArrangerId(arrangerUser.arranger_id)
+
         const { data: arranger, error: arrangerError } = await supabase
           .from('arranger_entities')
           .select('id, legal_name, status')
@@ -140,24 +177,27 @@ export default function MyCommercialPartnersPage() {
         if (arrangerError) throw arrangerError
         setArrangerInfo(arranger)
 
-        const { data: deals, error: dealsError } = await supabase
+        // Get deals for this arranger (for filter dropdown)
+        const { data: arrangerDeals, error: dealsError } = await supabase
           .from('deals')
-          .select('id')
+          .select('id, name, company_name')
           .eq('arranger_entity_id', arrangerUser.arranger_id)
+          .order('name')
 
         if (dealsError) throw dealsError
+        setDeals(arrangerDeals || [])
 
-        if (!deals || deals.length === 0) {
+        if (!arrangerDeals || arrangerDeals.length === 0) {
           setCommercialPartners([])
-          setSummary({ totalCPs: 0, activeCPs: 0, totalClients: 0, totalPlacementValue: 0 })
+          setSummary({ totalCPs: 0, activeCPs: 0, totalClients: 0, totalPlacementValue: 0, totalOwed: 0, totalPaid: 0 })
           return
         }
 
-        const dealIds = deals.map(d => d.id)
+        const dealIds = arrangerDeals.map(d => d.id)
 
         const { data: referrals, error: refError } = await supabase
           .from('deal_memberships')
-          .select(`referred_by_entity_id, investor_id, deal:deal_id (id, name)`)
+          .select(`referred_by_entity_id, investor_id, deal_id, deal:deal_id (id, name)`)
           .in('deal_id', dealIds)
           .eq('referred_by_entity_type', 'commercial_partner')
           .not('referred_by_entity_id', 'is', null)
@@ -168,7 +208,7 @@ export default function MyCommercialPartnersPage() {
 
         if (cpIds.length === 0) {
           setCommercialPartners([])
-          setSummary({ totalCPs: 0, activeCPs: 0, totalClients: 0, totalPlacementValue: 0 })
+          setSummary({ totalCPs: 0, activeCPs: 0, totalClients: 0, totalPlacementValue: 0, totalOwed: 0, totalPaid: 0 })
           return
         }
 
@@ -204,6 +244,56 @@ export default function MyCommercialPartnersPage() {
           subsByInvestor.set(s.investor_id, current + (Number(s.commitment) || 0))
         })
 
+        // Get fee plans for these CPs (created by this arranger)
+        const { data: feePlans } = await supabase
+          .from('fee_plans')
+          .select('id, name, is_active, commercial_partner_id')
+          .in('commercial_partner_id', cpIds)
+          .eq('created_by_arranger_id', arrangerUser.arranger_id)
+
+        const feePlansByCP = new Map<string, FeePlan[]>()
+        ;(feePlans || []).forEach((fp: any) => {
+          const existing = feePlansByCP.get(fp.commercial_partner_id) || []
+          existing.push({ id: fp.id, name: fp.name, is_active: fp.is_active })
+          feePlansByCP.set(fp.commercial_partner_id, existing)
+        })
+
+        // Get commissions for these CPs
+        const { data: commissions } = await supabase
+          .from('commercial_partner_commissions')
+          .select('commercial_partner_id, status, accrual_amount, currency')
+          .in('commercial_partner_id', cpIds)
+          .eq('arranger_id', arrangerUser.arranger_id)
+
+        // Build commission summaries by CP
+        const commissionsByCP = new Map<string, CommissionSummary>()
+        cpIds.forEach(cpId => {
+          commissionsByCP.set(cpId, {
+            accrued: 0,
+            invoice_requested: 0,
+            invoiced: 0,
+            paid: 0,
+            cancelled: 0,
+            total_owed: 0,
+            currency: 'USD',
+          })
+        })
+
+        ;(commissions || []).forEach((c: any) => {
+          const summary = commissionsByCP.get(c.commercial_partner_id)
+          if (!summary) return
+          const amount = Number(c.accrual_amount) || 0
+          if (c.status === 'accrued') summary.accrued += amount
+          else if (c.status === 'invoice_requested') summary.invoice_requested += amount
+          else if (c.status === 'invoiced') summary.invoiced += amount
+          else if (c.status === 'paid') summary.paid += amount
+          else if (c.status === 'cancelled') summary.cancelled += amount
+          if (['accrued', 'invoice_requested', 'invoiced'].includes(c.status)) {
+            summary.total_owed += amount
+          }
+          if (c.currency) summary.currency = c.currency
+        })
+
         const processedCPs: CommercialPartner[] = (cpsData || []).map((cp: any) => {
           const cpRefs = (referrals || []).filter(r => r.referred_by_entity_id === cp.id)
           const dealsInvolved = [...new Set(cpRefs.map(r => {
@@ -233,15 +323,35 @@ export default function MyCommercialPartnersPage() {
             deals_count: dealsInvolved.length,
             clients_count: clientCountsByCP.get(cp.id) || 0,
             total_placement_value: totalValue,
+            fee_plans: feePlansByCP.get(cp.id) || [],
+            commission_summary: commissionsByCP.get(cp.id) || {
+              accrued: 0,
+              invoice_requested: 0,
+              invoiced: 0,
+              paid: 0,
+              cancelled: 0,
+              total_owed: 0,
+              currency: 'USD',
+            },
+            deal_ids: dealsInvolved as string[],
           }
         })
 
         setCommercialPartners(processedCPs)
+
+        const active = processedCPs.filter(cp => cp.status === 'active').length
+        const totalClients = processedCPs.reduce((sum, cp) => sum + cp.clients_count, 0)
+        const totalVal = processedCPs.reduce((sum, cp) => sum + cp.total_placement_value, 0)
+        const totalOwed = processedCPs.reduce((sum, cp) => sum + cp.commission_summary.total_owed, 0)
+        const totalPaid = processedCPs.reduce((sum, cp) => sum + cp.commission_summary.paid, 0)
+
         setSummary({
           totalCPs: processedCPs.length,
-          activeCPs: processedCPs.filter(cp => cp.status === 'active').length,
-          totalClients: processedCPs.reduce((sum, cp) => sum + cp.clients_count, 0),
-          totalPlacementValue: processedCPs.reduce((sum, cp) => sum + cp.total_placement_value, 0),
+          activeCPs: active,
+          totalClients,
+          totalPlacementValue: totalVal,
+          totalOwed,
+          totalPaid,
         })
         setError(null)
       } catch (err) {
@@ -261,6 +371,16 @@ export default function MyCommercialPartnersPage() {
 
       if (cpsError) throw cpsError
 
+      const emptyCommission: CommissionSummary = {
+        accrued: 0,
+        invoice_requested: 0,
+        invoiced: 0,
+        paid: 0,
+        cancelled: 0,
+        total_owed: 0,
+        currency: 'USD',
+      }
+
       const processedCPs: CommercialPartner[] = (cpsData || []).map((cp: any) => ({
         id: cp.id,
         name: cp.name || cp.legal_name || 'Unknown CP',
@@ -279,6 +399,9 @@ export default function MyCommercialPartnersPage() {
         deals_count: 0,
         clients_count: 0,
         total_placement_value: 0,
+        fee_plans: [],
+        commission_summary: emptyCommission,
+        deal_ids: [],
       }))
 
       setCommercialPartners(processedCPs)
@@ -287,6 +410,8 @@ export default function MyCommercialPartnersPage() {
         activeCPs: processedCPs.filter(cp => cp.status === 'active').length,
         totalClients: 0,
         totalPlacementValue: 0,
+        totalOwed: 0,
+        totalPaid: 0,
       })
     }
 
@@ -300,7 +425,8 @@ export default function MyCommercialPartnersPage() {
       cp.legal_name?.toLowerCase().includes(search.toLowerCase()) ||
       cp.contact_name?.toLowerCase().includes(search.toLowerCase()) ||
       cp.jurisdiction?.toLowerCase().includes(search.toLowerCase())
-    return matchesStatus && matchesSearch
+    const matchesDeal = dealFilter === 'all' || cp.deal_ids.includes(dealFilter)
+    return matchesStatus && matchesSearch && matchesDeal
   })
 
   const today = new Date()
@@ -334,9 +460,16 @@ export default function MyCommercialPartnersPage() {
             {arrangerInfo ? `Commercial partners working with ${arrangerInfo.legal_name}` : 'View all commercial partners'}
           </p>
         </div>
+        <Link href="/versotech_main/fee-plans">
+          <Button variant="outline" size="sm">
+            <FileText className="h-4 w-4 mr-2" />
+            Fee Plans
+          </Button>
+        </Link>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
@@ -373,7 +506,7 @@ export default function MyCommercialPartnersPage() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <TrendingUp className="h-4 w-4" />Placement Value
+              <Handshake className="h-4 w-4" />Placement Value
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -381,8 +514,31 @@ export default function MyCommercialPartnersPage() {
             <p className="text-xs text-muted-foreground mt-1">Total placed</p>
           </CardContent>
         </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+              <DollarSign className="h-4 w-4" />Fees Owed
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-yellow-600">{formatCurrency(summary.totalOwed, 'USD')}</div>
+            <p className="text-xs text-muted-foreground mt-1">Pending payment</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+              <CheckCircle2 className="h-4 w-4" />Fees Paid
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-600">{formatCurrency(summary.totalPaid, 'USD')}</div>
+            <p className="text-xs text-muted-foreground mt-1">Total paid out</p>
+          </CardContent>
+        </Card>
       </div>
 
+      {/* Filters */}
       <Card>
         <CardContent className="pt-6">
           <div className="flex flex-col md:flex-row gap-4">
@@ -396,14 +552,33 @@ export default function MyCommercialPartnersPage() {
                 {STATUS_FILTERS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
               </SelectContent>
             </Select>
+            {deals.length > 0 && (
+              <Select value={dealFilter} onValueChange={setDealFilter}>
+                <SelectTrigger className="w-full md:w-56">
+                  <SelectValue placeholder="Filter by deal" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Deals</SelectItem>
+                  {deals.map((deal) => (
+                    <SelectItem key={deal.id} value={deal.id}>
+                      {deal.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
           </div>
         </CardContent>
       </Card>
 
+      {/* Commercial Partners Table */}
       <Card>
         <CardHeader>
           <CardTitle>Commercial Partners</CardTitle>
-          <CardDescription>{filteredCPs.length} partner{filteredCPs.length !== 1 ? 's' : ''} found</CardDescription>
+          <CardDescription>
+            {filteredCPs.length} partner{filteredCPs.length !== 1 ? 's' : ''} found
+            {arrangerInfo && ' • Click a row to view details'}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {filteredCPs.length === 0 ? (
@@ -419,11 +594,11 @@ export default function MyCommercialPartnersPage() {
                     <TableHead>Partner</TableHead>
                     <TableHead>Type</TableHead>
                     <TableHead>Jurisdiction</TableHead>
-                    <TableHead>Clients</TableHead>
-                    <TableHead>Placement Value</TableHead>
-                    <TableHead>Contract</TableHead>
+                    <TableHead>Fee Plans</TableHead>
+                    <TableHead>Placements</TableHead>
+                    <TableHead>Payments</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead className="w-10"></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -431,7 +606,11 @@ export default function MyCommercialPartnersPage() {
                     const isExpiringSoon = cp.contract_end_date && new Date(cp.contract_end_date) <= thirtyDaysFromNow && new Date(cp.contract_end_date) > today
                     const isExpired = cp.contract_end_date && new Date(cp.contract_end_date) <= today
                     return (
-                      <TableRow key={cp.id}>
+                      <TableRow
+                        key={cp.id}
+                        className={cn(arrangerInfo && 'cursor-pointer hover:bg-muted/50 transition-colors')}
+                        onClick={() => arrangerInfo && handleCPClick(cp.id)}
+                      >
                         <TableCell>
                           <div className="flex items-center gap-3">
                             {cp.logo_url ? (
@@ -457,29 +636,51 @@ export default function MyCommercialPartnersPage() {
                           ) : <span className="text-muted-foreground text-xs">—</span>}
                         </TableCell>
                         <TableCell>
-                          <Badge variant="outline">{cp.clients_count} client{cp.clients_count !== 1 ? 's' : ''}</Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="font-medium">{formatCurrency(cp.total_placement_value, 'USD')}</div>
-                          <div className="text-xs text-muted-foreground">{cp.deals_count} deal{cp.deals_count !== 1 ? 's' : ''}</div>
-                        </TableCell>
-                        <TableCell>
-                          {cp.contract_end_date ? (
-                            <div className={cn("text-sm", isExpired && "text-red-600", isExpiringSoon && "text-yellow-600")}>
-                              <div className="flex items-center gap-1"><FileText className="h-3 w-3" />{formatDate(cp.contract_end_date)}</div>
-                              {isExpired && <Badge variant="destructive" className="text-xs mt-1">Expired</Badge>}
-                              {isExpiringSoon && <Badge variant="outline" className="text-xs mt-1 bg-yellow-100">Expiring Soon</Badge>}
+                          {cp.fee_plans.length > 0 ? (
+                            <div className="flex flex-wrap gap-1">
+                              {cp.fee_plans.slice(0, 2).map((fp) => (
+                                <Badge
+                                  key={fp.id}
+                                  variant={fp.is_active ? 'default' : 'secondary'}
+                                  className="text-xs"
+                                >
+                                  {fp.name}
+                                </Badge>
+                              ))}
+                              {cp.fee_plans.length > 2 && (
+                                <Badge variant="outline" className="text-xs">
+                                  +{cp.fee_plans.length - 2}
+                                </Badge>
+                              )}
                             </div>
-                          ) : <span className="text-muted-foreground text-xs">No date</span>}
+                          ) : (
+                            <span className="text-muted-foreground text-xs">No fee plans</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <div>
+                            <div className="font-medium">{formatCurrency(cp.total_placement_value, 'USD')}</div>
+                            <div className="text-xs text-muted-foreground">{cp.deals_count} deal{cp.deals_count !== 1 ? 's' : ''} • {cp.clients_count} client{cp.clients_count !== 1 ? 's' : ''}</div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <PartnerCommissionSummary
+                            summary={cp.commission_summary}
+                            variant="inline"
+                          />
                         </TableCell>
                         <TableCell>
                           <div className="space-y-1">
                             <Badge variant="outline" className={cn('capitalize', STATUS_STYLES[cp.status] || STATUS_STYLES.active)}>{cp.status}</Badge>
                             {cp.kyc_status && <div><Badge variant="secondary" className={cn('text-xs', KYC_STYLES[cp.kyc_status] || '')}>KYC: {cp.kyc_status.replace('_', ' ')}</Badge></div>}
+                            {isExpired && <Badge variant="destructive" className="text-xs">Contract Expired</Badge>}
+                            {isExpiringSoon && !isExpired && <Badge variant="outline" className="text-xs bg-yellow-100">Expiring Soon</Badge>}
                           </div>
                         </TableCell>
-                        <TableCell className="text-right">
-                          <Button variant="ghost" size="sm" asChild><a href={`/versotech_main/users?type=commercial_partner&id=${cp.id}`}><ExternalLink className="h-4 w-4" /></a></Button>
+                        <TableCell>
+                          {arrangerInfo && (
+                            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                          )}
                         </TableCell>
                       </TableRow>
                     )
@@ -490,6 +691,13 @@ export default function MyCommercialPartnersPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Detail Drawer */}
+      <CommercialPartnerDetailDrawer
+        commercialPartnerId={selectedCPId}
+        open={drawerOpen}
+        onOpenChange={setDrawerOpen}
+      />
     </div>
   )
 }

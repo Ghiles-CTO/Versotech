@@ -36,7 +36,10 @@ import {
   Building2,
   AlertCircle,
   CreditCard,
+  Users,
+  CheckCircle,
 } from 'lucide-react'
+import { ConfirmIntroducerPaymentModal } from './confirm-introducer-payment-modal'
 import { cn } from '@/lib/utils'
 import { formatDate } from '@/lib/format'
 
@@ -96,11 +99,24 @@ type FeeEvent = {
   invoice_paid_at: string | null
 }
 
+type IntroducerCommission = {
+  id: string
+  introducer_name: string
+  deal_id: string | null
+  deal_name: string | null
+  accrual_amount: number
+  currency: string
+  status: string
+  invoice_id: string | null
+  created_at: string
+}
+
 type LawyerReconciliationClientProps = {
   lawyerInfo: LawyerInfo | null
   deals: Deal[]
   subscriptions: Subscription[]
   feeEvents: FeeEvent[]
+  introducerCommissions: IntroducerCommission[]
 }
 
 function formatCurrency(amount: number, currency: string = 'USD'): string {
@@ -148,11 +164,14 @@ export function LawyerReconciliationClient({
   lawyerInfo,
   deals,
   subscriptions,
-  feeEvents
+  feeEvents,
+  introducerCommissions
 }: LawyerReconciliationClientProps) {
   const [search, setSearch] = useState('')
   const [dealFilter, setDealFilter] = useState('all')
   const [activeTab, setActiveTab] = useState('subscriptions')
+  const [confirmPaymentOpen, setConfirmPaymentOpen] = useState(false)
+  const [selectedCommission, setSelectedCommission] = useState<IntroducerCommission | null>(null)
 
   // Calculate summary metrics
   const summary = useMemo(() => {
@@ -209,6 +228,17 @@ export function LawyerReconciliationClient({
       return matchesDeal && matchesSearch
     })
   }, [feeEvents, dealFilter, search])
+
+  // Filter introducer commissions
+  const filteredIntroducerCommissions = useMemo(() => {
+    return introducerCommissions.filter(ic => {
+      const matchesDeal = dealFilter === 'all' || ic.deal_id === dealFilter
+      const matchesSearch = !search ||
+        ic.introducer_name.toLowerCase().includes(search.toLowerCase()) ||
+        (ic.deal_name && ic.deal_name.toLowerCase().includes(search.toLowerCase()))
+      return matchesDeal && matchesSearch
+    })
+  }, [introducerCommissions, dealFilter, search])
 
   // Deal summary by deal
   const dealSummaries = useMemo(() => {
@@ -383,6 +413,10 @@ export function LawyerReconciliationClient({
             <TabsTrigger value="fees" className="flex items-center gap-2">
               <DollarSign className="h-4 w-4" />
               Fee Payments ({filteredFeeEvents.length})
+            </TabsTrigger>
+            <TabsTrigger value="introducer-fees" className="flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              Introducer Fees ({filteredIntroducerCommissions.length})
             </TabsTrigger>
             <TabsTrigger value="deals" className="flex items-center gap-2">
               <Building2 className="h-4 w-4" />
@@ -575,6 +609,84 @@ export function LawyerReconciliationClient({
             </Card>
           </TabsContent>
 
+          {/* Introducer Fees Tab */}
+          <TabsContent value="introducer-fees">
+            <Card>
+              <CardHeader>
+                <CardTitle>Introducer Fee Payments</CardTitle>
+                <CardDescription>
+                  Introducer commissions awaiting payment confirmation
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {filteredIntroducerCommissions.length === 0 ? (
+                  <div className="border border-dashed border-muted rounded-lg py-12 flex flex-col items-center justify-center text-center space-y-2">
+                    <Users className="h-10 w-10 text-muted-foreground" />
+                    <p className="text-sm text-muted-foreground">
+                      No introducer commissions awaiting payment
+                    </p>
+                  </div>
+                ) : (
+                  <div className="rounded-md border">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Introducer</TableHead>
+                          <TableHead>Deal</TableHead>
+                          <TableHead>Amount</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Date</TableHead>
+                          <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredIntroducerCommissions.map((ic) => (
+                          <TableRow key={ic.id}>
+                            <TableCell>
+                              <div className="font-medium">{ic.introducer_name}</div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="text-sm">{ic.deal_name || '—'}</div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="font-medium text-green-600">
+                                {formatCurrency(ic.accrual_amount, ic.currency)}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <Badge
+                                variant="outline"
+                                className="bg-amber-100 text-amber-800 border-amber-200"
+                              >
+                                Awaiting Payment
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <div className="text-sm">{formatDate(ic.created_at)}</div>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <Button
+                                size="sm"
+                                className="bg-green-600 hover:bg-green-700"
+                                onClick={() => {
+                                  setSelectedCommission(ic)
+                                  setConfirmPaymentOpen(true)
+                                }}
+                              >
+                                <CheckCircle className="h-4 w-4 mr-1" />
+                                Confirm Payment
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           {/* Deal Summary Tab */}
           <TabsContent value="deals">
             <Card>
@@ -655,6 +767,14 @@ export function LawyerReconciliationClient({
           </TabsContent>
         </Tabs>
       )}
+
+      {/* Confirm Introducer Payment Modal */}
+      <ConfirmIntroducerPaymentModal
+        open={confirmPaymentOpen}
+        onOpenChange={setConfirmPaymentOpen}
+        commission={selectedCommission}
+        onSuccess={() => window.location.reload()}
+      />
     </div>
   )
 }
