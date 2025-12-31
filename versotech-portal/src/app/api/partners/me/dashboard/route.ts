@@ -7,7 +7,6 @@ type ReferralRow = {
   role: string | null
   dispatched_at: string | null
   interest_confirmed_at: string | null
-  created_at: string | null
   deal: { id: string; name: string; status: string } | { id: string; name: string; status: string }[] | null
   investor: { id: string; legal_name: string | null; display_name: string | null } | { id: string; legal_name: string | null; display_name: string | null }[] | null
 }
@@ -71,7 +70,6 @@ export async function GET() {
         role,
         dispatched_at,
         interest_confirmed_at,
-        created_at,
         deal:deal_id (
           id,
           name,
@@ -247,13 +245,13 @@ export async function GET() {
     const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1)
 
     const thisMonthReferrals = referrals.filter(r =>
-      r.created_at && new Date(r.created_at) >= startOfThisMonth
+      r.dispatched_at && new Date(r.dispatched_at) >= startOfThisMonth
     ).length
 
     const lastMonthReferrals = referrals.filter(r =>
-      r.created_at &&
-      new Date(r.created_at) >= startOfLastMonth &&
-      new Date(r.created_at) < startOfThisMonth
+      r.dispatched_at &&
+      new Date(r.dispatched_at) >= startOfLastMonth &&
+      new Date(r.dispatched_at) < startOfThisMonth
     ).length
 
     const referralGrowth = lastMonthReferrals > 0

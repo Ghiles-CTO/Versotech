@@ -55,6 +55,7 @@ export function DealFeePlansTab({ dealId, feePlans }: DealFeePlansTabProps) {
 
   return (
     <div className="space-y-6">
+      {/* Fee Plans Section (for investors) */}
       <Card className="border border-white/10 bg-white/5">
         <CardHeader>
           <div className="flex items-center justify-between">

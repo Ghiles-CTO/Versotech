@@ -317,6 +317,38 @@ export async function POST(
       .eq('id', subscriptionId)
       .is('pack_generated_at', null)
 
+    // Notify arranger users when pack is sent for signature
+    if (subscription.deal_id) {
+      const { data: deal } = await serviceSupabase
+        .from('deals')
+        .select('arranger_entity_id, name')
+        .eq('id', subscription.deal_id)
+        .single()
+
+      if (deal?.arranger_entity_id) {
+        const { data: arrangerUsers } = await serviceSupabase
+          .from('arranger_users')
+          .select('user_id')
+          .eq('arranger_id', deal.arranger_entity_id)
+
+        if (arrangerUsers && arrangerUsers.length > 0) {
+          const investorName = subscription.investor?.display_name || subscription.investor?.legal_name || 'Investor'
+          const dealName = deal.name || 'the deal'
+
+          const notifications = arrangerUsers.map((au: { user_id: string }) => ({
+            user_id: au.user_id,
+            investor_id: null,
+            title: 'Subscription Pack Sent',
+            message: `Subscription pack for ${investorName} (${dealName}) has been sent for signature.`,
+            link: '/versotech_main/versosign'
+          }))
+
+          await serviceSupabase.from('investor_notifications').insert(notifications)
+          console.log('📧 Notified arranger users about pack sent:', arrangerUsers.length)
+        }
+      }
+    }
+
     console.log('✅ Multi-signatory signature requests created for subscription pack:', {
       document_id: documentId,
       investor_requests: investorSignatureRequests.length,

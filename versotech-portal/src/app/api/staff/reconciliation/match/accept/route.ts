@@ -480,7 +480,7 @@ export async function POST(req: Request) {
                 }
 
                 // Trigger certificate generation when subscription becomes active
-                triggerCertificateGeneration({
+                await triggerCertificateGeneration({
                   supabase,
                   subscriptionId,
                   investorId: fullSubscription.investor_id,

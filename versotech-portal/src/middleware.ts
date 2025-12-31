@@ -701,7 +701,10 @@ export async function middleware(request: NextRequest) {
     }
 
     // LEGACY: Old staff portal routes
-    if (pathname.startsWith('/versotech/staff') || pathname.startsWith('/versotech/login') === false && pathname.startsWith('/versotech')) {
+    // CRITICAL FIX: Use '/versotech/' (with trailing slash) to avoid matching '/versotech_main/*'
+    // The old check used '/versotech' which incorrectly matched '/versotech_main/dashboard' because
+    // '/versotech_main'.startsWith('/versotech') === true
+    if (pathname.startsWith('/versotech/staff') || (pathname.startsWith('/versotech/') && !pathname.startsWith('/versotech/login'))) {
       // Only staff roles can access staff portal
       if (!['staff_admin', 'staff_ops', 'staff_rm', 'ceo'].includes(effectiveProfile.role)) {
         return NextResponse.redirect(new URL('/versoholdings/dashboard', request.url))

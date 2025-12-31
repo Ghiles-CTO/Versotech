@@ -88,7 +88,7 @@ export const AuditActions = {
 export const AuditEntities = {
   USERS: 'users',
   PROFILES: 'profiles',
-  INVESTORS: 'investors', 
+  INVESTORS: 'investors',
   VEHICLES: 'vehicles',
   SUBSCRIPTIONS: 'subscriptions',
   POSITIONS: 'positions',
@@ -106,6 +106,9 @@ export const AuditEntities = {
   FEE_EVENTS: 'fee_events',
   INVOICES: 'invoices',
   BANK_TRANSACTIONS: 'bank_transactions',
-  PAYMENTS: 'payments'
+  PAYMENTS: 'payments',
+  ARRANGER: 'arranger_entities',
+  INTRODUCER: 'introducers',
+  PARTNER: 'partners',
 } as const
 

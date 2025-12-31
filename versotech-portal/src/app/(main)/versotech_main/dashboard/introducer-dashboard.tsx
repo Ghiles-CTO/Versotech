@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { DateRangePicker } from '@/components/ui/date-range-picker'
 import {
   UserPlus,
   Users,
@@ -21,10 +22,13 @@ import {
   BarChart3,
   Target,
   Wallet,
+  X,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { formatCurrency, formatDate } from '@/lib/format'
 import { useTheme } from '@/components/theme-provider'
+import type { DateRange } from 'react-day-picker'
+import { format } from 'date-fns'
 
 type Persona = {
   persona_type: string
@@ -87,6 +91,7 @@ export function IntroducerDashboard({ introducerId, userId, persona }: Introduce
   const [activeAgreement, setActiveAgreement] = useState<Agreement | null>(null)
   const [pendingAgreement, setPendingAgreement] = useState<Agreement | null>(null)
   const [recentIntroductions, setRecentIntroductions] = useState<RecentIntroduction[]>([])
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined)
 
   useEffect(() => {
     async function fetchData() {
@@ -100,17 +105,59 @@ export function IntroducerDashboard({ introducerId, userId, persona }: Introduce
           .eq('introducer_id', introducerId)
           .order('introduced_at', { ascending: false })
 
-        const intros = introductions || []
+        const allIntros = introductions || []
+
+        // Apply date range filter
+        const intros = allIntros.filter(i => {
+          if (!dateRange?.from) return true
+          if (!i.introduced_at) return false
+
+          const introDate = new Date(i.introduced_at)
+          const fromDate = new Date(dateRange.from)
+          fromDate.setHours(0, 0, 0, 0)
+
+          if (introDate < fromDate) return false
+
+          if (dateRange.to) {
+            const toDate = new Date(dateRange.to)
+            toDate.setHours(23, 59, 59, 999)
+            if (introDate > toDate) return false
+          }
+
+          return true
+        })
+
         const pending = intros.filter(i => i.status === 'invited' || i.status === 'joined')
         const allocated = intros.filter(i => i.status === 'allocated')
 
         // Fetch commissions
         const { data: commissions } = await supabase
           .from('introducer_commissions')
-          .select('id, accrual_amount, status')
+          .select('id, accrual_amount, status, accrual_date')
           .eq('introducer_id', introducerId)
 
-        const comms = commissions || []
+        const allComms = commissions || []
+
+        // Apply date range filter to commissions
+        const comms = allComms.filter(c => {
+          if (!dateRange?.from) return true
+          if (!c.accrual_date) return false
+
+          const commDate = new Date(c.accrual_date)
+          const fromDate = new Date(dateRange.from)
+          fromDate.setHours(0, 0, 0, 0)
+
+          if (commDate < fromDate) return false
+
+          if (dateRange.to) {
+            const toDate = new Date(dateRange.to)
+            toDate.setHours(23, 59, 59, 999)
+            if (commDate > toDate) return false
+          }
+
+          return true
+        })
+
         const totalEarned = comms
           .filter(c => c.status === 'paid')
           .reduce((sum, c) => sum + (c.accrual_amount || 0), 0)
@@ -127,7 +174,7 @@ export function IntroducerDashboard({ introducerId, userId, persona }: Introduce
           conversionRate: intros.length > 0 ? (allocated.length / intros.length) * 100 : 0,
         })
 
-        // Calculate performance metrics
+        // Calculate performance metrics based on date range or default to monthly comparison
         const now = new Date()
         const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1)
         const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1)
@@ -136,7 +183,7 @@ export function IntroducerDashboard({ introducerId, userId, persona }: Introduce
           i.introduced_at && new Date(i.introduced_at) >= startOfThisMonth
         ).length
 
-        const lastMonthIntroductions = intros.filter(i =>
+        const lastMonthIntroductions = allIntros.filter(i =>
           i.introduced_at &&
           new Date(i.introduced_at) >= startOfLastMonth &&
           new Date(i.introduced_at) < startOfThisMonth
@@ -167,7 +214,7 @@ export function IntroducerDashboard({ introducerId, userId, persona }: Introduce
         }))
         setRecentIntroductions(mappedIntros)
 
-        // Fetch agreements
+        // Fetch agreements (not affected by date filter)
         const { data: agreements } = await supabase
           .from('introducer_agreements')
           .select('id, status, default_commission_bps, effective_date, expiry_date, signed_date')
@@ -190,7 +237,7 @@ export function IntroducerDashboard({ introducerId, userId, persona }: Introduce
     }
 
     fetchData()
-  }, [introducerId])
+  }, [introducerId, dateRange])
 
   if (loading) {
     return (
@@ -288,6 +335,48 @@ export function IntroducerDashboard({ introducerId, userId, persona }: Introduce
           </CardContent>
         </Card>
       )}
+
+      {/* Date Range Filter */}
+      <Card className={isDark ? 'bg-white/5 border-white/10' : ''}>
+        <CardContent className="py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <p className={`text-sm font-medium ${isDark ? 'text-gray-400' : 'text-gray-700'}`}>
+                Filter by Date Range:
+              </p>
+              <DateRangePicker
+                value={dateRange}
+                onChange={setDateRange}
+                variant={isDark ? 'dark' : 'default'}
+              />
+            </div>
+            {dateRange?.from && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setDateRange(undefined)}
+                className={isDark ? 'text-gray-400 hover:text-white' : ''}
+              >
+                <X className="h-4 w-4 mr-1" />
+                Clear Filter
+              </Button>
+            )}
+          </div>
+          {dateRange?.from && (
+            <p className={`text-xs mt-2 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
+              {dateRange.to
+                ? `Showing data from ${format(dateRange.from, 'MMM dd, yyyy')} to ${format(dateRange.to, 'MMM dd, yyyy')}`
+                : `Showing data from ${format(dateRange.from, 'MMM dd, yyyy')} onwards`
+              }
+            </p>
+          )}
+          {!dateRange?.from && (
+            <p className={`text-xs mt-2 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
+              Showing all-time data
+            </p>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Metrics Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

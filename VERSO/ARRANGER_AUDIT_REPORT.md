@@ -615,13 +615,13 @@ This is the only fully working page for the Arranger persona.
 
 #### What's Missing
 
-| Feature | User Story Ref | Status |
-|---------|---------------|--------|
-| Pack rejection notification | 2.6 Row 69 | ❌ Missing |
-| CEO notification workflow | 2.6 Row 70 | ❌ Missing |
-| Lawyer notification after signing | 2.6 Row 71 | ❌ Missing |
-| Date range report | 2.6 Row 72-74 | ❌ Missing |
-| Compartment-level reporting | 2.6 Row 75-77 | ❌ Missing |
+| Feature                           | User Story Ref | Status    |
+| --------------------------------- | -------------- | --------- |
+| Pack rejection notification       | 2.6 Row 69     | ❌ Missing |
+| CEO notification workflow         | 2.6 Row 70     | ❌ Missing |
+| Lawyer notification after signing | 2.6 Row 71     | ❌ Missing |
+| Date range report                 | 2.6 Row 72-74  | ❌ Missing |
+| Compartment-level reporting       | 2.6 Row 75-77  | ❌ Missing |
 
 #### Notification Gaps
 

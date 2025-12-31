@@ -23,7 +23,7 @@ const createAgreementSchema = z.object({
 
 /**
  * GET /api/placement-agreements
- * List agreements - staff see all, commercial partners see their own
+ * List agreements - staff see all, arrangers see their own, commercial partners see their own
  */
 export async function GET(request: NextRequest) {
   try {
@@ -45,6 +45,7 @@ export async function GET(request: NextRequest) {
 
     const isStaff = personas?.some((p: any) => p.persona_type === 'staff')
     const cpPersona = personas?.find((p: any) => p.persona_type === 'commercial_partner')
+    const arrangerPersona = personas?.find((p: any) => p.persona_type === 'arranger')
 
     // Get query params
     const searchParams = request.nextUrl.searchParams
@@ -70,6 +71,23 @@ export async function GET(request: NextRequest) {
       // Staff can see all, optionally filter by commercial_partner_id
       if (commercialPartnerId) {
         query = query.eq('commercial_partner_id', commercialPartnerId)
+      }
+    } else if (arrangerPersona) {
+      // Arranger can see agreements they created
+      const { data: arrangerUser } = await serviceSupabase
+        .from('arranger_users')
+        .select('arranger_id')
+        .eq('user_id', user.id)
+        .single()
+
+      if (arrangerUser) {
+        query = query.eq('arranger_id', arrangerUser.arranger_id)
+        // Optionally filter by commercial_partner_id within their agreements
+        if (commercialPartnerId) {
+          query = query.eq('commercial_partner_id', commercialPartnerId)
+        }
+      } else {
+        return NextResponse.json({ error: 'Arranger entity not found' }, { status: 403 })
       }
     } else if (cpPersona) {
       // Commercial partner can only see their own agreements
@@ -109,7 +127,9 @@ export async function GET(request: NextRequest) {
 
 /**
  * POST /api/placement-agreements
- * Create new agreement - staff only
+ * Create new agreement - staff or arrangers
+ * Staff: Creates with 'draft' status (can send directly)
+ * Arrangers: Creates with 'pending_internal_approval' status (requires CEO approval first)
  */
 export async function POST(request: NextRequest) {
   try {
@@ -124,14 +144,17 @@ export async function POST(request: NextRequest) {
 
     const serviceSupabase = createServiceClient()
 
-    // Check if user is staff
+    // Check user personas
     const { data: personas } = await serviceSupabase.rpc('get_user_personas', {
       p_user_id: user.id,
     })
 
     const isStaff = personas?.some((p: any) => p.persona_type === 'staff')
-    if (!isStaff) {
-      return NextResponse.json({ error: 'Only staff can create agreements' }, { status: 403 })
+    const arrangerPersona = personas?.find((p: any) => p.persona_type === 'arranger')
+
+    // Must be either staff or arranger
+    if (!isStaff && !arrangerPersona) {
+      return NextResponse.json({ error: 'Only staff or arrangers can create agreements' }, { status: 403 })
     }
 
     // Parse and validate body
@@ -147,13 +170,34 @@ export async function POST(request: NextRequest) {
 
     const agreementData = validation.data
 
-    // Create agreement with draft status
+    // Determine status and arranger_id based on creator role
+    let initialStatus = 'draft'
+    let arrangerId = null
+
+    if (arrangerPersona && !isStaff) {
+      // Arranger-created agreements require internal approval first
+      const { data: arrangerUser } = await serviceSupabase
+        .from('arranger_users')
+        .select('arranger_id')
+        .eq('user_id', user.id)
+        .single()
+
+      if (!arrangerUser) {
+        return NextResponse.json({ error: 'Arranger entity not found' }, { status: 403 })
+      }
+
+      arrangerId = arrangerUser.arranger_id
+      initialStatus = 'pending_internal_approval'
+    }
+
+    // Create agreement
     const { data, error } = await serviceSupabase
       .from('placement_agreements')
       .insert({
         ...agreementData,
-        status: 'draft',
+        status: initialStatus,
         created_by: user.id,
+        arranger_id: arrangerId,
       })
       .select(`
         *,
@@ -169,6 +213,43 @@ export async function POST(request: NextRequest) {
     if (error) {
       console.error('[placement-agreements] Create error:', error)
       return NextResponse.json({ error: 'Failed to create agreement' }, { status: 500 })
+    }
+
+    // If arranger-created, notify CEO/staff_admin users for approval
+    if (initialStatus === 'pending_internal_approval') {
+      try {
+        // Get arranger entity name for notification
+        const { data: arrangerEntity } = await serviceSupabase
+          .from('arranger_entities')
+          .select('legal_name')
+          .eq('id', arrangerId)
+          .single()
+
+        // Get commercial partner name
+        const cp = Array.isArray(data.commercial_partner) ? data.commercial_partner[0] : data.commercial_partner
+
+        // Find CEO/staff_admin users to notify
+        const { data: staffAdmins } = await serviceSupabase
+          .from('profiles')
+          .select('id')
+          .in('role', ['staff_admin', 'ceo'])
+          .limit(5)
+
+        if (staffAdmins && staffAdmins.length > 0) {
+          const notifications = staffAdmins.map((admin: any) => ({
+            user_id: admin.id,
+            investor_id: null,
+            title: 'Placement Agreement Pending Approval',
+            message: `${arrangerEntity?.legal_name || 'An arranger'} has created a placement agreement with ${cp?.legal_name || 'a commercial partner'} that requires your approval.`,
+            link: `/versotech_main/placement-agreements/${data.id}`,
+          }))
+
+          await serviceSupabase.from('investor_notifications').insert(notifications)
+        }
+      } catch (notifyError) {
+        // Don't fail the request if notification fails
+        console.error('[placement-agreements] Notification error:', notifyError)
+      }
     }
 
     return NextResponse.json({ data }, { status: 201 })

@@ -31,12 +31,24 @@ import {
   AlertCircle,
   ExternalLink,
   Download,
+  FolderOpen,
+  Building2,
+  X,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { formatCurrency, formatDate, formatBps } from '@/lib/format'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Label } from '@/components/ui/label'
+import { Separator } from '@/components/ui/separator'
 
 type Introduction = {
   id: string
@@ -59,6 +71,30 @@ type Introduction = {
     currency: string
     status: string
   } | null
+}
+
+type DealDetails = {
+  id: string
+  name: string
+  company_name: string | null
+  description: string | null
+  investment_thesis: string | null
+  sector: string | null
+  stage: string | null
+  location: string | null
+  deal_type: string | null
+  currency: string | null
+  minimum_investment: number | null
+  maximum_investment: number | null
+  target_amount: number | null
+  raised_amount: number | null
+  offer_unit_price: number | null
+  open_at: string | null
+  close_at: string | null
+  status: string
+  company_website: string | null
+  stock_type: string | null
+  deal_round: string | null
 }
 
 type IntroducerInfo = {
@@ -109,6 +145,54 @@ export default function IntroductionsPage() {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [exporting, setExporting] = useState(false)
+  const [selectedDeal, setSelectedDeal] = useState<DealDetails | null>(null)
+  const [dealDialogOpen, setDealDialogOpen] = useState(false)
+  const [loadingDeal, setLoadingDeal] = useState(false)
+
+  const handleViewDeal = async (dealId: string) => {
+    try {
+      setLoadingDeal(true)
+      setDealDialogOpen(true)
+
+      const supabase = createClient()
+      const { data: deal, error } = await supabase
+        .from('deals')
+        .select(`
+          id,
+          name,
+          company_name,
+          description,
+          investment_thesis,
+          sector,
+          stage,
+          location,
+          deal_type,
+          currency,
+          minimum_investment,
+          maximum_investment,
+          target_amount,
+          raised_amount,
+          offer_unit_price,
+          open_at,
+          close_at,
+          status,
+          company_website,
+          stock_type,
+          deal_round
+        `)
+        .eq('id', dealId)
+        .single()
+
+      if (error) throw error
+      setSelectedDeal(deal)
+    } catch (err) {
+      console.error('[IntroductionsPage] Error fetching deal:', err)
+      toast.error('Failed to load deal details')
+      setDealDialogOpen(false)
+    } finally {
+      setLoadingDeal(false)
+    }
+  }
 
   const handleExport = async () => {
     if (!introducerInfo) {
@@ -537,7 +621,12 @@ export default function IntroductionsPage() {
                       <TableCell>
                         {intro.deal ? (
                           <div>
-                            <div className="font-medium">{intro.deal.name}</div>
+                            <button
+                              onClick={() => handleViewDeal(intro.deal!.id)}
+                              className="font-medium text-left hover:text-primary hover:underline transition-colors"
+                            >
+                              {intro.deal.name}
+                            </button>
                             {intro.deal.company_name && (
                               <div className="text-xs text-muted-foreground">
                                 {intro.deal.company_name}
@@ -579,11 +668,19 @@ export default function IntroductionsPage() {
                       </TableCell>
                       <TableCell className="text-right">
                         {intro.deal && (
-                          <Button variant="ghost" size="sm" asChild>
-                            <Link href={`/versotech_main/opportunities/${intro.deal.id}`}>
-                              <ExternalLink className="h-4 w-4" />
-                            </Link>
-                          </Button>
+                          <div className="flex items-center justify-end gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              asChild
+                              title="View Data Room"
+                            >
+                              <Link href={`/versotech_main/opportunities/${intro.deal.id}`}>
+                                <FolderOpen className="h-4 w-4 mr-1" />
+                                Data Room
+                              </Link>
+                            </Button>
+                          </div>
                         )}
                       </TableCell>
                     </TableRow>
@@ -594,6 +691,214 @@ export default function IntroductionsPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Deal Details Dialog */}
+      <Dialog open={dealDialogOpen} onOpenChange={setDealDialogOpen}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          {loadingDeal ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              <span className="ml-3 text-muted-foreground">Loading deal details...</span>
+            </div>
+          ) : selectedDeal ? (
+            <>
+              <DialogHeader>
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+                    <Building2 className="w-6 h-6 text-muted-foreground" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <DialogTitle className="text-xl">{selectedDeal.name}</DialogTitle>
+                    {selectedDeal.company_name && (
+                      <DialogDescription className="text-base">
+                        {selectedDeal.company_name}
+                      </DialogDescription>
+                    )}
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setDealDialogOpen(false)}
+                    className="flex-shrink-0"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              </DialogHeader>
+
+              <div className="space-y-6 pt-4">
+                {/* Key Badges */}
+                <div className="flex flex-wrap gap-2">
+                  {selectedDeal.sector && (
+                    <Badge variant="secondary">{selectedDeal.sector}</Badge>
+                  )}
+                  {selectedDeal.stage && (
+                    <Badge variant="outline">{selectedDeal.stage}</Badge>
+                  )}
+                  {selectedDeal.location && (
+                    <Badge variant="outline">{selectedDeal.location}</Badge>
+                  )}
+                  {selectedDeal.status && (
+                    <Badge
+                      variant="outline"
+                      className={cn(
+                        'capitalize',
+                        selectedDeal.status === 'active' && 'bg-green-100 text-green-800 border-green-200',
+                        selectedDeal.status === 'draft' && 'bg-gray-100 text-gray-800 border-gray-200',
+                        selectedDeal.status === 'closed' && 'bg-red-100 text-red-800 border-red-200'
+                      )}
+                    >
+                      {selectedDeal.status}
+                    </Badge>
+                  )}
+                </div>
+
+                <Separator />
+
+                {/* Description */}
+                {selectedDeal.description && (
+                  <div>
+                    <Label className="text-base font-semibold">Description</Label>
+                    <p className="mt-2 text-muted-foreground whitespace-pre-wrap">
+                      {selectedDeal.description}
+                    </p>
+                  </div>
+                )}
+
+                {/* Investment Thesis */}
+                {selectedDeal.investment_thesis && (
+                  <div>
+                    <Label className="text-base font-semibold">Investment Thesis</Label>
+                    <p className="mt-2 text-muted-foreground whitespace-pre-wrap">
+                      {selectedDeal.investment_thesis}
+                    </p>
+                  </div>
+                )}
+
+                <Separator />
+
+                {/* Deal Details Grid */}
+                <div>
+                  <Label className="text-base font-semibold">Deal Information</Label>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-3">
+                    {selectedDeal.deal_type && (
+                      <div>
+                        <Label className="text-xs text-muted-foreground">Deal Type</Label>
+                        <p className="font-medium mt-1 capitalize">
+                          {selectedDeal.deal_type.replace(/_/g, ' ')}
+                        </p>
+                      </div>
+                    )}
+                    {selectedDeal.stock_type && (
+                      <div>
+                        <Label className="text-xs text-muted-foreground">Stock Type</Label>
+                        <p className="font-medium mt-1 capitalize">
+                          {selectedDeal.stock_type.replace(/_/g, ' ')}
+                        </p>
+                      </div>
+                    )}
+                    {selectedDeal.deal_round && (
+                      <div>
+                        <Label className="text-xs text-muted-foreground">Round</Label>
+                        <p className="font-medium mt-1">{selectedDeal.deal_round}</p>
+                      </div>
+                    )}
+                    {selectedDeal.target_amount && (
+                      <div>
+                        <Label className="text-xs text-muted-foreground">Target Raise</Label>
+                        <p className="font-medium mt-1">
+                          {formatCurrency(selectedDeal.target_amount, selectedDeal.currency || 'USD')}
+                        </p>
+                      </div>
+                    )}
+                    {selectedDeal.raised_amount !== null && (
+                      <div>
+                        <Label className="text-xs text-muted-foreground">Raised</Label>
+                        <p className="font-medium mt-1">
+                          {formatCurrency(selectedDeal.raised_amount, selectedDeal.currency || 'USD')}
+                        </p>
+                      </div>
+                    )}
+                    {selectedDeal.minimum_investment && (
+                      <div>
+                        <Label className="text-xs text-muted-foreground">Min Investment</Label>
+                        <p className="font-medium mt-1">
+                          {formatCurrency(selectedDeal.minimum_investment, selectedDeal.currency || 'USD')}
+                        </p>
+                      </div>
+                    )}
+                    {selectedDeal.maximum_investment && (
+                      <div>
+                        <Label className="text-xs text-muted-foreground">Max Investment</Label>
+                        <p className="font-medium mt-1">
+                          {formatCurrency(selectedDeal.maximum_investment, selectedDeal.currency || 'USD')}
+                        </p>
+                      </div>
+                    )}
+                    {selectedDeal.offer_unit_price && (
+                      <div>
+                        <Label className="text-xs text-muted-foreground">Unit Price</Label>
+                        <p className="font-medium mt-1">
+                          {formatCurrency(selectedDeal.offer_unit_price, selectedDeal.currency || 'USD')}
+                        </p>
+                      </div>
+                    )}
+                    {selectedDeal.open_at && (
+                      <div>
+                        <Label className="text-xs text-muted-foreground">Opens</Label>
+                        <p className="font-medium mt-1">{formatDate(selectedDeal.open_at)}</p>
+                      </div>
+                    )}
+                    {selectedDeal.close_at && (
+                      <div>
+                        <Label className="text-xs text-muted-foreground">Closes</Label>
+                        <p className="font-medium mt-1">{formatDate(selectedDeal.close_at)}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Company Website */}
+                {selectedDeal.company_website && (
+                  <div>
+                    <Label className="text-base font-semibold">Company Website</Label>
+                    <a
+                      href={selectedDeal.company_website}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 mt-2 text-primary hover:underline"
+                    >
+                      {selectedDeal.company_website}
+                      <ExternalLink className="h-4 w-4" />
+                    </a>
+                  </div>
+                )}
+
+                <Separator />
+
+                {/* Action Button */}
+                <div className="flex justify-end gap-3">
+                  <Button variant="outline" onClick={() => setDealDialogOpen(false)}>
+                    Close
+                  </Button>
+                  <Button asChild>
+                    <Link href={`/versotech_main/opportunities/${selectedDeal.id}`}>
+                      <FolderOpen className="h-4 w-4 mr-2" />
+                      View Full Details & Data Room
+                    </Link>
+                  </Button>
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="text-center py-12">
+              <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-foreground mb-2">Deal Not Found</h3>
+              <p className="text-muted-foreground">Unable to load deal details.</p>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

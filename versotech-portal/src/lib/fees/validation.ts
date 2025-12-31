@@ -68,6 +68,7 @@ export const commissionStatusSchema = z.enum(['accrued', 'approved', 'paid']);
 
 // Fee Component schema
 export const feeComponentSchema = z.object({
+  id: flexibleUuidSchema.optional(), // Allow existing component IDs on update
   kind: feeKindSchema,
   calc_method: feeCalcMethodSchema.optional(),
   frequency: feeFrequencySchema.optional(),
@@ -86,6 +87,18 @@ export const feeComponentSchema = z.object({
   next_tier_component_id: optionalFlexibleUuidSchema,
 });
 
+// Date string schema for DATE columns (accepts YYYY-MM-DD or ISO datetime)
+const dateStringSchema = z.string().refine(
+  (val) => {
+    // Accept YYYY-MM-DD format
+    if (/^\d{4}-\d{2}-\d{2}$/.test(val)) return true;
+    // Accept ISO datetime format (will be truncated to date by Postgres)
+    if (/^\d{4}-\d{2}-\d{2}T/.test(val)) return true;
+    return false;
+  },
+  { message: 'Invalid date format. Expected YYYY-MM-DD or ISO datetime.' }
+);
+
 // Fee Plan schemas
 export const createFeePlanSchema = z.object({
   deal_id: optionalFlexibleUuidSchema,
@@ -93,8 +106,8 @@ export const createFeePlanSchema = z.object({
   name: z.string().min(1).max(200),
   description: z.string().optional(),
   is_default: z.boolean().optional().default(false),
-  effective_from: z.string().datetime().optional(),
-  effective_until: z.string().datetime().optional(),
+  effective_from: dateStringSchema.optional(),
+  effective_until: dateStringSchema.optional(),
   components: z.array(feeComponentSchema).min(1),
 });
 

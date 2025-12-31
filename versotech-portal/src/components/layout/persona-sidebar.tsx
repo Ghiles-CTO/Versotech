@@ -85,7 +85,7 @@ const PERSONA_NAV_ITEMS: Record<string, NavItem[]> = {
     { name: 'Portfolio', href: '/versotech_main/portfolio', icon: Briefcase, description: 'My investments' },
     { name: 'Documents', href: '/versotech_main/documents', icon: FileText, description: 'My documents' },
     { name: 'Inbox', href: '/versotech_main/inbox', icon: MessageSquare, description: 'Tasks, messages & notifications' },
-    { name: 'Calendar', href: '/versotech_main/calendar', icon: Calendar, description: 'Schedule' },
+    // Calendar intentionally omitted - staff-only feature
   ],
 
   // Arranger persona
@@ -103,16 +103,16 @@ const PERSONA_NAV_ITEMS: Record<string, NavItem[]> = {
     { name: 'My Lawyers', href: '/versotech_main/my-lawyers', icon: Scale, description: 'Legal counsel' },
     { name: 'VERSOSign', href: '/versotech_main/versosign', icon: FileSignature, description: 'E-signatures' },
     { name: 'Profile', href: '/versotech_main/arranger-profile', icon: UserCheck, description: 'Entity & KYC status' },
-    { name: 'Messages', href: '/versotech_main/messages', icon: MessageSquare, description: 'Communications' },
   ],
 
   // Introducer persona
+  // NOTE: Messages removed per PRD - introducers have no messaging user stories (passive notification recipients only)
   introducer: [
     { name: 'Dashboard', href: '/versotech_main/dashboard', icon: LayoutDashboard, description: 'Overview' },
     { name: 'Introductions', href: '/versotech_main/introductions', icon: UserPlus, description: 'My introductions' },
     { name: 'Agreements', href: '/versotech_main/introducer-agreements', icon: FileText, description: 'Fee agreements' },
     { name: 'VersoSign', href: '/versotech_main/versosign', icon: FileSignature, description: 'E-signatures' },
-    { name: 'Messages', href: '/versotech_main/messages', icon: MessageSquare, description: 'Communications' },
+    { name: 'Profile', href: '/versotech_main/introducer-profile', icon: UserCheck, description: 'My profile' },
   ],
 
   // Partner persona

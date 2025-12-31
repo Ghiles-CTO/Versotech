@@ -1,10 +1,17 @@
 'use client'
 
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,9 +24,11 @@ import {
   Eye,
   MoreVertical,
   DollarSign,
-  Calendar
+  Calendar,
+  TrendingDown
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { SellPositionForm } from '@/components/investor/sell-position-form'
 
 interface DocumentInfo {
   id: string
@@ -50,6 +59,7 @@ interface EnhancedHolding {
     lastUpdated?: string
   } | null
   subscription: {
+    id?: string  // For sell request form
     commitment: number | null
     currency: string
     status: string
@@ -99,7 +109,9 @@ export function VehicleCard({
   detailsBasePath = '/versotech_main/portfolio'
 }: VehicleCardProps) {
   const router = useRouter()
+  const [sellSheetOpen, setSellSheetOpen] = useState(false)
   const hasPosition = holding.position && holding.position.currentValue > 0
+  const canSell = hasPosition && holding.subscription?.id
   const isPositive = holding.position?.unrealizedGainPct ? holding.position.unrealizedGainPct >= 0 : false
   const rawStatus =
     holding.status ||
@@ -181,6 +193,12 @@ export function VehicleCard({
                 <Eye className="mr-2 h-4 w-4" />
                 View Details
               </DropdownMenuItem>
+              {canSell && (
+                <DropdownMenuItem onClick={() => setSellSheetOpen(true)}>
+                  <TrendingDown className="mr-2 h-4 w-4" />
+                  Request Sale
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -343,8 +361,19 @@ export function VehicleCard({
           </div>
         )}
 
-        {/* View Details Button */}
-        <div className="pt-2 mt-auto">
+        {/* Action Buttons */}
+        <div className="pt-2 mt-auto space-y-2">
+          {canSell && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full border-amber-200 text-amber-700 hover:bg-amber-50 hover:text-amber-800"
+              onClick={() => setSellSheetOpen(true)}
+            >
+              <TrendingDown className="h-4 w-4 mr-2" />
+              Request Sale
+            </Button>
+          )}
           <Button
             variant="outline"
             size="sm"
@@ -356,6 +385,25 @@ export function VehicleCard({
           </Button>
         </div>
       </CardContent>
+
+      {/* Sell Position Sheet */}
+      {canSell && (
+        <Sheet open={sellSheetOpen} onOpenChange={setSellSheetOpen}>
+          <SheetContent className="sm:max-w-md overflow-y-auto">
+            <SheetHeader className="mb-4">
+              <SheetTitle>Request Position Sale</SheetTitle>
+            </SheetHeader>
+            <SellPositionForm
+              subscriptionId={holding.subscription!.id!}
+              vehicleName={holding.name}
+              fundedAmount={holding.position!.costBasis}
+              currency={holding.currency}
+              onSuccess={() => setSellSheetOpen(false)}
+              onCancel={() => setSellSheetOpen(false)}
+            />
+          </SheetContent>
+        </Sheet>
+      )}
     </Card>
   )
 }

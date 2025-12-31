@@ -32,16 +32,56 @@ export default async function MessagesPage() {
     )
   }
 
-  // Check if user has staff/CEO/arranger persona for full access
+  // Check user personas for access control
   const serviceSupabase = createServiceClient()
   const { data: personas } = await serviceSupabase.rpc('get_user_personas', {
     p_user_id: user.id
   })
 
-  // Staff and arrangers get elevated messaging access
-  const hasStaffAccess = personas?.some(
-    (p: any) => p.persona_type === 'staff' || p.persona_type === 'arranger'
-  ) || false
+  const isStaff = personas?.some((p: any) => p.persona_type === 'staff') || false
+  const isArranger = personas?.some((p: any) => p.persona_type === 'arranger') || false
+  const isIntroducer = personas?.some((p: any) => p.persona_type === 'introducer') || false
+
+  // Block arrangers who don't have staff access
+  // Per user stories: Arrangers need notifications, not messaging
+  if (isArranger && !isStaff) {
+    return (
+      <div className="p-6">
+        <div className="text-center py-16">
+          <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-foreground mb-2">
+            Messages Not Available
+          </h3>
+          <p className="text-muted-foreground">
+            As an arranger, you&apos;ll receive important updates via the notification system.
+            Check the notification bell for alerts about agreements, payments, and signatures.
+          </p>
+        </div>
+      </div>
+    )
+  }
+
+  // Block introducers who don't have staff access
+  // Per PRD: Introducers have zero messaging user stories - passive notification recipients only
+  if (isIntroducer && !isStaff) {
+    return (
+      <div className="p-6">
+        <div className="text-center py-16">
+          <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-foreground mb-2">
+            Messages Not Available
+          </h3>
+          <p className="text-muted-foreground">
+            As an introducer, you&apos;ll receive important updates via the notification system.
+            Check the notification bell for alerts about introduction progress and commission updates.
+          </p>
+        </div>
+      </div>
+    )
+  }
+
+  // Only staff get elevated messaging access (all conversations)
+  const hasStaffAccess = isStaff
 
   let conversationData: any[] = []
 

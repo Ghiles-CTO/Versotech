@@ -219,7 +219,16 @@ const subscriptionStageMeta: Record<string, {
   textColor: string
   borderColor: string
 }> = {
-  // Actual database statuses from subscriptions table
+  // Actual database statuses from deal_subscription_submissions table
+  pending_review: {
+    label: 'Pending Review',
+    stage: 6,
+    icon: Clock,
+    bgColor: 'bg-amber-50',
+    textColor: 'text-amber-700',
+    borderColor: 'border-amber-200'
+  },
+  // Keep 'pending' as alias for backwards compatibility
   pending: {
     label: 'Pending Review',
     stage: 6,
@@ -300,6 +309,23 @@ const subscriptionStageMeta: Record<string, {
     bgColor: 'bg-amber-50',
     textColor: 'text-amber-700',
     borderColor: 'border-amber-200'
+  },
+  // DB enum statuses: rejected, cancelled
+  rejected: {
+    label: 'Rejected',
+    stage: 0,
+    icon: AlertCircle,
+    bgColor: 'bg-rose-50',
+    textColor: 'text-rose-700',
+    borderColor: 'border-rose-200'
+  },
+  cancelled: {
+    label: 'Cancelled',
+    stage: 0,
+    icon: AlertCircle,
+    bgColor: 'bg-slate-50',
+    textColor: 'text-slate-700',
+    borderColor: 'border-slate-200'
   }
 }
 

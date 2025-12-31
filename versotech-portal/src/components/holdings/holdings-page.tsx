@@ -46,6 +46,7 @@ interface EnhancedHolding {
     lastUpdated?: string
   } | null
   subscription: {
+    id?: string  // For sell request form
     commitment: number | null
     currency: string
     status: string

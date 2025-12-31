@@ -102,6 +102,7 @@ const STATUS_STYLES: Record<string, string> = {
 }
 
 const PAGE_SIZE = 50
+const ALL_VALUE = '__all__' // Radix UI doesn't allow empty string as SelectItem value
 
 export function CommissionTab({
   type,
@@ -305,12 +306,15 @@ export function CommissionTab({
             {/* Entity Filter */}
             <div className="space-y-2">
               <Label>{entityLabel}</Label>
-              <Select value={entityId} onValueChange={setEntityId}>
+              <Select
+                value={entityId || ALL_VALUE}
+                onValueChange={(v) => setEntityId(v === ALL_VALUE ? '' : v)}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder={`All ${entityPlural.toLowerCase()}`} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All {entityPlural.toLowerCase()}</SelectItem>
+                  <SelectItem value={ALL_VALUE}>All {entityPlural.toLowerCase()}</SelectItem>
                   {entities.map((e) => (
                     <SelectItem key={e.id} value={e.id}>
                       {e.name}
@@ -323,12 +327,15 @@ export function CommissionTab({
             {/* Deal Filter */}
             <div className="space-y-2">
               <Label>Deal</Label>
-              <Select value={dealId} onValueChange={setDealId}>
+              <Select
+                value={dealId || ALL_VALUE}
+                onValueChange={(v) => setDealId(v === ALL_VALUE ? '' : v)}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="All deals" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All deals</SelectItem>
+                  <SelectItem value={ALL_VALUE}>All deals</SelectItem>
                   {deals.map((d) => (
                     <SelectItem key={d.id} value={d.id}>
                       {d.name}
@@ -341,12 +348,15 @@ export function CommissionTab({
             {/* Status Filter */}
             <div className="space-y-2">
               <Label>Status</Label>
-              <Select value={status} onValueChange={setStatus}>
+              <Select
+                value={status || ALL_VALUE}
+                onValueChange={(v) => setStatus(v === ALL_VALUE ? '' : v)}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="All statuses" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All statuses</SelectItem>
+                  <SelectItem value={ALL_VALUE}>All statuses</SelectItem>
                   <SelectItem value="accrued">Accrued</SelectItem>
                   <SelectItem value="invoice_requested">Invoice Requested</SelectItem>
                   <SelectItem value="invoiced">Invoiced</SelectItem>

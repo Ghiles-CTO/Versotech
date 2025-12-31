@@ -78,9 +78,9 @@ type Summary = {
 }
 
 type MembershipRow = {
-  id: string
+  // Note: deal_memberships has composite PK (deal_id, user_id), no 'id' column
   role: string | null
-  created_at: string | null
+  dispatched_at: string | null
   deal_id: string | null
   investor_id: string | null
   investor: { id: string; legal_name: string | null } | { id: string; legal_name: string | null }[] | null
@@ -255,8 +255,11 @@ export default function PartnerTransactionsPage() {
           ? subscriptionMap.get(getSubscriptionKey(membership.investor_id, membership.deal_id)) || null
           : null
 
+        // Create synthetic ID from composite key (deal_memberships has no 'id' column)
+        const syntheticId = `${membership.deal_id || 'no-deal'}-${membership.investor_id || 'no-investor'}`
+
         return {
-          id: membership.id,
+          id: syntheticId,
           investor: investor ? {
             id: investor.id,
             legal_name: investor.legal_name || 'Unknown',
@@ -274,7 +277,7 @@ export default function PartnerTransactionsPage() {
             status: subscription.status || 'pending',
             committed_at: subscription.committed_at,
           } : null,
-          referred_at: membership.created_at,
+          referred_at: membership.dispatched_at,
           role: membership.role || 'investor',
         }
       })
@@ -318,9 +321,8 @@ export default function PartnerTransactionsPage() {
         const { data: memberships, error: membershipsError } = await supabase
           .from('deal_memberships')
           .select(`
-            id,
             role,
-            created_at,
+            dispatched_at,
             deal_id,
             investor_id,
             investor:investor_id (
@@ -336,7 +338,7 @@ export default function PartnerTransactionsPage() {
           `)
           .eq('referred_by_entity_id', partnerUser.partner_id)
           .eq('referred_by_entity_type', 'partner')
-          .order('created_at', { ascending: false })
+          .order('dispatched_at', { ascending: false })
 
         if (membershipsError) throw membershipsError
 
@@ -358,9 +360,8 @@ export default function PartnerTransactionsPage() {
       const { data: memberships, error: membershipsError } = await supabase
         .from('deal_memberships')
         .select(`
-          id,
           role,
-          created_at,
+          dispatched_at,
           deal_id,
           investor_id,
           referred_by_entity_id,
@@ -376,7 +377,7 @@ export default function PartnerTransactionsPage() {
           )
         `)
         .eq('referred_by_entity_type', 'partner')
-        .order('created_at', { ascending: false })
+        .order('dispatched_at', { ascending: false })
         .limit(100)
 
       if (membershipsError) throw membershipsError

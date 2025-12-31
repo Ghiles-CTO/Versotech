@@ -34,6 +34,8 @@ import {
   Building2,
   Handshake,
   Briefcase,
+  MessageCircle,
+  RefreshCw,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatCurrency, formatDate } from '@/lib/format'
@@ -60,6 +62,9 @@ type Commission = {
   notes: string | null
   created_at: string
   invoice_id: string | null
+  rejection_reason: string | null
+  rejected_by: string | null
+  rejected_at: string | null
   deal?: {
     id: string
     name: string
@@ -89,6 +94,7 @@ const STATUS_STYLES: Record<string, string> = {
   invoiced: 'bg-orange-100 text-orange-800',
   paid: 'bg-green-100 text-green-800',
   cancelled: 'bg-red-100 text-red-800',
+  rejected: 'bg-red-100 text-red-800 border border-red-300',
 }
 
 const STATUS_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -97,6 +103,7 @@ const STATUS_ICONS: Record<string, React.ComponentType<{ className?: string }>> 
   invoiced: FileText,
   paid: CheckCircle,
   cancelled: XCircle,
+  rejected: XCircle,
 }
 
 const STATUS_FILTERS = [
@@ -105,6 +112,7 @@ const STATUS_FILTERS = [
   { label: 'Invoiced', value: 'invoiced' },
   { label: 'Paid', value: 'paid' },
   { label: 'Accrued', value: 'accrued' },
+  { label: 'Rejected', value: 'rejected' },
   { label: 'Cancelled', value: 'cancelled' },
 ]
 
@@ -231,6 +239,9 @@ export default function MyCommissionsPage() {
           notes,
           created_at,
           invoice_id,
+          rejection_reason,
+          rejected_by,
+          rejected_at,
           deal:deals(id, name, company_name),
           arranger:arranger_entities(id, legal_name)
         `)
@@ -443,6 +454,41 @@ export default function MyCommissionsPage() {
         </Card>
       )}
 
+      {/* Alert for rejected invoices */}
+      {commissions.some(c => c.status === 'rejected') && (
+        <Card className="border-red-400/50 bg-red-50 dark:bg-red-950/30">
+          <CardContent className="py-4">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-lg bg-red-100 dark:bg-red-900 flex items-center justify-center">
+                <MessageCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-medium text-red-800 dark:text-red-200">Invoice Rejected - Action Required</h3>
+                <p className="text-sm text-red-700 dark:text-red-300">
+                  One or more of your invoices has been rejected. Please review the feedback below and resubmit.
+                </p>
+                <div className="mt-2 space-y-2">
+                  {commissions.filter(c => c.status === 'rejected').map(c => (
+                    <div key={c.id} className="text-sm bg-red-100 dark:bg-red-900/50 p-2 rounded flex items-start gap-2">
+                      <XCircle className="h-4 w-4 mt-0.5 flex-shrink-0 text-red-600 dark:text-red-400" />
+                      <div>
+                        <span className="font-medium">{c.deal?.name || 'Commission'}</span>
+                        {c.rejection_reason && (
+                          <p className="text-red-600 dark:text-red-400 mt-1">&ldquo;{c.rejection_reason}&rdquo;</p>
+                        )}
+                        {c.rejected_at && (
+                          <p className="text-xs text-red-500 dark:text-red-500 mt-1">Rejected on {formatDate(c.rejected_at)}</p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Filter */}
       <Card>
         <CardContent className="pt-6">
@@ -547,32 +593,51 @@ export default function MyCommissionsPage() {
                           {formatDate(commission.created_at)}
                         </TableCell>
                         <TableCell className="text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            {commission.status === 'invoice_requested' && (
-                              <Button
-                                size="sm"
-                                onClick={() => handleSubmitInvoice(commission)}
-                              >
-                                <Upload className="h-4 w-4 mr-1" />
-                                Submit Invoice
-                              </Button>
-                            )}
-                            {(commission.status === 'invoiced' || commission.status === 'paid') &&
-                              commission.invoice_id && (
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => handleViewInvoice(commission)}
-                                className="text-blue-600"
-                              >
-                                <Eye className="h-4 w-4 mr-1" />
-                                View Invoice
-                              </Button>
-                            )}
-                            {commission.status === 'paid' && commission.paid_at && (
-                              <span className="text-xs text-green-600">
-                                Paid {formatDate(commission.paid_at)}
-                              </span>
+                          <div className="flex flex-col items-end gap-1">
+                            <div className="flex items-center gap-2">
+                              {commission.status === 'invoice_requested' && (
+                                <Button
+                                  size="sm"
+                                  onClick={() => handleSubmitInvoice(commission)}
+                                >
+                                  <Upload className="h-4 w-4 mr-1" />
+                                  Submit Invoice
+                                </Button>
+                              )}
+                              {commission.status === 'rejected' && (
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  onClick={() => handleSubmitInvoice(commission)}
+                                >
+                                  <RefreshCw className="h-4 w-4 mr-1" />
+                                  Resubmit
+                                </Button>
+                              )}
+                              {(commission.status === 'invoiced' || commission.status === 'paid') &&
+                                commission.invoice_id && (
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => handleViewInvoice(commission)}
+                                  className="text-blue-600"
+                                >
+                                  <Eye className="h-4 w-4 mr-1" />
+                                  View Invoice
+                                </Button>
+                              )}
+                              {commission.status === 'paid' && commission.paid_at && (
+                                <span className="text-xs text-green-600">
+                                  Paid {formatDate(commission.paid_at)}
+                                </span>
+                              )}
+                            </div>
+                            {commission.status === 'rejected' && commission.rejection_reason && (
+                              <div className="text-xs text-red-600 max-w-48 text-right mt-1" title={commission.rejection_reason}>
+                                <span className="font-medium">Reason:</span> {commission.rejection_reason.length > 50
+                                  ? `${commission.rejection_reason.slice(0, 50)}...`
+                                  : commission.rejection_reason}
+                              </div>
                             )}
                           </div>
                         </TableCell>

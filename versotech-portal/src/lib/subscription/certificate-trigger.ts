@@ -117,11 +117,14 @@ export async function triggerCertificateGeneration({
 
     if (usersError) {
       console.error(`❌ Failed to fetch investor users for notification:`, usersError)
-    } else if (investorUsers && investorUsers.length > 0) {
+    } else if (!investorUsers || investorUsers.length === 0) {
+      console.warn(`⚠️ No investor_users found for investor ${investorId} - cannot create notification`)
+    } else {
       // Create notifications for all users linked to this investor
       const notifications = investorUsers.map(iu => ({
         user_id: iu.user_id,
         investor_id: investorId,
+        type: 'investment_activated',
         title: 'Investment Activated',
         message: 'Your investment is now active. Your equity certificate will be available shortly.',
         link: '/versotech_main/portfolio'
@@ -182,6 +185,7 @@ export async function triggerCertificateGeneration({
           const lawyerNotifications = lawyerUsers.map((lu: any) => ({
             user_id: lu.user_id,
             investor_id: null,
+            type: 'certificate_issued',
             title: 'Certificate Issued',
             message: `Investment certificate issued for ${investorName}. The subscription is now fully active.`,
             link: '/versotech_main/subscription-packs'

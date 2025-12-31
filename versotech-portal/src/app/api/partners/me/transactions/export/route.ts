@@ -19,9 +19,10 @@ export async function GET(request: NextRequest) {
     const supabase = createServiceClient()
 
     // Get partner entity for this user
+    // Note: partners table has 'name' not 'display_name'
     const { data: partnerLink } = await supabase
       .from('partner_users')
-      .select('partner_id, partners(id, legal_name, display_name)')
+      .select('partner_id, partners(id, name, legal_name)')
       .eq('user_id', user.id)
       .single()
 
@@ -30,7 +31,7 @@ export async function GET(request: NextRequest) {
     }
 
     const partnerRaw = partnerLink.partners as unknown
-    const partner = (Array.isArray(partnerRaw) ? partnerRaw[0] : partnerRaw) as { id: string; legal_name: string; display_name: string | null }
+    const partner = (Array.isArray(partnerRaw) ? partnerRaw[0] : partnerRaw) as { id: string; name: string; legal_name: string | null }
     const partnerId = partnerLink.partner_id
 
     // Rate limiting - check for recent export requests (1 per minute)
@@ -56,6 +57,7 @@ export async function GET(request: NextRequest) {
     const status = url.searchParams.get('status')
 
     // Get all deal memberships where this partner referred investors
+    // Note: deal_memberships has no 'created_at' column - use 'dispatched_at' instead
     let query = supabase
       .from('deal_memberships')
       .select(`
@@ -63,7 +65,6 @@ export async function GET(request: NextRequest) {
         user_id,
         role,
         dispatched_at,
-        created_at,
         deals (
           id,
           name,
@@ -76,14 +77,14 @@ export async function GET(request: NextRequest) {
       `)
       .eq('referred_by_entity_type', 'partner')
       .eq('referred_by_entity_id', partnerId)
-      .order('created_at', { ascending: false })
+      .order('dispatched_at', { ascending: false })
       .limit(1000)
 
     if (fromDate) {
-      query = query.gte('created_at', fromDate)
+      query = query.gte('dispatched_at', fromDate)
     }
     if (toDate) {
-      query = query.lte('created_at', toDate)
+      query = query.lte('dispatched_at', toDate)
     }
 
     const { data: referrals, error } = await query
@@ -144,7 +145,7 @@ export async function GET(request: NextRequest) {
       const sub = subscriptionData[ref.user_id]
 
       return [
-        ref.created_at ? new Date(ref.created_at).toISOString().split('T')[0] : '',
+        ref.dispatched_at ? new Date(ref.dispatched_at).toISOString().split('T')[0] : '',
         profile?.display_name || 'Unknown',
         profile?.email || '',
         deal?.name || 'Unknown Deal',
@@ -171,7 +172,7 @@ export async function GET(request: NextRequest) {
 
     // Create response with CSV
     const fullCsv = csvContent + summaryContent
-    const filename = `partner-transactions-${partner.display_name || partner.legal_name}-${new Date().toISOString().split('T')[0]}.csv`
+    const filename = `partner-transactions-${partner.name || partner.legal_name}-${new Date().toISOString().split('T')[0]}.csv`
 
     // Log the export for rate limiting
     await supabase.from('audit_logs').insert({

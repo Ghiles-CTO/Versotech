@@ -61,6 +61,11 @@ type Lawyer = {
   is_active: boolean
   deals_count: number
   total_deal_value: number
+  // Escrow/funding status
+  total_subscriptions: number
+  funded_subscriptions: number
+  total_funded_amount: number
+  total_commitment: number
 }
 
 type Summary = {
@@ -181,6 +186,19 @@ export default function MyLawyersPage() {
         const dealValueMap = new Map<string, number>()
         deals.forEach(d => dealValueMap.set(d.id, Number(d.target_amount) || 0))
 
+        // Fetch subscriptions for escrow status
+        const { data: subscriptions } = await supabase
+          .from('subscriptions')
+          .select('id, deal_id, commitment, funded_amount, status')
+          .in('deal_id', dealIds)
+
+        const subscriptionsByDeal = new Map<string, typeof subscriptions>()
+        ;(subscriptions || []).forEach(sub => {
+          const existing = subscriptionsByDeal.get(sub.deal_id) || []
+          existing.push(sub)
+          subscriptionsByDeal.set(sub.deal_id, existing)
+        })
+
         const processedLawyers: Lawyer[] = (lawyersData || []).map((l: any) => {
           // Find deals where this lawyer is legal counsel
           const lawyerDeals = (feeStructures || []).filter(fs => {
@@ -190,6 +208,26 @@ export default function MyLawyersPage() {
           })
           const dealsInvolved = [...new Set(lawyerDeals.map(fs => fs.deal_id))]
           const totalValue = dealsInvolved.reduce((sum, dealId) => sum + (dealValueMap.get(dealId) || 0), 0)
+
+          // Calculate escrow/funding status for this lawyer's deals
+          let totalSubscriptions = 0
+          let fundedSubscriptions = 0
+          let totalFundedAmount = 0
+          let totalCommitment = 0
+
+          dealsInvolved.forEach(dealId => {
+            const dealSubs = subscriptionsByDeal.get(dealId) || []
+            dealSubs.forEach(sub => {
+              totalSubscriptions++
+              const commitment = Number(sub.commitment) || 0
+              const funded = Number(sub.funded_amount) || 0
+              totalCommitment += commitment
+              totalFundedAmount += funded
+              if (commitment > 0 && funded >= commitment) {
+                fundedSubscriptions++
+              }
+            })
+          })
 
           return {
             id: l.id,
@@ -206,6 +244,10 @@ export default function MyLawyersPage() {
             is_active: l.is_active,
             deals_count: dealsInvolved.length,
             total_deal_value: totalValue,
+            total_subscriptions: totalSubscriptions,
+            funded_subscriptions: fundedSubscriptions,
+            total_funded_amount: totalFundedAmount,
+            total_commitment: totalCommitment,
           }
         })
 
@@ -249,6 +291,10 @@ export default function MyLawyersPage() {
         is_active: l.is_active,
         deals_count: 0,
         total_deal_value: 0,
+        total_subscriptions: 0,
+        funded_subscriptions: 0,
+        total_funded_amount: 0,
+        total_commitment: 0,
       }))
 
       setLawyers(processedLawyers)
@@ -389,6 +435,7 @@ export default function MyLawyersPage() {
                     <TableHead>Specializations</TableHead>
                     <TableHead>Contact</TableHead>
                     <TableHead>Deals</TableHead>
+                    <TableHead>Escrow Status</TableHead>
                     <TableHead>Deal Value</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
@@ -431,6 +478,32 @@ export default function MyLawyersPage() {
                       </TableCell>
                       <TableCell>
                         <Badge variant="outline">{lawyer.deals_count} deal{lawyer.deals_count !== 1 ? 's' : ''}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        {lawyer.total_subscriptions > 0 ? (
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <Badge
+                                variant="secondary"
+                                className={cn(
+                                  'text-xs',
+                                  lawyer.funded_subscriptions === lawyer.total_subscriptions
+                                    ? 'bg-green-100 text-green-800'
+                                    : lawyer.funded_subscriptions > 0
+                                      ? 'bg-yellow-100 text-yellow-800'
+                                      : 'bg-gray-100 text-gray-800'
+                                )}
+                              >
+                                {lawyer.funded_subscriptions}/{lawyer.total_subscriptions} funded
+                              </Badge>
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              {formatCurrency(lawyer.total_funded_amount, 'USD')} / {formatCurrency(lawyer.total_commitment, 'USD')}
+                            </div>
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground text-xs">No subs</span>
+                        )}
                       </TableCell>
                       <TableCell>
                         <div className="font-medium">{formatCurrency(lawyer.total_deal_value, 'USD')}</div>

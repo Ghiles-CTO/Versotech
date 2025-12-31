@@ -150,6 +150,7 @@ export async function GET(request: Request) {
       let subscriptionData = null
       if (subscription) {
         subscriptionData = {
+          id: subscription.id,  // Include subscription ID for sell requests
           commitment: subscription.commitment ? parseFloat(subscription.commitment) : null,
           currency: subscription.currency || vehicle.currency,
           status: subscription.status || 'pending',

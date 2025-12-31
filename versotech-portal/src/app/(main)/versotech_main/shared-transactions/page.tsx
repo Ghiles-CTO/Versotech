@@ -38,14 +38,15 @@ import { formatCurrency, formatDate } from '@/lib/format'
 import { createClient } from '@/lib/supabase/client'
 
 type SharedTransaction = {
-  id: string
+  id: string // Synthetic ID from deal_id + investor_id
   deal_id: string
   deal_name: string
   deal_status: string
+  investor_id: string | null
   investor_name: string
   commitment_amount: number
   currency: string
-  created_at: string
+  dispatched_at: string | null
   partner_share: number // Percentage share
   co_referrer_name: string | null
   co_referrer_type: string | null
@@ -132,16 +133,17 @@ export default function SharedTransactionsPage() {
 
         // Fetch shared transactions for this partner
         // Looking for deals where this partner referred AND there are other referrers
+        // Note: deal_memberships has no 'id' or 'created_at' columns - use composite key and dispatched_at
         const { data: memberships, error: membershipsError } = await supabase
           .from('deal_memberships')
           .select(`
-            id,
-            created_at,
+            deal_id,
+            investor_id,
+            dispatched_at,
             referred_by_entity_id,
             referred_by_entity_type,
             investor:investor_id (
               id,
-              display_name,
               legal_name
             ),
             deal:deal_id (
@@ -154,7 +156,7 @@ export default function SharedTransactionsPage() {
           `)
           .eq('referred_by_entity_id', partnerUser.partner_id)
           .eq('referred_by_entity_type', 'partner')
-          .order('created_at', { ascending: false })
+          .order('dispatched_at', { ascending: false })
 
         if (membershipsError) throw membershipsError
 
@@ -225,16 +227,17 @@ export default function SharedTransactionsPage() {
 
     async function fetchAllSharedTransactions(supabase: any) {
       // Staff view - show deals with multiple referrers
+      // Note: deal_memberships has no 'id' or 'created_at' columns
       const { data: memberships, error: membershipsError } = await supabase
         .from('deal_memberships')
         .select(`
-          id,
-          created_at,
+          deal_id,
+          investor_id,
+          dispatched_at,
           referred_by_entity_id,
           referred_by_entity_type,
           investor:investor_id (
             id,
-            display_name,
             legal_name
           ),
           deal:deal_id (
@@ -246,7 +249,7 @@ export default function SharedTransactionsPage() {
           )
         `)
         .not('referred_by_entity_id', 'is', null)
-        .order('created_at', { ascending: false })
+        .order('dispatched_at', { ascending: false })
         .limit(50)
 
       if (membershipsError) throw membershipsError
@@ -271,15 +274,19 @@ export default function SharedTransactionsPage() {
         const hasCoReferrer = coReferrers.length > 0
         const coReferrer = coReferrers[0]
 
+        // Create synthetic ID from composite key (deal_memberships has no 'id' column)
+        const syntheticId = `${membership.deal_id || 'no-deal'}-${membership.investor_id || 'no-investor'}`
+
         return {
-          id: membership.id,
+          id: syntheticId,
           deal_id: deal?.id || '',
           deal_name: deal?.name || 'Unknown Deal',
           deal_status: deal?.status || 'draft',
-          investor_name: investor?.display_name || investor?.legal_name || 'Unknown',
+          investor_id: investor?.id || null,
+          investor_name: investor?.legal_name || 'Unknown',
           commitment_amount: subscription?.commitment || 0,
           currency: deal?.currency || 'USD',
-          created_at: membership.created_at,
+          dispatched_at: membership.dispatched_at,
           partner_share: hasCoReferrer ? 50 : 100, // Simplified share calculation
           co_referrer_name: hasCoReferrer ? `Co-referrer (${coReferrer.referred_by_entity_type})` : null,
           co_referrer_type: coReferrer?.referred_by_entity_type || null,
@@ -531,7 +538,7 @@ export default function SharedTransactionsPage() {
                           {formatCurrency(tx.commitment_amount, tx.currency)}
                         </div>
                         <div className="text-xs text-muted-foreground">
-                          {formatDate(tx.created_at)}
+                          {tx.dispatched_at ? formatDate(tx.dispatched_at) : '—'}
                         </div>
                       </TableCell>
                       <TableCell>

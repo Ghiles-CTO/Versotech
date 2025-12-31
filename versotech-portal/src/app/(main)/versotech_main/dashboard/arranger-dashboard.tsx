@@ -27,6 +27,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { createClient } from '@/lib/supabase/client'
 import { formatCurrency, formatDate } from '@/lib/format'
 import { useTheme } from '@/components/theme-provider'
+import { ArrangerOnboardingChecklist } from '@/components/arranger/arranger-onboarding-checklist'
 
 type Persona = {
   persona_type: string
@@ -539,6 +540,11 @@ export function ArrangerDashboard({ arrangerId, userId, persona }: ArrangerDashb
             </div>
           </CardContent>
         </Card>
+      )}
+
+      {/* Onboarding Checklist - Show when KYC not approved */}
+      {arrangerInfo?.kyc_status !== 'approved' && (
+        <ArrangerOnboardingChecklist arrangerId={arrangerId} compact />
       )}
 
       {/* Metrics Grid */}
