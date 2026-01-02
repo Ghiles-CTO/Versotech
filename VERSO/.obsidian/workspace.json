@@ -13,12 +13,26 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "ARRANGER_AUDIT_REPORT.md",
+                "file": "10 days/ARRANGER_PERSONA_STATUS_REPORT.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "ARRANGER_AUDIT_REPORT"
+              "title": "ARRANGER_PERSONA_STATUS_REPORT"
+            }
+          },
+          {
+            "id": "e8d9455eb8b9efa2",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "10 days/PHASE2_STATUS_REPORT.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "PHASE2_STATUS_REPORT"
             }
           }
         ]
@@ -183,14 +197,34 @@
       "bases:Create new base": false
     }
   },
-  "active": "3e117a3b32dcf196",
+  "active": "fa32b80b5b7a6b50",
   "lastOpenFiles": [
-    "TESTING_GUIDE_V3.md",
-    "~$RANGER_AUDIT_REPORT.md",
+    "10 days/LAWYER_PERSONA_STATUS_REPORT.md",
+    "10 days/COMMERCIAL_PARTNER_PERSONA_STATUS_REPORT.md",
+    "10 days/INVESTOR_PERSONA_STATUS_REPORT.md",
+    "10 days/INTRODUCER_PERSONA_STATUS_REPORT.md",
+    "10 days/day1/meeting1.md",
+    "10 days/day1",
+    "10 days/PARTNER_PERSONA_STATUS_REPORT.md",
+    "10 days/CEO_PERSONA_STATUS_REPORT.md",
+    "10 days/PHASE2_STATUS_REPORT.md",
+    "10 days/ARRANGER_PERSONA_STATUS_REPORT.md",
     "ARRANGER_AUDIT_REPORT.md",
-    "PERSONA_TESTING_GUIDE.md",
+    "COMMERCIAL_PARTNER_AUDIT.md",
+    "INTRODUCER_ISSUES_REPORT.md",
+    "INTRODUCER_REALITY_CHECK.md",
     "Nir meeting.md",
-    "Welcome.md",
-    "create a link.md"
+    "INTRODUCER_FINAL_VERIFICATION.md",
+    "INTRODUCER_AUDIT.md",
+    "INTRODUCER_PAGE_BREAKDOWN.md",
+    "PARTNER_ISSUES.md",
+    "LAWYER_AUDIT.md",
+    "Pre meeting.md",
+    "TESTING_GUIDE_V3.md",
+    "PARTNER_TEST_REPORT.md",
+    "INTRODUCER_TEST_REPORT.md",
+    "INTRODUCER_COMPLETE_AUDIT.md",
+    "PARTNER_VERIFIED_AUDIT.md",
+    "PARTNER_AUDIT.md"
   ]
 }

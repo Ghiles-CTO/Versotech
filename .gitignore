@@ -44,3 +44,24 @@ server.log
 .venv/
 nul
 work/
+
+# Test artifacts & screenshots
+.claude/skills/webapp-testing/screenshots/
+.claude/skills/webapp-testing/*.png
+*_test.png
+*_screenshot.png
+
+# Binary documents (keep specific ones explicitly added)
+*.pdf
+*.docx
+
+# Session files
+session-*.md
+
+# Root-level audit reports (keep in VERSO/ folder)
+/*_AUDIT*.md
+/*_VERIFICATION*.md
+/*_TEST_REPORT.md
+!/CLAUDE.md
+!/AGENTS.md
+!/README.md
