@@ -36,7 +36,10 @@ import {
   Briefcase,
   MessageCircle,
   RefreshCw,
+  X,
 } from 'lucide-react'
+import type { DateRange } from 'react-day-picker'
+import { DateRangePicker } from '@/components/ui/date-range-picker'
 import { cn } from '@/lib/utils'
 import { formatCurrency, formatDate } from '@/lib/format'
 import { createClient } from '@/lib/supabase/client'
@@ -166,6 +169,7 @@ export default function MyCommissionsPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [statusFilter, setStatusFilter] = useState('all')
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined)
 
   // Entity type detection
   const [entityType, setEntityType] = useState<EntityType | null>(null)
@@ -326,8 +330,22 @@ export default function MyCommissionsPage() {
   // ============================================================================
 
   const filteredCommissions = commissions.filter(c => {
-    if (statusFilter === 'all') return true
-    return c.status === statusFilter
+    // Status filter
+    if (statusFilter !== 'all' && c.status !== statusFilter) return false
+
+    // Date range filter (PRD Row 88)
+    if (dateRange?.from || dateRange?.to) {
+      const commissionDate = new Date(c.created_at)
+      if (dateRange.from && commissionDate < dateRange.from) return false
+      if (dateRange.to) {
+        // Include the entire end date (set to end of day)
+        const endOfDay = new Date(dateRange.to)
+        endOfDay.setHours(23, 59, 59, 999)
+        if (commissionDate > endOfDay) return false
+      }
+    }
+
+    return true
   })
 
   // ============================================================================
@@ -489,10 +507,10 @@ export default function MyCommissionsPage() {
         </Card>
       )}
 
-      {/* Filter */}
+      {/* Filters - PRD Row 88: Date range filter */}
       <Card>
         <CardContent className="pt-6">
-          <div className="flex gap-4">
+          <div className="flex flex-wrap gap-4 items-center">
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-48">
                 <SelectValue placeholder="Filter by status" />
@@ -505,6 +523,40 @@ export default function MyCommissionsPage() {
                 ))}
               </SelectContent>
             </Select>
+
+            {/* Date Range Filter - PRD Row 88 */}
+            <div className="flex items-center gap-2">
+              <DateRangePicker
+                value={dateRange}
+                onChange={setDateRange}
+                className="w-auto"
+              />
+              {dateRange && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setDateRange(undefined)}
+                  title="Clear date filter"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+
+            {/* Active filter indicator */}
+            {(statusFilter !== 'all' || dateRange) && (
+              <Button
+                variant="link"
+                size="sm"
+                onClick={() => {
+                  setStatusFilter('all')
+                  setDateRange(undefined)
+                }}
+                className="text-muted-foreground"
+              >
+                Clear all filters
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -574,7 +626,7 @@ export default function MyCommissionsPage() {
                           </span>
                         </TableCell>
                         <TableCell className="capitalize text-sm">
-                          {commission.basis_type.replace('_', ' ')}
+                          {commission.basis_type ? commission.basis_type.replace('_', ' ') : '—'}
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="font-medium">

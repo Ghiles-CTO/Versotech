@@ -672,13 +672,11 @@ export default function IntroductionsPage() {
                             <Button
                               variant="ghost"
                               size="sm"
-                              asChild
-                              title="View Data Room"
+                              onClick={() => handleViewDeal(intro.deal!.id)}
+                              title="View Deal Details"
                             >
-                              <Link href={`/versotech_main/opportunities/${intro.deal.id}`}>
-                                <FolderOpen className="h-4 w-4 mr-1" />
-                                Data Room
-                              </Link>
+                              <FolderOpen className="h-4 w-4 mr-1" />
+                              View Deal
                             </Button>
                           </div>
                         )}
@@ -877,16 +875,21 @@ export default function IntroductionsPage() {
                 <Separator />
 
                 {/* Action Button */}
-                <div className="flex justify-end gap-3">
-                  <Button variant="outline" onClick={() => setDealDialogOpen(false)}>
-                    Close
-                  </Button>
-                  <Button asChild>
-                    <Link href={`/versotech_main/opportunities/${selectedDeal.id}`}>
-                      <FolderOpen className="h-4 w-4 mr-2" />
-                      View Full Details & Data Room
-                    </Link>
-                  </Button>
+                <div className="space-y-3">
+                  <div className="flex justify-end gap-3">
+                    <Button variant="outline" onClick={() => setDealDialogOpen(false)}>
+                      Close
+                    </Button>
+                    <Button asChild>
+                      <Link href={`/versotech_main/opportunities/${selectedDeal.id}?from=introductions`}>
+                        <FolderOpen className="h-4 w-4 mr-2" />
+                        View as Investor
+                      </Link>
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground text-right">
+                    Data room access requires investor persona with deal membership
+                  </p>
                 </div>
               </div>
             </>

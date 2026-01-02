@@ -17,6 +17,29 @@ export type NotificationType =
   | 'certificate_issued'
   | 'escrow_confirmed'
   | 'system'
+  // Introducer notification types (PRD Section 6.6)
+  | 'introducer_agreement_signed'      // Row 86: Agreement signed
+  | 'introducer_agreement_rejected'    // Row 88: Agreement rejected
+  | 'introducer_agreement_pending'     // Agreement pending signature
+  | 'introducer_pack_sent'             // Row 91: Pack sent to referred investor
+  | 'introducer_pack_approved'         // Row 92: Pack approved by referred investor
+  | 'introducer_pack_signed'           // Row 93: Pack signed by referred investor
+  | 'introducer_escrow_funded'         // Row 94: Escrow funded by referred investor
+  | 'introducer_invoice_sent'          // Row 95: Invoice submitted
+  | 'introducer_payment_sent'          // Row 96: Payment sent
+  | 'introducer_commission_accrued'    // Commission accrued
+  | 'introducer_invoice_approved'      // Row 103: Invoice approved by CEO
+  | 'introducer_invoice_rejected'      // Row 104: Invoice rejected (request for change)
+  | 'introducer_payment_confirmed'     // Row 105: Payment confirmed
+  // Partner notification types (PRD Section 5.6)
+  | 'partner_commission_accrued'
+  | 'partner_invoice_requested'
+  | 'partner_invoiced'
+  | 'partner_paid'
+  | 'partner_rejected'
+  // Deal share types (PRD Rows 95-96)
+  | 'deal_shared'
+  | 'partner_deal_share'
 
 export interface CreateNotificationParams {
   /** The user_id (profile) to notify */
@@ -158,7 +181,8 @@ function generateNotificationEmail(params: {
   link: string
   type: NotificationType
 }): string {
-  const typeColors: Record<NotificationType, string> = {
+  const typeColors: Partial<Record<NotificationType, string>> = {
+    // Core types
     certificate_issued: '#10b981', // green
     subscription: '#6366f1', // indigo
     capital_call: '#f59e0b', // amber
@@ -170,7 +194,30 @@ function generateNotificationEmail(params: {
     task: '#f59e0b',
     approval: '#10b981',
     nda_complete: '#10b981',
-    system: '#6b7280'
+    system: '#6b7280',
+    // Introducer types (PRD Section 6.6)
+    introducer_agreement_signed: '#10b981',
+    introducer_agreement_rejected: '#ef4444',
+    introducer_agreement_pending: '#f59e0b',
+    introducer_pack_sent: '#6366f1',
+    introducer_pack_approved: '#10b981',
+    introducer_pack_signed: '#10b981',
+    introducer_escrow_funded: '#10b981',
+    introducer_invoice_sent: '#6366f1',
+    introducer_payment_sent: '#10b981',
+    introducer_commission_accrued: '#8b5cf6',
+    introducer_invoice_approved: '#10b981',
+    introducer_invoice_rejected: '#ef4444',
+    introducer_payment_confirmed: '#10b981',
+    // Partner types (PRD Section 5.6)
+    partner_commission_accrued: '#8b5cf6',
+    partner_invoice_requested: '#6366f1',
+    partner_invoiced: '#10b981',
+    partner_paid: '#10b981',
+    partner_rejected: '#ef4444',
+    // Deal share types
+    deal_shared: '#3b82f6',
+    partner_deal_share: '#3b82f6'
   }
 
   const accentColor = typeColors[params.type] || '#6366f1'

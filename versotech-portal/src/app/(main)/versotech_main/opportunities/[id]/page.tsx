@@ -270,6 +270,7 @@ export default function OpportunityDetailPage() {
   const searchParams = useSearchParams()
   const dealId = params.id as string
   const actionParam = searchParams.get('action')
+  const fromParam = searchParams.get('from') // Track where user came from
 
   const { hasAnyPersona, isLoading: personaLoading, activePersona } = usePersona()
   const [opportunity, setOpportunity] = useState<Opportunity | null>(null)
@@ -463,9 +464,13 @@ export default function OpportunityDetailPage() {
             <CardDescription>{error || 'Opportunity not found'}</CardDescription>
           </CardHeader>
           <CardContent>
-            <Button onClick={() => router.push('/versotech_main/opportunities')}>
+            <Button onClick={() => router.push(
+              fromParam === 'introductions'
+                ? '/versotech_main/introductions'
+                : '/versotech_main/opportunities'
+            )}>
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Opportunities
+              {fromParam === 'introductions' ? 'Back to Introductions' : 'Back to Opportunities'}
             </Button>
           </CardContent>
         </Card>
@@ -484,10 +489,20 @@ export default function OpportunityDetailPage() {
 
   return (
     <div className="p-6 space-y-6">
-      {/* Back button */}
-      <Button variant="ghost" onClick={() => router.push('/versotech_main/opportunities')}>
+      {/* Back button - context-aware navigation */}
+      <Button
+        variant="ghost"
+        onClick={() => {
+          // If user came from introductions, go back there specifically
+          if (fromParam === 'introductions') {
+            router.push('/versotech_main/introductions')
+          } else {
+            router.back()
+          }
+        }}
+      >
         <ArrowLeft className="w-4 h-4 mr-2" />
-        Back to Opportunities
+        {fromParam === 'introductions' ? 'Back to Introductions' : 'Back'}
       </Button>
 
       {/* Journey Progress Bar */}

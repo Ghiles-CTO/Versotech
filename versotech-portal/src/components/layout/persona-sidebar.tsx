@@ -111,17 +111,21 @@ const PERSONA_NAV_ITEMS: Record<string, NavItem[]> = {
     { name: 'Dashboard', href: '/versotech_main/dashboard', icon: LayoutDashboard, description: 'Overview' },
     { name: 'Introductions', href: '/versotech_main/introductions', icon: UserPlus, description: 'My introductions' },
     { name: 'Agreements', href: '/versotech_main/introducer-agreements', icon: FileText, description: 'Fee agreements' },
+    { name: 'My Commissions', href: '/versotech_main/my-commissions', icon: Calculator, description: 'Commission tracking & invoices' },
     { name: 'VersoSign', href: '/versotech_main/versosign', icon: FileSignature, description: 'E-signatures' },
     { name: 'Profile', href: '/versotech_main/introducer-profile', icon: UserCheck, description: 'My profile' },
   ],
 
   // Partner persona
+  // PRD Section 5.6: My Transactions as Partner - tracking referrals, commissions, invoicing
   partner: [
     { name: 'Dashboard', href: '/versotech_main/dashboard', icon: LayoutDashboard, description: 'Overview' },
     { name: 'Opportunities', href: '/versotech_main/opportunities', icon: TrendingUp, description: 'Investment opportunities' },
     { name: 'Transactions', href: '/versotech_main/partner-transactions', icon: ArrowRightLeft, description: 'My referred investors' },
+    { name: 'My Commissions', href: '/versotech_main/my-commissions', icon: Calculator, description: 'Revenue & invoicing' },
     { name: 'Shared Deals', href: '/versotech_main/shared-transactions', icon: Share2, description: 'Co-referred deals' },
-    { name: 'Messages', href: '/versotech_main/messages', icon: MessageSquare, description: 'Communications' },
+    { name: 'VersoSign', href: '/versotech_main/versosign', icon: FileSignature, description: 'E-signatures' },
+    { name: 'Profile', href: '/versotech_main/profile', icon: UserCheck, description: 'Account & GDPR' },
   ],
 
   // Commercial Partner persona

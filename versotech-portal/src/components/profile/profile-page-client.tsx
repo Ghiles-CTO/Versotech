@@ -46,11 +46,38 @@ export function ProfilePageClient({ profile: initialProfile, variant = 'investor
   const [kycStatus, setKycStatus] = useState<string>('not_started')
   const [isEntityInvestor, setIsEntityInvestor] = useState(false)
 
+  const [hasInvestorEntity, setHasInvestorEntity] = useState<boolean | null>(null)
+
   useEffect(() => {
+    // First check if user has an investor entity before calling investor APIs
+    const checkInvestorEntity = async () => {
+      try {
+        const response = await fetch('/api/investors/me')
+        if (response.ok) {
+          const data = await response.json()
+          // Check if investor actually exists (API returns { investor: null, exists: false } for non-investors)
+          if (data.investor && data.exists !== false) {
+            setHasInvestorEntity(true)
+            // Only fetch KYC data if user has investor entity
+            fetchKycStatus()
+            fetchInvestorType()
+          } else {
+            // User is not an investor (e.g., Partner, Introducer)
+            setHasInvestorEntity(false)
+          }
+        } else {
+          // User is not an investor (e.g., Partner, Introducer)
+          setHasInvestorEntity(false)
+        }
+      } catch (error) {
+        console.error('Error checking investor entity:', error)
+        setHasInvestorEntity(false)
+      }
+    }
+
     // Fetch KYC status
     const fetchKycStatus = async () => {
       try {
-        // This endpoint needs to be verified/created
         const response = await fetch('/api/investors/me/kyc-status')
         if (response.ok) {
           const data = await response.json()
@@ -75,8 +102,7 @@ export function ProfilePageClient({ profile: initialProfile, variant = 'investor
     }
 
     if (!isStaff) {
-      fetchKycStatus()
-      fetchInvestorType()
+      checkInvestorEntity()
     }
   }, [isStaff])
 
@@ -139,7 +165,7 @@ export function ProfilePageClient({ profile: initialProfile, variant = 'investor
             </div>
           )}
 
-          {!isStaff && (
+          {!isStaff && hasInvestorEntity && (
             <div className="mt-6">
               <KYCAlert status={kycStatus} />
             </div>
@@ -150,7 +176,7 @@ export function ProfilePageClient({ profile: initialProfile, variant = 'investor
       {/* Right Column - Tabs */}
       <div className="lg:col-span-2">
         <Tabs defaultValue={defaultTab} className="w-full" id={`profile-tabs-${profile.id}`}>
-          <TabsList className={isStaff ? "grid w-full grid-cols-3 bg-white/5 border border-white/10" : `grid w-full ${isEntityInvestor ? 'grid-cols-7' : 'grid-cols-6'}`}>
+          <TabsList className={isStaff ? "grid w-full grid-cols-3 bg-white/5 border border-white/10" : `grid w-full ${hasInvestorEntity ? (isEntityInvestor ? 'grid-cols-7' : 'grid-cols-6') : 'grid-cols-3'}`}>
             <TabsTrigger
               value="profile"
               className={isStaff ? "data-[state=active]:bg-white/10 data-[state=active]:text-white text-white/70" : ""}
@@ -172,7 +198,7 @@ export function ProfilePageClient({ profile: initialProfile, variant = 'investor
               {isStaff ? <Bell className="h-4 w-4 mr-2" /> : <Settings className="h-4 w-4 mr-2" />}
               {isStaff ? 'Notifications' : 'Preferences'}
             </TabsTrigger>
-            {!isStaff && (
+            {!isStaff && hasInvestorEntity && (
               <>
                 <TabsTrigger value="kyc">
                   <ShieldCheck className="h-4 w-4 mr-2" />
@@ -213,7 +239,7 @@ export function ProfilePageClient({ profile: initialProfile, variant = 'investor
             <PreferencesEditor variant={variant} />
           </TabsContent>
 
-          {!isStaff && (
+          {!isStaff && hasInvestorEntity && (
             <>
               <TabsContent value="kyc" className="mt-6 space-y-6">
                 <div>

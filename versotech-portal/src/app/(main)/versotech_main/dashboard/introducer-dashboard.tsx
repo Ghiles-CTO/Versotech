@@ -130,10 +130,10 @@ export function IntroducerDashboard({ introducerId, userId, persona }: Introduce
         const pending = intros.filter(i => i.status === 'invited' || i.status === 'joined')
         const allocated = intros.filter(i => i.status === 'allocated')
 
-        // Fetch commissions
+        // Fetch commissions (using created_at as the date column)
         const { data: commissions } = await supabase
           .from('introducer_commissions')
-          .select('id, accrual_amount, status, accrual_date')
+          .select('id, accrual_amount, status, created_at')
           .eq('introducer_id', introducerId)
 
         const allComms = commissions || []
@@ -141,9 +141,9 @@ export function IntroducerDashboard({ introducerId, userId, persona }: Introduce
         // Apply date range filter to commissions
         const comms = allComms.filter(c => {
           if (!dateRange?.from) return true
-          if (!c.accrual_date) return false
+          if (!c.created_at) return false
 
-          const commDate = new Date(c.accrual_date)
+          const commDate = new Date(c.created_at)
           const fromDate = new Date(dateRange.from)
           fromDate.setHours(0, 0, 0, 0)
 

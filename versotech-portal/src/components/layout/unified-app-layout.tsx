@@ -23,8 +23,8 @@ interface UnifiedAppLayoutProps {
 }
 
 // Theme toggle component
-// IMPORTANT: To prevent hydration mismatch, we must render the same DOM structure
-// on both server and client. Only the content/styling can change after mount.
+// FIX: To prevent hydration mismatch from Radix UI's random ID generation,
+// render a static placeholder during SSR and swap to DropdownMenu after mount.
 function ThemeToggle() {
   const [mounted, setMounted] = useState(false)
   const { theme, preference, setPreference } = useTheme()
@@ -34,13 +34,26 @@ function ThemeToggle() {
     setMounted(true)
   }, [])
 
-  // Compute styling - use light mode defaults during SSR to match server render
-  // After mount, use actual theme value
-  const isDark = mounted && theme === 'staff-dark'
-  const displayIcon = mounted ? (theme === 'light' ? 'sun' : 'moon') : 'sun'
+  // Compute styling based on theme
+  const isDark = theme === 'staff-dark'
 
-  // Always render the same DOM structure (DropdownMenu wrapper)
-  // Only the content and styling change after mount
+  // During SSR/initial render, show a static button placeholder (no Radix IDs)
+  // This prevents hydration mismatch from Radix generating different IDs
+  if (!mounted) {
+    return (
+      <Button
+        variant="ghost"
+        size="icon"
+        className="text-gray-500 hover:text-gray-900 hover:bg-gray-100"
+        aria-label="Toggle theme"
+      >
+        <Sun className="h-5 w-5" />
+        <span className="sr-only">Toggle theme</span>
+      </Button>
+    )
+  }
+
+  // After mount, render the full interactive DropdownMenu
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -49,7 +62,7 @@ function ThemeToggle() {
           size="icon"
           className={isDark ? 'text-zinc-400 hover:text-white hover:bg-white/10' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100'}
         >
-          {displayIcon === 'sun' ? (
+          {theme === 'light' ? (
             <Sun className="h-5 w-5" />
           ) : (
             <Moon className="h-5 w-5" />

@@ -34,12 +34,115 @@ import {
   Clock,
   CheckCircle2,
   DollarSign,
-  Package
+  Package,
+  Share2,
+  // Partner-specific icons
+  UserPlus,
+  TrendingUp,
+  Wallet,
+  BadgeCheck
 } from 'lucide-react'
 import { InterestModal } from '@/components/deals/interest-modal'
 import { SubscribeNowDialog } from '@/components/deals/subscribe-now-dialog'
+import { ShareDealDialog } from '@/components/deals/share-deal-dialog'
 
 type Nullable<T> = T | null
+
+// ============================================================================
+// Persona Mode Detection
+// ============================================================================
+
+type PersonaMode = 'INVESTOR_ONLY' | 'PARTNER_ONLY' | 'DUAL_PERSONA' | 'GENERIC'
+
+// ============================================================================
+// Partner Referral Types (US-5.6.1-01 through 07)
+// ============================================================================
+
+interface PartnerReferral {
+  deal_id: string
+  investor_id: string
+  investor_name: string
+  dispatched_at: string | null
+  interest_confirmed_at: string | null
+}
+
+interface ReferralSubscription {
+  investor_id: string
+  deal_id: string
+  status: string
+  commitment: number | null
+  currency: string | null
+  funded_at: string | null
+  signed_at: string | null
+}
+
+interface PartnerCommission {
+  deal_id: string
+  investor_id: string
+  rate_bps: number | null
+  accrual_amount: number | null
+  currency: string | null
+  status: string
+}
+
+interface PartnerSummary {
+  totalReferrals: number
+  converted: number
+  pipelineValue: number
+  pendingCommissions: number
+  currency: string
+}
+
+// Investor journey stage for referral tracking
+type ReferralStage = 'dispatched' | 'interested' | 'passed' | 'approved' | 'signed' | 'funded'
+
+const referralStageMeta: Record<ReferralStage, {
+  label: string
+  bgColor: string
+  textColor: string
+  borderColor: string
+}> = {
+  dispatched: {
+    label: 'Dispatched',
+    bgColor: 'bg-slate-50',
+    textColor: 'text-slate-600',
+    borderColor: 'border-slate-200'
+  },
+  interested: {
+    label: 'Interested',
+    bgColor: 'bg-amber-50',
+    textColor: 'text-amber-700',
+    borderColor: 'border-amber-200'
+  },
+  passed: {
+    label: 'Passed',
+    bgColor: 'bg-rose-50',
+    textColor: 'text-rose-600',
+    borderColor: 'border-rose-200'
+  },
+  approved: {
+    label: 'Approved',
+    bgColor: 'bg-indigo-50',
+    textColor: 'text-indigo-700',
+    borderColor: 'border-indigo-200'
+  },
+  signed: {
+    label: 'Signed',
+    bgColor: 'bg-purple-50',
+    textColor: 'text-purple-700',
+    borderColor: 'border-purple-200'
+  },
+  funded: {
+    label: 'Funded',
+    bgColor: 'bg-emerald-50',
+    textColor: 'text-emerald-700',
+    borderColor: 'border-emerald-200'
+  }
+}
+
+// ============================================================================
+// Deal Types
+// ============================================================================
 
 interface InvestorDeal {
   id: string
@@ -160,6 +263,9 @@ interface InvestorDealsListClientProps {
   accessByDeal: Map<string, DataRoomAccess>
   subscriptionByDeal: Map<string, SubscriptionSubmission>
   primaryInvestorId: string | null
+  /** Partner ID - if present, user can share deals with investors (PRD Rows 95-96) */
+  partnerId?: string | null
+  /** Investor-centric summary metrics */
   summary: {
     totalDeals: number
     openDeals: number
@@ -169,6 +275,19 @@ interface InvestorDealsListClientProps {
   }
   /** Base URL for deal detail pages. Defaults to /versoholdings/deal */
   detailUrlBase?: string
+
+  // ============================================================================
+  // Partner-Specific Props (US-5.6.1-01 through 07)
+  // ============================================================================
+
+  /** Partner's referrals grouped by deal_id */
+  referralsByDeal?: Record<string, PartnerReferral[]>
+  /** Subscription statuses for referred investors, grouped by deal_id */
+  referralSubscriptionsByDeal?: Record<string, ReferralSubscription[]>
+  /** Partner's commissions grouped by deal_id */
+  partnerCommissionsByDeal?: Record<string, PartnerCommission[]>
+  /** Aggregated Partner metrics */
+  partnerSummary?: PartnerSummary
 }
 
 const dealTypeLabels: Record<string, string> = {
@@ -402,10 +521,67 @@ export function InvestorDealsListClient({
   accessByDeal,
   subscriptionByDeal,
   primaryInvestorId,
+  partnerId,
   summary,
-  detailUrlBase = '/versotech_main/opportunities'
+  detailUrlBase = '/versotech_main/opportunities',
+  // Partner-specific props
+  referralsByDeal = {},
+  referralSubscriptionsByDeal = {},
+  partnerCommissionsByDeal = {},
+  partnerSummary
 }: InvestorDealsListClientProps) {
   const [mounted, setMounted] = useState(false)
+
+  // ============================================================================
+  // Persona Mode Detection
+  // Determines which view(s) to show based on user's personas
+  // ============================================================================
+
+  const personaMode: PersonaMode = useMemo(() => {
+    if (partnerId && primaryInvestorId) return 'DUAL_PERSONA'
+    if (partnerId) return 'PARTNER_ONLY'
+    if (primaryInvestorId) return 'INVESTOR_ONLY'
+    return 'GENERIC'
+  }, [partnerId, primaryInvestorId])
+
+  const isPartnerView = personaMode === 'PARTNER_ONLY' || personaMode === 'DUAL_PERSONA'
+  const isInvestorView = personaMode === 'INVESTOR_ONLY' || personaMode === 'DUAL_PERSONA'
+
+  // Helper function to determine referral stage for an investor
+  const getReferralStage = (
+    referral: PartnerReferral,
+    subscriptions: ReferralSubscription[]
+  ): ReferralStage => {
+    const sub = subscriptions.find(s => s.investor_id === referral.investor_id)
+
+    if (sub) {
+      const status = sub.status?.toLowerCase()
+      // Check for funded/active
+      if (['funded', 'active', 'activated', 'committed'].includes(status)) {
+        return 'funded'
+      }
+      // Check for signed
+      if (status === 'signed' || sub.signed_at) {
+        return 'signed'
+      }
+      // Check for approved
+      if (status === 'approved') {
+        return 'approved'
+      }
+      // Check for passed/rejected/cancelled
+      if (['rejected', 'cancelled', 'passed', 'declined'].includes(status)) {
+        return 'passed'
+      }
+    }
+
+    // Check for interest confirmed
+    if (referral.interest_confirmed_at) {
+      return 'interested'
+    }
+
+    // Default: dispatched only
+    return 'dispatched'
+  }
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [dealTypeFilter, setDealTypeFilter] = useState('all')
@@ -641,57 +817,173 @@ export function InvestorDealsListClient({
           </p>
         </div>
 
-        {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm text-muted-foreground">Open deals</CardTitle>
-              <CardDescription className="flex items-center gap-2 text-sm text-gray-500">
-                <Activity className="h-4 w-4 text-emerald-500" />
-                Ready for exploration
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="text-2xl font-semibold text-gray-900">
-              {summary.openDeals} / {summary.totalDeals}
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm text-muted-foreground">Pending interests</CardTitle>
-              <CardDescription className="flex items-center gap-2 text-sm text-gray-500">
-                <LineChart className="h-4 w-4 text-amber-500" />
-                Awaiting team review
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="text-2xl font-semibold text-gray-900">
-              {summary.pendingInterests}
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm text-muted-foreground">Active NDAs</CardTitle>
-              <CardDescription className="flex items-center gap-2 text-sm text-gray-500">
-                <ShieldCheck className="h-4 w-4 text-sky-500" />
-                Data room unlocked
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="text-2xl font-semibold text-gray-900">
-              {summary.activeNdas}
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm text-muted-foreground">Subscriptions in review</CardTitle>
-              <CardDescription className="flex items-center gap-2 text-sm text-gray-500">
-                <MailCheck className="h-4 w-4 text-indigo-500" />
-                Awaiting confirmation
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="text-2xl font-semibold text-gray-900">
-              {summary.submittedSubscriptions}
-            </CardContent>
-          </Card>
-        </div>
+        {/* ================================================================ */}
+        {/* PARTNER Summary Cards (US-5.6.1-07: Display Partner metrics) */}
+        {/* ================================================================ */}
+        {isPartnerView && partnerSummary && (
+          <>
+            {personaMode === 'DUAL_PERSONA' && (
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                  <Share2 className="h-3 w-3 mr-1" />
+                  Partner View
+                </Badge>
+              </div>
+            )}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <Card className="border-blue-100 bg-gradient-to-br from-blue-50/50 to-white">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm text-muted-foreground">Total Referrals</CardTitle>
+                  <CardDescription className="flex items-center gap-2 text-sm text-gray-500">
+                    <UserPlus className="h-4 w-4 text-blue-500" />
+                    Investors you&apos;ve shared with
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="text-2xl font-semibold text-gray-900">
+                  {partnerSummary.totalReferrals}
+                </CardContent>
+              </Card>
+              <Card className="border-emerald-100 bg-gradient-to-br from-emerald-50/50 to-white">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm text-muted-foreground">Converted</CardTitle>
+                  <CardDescription className="flex items-center gap-2 text-sm text-gray-500">
+                    <BadgeCheck className="h-4 w-4 text-emerald-500" />
+                    Funded investments
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="text-2xl font-semibold text-gray-900">
+                  {partnerSummary.converted}
+                </CardContent>
+              </Card>
+              <Card className="border-amber-100 bg-gradient-to-br from-amber-50/50 to-white">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm text-muted-foreground">Pipeline Value</CardTitle>
+                  <CardDescription className="flex items-center gap-2 text-sm text-gray-500">
+                    <TrendingUp className="h-4 w-4 text-amber-500" />
+                    In-progress commitments
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="text-2xl font-semibold text-gray-900">
+                  {partnerSummary.pipelineValue > 0
+                    ? formatCurrency(partnerSummary.pipelineValue, partnerSummary.currency)
+                    : '—'}
+                </CardContent>
+              </Card>
+              <Card className="border-purple-100 bg-gradient-to-br from-purple-50/50 to-white">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm text-muted-foreground">Pending Commissions</CardTitle>
+                  <CardDescription className="flex items-center gap-2 text-sm text-gray-500">
+                    <Wallet className="h-4 w-4 text-purple-500" />
+                    Accrued, awaiting invoice
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="text-2xl font-semibold text-gray-900">
+                  {partnerSummary.pendingCommissions > 0
+                    ? formatCurrency(partnerSummary.pendingCommissions, partnerSummary.currency)
+                    : '—'}
+                </CardContent>
+              </Card>
+            </div>
+          </>
+        )}
+
+        {/* ================================================================ */}
+        {/* INVESTOR Summary Cards (original investor-centric metrics) */}
+        {/* ================================================================ */}
+        {isInvestorView && (
+          <>
+            {personaMode === 'DUAL_PERSONA' && (
+              <div className="flex items-center gap-2 mt-4">
+                <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">
+                  <Activity className="h-3 w-3 mr-1" />
+                  Investor View
+                </Badge>
+              </div>
+            )}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm text-muted-foreground">Open deals</CardTitle>
+                  <CardDescription className="flex items-center gap-2 text-sm text-gray-500">
+                    <Activity className="h-4 w-4 text-emerald-500" />
+                    Ready for exploration
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="text-2xl font-semibold text-gray-900">
+                  {summary.openDeals} / {summary.totalDeals}
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm text-muted-foreground">Pending interests</CardTitle>
+                  <CardDescription className="flex items-center gap-2 text-sm text-gray-500">
+                    <LineChart className="h-4 w-4 text-amber-500" />
+                    Awaiting team review
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="text-2xl font-semibold text-gray-900">
+                  {summary.pendingInterests}
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm text-muted-foreground">Active NDAs</CardTitle>
+                  <CardDescription className="flex items-center gap-2 text-sm text-gray-500">
+                    <ShieldCheck className="h-4 w-4 text-sky-500" />
+                    Data room unlocked
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="text-2xl font-semibold text-gray-900">
+                  {summary.activeNdas}
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm text-muted-foreground">Subscriptions in review</CardTitle>
+                  <CardDescription className="flex items-center gap-2 text-sm text-gray-500">
+                    <MailCheck className="h-4 w-4 text-indigo-500" />
+                    Awaiting confirmation
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="text-2xl font-semibold text-gray-900">
+                  {summary.submittedSubscriptions}
+                </CardContent>
+              </Card>
+            </div>
+          </>
+        )}
+
+        {/* ================================================================ */}
+        {/* GENERIC View (no investor/partner - just deal counts) */}
+        {/* ================================================================ */}
+        {personaMode === 'GENERIC' && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm text-muted-foreground">Open deals</CardTitle>
+                <CardDescription className="flex items-center gap-2 text-sm text-gray-500">
+                  <Activity className="h-4 w-4 text-emerald-500" />
+                  Ready for exploration
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="text-2xl font-semibold text-gray-900">
+                {summary.openDeals} / {summary.totalDeals}
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm text-muted-foreground">Your Role</CardTitle>
+                <CardDescription className="flex items-center gap-2 text-sm text-gray-500">
+                  <Users className="h-4 w-4 text-gray-500" />
+                  Tracking access
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="text-lg font-medium text-gray-600">
+                View-only access
+              </CardContent>
+            </Card>
+          </div>
+        )}
       </header>
 
       {/* Search and Filters */}
@@ -1151,48 +1443,171 @@ export function InvestorDealsListClient({
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 gap-4">
-                    <div>
-                      <p className="text-xs uppercase tracking-wide text-gray-500">Your pipeline</p>
-                      <div className="flex flex-wrap items-center gap-2">
-                        {interest ? (
-                          interest.is_post_close ? (
-                            <Badge className="w-fit bg-purple-100 text-purple-700">
-                              Future interest signal
-                            </Badge>
-                          ) : (
-                            <Badge className={cn('w-fit', interestStatusMeta[interest.status].tone)}>
-                              {interestStatusMeta[interest.status].label}
-                            </Badge>
-                          )
-                        ) : (
-                          <span className="text-sm text-gray-600">No signal yet</span>
-                        )}
-                        {subscription && (
-                          <Badge variant="outline" className="text-indigo-600 border-indigo-300">
-                            Subscription {subscription.status.replace(/_/g, ' ')}
-                          </Badge>
-                        )}
-                        {isTrackingOnly && (
-                          <Badge variant="outline" className="border-amber-200 text-amber-700">
-                            Tracking only
-                          </Badge>
-                        )}
-                        {hasDataRoomAccess && (
-                          <Badge variant="outline" className="text-sky-600 border-sky-300">
-                            Data room unlocked
-                          </Badge>
-                        )}
-                        {feeStructure?.interest_confirmation_deadline && (
-                          <span className="text-xs text-gray-600">
-                            Interest deadline: {new Date(feeStructure.interest_confirmation_deadline).toLocaleDateString()}
-                          </span>
+                  {/* ============================================================ */}
+                  {/* PARTNER VIEW: Your Referrals (US-5.6.1-01 through 06) */}
+                  {/* ============================================================ */}
+                  {isPartnerView && (() => {
+                    const dealReferrals = referralsByDeal[deal.id] || []
+                    const dealSubscriptions = referralSubscriptionsByDeal[deal.id] || []
+                    const dealCommissions = partnerCommissionsByDeal[deal.id] || []
+
+                    // Get the commission rate (they should all be the same for this deal)
+                    const commissionRate = dealCommissions[0]?.rate_bps
+                      ? `${(dealCommissions[0].rate_bps / 100).toFixed(2)}%`
+                      : null
+
+                    // Calculate estimated commission from funded subscriptions
+                    const fundedSubs = dealSubscriptions.filter(s =>
+                      ['funded', 'active', 'activated', 'committed'].includes(s.status?.toLowerCase())
+                    )
+                    const totalFundedAmount = fundedSubs.reduce((sum, s) => sum + Number(s.commitment || 0), 0)
+                    const rateBps = dealCommissions[0]?.rate_bps ?? 0
+                    const estCommission = commissionRate && totalFundedAmount > 0 && rateBps > 0
+                      ? totalFundedAmount * (rateBps / 10000)
+                      : 0
+
+                    if (dealReferrals.length === 0) {
+                      return (
+                        <div className="rounded-lg border border-blue-100 bg-blue-50/50 px-4 py-3">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <UserPlus className="h-4 w-4 text-blue-500" />
+                              <span className="text-sm text-blue-700">No referrals yet</span>
+                            </div>
+                            {commissionRate && (
+                              <span className="text-xs text-blue-600">
+                                Fee: {commissionRate} of invested
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      )
+                    }
+
+                    return (
+                      <div className="rounded-lg border border-blue-100 bg-blue-50/50 px-4 py-3 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <UserPlus className="h-4 w-4 text-blue-500" />
+                            <span className="text-sm font-medium text-blue-900">
+                              Your Referrals ({dealReferrals.length})
+                            </span>
+                          </div>
+                          {commissionRate && (
+                            <span className="text-xs text-blue-600">
+                              Fee: {commissionRate} of invested
+                            </span>
+                          )}
+                        </div>
+
+                        {/* List of referred investors with stage badges */}
+                        <div className="space-y-2">
+                          {dealReferrals.slice(0, 5).map((referral) => {
+                            const stage = getReferralStage(referral, dealSubscriptions)
+                            const stageMeta = referralStageMeta[stage]
+
+                            return (
+                              <div
+                                key={referral.investor_id}
+                                className="flex items-center justify-between text-sm"
+                              >
+                                <span className="text-gray-700 truncate max-w-[200px]">
+                                  {referral.investor_name}
+                                </span>
+                                <Badge
+                                  variant="outline"
+                                  className={cn(
+                                    'text-xs',
+                                    stageMeta.bgColor,
+                                    stageMeta.textColor,
+                                    stageMeta.borderColor,
+                                    'border'
+                                  )}
+                                >
+                                  {stageMeta.label}
+                                </Badge>
+                              </div>
+                            )
+                          })}
+                          {dealReferrals.length > 5 && (
+                            <p className="text-xs text-blue-600">
+                              +{dealReferrals.length - 5} more referrals
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Estimated commission summary */}
+                        {estCommission > 0 && (
+                          <div className="pt-2 border-t border-blue-200 flex items-center justify-between">
+                            <span className="text-xs text-blue-600">Est. Commission:</span>
+                            <span className="text-sm font-semibold text-blue-900">
+                              {formatCurrency(estCommission, dealCommissions[0]?.currency || deal.currency)}
+                            </span>
+                          </div>
                         )}
                       </div>
-                    </div>
-                  </div>
+                    )
+                  })()}
 
-                  {interest && indicativeAmount ? (
+                  {/* ============================================================ */}
+                  {/* INVESTOR VIEW: Your Pipeline (original investor tracking) */}
+                  {/* ============================================================ */}
+                  {isInvestorView && (
+                    <div className="grid grid-cols-1 gap-4">
+                      <div>
+                        <p className="text-xs uppercase tracking-wide text-gray-500">Your pipeline</p>
+                        <div className="flex flex-wrap items-center gap-2">
+                          {interest ? (
+                            interest.is_post_close ? (
+                              <Badge className="w-fit bg-purple-100 text-purple-700">
+                                Future interest signal
+                              </Badge>
+                            ) : (
+                              <Badge className={cn('w-fit', interestStatusMeta[interest.status].tone)}>
+                                {interestStatusMeta[interest.status].label}
+                              </Badge>
+                            )
+                          ) : (
+                            <span className="text-sm text-gray-600">No signal yet</span>
+                          )}
+                          {subscription && (
+                            <Badge variant="outline" className="text-indigo-600 border-indigo-300">
+                              Subscription {subscription.status.replace(/_/g, ' ')}
+                            </Badge>
+                          )}
+                          {isTrackingOnly && (
+                            <Badge variant="outline" className="border-amber-200 text-amber-700">
+                              Tracking only
+                            </Badge>
+                          )}
+                          {hasDataRoomAccess && (
+                            <Badge variant="outline" className="text-sky-600 border-sky-300">
+                              Data room unlocked
+                            </Badge>
+                          )}
+                          {feeStructure?.interest_confirmation_deadline && (
+                            <span className="text-xs text-gray-600">
+                              Interest deadline: {new Date(feeStructure.interest_confirmation_deadline).toLocaleDateString()}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ============================================================ */}
+                  {/* GENERIC VIEW: Basic tracking info */}
+                  {/* ============================================================ */}
+                  {personaMode === 'GENERIC' && (
+                    <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <Users className="h-4 w-4 text-gray-500" />
+                        <span className="text-sm text-gray-600">View-only access</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {isInvestorView && interest && indicativeAmount ? (
                     <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
                       You indicated interest for approximately{' '}
                       <span className="font-semibold">
@@ -1247,6 +1662,20 @@ export function InvestorDealsListClient({
                             <ArrowUpRight className="h-4 w-4" />
                           </Button>
                         </InterestModal>
+                      )}
+
+                      {/* Partner Share Deal - PRD Rows 95-96 */}
+                      {partnerId && !isClosed && (
+                        <ShareDealDialog
+                          dealId={deal.id}
+                          dealName={deal.name}
+                          partnerId={partnerId}
+                        >
+                          <Button className="gap-2 bg-blue-600 hover:bg-blue-700">
+                            <Share2 className="h-4 w-4" />
+                            Share with Investor
+                          </Button>
+                        </ShareDealDialog>
                       )}
                     </div>
                   </div>

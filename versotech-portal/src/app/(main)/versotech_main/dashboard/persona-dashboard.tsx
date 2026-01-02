@@ -167,42 +167,90 @@ export function PersonaDashboard() {
     // Introducer also has investments - show dual view
     if (investmentInfo?.hasInvestments && investmentInfo.investorId) {
       return (
-        <div className="space-y-4">
-          {/* View Switcher Banner */}
-          <div className={`p-4 rounded-lg ${isDark ? 'bg-gradient-to-r from-orange-900/50 to-amber-900/50 border border-orange-500/20' : 'bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200'}`}>
-            <div className="flex items-center justify-between flex-wrap gap-4">
-              <div className="flex items-center gap-3">
-                <div className={`h-10 w-10 rounded-full flex items-center justify-center ${isDark ? 'bg-orange-500/20' : 'bg-orange-100'}`}>
-                  <ArrowLeftRight className={`h-5 w-5 ${isDark ? 'text-orange-400' : 'text-orange-600'}`} />
+        <div className="space-y-5">
+          {/* Refined Context Switcher */}
+          <div className={`
+            relative overflow-hidden rounded-xl
+            ${isDark
+              ? 'bg-zinc-900/80 border border-zinc-800'
+              : 'bg-gradient-to-br from-slate-50 via-white to-stone-50 border border-slate-200/80 shadow-sm'
+            }
+          `}>
+            {/* Subtle pattern overlay */}
+            <div className={`absolute inset-0 opacity-[0.015] pointer-events-none`}
+              style={{
+                backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23${isDark ? 'ffffff' : '000000'}' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+              }}
+            />
+
+            <div className="relative px-5 py-4">
+              <div className="flex items-center justify-between flex-wrap gap-4">
+                {/* Left side - Context info */}
+                <div className="flex items-center gap-4">
+                  <div className={`
+                    h-11 w-11 rounded-xl flex items-center justify-center
+                    ${isDark
+                      ? 'bg-zinc-800 ring-1 ring-zinc-700'
+                      : 'bg-white ring-1 ring-slate-200 shadow-sm'
+                    }
+                  `}>
+                    <ArrowLeftRight className={`h-5 w-5 ${isDark ? 'text-zinc-400' : 'text-slate-500'}`} />
+                  </div>
+                  <div>
+                    <p className={`text-sm font-semibold tracking-tight ${isDark ? 'text-zinc-100' : 'text-slate-800'}`}>
+                      Dual Role Access
+                    </p>
+                    <p className={`text-[13px] ${isDark ? 'text-zinc-500' : 'text-slate-500'}`}>
+                      Introducer · {investmentInfo.investmentCount} investment{investmentInfo.investmentCount !== 1 ? 's' : ''}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                    You have multiple roles
-                  </p>
-                  <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                    Introducer referrals & {investmentInfo.investmentCount} personal investment{investmentInfo.investmentCount !== 1 ? 's' : ''}
-                  </p>
+
+                {/* Right side - Segment control */}
+                <div className={`
+                  inline-flex p-1 rounded-lg
+                  ${isDark
+                    ? 'bg-zinc-800/80 ring-1 ring-zinc-700/50'
+                    : 'bg-slate-100/80 ring-1 ring-slate-200/50'
+                  }
+                `}>
+                  <button
+                    onClick={() => setActiveView('partner')}
+                    className={`
+                      relative px-4 py-2 rounded-md text-sm font-medium transition-all duration-200
+                      flex items-center gap-2
+                      ${activeView === 'partner'
+                        ? isDark
+                          ? 'bg-zinc-700 text-white shadow-sm ring-1 ring-zinc-600'
+                          : 'bg-white text-slate-900 shadow-sm ring-1 ring-slate-200'
+                        : isDark
+                          ? 'text-zinc-400 hover:text-zinc-200'
+                          : 'text-slate-500 hover:text-slate-700'
+                      }
+                    `}
+                  >
+                    <UserPlus className="h-4 w-4" />
+                    <span>Referrals</span>
+                  </button>
+                  <button
+                    onClick={() => setActiveView('investor')}
+                    className={`
+                      relative px-4 py-2 rounded-md text-sm font-medium transition-all duration-200
+                      flex items-center gap-2
+                      ${activeView === 'investor'
+                        ? isDark
+                          ? 'bg-zinc-700 text-white shadow-sm ring-1 ring-zinc-600'
+                          : 'bg-white text-slate-900 shadow-sm ring-1 ring-slate-200'
+                        : isDark
+                          ? 'text-zinc-400 hover:text-zinc-200'
+                          : 'text-slate-500 hover:text-slate-700'
+                      }
+                    `}
+                  >
+                    <Wallet className="h-4 w-4" />
+                    <span>Portfolio</span>
+                  </button>
                 </div>
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  variant={activeView === 'partner' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setActiveView('partner')}
-                  className={activeView === 'partner' ? '' : isDark ? 'border-gray-700' : ''}
-                >
-                  <UserPlus className="h-4 w-4 mr-2" />
-                  Introducer View
-                </Button>
-                <Button
-                  variant={activeView === 'investor' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setActiveView('investor')}
-                  className={activeView === 'investor' ? '' : isDark ? 'border-gray-700' : ''}
-                >
-                  <Wallet className="h-4 w-4 mr-2" />
-                  My Investments
-                </Button>
               </div>
             </div>
           </div>
@@ -246,42 +294,90 @@ export function PersonaDashboard() {
     // Partner also has investments - show dual view
     if (investmentInfo?.hasInvestments && investmentInfo.investorId) {
       return (
-        <div className="space-y-4">
-          {/* View Switcher Banner */}
-          <div className={`p-4 rounded-lg ${isDark ? 'bg-gradient-to-r from-indigo-900/50 to-purple-900/50 border border-indigo-500/20' : 'bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200'}`}>
-            <div className="flex items-center justify-between flex-wrap gap-4">
-              <div className="flex items-center gap-3">
-                <div className={`h-10 w-10 rounded-full flex items-center justify-center ${isDark ? 'bg-indigo-500/20' : 'bg-indigo-100'}`}>
-                  <ArrowLeftRight className={`h-5 w-5 ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`} />
+        <div className="space-y-5">
+          {/* Refined Context Switcher */}
+          <div className={`
+            relative overflow-hidden rounded-xl
+            ${isDark
+              ? 'bg-zinc-900/80 border border-zinc-800'
+              : 'bg-gradient-to-br from-slate-50 via-white to-stone-50 border border-slate-200/80 shadow-sm'
+            }
+          `}>
+            {/* Subtle pattern overlay */}
+            <div className={`absolute inset-0 opacity-[0.015] pointer-events-none`}
+              style={{
+                backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23${isDark ? 'ffffff' : '000000'}' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+              }}
+            />
+
+            <div className="relative px-5 py-4">
+              <div className="flex items-center justify-between flex-wrap gap-4">
+                {/* Left side - Context info */}
+                <div className="flex items-center gap-4">
+                  <div className={`
+                    h-11 w-11 rounded-xl flex items-center justify-center
+                    ${isDark
+                      ? 'bg-zinc-800 ring-1 ring-zinc-700'
+                      : 'bg-white ring-1 ring-slate-200 shadow-sm'
+                    }
+                  `}>
+                    <ArrowLeftRight className={`h-5 w-5 ${isDark ? 'text-zinc-400' : 'text-slate-500'}`} />
+                  </div>
+                  <div>
+                    <p className={`text-sm font-semibold tracking-tight ${isDark ? 'text-zinc-100' : 'text-slate-800'}`}>
+                      Dual Role Access
+                    </p>
+                    <p className={`text-[13px] ${isDark ? 'text-zinc-500' : 'text-slate-500'}`}>
+                      Partner · {investmentInfo.investmentCount} investment{investmentInfo.investmentCount !== 1 ? 's' : ''}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                    You have multiple roles
-                  </p>
-                  <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                    Partner referrals & {investmentInfo.investmentCount} personal investment{investmentInfo.investmentCount !== 1 ? 's' : ''}
-                  </p>
+
+                {/* Right side - Segment control */}
+                <div className={`
+                  inline-flex p-1 rounded-lg
+                  ${isDark
+                    ? 'bg-zinc-800/80 ring-1 ring-zinc-700/50'
+                    : 'bg-slate-100/80 ring-1 ring-slate-200/50'
+                  }
+                `}>
+                  <button
+                    onClick={() => setActiveView('partner')}
+                    className={`
+                      relative px-4 py-2 rounded-md text-sm font-medium transition-all duration-200
+                      flex items-center gap-2
+                      ${activeView === 'partner'
+                        ? isDark
+                          ? 'bg-zinc-700 text-white shadow-sm ring-1 ring-zinc-600'
+                          : 'bg-white text-slate-900 shadow-sm ring-1 ring-slate-200'
+                        : isDark
+                          ? 'text-zinc-400 hover:text-zinc-200'
+                          : 'text-slate-500 hover:text-slate-700'
+                      }
+                    `}
+                  >
+                    <Users className="h-4 w-4" />
+                    <span>Referrals</span>
+                  </button>
+                  <button
+                    onClick={() => setActiveView('investor')}
+                    className={`
+                      relative px-4 py-2 rounded-md text-sm font-medium transition-all duration-200
+                      flex items-center gap-2
+                      ${activeView === 'investor'
+                        ? isDark
+                          ? 'bg-zinc-700 text-white shadow-sm ring-1 ring-zinc-600'
+                          : 'bg-white text-slate-900 shadow-sm ring-1 ring-slate-200'
+                        : isDark
+                          ? 'text-zinc-400 hover:text-zinc-200'
+                          : 'text-slate-500 hover:text-slate-700'
+                      }
+                    `}
+                  >
+                    <Wallet className="h-4 w-4" />
+                    <span>Portfolio</span>
+                  </button>
                 </div>
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  variant={activeView === 'partner' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setActiveView('partner')}
-                  className={activeView === 'partner' ? '' : isDark ? 'border-gray-700' : ''}
-                >
-                  <Users className="h-4 w-4 mr-2" />
-                  Partner View
-                </Button>
-                <Button
-                  variant={activeView === 'investor' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setActiveView('investor')}
-                  className={activeView === 'investor' ? '' : isDark ? 'border-gray-700' : ''}
-                >
-                  <Wallet className="h-4 w-4 mr-2" />
-                  My Investments
-                </Button>
               </div>
             </div>
           </div>

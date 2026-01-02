@@ -81,6 +81,17 @@ export default async function VersoSignPage() {
   const isLawyer = personas?.some((p: any) => p.persona_type === 'lawyer') || false
   const isIntroducer = personas?.some((p: any) => p.persona_type === 'introducer') || false
   const isArranger = personas?.some((p: any) => p.persona_type === 'arranger') || false
+  const isPartner = personas?.some((p: any) => p.persona_type === 'partner') || false
+
+  // Get partner IDs if user has partner persona
+  let partnerIds: string[] = []
+  if (isPartner) {
+    const { data: partnerLinks } = await serviceSupabase
+      .from('partner_users')
+      .select('partner_id')
+      .eq('user_id', user.id)
+    partnerIds = partnerLinks?.map(link => link.partner_id) || []
+  }
 
   // Get arranger IDs if user has arranger persona
   let arrangerIds: string[] = []
@@ -345,10 +356,12 @@ export default async function VersoSignPage() {
     expiredSignatures = (expiredData as unknown as ExpiredSignature[]) || []
   }
 
-  // If user has no signature tasks and no agreements to sign and is not staff/lawyer/introducer/arranger, show appropriate message
+  // If user has no signature tasks and no agreements to sign and is not staff/lawyer/introducer/arranger/partner, show appropriate message
   const hasTasks = tasks && tasks.length > 0
   const hasAgreementsToSign = introducerAgreementsForSigning.length > 0 || placementAgreementsForSigning.length > 0
-  if (!hasTasks && !hasAgreementsToSign && !isStaff && !isLawyer && !isIntroducer && !isArranger) {
+  const hasRelevantPersona = isStaff || isLawyer || isIntroducer || isArranger || isPartner
+
+  if (!hasTasks && !hasAgreementsToSign && !hasRelevantPersona) {
     return (
       <div className="p-6">
         <div className="text-center py-16">
@@ -449,6 +462,23 @@ export default async function VersoSignPage() {
           isStaff={isStaff}
           isArranger={isArranger}
         />
+      )}
+
+      {/* Partner Empty State - when Partner has no tasks or agreements */}
+      {isPartner && !hasTasks && !hasAgreementsToSign && (
+        <div className="bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/20 dark:to-teal-950/20 border border-emerald-200 dark:border-emerald-800 rounded-xl p-8 text-center">
+          <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-semibold text-emerald-900 dark:text-emerald-100 mb-2">
+            All Caught Up!
+          </h3>
+          <p className="text-emerald-700 dark:text-emerald-300 max-w-md mx-auto">
+            You don&apos;t have any pending signature tasks as a Partner. When your referred investors have documents requiring your signature, they&apos;ll appear here.
+          </p>
+        </div>
       )}
 
       {/* Standard VersaSign Tasks */}

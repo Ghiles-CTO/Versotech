@@ -31,6 +31,7 @@ import {
   ExternalLink,
   Building2,
   Download,
+  Percent,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
@@ -59,6 +60,17 @@ type PartnerTransaction = {
   } | null
   referred_at: string | null
   role: string
+  // PRD Row 72-76: Investor journey stage tracking
+  // PRD Row 73: "Passed" = investor declined/did not proceed
+  investorStage: 'dispatched' | 'interested' | 'passed' | 'approved' | 'signed' | 'funded'
+  interest_confirmed_at: string | null
+  // PRD Row 77: Partner fee model per deal
+  feeModel: {
+    rate_bps: number | null   // Basis points (e.g., 200 = 2%)
+    flat_amount: number | null
+    currency: string
+    kind: string | null       // 'referral', 'success', etc.
+  } | null
 }
 
 type PartnerInfo = {
@@ -81,6 +93,7 @@ type MembershipRow = {
   // Note: deal_memberships has composite PK (deal_id, user_id), no 'id' column
   role: string | null
   dispatched_at: string | null
+  interest_confirmed_at: string | null // PRD Row 72
   deal_id: string | null
   investor_id: string | null
   investor: { id: string; legal_name: string | null } | { id: string; legal_name: string | null }[] | null
@@ -152,6 +165,17 @@ const STATUS_FILTERS = [
   { label: 'Cancelled', value: 'cancelled' },
 ]
 
+// PRD Rows 71-76: Investor journey stage filters for Partner
+const INVESTOR_STAGE_FILTERS = [
+  { label: 'All Stages', value: 'all' },
+  { label: 'Dispatched', value: 'dispatched' },          // Row 71
+  { label: 'Interested', value: 'interested' },          // Row 72
+  { label: 'Passed', value: 'passed' },                  // Row 73 (investor declined)
+  { label: 'Approved (Pack)', value: 'approved' },       // Row 74 (subscription approved)
+  { label: 'Signed', value: 'signed' },                  // Row 75
+  { label: 'Funded', value: 'funded' },                  // Row 76
+]
+
 export default function PartnerTransactionsPage() {
   const [partnerInfo, setPartnerInfo] = useState<PartnerInfo | null>(null)
   const [transactions, setTransactions] = useState<PartnerTransaction[]>([])
@@ -166,6 +190,7 @@ export default function PartnerTransactionsPage() {
   const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
+  const [investorStageFilter, setInvestorStageFilter] = useState('all') // PRD Rows 72-76
   const [exporting, setExporting] = useState(false)
 
   const handleExport = async () => {
@@ -220,6 +245,8 @@ export default function PartnerTransactionsPage() {
       ))
 
       const subscriptionMap = new Map<string, SubscriptionRow>()
+      // PRD Row 77: Fee model per deal
+      const feeModelMap = new Map<string, { rate_bps: number | null; flat_amount: number | null; currency: string; kind: string | null }>()
 
       if (investorIds.length > 0 && dealIds.length > 0) {
         const { data: subscriptions, error: subscriptionsError } = await supabase
@@ -248,6 +275,41 @@ export default function PartnerTransactionsPage() {
         }
       }
 
+      // PRD Row 77: Fetch fee plans for deals to show partner's commission
+      if (dealIds.length > 0) {
+        const { data: feePlans } = await supabase
+          .from('fee_plans')
+          .select(`
+            deal_id,
+            is_default,
+            fee_components (
+              kind,
+              rate_bps,
+              flat_amount,
+              calc_method
+            )
+          `)
+          .in('deal_id', dealIds)
+          .eq('is_active', true)
+
+        if (feePlans) {
+          for (const plan of feePlans) {
+            // Get the referral/success fee component
+            const components = plan.fee_components as any[] || []
+            const referralFee = components.find(c => c.kind === 'referral' || c.kind === 'success' || c.kind === 'commission')
+            if (referralFee && plan.deal_id) {
+              const subForDeal = subscriptionMap.get(`${plan.deal_id}`) || Array.from(subscriptionMap.values()).find(s => s.deal_id === plan.deal_id)
+              feeModelMap.set(plan.deal_id, {
+                rate_bps: referralFee.rate_bps,
+                flat_amount: referralFee.flat_amount,
+                currency: subForDeal?.currency || 'USD',
+                kind: referralFee.kind
+              })
+            }
+          }
+        }
+      }
+
       return memberships.map((membership) => {
         const investor = normalizeJoin(membership.investor)
         const deal = normalizeJoin(membership.deal)
@@ -257,6 +319,27 @@ export default function PartnerTransactionsPage() {
 
         // Create synthetic ID from composite key (deal_memberships has no 'id' column)
         const syntheticId = `${membership.deal_id || 'no-deal'}-${membership.investor_id || 'no-investor'}`
+
+        // PRD Rows 71-76: Compute investor journey stage
+        // Priority: funded > signed > approved > passed > interested > dispatched
+        let investorStage: 'dispatched' | 'interested' | 'passed' | 'approved' | 'signed' | 'funded' = 'dispatched'
+        if (subscription) {
+          const status = subscription.status || ''
+          if (status === 'active' || status === 'committed') {
+            investorStage = 'funded'
+          } else if (status === 'signed') {
+            investorStage = 'signed'
+          } else if (status === 'approved') {
+            investorStage = 'approved'
+          } else if (status === 'cancelled' || status === 'rejected') {
+            // PRD Row 73: "Passed" = investor declined/subscription cancelled
+            investorStage = 'passed'
+          } else if (membership.interest_confirmed_at) {
+            investorStage = 'interested'
+          }
+        } else if (membership.interest_confirmed_at) {
+          investorStage = 'interested'
+        }
 
         return {
           id: syntheticId,
@@ -279,6 +362,10 @@ export default function PartnerTransactionsPage() {
           } : null,
           referred_at: membership.dispatched_at,
           role: membership.role || 'investor',
+          investorStage,
+          interest_confirmed_at: membership.interest_confirmed_at,
+          // PRD Row 77: Fee model per deal
+          feeModel: deal ? feeModelMap.get(deal.id) || null : null,
         }
       })
     }
@@ -323,6 +410,7 @@ export default function PartnerTransactionsPage() {
           .select(`
             role,
             dispatched_at,
+            interest_confirmed_at,
             deal_id,
             investor_id,
             investor:investor_id (
@@ -362,6 +450,7 @@ export default function PartnerTransactionsPage() {
         .select(`
           role,
           dispatched_at,
+          interest_confirmed_at,
           deal_id,
           investor_id,
           referred_by_entity_id,
@@ -394,11 +483,13 @@ export default function PartnerTransactionsPage() {
   const filteredTransactions = transactions.filter(tx => {
     const txStatus = tx.subscription?.status || 'no_subscription'
     const matchesStatus = statusFilter === 'all' || txStatus === statusFilter
+    // PRD Rows 72-76: Filter by investor journey stage
+    const matchesStage = investorStageFilter === 'all' || tx.investorStage === investorStageFilter
     const matchesSearch = !search ||
       tx.investor?.legal_name?.toLowerCase().includes(search.toLowerCase()) ||
       tx.deal?.name?.toLowerCase().includes(search.toLowerCase()) ||
       tx.deal?.company_name?.toLowerCase().includes(search.toLowerCase())
-    return matchesStatus && matchesSearch
+    return matchesStatus && matchesStage && matchesSearch
   })
 
   if (loading) {
@@ -544,6 +635,19 @@ export default function PartnerTransactionsPage() {
                 ))}
               </SelectContent>
             </Select>
+            {/* PRD Rows 72-76: Investor journey stage filter */}
+            <Select value={investorStageFilter} onValueChange={setInvestorStageFilter}>
+              <SelectTrigger className="w-full md:w-48">
+                <SelectValue placeholder="Filter by stage" />
+              </SelectTrigger>
+              <SelectContent>
+                {INVESTOR_STAGE_FILTERS.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </CardContent>
       </Card>
@@ -561,7 +665,7 @@ export default function PartnerTransactionsPage() {
             <div className="border border-dashed border-muted rounded-lg py-12 flex flex-col items-center justify-center text-center space-y-2">
               <Building2 className="h-10 w-10 text-muted-foreground" />
               <p className="text-sm text-muted-foreground">
-                {search || statusFilter !== 'all'
+                {search || statusFilter !== 'all' || investorStageFilter !== 'all'
                   ? 'No transactions match your filters'
                   : 'No partner transactions yet'}
               </p>
@@ -579,7 +683,9 @@ export default function PartnerTransactionsPage() {
                     <TableHead>Investor</TableHead>
                     <TableHead>Deal</TableHead>
                     <TableHead>Commitment</TableHead>
+                    <TableHead>Commission</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead>Stage</TableHead>
                     <TableHead>Referred</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
@@ -617,6 +723,28 @@ export default function PartnerTransactionsPage() {
                           <span className="text-muted-foreground text-sm">Not subscribed</span>
                         )}
                       </TableCell>
+                      {/* PRD Row 77: Partner fee model per deal */}
+                      <TableCell>
+                        {tx.feeModel ? (
+                          <div className="flex items-center gap-1">
+                            <Percent className="h-3 w-3 text-emerald-600" />
+                            <span className="text-sm font-medium text-emerald-600">
+                              {tx.feeModel.rate_bps
+                                ? `${(tx.feeModel.rate_bps / 100).toFixed(2)}%`
+                                : tx.feeModel.flat_amount
+                                  ? formatCurrency(tx.feeModel.flat_amount, tx.feeModel.currency)
+                                  : '—'}
+                            </span>
+                            {tx.subscription && tx.feeModel.rate_bps && (
+                              <span className="text-xs text-muted-foreground ml-1">
+                                (~{formatCurrency(tx.subscription.commitment * tx.feeModel.rate_bps / 10000, tx.subscription.currency)})
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground text-xs">Not set</span>
+                        )}
+                      </TableCell>
                       <TableCell>
                         {tx.subscription ? (
                           <Badge
@@ -630,6 +758,23 @@ export default function PartnerTransactionsPage() {
                             Referred
                           </Badge>
                         )}
+                      </TableCell>
+                      {/* PRD Rows 72-76: Investor journey stage */}
+                      <TableCell>
+                        <Badge
+                          variant="outline"
+                          className={cn(
+                            'capitalize',
+                            tx.investorStage === 'funded' && 'bg-green-100 text-green-800 border-green-200',
+                            tx.investorStage === 'signed' && 'bg-blue-100 text-blue-800 border-blue-200',
+                            tx.investorStage === 'approved' && 'bg-purple-100 text-purple-800 border-purple-200',
+                            tx.investorStage === 'passed' && 'bg-red-100 text-red-800 border-red-200',
+                            tx.investorStage === 'interested' && 'bg-yellow-100 text-yellow-800 border-yellow-200',
+                            tx.investorStage === 'dispatched' && 'bg-gray-100 text-gray-600 border-gray-200'
+                          )}
+                        >
+                          {tx.investorStage}
+                        </Badge>
                       </TableCell>
                       <TableCell>
                         {tx.referred_at ? formatDate(tx.referred_at) : '—'}

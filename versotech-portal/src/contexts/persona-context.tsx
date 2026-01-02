@@ -92,8 +92,31 @@ export function PersonaProvider({ children, initialPersonas = [] }: PersonaProvi
       }
 
       if (!selectedPersona) {
-        // Pick primary persona, or first one
-        selectedPersona = fetchedPersonas.find(p => p.is_primary) || fetchedPersonas[0] || null
+        // Priority order for default persona selection:
+        // 1. Staff (CEO/admin first)
+        // 2. Business personas (introducer, partner, arranger, commercial_partner)
+        // 3. Investor (lowest priority since they're often dual-persona with business roles)
+        const personaPriority: Record<string, number> = {
+          'staff': 1,
+          'arranger': 2,
+          'introducer': 3,
+          'partner': 4,
+          'commercial_partner': 5,
+          'lawyer': 6,
+          'investor': 7, // Investor is lowest priority for dual-persona users
+        }
+
+        // Find the primary persona with highest priority (lowest number)
+        const primaryPersonas = fetchedPersonas.filter(p => p.is_primary)
+        if (primaryPersonas.length > 0) {
+          selectedPersona = primaryPersonas.reduce((best, current) => {
+            const bestPriority = personaPriority[best.persona_type] ?? 99
+            const currentPriority = personaPriority[current.persona_type] ?? 99
+            return currentPriority < bestPriority ? current : best
+          })
+        } else {
+          selectedPersona = fetchedPersonas[0] || null
+        }
       }
 
       setActivePersona(selectedPersona)
@@ -124,7 +147,27 @@ export function PersonaProvider({ children, initialPersonas = [] }: PersonaProvi
         : null
 
       if (!selectedPersona) {
-        selectedPersona = initialPersonas.find(p => p.is_primary) || initialPersonas[0] || null
+        // Same priority order as refreshPersonas
+        const personaPriority: Record<string, number> = {
+          'staff': 1,
+          'arranger': 2,
+          'introducer': 3,
+          'partner': 4,
+          'commercial_partner': 5,
+          'lawyer': 6,
+          'investor': 7,
+        }
+
+        const primaryPersonas = initialPersonas.filter(p => p.is_primary)
+        if (primaryPersonas.length > 0) {
+          selectedPersona = primaryPersonas.reduce((best, current) => {
+            const bestPriority = personaPriority[best.persona_type] ?? 99
+            const currentPriority = personaPriority[current.persona_type] ?? 99
+            return currentPriority < bestPriority ? current : best
+          })
+        } else {
+          selectedPersona = initialPersonas[0] || null
+        }
       }
 
       setActivePersona(selectedPersona)

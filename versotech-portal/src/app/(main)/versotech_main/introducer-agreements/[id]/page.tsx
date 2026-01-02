@@ -28,7 +28,6 @@ export default async function AgreementDetailPage({ params }: PageProps) {
         legal_name,
         contact_name,
         email,
-        phone,
         status,
         logo_url
       ),

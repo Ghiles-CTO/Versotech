@@ -6,6 +6,49 @@ export const dynamic = 'force-dynamic'
 
 type Nullable<T> = T | null
 
+// ============================================================================
+// Partner Referral Types (US-5.6.1-01 through 07)
+// ============================================================================
+
+interface PartnerReferral {
+  deal_id: string
+  investor_id: string
+  investor_name: string
+  dispatched_at: string | null
+  interest_confirmed_at: string | null
+}
+
+interface ReferralSubscription {
+  investor_id: string
+  deal_id: string
+  status: string
+  commitment: number | null
+  currency: string | null
+  funded_at: string | null
+  signed_at: string | null
+}
+
+interface PartnerCommission {
+  deal_id: string
+  investor_id: string
+  rate_bps: number | null
+  accrual_amount: number | null
+  currency: string | null
+  status: string
+}
+
+interface PartnerSummary {
+  totalReferrals: number
+  converted: number // funded subscriptions
+  pipelineValue: number // sum of commitments in progress
+  pendingCommissions: number // sum of accrued commissions
+  currency: string
+}
+
+// ============================================================================
+// Investor Deal Types
+// ============================================================================
+
 interface InvestorDeal {
   id: string
   name: string
@@ -233,7 +276,151 @@ export default async function OpportunitiesPage() {
 
   const investorIds = investorLinks?.map(link => link.investor_id) ?? []
   const primaryInvestorId = investorIds[0] ?? null
+
+  // Get partner ID if user is a partner (PRD Rows 95-96: Partner Share feature)
+  const { data: partnerUser } = await serviceSupabase
+    .from('partner_users')
+    .select('partner_id')
+    .eq('user_id', user.id)
+    .maybeSingle()
+
+  const partnerId = partnerUser?.partner_id ?? null
   const dealIds = dealsData.map(deal => deal.id)
+
+  // ============================================================================
+  // Partner Referral Data (US-5.6.1-01 through 07)
+  // Fetch referrals, subscription statuses, and commissions for Partner persona
+  // ============================================================================
+
+  let referralsByDeal = new Map<string, PartnerReferral[]>()
+  let referralSubscriptionsByDeal = new Map<string, ReferralSubscription[]>()
+  let partnerCommissionsByDeal = new Map<string, PartnerCommission[]>()
+  let partnerSummary: PartnerSummary = {
+    totalReferrals: 0,
+    converted: 0,
+    pipelineValue: 0,
+    pendingCommissions: 0,
+    currency: 'USD'
+  }
+
+  if (partnerId && dealIds.length > 0) {
+    // 1. Get all deal_memberships where this partner referred investors
+    const { data: referralsRaw } = await serviceSupabase
+      .from('deal_memberships')
+      .select(`
+        deal_id,
+        investor_id,
+        dispatched_at,
+        interest_confirmed_at,
+        investors:investor_id (
+          id,
+          legal_name,
+          display_name
+        )
+      `)
+      .eq('referred_by_entity_id', partnerId)
+      .eq('referred_by_entity_type', 'partner')
+      .in('deal_id', dealIds)
+
+    // Process referrals - group by deal_id
+    if (referralsRaw && referralsRaw.length > 0) {
+      const referrals: PartnerReferral[] = referralsRaw.map(r => {
+        // Supabase returns the joined investor as a single object (not array) when using investor_id FK
+        const investor = r.investors as unknown as { id: string; legal_name: string; display_name: string | null } | null
+        return {
+          deal_id: r.deal_id,
+          investor_id: r.investor_id,
+          investor_name: investor?.display_name || investor?.legal_name || 'Unknown Investor',
+          dispatched_at: r.dispatched_at,
+          interest_confirmed_at: r.interest_confirmed_at
+        }
+      })
+
+      // Group referrals by deal_id
+      for (const referral of referrals) {
+        const existing = referralsByDeal.get(referral.deal_id) || []
+        existing.push(referral)
+        referralsByDeal.set(referral.deal_id, existing)
+      }
+
+      // 2. Get subscription statuses for referred investors
+      const referredInvestorIds = [...new Set(referrals.map(r => r.investor_id))]
+
+      const { data: subscriptionsRaw } = await serviceSupabase
+        .from('subscriptions')
+        .select('investor_id, deal_id, status, commitment, currency, funded_at, signed_at')
+        .in('investor_id', referredInvestorIds)
+        .in('deal_id', dealIds)
+
+      if (subscriptionsRaw) {
+        // Group subscriptions by deal_id
+        for (const sub of subscriptionsRaw) {
+          const existing = referralSubscriptionsByDeal.get(sub.deal_id) || []
+          existing.push(sub as ReferralSubscription)
+          referralSubscriptionsByDeal.set(sub.deal_id, existing)
+        }
+      }
+
+      // 3. Get partner commissions for fee rate display and pending amounts
+      const { data: commissionsRaw } = await serviceSupabase
+        .from('partner_commissions')
+        .select('deal_id, investor_id, rate_bps, accrual_amount, currency, status')
+        .eq('partner_id', partnerId)
+        .in('deal_id', dealIds)
+
+      if (commissionsRaw) {
+        // Group commissions by deal_id
+        for (const comm of commissionsRaw) {
+          const existing = partnerCommissionsByDeal.get(comm.deal_id) || []
+          existing.push(comm as PartnerCommission)
+          partnerCommissionsByDeal.set(comm.deal_id, existing)
+        }
+      }
+
+      // 4. Calculate Partner summary metrics
+      const fundedStatuses = ['funded', 'active', 'activated', 'committed']
+      const pipelineStatuses = ['pending', 'pending_review', 'approved', 'signed', 'pack_sent', 'pack_generated']
+
+      let totalPipelineValue = 0
+      let totalPendingCommissions = 0
+      let convertedCount = 0
+      let detectedCurrency = 'USD'
+
+      // Count conversions and pipeline value from subscriptions
+      for (const [, subs] of referralSubscriptionsByDeal) {
+        for (const sub of subs) {
+          if (sub.currency) detectedCurrency = sub.currency
+          if (fundedStatuses.includes(sub.status?.toLowerCase())) {
+            convertedCount++
+          } else if (pipelineStatuses.includes(sub.status?.toLowerCase()) && sub.commitment) {
+            totalPipelineValue += Number(sub.commitment)
+          }
+        }
+      }
+
+      // Sum pending commissions
+      for (const [, comms] of partnerCommissionsByDeal) {
+        for (const comm of comms) {
+          if (comm.status === 'accrued' && comm.accrual_amount) {
+            totalPendingCommissions += Number(comm.accrual_amount)
+            if (comm.currency) detectedCurrency = comm.currency
+          }
+        }
+      }
+
+      partnerSummary = {
+        totalReferrals: referrals.length,
+        converted: convertedCount,
+        pipelineValue: totalPipelineValue,
+        pendingCommissions: totalPendingCommissions,
+        currency: detectedCurrency
+      }
+    }
+  }
+
+  // ============================================================================
+  // Investor-Specific Data
+  // ============================================================================
 
   let feeStructureMap = new Map<string, FeeStructure>()
   let investorInterests: DealInterest[] = []
@@ -378,6 +565,11 @@ export default async function OpportunitiesPage() {
     submittedSubscriptions: subscriptionRecords.length
   }
 
+  // Convert Maps to serializable objects for client component
+  const referralsByDealObj = Object.fromEntries(referralsByDeal)
+  const referralSubscriptionsByDealObj = Object.fromEntries(referralSubscriptionsByDeal)
+  const partnerCommissionsByDealObj = Object.fromEntries(partnerCommissionsByDeal)
+
   return (
     <InvestorDealsListClient
       dealsData={dealsData}
@@ -386,8 +578,14 @@ export default async function OpportunitiesPage() {
       accessByDeal={accessByDeal}
       subscriptionByDeal={subscriptionByDeal}
       primaryInvestorId={primaryInvestorId}
+      partnerId={partnerId}
       summary={summary}
       detailUrlBase="/versotech_main/opportunities"
+      // Partner-specific props (US-5.6.1-01 through 07)
+      referralsByDeal={referralsByDealObj}
+      referralSubscriptionsByDeal={referralSubscriptionsByDealObj}
+      partnerCommissionsByDeal={partnerCommissionsByDealObj}
+      partnerSummary={partnerSummary}
     />
   )
 }

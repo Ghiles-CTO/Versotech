@@ -58,25 +58,30 @@ export async function GET(request: Request) {
       )
     }
 
-    // Get user profile to check role
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
-
-    if (!profile || profile.role !== 'investor') {
-      return NextResponse.json(
-        { error: 'Investor access required' },
-        { status: 403 }
-      )
-    }
-
     // Get investor entities linked to this user
+    // Check investor_users linkage FIRST - this supports dual-persona users
+    // who may have a different profile.role but ARE linked to investor entities
     const { data: investorLinks } = await supabase
       .from('investor_users')
       .select('investor_id')
       .eq('user_id', user.id)
+
+    // If no investor linkage exists, check if user has investor role as fallback
+    if (!investorLinks || investorLinks.length === 0) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single()
+
+      // Only return 403 if user has neither investor linkage NOR investor role
+      if (!profile || profile.role !== 'investor') {
+        return NextResponse.json(
+          { error: 'Investor access required. Please ensure your account is linked to an investor entity.' },
+          { status: 403 }
+        )
+      }
+    }
 
     if (!investorLinks || investorLinks.length === 0) {
       const emptyResponse = {

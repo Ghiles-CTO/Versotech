@@ -23,7 +23,9 @@ export async function GET(request: Request) {
       .eq('user_id', user.id)
 
     if (linksError || !investorLinks || investorLinks.length === 0) {
-      return NextResponse.json({ error: 'No investor profile found' }, { status: 404 })
+      // Return 200 with null investor instead of 404 to avoid log noise
+      // This allows profile page to gracefully check if user has investor entity
+      return NextResponse.json({ investor: null, exists: false }, { status: 200 })
     }
 
     // Get the first (primary) investor
