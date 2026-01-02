@@ -161,10 +161,10 @@ const staffNavItems: SidebarItem[] = [
     description: 'Deal management'
   },
   {
-    name: 'Entities',
+    name: 'Vehicles',
     href: '/versotech_main/entities',
     icon: Building2,
-    description: 'Legal entities'
+    description: 'Investment vehicles'
   },
   {
     name: 'Investors',

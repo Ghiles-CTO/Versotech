@@ -98,10 +98,10 @@ export function CommandPalette({ onQuickAddSubscription, brand = 'versotech' }: 
     },
     {
       id: 'nav-entities',
-      label: 'Entities',
-      description: 'Manage vehicles and entities',
+      label: 'Vehicles',
+      description: 'Manage investment vehicles',
       icon: Building2,
-      keywords: ['vehicles', 'funds', 'spvs'],
+      keywords: ['vehicles', 'funds', 'spvs', 'entities'],
       action: () => router.push('/versotech_main/entities'),
       group: 'navigation'
     },

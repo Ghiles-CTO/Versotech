@@ -1172,7 +1172,7 @@ export function EntityDetailEnhanced({
               className="gap-2 text-foreground hover:text-emerald-200 hover:bg-white/10"
             >
               <ArrowLeft className="h-4 w-4" />
-              Back to Entities
+              Back to Vehicles
             </Button>
           </Link>
           <div className="flex items-center gap-3 flex-wrap">

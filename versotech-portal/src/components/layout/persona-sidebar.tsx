@@ -56,7 +56,7 @@ const PERSONA_NAV_ITEMS: Record<string, NavItem[]> = {
     { name: 'Messages', href: '/versotech_main/messages', icon: MessageSquare, description: 'Inbox' },
     { name: 'Approvals', href: '/versotech_main/approvals', icon: UserCheck, description: 'Pending approvals' },
     { name: 'Deals', href: '/versotech_main/deals', icon: Activity, description: 'Deal management' },
-    { name: 'Entities', href: '/versotech_main/entities', icon: Building2, description: 'Legal entities' },
+    { name: 'Vehicles', href: '/versotech_main/entities', icon: Building2, description: 'Investment vehicles' },
     { name: 'Investors', href: '/versotech_main/investors', icon: Users, description: 'Investor relations' },
     { name: 'Subscriptions', href: '/versotech_main/subscriptions', icon: FileText, description: 'Subscription tracking' },
     { name: 'Requests', href: '/versotech_main/requests', icon: ClipboardList, description: 'Service requests' },

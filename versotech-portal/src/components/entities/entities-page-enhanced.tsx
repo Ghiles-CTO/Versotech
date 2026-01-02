@@ -159,9 +159,9 @@ export function EntitiesPageEnhanced({ entities: initialEntities }: EntitiesPage
     <div className="p-6 space-y-6 text-foreground">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Entities</h1>
+          <h1 className="text-3xl font-bold">Vehicles</h1>
           <p className="text-muted-foreground mt-1">
-            Manage legal entities with comprehensive tracking and multiple view modes.
+            Manage investment vehicles with comprehensive tracking and multiple view modes.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -173,7 +173,7 @@ export function EntitiesPageEnhanced({ entities: initialEntities }: EntitiesPage
           </Button>
           <Button className="gap-2" onClick={() => setCreateOpen(true)}>
             <Plus className="h-4 w-4" />
-            Create Entity
+            Create Vehicle
           </Button>
         </div>
       </div>
@@ -193,7 +193,7 @@ export function EntitiesPageEnhanced({ entities: initialEntities }: EntitiesPage
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <Card className="border border-white/10 bg-white/5">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground">Total Entities</CardTitle>
+            <CardTitle className="text-sm text-muted-foreground">Total Vehicles</CardTitle>
             <CardDescription className="text-3xl text-foreground font-semibold">
               {stats.total}
             </CardDescription>
@@ -242,7 +242,7 @@ export function EntitiesPageEnhanced({ entities: initialEntities }: EntitiesPage
                 Action Center
               </CardTitle>
               <CardDescription className="text-red-100/80">
-                Entities with outstanding health flags. Resolve issues to keep governance on track.
+                Vehicles with outstanding health flags. Resolve issues to keep governance on track.
               </CardDescription>
             </div>
             <Badge className="bg-red-500/20 border-red-400/40 text-red-100">{flaggedEntities.length}</Badge>
@@ -268,7 +268,7 @@ export function EntitiesPageEnhanced({ entities: initialEntities }: EntitiesPage
             ))}
             {flaggedEntities.length > 4 && (
               <p className="text-xs text-red-100/60">
-                Showing top priorities. Use the filter below to focus on all flagged entities.
+                Showing top priorities. Use the filter below to focus on all flagged vehicles.
               </p>
             )}
           </CardContent>
@@ -356,7 +356,7 @@ export function EntitiesPageEnhanced({ entities: initialEntities }: EntitiesPage
               onCheckedChange={(checked) => setShowOnlyFlagged(checked === true)}
             />
             <Label htmlFor="filter-flagged" className="cursor-pointer">
-              Show only entities with unresolved flags
+              Show only vehicles with unresolved flags
             </Label>
           </div>
 
@@ -364,7 +364,7 @@ export function EntitiesPageEnhanced({ entities: initialEntities }: EntitiesPage
             <div className="py-12 text-center text-muted-foreground">
               <div className="flex flex-col items-center gap-2">
                 <AlertCircle className="h-6 w-6" />
-                <p>No entities found. Try adjusting your filters.</p>
+                <p>No vehicles found. Try adjusting your filters.</p>
               </div>
             </div>
           ) : (

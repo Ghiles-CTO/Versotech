@@ -116,9 +116,9 @@ export function EntitiesPageClient({ entities }: EntitiesPageClientProps) {
     <div className="p-6 space-y-6 text-foreground">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Entities</h1>
+          <h1 className="text-3xl font-bold">Vehicles</h1>
           <p className="text-muted-foreground mt-1">
-            Manage legal entities used across deals, holdings, and reporting.
+            Manage investment vehicles used across deals, holdings, and reporting.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -130,7 +130,7 @@ export function EntitiesPageClient({ entities }: EntitiesPageClientProps) {
           </Button>
           <Button onClick={openCreateModal} className="gap-2">
             <Plus className="h-4 w-4" />
-            Create Entity
+            Create Vehicle
           </Button>
         </div>
       </div>
@@ -150,7 +150,7 @@ export function EntitiesPageClient({ entities }: EntitiesPageClientProps) {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="border border-white/10 bg-white/5">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground">Total Entities</CardTitle>
+            <CardTitle className="text-sm text-muted-foreground">Total Vehicles</CardTitle>
             <CardDescription className="text-3xl text-foreground font-semibold">
               {items.length}
             </CardDescription>
@@ -240,7 +240,7 @@ export function EntitiesPageClient({ entities }: EntitiesPageClientProps) {
                     <TableCell colSpan={9} className="py-12 text-center text-muted-foreground">
                       <div className="flex flex-col items-center gap-2">
                         <AlertCircle className="h-6 w-6" />
-                        <p>No entities found. Try adjusting your filters or create a new vehicle.</p>
+                        <p>No vehicles found. Try adjusting your filters or create a new vehicle.</p>
                       </div>
                     </TableCell>
                   </TableRow>
