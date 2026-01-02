@@ -12,6 +12,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import type { DateRange } from 'react-day-picker'
+import { DateRangePicker } from '@/components/ui/date-range-picker'
 import {
   Table,
   TableBody,
@@ -144,6 +146,7 @@ export default function IntroductionsPage() {
   const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined)
   const [exporting, setExporting] = useState(false)
   const [selectedDeal, setSelectedDeal] = useState<DealDetails | null>(null)
   const [dealDialogOpen, setDealDialogOpen] = useState(false)
@@ -431,7 +434,24 @@ export default function IntroductionsPage() {
       intro.deal?.name?.toLowerCase().includes(search.toLowerCase()) ||
       intro.deal?.company_name?.toLowerCase().includes(search.toLowerCase()) ||
       intro.investor?.legal_name?.toLowerCase().includes(search.toLowerCase())
-    return matchesStatus && matchesSearch
+
+    // Date range filter (PRD 6.6.4-01: view revenues between 2 DATES)
+    let matchesDateRange = true
+    if (dateRange?.from || dateRange?.to) {
+      if (!intro.introduced_at) {
+        matchesDateRange = false
+      } else {
+        const introDate = new Date(intro.introduced_at)
+        if (dateRange.from && introDate < dateRange.from) matchesDateRange = false
+        if (dateRange.to) {
+          const endOfDay = new Date(dateRange.to)
+          endOfDay.setHours(23, 59, 59, 999)
+          if (introDate > endOfDay) matchesDateRange = false
+        }
+      }
+    }
+
+    return matchesStatus && matchesSearch && matchesDateRange
   })
 
   if (loading) {
@@ -570,7 +590,42 @@ export default function IntroductionsPage() {
                 ))}
               </SelectContent>
             </Select>
+            {/* Date Range Filter - PRD 6.6.4-01 */}
+            <div className="flex items-center gap-2">
+              <DateRangePicker
+                value={dateRange}
+                onChange={setDateRange}
+                className="w-auto"
+              />
+              {dateRange && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setDateRange(undefined)}
+                  title="Clear date filter"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
           </div>
+          {/* Active filter indicator */}
+          {(statusFilter !== 'all' || search || dateRange) && (
+            <div className="mt-3 pt-3 border-t">
+              <Button
+                variant="link"
+                size="sm"
+                onClick={() => {
+                  setStatusFilter('all')
+                  setSearch('')
+                  setDateRange(undefined)
+                }}
+                className="text-muted-foreground p-0 h-auto"
+              >
+                Clear all filters
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
 

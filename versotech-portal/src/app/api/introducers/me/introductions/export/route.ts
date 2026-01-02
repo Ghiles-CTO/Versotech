@@ -61,9 +61,6 @@ export async function GET(request: NextRequest) {
         id,
         created_at,
         status,
-        commission_amount,
-        commission_currency,
-        commission_paid_at,
         notes,
         investors (
           id,
@@ -117,6 +114,30 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // Get commission data from introducer_commissions table
+    const introductionIds = introductions?.map(i => i.id) || []
+    let commissionData: Record<string, { amount: number; currency: string; status: string; paid_at: string | null }> = {}
+
+    if (introductionIds.length > 0) {
+      const { data: commissions } = await supabase
+        .from('introducer_commissions')
+        .select('introduction_id, accrual_amount, currency, status, paid_at')
+        .in('introduction_id', introductionIds)
+
+      if (commissions) {
+        for (const comm of commissions) {
+          if (comm.introduction_id) {
+            commissionData[comm.introduction_id] = {
+              amount: Number(comm.accrual_amount) || 0,
+              currency: comm.currency || 'USD',
+              status: comm.status || 'accrued',
+              paid_at: comm.paid_at
+            }
+          }
+        }
+      }
+    }
+
     // Build CSV
     const csvHeaders = [
       'Date',
@@ -142,6 +163,7 @@ export async function GET(request: NextRequest) {
       const investor = normalizeJoin(intro.investors as unknown as { id: string; legal_name: string; display_name: string | null } | { id: string; legal_name: string; display_name: string | null }[] | null)
       const deal = normalizeJoin(intro.deals as unknown as { id: string; name: string; status: string } | { id: string; name: string; status: string }[] | null)
       const sub = investor ? subscriptionData[investor.id] : null
+      const comm = commissionData[intro.id]
 
       return [
         intro.created_at ? new Date(intro.created_at).toISOString().split('T')[0] : '',
@@ -151,9 +173,9 @@ export async function GET(request: NextRequest) {
         intro.status || 'pending',
         sub?.commitment || 0,
         sub?.currency || 'EUR',
-        intro.commission_amount || 0,
-        intro.commission_currency || 'EUR',
-        intro.commission_paid_at ? new Date(intro.commission_paid_at).toISOString().split('T')[0] : 'Not Paid',
+        comm?.amount || 0,
+        comm?.currency || 'USD',
+        comm?.paid_at ? new Date(comm.paid_at).toISOString().split('T')[0] : 'Not Paid',
         (intro.notes || '').replace(/"/g, '""')
       ].map(val => `"${String(val)}"`)
     }) || []
@@ -166,8 +188,8 @@ export async function GET(request: NextRequest) {
     // Summary
     const totalIntroductions = introductions?.length || 0
     const successfulIntroductions = introductions?.filter(i => i.status === 'converted' || i.status === 'allocated').length || 0
-    const totalCommission = introductions?.reduce((sum, i) => sum + (i.commission_amount || 0), 0) || 0
-    const paidCommission = introductions?.filter(i => i.commission_paid_at).reduce((sum, i) => sum + (i.commission_amount || 0), 0) || 0
+    const totalCommission = Object.values(commissionData).reduce((sum, c) => sum + (c.amount || 0), 0)
+    const paidCommission = Object.values(commissionData).filter(c => c.paid_at).reduce((sum, c) => sum + (c.amount || 0), 0)
 
     const summaryContent = `\n\n"Summary"\n"Total Introductions","${totalIntroductions}"\n"Successful Conversions","${successfulIntroductions}"\n"Conversion Rate","${totalIntroductions > 0 ? Math.round((successfulIntroductions / totalIntroductions) * 100) : 0}%"\n"Total Commission","${totalCommission}"\n"Paid Commission","${paidCommission}"\n"Pending Commission","${totalCommission - paidCommission}"`
 

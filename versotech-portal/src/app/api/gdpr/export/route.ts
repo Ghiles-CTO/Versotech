@@ -87,10 +87,53 @@ export async function POST(request: NextRequest) {
       .select('entity_id, role, is_primary, entities(legal_name, type)')
       .eq('user_id', user.id)
 
+    // Get introducer data if user is linked to an introducer
+    const { data: introducerUser } = await supabase
+      .from('introducer_users')
+      .select('introducer_id, role, introducers(*)')
+      .eq('user_id', user.id)
+      .maybeSingle()
+
+    // Get introductions if introducer
+    let introductions: any[] = []
+    if (introducerUser?.introducer_id) {
+      const { data: intros } = await supabase
+        .from('introductions')
+        .select('id, prospect_email, status, introduced_at, created_at')
+        .eq('introducer_id', introducerUser.introducer_id)
+        .order('created_at', { ascending: false })
+
+      introductions = intros || []
+    }
+
+    // Get introducer commissions if introducer
+    let introducerCommissions: any[] = []
+    if (introducerUser?.introducer_id) {
+      const { data: comms } = await supabase
+        .from('introducer_commissions')
+        .select('id, accrual_amount, currency, status, created_at, paid_at')
+        .eq('introducer_id', introducerUser.introducer_id)
+        .order('created_at', { ascending: false })
+
+      introducerCommissions = comms || []
+    }
+
+    // Get introducer agreements if introducer
+    let introducerAgreements: any[] = []
+    if (introducerUser?.introducer_id) {
+      const { data: agreements } = await supabase
+        .from('introducer_agreements')
+        .select('id, status, default_commission_bps, effective_date, expiry_date, signed_date')
+        .eq('introducer_id', introducerUser.introducer_id)
+        .order('created_at', { ascending: false })
+
+      introducerAgreements = agreements || []
+    }
+
     // Compile export data
     const exportData = {
       export_date: new Date().toISOString(),
-      export_version: '1.0',
+      export_version: '1.1',
       user_id: user.id,
       email: user.email,
       profile: profile ? {
@@ -104,6 +147,11 @@ export async function POST(request: NextRequest) {
       subscriptions: subscriptions,
       deal_interests: dealInterests,
       entity_memberships: entityMemberships || [],
+      // Introducer data (GDPR compliance)
+      introducer_data: introducerUser?.introducers || null,
+      introductions: introductions,
+      introducer_commissions: introducerCommissions,
+      introducer_agreements: introducerAgreements,
       activity_logs: auditLogs || [],
       notifications: notifications || [],
       signature_requests: signatures || [],
@@ -123,6 +171,10 @@ export async function POST(request: NextRequest) {
           'subscriptions',
           'deal_interests',
           'entity_memberships',
+          'introducers',
+          'introductions',
+          'introducer_commissions',
+          'introducer_agreements',
           'audit_logs',
           'notifications',
           'signatures'

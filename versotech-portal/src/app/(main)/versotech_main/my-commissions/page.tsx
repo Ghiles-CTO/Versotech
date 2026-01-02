@@ -633,7 +633,7 @@ export default function MyCommissionsPage() {
                             {formatCurrency(commission.accrual_amount, commission.currency)}
                           </div>
                           <div className="text-xs text-muted-foreground">
-                            {(commission.rate_bps / 100).toFixed(2)}%
+                            {commission.rate_bps != null ? `${(commission.rate_bps / 100).toFixed(2)}%` : '—'}
                           </div>
                         </TableCell>
                         <TableCell className="text-sm">

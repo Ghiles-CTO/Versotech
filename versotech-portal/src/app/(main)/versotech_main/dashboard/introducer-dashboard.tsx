@@ -83,6 +83,7 @@ type RecentIntroduction = {
 
 export function IntroducerDashboard({ introducerId, userId, persona }: IntroducerDashboardProps) {
   const { theme } = useTheme()
+  // Theme system uses 'staff-dark' for dark mode across all personas
   const isDark = theme === 'staff-dark'
 
   const [loading, setLoading] = useState(true)

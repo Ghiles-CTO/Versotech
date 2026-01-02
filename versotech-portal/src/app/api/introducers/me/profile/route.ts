@@ -91,16 +91,16 @@ export async function GET() {
     // Get commission statistics
     const { data: commissionStats } = await serviceSupabase
       .from('introducer_commissions')
-      .select('amount, status')
+      .select('accrual_amount, status')
       .eq('introducer_id', introducerUser.introducer_id)
 
     const totalEarned = commissionStats
       ?.filter(c => c.status === 'paid')
-      .reduce((sum, c) => sum + (Number(c.amount) || 0), 0) || 0
+      .reduce((sum, c) => sum + (Number(c.accrual_amount) || 0), 0) || 0
 
     const pendingCommission = commissionStats
       ?.filter(c => ['accrued', 'invoiced'].includes(c.status))
-      .reduce((sum, c) => sum + (Number(c.amount) || 0), 0) || 0
+      .reduce((sum, c) => sum + (Number(c.accrual_amount) || 0), 0) || 0
 
     return NextResponse.json({
       introducer,
