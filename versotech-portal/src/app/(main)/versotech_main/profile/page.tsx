@@ -1,14 +1,13 @@
 import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { ProfilePageClient } from '@/components/profile/profile-page-client'
-import { User, Calendar } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
 export default async function ProfilePage() {
   const supabase = await createClient()
+  const serviceSupabase = createServiceClient()
 
   // Get the current user
   const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -25,65 +24,113 @@ export default async function ProfilePage() {
 
   if (error || !profile) {
     return (
-      <div className="container mx-auto p-6">
-        <Card>
-          <CardContent className="p-6">
-            <p className="text-destructive">Error loading profile data</p>
-          </CardContent>
-        </Card>
+      <div className="p-6">
+        <div className="max-w-2xl mx-auto text-center py-12">
+          <h1 className="text-2xl font-bold text-foreground mb-2">Error Loading Profile</h1>
+          <p className="text-muted-foreground">
+            Unable to load your profile data. Please try again.
+          </p>
+        </div>
       </div>
     )
   }
 
-  // Determine variant based on role
+  // Determine if user is staff
   const isStaff = ['staff_admin', 'staff_ops', 'staff_rm', 'staff', 'admin'].includes(profile.role)
 
-  // Format member since date
-  const memberSince = new Date(profile.created_at).toLocaleDateString('en-US', {
-    month: 'long',
-    year: 'numeric'
-  })
+  // For non-staff users, check if they have an investor entity
+  let investorInfo = null
+  let investorUserInfo = null
+
+  if (!isStaff) {
+    // Check if user is associated with an investor
+    const { data: investorUser } = await serviceSupabase
+      .from('investor_users')
+      .select('investor_id, role, is_primary, can_sign')
+      .eq('user_id', user.id)
+      .maybeSingle()
+
+    if (investorUser) {
+      // Fetch investor entity details
+      const { data: investor } = await serviceSupabase
+        .from('investors')
+        .select(`
+          id,
+          legal_name,
+          display_name,
+          type,
+          status,
+          kyc_status,
+          onboarding_status,
+          country,
+          country_of_incorporation,
+          tax_residency,
+          email,
+          phone,
+          registered_address,
+          city,
+          representative_name,
+          representative_title,
+          is_professional_investor,
+          is_qualified_purchaser,
+          aml_risk_rating,
+          logo_url
+        `)
+        .eq('id', investorUser.investor_id)
+        .single()
+
+      if (investor) {
+        investorInfo = {
+          id: investor.id,
+          legal_name: investor.legal_name,
+          display_name: investor.display_name,
+          type: investor.type,
+          status: investor.status,
+          kyc_status: investor.kyc_status,
+          onboarding_status: investor.onboarding_status,
+          country: investor.country,
+          country_of_incorporation: investor.country_of_incorporation,
+          tax_residency: investor.tax_residency,
+          email: investor.email,
+          phone: investor.phone,
+          registered_address: investor.registered_address,
+          city: investor.city,
+          representative_name: investor.representative_name,
+          representative_title: investor.representative_title,
+          is_professional_investor: investor.is_professional_investor,
+          is_qualified_purchaser: investor.is_qualified_purchaser,
+          aml_risk_rating: investor.aml_risk_rating,
+          logo_url: investor.logo_url
+        }
+
+        investorUserInfo = {
+          role: investorUser.role,
+          is_primary: investorUser.is_primary,
+          can_sign: investorUser.can_sign || false
+        }
+      }
+    }
+  }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      {/* Page Header */}
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">My Profile</h1>
-        <p className="text-muted-foreground mt-1">
-          Manage your account settings and preferences
-        </p>
-      </div>
-
-      {/* Account Overview */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <User className="h-5 w-5" />
-            <CardTitle>Account Overview</CardTitle>
-          </div>
-          <CardDescription>
-            Your account information
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 md:grid-cols-2">
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Account Type</p>
-              <p className="text-lg font-semibold capitalize">{profile.role.replace(/_/g, ' ')}</p>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Member Since</p>
-              <div className="flex items-center gap-2 mt-1">
-                <Calendar className="h-4 w-4 text-muted-foreground" />
-                <p className="text-lg font-semibold">{memberSince}</p>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Client-side Profile Management */}
-      <ProfilePageClient profile={profile} variant={isStaff ? 'staff' : 'investor'} />
-    </div>
+    <ProfilePageClient
+      userEmail={user.email || ''}
+      profile={{
+        id: profile.id,
+        email: profile.email,
+        display_name: profile.display_name,
+        full_name: profile.full_name || profile.display_name,
+        title: profile.title,
+        avatar_url: profile.avatar_url,
+        phone: profile.phone,
+        office_location: profile.office_location,
+        bio: profile.bio,
+        role: profile.role,
+        created_at: profile.created_at
+      }}
+      variant={isStaff ? 'staff' : 'investor'}
+      investorInfo={investorInfo}
+      investorUserInfo={investorUserInfo}
+    />
   )
 }

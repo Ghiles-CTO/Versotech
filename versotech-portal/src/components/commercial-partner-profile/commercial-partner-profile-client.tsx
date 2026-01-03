@@ -9,17 +9,6 @@ import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog'
-import {
   Building2,
   Mail,
   Phone,
@@ -34,13 +23,10 @@ import {
   Save,
   X,
   Camera,
-  Upload,
   Globe,
   Calendar,
   FileSignature,
-  Trash2,
   AlertCircle,
-  Image as ImageIcon,
   Shield,
   Scale,
   Users,
@@ -56,6 +42,7 @@ import { PreferencesEditor } from '@/components/profile/preferences-editor'
 import { GDPRControls } from '@/components/profile/gdpr-controls'
 import { MembersManagementTab } from '@/components/members/members-management-tab'
 import { CommercialPartnerKYCDocumentsTab } from '@/components/profile/commercial-partner-kyc-documents-tab'
+import { SignatureSpecimenTab } from '@/components/profile/signature-specimen-tab'
 
 type CommercialPartnerInfo = {
   id: string
@@ -85,8 +72,6 @@ type CommercialPartnerUserInfo = {
   is_primary: boolean
   can_sign: boolean
   can_execute_for_clients: boolean
-  signature_specimen_url: string | null
-  signature_specimen_uploaded_at: string | null
 }
 
 type Profile = {
@@ -176,15 +161,6 @@ export function CommercialPartnerProfileClient({
   const [isUploadingLogo, setIsUploadingLogo] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // Signature state
-  const [signaturePreview, setSignaturePreview] = useState<string | null>(
-    cpUserInfo.signature_specimen_url
-  )
-  const [signatureFile, setSignatureFile] = useState<File | null>(null)
-  const [uploadingSignature, setUploadingSignature] = useState(false)
-  const [deletingSignature, setDeletingSignature] = useState(false)
-  const signatureInputRef = useRef<HTMLInputElement>(null)
-
   // Edit state
   const [editData, setEditData] = useState({
     contact_name: cpInfo?.contact_name || '',
@@ -267,99 +243,6 @@ export function CommercialPartnerProfileClient({
       toast.error('Failed to upload logo')
     } finally {
       setIsUploadingLogo(false)
-    }
-  }
-
-  // Signature handlers
-  const handleSignatureFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (!file) return
-
-    const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp']
-    if (!allowedTypes.includes(file.type)) {
-      toast.error('Please upload a PNG, JPEG, or WebP image')
-      return
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('File too large. Maximum size is 5MB')
-      return
-    }
-
-    setSignatureFile(file)
-
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      setSignaturePreview(e.target?.result as string)
-    }
-    reader.readAsDataURL(file)
-  }
-
-  const handleSignatureUpload = async () => {
-    if (!signatureFile) {
-      toast.error('Please select a file first')
-      return
-    }
-
-    setUploadingSignature(true)
-    try {
-      const formData = new FormData()
-      formData.append('file', signatureFile)
-
-      const response = await fetch('/api/commercial-partners/me/upload-signature', {
-        method: 'POST',
-        body: formData
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to upload signature')
-      }
-
-      setSignaturePreview(data.url)
-      setSignatureFile(null)
-      toast.success('Signature specimen uploaded successfully')
-    } catch (error) {
-      console.error('Upload error:', error)
-      toast.error(error instanceof Error ? error.message : 'Failed to upload signature')
-    } finally {
-      setUploadingSignature(false)
-    }
-  }
-
-  const handleSignatureDelete = async () => {
-    setDeletingSignature(true)
-    try {
-      const response = await fetch('/api/commercial-partners/me/upload-signature', {
-        method: 'DELETE'
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to remove signature')
-      }
-
-      setSignaturePreview(null)
-      setSignatureFile(null)
-      if (signatureInputRef.current) {
-        signatureInputRef.current.value = ''
-      }
-      toast.success('Signature specimen removed')
-    } catch (error) {
-      console.error('Delete error:', error)
-      toast.error(error instanceof Error ? error.message : 'Failed to remove signature')
-    } finally {
-      setDeletingSignature(false)
-    }
-  }
-
-  const handleCancelSignatureSelection = () => {
-    setSignatureFile(null)
-    setSignaturePreview(cpUserInfo.signature_specimen_url)
-    if (signatureInputRef.current) {
-      signatureInputRef.current.value = ''
     }
   }
 
@@ -773,21 +656,19 @@ export function CommercialPartnerProfileClient({
         </TabsContent>
 
         {/* Signature Tab */}
-        <TabsContent value="signature" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileSignature className="h-5 w-5" />
-                Signature Specimen
-              </CardTitle>
-              <CardDescription>
-                {cpUserInfo.can_sign
-                  ? 'Upload your signature specimen for document signing (e.g., Placement Agreements)'
-                  : 'You do not have signing permissions for this commercial partner'}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {!cpUserInfo.can_sign ? (
+        <TabsContent value="signature" className="space-y-6">
+          {!cpUserInfo.can_sign ? (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileSignature className="h-5 w-5" />
+                  Signature Specimen
+                </CardTitle>
+                <CardDescription>
+                  You do not have signing permissions for this commercial partner
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
                 <div className="border border-dashed border-muted rounded-lg py-8 px-4 text-center">
                   <AlertCircle className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
                   <p className="text-sm text-muted-foreground">
@@ -795,120 +676,14 @@ export function CommercialPartnerProfileClient({
                     Contact your commercial partner administrator for access.
                   </p>
                 </div>
-              ) : (
-                <div className="space-y-4">
-                  {/* Current Signature Preview */}
-                  {signaturePreview && (
-                    <div className="space-y-2">
-                      <Label className="text-muted-foreground">Current Signature</Label>
-                      <div className="border rounded-lg p-4 bg-white">
-                        <img
-                          src={signaturePreview}
-                          alt="Signature specimen"
-                          className="max-h-32 mx-auto object-contain"
-                        />
-                      </div>
-                      {cpUserInfo.signature_specimen_uploaded_at && !signatureFile && (
-                        <p className="text-xs text-muted-foreground">
-                          Uploaded on {formatDate(cpUserInfo.signature_specimen_uploaded_at)}
-                        </p>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Upload Section */}
-                  <div className="space-y-3">
-                    <Label>
-                      {signaturePreview ? 'Update Signature' : 'Upload Signature'}
-                    </Label>
-
-                    <div className="flex items-center gap-4">
-                      <Input
-                        ref={signatureInputRef}
-                        type="file"
-                        accept="image/png,image/jpeg,image/jpg,image/webp"
-                        onChange={handleSignatureFileSelect}
-                        className="flex-1"
-                      />
-                    </div>
-
-                    <p className="text-xs text-muted-foreground">
-                      Accepted formats: PNG, JPEG, WebP. Maximum size: 5MB.
-                      For best results, use a transparent PNG.
-                    </p>
-
-                    {signatureFile && (
-                      <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
-                        <ImageIcon className="h-5 w-5 text-muted-foreground" />
-                        <div className="flex-1">
-                          <p className="text-sm font-medium">{signatureFile.name}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {(signatureFile.size / 1024).toFixed(1)} KB - Ready to upload
-                          </p>
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="flex items-center gap-3">
-                      {signatureFile && (
-                        <>
-                          <Button onClick={handleSignatureUpload} disabled={uploadingSignature}>
-                            {uploadingSignature ? (
-                              <>
-                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                Uploading...
-                              </>
-                            ) : (
-                              <>
-                                <Upload className="h-4 w-4 mr-2" />
-                                Upload Signature
-                              </>
-                            )}
-                          </Button>
-                          <Button
-                            variant="outline"
-                            onClick={handleCancelSignatureSelection}
-                            disabled={uploadingSignature}
-                          >
-                            Cancel
-                          </Button>
-                        </>
-                      )}
-
-                      {signaturePreview && !signatureFile && (
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button variant="destructive" disabled={deletingSignature}>
-                              {deletingSignature ? (
-                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                              ) : (
-                                <Trash2 className="h-4 w-4 mr-2" />
-                              )}
-                              Remove Signature
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Remove Signature Specimen?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                This will remove your current signature specimen. You can upload a new one at any time.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction onClick={handleSignatureDelete}>
-                                Remove
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          ) : (
+            <SignatureSpecimenTab
+              entityType="commercial_partner"
+              entityId={cpInfo?.id}
+            />
+          )}
         </TabsContent>
       </Tabs>
     </div>

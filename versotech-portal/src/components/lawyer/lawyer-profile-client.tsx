@@ -1,22 +1,10 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Label } from '@/components/ui/label'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog'
 import {
   Scale,
   User,
@@ -25,16 +13,18 @@ import {
   Building2,
   CheckCircle2,
   AlertCircle,
-  Upload,
-  Trash2,
-  Loader2,
   FileSignature,
-  Image as ImageIcon,
+  Users,
+  Briefcase,
+  Shield,
+  Lock,
+  Settings,
 } from 'lucide-react'
-import { cn } from '@/lib/utils'
-import { formatDate } from '@/lib/format'
-import { toast } from 'sonner'
 import { MembersManagementTab } from '@/components/members/members-management-tab'
+import { SignatureSpecimenTab } from '@/components/profile/signature-specimen-tab'
+import { LawyerKYCDocumentsTab } from '@/components/profile/lawyer-kyc-documents-tab'
+import { PasswordChangeForm } from '@/components/profile/password-change-form'
+import { PreferencesEditor } from '@/components/profile/preferences-editor'
 
 type Profile = {
   full_name: string | null
@@ -56,8 +46,6 @@ type LawyerUserInfo = {
   role: string
   is_primary: boolean
   can_sign: boolean
-  signature_specimen_url: string | null
-  signature_specimen_uploaded_at: string | null
 }
 
 interface LawyerProfileClientProps {
@@ -73,116 +61,16 @@ export function LawyerProfileClient({
   lawyerInfo,
   lawyerUserInfo
 }: LawyerProfileClientProps) {
-  const [signaturePreview, setSignaturePreview] = useState<string | null>(
-    lawyerUserInfo.signature_specimen_url
-  )
-  const [signatureFile, setSignatureFile] = useState<File | null>(null)
-  const [uploading, setUploading] = useState(false)
-  const [deleting, setDeleting] = useState(false)
-  const fileInputRef = useRef<HTMLInputElement>(null)
-
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (!file) return
-
-    // Validate file type
-    const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp']
-    if (!allowedTypes.includes(file.type)) {
-      toast.error('Please upload a PNG, JPEG, or WebP image')
-      return
-    }
-
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('File too large. Maximum size is 5MB')
-      return
-    }
-
-    setSignatureFile(file)
-
-    // Create preview
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      setSignaturePreview(e.target?.result as string)
-    }
-    reader.readAsDataURL(file)
-  }
-
-  const handleUpload = async () => {
-    if (!signatureFile) {
-      toast.error('Please select a file first')
-      return
-    }
-
-    setUploading(true)
-    try {
-      const formData = new FormData()
-      formData.append('file', signatureFile)
-
-      const response = await fetch('/api/lawyers/me/upload-signature', {
-        method: 'POST',
-        body: formData
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to upload signature')
-      }
-
-      setSignaturePreview(data.url)
-      setSignatureFile(null)
-      toast.success('Signature specimen uploaded successfully')
-    } catch (error) {
-      console.error('Upload error:', error)
-      toast.error(error instanceof Error ? error.message : 'Failed to upload signature')
-    } finally {
-      setUploading(false)
-    }
-  }
-
-  const handleDelete = async () => {
-    setDeleting(true)
-    try {
-      const response = await fetch('/api/lawyers/me/upload-signature', {
-        method: 'DELETE'
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to remove signature')
-      }
-
-      setSignaturePreview(null)
-      setSignatureFile(null)
-      if (fileInputRef.current) {
-        fileInputRef.current.value = ''
-      }
-      toast.success('Signature specimen removed')
-    } catch (error) {
-      console.error('Delete error:', error)
-      toast.error(error instanceof Error ? error.message : 'Failed to remove signature')
-    } finally {
-      setDeleting(false)
-    }
-  }
-
-  const handleCancelSelection = () => {
-    setSignatureFile(null)
-    setSignaturePreview(lawyerUserInfo.signature_specimen_url)
-    if (fileInputRef.current) {
-      fileInputRef.current.value = ''
-    }
-  }
+  const [activeTab, setActiveTab] = useState('overview')
 
   return (
     <div className="p-6 space-y-6">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Lawyer Profile</h1>
           <p className="text-muted-foreground mt-1">
-            Manage your profile and signature specimen
+            Manage your profile, team members, and signature specimen
           </p>
         </div>
         {lawyerInfo?.is_active ? (
@@ -198,82 +86,141 @@ export function LawyerProfileClient({
         )}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Personal Info */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <User className="h-5 w-5" />
-              Personal Information
-            </CardTitle>
-            <CardDescription>
-              Your account details
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label className="text-muted-foreground">Full Name</Label>
-              <div className="font-medium">
-                {profile?.full_name || 'Not set'}
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label className="text-muted-foreground">Email</Label>
-              <div className="font-medium flex items-center gap-2">
-                <Mail className="h-4 w-4 text-muted-foreground" />
-                {profile?.email || userEmail}
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label className="text-muted-foreground">Role</Label>
-              <div className="flex items-center gap-2">
-                <Badge variant="outline" className="capitalize">
-                  {lawyerUserInfo.role}
-                </Badge>
-                {lawyerUserInfo.is_primary && (
-                  <Badge variant="secondary">Primary Contact</Badge>
-                )}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6" id="lawyer-profile-tabs">
+        <TabsList>
+          <TabsTrigger value="overview" className="flex items-center gap-2">
+            <Scale className="h-4 w-4" />
+            Overview
+          </TabsTrigger>
+          <TabsTrigger value="members" className="flex items-center gap-2">
+            <Users className="h-4 w-4" />
+            Members
+          </TabsTrigger>
+          <TabsTrigger value="kyc" className="flex items-center gap-2">
+            <Shield className="h-4 w-4" />
+            KYC Documents
+          </TabsTrigger>
+          <TabsTrigger value="signature" className="flex items-center gap-2">
+            <FileSignature className="h-4 w-4" />
+            Signature
+          </TabsTrigger>
+          <TabsTrigger value="security" className="flex items-center gap-2">
+            <Lock className="h-4 w-4" />
+            Security
+          </TabsTrigger>
+          <TabsTrigger value="preferences" className="flex items-center gap-2">
+            <Settings className="h-4 w-4" />
+            Preferences
+          </TabsTrigger>
+        </TabsList>
 
-        {/* Firm Info */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Building2 className="h-5 w-5" />
-              Firm Information
-            </CardTitle>
-            <CardDescription>
-              Your law firm details
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label className="text-muted-foreground">Firm Name</Label>
-              <div className="font-medium">
-                {lawyerInfo?.firm_name || 'Not set'}
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label className="text-muted-foreground">Display Name</Label>
-              <div className="font-medium">
-                {lawyerInfo?.display_name || 'Not set'}
-              </div>
-            </div>
-            {lawyerInfo?.phone && (
-              <div className="space-y-2">
-                <Label className="text-muted-foreground">Phone</Label>
-                <div className="font-medium flex items-center gap-2">
-                  <Phone className="h-4 w-4 text-muted-foreground" />
-                  {lawyerInfo.phone}
+        {/* Overview Tab */}
+        <TabsContent value="overview" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Personal Info */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <User className="h-5 w-5" />
+                  Personal Information
+                </CardTitle>
+                <CardDescription>
+                  Your account details within this law firm
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label className="text-muted-foreground">Full Name</Label>
+                  <div className="font-medium">
+                    {profile?.full_name || 'Not set'}
+                  </div>
                 </div>
-              </div>
-            )}
-            {lawyerInfo?.specializations?.length ? (
-              <div className="space-y-2">
-                <Label className="text-muted-foreground">Specializations</Label>
+                <div className="space-y-2">
+                  <Label className="text-muted-foreground">Email</Label>
+                  <div className="font-medium flex items-center gap-2">
+                    <Mail className="h-4 w-4 text-muted-foreground" />
+                    {profile?.email || userEmail}
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-muted-foreground">Role</Label>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="capitalize">
+                      {lawyerUserInfo.role}
+                    </Badge>
+                    {lawyerUserInfo.is_primary && (
+                      <Badge variant="secondary">Primary Contact</Badge>
+                    )}
+                    {lawyerUserInfo.can_sign && (
+                      <Badge className="bg-blue-100 text-blue-800 border-blue-200">
+                        Signatory
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Firm Info */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Building2 className="h-5 w-5" />
+                  Firm Information
+                </CardTitle>
+                <CardDescription>
+                  Your law firm details
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label className="text-muted-foreground">Firm Name</Label>
+                  <div className="font-medium">
+                    {lawyerInfo?.firm_name || 'Not set'}
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-muted-foreground">Display Name</Label>
+                  <div className="font-medium">
+                    {lawyerInfo?.display_name || 'Not set'}
+                  </div>
+                </div>
+                {lawyerInfo?.phone && (
+                  <div className="space-y-2">
+                    <Label className="text-muted-foreground">Phone</Label>
+                    <div className="font-medium flex items-center gap-2">
+                      <Phone className="h-4 w-4 text-muted-foreground" />
+                      {lawyerInfo.phone}
+                    </div>
+                  </div>
+                )}
+                {lawyerInfo?.email && (
+                  <div className="space-y-2">
+                    <Label className="text-muted-foreground">Firm Email</Label>
+                    <div className="font-medium flex items-center gap-2">
+                      <Mail className="h-4 w-4 text-muted-foreground" />
+                      {lawyerInfo.email}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Specializations Card */}
+          {lawyerInfo?.specializations?.length ? (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Briefcase className="h-5 w-5" />
+                  Specializations
+                </CardTitle>
+                <CardDescription>
+                  Areas of legal expertise
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
                 <div className="flex flex-wrap gap-2">
                   {lawyerInfo.specializations.map((spec, idx) => (
                     <Badge key={idx} variant="outline" className="capitalize">
@@ -281,158 +228,92 @@ export function LawyerProfileClient({
                     </Badge>
                   ))}
                 </div>
-              </div>
-            ) : null}
-          </CardContent>
-        </Card>
-      </div>
+              </CardContent>
+            </Card>
+          ) : null}
+        </TabsContent>
 
-      {/* Signature Specimen */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FileSignature className="h-5 w-5" />
-            Signature Specimen
-          </CardTitle>
-          <CardDescription>
-            {lawyerUserInfo.can_sign
-              ? 'Upload your signature specimen for document signing'
-              : 'You do not have signing permissions for this firm'}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {!lawyerUserInfo.can_sign ? (
-            <div className="border border-dashed border-muted rounded-lg py-8 px-4 text-center">
-              <AlertCircle className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
-              <p className="text-sm text-muted-foreground">
-                Signing permissions are required to upload a signature specimen.
-                Contact your firm administrator for access.
-              </p>
-            </div>
+        {/* Members Tab */}
+        <TabsContent value="members" className="space-y-4">
+          {lawyerInfo ? (
+            <MembersManagementTab
+              entityType="lawyer"
+              entityId={lawyerInfo.id}
+              entityName={lawyerInfo.firm_name || lawyerInfo.display_name || 'Law Firm'}
+              showSignatoryOption={true}
+            />
           ) : (
-            <div className="space-y-4">
-              {/* Current Signature Preview */}
-              {signaturePreview && (
-                <div className="space-y-2">
-                  <Label className="text-muted-foreground">Current Signature</Label>
-                  <div className="border rounded-lg p-4 bg-white">
-                    <img
-                      src={signaturePreview}
-                      alt="Signature specimen"
-                      className="max-h-32 mx-auto object-contain"
-                    />
-                  </div>
-                  {lawyerUserInfo.signature_specimen_uploaded_at && !signatureFile && (
-                    <p className="text-xs text-muted-foreground">
-                      Uploaded on {formatDate(lawyerUserInfo.signature_specimen_uploaded_at)}
-                    </p>
-                  )}
-                </div>
-              )}
-
-              {/* Upload Section */}
-              <div className="space-y-3">
-                <Label>
-                  {signaturePreview ? 'Update Signature' : 'Upload Signature'}
-                </Label>
-
-                <div className="flex items-center gap-4">
-                  <Input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/png,image/jpeg,image/jpg,image/webp"
-                    onChange={handleFileSelect}
-                    className="flex-1"
-                  />
-                </div>
-
-                <p className="text-xs text-muted-foreground">
-                  Accepted formats: PNG, JPEG, WebP. Maximum size: 5MB.
-                  For best results, use a transparent PNG.
+            <Card>
+              <CardContent className="py-8 text-center">
+                <AlertCircle className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
+                <p className="text-muted-foreground">
+                  No law firm linked to your account
                 </p>
-
-                {signatureFile && (
-                  <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
-                    <ImageIcon className="h-5 w-5 text-muted-foreground" />
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">{signatureFile.name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {(signatureFile.size / 1024).toFixed(1)} KB - Ready to upload
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                <div className="flex items-center gap-3">
-                  {signatureFile && (
-                    <>
-                      <Button onClick={handleUpload} disabled={uploading}>
-                        {uploading ? (
-                          <>
-                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                            Uploading...
-                          </>
-                        ) : (
-                          <>
-                            <Upload className="h-4 w-4 mr-2" />
-                            Upload Signature
-                          </>
-                        )}
-                      </Button>
-                      <Button
-                        variant="outline"
-                        onClick={handleCancelSelection}
-                        disabled={uploading}
-                      >
-                        Cancel
-                      </Button>
-                    </>
-                  )}
-
-                  {signaturePreview && !signatureFile && (
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="destructive" disabled={deleting}>
-                          {deleting ? (
-                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          ) : (
-                            <Trash2 className="h-4 w-4 mr-2" />
-                          )}
-                          Remove Signature
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Remove Signature Specimen?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            This will remove your current signature specimen. You can upload a new one at any time.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction onClick={handleDelete}>
-                            Remove
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  )}
-                </div>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           )}
-        </CardContent>
-      </Card>
+        </TabsContent>
 
-      {/* Members Management */}
-      {lawyerInfo && (
-        <MembersManagementTab
-          entityType="lawyer"
-          entityId={lawyerInfo.id}
-          entityName={lawyerInfo.firm_name || lawyerInfo.display_name || 'Law Firm'}
-          showSignatoryOption={true}
-        />
-      )}
+        {/* KYC Documents Tab */}
+        <TabsContent value="kyc" className="space-y-4">
+          {lawyerInfo ? (
+            <LawyerKYCDocumentsTab
+              lawyerId={lawyerInfo.id}
+              lawyerName={lawyerInfo.firm_name || lawyerInfo.display_name || undefined}
+            />
+          ) : (
+            <Card>
+              <CardContent className="py-8 text-center">
+                <AlertCircle className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
+                <p className="text-muted-foreground">
+                  No law firm linked to your account
+                </p>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        {/* Signature Tab */}
+        <TabsContent value="signature" className="space-y-6">
+          {!lawyerUserInfo.can_sign ? (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileSignature className="h-5 w-5" />
+                  Signature Specimen
+                </CardTitle>
+                <CardDescription>
+                  You do not have signing permissions for this firm
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="border border-dashed border-muted rounded-lg py-8 px-4 text-center">
+                  <AlertCircle className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
+                  <p className="text-sm text-muted-foreground">
+                    Signing permissions are required to upload a signature specimen.
+                    Contact your firm administrator for access.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <SignatureSpecimenTab
+              entityType="lawyer"
+              entityId={lawyerInfo?.id}
+            />
+          )}
+        </TabsContent>
+
+        {/* Security Tab */}
+        <TabsContent value="security" className="space-y-4">
+          <PasswordChangeForm />
+        </TabsContent>
+
+        {/* Preferences Tab */}
+        <TabsContent value="preferences" className="space-y-4">
+          <PreferencesEditor variant="investor" />
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }

@@ -37,7 +37,8 @@ import {
   Share2,
   ArrowRightLeft,
   UserPlus,
-  Scale
+  Scale,
+  PenTool
 } from 'lucide-react'
 
 interface NavItem {
@@ -85,7 +86,7 @@ const PERSONA_NAV_ITEMS: Record<string, NavItem[]> = {
     { name: 'Portfolio', href: '/versotech_main/portfolio', icon: Briefcase, description: 'My investments' },
     { name: 'Documents', href: '/versotech_main/documents', icon: FileText, description: 'My documents' },
     { name: 'Inbox', href: '/versotech_main/inbox', icon: MessageSquare, description: 'Tasks, messages & notifications' },
-    { name: 'Profile', href: '/versotech_main/investor-profile', icon: UserCheck, description: 'Entity & members' },
+    { name: 'Profile', href: '/versotech_main/profile', icon: UserCheck, description: 'Entity & members' },
   ],
 
   // Arranger persona
@@ -141,15 +142,16 @@ const PERSONA_NAV_ITEMS: Record<string, NavItem[]> = {
   ],
 
   // Lawyer persona
+  // NOTE: Messages removed - lawyers are passive notification recipients only (same as introducers)
   lawyer: [
     { name: 'Dashboard', href: '/versotech_main/dashboard', icon: LayoutDashboard, description: 'Overview' },
     { name: 'Assigned Deals', href: '/versotech_main/assigned-deals', icon: Briefcase, description: 'My deals' },
     { name: 'Escrow', href: '/versotech_main/escrow', icon: Lock, description: 'Escrow management' },
     { name: 'Subscription Packs', href: '/versotech_main/subscription-packs', icon: FileText, description: 'Pack review' },
+    { name: 'VersoSign', href: '/versotech_main/versosign', icon: PenTool, description: 'E-signatures' },
     { name: 'Reconciliation', href: '/versotech_main/lawyer-reconciliation', icon: Calculator, description: 'Financials' },
     { name: 'Profile', href: '/versotech_main/lawyer-profile', icon: FileSignature, description: 'Signature & settings' },
     { name: 'Notifications', href: '/versotech_main/notifications', icon: Bell, description: 'Alerts' },
-    { name: 'Messages', href: '/versotech_main/messages', icon: MessageSquare, description: 'Communications' },
   ],
 }
 

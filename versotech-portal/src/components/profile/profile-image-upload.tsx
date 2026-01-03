@@ -10,12 +10,15 @@ interface ProfileImageUploadProps {
   currentAvatarUrl?: string | null
   userName: string
   onAvatarUpdate: (newAvatarUrl: string) => void
+  /** Compact mode shows a smaller avatar (64x64) with minimal UI for inline header usage */
+  compact?: boolean
 }
 
 export function ProfileImageUpload({
   currentAvatarUrl,
   userName,
-  onAvatarUpdate
+  onAvatarUpdate,
+  compact = false
 }: ProfileImageUploadProps) {
   const [isUploading, setIsUploading] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
@@ -130,6 +133,45 @@ export function ProfileImageUpload({
 
   const displayUrl = previewUrl || currentAvatarUrl
 
+  // Compact mode: smaller avatar for inline header usage
+  if (compact) {
+    return (
+      <div className="relative">
+        <Avatar className="h-16 w-16 border-2 border-background shadow-md">
+          <AvatarImage src={displayUrl || undefined} alt={userName} />
+          <AvatarFallback className="text-lg">
+            {getInitials(userName)}
+          </AvatarFallback>
+        </Avatar>
+
+        {isUploading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-background/80 rounded-full">
+            <Loader2 className="h-5 w-5 animate-spin text-primary" />
+          </div>
+        )}
+
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={isUploading || isDeleting}
+          className="absolute -bottom-1 -right-1 p-1.5 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed border border-blue-700"
+        >
+          <Camera className="h-3 w-3" />
+        </button>
+
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/gif,image/webp"
+          className="hidden"
+          onChange={handleFileSelect}
+          disabled={isUploading || isDeleting}
+        />
+      </div>
+    )
+  }
+
+  // Full mode: large avatar with buttons and instructions
   return (
     <div className="flex flex-col items-center gap-4">
       <div className="relative">

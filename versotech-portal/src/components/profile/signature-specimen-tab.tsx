@@ -21,18 +21,66 @@ import {
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 
+// Entity type determines which API endpoints to use for signature operations
+type EntityType = 'investor' | 'commercial_partner' | 'partner' | 'introducer' | 'lawyer'
+
 interface SignatureSpecimenTabProps {
   currentSignatureUrl?: string | null
   onSignatureUpdate?: (url: string | null) => void
+  entityType?: EntityType
+  entityId?: string
+}
+
+// API endpoint mapping for each entity type
+function getSignatureApiEndpoints(entityType: EntityType = 'investor') {
+  switch (entityType) {
+    case 'commercial_partner':
+      return {
+        get: '/api/commercial-partners/me/signature',
+        post: '/api/commercial-partners/me/upload-signature',
+        delete: '/api/commercial-partners/me/signature',
+      }
+    case 'partner':
+      return {
+        get: '/api/partners/me/signature',
+        post: '/api/partners/me/upload-signature',
+        delete: '/api/partners/me/signature',
+      }
+    case 'introducer':
+      return {
+        get: '/api/introducers/me/signature',
+        post: '/api/introducers/me/upload-signature',
+        delete: '/api/introducers/me/signature',
+      }
+    case 'lawyer':
+      return {
+        get: '/api/lawyers/me/signature',
+        post: '/api/lawyers/me/upload-signature',
+        delete: '/api/lawyers/me/signature',
+      }
+    case 'investor':
+    default:
+      return {
+        get: '/api/signature-specimen',
+        post: '/api/signature-specimen',
+        delete: '/api/signature-specimen',
+      }
+  }
 }
 
 export function SignatureSpecimenTab({
   currentSignatureUrl,
-  onSignatureUpdate
+  onSignatureUpdate,
+  entityType = 'investor',
+  entityId,
 }: SignatureSpecimenTabProps) {
+  // Get the appropriate API endpoints for this entity type
+  const apiEndpoints = getSignatureApiEndpoints(entityType)
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const isDrawingRef = useRef(false)
   const lastPointRef = useRef<{ x: number; y: number } | null>(null)
-  const [isDrawing, setIsDrawing] = useState(false)
+
   const [hasDrawn, setHasDrawn] = useState(false)
   const [signatureUrl, setSignatureUrl] = useState<string | null>(currentSignatureUrl || null)
   const [isLoading, setIsLoading] = useState(false)
@@ -41,6 +89,7 @@ export function SignatureSpecimenTab({
   const [uploadPreview, setUploadPreview] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<'draw' | 'upload'>('draw')
   const [error, setError] = useState<string | null>(null)
+  const [canvasReady, setCanvasReady] = useState(false)
 
   // Load existing signature on mount
   useEffect(() => {
@@ -50,7 +99,7 @@ export function SignatureSpecimenTab({
   const loadExistingSignature = async () => {
     setIsLoading(true)
     try {
-      const response = await fetch('/api/signature-specimen')
+      const response = await fetch(apiEndpoints.get)
       if (response.ok) {
         const data = await response.json()
         if (data.signature_url) {
@@ -64,147 +113,144 @@ export function SignatureSpecimenTab({
     }
   }
 
-  // Get the appropriate stroke color based on theme
-  const getStrokeColor = useCallback(() => {
-    // Always use a dark color for signatures - signatures should be black/dark on white
-    return '#000000'
-  }, [])
-
-  // Canvas initialization function
+  // Initialize canvas with proper dimensions
   const initializeCanvas = useCallback(() => {
     const canvas = canvasRef.current
-    if (!canvas) return
+    const container = containerRef.current
+    if (!canvas || !container) return
+
+    const rect = container.getBoundingClientRect()
+    if (rect.width === 0 || rect.height === 0) return
+
+    // Set canvas size to match container exactly (1:1 pixel ratio for simplicity)
+    // This avoids DPR scaling issues that cause coordinate misalignment
+    canvas.width = rect.width
+    canvas.height = rect.height
 
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
-    // Get the display size (CSS pixels)
-    const rect = canvas.getBoundingClientRect()
-    if (rect.width === 0 || rect.height === 0) return // Not visible yet
-
-    const dpr = window.devicePixelRatio || 1
-
-    // Set the canvas internal size (scaled for high-DPI)
-    canvas.width = rect.width * dpr
-    canvas.height = rect.height * dpr
-
-    // Scale all drawing operations by the dpr
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
-
-    // Fill with white background FIRST (signatures are always on white)
+    // Fill with white background
     ctx.fillStyle = '#ffffff'
-    ctx.fillRect(0, 0, rect.width, rect.height)
+    ctx.fillRect(0, 0, canvas.width, canvas.height)
 
-    // Set drawing styles - use black for maximum visibility
-    ctx.strokeStyle = getStrokeColor()
-    ctx.lineWidth = 2.5  // Slightly thicker for better visibility
-    ctx.lineCap = 'round'
-    ctx.lineJoin = 'round'
-  }, [getStrokeColor])
-
-  // Canvas setup on tab change
-  useEffect(() => {
-    if (activeTab === 'draw') {
-      // Small delay to ensure canvas is mounted and has proper dimensions
-      const timer = setTimeout(initializeCanvas, 50)
-      return () => clearTimeout(timer)
-    }
-  }, [activeTab, initializeCanvas])
-
-  // Handle window resize
-  useEffect(() => {
-    const handleResize = () => {
-      if (activeTab === 'draw') {
-        initializeCanvas()
-        setHasDrawn(false) // Reset drawing state on resize
-      }
-    }
-    window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
-  }, [activeTab, initializeCanvas])
-
-  const getCoordinates = (e: React.MouseEvent | React.TouchEvent): { x: number; y: number } | null => {
-    const canvas = canvasRef.current
-    if (!canvas) return null
-
-    // For mouse events, use nativeEvent.offsetX/Y which is more reliable
-    if ('nativeEvent' in e && 'offsetX' in e.nativeEvent) {
-      const mouseEvent = e.nativeEvent as MouseEvent
-      return {
-        x: mouseEvent.offsetX,
-        y: mouseEvent.offsetY
-      }
-    }
-
-    // For touch events, calculate from clientX/Y
-    if ('touches' in e && e.touches.length > 0) {
-      const touch = e.touches[0]
-      const rect = canvas.getBoundingClientRect()
-      return {
-        x: touch.clientX - rect.left,
-        y: touch.clientY - rect.top
-      }
-    }
-
-    // Fallback for other mouse events
-    const rect = canvas.getBoundingClientRect()
-    if ('clientX' in e) {
-      return {
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top
-      }
-    }
-
-    return null
-  }
-
-  const startDrawing = (e: React.MouseEvent | React.TouchEvent) => {
-    e.preventDefault()
-    const coords = getCoordinates(e)
-    if (!coords) return
-
-    // Store the starting point for segment drawing
-    lastPointRef.current = coords
-    setIsDrawing(true)
-    setHasDrawn(true)
-    setError(null)
-  }
-
-  const draw = (e: React.MouseEvent | React.TouchEvent) => {
-    if (!isDrawing || !lastPointRef.current) return
-    e.preventDefault()
-
-    const coords = getCoordinates(e)
-    if (!coords) return
-
-    const canvas = canvasRef.current
-    const ctx = canvas?.getContext('2d')
-    if (!canvas || !ctx) return
-
-    // Ensure transform and styles are set for this draw operation
-    const dpr = window.devicePixelRatio || 1
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
-
-    // Use pure black for maximum contrast
+    // Set drawing styles
     ctx.strokeStyle = '#000000'
     ctx.lineWidth = 2.5
     ctx.lineCap = 'round'
     ctx.lineJoin = 'round'
 
-    // Draw a single segment from last point to current point
+    setCanvasReady(true)
+    setHasDrawn(false)
+  }, [])
+
+  // Setup canvas when draw tab is active
+  useEffect(() => {
+    if (activeTab === 'draw') {
+      // Use requestAnimationFrame to ensure DOM is ready
+      const timer = requestAnimationFrame(() => {
+        initializeCanvas()
+      })
+      return () => cancelAnimationFrame(timer)
+    }
+  }, [activeTab, initializeCanvas])
+
+  // Handle resize with ResizeObserver
+  useEffect(() => {
+    const container = containerRef.current
+    if (!container) return
+
+    const resizeObserver = new ResizeObserver(() => {
+      if (activeTab === 'draw') {
+        initializeCanvas()
+      }
+    })
+
+    resizeObserver.observe(container)
+    return () => resizeObserver.disconnect()
+  }, [activeTab, initializeCanvas])
+
+  // Get coordinates relative to canvas - simple and reliable
+  const getCanvasCoordinates = useCallback((e: MouseEvent | TouchEvent): { x: number; y: number } | null => {
+    const canvas = canvasRef.current
+    if (!canvas) return null
+
+    const rect = canvas.getBoundingClientRect()
+
+    let clientX: number
+    let clientY: number
+
+    if ('touches' in e && e.touches.length > 0) {
+      clientX = e.touches[0].clientX
+      clientY = e.touches[0].clientY
+    } else if ('clientX' in e) {
+      clientX = e.clientX
+      clientY = e.clientY
+    } else {
+      return null
+    }
+
+    // Calculate position relative to canvas, accounting for any CSS scaling
+    const scaleX = canvas.width / rect.width
+    const scaleY = canvas.height / rect.height
+
+    return {
+      x: (clientX - rect.left) * scaleX,
+      y: (clientY - rect.top) * scaleY
+    }
+  }, [])
+
+  // Drawing functions using native events for better reliability
+  const handlePointerDown = useCallback((e: React.PointerEvent<HTMLCanvasElement>) => {
+    e.preventDefault()
+    const canvas = canvasRef.current
+    if (!canvas) return
+
+    // Capture pointer for smoother drawing
+    canvas.setPointerCapture(e.pointerId)
+
+    const coords = getCanvasCoordinates(e.nativeEvent as unknown as MouseEvent)
+    if (!coords) return
+
+    isDrawingRef.current = true
+    lastPointRef.current = coords
+    setHasDrawn(true)
+    setError(null)
+  }, [getCanvasCoordinates])
+
+  const handlePointerMove = useCallback((e: React.PointerEvent<HTMLCanvasElement>) => {
+    if (!isDrawingRef.current || !lastPointRef.current) return
+    e.preventDefault()
+
+    const canvas = canvasRef.current
+    const ctx = canvas?.getContext('2d')
+    if (!canvas || !ctx) return
+
+    const coords = getCanvasCoordinates(e.nativeEvent as unknown as MouseEvent)
+    if (!coords) return
+
+    // Draw line segment
     ctx.beginPath()
     ctx.moveTo(lastPointRef.current.x, lastPointRef.current.y)
     ctx.lineTo(coords.x, coords.y)
     ctx.stroke()
 
-    // Update last point for next segment
     lastPointRef.current = coords
-  }
+  }, [getCanvasCoordinates])
 
-  const stopDrawing = () => {
-    setIsDrawing(false)
+  const handlePointerUp = useCallback((e: React.PointerEvent<HTMLCanvasElement>) => {
+    const canvas = canvasRef.current
+    if (canvas) {
+      canvas.releasePointerCapture(e.pointerId)
+    }
+    isDrawingRef.current = false
     lastPointRef.current = null
-  }
+  }, [])
+
+  const handlePointerLeave = useCallback(() => {
+    isDrawingRef.current = false
+    lastPointRef.current = null
+  }, [])
 
   const clearCanvas = useCallback(() => {
     const canvas = canvasRef.current
@@ -213,18 +259,11 @@ export function SignatureSpecimenTab({
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
-    // Get the CSS dimensions for the fill area
-    const rect = canvas.getBoundingClientRect()
-
-    // Re-apply the transform (it may have been reset)
-    const dpr = window.devicePixelRatio || 1
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
-
-    // Clear and fill with white (signatures are always on white background)
+    // Clear and fill with white
     ctx.fillStyle = '#ffffff'
-    ctx.fillRect(0, 0, rect.width, rect.height)
+    ctx.fillRect(0, 0, canvas.width, canvas.height)
 
-    // Restore drawing styles with black stroke for visibility
+    // Restore drawing styles
     ctx.strokeStyle = '#000000'
     ctx.lineWidth = 2.5
     ctx.lineCap = 'round'
@@ -237,13 +276,11 @@ export function SignatureSpecimenTab({
     const file = e.target.files?.[0]
     if (!file) return
 
-    // Validate file type
     if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) {
       setError('Please upload a PNG, JPEG, or WebP image')
       return
     }
 
-    // Validate file size (2MB max)
     if (file.size > 2 * 1024 * 1024) {
       setError('File size must be less than 2MB')
       return
@@ -252,7 +289,6 @@ export function SignatureSpecimenTab({
     setUploadedFile(file)
     setError(null)
 
-    // Create preview
     const reader = new FileReader()
     reader.onload = (event) => {
       setUploadPreview(event.target?.result as string)
@@ -273,7 +309,6 @@ export function SignatureSpecimenTab({
       let blob: Blob
 
       if (activeTab === 'draw') {
-        // Get canvas data
         const canvas = canvasRef.current
         if (!canvas || !hasDrawn) {
           setError('Please draw your signature first')
@@ -281,7 +316,6 @@ export function SignatureSpecimenTab({
           return
         }
 
-        // Convert canvas to blob
         blob = await new Promise<Blob>((resolve, reject) => {
           canvas.toBlob((b) => {
             if (b) resolve(b)
@@ -289,7 +323,6 @@ export function SignatureSpecimenTab({
           }, 'image/png')
         })
       } else {
-        // Use uploaded file
         if (!uploadedFile) {
           setError('Please upload an image first')
           setIsSaving(false)
@@ -298,11 +331,10 @@ export function SignatureSpecimenTab({
         blob = uploadedFile
       }
 
-      // Upload to API
       const formData = new FormData()
       formData.append('signature', blob, 'signature.png')
 
-      const response = await fetch('/api/signature-specimen', {
+      const response = await fetch(apiEndpoints.post, {
         method: 'POST',
         body: formData,
       })
@@ -316,7 +348,6 @@ export function SignatureSpecimenTab({
       setSignatureUrl(data.signature_url)
       onSignatureUpdate?.(data.signature_url)
 
-      // Clear the inputs after successful save
       if (activeTab === 'draw') {
         clearCanvas()
       } else {
@@ -338,7 +369,7 @@ export function SignatureSpecimenTab({
 
     setIsSaving(true)
     try {
-      const response = await fetch('/api/signature-specimen', {
+      const response = await fetch(apiEndpoints.delete, {
         method: 'DELETE',
       })
 
@@ -444,18 +475,20 @@ export function SignatureSpecimenTab({
             </TabsList>
 
             <TabsContent value="draw" className="mt-4 space-y-4">
-              <div className="border-2 border-dashed rounded-lg p-1 bg-white">
+              <div
+                ref={containerRef}
+                className="border-2 border-dashed rounded-lg bg-white overflow-hidden"
+                style={{ height: '160px' }}
+              >
                 <canvas
                   ref={canvasRef}
-                  className="w-full h-40 cursor-crosshair touch-none rounded"
-                  onMouseDown={startDrawing}
-                  onMouseMove={draw}
-                  onMouseUp={stopDrawing}
-                  onMouseLeave={stopDrawing}
-                  onTouchStart={startDrawing}
-                  onTouchMove={draw}
-                  onTouchEnd={stopDrawing}
-                  onTouchCancel={stopDrawing}
+                  className="w-full h-full cursor-crosshair"
+                  style={{ touchAction: 'none' }}
+                  onPointerDown={handlePointerDown}
+                  onPointerMove={handlePointerMove}
+                  onPointerUp={handlePointerUp}
+                  onPointerLeave={handlePointerLeave}
+                  onPointerCancel={handlePointerUp}
                 />
               </div>
               <p className="text-xs text-muted-foreground text-center">

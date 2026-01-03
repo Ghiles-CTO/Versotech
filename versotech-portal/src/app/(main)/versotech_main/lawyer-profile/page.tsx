@@ -52,7 +52,7 @@ export default async function LawyerProfilePage() {
   // Get lawyer user info
   const { data: lawyerUser } = await serviceSupabase
     .from('lawyer_users')
-    .select('lawyer_id, role, is_primary, can_sign, signature_specimen_url, signature_specimen_uploaded_at')
+    .select('lawyer_id, role, is_primary, can_sign')
     .eq('user_id', user.id)
     .maybeSingle()
 
@@ -107,9 +107,7 @@ export default async function LawyerProfilePage() {
       lawyerUserInfo={{
         role: lawyerUser.role,
         is_primary: lawyerUser.is_primary,
-        can_sign: lawyerUser.can_sign,
-        signature_specimen_url: lawyerUser.signature_specimen_url,
-        signature_specimen_uploaded_at: lawyerUser.signature_specimen_uploaded_at
+        can_sign: lawyerUser.can_sign || false
       }}
     />
   )
