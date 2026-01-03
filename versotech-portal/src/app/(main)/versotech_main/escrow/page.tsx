@@ -41,6 +41,7 @@ import {
   CreditCard,
   BanknoteIcon,
   Download,
+  Info,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatCurrency, formatDate } from '@/lib/format'
@@ -746,6 +747,20 @@ export default function EscrowPage() {
           )}
         </div>
       </div>
+
+      {/* Arranger Info Banner - explains view-only access */}
+      {arrangerInfo && !lawyerInfo && (
+        <div className="flex items-start gap-3 rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-950/30">
+          <Info className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5 shrink-0" />
+          <div className="text-sm">
+            <p className="font-medium text-blue-900 dark:text-blue-100">View-Only Access</p>
+            <p className="text-blue-700 dark:text-blue-300 mt-0.5">
+              As an arranger, you can monitor escrow status and view transaction details for deals you manage.
+              Funding confirmations and fee payments are handled by assigned lawyers.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

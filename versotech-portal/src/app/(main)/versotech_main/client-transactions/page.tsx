@@ -132,17 +132,26 @@ const CLIENT_TYPE_LABELS: Record<string, string> = {
   fund: 'Fund',
 }
 
+// Membership progression data from deal_memberships table
+type MembershipProgression = {
+  interest_confirmed_at?: string | null
+  nda_signed_at?: string | null
+  data_room_granted_at?: string | null
+}
+
 // Map subscription status to journey stage
+// Uses membership progression data to accurately track client journey
 function getJourneyStage(
   subscriptionStatus: string | null,
   hasSubscription: boolean,
-  interestLevel?: string
+  membership?: MembershipProgression
 ): ClientTransaction['journey_stage'] {
   if (!hasSubscription) {
-    if (interestLevel === 'passed' || interestLevel === 'rejected') {
-      return 'passed'
-    }
-    return interestLevel === 'interested' ? 'interested' : 'new_lead'
+    // Check membership progression for non-subscribed clients
+    if (membership?.data_room_granted_at) return 'interested'
+    if (membership?.nda_signed_at) return 'interested'
+    if (membership?.interest_confirmed_at) return 'interested'
+    return 'new_lead'
   }
 
   switch (subscriptionStatus) {
@@ -286,6 +295,28 @@ export default function ClientTransactionsPage() {
           }
         }
 
+        // Query deal_memberships for progression data (interest, NDA, dataroom access timestamps)
+        // This helps accurately determine journey stage for clients without subscriptions
+        let membershipMap: Record<string, MembershipProgression> = {}
+        if (investorIds.length > 0) {
+          const { data: memberships } = await supabase
+            .from('deal_memberships')
+            .select('investor_id, deal_id, interest_confirmed_at, nda_signed_at, data_room_granted_at')
+            .in('investor_id', investorIds)
+
+          if (memberships) {
+            memberships.forEach((m: any) => {
+              // Key by investor_id:deal_id to match specific client-deal relationships
+              const key = `${m.investor_id}:${m.deal_id}`
+              membershipMap[key] = {
+                interest_confirmed_at: m.interest_confirmed_at,
+                nda_signed_at: m.nda_signed_at,
+                data_room_granted_at: m.data_room_granted_at,
+              }
+            })
+          }
+        }
+
         // Check for actual dataroom access (verified via deal_data_room_access table)
         const dealIds = (clientsData || [])
           .filter((c: any) => c.created_for_deal_id)
@@ -316,6 +347,7 @@ export default function ClientTransactionsPage() {
           clientsData || [],
           subscriptionsMap,
           dataroomAccessMap,
+          membershipMap,
           agreement?.default_commission_bps || 0
         )
         setError(null)
@@ -355,13 +387,14 @@ export default function ClientTransactionsPage() {
         .limit(100)
 
       if (clientsError) throw clientsError
-      processClients(clientsData || [], {}, {}, 0)
+      processClients(clientsData || [], {}, {}, {}, 0)
     }
 
     function processClients(
       data: any[],
       subscriptionsMap: Record<string, any[]>,
       dataroomAccessMap: Record<string, boolean>,
+      membershipMap: Record<string, MembershipProgression>,
       commissionBps: number
     ) {
       const processed: ClientTransaction[] = []
@@ -373,6 +406,12 @@ export default function ClientTransactionsPage() {
 
         if (subscriptions.length === 0) {
           // Client without subscription - single entry
+          // Get membership progression for this client-deal pair
+          const membershipKey = client.client_investor_id && client.created_for_deal_id
+            ? `${client.client_investor_id}:${client.created_for_deal_id}`
+            : ''
+          const membership = membershipKey ? membershipMap[membershipKey] : undefined
+
           processed.push({
             id: client.id,
             client_name: client.client_name || 'Unknown Client',
@@ -388,7 +427,7 @@ export default function ClientTransactionsPage() {
             subscription_amount: null,
             subscription_status: null,
             subscription_date: null,
-            journey_stage: getJourneyStage(null, false),
+            journey_stage: getJourneyStage(null, false, membership),
             has_termsheet: !!client.created_for_deal_id,
             has_dataroom_access: !!(client.created_for_deal_id && client.client_investor_id && dataroomAccessMap[`${client.created_for_deal_id}:${client.client_investor_id}`]),
             estimated_commission: null,
@@ -399,6 +438,11 @@ export default function ClientTransactionsPage() {
           subscriptions.forEach((sub: any) => {
             const commitment = sub.commitment || 0
             const estimatedComm = commissionBps > 0 ? (commitment * commissionBps) / 10000 : null
+            // Get membership progression for this subscription's deal
+            const subMembershipKey = client.client_investor_id && sub.deal_id
+              ? `${client.client_investor_id}:${sub.deal_id}`
+              : ''
+            const subMembership = subMembershipKey ? membershipMap[subMembershipKey] : undefined
 
             processed.push({
               id: `${client.id}-${sub.id}`,
@@ -415,7 +459,7 @@ export default function ClientTransactionsPage() {
               subscription_amount: commitment,
               subscription_status: sub.status,
               subscription_date: sub.subscription_date,
-              journey_stage: getJourneyStage(sub.status, true),
+              journey_stage: getJourneyStage(sub.status, true, subMembership),
               has_termsheet: true,
               has_dataroom_access: !!(sub.deal_id && client.client_investor_id && dataroomAccessMap[`${sub.deal_id}:${client.client_investor_id}`]),
               estimated_commission: estimatedComm,

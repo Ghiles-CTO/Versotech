@@ -36,14 +36,19 @@ interface LawyerDashboardProps {
   persona: Persona
 }
 
+type CurrencyTotal = {
+  currency: string
+  amount: number
+}
+
 type LawyerMetrics = {
   assignedDeals: number
   pendingEscrowConfirmations: number
   pendingPaymentConfirmations: number
   signedSubscriptions: number
   fullyFundedSubscriptions: number
-  totalCommitmentValue: number
-  totalFundedValue: number
+  commitmentsByCurrency: CurrencyTotal[]
+  fundedByCurrency: CurrencyTotal[]
 }
 
 type RecentSubscription = {
@@ -70,6 +75,7 @@ export function LawyerDashboard({ lawyerId, userId, persona }: LawyerDashboardPr
   const isDark = theme === 'staff-dark'
 
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [metrics, setMetrics] = useState<LawyerMetrics | null>(null)
   const [lawyerInfo, setLawyerInfo] = useState<{
     firm_name: string
@@ -94,10 +100,10 @@ export function LawyerDashboard({ lawyerId, userId, persona }: LawyerDashboardPr
 
         if (lawyer) {
           setLawyerInfo({
-            firm_name: lawyer.firm_name,
-            display_name: lawyer.display_name,
+            firm_name: lawyer.firm_name || '',
+            display_name: lawyer.display_name || '',
             specializations: lawyer.specializations,
-            is_active: lawyer.is_active,
+            is_active: lawyer.is_active ?? true,
           })
         }
 
@@ -174,8 +180,33 @@ export function LawyerDashboard({ lawyerId, userId, persona }: LawyerDashboardPr
           const committed = subs.filter((s: any) => s.status === 'committed')
           const partiallyFunded = subs.filter((s: any) => s.status === 'partially_funded')
           const fullyFunded = subs.filter((s: any) => s.status === 'active')
-          const totalCommitment = subs.reduce((sum: number, s: any) => sum + (s.commitment || 0), 0)
-          const totalFunded = subs.reduce((sum: number, s: any) => sum + (s.funded_amount || 0), 0)
+
+          // Group totals by currency to avoid mixing USD/EUR/GBP
+          const commitmentMap = new Map<string, number>()
+          const fundedMap = new Map<string, number>()
+
+          subs.forEach((s: any) => {
+            const currency = s.currency || 'USD'
+            commitmentMap.set(currency, (commitmentMap.get(currency) || 0) + (s.commitment || 0))
+            fundedMap.set(currency, (fundedMap.get(currency) || 0) + (s.funded_amount || 0))
+          })
+
+          // Convert to sorted arrays (USD first, then alphabetically)
+          const sortCurrencies = (a: CurrencyTotal, b: CurrencyTotal) => {
+            if (a.currency === 'USD') return -1
+            if (b.currency === 'USD') return 1
+            return a.currency.localeCompare(b.currency)
+          }
+
+          const commitmentsByCurrency = Array.from(commitmentMap.entries())
+            .map(([currency, amount]) => ({ currency, amount }))
+            .filter(c => c.amount > 0)
+            .sort(sortCurrencies)
+
+          const fundedByCurrency = Array.from(fundedMap.entries())
+            .map(([currency, amount]) => ({ currency, amount }))
+            .filter(c => c.amount > 0)
+            .sort(sortCurrencies)
 
           setMetrics({
             assignedDeals: dealIds.length,
@@ -183,8 +214,8 @@ export function LawyerDashboard({ lawyerId, userId, persona }: LawyerDashboardPr
             pendingPaymentConfirmations: pendingFeePayments,
             signedSubscriptions: subs.length,
             fullyFundedSubscriptions: fullyFunded.length,
-            totalCommitmentValue: totalCommitment,
-            totalFundedValue: totalFunded,
+            commitmentsByCurrency,
+            fundedByCurrency,
           })
 
           // Map recent subscriptions
@@ -213,25 +244,39 @@ export function LawyerDashboard({ lawyerId, userId, persona }: LawyerDashboardPr
             pendingPaymentConfirmations: 0,
             signedSubscriptions: 0,
             fullyFundedSubscriptions: 0,
-            totalCommitmentValue: 0,
-            totalFundedValue: 0,
+            commitmentsByCurrency: [],
+            fundedByCurrency: [],
           })
         }
-      } catch (error) {
-        console.error('Error fetching lawyer data:', error)
+      } catch (err) {
+        console.error('Error fetching lawyer data:', err)
+        setError(err instanceof Error ? err.message : 'Failed to load dashboard data')
       } finally {
         setLoading(false)
       }
     }
 
     fetchData()
-  }, [lawyerId])
+  }, [lawyerId, userId])
 
   if (loading) {
     return (
       <div className="p-8 text-center flex flex-col items-center gap-3">
         <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
         <p className="text-gray-500">Loading dashboard...</p>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="p-8 text-center flex flex-col items-center gap-3">
+        <AlertCircle className="h-12 w-12 text-destructive" />
+        <h3 className="text-lg font-medium">Error Loading Dashboard</h3>
+        <p className="text-muted-foreground">{error}</p>
+        <Button variant="outline" onClick={() => window.location.reload()}>
+          Try Again
+        </Button>
       </div>
     )
   }
@@ -249,8 +294,10 @@ export function LawyerDashboard({ lawyerId, userId, persona }: LawyerDashboardPr
   }
 
   const dealStatusStyles: Record<string, string> = {
-    active: 'bg-green-500/20 text-green-400',
+    open: 'bg-green-500/20 text-green-400',
     draft: 'bg-gray-500/20 text-gray-400',
+    allocation_pending: 'bg-yellow-500/20 text-yellow-400',
+    fully_subscribed: 'bg-blue-500/20 text-blue-400',
     closed: 'bg-purple-500/20 text-purple-400',
     cancelled: 'bg-red-500/20 text-red-400',
   }
@@ -402,10 +449,20 @@ export function LawyerDashboard({ lawyerId, userId, persona }: LawyerDashboardPr
             <DollarSign className={`h-4 w-4 ${isDark ? 'text-gray-500' : 'text-gray-400'}`} />
           </CardHeader>
           <CardContent>
-            <div className={`text-2xl font-bold text-blue-500`}>
-              {formatCurrency(metrics?.totalCommitmentValue || 0)}
-            </div>
-            <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
+            {metrics?.commitmentsByCurrency && metrics.commitmentsByCurrency.length > 0 ? (
+              <div className="space-y-1">
+                {metrics.commitmentsByCurrency.map((c, i) => (
+                  <div key={c.currency} className={`${i === 0 ? 'text-2xl font-bold' : 'text-sm font-medium'} text-blue-500`}>
+                    {formatCurrency(c.amount, c.currency)}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className={`text-2xl font-bold text-blue-500`}>
+                {formatCurrency(0)}
+              </div>
+            )}
+            <p className={`text-xs mt-1 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
               Across all subscriptions
             </p>
           </CardContent>
@@ -419,10 +476,20 @@ export function LawyerDashboard({ lawyerId, userId, persona }: LawyerDashboardPr
             <CheckCircle2 className={`h-4 w-4 ${isDark ? 'text-gray-500' : 'text-gray-400'}`} />
           </CardHeader>
           <CardContent>
-            <div className={`text-2xl font-bold text-green-500`}>
-              {formatCurrency(metrics?.totalFundedValue || 0)}
-            </div>
-            <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
+            {metrics?.fundedByCurrency && metrics.fundedByCurrency.length > 0 ? (
+              <div className="space-y-1">
+                {metrics.fundedByCurrency.map((c, i) => (
+                  <div key={c.currency} className={`${i === 0 ? 'text-2xl font-bold' : 'text-sm font-medium'} text-green-500`}>
+                    {formatCurrency(c.amount, c.currency)}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className={`text-2xl font-bold text-green-500`}>
+                {formatCurrency(0)}
+              </div>
+            )}
+            <p className={`text-xs mt-1 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
               Escrow confirmed
             </p>
           </CardContent>

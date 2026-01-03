@@ -173,36 +173,76 @@ export function LawyerReconciliationClient({
   const [confirmPaymentOpen, setConfirmPaymentOpen] = useState(false)
   const [selectedCommission, setSelectedCommission] = useState<IntroducerCommission | null>(null)
 
-  // Calculate summary metrics
+  // Calculate summary metrics (grouped by currency to avoid mixing USD/EUR/GBP)
   const summary = useMemo(() => {
-    const totalCommitment = subscriptions.reduce((sum, s) => sum + s.commitment, 0)
-    const totalFunded = subscriptions.reduce((sum, s) => sum + s.funded_amount, 0)
-    const totalOutstanding = subscriptions.reduce((sum, s) => sum + s.outstanding_amount, 0)
+    // Group subscription totals by currency
+    const commitmentByCurrency = new Map<string, number>()
+    const fundedByCurrency = new Map<string, number>()
+
+    subscriptions.forEach(s => {
+      const currency = s.currency || 'USD'
+      commitmentByCurrency.set(currency, (commitmentByCurrency.get(currency) || 0) + s.commitment)
+      fundedByCurrency.set(currency, (fundedByCurrency.get(currency) || 0) + s.funded_amount)
+    })
+
     const awaitingFunding = subscriptions.filter(s => s.status === 'committed').length
     const partiallyFunded = subscriptions.filter(s => s.status === 'partially_funded').length
     const fullyFunded = subscriptions.filter(s => s.status === 'active').length
 
-    const totalFeesAccrued = feeEvents.reduce((sum, f) => sum + (f.computed_amount || 0), 0)
-    const feesPaid = feeEvents.filter(f => f.status === 'paid')
-    const totalFeesPaid = feesPaid.reduce((sum, f) => sum + (f.computed_amount || 0), 0)
-    const feesPending = feeEvents.filter(f => f.status === 'accrued' || f.status === 'invoiced')
-    const totalFeesPending = feesPending.reduce((sum, f) => sum + (f.computed_amount || 0), 0)
+    // Group fee totals by currency
+    const feesPaidByCurrency = new Map<string, number>()
+    const feesPendingByCurrency = new Map<string, number>()
+
+    feeEvents.forEach(f => {
+      const currency = f.currency || 'USD'
+      const amount = f.computed_amount || 0
+      if (f.status === 'paid') {
+        feesPaidByCurrency.set(currency, (feesPaidByCurrency.get(currency) || 0) + amount)
+      } else if (f.status === 'accrued' || f.status === 'invoiced') {
+        feesPendingByCurrency.set(currency, (feesPendingByCurrency.get(currency) || 0) + amount)
+      }
+    })
+
+    // Convert to sorted arrays (USD first)
+    const sortCurrencies = (a: [string, number], b: [string, number]) => {
+      if (a[0] === 'USD') return -1
+      if (b[0] === 'USD') return 1
+      return a[0].localeCompare(b[0])
+    }
+
+    const commitmentTotals = Array.from(commitmentByCurrency.entries())
+      .filter(([_, amount]) => amount > 0)
+      .sort(sortCurrencies)
+      .map(([currency, amount]) => ({ currency, amount }))
+
+    const fundedTotals = Array.from(fundedByCurrency.entries())
+      .filter(([_, amount]) => amount > 0)
+      .sort(sortCurrencies)
+      .map(([currency, amount]) => ({ currency, amount }))
+
+    const feesPaidTotals = Array.from(feesPaidByCurrency.entries())
+      .filter(([_, amount]) => amount > 0)
+      .sort(sortCurrencies)
+      .map(([currency, amount]) => ({ currency, amount }))
+
+    const feesPendingTotals = Array.from(feesPendingByCurrency.entries())
+      .filter(([_, amount]) => amount > 0)
+      .sort(sortCurrencies)
+      .map(([currency, amount]) => ({ currency, amount }))
 
     return {
       totalDeals: deals.length,
       totalSubscriptions: subscriptions.length,
-      totalCommitment,
-      totalFunded,
-      totalOutstanding,
+      commitmentTotals,
+      fundedTotals,
       awaitingFunding,
       partiallyFunded,
       fullyFunded,
       totalFeeEvents: feeEvents.length,
-      totalFeesAccrued,
-      totalFeesPaid,
-      totalFeesPending,
-      feesPaidCount: feesPaid.length,
-      feesPendingCount: feesPending.length,
+      feesPaidTotals,
+      feesPendingTotals,
+      feesPaidCount: feeEvents.filter(f => f.status === 'paid').length,
+      feesPendingCount: feeEvents.filter(f => f.status === 'accrued' || f.status === 'invoiced').length,
     }
   }, [deals, subscriptions, feeEvents])
 
@@ -312,9 +352,19 @@ export function LawyerReconciliationClient({
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">
-              {formatCurrency(summary.totalCommitment)}
-            </div>
+            {summary.commitmentTotals.length > 0 ? (
+              <div className="space-y-0.5">
+                {summary.commitmentTotals.map((c, i) => (
+                  <div key={c.currency} className={`${i === 0 ? 'text-2xl font-bold' : 'text-sm font-medium'} text-blue-600`}>
+                    {formatCurrency(c.amount, c.currency)}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-2xl font-bold text-blue-600">
+                {formatCurrency(0)}
+              </div>
+            )}
             <p className="text-xs text-muted-foreground mt-1">
               {summary.awaitingFunding} awaiting funding
             </p>
@@ -329,11 +379,21 @@ export function LawyerReconciliationClient({
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-emerald-600">
-              {formatCurrency(summary.totalFunded)}
-            </div>
+            {summary.fundedTotals.length > 0 ? (
+              <div className="space-y-0.5">
+                {summary.fundedTotals.map((c, i) => (
+                  <div key={c.currency} className={`${i === 0 ? 'text-2xl font-bold' : 'text-sm font-medium'} text-emerald-600`}>
+                    {formatCurrency(c.amount, c.currency)}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-2xl font-bold text-emerald-600">
+                {formatCurrency(0)}
+              </div>
+            )}
             <p className="text-xs text-muted-foreground mt-1">
-              {formatCurrency(summary.totalOutstanding)} outstanding
+              {summary.partiallyFunded} partially funded
             </p>
           </CardContent>
         </Card>
@@ -346,11 +406,23 @@ export function LawyerReconciliationClient({
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-purple-600">
-              {formatCurrency(summary.totalFeesPaid)}
-            </div>
+            {summary.feesPaidTotals.length > 0 ? (
+              <div className="space-y-0.5">
+                {summary.feesPaidTotals.map((c, i) => (
+                  <div key={c.currency} className={`${i === 0 ? 'text-2xl font-bold' : 'text-sm font-medium'} text-purple-600`}>
+                    {formatCurrency(c.amount, c.currency)}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-2xl font-bold text-purple-600">
+                {formatCurrency(0)}
+              </div>
+            )}
             <p className="text-xs text-muted-foreground mt-1">
-              {formatCurrency(summary.totalFeesPending)} pending
+              {summary.feesPendingCount} pending ({summary.feesPendingTotals.length > 0
+                ? summary.feesPendingTotals.map(c => formatCurrency(c.amount, c.currency)).join(' / ')
+                : formatCurrency(0)})
             </p>
           </CardContent>
         </Card>

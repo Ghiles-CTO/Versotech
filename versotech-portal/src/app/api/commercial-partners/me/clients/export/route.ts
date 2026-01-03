@@ -93,22 +93,30 @@ export async function GET(request: NextRequest) {
     // Get subscription data for clients that have investor IDs
     const clientInvestorIds = clients?.map(c => c.client_investor_id).filter(Boolean) || []
 
-    let subscriptionData: Record<string, { commitment: number; status: string; currency: string; funded_amount: number }> = {}
+    let subscriptionData: Record<string, { commitment: number; status: string[]; currency: string; funded_amount: number }> = {}
 
     if (clientInvestorIds.length > 0) {
+      // SECURITY FIX: Filter by proxy_commercial_partner_id to prevent data leakage
       const { data: subs } = await supabase
         .from('subscriptions')
         .select('investor_id, commitment, funded_amount, status, currency')
         .in('investor_id', clientInvestorIds)
+        .eq('proxy_commercial_partner_id', cpId)
 
       if (subs) {
+        // AGGREGATION FIX: Sum multiple subscriptions per investor instead of overwriting
         for (const sub of subs) {
-          subscriptionData[sub.investor_id] = {
-            commitment: sub.commitment || 0,
-            funded_amount: sub.funded_amount || 0,
-            status: sub.status || 'unknown',
-            currency: sub.currency || 'EUR'
+          if (!subscriptionData[sub.investor_id]) {
+            subscriptionData[sub.investor_id] = {
+              commitment: 0,
+              funded_amount: 0,
+              status: [],
+              currency: sub.currency || 'EUR'
+            }
           }
+          subscriptionData[sub.investor_id].commitment += sub.commitment || 0
+          subscriptionData[sub.investor_id].funded_amount += sub.funded_amount || 0
+          subscriptionData[sub.investor_id].status.push(sub.status || 'unknown')
         }
       }
     }
@@ -149,7 +157,7 @@ export async function GET(request: NextRequest) {
         sub?.commitment || 0,
         sub?.funded_amount || 0,
         sub?.currency || 'EUR',
-        sub?.status || 'No subscription'
+        sub?.status?.join(', ') || 'No subscription'
       ].map(val => `"${String(val).replace(/"/g, '""')}"`)
     }) || []
 

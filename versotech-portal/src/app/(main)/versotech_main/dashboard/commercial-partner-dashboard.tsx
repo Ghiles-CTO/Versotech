@@ -53,6 +53,10 @@ type CPMetrics = {
   clientInvestmentValue: number
   pendingAgreements: number
   activeAgreements: number
+  // Commission aggregations from commercial_partner_commissions
+  commissionPaid: number
+  commissionAccrued: number
+  commissionPending: number
 }
 
 type RecentSubscription = {
@@ -257,6 +261,34 @@ export function CommercialPartnerDashboard({ commercialPartnerId, userId, person
         ).length
         const activeAgreements = (agreements || []).filter((a: any) => a.status === 'active').length
 
+        // Fetch commission aggregations from commercial_partner_commissions
+        let commissionPaid = 0
+        let commissionAccrued = 0
+        let commissionPending = 0
+
+        const { data: commissions } = await supabase
+          .from('commercial_partner_commissions')
+          .select('status, accrual_amount')
+          .eq('commercial_partner_id', commercialPartnerId)
+
+        if (commissions && commissions.length > 0) {
+          commissions.forEach((c: any) => {
+            const amount = parseFloat(c.accrual_amount) || 0
+            switch (c.status) {
+              case 'paid':
+                commissionPaid += amount
+                break
+              case 'accrued':
+                commissionAccrued += amount
+                break
+              case 'invoice_requested':
+              case 'invoiced':
+                commissionPending += amount
+                break
+            }
+          })
+        }
+
         setMetrics({
           totalClients,
           activeClients,
@@ -268,6 +300,9 @@ export function CommercialPartnerDashboard({ commercialPartnerId, userId, person
           clientInvestmentValue,
           pendingAgreements,
           activeAgreements,
+          commissionPaid,
+          commissionAccrued,
+          commissionPending,
         })
       } catch (error) {
         console.error('Error fetching commercial partner data:', error)
@@ -479,6 +514,45 @@ export function CommercialPartnerDashboard({ commercialPartnerId, userId, person
           </CardContent>
         </Card>
       </div>
+
+      {/* Commission Earnings Summary */}
+      {(metrics?.commissionPaid || 0) + (metrics?.commissionAccrued || 0) + (metrics?.commissionPending || 0) > 0 && (
+        <Card className={isDark ? 'bg-white/5 border-white/10' : ''}>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className={isDark ? 'text-white' : ''}>Commission Earnings</CardTitle>
+                <CardDescription>Your commission totals across all deals</CardDescription>
+              </div>
+              <div className="p-2 rounded-full bg-purple-500/20">
+                <DollarSign className="h-5 w-5 text-purple-500" />
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className={`p-4 rounded-lg ${isDark ? 'bg-white/5' : 'bg-green-50'}`}>
+                <p className={`text-xs font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'} mb-1`}>Paid</p>
+                <p className="text-xl font-bold text-green-500">
+                  {formatCurrency(metrics?.commissionPaid || 0)}
+                </p>
+              </div>
+              <div className={`p-4 rounded-lg ${isDark ? 'bg-white/5' : 'bg-blue-50'}`}>
+                <p className={`text-xs font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'} mb-1`}>Accrued</p>
+                <p className="text-xl font-bold text-blue-500">
+                  {formatCurrency(metrics?.commissionAccrued || 0)}
+                </p>
+              </div>
+              <div className={`p-4 rounded-lg ${isDark ? 'bg-white/5' : 'bg-amber-50'}`}>
+                <p className={`text-xs font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'} mb-1`}>Pending</p>
+                <p className="text-xl font-bold text-amber-500">
+                  {formatCurrency(metrics?.commissionPending || 0)}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Subscriptions & Agreements Summary */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

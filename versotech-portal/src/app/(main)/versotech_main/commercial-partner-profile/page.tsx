@@ -49,10 +49,10 @@ export default async function CommercialPartnerProfilePage() {
     )
   }
 
-  // Get commercial partner user info (including signature data)
+  // Get commercial partner user info
   const { data: cpUser } = await serviceSupabase
     .from('commercial_partner_users')
-    .select('commercial_partner_id, role, is_primary, can_sign, can_execute_for_clients, signature_specimen_url, signature_specimen_uploaded_at')
+    .select('commercial_partner_id, role, is_primary, can_sign, can_execute_for_clients')
     .eq('user_id', user.id)
     .maybeSingle()
 
@@ -127,8 +127,6 @@ export default async function CommercialPartnerProfilePage() {
         is_primary: cpUser.is_primary,
         can_sign: cpUser.can_sign || false,
         can_execute_for_clients: cpUser.can_execute_for_clients || false,
-        signature_specimen_url: cpUser.signature_specimen_url,
-        signature_specimen_uploaded_at: cpUser.signature_specimen_uploaded_at,
       }}
       agreementCount={agreementCount || 0}
     />

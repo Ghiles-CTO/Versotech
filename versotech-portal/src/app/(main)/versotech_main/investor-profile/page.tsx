@@ -27,7 +27,7 @@ export default async function InvestorProfilePage() {
   // Check if user is associated with an investor
   const { data: investorUser } = await serviceSupabase
     .from('investor_users')
-    .select('investor_id, role, is_primary, can_sign, signature_specimen_url, signature_specimen_uploaded_at')
+    .select('investor_id, role, is_primary, can_sign')
     .eq('user_id', user.id)
     .maybeSingle()
 
@@ -119,9 +119,7 @@ export default async function InvestorProfilePage() {
       investorUserInfo={{
         role: investorUser.role,
         is_primary: investorUser.is_primary,
-        can_sign: investorUser.can_sign || false,
-        signature_specimen_url: investorUser.signature_specimen_url,
-        signature_specimen_uploaded_at: investorUser.signature_specimen_uploaded_at
+        can_sign: investorUser.can_sign || false
       }}
     />
   )

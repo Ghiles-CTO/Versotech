@@ -27,9 +27,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'You do not have signing permissions' }, { status: 403 })
     }
 
-    // Parse form data
+    // Parse form data - accept both 'file' and 'signature' field names for compatibility
     const formData = await request.formData()
-    const file = formData.get('file') as File | null
+    const file = (formData.get('signature') || formData.get('file')) as File | null
 
     if (!file) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 })
@@ -96,7 +96,7 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({
-      url: publicUrl,
+      signature_url: publicUrl,
       message: 'Signature specimen uploaded successfully'
     })
 

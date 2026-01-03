@@ -29,8 +29,11 @@ const ENTITY_ID_COLUMNS: Record<EntityType, string> = {
 // NOTE: All user tables use composite keys (entity_id + user_id), none have 'id'
 const TABLES_WITH_ID: EntityType[] = []
 
-// Tables that have signature_specimen_url column
-const TABLES_WITH_SIGNATURE: EntityType[] = ['introducer', 'commercial_partner', 'lawyer']
+// Note: Signature specimen location varies by entity type:
+// - Lawyers: stored in lawyer_users.signature_specimen_url
+// - Introducers: stored in introducer_users.signature_specimen_url (if implemented)
+// - Others: stored in profiles.signature_specimen_url
+// This code handles both cases for proper display in Members tab
 
 /**
  * GET /api/members?entity_type=xxx&entity_id=xxx
@@ -82,30 +85,27 @@ export async function GET(request: NextRequest) {
 
     // Build select query based on table schema
     const hasId = TABLES_WITH_ID.includes(entity_type as EntityType)
-    const hasSignature = TABLES_WITH_SIGNATURE.includes(entity_type as EntityType)
 
-    // Base columns that all tables have
+    // Base columns - include signature_specimen_url from user table (lawyers, introducers, etc.)
+    // Also fetch from profiles as fallback for older entity types
     let selectColumns = `
       user_id,
       role,
       is_primary,
       can_sign,
       created_at,
+      signature_specimen_url,
       profiles:user_id (
         display_name,
         email,
-        avatar_url
+        avatar_url,
+        signature_specimen_url
       )
     `
 
     // Add id column if table has it
     if (hasId) {
       selectColumns = `id,` + selectColumns
-    }
-
-    // Add signature column if table has it
-    if (hasSignature) {
-      selectColumns = selectColumns.replace('can_sign,', 'can_sign, signature_specimen_url,')
     }
 
     // Get all members with their profiles
@@ -121,7 +121,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to fetch members' }, { status: 500 })
     }
 
-    // Transform the data - handle optional fields based on table schema
+    // Transform the data - signature_specimen_url comes from user table OR profiles table
+    // Priority: user table signature (lawyers, introducers, etc.) > profiles signature (fallback)
     const transformedMembers = (members || []).map((member: any) => ({
       // Use id if available, otherwise generate from user_id + entity_id
       id: member.id || `${member.user_id}_${entity_id}`,
@@ -129,7 +130,8 @@ export async function GET(request: NextRequest) {
       role: member.role,
       is_primary: member.is_primary,
       can_sign: member.can_sign ?? false,
-      signature_specimen_url: member.signature_specimen_url || null,
+      // Prefer user table signature (lawyers store in lawyer_users), fallback to profiles
+      signature_specimen_url: member.signature_specimen_url || member.profiles?.signature_specimen_url || null,
       created_at: member.created_at,
       profile: member.profiles ? {
         display_name: member.profiles.display_name,

@@ -79,6 +79,10 @@ export function EscrowConfirmModal({
   }, [open, mode, defaultAmount, defaultPaymentType, defaultRecipientId])
 
   const handleConfirmFunding = async () => {
+    if (!subscriptionId) {
+      toast.error('Invalid subscription reference')
+      return
+    }
     if (!amount || parseFloat(amount) <= 0) {
       toast.error('Please enter a valid amount')
       return
@@ -119,6 +123,10 @@ export function EscrowConfirmModal({
   }
 
   const handleConfirmPayment = async () => {
+    if (!subscriptionId) {
+      toast.error('Invalid subscription reference')
+      return
+    }
     if (!amount || parseFloat(amount) <= 0) {
       toast.error('Please enter a valid amount')
       return

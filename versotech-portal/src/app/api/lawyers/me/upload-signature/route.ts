@@ -27,9 +27,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'You do not have signing permissions' }, { status: 403 })
     }
 
-    // Parse form data
+    // Parse form data - accept both 'file' and 'signature' field names for compatibility
     const formData = await request.formData()
-    const file = formData.get('file') as File | null
+    const file = (formData.get('signature') || formData.get('file')) as File | null
 
     if (!file) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 })
@@ -96,65 +96,17 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({
-      url: publicUrl,
+      signature_url: publicUrl,
       message: 'Signature specimen uploaded successfully'
     })
 
   } catch (error) {
-    console.error('[upload-signature] Error:', error)
+    console.error('[lawyer-upload-signature] Error:', error)
     return NextResponse.json({
       error: 'Internal server error'
     }, { status: 500 })
   }
 }
 
-export async function DELETE(request: NextRequest) {
-  try {
-    const clientSupabase = await createClient()
-    const { data: { user }, error: authError } = await clientSupabase.auth.getUser()
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const serviceSupabase = createServiceClient()
-
-    // Verify user is a lawyer
-    const { data: lawyerUser, error: lawyerError } = await serviceSupabase
-      .from('lawyer_users')
-      .select('lawyer_id, signature_specimen_url')
-      .eq('user_id', user.id)
-      .maybeSingle()
-
-    if (lawyerError || !lawyerUser) {
-      return NextResponse.json({ error: 'Not a lawyer' }, { status: 403 })
-    }
-
-    // Clear signature URL
-    const { error: updateError } = await serviceSupabase
-      .from('lawyer_users')
-      .update({
-        signature_specimen_url: null,
-        signature_specimen_uploaded_at: null
-      })
-      .eq('user_id', user.id)
-      .eq('lawyer_id', lawyerUser.lawyer_id)
-
-    if (updateError) {
-      console.error('[delete-signature] Update error:', updateError)
-      return NextResponse.json({
-        error: 'Failed to remove signature'
-      }, { status: 500 })
-    }
-
-    return NextResponse.json({
-      message: 'Signature specimen removed successfully'
-    })
-
-  } catch (error) {
-    console.error('[delete-signature] Error:', error)
-    return NextResponse.json({
-      error: 'Internal server error'
-    }, { status: 500 })
-  }
-}
+// NOTE: DELETE is handled by /api/lawyers/me/signature route
+// which includes proper storage cleanup. Do not duplicate here.

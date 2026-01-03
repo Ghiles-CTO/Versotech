@@ -31,6 +31,8 @@ import {
   ExternalLink,
   Building2,
   Scale,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatCurrency, formatDate } from '@/lib/format'
@@ -96,6 +98,8 @@ export default function AssignedDealsPage() {
   const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
+  const [currentPage, setCurrentPage] = useState(1)
+  const pageSize = 10
 
   useEffect(() => {
     async function fetchData() {
@@ -315,6 +319,16 @@ export default function AssignedDealsPage() {
     return matchesStatus && matchesSearch
   })
 
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredDeals.length / pageSize)
+  const startIndex = (currentPage - 1) * pageSize
+  const paginatedDeals = filteredDeals.slice(startIndex, startIndex + pageSize)
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [search, statusFilter])
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-16">
@@ -476,6 +490,7 @@ export default function AssignedDealsPage() {
               )}
             </div>
           ) : (
+            <>
             <div className="rounded-md border">
               <Table>
                 <TableHeader>
@@ -489,7 +504,7 @@ export default function AssignedDealsPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredDeals.map((deal) => (
+                  {paginatedDeals.map((deal) => (
                     <TableRow key={deal.id}>
                       <TableCell>
                         <div className="flex items-center gap-3">
@@ -529,7 +544,7 @@ export default function AssignedDealsPage() {
                       </TableCell>
                       <TableCell>
                         <div className="font-medium">
-                          {formatCurrency(deal.target_amount)}
+                          {formatCurrency(deal.target_amount, deal.currency)}
                         </div>
                       </TableCell>
                       <TableCell>
@@ -553,6 +568,42 @@ export default function AssignedDealsPage() {
                 </TableBody>
               </Table>
             </div>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between pt-4 border-t">
+                <div className="text-sm text-muted-foreground">
+                  Showing {startIndex + 1}-{Math.min(startIndex + pageSize, filteredDeals.length)} of {filteredDeals.length} deals
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    Previous
+                  </Button>
+                  <div className="flex items-center gap-1 text-sm">
+                    <span>Page</span>
+                    <span className="font-medium">{currentPage}</span>
+                    <span>of</span>
+                    <span className="font-medium">{totalPages}</span>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                  >
+                    Next
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            )}
+            </>
           )}
         </CardContent>
       </Card>

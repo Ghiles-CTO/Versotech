@@ -90,29 +90,43 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to fetch clients' }, { status: 500 })
     }
 
-    // Get subscription counts for each client
-    const clientsWithStats = await Promise.all(
-      (clients || []).map(async (client) => {
-        if (!client.client_investor_id) {
-          return { ...client, subscription_count: 0, total_commitment: 0 }
-        }
+    // PERFORMANCE FIX: Batch query all subscriptions at once instead of N+1 queries
+    const clientInvestorIds = (clients || [])
+      .filter(c => c.client_investor_id)
+      .map(c => c.client_investor_id as string)
 
-        const { data: subs } = await serviceSupabase
-          .from('subscriptions')
-          .select('id, commitment, currency')
-          .eq('investor_id', client.client_investor_id)
-          .eq('proxy_commercial_partner_id', cpLink.commercial_partner_id)
+    // Build subscription lookup map with a single query
+    const subsMap = new Map<string, { count: number; commitment: number }>()
 
-        const subscriptionCount = subs?.length || 0
-        const totalCommitment = subs?.reduce((sum, s) => sum + (s.commitment || 0), 0) || 0
+    if (clientInvestorIds.length > 0) {
+      const { data: allSubs } = await serviceSupabase
+        .from('subscriptions')
+        .select('investor_id, id, commitment')
+        .in('investor_id', clientInvestorIds)
+        .eq('proxy_commercial_partner_id', cpLink.commercial_partner_id)
 
-        return {
-          ...client,
-          subscription_count: subscriptionCount,
-          total_commitment: totalCommitment
-        }
-      })
-    )
+      // Aggregate subscriptions by investor_id
+      for (const sub of allSubs || []) {
+        const existing = subsMap.get(sub.investor_id) || { count: 0, commitment: 0 }
+        subsMap.set(sub.investor_id, {
+          count: existing.count + 1,
+          commitment: existing.commitment + (sub.commitment || 0)
+        })
+      }
+    }
+
+    // Map clients with subscription stats from the lookup map
+    const clientsWithStats = (clients || []).map(client => {
+      const stats = client.client_investor_id
+        ? subsMap.get(client.client_investor_id) || { count: 0, commitment: 0 }
+        : { count: 0, commitment: 0 }
+
+      return {
+        ...client,
+        subscription_count: stats.count,
+        total_commitment: stats.commitment
+      }
+    })
 
     return NextResponse.json({
       clients: clientsWithStats,

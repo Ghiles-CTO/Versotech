@@ -27,7 +27,7 @@ export default async function PartnerProfilePage() {
   // Check if user is associated with a partner
   const { data: partnerUser } = await serviceSupabase
     .from('partner_users')
-    .select('partner_id, role, is_primary, can_sign, signature_specimen_url, signature_specimen_uploaded_at')
+    .select('partner_id, role, is_primary, can_sign')
     .eq('user_id', user.id)
     .maybeSingle()
 
@@ -116,9 +116,7 @@ export default async function PartnerProfilePage() {
       partnerUserInfo={{
         role: partnerUser.role,
         is_primary: partnerUser.is_primary,
-        can_sign: partnerUser.can_sign || false,
-        signature_specimen_url: partnerUser.signature_specimen_url,
-        signature_specimen_uploaded_at: partnerUser.signature_specimen_uploaded_at
+        can_sign: partnerUser.can_sign || false
       }}
     />
   )

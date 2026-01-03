@@ -35,7 +35,11 @@ import {
   Building2,
   PenTool,
   ExternalLink,
+  ThumbsUp,
+  ThumbsDown,
+  Eye,
 } from 'lucide-react'
+import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { formatDate } from '@/lib/format'
 import { createClient } from '@/lib/supabase/client'
@@ -78,14 +82,19 @@ type Summary = {
 const STATUS_STYLES: Record<string, string> = {
   active: 'bg-green-100 text-green-800 border-green-200',
   pending: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+  pending_approval: 'bg-blue-100 text-blue-800 border-blue-200',
+  pending_cp_signature: 'bg-amber-100 text-amber-800 border-amber-200',
   expired: 'bg-red-100 text-red-800 border-red-200',
   draft: 'bg-gray-100 text-gray-800 border-gray-200',
   terminated: 'bg-red-100 text-red-800 border-red-200',
+  approved: 'bg-green-100 text-green-800 border-green-200',
+  rejected: 'bg-red-100 text-red-800 border-red-200',
 }
 
 const STATUS_FILTERS = [
   { label: 'All Status', value: 'all' },
   { label: 'Active', value: 'active' },
+  { label: 'Pending Approval', value: 'pending_approval' },
   { label: 'Pending', value: 'pending' },
   { label: 'Expired', value: 'expired' },
   { label: 'Draft', value: 'draft' },
@@ -111,6 +120,63 @@ export default function PlacementAgreementsPage() {
   const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
+  const [actionLoading, setActionLoading] = useState<string | null>(null)
+
+  // Handle approve agreement
+  const handleApprove = async (agreementId: string) => {
+    setActionLoading(agreementId)
+    try {
+      const response = await fetch(`/api/placement-agreements/${agreementId}/approve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'approve' }),
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || 'Failed to approve agreement')
+      }
+
+      // Update local state
+      setAgreements(prev => prev.map(a =>
+        a.id === agreementId ? { ...a, status: 'approved' } : a
+      ))
+      toast.success('Agreement approved successfully')
+    } catch (err) {
+      console.error('Error approving agreement:', err)
+      toast.error(err instanceof Error ? err.message : 'Failed to approve agreement')
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
+  // Handle reject agreement
+  const handleReject = async (agreementId: string) => {
+    setActionLoading(agreementId)
+    try {
+      const response = await fetch(`/api/placement-agreements/${agreementId}/approve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'reject' }),
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || 'Failed to reject agreement')
+      }
+
+      // Update local state
+      setAgreements(prev => prev.map(a =>
+        a.id === agreementId ? { ...a, status: 'rejected' } : a
+      ))
+      toast.success('Agreement rejected')
+    } catch (err) {
+      console.error('Error rejecting agreement:', err)
+      toast.error(err instanceof Error ? err.message : 'Failed to reject agreement')
+    } finally {
+      setActionLoading(null)
+    }
+  }
 
   useEffect(() => {
     async function fetchData() {
@@ -545,6 +611,37 @@ export default function PlacementAgreementsPage() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
+                          {/* Approve/Reject buttons for pending_approval status */}
+                          {agreement.status === 'pending_approval' && (
+                            <>
+                              <Button
+                                size="sm"
+                                onClick={() => handleApprove(agreement.id)}
+                                disabled={actionLoading === agreement.id}
+                                className="bg-green-600 hover:bg-green-700"
+                              >
+                                {actionLoading === agreement.id ? (
+                                  <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                                ) : (
+                                  <ThumbsUp className="h-4 w-4 mr-1" />
+                                )}
+                                Approve
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => handleReject(agreement.id)}
+                                disabled={actionLoading === agreement.id}
+                              >
+                                {actionLoading === agreement.id ? (
+                                  <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                                ) : (
+                                  <ThumbsDown className="h-4 w-4 mr-1" />
+                                )}
+                                Reject
+                              </Button>
+                            </>
+                          )}
                           {/* Sign button for pending agreements with signature requests */}
                           {agreement.signature_token && agreement.signature_status === 'pending' && (
                             <Button
@@ -565,10 +662,10 @@ export default function PlacementAgreementsPage() {
                               Signed
                             </Badge>
                           )}
-                          {/* View VERSOSign for any status */}
+                          {/* View agreement details */}
                           <Button variant="ghost" size="sm" asChild>
-                            <Link href="/versotech_main/versosign">
-                              <ExternalLink className="h-4 w-4" />
+                            <Link href={`/versotech_main/placement-agreements/${agreement.id}`}>
+                              <Eye className="h-4 w-4" />
                             </Link>
                           </Button>
                         </div>
