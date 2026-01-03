@@ -58,9 +58,9 @@ export async function POST(request: NextRequest) {
     const arrayBuffer = await file.arrayBuffer()
     const buffer = Buffer.from(arrayBuffer)
 
-    // Upload to Supabase Storage
+    // Upload to Supabase Storage (signatures bucket for signature specimens)
     const { data: uploadData, error: uploadError } = await serviceSupabase.storage
-      .from('documents')
+      .from('signatures')
       .upload(fileName, buffer, {
         contentType: file.type,
         upsert: true
@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
 
     // Get public URL
     const { data: { publicUrl } } = serviceSupabase.storage
-      .from('documents')
+      .from('signatures')
       .getPublicUrl(fileName)
 
     // Update lawyer_users record with signature URL

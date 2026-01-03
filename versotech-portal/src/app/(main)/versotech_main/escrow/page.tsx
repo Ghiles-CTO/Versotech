@@ -435,7 +435,7 @@ export default function EscrowPage() {
           investor:investor_id (
             id,
             display_name,
-            legal_entity_name
+            legal_name
           )
         `)
         .in('deal_id', dealIds)
@@ -492,7 +492,7 @@ export default function EscrowPage() {
           return {
             id: s.id,
             investor_name: s.investor?.display_name || 'Unknown Investor',
-            investor_entity: s.investor?.legal_entity_name,
+            investor_entity: s.investor?.legal_name,
             deal_name: deal?.deal?.name || 'Unknown Deal',
             deal_id: s.deal_id,
             commitment_amount: Number(s.commitment) || 0,

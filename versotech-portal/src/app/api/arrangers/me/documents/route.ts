@@ -22,7 +22,7 @@ const ALLOWED_MIME_TYPES = [
 
 /**
  * GET /api/arrangers/me/documents
- * List documents for the current arranger entity
+ * List documents for the current arranger entity, including member info
  */
 export async function GET() {
   try {
@@ -58,6 +58,7 @@ export async function GET() {
         mime_type,
         created_at,
         created_by,
+        arranger_user_id,
         profiles:created_by(display_name, email)
       `)
       .eq('arranger_entity_id', arrangerUser.arranger_id)
@@ -68,7 +69,30 @@ export async function GET() {
       return NextResponse.json({ error: 'Failed to fetch documents' }, { status: 500 })
     }
 
-    // Transform for response
+    // Fetch arranger members for the member selector
+    const { data: members, error: membersError } = await serviceSupabase
+      .from('arranger_users')
+      .select(`
+        user_id,
+        role,
+        is_primary,
+        profiles:user_id(display_name, email)
+      `)
+      .eq('arranger_id', arrangerUser.arranger_id)
+
+    if (membersError) {
+      console.error('Error fetching members:', membersError)
+    }
+
+    // Transform members for response
+    const formattedMembers = members?.map(member => ({
+      id: member.user_id,
+      full_name: (member.profiles as any)?.display_name || (member.profiles as any)?.email || 'Unknown',
+      role: member.role,
+      is_primary: member.is_primary
+    })) || []
+
+    // Transform documents for response
     const formattedDocs = documents?.map(doc => ({
       id: doc.id,
       name: doc.name,
@@ -77,10 +101,14 @@ export async function GET() {
       file_name: doc.name,
       file_size_bytes: doc.file_size_bytes,
       created_at: doc.created_at,
-      created_by: doc.profiles
+      created_by: doc.profiles,
+      arranger_user_id: doc.arranger_user_id
     })) || []
 
-    return NextResponse.json({ documents: formattedDocs })
+    return NextResponse.json({
+      documents: formattedDocs,
+      members: formattedMembers
+    })
 
   } catch (error) {
     console.error('Error in GET /api/arrangers/me/documents:', error)
@@ -128,6 +156,7 @@ export async function POST(request: NextRequest) {
     const file = formData.get('file') as File
     const documentType = formData.get('type') as string
     const documentName = formData.get('name') as string
+    const arrangerUserId = formData.get('arranger_user_id') as string | null
 
     if (!file) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 })
@@ -135,6 +164,20 @@ export async function POST(request: NextRequest) {
 
     if (!documentType) {
       return NextResponse.json({ error: 'Document type is required' }, { status: 400 })
+    }
+
+    // If arranger_user_id provided, validate it belongs to this arranger
+    if (arrangerUserId && arrangerUserId !== 'entity-level') {
+      const { data: memberCheck, error: memberError } = await serviceSupabase
+        .from('arranger_users')
+        .select('user_id')
+        .eq('arranger_id', arrangerId)
+        .eq('user_id', arrangerUserId)
+        .maybeSingle()
+
+      if (memberError || !memberCheck) {
+        return NextResponse.json({ error: 'Invalid member selected' }, { status: 400 })
+      }
     }
 
     // Validate file size
@@ -187,6 +230,7 @@ export async function POST(request: NextRequest) {
         type: documentType,
         file_key: uploadData.path,
         arranger_entity_id: arrangerId,
+        arranger_user_id: (arrangerUserId && arrangerUserId !== 'entity-level') ? arrangerUserId : null,
         file_size_bytes: file.size,
         mime_type: file.type,
         current_version: 1,

@@ -49,10 +49,10 @@ export default async function IntroducerProfilePage() {
     )
   }
 
-  // Get introducer user info
+  // Get introducer user info (including signature data)
   const { data: introducerUser } = await serviceSupabase
     .from('introducer_users')
-    .select('introducer_id, role, is_primary, can_sign')
+    .select('introducer_id, role, is_primary, can_sign, signature_specimen_url, signature_specimen_uploaded_at')
     .eq('user_id', user.id)
     .maybeSingle()
 
@@ -120,11 +120,14 @@ export default async function IntroducerProfilePage() {
         notes: introducer.notes,
         created_at: introducer.created_at,
         logo_url: introducer.logo_url,
+        kyc_status: introducer.kyc_status,
       } : null}
       introducerUserInfo={{
         role: introducerUser.role,
         is_primary: introducerUser.is_primary,
         can_sign: introducerUser.can_sign || false,
+        signature_specimen_url: introducerUser.signature_specimen_url,
+        signature_specimen_uploaded_at: introducerUser.signature_specimen_uploaded_at,
       }}
       activeAgreement={activeAgreement ? {
         id: activeAgreement.id,

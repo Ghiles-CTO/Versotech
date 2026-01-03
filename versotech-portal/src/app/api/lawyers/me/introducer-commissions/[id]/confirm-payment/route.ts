@@ -208,11 +208,22 @@ export async function POST(
       }
     }
 
-    // Send notifications
+    // Send notifications to non-lawyer recipients (investor_notifications table)
     if (notificationsToCreate.length > 0) {
       await serviceSupabase.from('investor_notifications').insert(notificationsToCreate)
-      console.log('[confirm-payment] Sent', notificationsToCreate.length, 'notifications')
+      console.log('[confirm-payment] Sent', notificationsToCreate.length, 'notifications to investor_notifications')
     }
+
+    // Send confirmation notification to the lawyer actor (notifications table - lawyers query this table)
+    await serviceSupabase.from('notifications').insert({
+      user_id: user.id,
+      title: 'Payment Confirmation Sent',
+      message: `You confirmed payment of ${formattedAmount} to ${introducer?.legal_name || 'Introducer'}${deal ? ` for ${deal.name}` : ''}.`,
+      link: `/versotech_main/lawyer-reconciliation`,
+      type: 'success',
+      read: false,
+    })
+    console.log('[confirm-payment] Sent confirmation to lawyer in notifications table')
 
     // Create audit log
     await serviceSupabase.from('audit_logs').insert({

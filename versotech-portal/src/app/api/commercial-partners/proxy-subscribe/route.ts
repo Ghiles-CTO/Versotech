@@ -95,9 +95,10 @@ export async function POST(request: Request) {
 
     // SECURITY: Verify the commercial partner user has been dispatched to this deal
     // This prevents CPs from subscribing to deals they don't have access to
+    // NOTE: deal_memberships uses composite key (deal_id, user_id), not a separate id column
     const { data: cpDealMembership } = await serviceSupabase
       .from('deal_memberships')
-      .select('id, role, dispatched_at')
+      .select('deal_id, user_id, role, dispatched_at')
       .eq('deal_id', deal_id)
       .eq('user_id', user.id)
       .in('role', ['commercial_partner_investor', 'commercial_partner_proxy'])
@@ -174,15 +175,15 @@ export async function POST(request: Request) {
         commitment,
         funded_amount: 0,
         status: 'pending',
-        stock_type,
-        notes,
+        // Note: stock_type removed - column doesn't exist in subscriptions table
+        // Use acknowledgement_notes instead of notes (correct column name)
+        acknowledgement_notes: notes,
         // Proxy-specific fields
         submitted_by_proxy: true,
         proxy_user_id: user.id,
         proxy_commercial_partner_id: cpLink.commercial_partner_id,
         proxy_authorization_doc_id,
-        created_at: now,
-        updated_at: now
+        created_at: now
       })
       .select()
       .single()
@@ -201,10 +202,8 @@ export async function POST(request: Request) {
             commitment,
             funded_amount: 0,
             status: 'pending',
-            stock_type,
-            notes: `${notes || ''}\n[Submitted by proxy: ${commercialPartner?.name} via ${user.email}]`.trim(),
-            created_at: now,
-            updated_at: now
+            acknowledgement_notes: `${notes || ''}\n[Submitted by proxy: ${commercialPartner?.name} via ${user.email}]`.trim(),
+            created_at: now
           })
           .select()
           .single()
@@ -396,22 +395,24 @@ export async function GET(request: Request) {
     const uniqueLegacyClients = (legacyClients || []).filter(lc => !clientInvestorIds.has(lc.id))
 
     // Format clients for response
+    // IMPORTANT: Field names must match the Client interface in proxy-mode-context.tsx
+    // Interface expects: { id, name, investor_type, kyc_status }
     const formattedClients = [
       // Clients from commercial_partner_clients with linked investors
       ...(cpClients || [])
         .filter(c => c.investor)
         .map(c => ({
           id: (c.investor as any).id,
-          legal_name: (c.investor as any).legal_name || c.client_name,
-          type: (c.investor as any).type || c.client_type,
+          name: (c.investor as any).legal_name || c.client_name, // Changed: legal_name -> name
+          investor_type: (c.investor as any).type || c.client_type, // Changed: type -> investor_type
           kyc_status: (c.investor as any).kyc_status,
           client_record_id: c.id // Include the client record ID for reference
         })),
       // Legacy clients directly linked to CP
       ...uniqueLegacyClients.map(lc => ({
         id: lc.id,
-        legal_name: lc.legal_name,
-        type: lc.type,
+        name: lc.legal_name, // Changed: legal_name -> name
+        investor_type: lc.type, // Changed: type -> investor_type
         kyc_status: lc.kyc_status
       }))
     ]

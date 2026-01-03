@@ -34,6 +34,7 @@ import {
 import { cn } from '@/lib/utils'
 import { formatDate } from '@/lib/format'
 import { toast } from 'sonner'
+import { MembersManagementTab } from '@/components/members/members-management-tab'
 
 type Profile = {
   full_name: string | null
@@ -422,6 +423,16 @@ export function LawyerProfileClient({
           )}
         </CardContent>
       </Card>
+
+      {/* Members Management */}
+      {lawyerInfo && (
+        <MembersManagementTab
+          entityType="lawyer"
+          entityId={lawyerInfo.id}
+          entityName={lawyerInfo.firm_name || lawyerInfo.display_name || 'Law Firm'}
+          showSignatoryOption={true}
+        />
+      )}
     </div>
   )
 }

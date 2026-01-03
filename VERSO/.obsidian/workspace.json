@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "10 days/ARRANGER_PERSONA_STATUS_REPORT.md",
+                "file": "10 days/day1/CP_E2E_COMPLETE.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "ARRANGER_PERSONA_STATUS_REPORT"
+              "title": "CP_E2E_COMPLETE"
             }
           },
           {
@@ -197,34 +197,34 @@
       "bases:Create new base": false
     }
   },
-  "active": "fa32b80b5b7a6b50",
+  "active": "3e117a3b32dcf196",
   "lastOpenFiles": [
-    "10 days/LAWYER_PERSONA_STATUS_REPORT.md",
-    "10 days/COMMERCIAL_PARTNER_PERSONA_STATUS_REPORT.md",
-    "10 days/INVESTOR_PERSONA_STATUS_REPORT.md",
-    "10 days/INTRODUCER_PERSONA_STATUS_REPORT.md",
+    "10 days/day1/LAWYER_FIX_VERIFICATION.md",
+    "10 days/day1/LAWYER_AUDIT_REPORT.md",
+    "10 days/day1/LAWYER_E2E_FINAL.md",
+    "10 days/day1/CP_E2E_COMPLETE.md",
+    "10 days/day1/COMMERCIAL_PARTNER_AUDIT_REPORT_WORKING.md",
+    "10 days/VERSO_BUSINESS_PROCESS_MAP.md",
     "10 days/day1/meeting1.md",
-    "10 days/day1",
-    "10 days/PARTNER_PERSONA_STATUS_REPORT.md",
-    "10 days/CEO_PERSONA_STATUS_REPORT.md",
-    "10 days/PHASE2_STATUS_REPORT.md",
     "10 days/ARRANGER_PERSONA_STATUS_REPORT.md",
+    "10 days/PHASE2_STATUS_REPORT.md",
     "ARRANGER_AUDIT_REPORT.md",
+    "ARRANGER_DEEP_AUDIT.md",
     "COMMERCIAL_PARTNER_AUDIT.md",
-    "INTRODUCER_ISSUES_REPORT.md",
-    "INTRODUCER_REALITY_CHECK.md",
-    "Nir meeting.md",
-    "INTRODUCER_FINAL_VERIFICATION.md",
     "INTRODUCER_AUDIT.md",
-    "INTRODUCER_PAGE_BREAKDOWN.md",
-    "PARTNER_ISSUES.md",
-    "LAWYER_AUDIT.md",
-    "Pre meeting.md",
-    "TESTING_GUIDE_V3.md",
-    "PARTNER_TEST_REPORT.md",
-    "INTRODUCER_TEST_REPORT.md",
+    "INTRODUCER_REALITY_CHECK.md",
     "INTRODUCER_COMPLETE_AUDIT.md",
-    "PARTNER_VERIFIED_AUDIT.md",
-    "PARTNER_AUDIT.md"
+    "LAWYER_AUDIT.md",
+    "Welcome.md",
+    "Pre meeting.md",
+    "PARTNER_AUDIT.md",
+    "TESTING_GUIDE_V3.md",
+    "10 days/CEO_PERSONA_STATUS_REPORT.md",
+    "10 days/COMMERCIAL_PARTNER_PERSONA_STATUS_REPORT.md",
+    "10 days/INTRODUCER_PERSONA_STATUS_REPORT.md",
+    "10 days/INVESTOR_PERSONA_STATUS_REPORT.md",
+    "10 days/LAWYER_PERSONA_STATUS_REPORT.md",
+    "10 days/PARTNER_PERSONA_STATUS_REPORT.md",
+    "10 days/day1"
   ]
 }

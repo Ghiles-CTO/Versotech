@@ -37,7 +37,7 @@ export async function GET(
     const serviceSupabase = createServiceClient()
     const { data: document, error: docError } = await serviceSupabase
       .from('documents')
-      .select('id, name, file_key, mime_type, type, owner_investor_id, vehicle_id, deal_id, subscription_id')
+      .select('id, name, file_key, mime_type, type, owner_investor_id, vehicle_id, deal_id, subscription_id, partner_id, commercial_partner_id, introducer_id')
       .eq('id', documentId)
       .single()
 
@@ -176,6 +176,48 @@ export async function GET(
           if (dealMember) {
             hasAccess = true
           }
+        }
+      }
+
+      // Check Partner access - documents belonging to their partner entity
+      if (!hasAccess && document.partner_id) {
+        const { data: partnerUser } = await serviceSupabase
+          .from('partner_users')
+          .select('partner_id')
+          .eq('user_id', user.id)
+          .eq('partner_id', document.partner_id)
+          .maybeSingle()
+
+        if (partnerUser) {
+          hasAccess = true
+        }
+      }
+
+      // Check Commercial Partner access - documents belonging to their CP entity
+      if (!hasAccess && document.commercial_partner_id) {
+        const { data: cpUser } = await serviceSupabase
+          .from('commercial_partner_users')
+          .select('commercial_partner_id')
+          .eq('user_id', user.id)
+          .eq('commercial_partner_id', document.commercial_partner_id)
+          .maybeSingle()
+
+        if (cpUser) {
+          hasAccess = true
+        }
+      }
+
+      // Check Introducer access - documents belonging to their introducer entity
+      if (!hasAccess && document.introducer_id) {
+        const { data: introducerUser } = await serviceSupabase
+          .from('introducer_users')
+          .select('introducer_id')
+          .eq('user_id', user.id)
+          .eq('introducer_id', document.introducer_id)
+          .maybeSingle()
+
+        if (introducerUser) {
+          hasAccess = true
         }
       }
 

@@ -28,6 +28,7 @@ import {
   X,
   Camera,
   Upload,
+  Users,
 } from 'lucide-react'
 import { formatDate } from '@/lib/format'
 import { cn } from '@/lib/utils'
@@ -40,6 +41,7 @@ import { PasswordChangeForm } from '@/components/profile/password-change-form'
 import { PreferencesEditor } from '@/components/profile/preferences-editor'
 import { GDPRControls } from '@/components/profile/gdpr-controls'
 import { ArrangerKYCDocumentsTab } from '@/components/profile/arranger-kyc-documents-tab'
+import { MembersManagementTab } from '@/components/members/members-management-tab'
 
 type ArrangerInfo = {
   id: string
@@ -66,6 +68,9 @@ type ArrangerInfo = {
 type ArrangerUserInfo = {
   role: string
   is_active: boolean
+  can_sign: boolean
+  signature_specimen_url: string | null
+  signature_specimen_uploaded_at: string | null
 }
 
 type Profile = {
@@ -568,11 +573,15 @@ export function ArrangerProfileClient({
       </div>
 
       {/* Profile Details Tabs */}
-      <Tabs defaultValue="details" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4 md:grid-cols-8 h-auto p-1 gap-1">
+      <Tabs defaultValue="details" className="space-y-4" id="arranger-profile-tabs">
+        <TabsList className="grid w-full grid-cols-5 md:grid-cols-9 h-auto p-1 gap-1">
           <TabsTrigger value="details" className="flex items-center gap-2 text-xs sm:text-sm">
             <Building2 className="h-4 w-4" />
             <span className="hidden sm:inline">Entity</span>
+          </TabsTrigger>
+          <TabsTrigger value="members" className="flex items-center gap-2 text-xs sm:text-sm">
+            <Users className="h-4 w-4" />
+            <span className="hidden sm:inline">Members</span>
           </TabsTrigger>
           <TabsTrigger value="regulatory" className="flex items-center gap-2 text-xs sm:text-sm">
             <FileText className="h-4 w-4" />
@@ -671,6 +680,16 @@ export function ArrangerProfileClient({
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Members Tab */}
+        <TabsContent value="members">
+          <MembersManagementTab
+            entityType="arranger"
+            entityId={arrangerInfo.id}
+            entityName={arrangerInfo.legal_name}
+            showSignatoryOption={true}
+          />
         </TabsContent>
 
         {/* Regulatory Tab - EDITABLE (except KYC) */}

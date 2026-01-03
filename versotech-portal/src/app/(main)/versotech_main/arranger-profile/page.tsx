@@ -52,7 +52,7 @@ export default async function ArrangerProfilePage() {
   // Get arranger user info
   const { data: arrangerUser } = await serviceSupabase
     .from('arranger_users')
-    .select('arranger_id, role, is_primary')
+    .select('arranger_id, role, is_primary, can_sign, signature_specimen_url, signature_specimen_uploaded_at')
     .eq('user_id', user.id)
     .maybeSingle()
 
@@ -123,7 +123,10 @@ export default async function ArrangerProfilePage() {
       } : null}
       arrangerUserInfo={{
         role: arrangerUser.role,
-        is_active: true // arranger_users doesn't have is_active, assume active
+        is_active: true, // arranger_users doesn't have is_active, assume active
+        can_sign: arrangerUser.can_sign || false,
+        signature_specimen_url: arrangerUser.signature_specimen_url,
+        signature_specimen_uploaded_at: arrangerUser.signature_specimen_uploaded_at
       }}
       dealCount={dealCount || 0}
     />

@@ -55,7 +55,6 @@ export async function GET() {
         id,
         name,
         type,
-        target_size,
         status
       `)
 

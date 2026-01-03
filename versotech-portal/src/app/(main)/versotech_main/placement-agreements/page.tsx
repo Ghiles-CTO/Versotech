@@ -214,6 +214,16 @@ export default function PlacementAgreementsPage() {
 
       const processed: Agreement[] = data.map((agreement) => {
         const sigInfo = signatureMap[agreement.id]
+
+        // Compute effective status - if expiry_date has passed and status is "active", show as "expired"
+        let effectiveStatus = agreement.status || 'draft'
+        if (agreement.expiry_date && effectiveStatus === 'active') {
+          const expiryDate = new Date(agreement.expiry_date)
+          if (expiryDate < now) {
+            effectiveStatus = 'expired'
+          }
+        }
+
         return {
           id: agreement.id,
           agreement_type: agreement.agreement_type || 'placement',
@@ -226,7 +236,7 @@ export default function PlacementAgreementsPage() {
           territory: agreement.territory,
           deal_types: agreement.deal_types,
           exclusivity_level: agreement.exclusivity_level,
-          status: agreement.status || 'draft',
+          status: effectiveStatus,
           created_at: agreement.created_at,
           signature_token: sigInfo?.token || null,
           signature_status: sigInfo?.status || null,

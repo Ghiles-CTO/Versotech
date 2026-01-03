@@ -85,7 +85,7 @@ const PERSONA_NAV_ITEMS: Record<string, NavItem[]> = {
     { name: 'Portfolio', href: '/versotech_main/portfolio', icon: Briefcase, description: 'My investments' },
     { name: 'Documents', href: '/versotech_main/documents', icon: FileText, description: 'My documents' },
     { name: 'Inbox', href: '/versotech_main/inbox', icon: MessageSquare, description: 'Tasks, messages & notifications' },
-    // Calendar intentionally omitted - staff-only feature
+    { name: 'Profile', href: '/versotech_main/investor-profile', icon: UserCheck, description: 'Entity & members' },
   ],
 
   // Arranger persona
@@ -125,7 +125,7 @@ const PERSONA_NAV_ITEMS: Record<string, NavItem[]> = {
     { name: 'My Commissions', href: '/versotech_main/my-commissions', icon: Calculator, description: 'Revenue & invoicing' },
     { name: 'Shared Deals', href: '/versotech_main/shared-transactions', icon: Share2, description: 'Co-referred deals' },
     { name: 'VersoSign', href: '/versotech_main/versosign', icon: FileSignature, description: 'E-signatures' },
-    { name: 'Profile', href: '/versotech_main/profile', icon: UserCheck, description: 'Account & GDPR' },
+    { name: 'Profile', href: '/versotech_main/partner-profile', icon: UserCheck, description: 'Entity & members' },
   ],
 
   // Commercial Partner persona
@@ -135,6 +135,7 @@ const PERSONA_NAV_ITEMS: Record<string, NavItem[]> = {
     { name: 'Client Transactions', href: '/versotech_main/client-transactions', icon: Users, description: 'Client investors' },
     { name: 'Portfolio', href: '/versotech_main/portfolio', icon: Briefcase, description: 'My investments' },
     { name: 'Agreements', href: '/versotech_main/placement-agreements', icon: FileText, description: 'Placement agreements' },
+    { name: 'Profile', href: '/versotech_main/commercial-partner-profile', icon: FileSignature, description: 'Signature & settings' },
     { name: 'Notifications', href: '/versotech_main/notifications', icon: Bell, description: 'Alerts & updates' },
     { name: 'Messages', href: '/versotech_main/messages', icon: MessageSquare, description: 'Communications' },
   ],

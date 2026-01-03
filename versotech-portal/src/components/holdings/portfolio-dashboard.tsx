@@ -88,22 +88,28 @@ interface CleanPortfolioDashboardProps {
 }
 
 const formatCurrency = (value: number) => {
+  // Handle NaN, undefined, or null values
+  const safeValue = (value === undefined || value === null || isNaN(value)) ? 0 : value
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
-    notation: Math.abs(value) >= 1000000 ? 'compact' : 'standard',
+    notation: Math.abs(safeValue) >= 1000000 ? 'compact' : 'standard',
     compactDisplay: 'short'
-  }).format(value)
+  }).format(safeValue)
 }
 
 const formatPercentage = (value: number, decimals: number = 1) => {
-  return `${value > 0 ? '+' : ''}${value.toFixed(decimals)}%`
+  // Handle NaN, undefined, or null values
+  const safeValue = (value === undefined || value === null || isNaN(value)) ? 0 : value
+  return `${safeValue > 0 ? '+' : ''}${safeValue.toFixed(decimals)}%`
 }
 
 const formatRatio = (value: number, decimals: number = 2) => {
-  return `${value.toFixed(decimals)}x`
+  // Handle NaN, undefined, or null values
+  const safeValue = (value === undefined || value === null || isNaN(value)) ? 0 : value
+  return `${safeValue.toFixed(decimals)}x`
 }
 
 type IconType = React.ComponentType<{ className?: string }>
@@ -220,7 +226,7 @@ export function PortfolioDashboard({
         <CleanKPICard
           title="Invested"
           value={formatCurrency(kpis.totalContributed)}
-          subtitle={`${((kpis.totalContributed / kpis.totalCommitment) * 100).toFixed(0)}% deployed`}
+          subtitle={`${kpis.totalCommitment > 0 ? ((kpis.totalContributed / kpis.totalCommitment) * 100).toFixed(0) : 0}% deployed`}
           icon={PiggyBank}
         />
         <CleanKPICard
@@ -232,7 +238,7 @@ export function PortfolioDashboard({
         <CleanKPICard
           title="Unrealized"
           value={formatCurrency(kpis.unrealizedGain)}
-          subtitle={`${kpis.unrealizedGainPct.toFixed(1)}% return`}
+          subtitle={`${(kpis.unrealizedGainPct ?? 0).toFixed(1)}% return`}
           change={kpis.unrealizedGainPct}
           icon={Target}
         />
@@ -281,11 +287,11 @@ export function PortfolioDashboard({
                 <div className="flex justify-between mb-2">
                   <span className="text-sm text-muted-foreground">Deployed</span>
                   <span className="text-sm font-medium">
-                    {((kpis.totalContributed / kpis.totalCommitment) * 100).toFixed(0)}%
+                    {kpis.totalCommitment > 0 ? ((kpis.totalContributed / kpis.totalCommitment) * 100).toFixed(0) : 0}%
                   </span>
                 </div>
-                <Progress 
-                  value={(kpis.totalContributed / kpis.totalCommitment) * 100} 
+                <Progress
+                  value={kpis.totalCommitment > 0 ? (kpis.totalContributed / kpis.totalCommitment) * 100 : 0}
                   className="h-2"
                 />
               </div>

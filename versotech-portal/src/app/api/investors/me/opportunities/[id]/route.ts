@@ -96,7 +96,7 @@ export async function GET(request: Request, { params }: RouteParams) {
     if (deal.vehicle_id) {
       const { data: v } = await serviceSupabase
         .from('vehicles')
-        .select('id, name, type, inception_date, target_size, currency')
+        .select('id, name, type, formation_date, currency')
         .eq('id', deal.vehicle_id)
         .single()
       vehicle = v

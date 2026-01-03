@@ -61,7 +61,7 @@ type AssignedDeal = {
   id: string
   name: string
   status: string
-  target_size: number | null
+  target_amount: number | null
   currency: string
 }
 
@@ -101,38 +101,45 @@ export function LawyerDashboard({ lawyerId, userId, persona }: LawyerDashboardPr
           })
         }
 
-        // Get deal assignments
+        // Get deal assignments with nested deal data (FK select bypasses direct RLS)
         const { data: assignments } = await supabase
           .from('deal_lawyer_assignments')
-          .select('deal_id')
+          .select(`
+            deal_id,
+            deal:deal_id (
+              id,
+              name,
+              status,
+              target_amount,
+              currency
+            )
+          `)
           .eq('lawyer_id', lawyerId)
+          .order('assigned_at', { ascending: false })
+          .limit(5)
 
-        let dealIds = (assignments || []).map((a: any) => a.deal_id)
+        // Extract deals from nested select
+        const dealsFromAssignments = (assignments || [])
+          .filter((a: any) => a.deal)
+          .map((a: any) => ({
+            id: a.deal.id,
+            name: a.deal.name,
+            status: a.deal.status,
+            target_amount: a.deal.target_amount,
+            currency: a.deal.currency || 'USD',
+          }))
+
+        let dealIds = (assignments || []).map((a: any) => a.deal_id).filter(Boolean)
 
         // Fallback to lawyers.assigned_deals if no assignments
         if (!dealIds.length && lawyer?.assigned_deals?.length) {
           dealIds = lawyer.assigned_deals
         }
 
+        // Set assigned deals from nested query result
+        setAssignedDeals(dealsFromAssignments)
+
         if (dealIds.length > 0) {
-          // Fetch assigned deals
-          const { data: deals } = await supabase
-            .from('deals')
-            .select('id, name, status, target_size, currency')
-            .in('id', dealIds)
-            .order('created_at', { ascending: false })
-            .limit(5)
-
-          if (deals) {
-            setAssignedDeals(deals.map((d: any) => ({
-              id: d.id,
-              name: d.name,
-              status: d.status,
-              target_size: d.target_size,
-              currency: d.currency || 'USD',
-            })))
-          }
-
           // Fetch subscriptions for these deals (signed/committed statuses)
           const { data: subscriptions } = await supabase
             .from('subscriptions')
@@ -516,8 +523,8 @@ export function LawyerDashboard({ lawyerId, userId, persona }: LawyerDashboardPr
                         {deal.name}
                       </p>
                       <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                        {deal.target_size
-                          ? `${formatCurrency(deal.target_size, deal.currency)} target`
+                        {deal.target_amount
+                          ? `${formatCurrency(deal.target_amount, deal.currency)} target`
                           : 'No target set'}
                       </p>
                     </div>
