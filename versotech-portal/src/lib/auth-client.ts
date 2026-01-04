@@ -258,7 +258,11 @@ export const resetPassword = async (email: string) => {
     const data = await response.json()
 
     if (!response.ok) {
-      throw new AuthError(data.error || 'Password reset failed. Please try again.')
+      // Include detail error for debugging
+      const errorMsg = data.detail
+        ? `${data.error} (${data.detail})`
+        : data.error || 'Password reset failed. Please try again.'
+      throw new AuthError(errorMsg)
     }
 
     // Success - email sent (or would have been if account exists)

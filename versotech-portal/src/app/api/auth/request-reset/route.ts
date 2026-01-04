@@ -84,8 +84,15 @@ export async function POST(request: NextRequest) {
 
     if (!emailResult.success) {
       console.error('[password-reset] Email send failed:', emailResult.error)
+      // Include the actual error for debugging (safe to show since it's internal config errors)
+      const errorDetail = emailResult.error || 'Unknown email error'
       return NextResponse.json(
-        { error: 'Failed to send reset email. Please try again.' },
+        {
+          error: 'Failed to send reset email. Please try again.',
+          debug: process.env.NODE_ENV === 'development' ? errorDetail : undefined,
+          // Also include in prod for now to debug
+          detail: errorDetail
+        },
         { status: 500 }
       )
     }
