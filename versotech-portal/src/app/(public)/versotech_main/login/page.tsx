@@ -51,6 +51,8 @@ function UnifiedLoginContent() {
         case 'auth_required': errorMessage = 'Please sign in to continue.'; break
         case 'session_not_found': errorMessage = 'Session not found. Please try your invitation link again or contact support.'; break
         case 'no_personas': errorMessage = 'No access configured. Please contact your administrator.'; break
+        case 'link_expired': errorMessage = 'This link has expired. Please request a new password reset.'; break
+        case 'access_denied': errorMessage = 'Access denied. The link may be invalid or already used.'; break
         default: errorMessage = 'An error occurred. Please try again.';
       }
       setMessage({ type: 'error', text: errorMessage })

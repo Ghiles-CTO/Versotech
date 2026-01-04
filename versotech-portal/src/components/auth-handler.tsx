@@ -11,12 +11,35 @@ export function AuthHandler() {
 
   useEffect(() => {
     const handleAuthCallback = async () => {
-      // CRITICAL: Detect hash fragments from implicit flow (invite magic links)
-      // Supabase inviteUserByEmail() uses implicit flow which passes tokens in hash fragment
-      // If we detect hash fragment with access_token, redirect to /auth/callback to process it
+      // CRITICAL: Detect hash fragments from Supabase auth redirects
       if (typeof window !== 'undefined' && window.location.hash) {
         const hash = window.location.hash
-        if (hash.includes('access_token') || hash.includes('type=invite')) {
+        const hashParams = new URLSearchParams(hash.substring(1))
+
+        // Handle ERROR hashes from Supabase (e.g., expired password reset links)
+        const hashError = hashParams.get('error')
+        const errorCode = hashParams.get('error_code')
+        const errorDescription = hashParams.get('error_description')
+
+        if (hashError) {
+          console.error('[AuthHandler] Auth error in hash:', { hashError, errorCode, errorDescription })
+
+          // Map error codes to user-friendly messages
+          let errorMessage = 'auth_failed'
+          if (errorCode === 'otp_expired') {
+            errorMessage = 'link_expired'
+          } else if (errorCode === 'access_denied') {
+            errorMessage = 'access_denied'
+          }
+
+          // Clear the hash and redirect to login with error
+          window.history.replaceState(null, '', window.location.pathname)
+          router.push(`/versotech_main/login?error=${errorMessage}`)
+          return
+        }
+
+        // Handle SUCCESS hashes (access_token from implicit flow)
+        if (hash.includes('access_token') || hash.includes('type=invite') || hash.includes('type=recovery')) {
           console.log('[AuthHandler] Detected hash fragment from implicit flow, redirecting to callback...')
           // Redirect to /auth/callback with the hash fragment preserved
           window.location.href = '/auth/callback' + hash
