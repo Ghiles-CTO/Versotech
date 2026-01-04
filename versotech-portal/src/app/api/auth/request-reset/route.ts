@@ -9,6 +9,14 @@ import { sendPasswordResetEmail } from '@/lib/email/resend-service'
  * Uses Supabase admin API to generate the reset link, then sends via Resend.
  */
 export async function POST(request: NextRequest) {
+  // Debug: Log env var status (not the actual key)
+  const resendKey = process.env.RESEND_API_KEY
+  console.log('[password-reset] RESEND_API_KEY status:', {
+    exists: !!resendKey,
+    length: resendKey?.length || 0,
+    prefix: resendKey?.substring(0, 8) || 'NOT_SET'
+  })
+
   try {
     const body = await request.json()
     const { email } = body
@@ -86,12 +94,17 @@ export async function POST(request: NextRequest) {
       console.error('[password-reset] Email send failed:', emailResult.error)
       // Include the actual error for debugging (safe to show since it's internal config errors)
       const errorDetail = emailResult.error || 'Unknown email error'
+      const resendKey = process.env.RESEND_API_KEY
       return NextResponse.json(
         {
           error: 'Failed to send reset email. Please try again.',
-          debug: process.env.NODE_ENV === 'development' ? errorDetail : undefined,
-          // Also include in prod for now to debug
-          detail: errorDetail
+          detail: errorDetail,
+          // Debug info to see env var status
+          envDebug: {
+            keyExists: !!resendKey,
+            keyLength: resendKey?.length || 0,
+            keyPrefix: resendKey?.substring(0, 8) || 'NOT_SET'
+          }
         },
         { status: 500 }
       )
