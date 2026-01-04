@@ -77,15 +77,28 @@ function AuthCallbackContent() {
   const errorParam = searchParams.get('error')
   const errorDescription = searchParams.get('error_description')
   const code = searchParams.get('code')
+  const authType = searchParams.get('type') // 'recovery', 'signup', 'invite', etc.
 
   // Handle authenticated user - create profile if needed and redirect
-  const handleAuthenticatedUser = useCallback(async (user: User) => {
+  const handleAuthenticatedUser = useCallback(async (user: User, isRecoveryFlow: boolean = false) => {
     // Prevent double processing
     if (processedRef.current) return
     processedRef.current = true
 
     console.log('[auth-callback] User authenticated:', user.email)
     console.log('[auth-callback] User metadata:', user.user_metadata)
+    console.log('[auth-callback] Is recovery flow:', isRecoveryFlow)
+
+    // If this is a password recovery flow, redirect directly to reset-password page
+    if (isRecoveryFlow) {
+      console.log('[auth-callback] Recovery flow detected, redirecting to reset-password...')
+      setStatus('success')
+      setMessage('Redirecting to reset your password...')
+      setTimeout(() => {
+        window.location.href = '/versotech_main/reset-password'
+      }, 1000)
+      return
+    }
 
     // Use the implicit flow client for database operations too
     const supabase = supabaseRef.current || createImplicitFlowClient()
@@ -263,7 +276,7 @@ function AuthCallbackContent() {
         }
       }
 
-      // Check for hash fragment (implicit flow from invite links)
+      // Check for hash fragment (implicit flow from invite links and recovery)
       if (window.location.hash && window.location.hash.includes('access_token')) {
         console.log('[auth-callback] Hash fragment detected, manually extracting tokens...')
 
@@ -271,11 +284,16 @@ function AuthCallbackContent() {
         const hashParams = new URLSearchParams(window.location.hash.substring(1))
         const accessToken = hashParams.get('access_token')
         const refreshToken = hashParams.get('refresh_token')
+        const hashType = hashParams.get('type') // 'recovery', 'signup', 'invite', etc.
 
         console.log('[auth-callback] Tokens extracted:', {
           hasAccessToken: !!accessToken,
-          hasRefreshToken: !!refreshToken
+          hasRefreshToken: !!refreshToken,
+          type: hashType
         })
+
+        // Detect if this is a password recovery flow
+        const isRecovery = hashType === 'recovery' || authType === 'recovery'
 
         if (accessToken && refreshToken) {
           // Set the session on BOTH the implicit client and the main app client
@@ -299,7 +317,7 @@ function AuthCallbackContent() {
               console.warn('[auth-callback] Session sync to main client failed, navigation may fail')
             }
 
-            handleAuthenticatedUser(sessionData.user)
+            handleAuthenticatedUser(sessionData.user, isRecovery)
             return
           }
         }
@@ -309,7 +327,7 @@ function AuthCallbackContent() {
         const { data: { user: hashUser } } = await supabase.auth.getUser()
         if (hashUser) {
           console.log('[auth-callback] User found after hash processing')
-          handleAuthenticatedUser(hashUser)
+          handleAuthenticatedUser(hashUser, isRecovery)
           return
         }
       }
@@ -337,7 +355,7 @@ function AuthCallbackContent() {
     return () => {
       subscription.unsubscribe()
     }
-  }, [errorParam, errorDescription, code, portalContext, router, handleAuthenticatedUser])
+  }, [errorParam, errorDescription, code, authType, portalContext, router, handleAuthenticatedUser])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-slate-50 flex items-center justify-center p-4">
