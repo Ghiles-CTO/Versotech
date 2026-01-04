@@ -34,7 +34,7 @@ function ResetPasswordContent() {
   const [isRecoveryMode, setIsRecoveryMode] = useState(false)
   const [checkingSession, setCheckingSession] = useState(true)
 
-  // Check if user came from a password reset email link
+  // Check if user came from a password reset email link (or was redirected from auth callback)
   useEffect(() => {
     const checkRecoverySession = async () => {
       const supabase = createClient()
@@ -54,12 +54,15 @@ function ResetPasswordContent() {
           })
 
           if (!error) {
+            console.log('[reset-password] Recovery session set from hash')
             setIsRecoveryMode(true)
             // Clear the hash from URL for cleaner display
             window.history.replaceState(null, '', window.location.pathname)
           } else {
             setMessage({ type: 'error', text: 'Recovery link expired or invalid. Please request a new one.' })
           }
+          setCheckingSession(false)
+          return
         }
       }
 
@@ -69,6 +72,7 @@ function ResetPasswordContent() {
         try {
           const { error } = await supabase.auth.exchangeCodeForSession(code)
           if (!error) {
+            console.log('[reset-password] Recovery session set from code')
             setIsRecoveryMode(true)
           } else {
             setMessage({ type: 'error', text: 'Recovery link expired or invalid. Please request a new one.' })
@@ -76,8 +80,24 @@ function ResetPasswordContent() {
         } catch {
           setMessage({ type: 'error', text: 'Failed to process recovery link.' })
         }
+        setCheckingSession(false)
+        return
       }
 
+      // CRITICAL: Check if we have an existing session (from auth/callback redirect)
+      // The auth callback syncs the session before redirecting here
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        console.log('[reset-password] Found existing session from auth callback redirect, user:', user.email)
+        // User has a valid session - they were likely redirected from auth callback
+        // Allow them to set a new password
+        setIsRecoveryMode(true)
+        setCheckingSession(false)
+        return
+      }
+
+      // No session found - show the email request form
+      console.log('[reset-password] No session found, showing request form')
       setCheckingSession(false)
     }
 

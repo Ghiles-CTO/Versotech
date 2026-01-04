@@ -8,6 +8,23 @@ import type { User, SupabaseClient } from '@supabase/supabase-js'
 import { createClient as createMainClient, resetClient } from '@/lib/supabase/client'
 
 /**
+ * CRITICAL: Capture hash fragment AT MODULE LOAD TIME
+ * This happens BEFORE any React rendering or Supabase client initialization.
+ * Supabase's detectSessionInUrl may clear the hash, so we must capture it first.
+ */
+let CAPTURED_HASH = ''
+let IS_RECOVERY_FLOW_DETECTED = false
+
+if (typeof window !== 'undefined') {
+  CAPTURED_HASH = window.location.hash || ''
+  // Check if this is a recovery/password reset flow
+  if (CAPTURED_HASH.includes('type=recovery')) {
+    IS_RECOVERY_FLOW_DETECTED = true
+    console.log('[auth-callback:module] RECOVERY FLOW DETECTED at module load! Hash:', CAPTURED_HASH.substring(0, 50) + '...')
+  }
+}
+
+/**
  * Create a special Supabase client for auth callback that handles IMPLICIT flow.
  *
  * WHY THIS IS NEEDED:
@@ -79,19 +96,28 @@ function AuthCallbackContent() {
   const code = searchParams.get('code')
   const authType = searchParams.get('type') // 'recovery', 'signup', 'invite', etc.
 
+  // Also check URL params for recovery type (in case it's there)
+  const isRecoveryFromParams = authType === 'recovery'
+
+  // Use module-level detection OR URL param detection
+  const isRecovery = IS_RECOVERY_FLOW_DETECTED || isRecoveryFromParams
+
   // Handle authenticated user - create profile if needed and redirect
-  const handleAuthenticatedUser = useCallback(async (user: User, isRecoveryFlow: boolean = false) => {
+  const handleAuthenticatedUser = useCallback(async (user: User) => {
     // Prevent double processing
     if (processedRef.current) return
     processedRef.current = true
 
     console.log('[auth-callback] User authenticated:', user.email)
     console.log('[auth-callback] User metadata:', user.user_metadata)
-    console.log('[auth-callback] Is recovery flow:', isRecoveryFlow)
+    console.log('[auth-callback] IS_RECOVERY_FLOW_DETECTED (module):', IS_RECOVERY_FLOW_DETECTED)
+    console.log('[auth-callback] isRecoveryFromParams:', isRecoveryFromParams)
+    console.log('[auth-callback] Final isRecovery:', isRecovery)
 
     // If this is a password recovery flow, redirect directly to reset-password page
-    if (isRecoveryFlow) {
-      console.log('[auth-callback] Recovery flow detected, redirecting to reset-password...')
+    // Check BOTH module-level detection AND local detection
+    if (isRecovery) {
+      console.log('[auth-callback] Recovery flow CONFIRMED, redirecting to reset-password...')
       setStatus('success')
       setMessage('Redirecting to reset your password...')
       setTimeout(() => {
@@ -189,9 +215,14 @@ function AuthCallbackContent() {
       setStatus('error')
       setMessage('An unexpected error occurred. Please try again.')
     }
-  }, [])
+  }, [isRecovery, isRecoveryFromParams])
 
   useEffect(() => {
+    // Log module-level detection status
+    console.log('[auth-callback:effect] Module-level IS_RECOVERY_FLOW_DETECTED:', IS_RECOVERY_FLOW_DETECTED)
+    console.log('[auth-callback:effect] Module-level CAPTURED_HASH:', CAPTURED_HASH ? CAPTURED_HASH.substring(0, 50) + '...' : 'empty')
+    console.log('[auth-callback:effect] Component-level isRecovery:', isRecovery)
+
     // Handle explicit errors in URL
     if (errorParam) {
       console.error('[auth-callback] Error in URL:', errorParam, errorDescription)
@@ -213,37 +244,25 @@ function AuthCallbackContent() {
     console.log('[auth-callback] Current URL hash:', window.location.hash ? 'Present (tokens in hash)' : 'Empty')
     console.log('[auth-callback] Code param:', code ? 'Present (PKCE flow)' : 'Empty')
 
-    // CRITICAL: Detect recovery type EARLY from hash fragment before any auth processing
-    // This must happen before onAuthStateChange fires
-    let isRecoveryFlow = authType === 'recovery'
-    if (window.location.hash) {
-      const earlyHashParams = new URLSearchParams(window.location.hash.substring(1))
-      const hashAuthType = earlyHashParams.get('type')
-      if (hashAuthType === 'recovery') {
-        isRecoveryFlow = true
-        console.log('[auth-callback] RECOVERY FLOW DETECTED from hash!')
-      }
-    }
-
-    // Set up auth state change listener FIRST
+    // Set up auth state change listener
     // The implicit flow client will automatically process hash fragments
     // and fire SIGNED_IN event when tokens are detected
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('[auth-callback] Auth state changed:', event, session?.user?.email, 'isRecovery:', isRecoveryFlow)
+        console.log('[auth-callback] Auth state changed:', event, session?.user?.email, 'isRecovery:', isRecovery)
 
         if (event === 'SIGNED_IN' && session?.user) {
           // CRITICAL: Sync session to main app client for page navigation
           if (session.access_token && session.refresh_token) {
             await syncSessionToMainClient(session.access_token, session.refresh_token)
           }
-          handleAuthenticatedUser(session.user, isRecoveryFlow)
+          handleAuthenticatedUser(session.user)
         } else if (event === 'TOKEN_REFRESHED' && session?.user) {
           // Also sync on token refresh
           if (session.access_token && session.refresh_token) {
             await syncSessionToMainClient(session.access_token, session.refresh_token)
           }
-          handleAuthenticatedUser(session.user, isRecoveryFlow)
+          handleAuthenticatedUser(session.user)
         } else if (event === 'INITIAL_SESSION' && session?.user) {
           // This fires when client initializes and finds a session
           console.log('[auth-callback] Initial session detected')
@@ -251,7 +270,7 @@ function AuthCallbackContent() {
           if (session.access_token && session.refresh_token) {
             await syncSessionToMainClient(session.access_token, session.refresh_token)
           }
-          handleAuthenticatedUser(session.user, isRecoveryFlow)
+          handleAuthenticatedUser(session.user)
         }
       }
     )
@@ -262,8 +281,8 @@ function AuthCallbackContent() {
       const { data: { user: existingUser } } = await supabase.auth.getUser()
 
       if (existingUser) {
-        console.log('[auth-callback] Found existing session, isRecovery:', isRecoveryFlow)
-        handleAuthenticatedUser(existingUser, isRecoveryFlow)
+        console.log('[auth-callback] Found existing session, isRecovery:', isRecovery)
+        handleAuthenticatedUser(existingUser)
         return
       }
 
@@ -283,29 +302,28 @@ function AuthCallbackContent() {
         }
 
         if (data?.user) {
-          handleAuthenticatedUser(data.user, isRecoveryFlow)
+          handleAuthenticatedUser(data.user)
           return
         }
       }
 
       // Check for hash fragment (implicit flow from invite links and recovery)
-      if (window.location.hash && window.location.hash.includes('access_token')) {
-        console.log('[auth-callback] Hash fragment detected, manually extracting tokens...')
+      // Use CAPTURED_HASH from module level since current hash might be cleared
+      const hashToUse = CAPTURED_HASH || window.location.hash
+      if (hashToUse && hashToUse.includes('access_token')) {
+        console.log('[auth-callback] Hash fragment detected, manually extracting tokens from:', hashToUse.substring(0, 50) + '...')
 
         // Parse hash fragment to extract tokens
-        const hashParams = new URLSearchParams(window.location.hash.substring(1))
+        const hashParams = new URLSearchParams(hashToUse.substring(1))
         const accessToken = hashParams.get('access_token')
         const refreshToken = hashParams.get('refresh_token')
-        const hashType = hashParams.get('type') // 'recovery', 'signup', 'invite', etc.
+        const hashType = hashParams.get('type')
 
         console.log('[auth-callback] Tokens extracted:', {
           hasAccessToken: !!accessToken,
           hasRefreshToken: !!refreshToken,
           type: hashType
         })
-
-        // Detect if this is a password recovery flow
-        const isRecovery = hashType === 'recovery' || authType === 'recovery'
 
         if (accessToken && refreshToken) {
           // Set the session on BOTH the implicit client and the main app client
@@ -329,7 +347,7 @@ function AuthCallbackContent() {
               console.warn('[auth-callback] Session sync to main client failed, navigation may fail')
             }
 
-            handleAuthenticatedUser(sessionData.user, isRecovery)
+            handleAuthenticatedUser(sessionData.user)
             return
           }
         }
@@ -339,7 +357,7 @@ function AuthCallbackContent() {
         const { data: { user: hashUser } } = await supabase.auth.getUser()
         if (hashUser) {
           console.log('[auth-callback] User found after hash processing')
-          handleAuthenticatedUser(hashUser, isRecovery)
+          handleAuthenticatedUser(hashUser)
           return
         }
       }
@@ -352,6 +370,7 @@ function AuthCallbackContent() {
         if (!processedRef.current) {
           console.error('[auth-callback] Timeout - no authenticated user found')
           console.error('[auth-callback] Hash was:', window.location.hash ? 'Present' : 'Empty')
+          console.error('[auth-callback] CAPTURED_HASH was:', CAPTURED_HASH ? 'Present' : 'Empty')
           setStatus('error')
           setMessage('Verification failed. The link may have expired or already been used.')
           setTimeout(() => {
@@ -367,7 +386,7 @@ function AuthCallbackContent() {
     return () => {
       subscription.unsubscribe()
     }
-  }, [errorParam, errorDescription, code, authType, portalContext, router, handleAuthenticatedUser])
+  }, [errorParam, errorDescription, code, authType, portalContext, router, handleAuthenticatedUser, isRecovery])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-slate-50 flex items-center justify-center p-4">
