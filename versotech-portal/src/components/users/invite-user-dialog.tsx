@@ -276,39 +276,21 @@ export function InviteUserDialog({
           </div>
 
           {entityType === 'lawyer' && (
-            <>
-              <div className="flex items-center justify-between rounded-lg border p-3">
-                <div className="space-y-0.5">
-                  <Label htmlFor="is_signatory" className="text-sm font-medium">
-                    Signatory
-                  </Label>
-                  <p className="text-xs text-muted-foreground">
-                    Can act as signatory for legal documents
-                  </p>
-                </div>
-                <Switch
-                  id="is_signatory"
-                  checked={isSignatory}
-                  onCheckedChange={(checked) => setValue('is_signatory', checked)}
-                />
+            <div className="flex items-center justify-between rounded-lg border p-3">
+              <div className="space-y-0.5">
+                <Label htmlFor="can_sign" className="text-sm font-medium">
+                  Can Sign Documents
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  Has authority to sign on behalf of the law firm
+                </p>
               </div>
-
-              <div className="flex items-center justify-between rounded-lg border p-3">
-                <div className="space-y-0.5">
-                  <Label htmlFor="can_sign" className="text-sm font-medium">
-                    Can Sign Documents
-                  </Label>
-                  <p className="text-xs text-muted-foreground">
-                    Has authority to sign on behalf of the law firm
-                  </p>
-                </div>
-                <Switch
-                  id="can_sign"
-                  checked={canSign}
-                  onCheckedChange={(checked) => setValue('can_sign', checked)}
-                />
-              </div>
-            </>
+              <Switch
+                id="can_sign"
+                checked={canSign}
+                onCheckedChange={(checked) => setValue('can_sign', checked)}
+              />
+            </div>
           )}
 
           <DialogFooter className="gap-2 sm:gap-0">

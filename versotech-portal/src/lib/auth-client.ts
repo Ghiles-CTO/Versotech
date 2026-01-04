@@ -71,34 +71,17 @@ export class AuthError extends Error {
   }
 }
 
-// Sign up with email and password
+/**
+ * SIGNUP - DISABLED
+ *
+ * This platform is invite-only. Self-registration is not allowed.
+ * This function is kept for backwards compatibility but will always fail.
+ *
+ * @deprecated Use admin invitation flow instead
+ */
 export const signUp = async (email: string, password: string, displayName: string, portal: 'investor' | 'staff' = 'investor') => {
-  try {
-    const response = await fetch('/api/auth/signup', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ email, password, displayName, portal })
-    })
-
-    const payload = await response.json().catch(() => ({}))
-
-    if (!response.ok || !payload.success) {
-      const message = typeof payload.error === 'string' && payload.error.trim()
-        ? payload.error
-        : 'Sign up failed. Please try again.'
-      throw new AuthError(message)
-    }
-
-    return payload
-  } catch (error) {
-    if (error instanceof AuthError) {
-      throw error
-    }
-    console.error('Sign up failed:', error)
-    throw new AuthError('Sign up failed. Please try again.')
-  }
+  console.warn('[auth-client] signUp() called but self-registration is disabled')
+  throw new AuthError('Self-registration is disabled. This platform is invite-only. Please contact your administrator or relationship manager to request access.')
 }
 
 // Sign in with email and password
@@ -154,38 +137,17 @@ export const signIn = async (email: string, password: string, portal: 'investor'
   }
 }
 
-// Sign in with Google
+/**
+ * GOOGLE OAUTH - DISABLED
+ *
+ * Google OAuth has been disabled for security reasons.
+ * This platform is invite-only with email/password authentication.
+ *
+ * @deprecated OAuth providers have been disabled
+ */
 export const signInWithGoogle = async (portalType: 'staff' | 'investor' = 'investor') => {
-  const supabase = createClient()
-
-  try {
-    // Get the application URL - should always work in browser context
-    let appUrl = process.env.NEXT_PUBLIC_APP_URL
-
-    if (!appUrl && typeof window !== 'undefined') {
-      appUrl = window.location.origin
-    }
-
-    if (!appUrl) {
-      throw new AuthError('Application URL not configured. Cannot perform OAuth authentication.')
-    }
-
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${appUrl}/auth/callback?portal=${portalType}`
-      }
-    })
-
-    if (error) {
-      throw new AuthError(error.message, error.message)
-    }
-
-    return data
-  } catch (error) {
-    if (error instanceof AuthError) throw error
-    throw new AuthError('Google sign in failed. Please try again.')
-  }
+  console.warn('[auth-client] signInWithGoogle() called but OAuth is disabled')
+  throw new AuthError('Google sign-in is disabled. Please use your email and password to sign in.')
 }
 
 // Sign out with comprehensive session clearing

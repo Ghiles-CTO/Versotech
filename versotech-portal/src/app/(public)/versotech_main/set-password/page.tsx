@@ -28,13 +28,22 @@ function SetPasswordContent() {
   const [message, setMessage] = useState<{ type: 'error' | 'success', text: string } | null>(null)
 
   useEffect(() => {
-    const checkAuth = async () => {
+    const checkAuth = async (retryCount = 0) => {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
 
       if (!user) {
-        // Not logged in - redirect to login
-        router.replace('/versotech_main/login')
+        // Session might not be fully synced yet after redirect from auth callback
+        // Retry a few times with exponential backoff before giving up
+        if (retryCount < 3) {
+          console.log(`[set-password] No user found, retry ${retryCount + 1}/3...`)
+          await new Promise(resolve => setTimeout(resolve, 500 * (retryCount + 1)))
+          return checkAuth(retryCount + 1)
+        }
+
+        // Still no user after retries - redirect to login
+        console.log('[set-password] No user found after retries, redirecting to login')
+        router.replace('/versotech_main/login?error=session_not_found')
         return
       }
 

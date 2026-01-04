@@ -6,19 +6,25 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Separator } from '@/components/ui/separator'
-import { signIn, signInWithGoogle, AuthError } from '@/lib/auth-client'
+import { signIn, AuthError } from '@/lib/auth-client'
 import {
   Loader2,
   Eye,
   EyeOff,
   Shield,
   Lock,
-  ArrowLeft
+  ArrowLeft,
+  Mail
 } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
 
+/**
+ * LEGACY STAFF LOGIN PAGE - INVITE ONLY
+ *
+ * This page redirects to /versotech_main/login but is kept for backwards compatibility.
+ * Google OAuth has been removed for security - all access is via admin invitation.
+ */
 function StaffLoginContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -55,9 +61,9 @@ function StaffLoginContent() {
       const result = await signIn(email, password, 'staff')
       if (result?.success) {
         if ((result.user as any)?.demo) {
-          window.location.href = result.redirect ?? '/versotech/staff'
+          window.location.href = result.redirect ?? '/versotech_main/dashboard'
         } else {
-          router.replace(result.redirect ?? '/versotech/staff')
+          router.replace(result.redirect ?? '/versotech_main/dashboard')
         }
       }
     } catch (error) {
@@ -68,34 +74,23 @@ function StaffLoginContent() {
     }
   }
 
-  const handleGoogleSignIn = async () => {
-    try {
-      setIsLoading(true)
-      await signInWithGoogle('staff')
-    } catch (error) {
-      if (error instanceof AuthError) setMessage({ type: 'error', text: error.message })
-      else setMessage({ type: 'error', text: 'Google sign in failed.' })
-      setIsLoading(false)
-    }
-  }
-
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-[#050505] p-4 font-sans text-zinc-100">
-      
+
       <Link href="/" className="absolute top-8 left-8 text-sm text-zinc-500 hover:text-white transition-colors flex items-center gap-2 group">
         <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Return Home
       </Link>
 
       <div className="w-full max-w-md space-y-8 animate-in fade-in zoom-in-95 duration-700">
-        
+
         <div className="text-center space-y-4">
           <div className="flex justify-center mb-4">
              <div className="relative w-48 h-16">
-                <Image 
-                  src="/versotech-logo.jpg" 
-                  alt="VERSO Tech" 
+                <Image
+                  src="/versotech-logo.jpg"
+                  alt="VERSO Tech"
                   fill
-                  className="object-contain invert" // Inverting for dark mode compatibility if the logo is dark
+                  className="object-contain invert"
                   priority
                 />
              </div>
@@ -122,27 +117,6 @@ function StaffLoginContent() {
               </div>
             )}
 
-            <Button
-              variant="outline"
-              onClick={handleGoogleSignIn}
-              disabled={isLoading}
-              className="w-full h-12 bg-white/5 border-white/10 hover:bg-white/10 text-white font-medium relative"
-            >
-              <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24">
-                <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-                <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-              </svg>
-              Continue with Google
-            </Button>
-
-            <div className="relative flex items-center py-2 overflow-hidden">
-              <Separator className="flex-grow border-t border-white/10" />
-              <span className="flex-shrink-0 px-4 text-xs text-zinc-500 uppercase tracking-wide font-medium whitespace-nowrap">Or using credentials</span>
-              <Separator className="flex-grow border-t border-white/10" />
-            </div>
-
             <form onSubmit={handleEmailAuth} className="space-y-5">
               <div className="space-y-1.5">
                 <Label className="text-xs font-semibold text-zinc-500 uppercase">System ID / Email</Label>
@@ -157,7 +131,15 @@ function StaffLoginContent() {
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-zinc-500 uppercase">Passkey</Label>
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs font-semibold text-zinc-500 uppercase">Passkey</Label>
+                  <Link
+                    href="/versotech_main/reset-password"
+                    className="text-xs text-zinc-500 hover:text-white transition-colors"
+                  >
+                    Forgot Passkey?
+                  </Link>
+                </div>
                 <div className="relative">
                   <Input
                     type={showPassword ? 'text' : 'password'}
@@ -190,9 +172,16 @@ function StaffLoginContent() {
               </Button>
             </form>
 
-            <p className="text-center text-xs text-zinc-600 pt-2">
-              Staff access requires invitation or @versotech.com email
-            </p>
+            {/* Invite-only notice */}
+            <div className="text-center space-y-3 pt-2">
+              <div className="flex items-center justify-center gap-2 text-xs text-zinc-500">
+                <Mail className="h-3 w-3" />
+                <span>Staff access requires invitation</span>
+              </div>
+              <p className="text-xs text-zinc-600">
+                Contact your system administrator for access.
+              </p>
+            </div>
 
           </CardContent>
         </Card>

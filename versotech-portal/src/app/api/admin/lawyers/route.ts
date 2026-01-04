@@ -18,7 +18,7 @@ const createLawyerSchema = z.object({
   country: z.string().optional().nullable(),
   specializations: z.array(z.string()).optional().nullable(),
   is_active: z.boolean().default(true),
-  kyc_status: z.string().optional().default('draft'),
+  kyc_status: z.string().optional().default('not_started'),
 })
 
 export async function POST(request: NextRequest) {

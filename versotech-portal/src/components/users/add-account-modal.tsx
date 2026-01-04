@@ -122,9 +122,9 @@ const lawyerSchema = z.object({
 const partnerSchema = z.object({
   name: z.string().min(2, 'Name is required'),
   legal_name: z.string().optional(),
-  type: z.enum(['entity', 'individual']),
-  partner_type: z.enum(['co-investor', 'syndicate-lead', 'family-office', 'other']),
-  status: z.enum(['active', 'pending', 'inactive']).default('active'),
+  type: z.enum(['entity', 'individual', 'institutional']),
+  partner_type: z.enum(['co_investor', 'syndicate', 'strategic', 'institutional', 'other']),
+  status: z.enum(['active', 'inactive', 'suspended']).default('active'),
   contact_name: z.string().optional(),
   contact_email: z.string().email().optional().or(z.literal('')),
   country: z.string().optional(),
@@ -133,9 +133,9 @@ const partnerSchema = z.object({
 const commercialPartnerSchema = z.object({
   name: z.string().min(2, 'Name is required'),
   legal_name: z.string().optional(),
-  type: z.enum(['entity', 'individual']),
-  cp_type: z.enum(['bank', 'insurance', 'wealth-manager', 'broker', 'custodian', 'other']),
-  status: z.enum(['active', 'pending', 'inactive']).default('active'),
+  type: z.enum(['entity', 'individual', 'institutional']),
+  cp_type: z.enum(['placement_agent', 'distributor', 'wealth_manager', 'family_office', 'bank', 'other']),
+  status: z.enum(['active', 'inactive', 'suspended']).default('active'),
   contact_name: z.string().optional(),
   contact_email: z.string().email().optional().or(z.literal('')),
   country: z.string().optional(),
@@ -207,7 +207,7 @@ export function AddAccountModal({
       investor: { type: 'individual', legal_name: '' },
       introducer: { status: 'active', payment_terms: 'net_30', legal_name: '' },
       lawyer: { firm_name: '', display_name: '' },
-      partner: { type: 'entity', partner_type: 'co-investor', status: 'active', name: '' },
+      partner: { type: 'entity', partner_type: 'co_investor', status: 'active', name: '' },
       commercial_partner: { type: 'entity', cp_type: 'bank', status: 'active', name: '' },
       arranger: { status: 'active', legal_name: '' },
     }
@@ -493,11 +493,13 @@ export function AddAccountModal({
             {renderFormField('type', 'Type', 'select', [
               { value: 'entity', label: 'Entity' },
               { value: 'individual', label: 'Individual' },
+              { value: 'institutional', label: 'Institutional' },
             ])}
             {renderFormField('partner_type', 'Partner Type', 'select', [
-              { value: 'co-investor', label: 'Co-Investor' },
-              { value: 'syndicate-lead', label: 'Syndicate Lead' },
-              { value: 'family-office', label: 'Family Office' },
+              { value: 'co_investor', label: 'Co-Investor' },
+              { value: 'syndicate', label: 'Syndicate' },
+              { value: 'strategic', label: 'Strategic' },
+              { value: 'institutional', label: 'Institutional' },
               { value: 'other', label: 'Other' },
             ])}
           </div>
@@ -516,13 +518,14 @@ export function AddAccountModal({
             {renderFormField('type', 'Type', 'select', [
               { value: 'entity', label: 'Entity' },
               { value: 'individual', label: 'Individual' },
+              { value: 'institutional', label: 'Institutional' },
             ])}
             {renderFormField('cp_type', 'Service Type', 'select', [
+              { value: 'placement_agent', label: 'Placement Agent' },
+              { value: 'distributor', label: 'Distributor' },
+              { value: 'wealth_manager', label: 'Wealth Manager' },
+              { value: 'family_office', label: 'Family Office' },
               { value: 'bank', label: 'Bank' },
-              { value: 'insurance', label: 'Insurance' },
-              { value: 'wealth-manager', label: 'Wealth Manager' },
-              { value: 'broker', label: 'Broker' },
-              { value: 'custodian', label: 'Custodian' },
               { value: 'other', label: 'Other' },
             ])}
           </div>

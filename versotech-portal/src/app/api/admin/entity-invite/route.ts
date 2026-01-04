@@ -148,9 +148,8 @@ export async function POST(request: NextRequest) {
         created_at: new Date().toISOString(),
       }
 
-      // Add lawyer-specific fields
+      // Add lawyer-specific fields (only can_sign exists in lawyer_users table)
       if (entity_type === 'lawyer') {
-        junctionData.is_signatory = is_signatory
         junctionData.can_sign = can_sign
       }
 
@@ -240,9 +239,8 @@ export async function POST(request: NextRequest) {
       created_at: new Date().toISOString(),
     }
 
-    // Add lawyer-specific fields
+    // Add lawyer-specific fields (only can_sign exists in lawyer_users table)
     if (entity_type === 'lawyer') {
-      junctionData.is_signatory = is_signatory
       junctionData.can_sign = can_sign
     }
 

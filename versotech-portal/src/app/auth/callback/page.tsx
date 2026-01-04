@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { createBrowserClient } from '@supabase/ssr'
 import { Loader2, CheckCircle, XCircle } from 'lucide-react'
 import type { User, SupabaseClient } from '@supabase/supabase-js'
+import { createClient as createMainClient, resetClient } from '@/lib/supabase/client'
 
 /**
  * Create a special Supabase client for auth callback that handles IMPLICIT flow.
@@ -14,6 +15,9 @@ import type { User, SupabaseClient } from '@supabase/supabase-js'
  * - BUT Supabase inviteUserByEmail() uses IMPLICIT flow (tokens in hash fragment)
  * - PKCE clients IGNORE hash fragments (#access_token=...)
  * - So we need an IMPLICIT client specifically for processing invite magic links
+ *
+ * IMPORTANT: After extracting tokens, we sync the session to the main app's
+ * singleton client to ensure session persistence across page navigation.
  */
 function createImplicitFlowClient(): SupabaseClient {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -27,6 +31,38 @@ function createImplicitFlowClient(): SupabaseClient {
       flowType: 'implicit',      // CRITICAL: Process hash fragments from invite links
     },
   })
+}
+
+/**
+ * Sync the session to the main app's singleton client.
+ * This ensures that when we navigate to set-password or other pages,
+ * they can access the session using the standard createClient().
+ */
+async function syncSessionToMainClient(accessToken: string, refreshToken: string): Promise<boolean> {
+  try {
+    // Reset the singleton to ensure fresh state
+    resetClient()
+
+    // Get the main app's singleton client
+    const mainClient = createMainClient()
+
+    // Set the session on the main client
+    const { error } = await mainClient.auth.setSession({
+      access_token: accessToken,
+      refresh_token: refreshToken
+    })
+
+    if (error) {
+      console.error('[auth-callback] Failed to sync session to main client:', error)
+      return false
+    }
+
+    console.log('[auth-callback] Session synced to main app client successfully')
+    return true
+  } catch (err) {
+    console.error('[auth-callback] Error syncing session:', err)
+    return false
+  }
 }
 
 function AuthCallbackContent() {
@@ -172,12 +208,24 @@ function AuthCallbackContent() {
         console.log('[auth-callback] Auth state changed:', event, session?.user?.email)
 
         if (event === 'SIGNED_IN' && session?.user) {
+          // CRITICAL: Sync session to main app client for page navigation
+          if (session.access_token && session.refresh_token) {
+            await syncSessionToMainClient(session.access_token, session.refresh_token)
+          }
           handleAuthenticatedUser(session.user)
         } else if (event === 'TOKEN_REFRESHED' && session?.user) {
+          // Also sync on token refresh
+          if (session.access_token && session.refresh_token) {
+            await syncSessionToMainClient(session.access_token, session.refresh_token)
+          }
           handleAuthenticatedUser(session.user)
         } else if (event === 'INITIAL_SESSION' && session?.user) {
           // This fires when client initializes and finds a session
           console.log('[auth-callback] Initial session detected')
+          // Sync initial session too
+          if (session.access_token && session.refresh_token) {
+            await syncSessionToMainClient(session.access_token, session.refresh_token)
+          }
           handleAuthenticatedUser(session.user)
         }
       }
@@ -230,16 +278,27 @@ function AuthCallbackContent() {
         })
 
         if (accessToken && refreshToken) {
-          // Manually set the session using the tokens from hash
+          // Set the session on BOTH the implicit client and the main app client
+          // This ensures session persistence across page navigation
+
+          // 1. Set on implicit client first (for immediate use)
           const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
             access_token: accessToken,
             refresh_token: refreshToken
           })
 
           if (sessionError) {
-            console.error('[auth-callback] Failed to set session:', sessionError)
+            console.error('[auth-callback] Failed to set session on implicit client:', sessionError)
           } else if (sessionData?.user) {
-            console.log('[auth-callback] Session set successfully for:', sessionData.user.email)
+            console.log('[auth-callback] Session set on implicit client for:', sessionData.user.email)
+
+            // 2. CRITICAL: Also sync to main app's singleton client
+            // This ensures the set-password page can access the session
+            const synced = await syncSessionToMainClient(accessToken, refreshToken)
+            if (!synced) {
+              console.warn('[auth-callback] Session sync to main client failed, navigation may fail')
+            }
+
             handleAuthenticatedUser(sessionData.user)
             return
           }

@@ -5,9 +5,9 @@ import { z } from 'zod'
 const createCommercialPartnerSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
   legal_name: z.string().optional(),
-  type: z.enum(['entity', 'individual']),
-  cp_type: z.enum(['bank', 'insurance', 'wealth-manager', 'broker', 'custodian', 'other']),
-  status: z.enum(['active', 'pending', 'inactive']).default('active'),
+  type: z.enum(['entity', 'individual', 'institutional']),
+  cp_type: z.enum(['placement_agent', 'distributor', 'wealth_manager', 'family_office', 'bank', 'other']),
+  status: z.enum(['active', 'inactive', 'suspended']).default('active'),
   regulatory_status: z.string().optional(),
   regulatory_number: z.string().optional(),
   jurisdiction: z.string().optional(),
