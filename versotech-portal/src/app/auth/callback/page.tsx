@@ -121,7 +121,10 @@ function AuthCallbackContent() {
       setStatus('success')
       setMessage('Redirecting to reset your password...')
       setTimeout(() => {
-        window.location.href = '/versotech_main/reset-password'
+        // CRITICAL: Pass query param to indicate this is from a recovery flow
+        // This prevents the reset-password page from showing password form
+        // to users who just happen to have an existing session
+        window.location.href = '/versotech_main/reset-password?from=recovery'
       }, 1000)
       return
     }

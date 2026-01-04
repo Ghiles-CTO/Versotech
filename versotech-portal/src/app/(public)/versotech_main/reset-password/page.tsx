@@ -84,20 +84,25 @@ function ResetPasswordContent() {
         return
       }
 
-      // CRITICAL: Check if we have an existing session (from auth/callback redirect)
-      // The auth callback syncs the session before redirecting here
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
-        console.log('[reset-password] Found existing session from auth callback redirect, user:', user.email)
-        // User has a valid session - they were likely redirected from auth callback
-        // Allow them to set a new password
-        setIsRecoveryMode(true)
-        setCheckingSession(false)
-        return
+      // Check if we were redirected from auth/callback with recovery flag
+      // This is the ONLY way to enter recovery mode via redirect (not just any session)
+      const fromRecovery = searchParams.get('from') === 'recovery'
+      if (fromRecovery) {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user) {
+          console.log('[reset-password] Recovery redirect from auth callback, user:', user.email)
+          setIsRecoveryMode(true)
+          setCheckingSession(false)
+          return
+        } else {
+          // Had the flag but no session - session may have expired
+          console.log('[reset-password] Recovery flag present but no session')
+          setMessage({ type: 'error', text: 'Your session has expired. Please request a new password reset link.' })
+        }
       }
 
-      // No session found - show the email request form
-      console.log('[reset-password] No session found, showing request form')
+      // No recovery indicators - show the email request form
+      console.log('[reset-password] No recovery indicators, showing request form')
       setCheckingSession(false)
     }
 
