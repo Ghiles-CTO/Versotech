@@ -244,18 +244,25 @@ export const onAuthStateChange = (callback: (event: string, session: Session | n
   return supabase.auth.onAuthStateChange(callback)
 }
 
-// Password reset
+// Password reset - uses custom API with Resend email
 export const resetPassword = async (email: string) => {
-  const supabase = createClient()
-
   try {
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/versotech_main/reset-password`
+    const response = await fetch('/api/auth/request-reset', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ email })
     })
 
-    if (error) {
-      throw new AuthError(error.message, error.message)
+    const data = await response.json()
+
+    if (!response.ok) {
+      throw new AuthError(data.error || 'Password reset failed. Please try again.')
     }
+
+    // Success - email sent (or would have been if account exists)
+    return { success: true, message: data.message }
   } catch (error) {
     if (error instanceof AuthError) throw error
     throw new AuthError('Password reset failed. Please try again.')

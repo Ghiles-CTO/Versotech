@@ -2,10 +2,10 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import SignatureCanvas from 'react-signature-canvas'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import { Loader2 } from 'lucide-react'
+import { Loader2, RotateCcw } from 'lucide-react'
+import SignatureCanvas from 'react-signature-canvas'
 
 interface SignatureRequest {
   id: string
@@ -22,14 +22,13 @@ export default function SignPage() {
   const params = useParams()
   const router = useRouter()
   const token = params.token as string
-
   const sigCanvasRef = useRef<SignatureCanvas>(null)
 
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [signatureRequest, setSignatureRequest] = useState<SignatureRequest | null>(null)
-  const [canvasEmpty, setCanvasEmpty] = useState(true)
+  const [hasDrawn, setHasDrawn] = useState(false)
 
   const fetchSignatureRequest = useCallback(async () => {
     try {
@@ -62,17 +61,22 @@ export default function SignPage() {
     fetchSignatureRequest()
   }, [token, fetchSignatureRequest])
 
-  const handleClear = () => {
-    sigCanvasRef.current?.clear()
-    setCanvasEmpty(true)
+  const handleDrawEnd = () => {
+    if (sigCanvasRef.current && !sigCanvasRef.current.isEmpty()) {
+      setHasDrawn(true)
+      setError(null)
+    }
   }
 
-  const handleBegin = () => {
-    setCanvasEmpty(false)
+  const handleClear = () => {
+    if (sigCanvasRef.current) {
+      sigCanvasRef.current.clear()
+      setHasDrawn(false)
+    }
   }
 
   const handleSubmit = async () => {
-    if (!sigCanvasRef.current || canvasEmpty) {
+    if (!sigCanvasRef.current || sigCanvasRef.current.isEmpty()) {
       setError('Please provide your signature')
       return
     }
@@ -81,8 +85,9 @@ export default function SignPage() {
     setError(null)
 
     try {
-      // Get signature as base64 data URL
-      const signature_data_url = sigCanvasRef.current.toDataURL('image/png')
+      // Get trimmed canvas (removes whitespace around signature)
+      const trimmedCanvas = sigCanvasRef.current.getTrimmedCanvas()
+      const signature_data_url = trimmedCanvas.toDataURL('image/png')
 
       // Submit signature
       const response = await fetch('/api/signature/submit', {
@@ -114,10 +119,10 @@ export default function SignPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-muted/50 to-background">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-8 w-8 animate-spin text-slate-600" />
-          <p className="text-slate-600">Loading signature request...</p>
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          <p className="text-muted-foreground">Loading signature request...</p>
         </div>
       </div>
     )
@@ -125,12 +130,12 @@ export default function SignPage() {
 
   if (error && !signatureRequest) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 p-4">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-muted/50 to-background p-4">
         <Card className="max-w-md w-full p-8 text-center">
-          <div className="text-red-600 text-xl font-semibold mb-4">
+          <div className="text-red-600 dark:text-red-400 text-xl font-semibold mb-4">
             {error}
           </div>
-          <p className="text-slate-600">
+          <p className="text-muted-foreground">
             This signature link may be invalid, expired, or already used.
           </p>
         </Card>
@@ -139,37 +144,37 @@ export default function SignPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4">
+    <div className="min-h-screen bg-gradient-to-br from-muted/50 to-background p-4">
       <div className="max-w-3xl mx-auto py-8">
         {/* Header */}
         <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold text-slate-900 mb-2">
+          <h1 className="text-3xl font-bold text-foreground mb-2">
             Document Signature
           </h1>
-          <p className="text-slate-600">
+          <p className="text-muted-foreground">
             Please review and sign the document below
           </p>
         </div>
 
         {/* Document Info Card */}
         <Card className="p-6 mb-6">
-          <h2 className="text-lg font-semibold mb-4">Document Information</h2>
+          <h2 className="text-lg font-semibold text-foreground mb-4">Document Information</h2>
           <div className="space-y-3">
             <div className="flex justify-between">
-              <span className="text-slate-600">Signer:</span>
-              <span className="font-medium">{signatureRequest?.signer_name}</span>
+              <span className="text-muted-foreground">Signer:</span>
+              <span className="font-medium text-foreground">{signatureRequest?.signer_name}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-600">Email:</span>
-              <span className="font-medium">{signatureRequest?.signer_email}</span>
+              <span className="text-muted-foreground">Email:</span>
+              <span className="font-medium text-foreground">{signatureRequest?.signer_email}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-600">Document Type:</span>
-              <span className="font-medium uppercase">{signatureRequest?.document_type}</span>
+              <span className="text-muted-foreground">Document Type:</span>
+              <span className="font-medium text-foreground uppercase">{signatureRequest?.document_type}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-600">Expires:</span>
-              <span className="font-medium">
+              <span className="text-muted-foreground">Expires:</span>
+              <span className="font-medium text-foreground">
                 {signatureRequest?.expires_at
                   ? new Date(signatureRequest.expires_at).toLocaleDateString()
                   : 'N/A'}
@@ -194,32 +199,34 @@ export default function SignPage() {
 
         {/* Signature Canvas Card */}
         <Card className="p-6 mb-6">
-          <h2 className="text-lg font-semibold mb-4">Your Signature</h2>
+          <h2 className="text-lg font-semibold text-foreground mb-4">Your Signature</h2>
 
           <div className="mb-4">
-            <div className="border-2 border-dashed border-slate-300 rounded-lg bg-white">
+            {/* Note: Signature canvas must remain white background for proper signature capture and PDF embedding */}
+            <div className="border-2 border-dashed border-border rounded-lg bg-white overflow-hidden">
               <SignatureCanvas
                 ref={sigCanvasRef}
                 canvasProps={{
-                  className: 'w-full h-48 cursor-crosshair touch-none',
-                  style: { touchAction: 'none' }
+                  className: 'w-full cursor-crosshair',
+                  style: { width: '100%', height: '192px' }
                 }}
-                onBegin={handleBegin}
-                backgroundColor="rgb(255, 255, 255)"
-                penColor="rgb(0, 0, 0)"
+                penColor="black"
+                backgroundColor="white"
+                onEnd={handleDrawEnd}
               />
             </div>
           </div>
 
           <div className="flex justify-between items-center">
-            <p className="text-sm text-slate-500">
+            <p className="text-sm text-muted-foreground">
               Draw your signature using your mouse, finger, or stylus
             </p>
             <Button
               variant="outline"
               onClick={handleClear}
-              disabled={submitting}
+              disabled={submitting || !hasDrawn}
             >
+              <RotateCcw className="h-4 w-4 mr-2" />
               Clear
             </Button>
           </div>
@@ -237,7 +244,7 @@ export default function SignPage() {
           <Button
             size="lg"
             onClick={handleSubmit}
-            disabled={submitting || canvasEmpty}
+            disabled={submitting || !hasDrawn}
             className="min-w-[200px]"
           >
             {submitting ? (
@@ -252,7 +259,7 @@ export default function SignPage() {
         </div>
 
         {/* Legal Disclaimer */}
-        <div className="mt-8 text-center text-xs text-slate-500">
+        <div className="mt-8 text-center text-xs text-muted-foreground">
           <p>
             By signing this document, you agree that your electronic signature
             is legally binding and has the same effect as a handwritten signature.

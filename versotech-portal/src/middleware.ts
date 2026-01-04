@@ -305,7 +305,8 @@ export async function middleware(request: NextRequest) {
       '/versotech_main/login',
       '/versotech_main/set-password',
       '/versotech_main/reset-password',
-      '/logout'
+      '/logout',
+      '/invitation/accept'  // Allow unauthenticated access for new user invitations
     ]
 
     const isPublicRoute = publicRoutes.includes(pathname) || pathname.startsWith('/sign/')

@@ -91,6 +91,18 @@ export async function GET(
       emailMatch = profile?.email?.toLowerCase() === invitation.email.toLowerCase()
     }
 
+    // Check if the invited email already has an account (for showing correct UI)
+    let emailHasAccount = false
+    if (!user) {
+      const { data: existingProfile } = await serviceSupabase
+        .from('profiles')
+        .select('id')
+        .eq('email', invitation.email.toLowerCase())
+        .maybeSingle()
+
+      emailHasAccount = !!existingProfile
+    }
+
     return NextResponse.json({
       invitation: {
         id: invitation.id,
@@ -104,7 +116,8 @@ export async function GET(
       },
       user_logged_in: !!user,
       email_match: emailMatch,
-      user_email: user?.email
+      user_email: user?.email,
+      email_has_account: emailHasAccount
     })
 
   } catch (error) {

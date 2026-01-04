@@ -75,7 +75,7 @@ export default async function LawyerProfilePage() {
   // Get lawyer details
   const { data: lawyer } = await serviceSupabase
     .from('lawyers')
-    .select('id, firm_name, display_name, specializations, is_active, primary_contact_phone, primary_contact_email')
+    .select('id, firm_name, display_name, specializations, is_active, primary_contact_phone, primary_contact_email, primary_contact_name, logo_url, kyc_status')
     .eq('id', lawyerUser.lawyer_id)
     .maybeSingle()
 
@@ -102,7 +102,10 @@ export default async function LawyerProfilePage() {
         specializations: lawyer.specializations ?? null,
         is_active: lawyer.is_active,
         phone: lawyer.primary_contact_phone,
-        email: lawyer.primary_contact_email
+        email: lawyer.primary_contact_email,
+        primary_contact_name: lawyer.primary_contact_name,
+        logo_url: lawyer.logo_url,
+        kyc_status: lawyer.kyc_status
       } : null}
       lawyerUserInfo={{
         role: lawyerUser.role,

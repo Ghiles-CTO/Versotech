@@ -976,7 +976,7 @@ export default function EscrowPage() {
                           </TableCell>
                           <TableCell className="text-right">
                             <Button variant="ghost" size="sm" asChild>
-                              <a href={`/versotech_main/opportunities/${deal.deal_id}`}>
+                              <a href={lawyerInfo ? `/versotech_main/lawyer-deal/${deal.deal_id}` : `/versotech_main/opportunities/${deal.deal_id}`}>
                                 <ArrowUpRight className="h-4 w-4" />
                               </a>
                             </Button>
@@ -1038,7 +1038,7 @@ export default function EscrowPage() {
                           </TableCell>
                           <TableCell>
                             <a
-                              href={`/versotech_main/opportunities/${settlement.deal_id}`}
+                              href={lawyerInfo ? `/versotech_main/lawyer-deal/${settlement.deal_id}` : `/versotech_main/opportunities/${settlement.deal_id}`}
                               className="text-primary hover:underline"
                             >
                               {settlement.deal_name}

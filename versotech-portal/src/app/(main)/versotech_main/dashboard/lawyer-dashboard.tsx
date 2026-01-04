@@ -10,7 +10,6 @@ import {
   Briefcase,
   DollarSign,
   FileText,
-  Clock,
   CheckCircle2,
   ArrowRight,
   Loader2,
@@ -613,7 +612,7 @@ export function LawyerDashboard({ lawyerId, userId, persona }: LawyerDashboardPr
           <CardDescription>Common tasks and workflows</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             <Button variant="outline" asChild className="h-auto py-4 flex-col gap-2">
               <Link href="/versotech_main/subscription-packs">
                 <FileText className="h-5 w-5" />
@@ -630,12 +629,6 @@ export function LawyerDashboard({ lawyerId, userId, persona }: LawyerDashboardPr
               <Link href="/versotech_main/assigned-deals">
                 <Briefcase className="h-5 w-5" />
                 <span>View Deals</span>
-              </Link>
-            </Button>
-            <Button variant="outline" asChild className="h-auto py-4 flex-col gap-2">
-              <Link href="/versotech_main/notifications">
-                <Clock className="h-5 w-5" />
-                <span>Notifications</span>
               </Link>
             </Button>
           </div>

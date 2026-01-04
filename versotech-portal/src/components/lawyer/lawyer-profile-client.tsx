@@ -1,10 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Scale,
   User,
@@ -16,15 +18,24 @@ import {
   FileSignature,
   Users,
   Briefcase,
-  Shield,
   Lock,
   Settings,
+  Edit,
+  Save,
+  X,
+  Camera,
+  Loader2,
+  Shield,
+  Clock,
+  AlertTriangle,
 } from 'lucide-react'
 import { MembersManagementTab } from '@/components/members/members-management-tab'
 import { SignatureSpecimenTab } from '@/components/profile/signature-specimen-tab'
-import { LawyerKYCDocumentsTab } from '@/components/profile/lawyer-kyc-documents-tab'
 import { PasswordChangeForm } from '@/components/profile/password-change-form'
 import { PreferencesEditor } from '@/components/profile/preferences-editor'
+import { toast } from 'sonner'
+import { cn } from '@/lib/utils'
+import Image from 'next/image'
 
 type Profile = {
   full_name: string | null
@@ -40,6 +51,9 @@ type LawyerInfo = {
   is_active: boolean
   phone: string | null
   email: string | null
+  logo_url?: string | null
+  kyc_status?: string | null
+  primary_contact_name?: string | null
 }
 
 type LawyerUserInfo = {
@@ -55,6 +69,62 @@ interface LawyerProfileClientProps {
   lawyerUserInfo: LawyerUserInfo
 }
 
+// KYC Status styling with dark mode support
+const KYC_STATUS_STYLES: Record<string, { bg: string; text: string; icon: typeof CheckCircle2 }> = {
+  approved: { bg: 'bg-green-100 dark:bg-green-900/30', text: 'text-green-800 dark:text-green-300', icon: CheckCircle2 },
+  pending: { bg: 'bg-yellow-100 dark:bg-yellow-900/30', text: 'text-yellow-800 dark:text-yellow-300', icon: Clock },
+  pending_review: { bg: 'bg-yellow-100 dark:bg-yellow-900/30', text: 'text-yellow-800 dark:text-yellow-300', icon: Clock },
+  rejected: { bg: 'bg-red-100 dark:bg-red-900/30', text: 'text-red-800 dark:text-red-300', icon: AlertTriangle },
+  not_started: { bg: 'bg-gray-100 dark:bg-gray-800', text: 'text-gray-800 dark:text-gray-300', icon: AlertCircle },
+}
+
+// Editable field component
+function EditableField({
+  label,
+  value,
+  field,
+  isEditing,
+  editValue,
+  onEditChange,
+  type = 'text',
+  icon: Icon,
+  disabled = false,
+}: {
+  label: string
+  value: string | null | undefined
+  field: string
+  isEditing: boolean
+  editValue: string
+  onEditChange: (field: string, value: string) => void
+  type?: 'text' | 'email' | 'tel'
+  icon?: typeof Mail
+  disabled?: boolean
+}) {
+  if (isEditing && !disabled) {
+    return (
+      <div className="space-y-2">
+        <Label className="text-muted-foreground">{label}</Label>
+        <Input
+          type={type}
+          value={editValue}
+          onChange={(e) => onEditChange(field, e.target.value)}
+          className="text-sm"
+        />
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-2">
+      <Label className="text-muted-foreground">{label}</Label>
+      <div className="font-medium flex items-center gap-2">
+        {Icon && <Icon className="h-4 w-4 text-muted-foreground" />}
+        {value || 'Not set'}
+      </div>
+    </div>
+  )
+}
+
 export function LawyerProfileClient({
   userEmail,
   profile,
@@ -62,27 +132,198 @@ export function LawyerProfileClient({
   lawyerUserInfo
 }: LawyerProfileClientProps) {
   const [activeTab, setActiveTab] = useState('overview')
+  const [isEditing, setIsEditing] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Edit state
+  const [editData, setEditData] = useState({
+    display_name: lawyerInfo?.display_name || '',
+    primary_contact_name: lawyerInfo?.primary_contact_name || '',
+    primary_contact_email: lawyerInfo?.email || '',
+    primary_contact_phone: lawyerInfo?.phone || '',
+  })
+
+  const handleEditChange = (field: string, value: string) => {
+    setEditData(prev => ({ ...prev, [field]: value }))
+  }
+
+  const handleSave = async () => {
+    setIsSaving(true)
+    try {
+      const response = await fetch('/api/lawyers/me/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(editData),
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || 'Failed to save profile')
+      }
+
+      toast.success('Profile updated successfully')
+      setIsEditing(false)
+      // Refresh the page to show updated data
+      window.location.reload()
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'Failed to save profile')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const handleCancelEdit = () => {
+    setEditData({
+      display_name: lawyerInfo?.display_name || '',
+      primary_contact_name: lawyerInfo?.primary_contact_name || '',
+      primary_contact_email: lawyerInfo?.email || '',
+      primary_contact_phone: lawyerInfo?.phone || '',
+    })
+    setIsEditing(false)
+  }
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file')
+      return
+    }
+
+    // Validate file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('Image must be less than 2MB')
+      return
+    }
+
+    setIsUploadingLogo(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('type', 'logo')
+
+      const response = await fetch('/api/lawyers/me/profile', {
+        method: 'PUT',
+        body: formData,
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || 'Failed to upload logo')
+      }
+
+      toast.success('Logo updated successfully')
+      window.location.reload()
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'Failed to upload logo')
+    } finally {
+      setIsUploadingLogo(false)
+    }
+  }
+
+  const kycStatus = lawyerInfo?.kyc_status || 'not_started'
+  const kycStyle = KYC_STATUS_STYLES[kycStatus] || KYC_STATUS_STYLES.not_started
+  const KycIcon = kycStyle.icon
+
+  const canEdit = lawyerUserInfo.role === 'admin'
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Lawyer Profile</h1>
-          <p className="text-muted-foreground mt-1">
-            Manage your profile, team members, and signature specimen
-          </p>
+    <div className="p-6 space-y-6 max-w-5xl mx-auto">
+      {/* Header with Logo */}
+      <div className="flex items-start justify-between">
+        <div className="flex items-center gap-4">
+          {/* Logo */}
+          <div className="relative">
+            <div className="h-20 w-20 rounded-lg border-2 border-border overflow-hidden bg-muted flex items-center justify-center">
+              {lawyerInfo?.logo_url ? (
+                <Image
+                  src={lawyerInfo.logo_url}
+                  alt={lawyerInfo.firm_name || 'Logo'}
+                  fill
+                  className="object-cover"
+                />
+              ) : (
+                <Scale className="h-8 w-8 text-muted-foreground" />
+              )}
+            </div>
+            {canEdit && (
+              <>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleLogoUpload}
+                />
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="absolute -bottom-2 -right-2 h-7 w-7 rounded-full"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploadingLogo}
+                >
+                  {isUploadingLogo ? (
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  ) : (
+                    <Camera className="h-3 w-3" />
+                  )}
+                </Button>
+              </>
+            )}
+          </div>
+
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">
+              {lawyerInfo?.firm_name || 'Lawyer Profile'}
+            </h1>
+            <div className="flex items-center gap-2 mt-1">
+              {lawyerInfo?.is_active ? (
+                <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-800">
+                  <CheckCircle2 className="h-3 w-3 mr-1" />
+                  Active
+                </Badge>
+              ) : (
+                <Badge className="bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800">
+                  <AlertCircle className="h-3 w-3 mr-1" />
+                  Inactive
+                </Badge>
+              )}
+              <span className="text-sm text-muted-foreground">
+                {lawyerUserInfo.role} {lawyerUserInfo.is_primary && '(Primary)'}
+              </span>
+            </div>
+          </div>
         </div>
-        {lawyerInfo?.is_active ? (
-          <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200">
-            <CheckCircle2 className="h-3 w-3 mr-1" />
-            Active
-          </Badge>
-        ) : (
-          <Badge className="bg-amber-100 text-amber-800 border-amber-200">
-            <AlertCircle className="h-3 w-3 mr-1" />
-            Inactive
-          </Badge>
+
+        {/* Edit Button */}
+        {canEdit && (
+          <div className="flex gap-2">
+            {isEditing ? (
+              <>
+                <Button variant="outline" onClick={handleCancelEdit} disabled={isSaving}>
+                  <X className="h-4 w-4 mr-2" />
+                  Cancel
+                </Button>
+                <Button onClick={handleSave} disabled={isSaving}>
+                  {isSaving ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Save className="h-4 w-4 mr-2" />
+                  )}
+                  Save Changes
+                </Button>
+              </>
+            ) : (
+              <Button variant="outline" onClick={() => setIsEditing(true)}>
+                <Edit className="h-4 w-4 mr-2" />
+                Edit Profile
+              </Button>
+            )}
+          </div>
         )}
       </div>
 
@@ -96,10 +337,6 @@ export function LawyerProfileClient({
           <TabsTrigger value="members" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
             Members
-          </TabsTrigger>
-          <TabsTrigger value="kyc" className="flex items-center gap-2">
-            <Shield className="h-4 w-4" />
-            KYC Documents
           </TabsTrigger>
           <TabsTrigger value="signature" className="flex items-center gap-2">
             <FileSignature className="h-4 w-4" />
@@ -117,16 +354,100 @@ export function LawyerProfileClient({
 
         {/* Overview Tab */}
         <TabsContent value="overview" className="space-y-6">
+          {/* KYC Status Card */}
+          <Card className={cn('border-l-4', kycStatus === 'approved' ? 'border-l-green-500' : kycStatus === 'rejected' ? 'border-l-red-500' : 'border-l-yellow-500')}>
+            <CardContent className="py-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className={cn('h-10 w-10 rounded-full flex items-center justify-center', kycStyle.bg)}>
+                    <Shield className={cn('h-5 w-5', kycStyle.text)} />
+                  </div>
+                  <div>
+                    <p className="font-medium">KYC Verification Status</p>
+                    <p className="text-sm text-muted-foreground">
+                      Compliance status managed by VERSO administration
+                    </p>
+                  </div>
+                </div>
+                <Badge variant="outline" className={cn('capitalize', kycStyle.bg, kycStyle.text)}>
+                  <KycIcon className="h-3 w-3 mr-1" />
+                  {kycStatus.replace('_', ' ')}
+                </Badge>
+              </div>
+            </CardContent>
+          </Card>
+
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Personal Info */}
+            {/* Firm Information */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Building2 className="h-5 w-5" />
+                  Firm Information
+                </CardTitle>
+                <CardDescription>
+                  Your law firm details
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label className="text-muted-foreground">Legal Name</Label>
+                  <div className="font-medium">
+                    {lawyerInfo?.firm_name || 'Not set'}
+                  </div>
+                </div>
+
+                <EditableField
+                  label="Display Name"
+                  value={lawyerInfo?.display_name}
+                  field="display_name"
+                  isEditing={isEditing}
+                  editValue={editData.display_name}
+                  onEditChange={handleEditChange}
+                />
+
+                <EditableField
+                  label="Contact Person"
+                  value={lawyerInfo?.primary_contact_name}
+                  field="primary_contact_name"
+                  isEditing={isEditing}
+                  editValue={editData.primary_contact_name}
+                  onEditChange={handleEditChange}
+                />
+
+                <EditableField
+                  label="Contact Email"
+                  value={lawyerInfo?.email}
+                  field="primary_contact_email"
+                  isEditing={isEditing}
+                  editValue={editData.primary_contact_email}
+                  onEditChange={handleEditChange}
+                  type="email"
+                  icon={Mail}
+                />
+
+                <EditableField
+                  label="Contact Phone"
+                  value={lawyerInfo?.phone}
+                  field="primary_contact_phone"
+                  isEditing={isEditing}
+                  editValue={editData.primary_contact_phone}
+                  onEditChange={handleEditChange}
+                  type="tel"
+                  icon={Phone}
+                />
+              </CardContent>
+            </Card>
+
+            {/* Personal Information */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <User className="h-5 w-5" />
-                  Personal Information
+                  Your Account
                 </CardTitle>
                 <CardDescription>
-                  Your account details within this law firm
+                  Your personal account linked to this law firm
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -153,57 +474,12 @@ export function LawyerProfileClient({
                       <Badge variant="secondary">Primary Contact</Badge>
                     )}
                     {lawyerUserInfo.can_sign && (
-                      <Badge className="bg-blue-100 text-blue-800 border-blue-200">
+                      <Badge className="bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800">
                         Signatory
                       </Badge>
                     )}
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-
-            {/* Firm Info */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Building2 className="h-5 w-5" />
-                  Firm Information
-                </CardTitle>
-                <CardDescription>
-                  Your law firm details
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label className="text-muted-foreground">Firm Name</Label>
-                  <div className="font-medium">
-                    {lawyerInfo?.firm_name || 'Not set'}
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-muted-foreground">Display Name</Label>
-                  <div className="font-medium">
-                    {lawyerInfo?.display_name || 'Not set'}
-                  </div>
-                </div>
-                {lawyerInfo?.phone && (
-                  <div className="space-y-2">
-                    <Label className="text-muted-foreground">Phone</Label>
-                    <div className="font-medium flex items-center gap-2">
-                      <Phone className="h-4 w-4 text-muted-foreground" />
-                      {lawyerInfo.phone}
-                    </div>
-                  </div>
-                )}
-                {lawyerInfo?.email && (
-                  <div className="space-y-2">
-                    <Label className="text-muted-foreground">Firm Email</Label>
-                    <div className="font-medium flex items-center gap-2">
-                      <Mail className="h-4 w-4 text-muted-foreground" />
-                      {lawyerInfo.email}
-                    </div>
-                  </div>
-                )}
               </CardContent>
             </Card>
           </div>
@@ -241,25 +517,6 @@ export function LawyerProfileClient({
               entityId={lawyerInfo.id}
               entityName={lawyerInfo.firm_name || lawyerInfo.display_name || 'Law Firm'}
               showSignatoryOption={true}
-            />
-          ) : (
-            <Card>
-              <CardContent className="py-8 text-center">
-                <AlertCircle className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
-                <p className="text-muted-foreground">
-                  No law firm linked to your account
-                </p>
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
-
-        {/* KYC Documents Tab */}
-        <TabsContent value="kyc" className="space-y-4">
-          {lawyerInfo ? (
-            <LawyerKYCDocumentsTab
-              lawyerId={lawyerInfo.id}
-              lawyerName={lawyerInfo.firm_name || lawyerInfo.display_name || undefined}
             />
           ) : (
             <Card>

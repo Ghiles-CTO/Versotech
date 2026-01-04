@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -20,8 +20,8 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
+import SignatureCanvas from 'react-signature-canvas'
 
-// Entity type determines which API endpoints to use for signature operations
 type EntityType = 'investor' | 'commercial_partner' | 'partner' | 'introducer' | 'lawyer'
 
 interface SignatureSpecimenTabProps {
@@ -31,7 +31,6 @@ interface SignatureSpecimenTabProps {
   entityId?: string
 }
 
-// API endpoint mapping for each entity type
 function getSignatureApiEndpoints(entityType: EntityType = 'investor') {
   switch (entityType) {
     case 'commercial_partner':
@@ -72,14 +71,9 @@ export function SignatureSpecimenTab({
   currentSignatureUrl,
   onSignatureUpdate,
   entityType = 'investor',
-  entityId,
 }: SignatureSpecimenTabProps) {
-  // Get the appropriate API endpoints for this entity type
   const apiEndpoints = getSignatureApiEndpoints(entityType)
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-  const containerRef = useRef<HTMLDivElement>(null)
-  const isDrawingRef = useRef(false)
-  const lastPointRef = useRef<{ x: number; y: number } | null>(null)
+  const sigCanvasRef = useRef<SignatureCanvas>(null)
 
   const [hasDrawn, setHasDrawn] = useState(false)
   const [signatureUrl, setSignatureUrl] = useState<string | null>(currentSignatureUrl || null)
@@ -89,9 +83,7 @@ export function SignatureSpecimenTab({
   const [uploadPreview, setUploadPreview] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<'draw' | 'upload'>('draw')
   const [error, setError] = useState<string | null>(null)
-  const [canvasReady, setCanvasReady] = useState(false)
 
-  // Load existing signature on mount
   useEffect(() => {
     loadExistingSignature()
   }, [])
@@ -113,164 +105,19 @@ export function SignatureSpecimenTab({
     }
   }
 
-  // Initialize canvas with proper dimensions
-  const initializeCanvas = useCallback(() => {
-    const canvas = canvasRef.current
-    const container = containerRef.current
-    if (!canvas || !container) return
-
-    const rect = container.getBoundingClientRect()
-    if (rect.width === 0 || rect.height === 0) return
-
-    // Set canvas size to match container exactly (1:1 pixel ratio for simplicity)
-    // This avoids DPR scaling issues that cause coordinate misalignment
-    canvas.width = rect.width
-    canvas.height = rect.height
-
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
-
-    // Fill with white background
-    ctx.fillStyle = '#ffffff'
-    ctx.fillRect(0, 0, canvas.width, canvas.height)
-
-    // Set drawing styles
-    ctx.strokeStyle = '#000000'
-    ctx.lineWidth = 2.5
-    ctx.lineCap = 'round'
-    ctx.lineJoin = 'round'
-
-    setCanvasReady(true)
-    setHasDrawn(false)
-  }, [])
-
-  // Setup canvas when draw tab is active
-  useEffect(() => {
-    if (activeTab === 'draw') {
-      // Use requestAnimationFrame to ensure DOM is ready
-      const timer = requestAnimationFrame(() => {
-        initializeCanvas()
-      })
-      return () => cancelAnimationFrame(timer)
+  const handleDrawEnd = () => {
+    if (sigCanvasRef.current && !sigCanvasRef.current.isEmpty()) {
+      setHasDrawn(true)
+      setError(null)
     }
-  }, [activeTab, initializeCanvas])
+  }
 
-  // Handle resize with ResizeObserver
-  useEffect(() => {
-    const container = containerRef.current
-    if (!container) return
-
-    const resizeObserver = new ResizeObserver(() => {
-      if (activeTab === 'draw') {
-        initializeCanvas()
-      }
-    })
-
-    resizeObserver.observe(container)
-    return () => resizeObserver.disconnect()
-  }, [activeTab, initializeCanvas])
-
-  // Get coordinates relative to canvas - simple and reliable
-  const getCanvasCoordinates = useCallback((e: MouseEvent | TouchEvent): { x: number; y: number } | null => {
-    const canvas = canvasRef.current
-    if (!canvas) return null
-
-    const rect = canvas.getBoundingClientRect()
-
-    let clientX: number
-    let clientY: number
-
-    if ('touches' in e && e.touches.length > 0) {
-      clientX = e.touches[0].clientX
-      clientY = e.touches[0].clientY
-    } else if ('clientX' in e) {
-      clientX = e.clientX
-      clientY = e.clientY
-    } else {
-      return null
+  const clearCanvas = () => {
+    if (sigCanvasRef.current) {
+      sigCanvasRef.current.clear()
+      setHasDrawn(false)
     }
-
-    // Calculate position relative to canvas, accounting for any CSS scaling
-    const scaleX = canvas.width / rect.width
-    const scaleY = canvas.height / rect.height
-
-    return {
-      x: (clientX - rect.left) * scaleX,
-      y: (clientY - rect.top) * scaleY
-    }
-  }, [])
-
-  // Drawing functions using native events for better reliability
-  const handlePointerDown = useCallback((e: React.PointerEvent<HTMLCanvasElement>) => {
-    e.preventDefault()
-    const canvas = canvasRef.current
-    if (!canvas) return
-
-    // Capture pointer for smoother drawing
-    canvas.setPointerCapture(e.pointerId)
-
-    const coords = getCanvasCoordinates(e.nativeEvent as unknown as MouseEvent)
-    if (!coords) return
-
-    isDrawingRef.current = true
-    lastPointRef.current = coords
-    setHasDrawn(true)
-    setError(null)
-  }, [getCanvasCoordinates])
-
-  const handlePointerMove = useCallback((e: React.PointerEvent<HTMLCanvasElement>) => {
-    if (!isDrawingRef.current || !lastPointRef.current) return
-    e.preventDefault()
-
-    const canvas = canvasRef.current
-    const ctx = canvas?.getContext('2d')
-    if (!canvas || !ctx) return
-
-    const coords = getCanvasCoordinates(e.nativeEvent as unknown as MouseEvent)
-    if (!coords) return
-
-    // Draw line segment
-    ctx.beginPath()
-    ctx.moveTo(lastPointRef.current.x, lastPointRef.current.y)
-    ctx.lineTo(coords.x, coords.y)
-    ctx.stroke()
-
-    lastPointRef.current = coords
-  }, [getCanvasCoordinates])
-
-  const handlePointerUp = useCallback((e: React.PointerEvent<HTMLCanvasElement>) => {
-    const canvas = canvasRef.current
-    if (canvas) {
-      canvas.releasePointerCapture(e.pointerId)
-    }
-    isDrawingRef.current = false
-    lastPointRef.current = null
-  }, [])
-
-  const handlePointerLeave = useCallback(() => {
-    isDrawingRef.current = false
-    lastPointRef.current = null
-  }, [])
-
-  const clearCanvas = useCallback(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
-
-    // Clear and fill with white
-    ctx.fillStyle = '#ffffff'
-    ctx.fillRect(0, 0, canvas.width, canvas.height)
-
-    // Restore drawing styles
-    ctx.strokeStyle = '#000000'
-    ctx.lineWidth = 2.5
-    ctx.lineCap = 'round'
-    ctx.lineJoin = 'round'
-
-    setHasDrawn(false)
-  }, [])
+  }
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -309,19 +156,19 @@ export function SignatureSpecimenTab({
       let blob: Blob
 
       if (activeTab === 'draw') {
-        const canvas = canvasRef.current
-        if (!canvas || !hasDrawn) {
+        if (!sigCanvasRef.current || sigCanvasRef.current.isEmpty()) {
           setError('Please draw your signature first')
           setIsSaving(false)
           return
         }
 
-        blob = await new Promise<Blob>((resolve, reject) => {
-          canvas.toBlob((b) => {
-            if (b) resolve(b)
-            else reject(new Error('Failed to convert canvas to blob'))
-          }, 'image/png')
-        })
+        // Get trimmed canvas data URL (removes whitespace around signature)
+        const trimmedCanvas = sigCanvasRef.current.getTrimmedCanvas()
+        const dataUrl = trimmedCanvas.toDataURL('image/png')
+
+        // Convert data URL to blob
+        const response = await fetch(dataUrl)
+        blob = await response.blob()
       } else {
         if (!uploadedFile) {
           setError('Please upload an image first')
@@ -334,17 +181,17 @@ export function SignatureSpecimenTab({
       const formData = new FormData()
       formData.append('signature', blob, 'signature.png')
 
-      const response = await fetch(apiEndpoints.post, {
+      const apiResponse = await fetch(apiEndpoints.post, {
         method: 'POST',
         body: formData,
       })
 
-      if (!response.ok) {
-        const errorData = await response.json()
+      if (!apiResponse.ok) {
+        const errorData = await apiResponse.json()
         throw new Error(errorData.error || 'Failed to save signature')
       }
 
-      const data = await response.json()
+      const data = await apiResponse.json()
       setSignatureUrl(data.signature_url)
       onSignatureUpdate?.(data.signature_url)
 
@@ -402,7 +249,6 @@ export function SignatureSpecimenTab({
 
   return (
     <div className="space-y-6">
-      {/* Current Signature Preview */}
       {signatureUrl && (
         <Card>
           <CardHeader>
@@ -421,7 +267,7 @@ export function SignatureSpecimenTab({
                 size="sm"
                 onClick={deleteSignature}
                 disabled={isSaving}
-                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-950/50"
               >
                 {isSaving ? (
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
@@ -444,7 +290,6 @@ export function SignatureSpecimenTab({
         </Card>
       )}
 
-      {/* Signature Input */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base">
@@ -475,20 +320,16 @@ export function SignatureSpecimenTab({
             </TabsList>
 
             <TabsContent value="draw" className="mt-4 space-y-4">
-              <div
-                ref={containerRef}
-                className="border-2 border-dashed rounded-lg bg-white overflow-hidden"
-                style={{ height: '160px' }}
-              >
-                <canvas
-                  ref={canvasRef}
-                  className="w-full h-full cursor-crosshair"
-                  style={{ touchAction: 'none' }}
-                  onPointerDown={handlePointerDown}
-                  onPointerMove={handlePointerMove}
-                  onPointerUp={handlePointerUp}
-                  onPointerLeave={handlePointerLeave}
-                  onPointerCancel={handlePointerUp}
+              <div className="border-2 border-dashed rounded-lg bg-white overflow-hidden">
+                <SignatureCanvas
+                  ref={sigCanvasRef}
+                  canvasProps={{
+                    className: 'w-full h-40 cursor-crosshair',
+                    style: { width: '100%', height: '160px' }
+                  }}
+                  penColor="black"
+                  backgroundColor="white"
+                  onEnd={handleDrawEnd}
                 />
               </div>
               <p className="text-xs text-muted-foreground text-center">
@@ -558,7 +399,7 @@ export function SignatureSpecimenTab({
                     htmlFor="signature-upload"
                     className={cn(
                       "flex flex-col items-center justify-center w-full h-40 border-2 border-dashed rounded-lg cursor-pointer",
-                      "bg-gray-50 hover:bg-gray-100 transition-colors"
+                      "bg-muted/50 hover:bg-muted transition-colors"
                     )}
                   >
                     <div className="flex flex-col items-center justify-center pt-5 pb-6">
@@ -585,14 +426,13 @@ export function SignatureSpecimenTab({
         </CardContent>
       </Card>
 
-      {/* Info Card */}
-      <Card className="bg-blue-50/50 border-blue-200">
+      <Card className="bg-blue-50/50 border-blue-200 dark:bg-blue-950/30 dark:border-blue-900">
         <CardContent className="py-4">
           <div className="flex gap-3">
-            <PenTool className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+            <PenTool className="h-5 w-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
             <div className="text-sm">
-              <p className="font-medium text-blue-900">About Signature Specimens</p>
-              <p className="text-blue-700 mt-1">
+              <p className="font-medium text-blue-900 dark:text-blue-100">About Signature Specimens</p>
+              <p className="text-blue-700 dark:text-blue-300 mt-1">
                 Your signature specimen will be used for digitally signing documents such as
                 subscription agreements, NDAs, and introducer agreements. Make sure your
                 signature is clear and consistent with your legal documents.

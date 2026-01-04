@@ -64,8 +64,17 @@ type SignedSubscription = {
   commitment: number
   currency: string
   funded_amount: number
+  signed_at: string | null  // Actual signature date (primary)
   committed_at: string | null
   funded_at: string | null
+  subscription_number: number | null
+  subscription_date: string | null
+  // Additional useful fields
+  effective_date: string | null
+  funding_due_at: string | null
+  num_shares: number | null
+  price_per_share: number | null
+  pack_sent_at: string | null
   deal_name: string
   investor_name: string
   document_id: string | null
@@ -82,9 +91,9 @@ type SubscriptionPacksClientProps = {
 }
 
 const STATUS_STYLES: Record<string, string> = {
-  committed: 'bg-blue-100 text-blue-800 border-blue-200',
-  partially_funded: 'bg-amber-100 text-amber-800 border-amber-200',
-  active: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+  committed: 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800',
+  partially_funded: 'bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800',
+  active: 'bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-800',
 }
 
 const STATUS_LABELS: Record<string, string> = {
@@ -104,7 +113,7 @@ const STATUS_FILTERS = [
 const ITEMS_PER_PAGE = 10
 
 // Sortable columns configuration
-type SortColumn = 'deal_name' | 'investor_name' | 'commitment' | 'funded_amount' | 'status' | 'committed_at'
+type SortColumn = 'deal_name' | 'investor_name' | 'commitment' | 'funded_amount' | 'status' | 'signed_at' | 'subscription_number'
 type SortDirection = 'asc' | 'desc'
 
 // Using shared formatCurrency utility from @/lib/format
@@ -128,7 +137,7 @@ export function SubscriptionPacksClient({ entityInfo, subscriptions }: Subscript
   const [currentPage, setCurrentPage] = useState(1)
 
   // Sorting state
-  const [sortColumn, setSortColumn] = useState<SortColumn>('committed_at')
+  const [sortColumn, setSortColumn] = useState<SortColumn>('signed_at')
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc')
 
   // Document preview functionality (same as CEO/staff documents page)
@@ -204,12 +213,12 @@ export function SubscriptionPacksClient({ entityInfo, subscriptions }: Subscript
       // NEW: Deal/Opportunity filter
       const matchesDeal = dealFilter === 'all' || subscription.deal_id === dealFilter
 
-      // NEW: Date range filter (using date-only comparison to avoid timezone issues)
+      // Date range filter (using signed_at - the actual signature date)
       // Convert both to YYYY-MM-DD format for consistent comparison
       let matchesDateRange = true
-      if (subscription.committed_at) {
+      if (subscription.signed_at) {
         // Extract just the date portion from the ISO timestamp (YYYY-MM-DD)
-        const subDateStr = subscription.committed_at.split('T')[0]
+        const subDateStr = subscription.signed_at.split('T')[0]
 
         if (dateRange.startDate) {
           // Compare date strings directly (lexicographic comparison works for YYYY-MM-DD)
@@ -243,10 +252,13 @@ export function SubscriptionPacksClient({ entityInfo, subscriptions }: Subscript
         case 'status':
           comparison = a.status.localeCompare(b.status)
           break
-        case 'committed_at':
-          const dateA = a.committed_at ? new Date(a.committed_at).getTime() : 0
-          const dateB = b.committed_at ? new Date(b.committed_at).getTime() : 0
+        case 'signed_at':
+          const dateA = a.signed_at ? new Date(a.signed_at).getTime() : 0
+          const dateB = b.signed_at ? new Date(b.signed_at).getTime() : 0
           comparison = dateA - dateB
+          break
+        case 'subscription_number':
+          comparison = (a.subscription_number || 0) - (b.subscription_number || 0)
           break
       }
 
@@ -301,7 +313,7 @@ export function SubscriptionPacksClient({ entityInfo, subscriptions }: Subscript
     } else {
       // New column, default to descending for dates/amounts, ascending for text
       setSortColumn(column)
-      setSortDirection(['commitment', 'funded_amount', 'committed_at'].includes(column) ? 'desc' : 'asc')
+      setSortDirection(['commitment', 'funded_amount', 'signed_at'].includes(column) ? 'desc' : 'asc')
     }
     setCurrentPage(1) // Reset to first page on sort change
   }
@@ -682,6 +694,9 @@ export function SubscriptionPacksClient({ entityInfo, subscriptions }: Subscript
                           <SortIndicator column="commitment" />
                         </div>
                       </TableHead>
+                      <TableHead className="text-center">
+                        Shares
+                      </TableHead>
                       <TableHead
                         className="cursor-pointer hover:bg-muted/50 select-none min-w-[140px]"
                         onClick={() => handleSort('funded_amount')}
@@ -702,11 +717,20 @@ export function SubscriptionPacksClient({ entityInfo, subscriptions }: Subscript
                       </TableHead>
                       <TableHead
                         className="cursor-pointer hover:bg-muted/50 select-none"
-                        onClick={() => handleSort('committed_at')}
+                        onClick={() => handleSort('subscription_number')}
+                      >
+                        <div className="flex items-center">
+                          #
+                          <SortIndicator column="subscription_number" />
+                        </div>
+                      </TableHead>
+                      <TableHead
+                        className="cursor-pointer hover:bg-muted/50 select-none"
+                        onClick={() => handleSort('signed_at')}
                       >
                         <div className="flex items-center">
                           Signed Date
-                          <SortIndicator column="committed_at" />
+                          <SortIndicator column="signed_at" />
                         </div>
                       </TableHead>
                       <TableHead className="text-right">Actions</TableHead>
@@ -731,6 +755,23 @@ export function SubscriptionPacksClient({ entityInfo, subscriptions }: Subscript
                               {formatCurrency(subscription.commitment, subscription.currency)}
                             </div>
                           </TableCell>
+                          {/* Shares column */}
+                          <TableCell className="text-center">
+                            {subscription.num_shares ? (
+                              <div className="space-y-0.5">
+                                <div className="font-medium text-sm">
+                                  {Number(subscription.num_shares).toLocaleString()}
+                                </div>
+                                {subscription.price_per_share && (
+                                  <div className="text-xs text-muted-foreground">
+                                    @ {formatCurrency(Number(subscription.price_per_share), subscription.currency)}
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              <span className="text-muted-foreground text-xs">—</span>
+                            )}
+                          </TableCell>
                           <TableCell>
                             <div className="space-y-1.5">
                               <div className="flex items-center justify-between text-sm">
@@ -750,19 +791,44 @@ export function SubscriptionPacksClient({ entityInfo, subscriptions }: Subscript
                           <TableCell>
                             <Badge
                               variant="outline"
-                              className={cn('capitalize', STATUS_STYLES[subscription.status] || 'bg-gray-100 text-gray-800 border-gray-200')}
+                              className={cn('capitalize', STATUS_STYLES[subscription.status] || 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700')}
                             >
                               {STATUS_LABELS[subscription.status] || subscription.status.replace('_', ' ')}
                             </Badge>
                           </TableCell>
+                          {/* Subscription Number */}
                           <TableCell>
-                            {subscription.committed_at ? (
-                              <div className="text-sm">
-                                {formatDate(subscription.committed_at)}
-                              </div>
+                            {subscription.subscription_number ? (
+                              <span className="text-sm font-mono">{subscription.subscription_number}</span>
                             ) : (
-                              <span className="text-muted-foreground text-xs">Unknown</span>
+                              <span className="text-muted-foreground text-xs">—</span>
                             )}
+                          </TableCell>
+                          {/* Signed Date - uses signed_at (actual signature date) */}
+                          <TableCell>
+                            <div className="space-y-1">
+                              {subscription.signed_at ? (
+                                <div className="text-sm">
+                                  {formatDate(subscription.signed_at)}
+                                </div>
+                              ) : (
+                                <span className="text-muted-foreground text-xs">Unknown</span>
+                              )}
+                              {/* Funding due date indicator */}
+                              {subscription.funding_due_at && subscription.status !== 'active' && (
+                                <div className={cn(
+                                  "text-xs flex items-center gap-1",
+                                  new Date(subscription.funding_due_at) < new Date()
+                                    ? "text-red-600 dark:text-red-400"
+                                    : new Date(subscription.funding_due_at) < new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+                                    ? "text-amber-600 dark:text-amber-400"
+                                    : "text-muted-foreground"
+                                )}>
+                                  <Clock className="h-3 w-3" />
+                                  Due: {formatDate(subscription.funding_due_at)}
+                                </div>
+                              )}
+                            </div>
                           </TableCell>
                           <TableCell className="text-right">
                             {subscription.document_file_key ? (

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { z } from 'zod'
 import { getAppUrl } from '@/lib/signature/token'
+import { sendInvitationEmail } from '@/lib/email/resend-service'
 
 // Entity type to junction table mapping
 const JUNCTION_TABLES: Record<string, string> = {
@@ -50,6 +51,16 @@ const DEFAULT_ROLE_BY_ENTITY: Record<string, string> = {
   partner: 'member',
   introducer: 'contact',
   commercial_partner: 'contact',
+}
+
+// Entity name columns vary by table
+const ENTITY_NAME_COLUMNS: Record<string, { select: string; primary: string; fallback?: string }> = {
+  investor: { select: 'legal_name', primary: 'legal_name' },
+  arranger: { select: 'legal_name', primary: 'legal_name' },
+  lawyer: { select: 'firm_name, display_name', primary: 'firm_name', fallback: 'display_name' },
+  introducer: { select: 'legal_name', primary: 'legal_name' },
+  partner: { select: 'legal_name, name', primary: 'legal_name', fallback: 'name' },
+  commercial_partner: { select: 'legal_name, name', primary: 'legal_name', fallback: 'name' },
 }
 
 // Input validation schema
@@ -186,71 +197,93 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // Send invitation via Supabase Auth for new user
-    const { data: authData, error: authError } = await supabase.auth.admin.inviteUserByEmail(
-      email,
-      {
-        data: {
-          display_name: display_name,
-          role: 'multi_persona',
-          title: title,
-        },
-        redirectTo: `${getAppUrl()}/auth/callback?portal=main`
-      }
-    )
+    // ============================================
+    // CUSTOM INVITATION FLOW (replaces inviteUserByEmail)
+    // ============================================
 
-    if (authError) {
-      console.error('Auth invitation error:', authError)
-      return NextResponse.json({ error: 'Failed to invite user' }, { status: 500 })
+    // Get entity name for the invitation email
+    const nameConfig = ENTITY_NAME_COLUMNS[entity_type]
+    const { data: entityDetails, error: entityDetailsError } = await supabase
+      .from(entityTable)
+      .select(nameConfig.select)
+      .eq('id', entity_id)
+      .single()
+
+    if (entityDetailsError || !entityDetails) {
+      return NextResponse.json({ error: 'Failed to get entity details' }, { status: 500 })
     }
 
-    if (!authData.user) {
-      return NextResponse.json({ error: 'Failed to create user' }, { status: 500 })
-    }
+    const entityName = (entityDetails as any)[nameConfig.primary] ||
+                       (nameConfig.fallback ? (entityDetails as any)[nameConfig.fallback] : null) ||
+                       'Unknown Entity'
 
-    // Create profile record
-    const { error: profileError } = await supabase
+    // Get inviter's name
+    const { data: inviterProfile } = await supabase
       .from('profiles')
-      .upsert({
-        id: authData.user.id,
-        email: email,
-        role: 'multi_persona',
-        display_name: display_name,
-        title: title,
-        password_set: false,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+      .select('display_name, email')
+      .eq('id', user.id)
+      .single()
+
+    const inviterName = inviterProfile?.display_name || inviterProfile?.email || 'A team member'
+
+    // Check for existing pending invitation
+    const { data: existingInvitation } = await supabase
+      .from('member_invitations')
+      .select('id, status')
+      .eq('entity_type', entity_type)
+      .eq('entity_id', entity_id)
+      .eq('email', email.toLowerCase())
+      .eq('status', 'pending')
+      .maybeSingle()
+
+    if (existingInvitation) {
+      return NextResponse.json({
+        error: 'A pending invitation already exists for this email. Use resend to send again.',
+        existing_invitation_id: existingInvitation.id
+      }, { status: 400 })
+    }
+
+    // Create invitation record (user account will be created when they accept)
+    const { data: invitation, error: invitationError } = await supabase
+      .from('member_invitations')
+      .insert({
+        entity_type,
+        entity_id,
+        entity_name: entityName,
+        email: email.toLowerCase(),
+        role: role,
+        is_signatory: is_signatory || can_sign, // Map can_sign to is_signatory
+        invited_by: user.id,
+        invited_by_name: inviterName,
+        status: 'pending',
+        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 days
       })
+      .select()
+      .single()
 
-    if (profileError) {
-      console.error('Profile creation error:', profileError)
-      return NextResponse.json({ error: 'User invited but profile creation failed' }, { status: 500 })
+    if (invitationError || !invitation) {
+      console.error('Invitation creation error:', invitationError)
+      return NextResponse.json({ error: 'Failed to create invitation' }, { status: 500 })
     }
 
-    // Create junction record
-    const junctionTable = JUNCTION_TABLES[entity_type]
-    const entityIdColumn = ENTITY_ID_COLUMNS[entity_type]
+    // Construct accept URL
+    const acceptUrl = `${getAppUrl()}/invitation/accept?token=${invitation.invitation_token}`
 
-    const junctionData: Record<string, unknown> = {
-      user_id: authData.user.id,
-      [entityIdColumn]: entity_id,
+    // Send invitation email via Resend
+    const emailResult = await sendInvitationEmail({
+      email: email,
+      inviteeName: display_name,
+      entityName: entityName,
+      entityType: entity_type,
       role: role,
-      is_primary: is_primary,
-      created_at: new Date().toISOString(),
-    }
+      inviterName: inviterName,
+      acceptUrl: acceptUrl,
+      expiresAt: invitation.expires_at
+    })
 
-    // Add lawyer-specific fields (only can_sign exists in lawyer_users table)
-    if (entity_type === 'lawyer') {
-      junctionData.can_sign = can_sign
-    }
-
-    const { error: junctionError } = await supabase
-      .from(junctionTable)
-      .insert(junctionData)
-
-    if (junctionError) {
-      console.error('Junction record creation error:', junctionError)
-      return NextResponse.json({ error: 'User invited but entity link failed' }, { status: 500 })
+    if (!emailResult.success) {
+      console.error('Failed to send invitation email:', emailResult.error)
+      // Don't fail - invitation is created, user can still use the link
     }
 
     // Log the action
@@ -261,20 +294,26 @@ export async function POST(request: NextRequest) {
       entity_type: entity_type,
       entity_id: entity_id,
       action_details: {
-        user_id: authData.user.id,
+        invitation_id: invitation.id,
         email: email,
         display_name: display_name,
         role: role,
         is_primary: is_primary,
+        is_signatory: is_signatory,
+        email_sent: emailResult.success
       },
       timestamp: new Date().toISOString()
     })
 
     return NextResponse.json({
       success: true,
-      user_id: authData.user.id,
-      message: `User invited to ${entity_type.replace('_', ' ')}`,
+      invitation_id: invitation.id,
+      message: emailResult.success
+        ? `Invitation sent to ${email}`
+        : `Invitation created for ${email} (email delivery pending)`,
       is_new_user: true,
+      email_sent: emailResult.success,
+      accept_url: acceptUrl // For debugging/testing
     })
   } catch (error) {
     console.error('Entity invite error:', error)

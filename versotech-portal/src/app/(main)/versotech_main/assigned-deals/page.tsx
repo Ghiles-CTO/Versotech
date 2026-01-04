@@ -69,12 +69,12 @@ type Summary = {
 }
 
 const STATUS_STYLES: Record<string, string> = {
-  open: 'bg-green-100 text-green-800 border-green-200',
-  draft: 'bg-gray-100 text-gray-800 border-gray-200',
-  closed: 'bg-blue-100 text-blue-800 border-blue-200',
-  cancelled: 'bg-red-100 text-red-800 border-red-200',
-  allocation_pending: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-  fully_subscribed: 'bg-purple-100 text-purple-800 border-purple-200',
+  open: 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800',
+  draft: 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700',
+  closed: 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800',
+  cancelled: 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800',
+  allocation_pending: 'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-800',
+  fully_subscribed: 'bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-800',
 }
 
 const STATUS_FILTERS = [
@@ -558,7 +558,7 @@ export default function AssignedDealsPage() {
                       </TableCell>
                       <TableCell className="text-right">
                         <Button variant="ghost" size="sm" asChild>
-                          <Link href={`/versotech_main/opportunities/${deal.id}`}>
+                          <Link href={`/versotech_main/lawyer-deal/${deal.id}`}>
                             <ExternalLink className="h-4 w-4" />
                           </Link>
                         </Button>

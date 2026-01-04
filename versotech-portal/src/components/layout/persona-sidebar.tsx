@@ -143,6 +143,7 @@ const PERSONA_NAV_ITEMS: Record<string, NavItem[]> = {
 
   // Lawyer persona
   // NOTE: Messages removed - lawyers are passive notification recipients only (same as introducers)
+  // NOTE: Notifications removed from sidebar - header bell icon provides access (avoids redundancy)
   lawyer: [
     { name: 'Dashboard', href: '/versotech_main/dashboard', icon: LayoutDashboard, description: 'Overview' },
     { name: 'Assigned Deals', href: '/versotech_main/assigned-deals', icon: Briefcase, description: 'My deals' },
@@ -151,7 +152,6 @@ const PERSONA_NAV_ITEMS: Record<string, NavItem[]> = {
     { name: 'VersoSign', href: '/versotech_main/versosign', icon: PenTool, description: 'E-signatures' },
     { name: 'Reconciliation', href: '/versotech_main/lawyer-reconciliation', icon: Calculator, description: 'Financials' },
     { name: 'Profile', href: '/versotech_main/lawyer-profile', icon: FileSignature, description: 'Signature & settings' },
-    { name: 'Notifications', href: '/versotech_main/notifications', icon: Bell, description: 'Alerts' },
   ],
 }
 

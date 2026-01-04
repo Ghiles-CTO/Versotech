@@ -1,10 +1,10 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import SignatureCanvas from 'react-signature-canvas'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Loader2 } from 'lucide-react'
+import { Loader2, RotateCcw } from 'lucide-react'
+import SignatureCanvas from 'react-signature-canvas'
 
 interface SignatureCanvasWidgetProps {
   onSignatureCapture: (dataUrl: string) => Promise<void>
@@ -19,17 +19,28 @@ export function SignatureCanvasWidget({
   signerEmail,
   isSubmitting = false
 }: SignatureCanvasWidgetProps) {
-  const canvasRef = useRef<SignatureCanvas>(null)
+  const sigCanvasRef = useRef<SignatureCanvas>(null)
   const [hasDrawn, setHasDrawn] = useState(false)
 
+  const handleDrawEnd = () => {
+    if (sigCanvasRef.current && !sigCanvasRef.current.isEmpty()) {
+      setHasDrawn(true)
+    }
+  }
+
   const handleClear = () => {
-    canvasRef.current?.clear()
-    setHasDrawn(false)
+    if (sigCanvasRef.current) {
+      sigCanvasRef.current.clear()
+      setHasDrawn(false)
+    }
   }
 
   const handleSubmit = async () => {
-    if (!canvasRef.current || !hasDrawn) return
-    const dataUrl = canvasRef.current.toDataURL('image/png')
+    if (!sigCanvasRef.current || sigCanvasRef.current.isEmpty()) return
+
+    // Get trimmed canvas (removes whitespace around signature)
+    const trimmedCanvas = sigCanvasRef.current.getTrimmedCanvas()
+    const dataUrl = trimmedCanvas.toDataURL('image/png')
     await onSignatureCapture(dataUrl)
   }
 
@@ -52,16 +63,16 @@ export function SignatureCanvasWidget({
 
         <div>
           <p className="text-sm font-medium mb-2">Your Signature</p>
-          <div className="border-2 border-gray-300 rounded-lg bg-white">
+          <div className="border-2 border-gray-300 rounded-lg bg-white overflow-hidden">
             <SignatureCanvas
-              ref={canvasRef}
+              ref={sigCanvasRef}
               canvasProps={{
-                className: 'w-full h-48 cursor-crosshair touch-none',
-                style: { touchAction: 'none' }
+                className: 'w-full cursor-crosshair',
+                style: { width: '100%', height: '192px' }
               }}
-              onBegin={() => setHasDrawn(true)}
-              backgroundColor="rgb(255, 255, 255)"
-              penColor="rgb(0, 0, 0)"
+              penColor="black"
+              backgroundColor="white"
+              onEnd={handleDrawEnd}
             />
           </div>
           <p className="text-xs text-muted-foreground mt-2">
@@ -76,6 +87,7 @@ export function SignatureCanvasWidget({
             disabled={!hasDrawn || isSubmitting}
             className="flex-1"
           >
+            <RotateCcw className="h-4 w-4 mr-2" />
             Clear
           </Button>
           <Button

@@ -206,6 +206,7 @@ export default async function SubscriptionPacksPage() {
   }
 
   // Fetch SIGNED subscriptions (committed, partially_funded, active) for relevant deals
+  // Note: signed_at is the actual signature date, committed_at may be null
   const { data: subscriptionsData } = await serviceSupabase
     .from('subscriptions')
     .select(`
@@ -216,8 +217,16 @@ export default async function SubscriptionPacksPage() {
       commitment,
       currency,
       funded_amount,
+      signed_at,
       committed_at,
       funded_at,
+      subscription_number,
+      subscription_date,
+      effective_date,
+      funding_due_at,
+      num_shares,
+      price_per_share,
+      pack_sent_at,
       deals (
         id,
         name
@@ -230,7 +239,7 @@ export default async function SubscriptionPacksPage() {
     `)
     .in('deal_id', dealIds)
     .in('status', ['committed', 'partially_funded', 'active'])
-    .order('committed_at', { ascending: false })
+    .order('signed_at', { ascending: false, nullsFirst: false })
 
   const subscriptionIds = (subscriptionsData || []).map((s: any) => s.id)
 
@@ -277,8 +286,18 @@ export default async function SubscriptionPacksPage() {
       commitment: sub.commitment,
       currency: sub.currency || 'USD',
       funded_amount: sub.funded_amount || 0,
+      // Use signed_at as primary (actual signature date), fallback to committed_at
+      signed_at: sub.signed_at || sub.committed_at,
       committed_at: sub.committed_at,
       funded_at: sub.funded_at,
+      subscription_number: sub.subscription_number,
+      subscription_date: sub.subscription_date,
+      // Additional useful fields
+      effective_date: sub.effective_date,
+      funding_due_at: sub.funding_due_at,
+      num_shares: sub.num_shares,
+      price_per_share: sub.price_per_share,
+      pack_sent_at: sub.pack_sent_at,
       // Improved null safety: Show ID as fallback to help staff lookup missing records
       deal_name: deal?.name || `Unknown (ID: ${sub.deal_id?.slice(0, 8) || 'N/A'})`,
       investor_name: investor?.display_name || investor?.legal_name || `Unknown (ID: ${sub.investor_id?.slice(0, 8) || 'N/A'})`,

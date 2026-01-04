@@ -18,7 +18,9 @@ interface EmailResult {
   error?: string
 }
 
-const DEFAULT_FROM = process.env.EMAIL_FROM || 'VERSO Tech <noreply@versoholdings.com>'
+// Use Resend's shared domain for testing until client verifies versoholdings.com
+// Change to 'VERSO Holdings <noreply@versoholdings.com>' after domain verification
+const DEFAULT_FROM = process.env.EMAIL_FROM || 'VERSO Holdings <onboarding@resend.dev>'
 const RESEND_API_KEY = process.env.RESEND_API_KEY
 
 // Validate API key at module load time in production
@@ -154,51 +156,138 @@ export async function sendStaffInvitation(params: {
 
 /**
  * Send password reset email
+ * Uses clean, minimal design matching VERSO brand
  */
 export async function sendPasswordResetEmail(params: {
   email: string
-  displayName: string
+  displayName?: string
   resetUrl: string
 }): Promise<EmailResult> {
+  const displayName = params.displayName || params.email.split('@')[0]
+
   const html = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <style>
-        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-        .header { background: #1a1a2e; color: white; padding: 30px; text-align: center; }
-        .content { background: #f4f4f4; padding: 30px; }
-        .button { background: #6366f1; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; margin: 20px 0; }
-        .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
-      </style>
-    </head>
-    <body>
-      <div class="container">
-        <div class="header">
-          <h1>Password Reset Request</h1>
-        </div>
-        <div class="content">
-          <h2>Hi ${params.displayName},</h2>
-          <p>We received a request to reset your password for your VERSO Tech account.</p>
-          <p>Click the button below to reset your password. This link will expire in 1 hour.</p>
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!--[if mso]>
+  <style type="text/css">
+    body, table, td {font-family: Arial, Helvetica, sans-serif !important;}
+  </style>
+  <![endif]-->
+  <link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@700;800&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      line-height: 1.7;
+      color: #1a1a1a;
+      background: #ffffff;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 50px 40px;
+      background: #ffffff;
+    }
+    .logo-container {
+      text-align: center;
+      margin-bottom: 50px;
+      padding-bottom: 30px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .logo {
+      font-family: 'League Spartan', Arial, Helvetica, sans-serif;
+      font-size: 48px;
+      font-weight: 800;
+      letter-spacing: 8px;
+      color: #000000;
+      text-transform: uppercase;
+      margin: 0;
+    }
+    .greeting {
+      font-size: 16px;
+      margin-bottom: 30px;
+    }
+    .content {
+      font-size: 15px;
+      color: #333333;
+    }
+    .content p {
+      margin-bottom: 20px;
+    }
+    .alert-box {
+      background: #fef3cd;
+      border-left: 4px solid #ffc107;
+      padding: 15px 20px;
+      margin: 25px 0;
+      font-size: 14px;
+    }
+    .button-container {
+      text-align: center;
+      margin: 45px 0;
+    }
+    .button {
+      display: inline-block;
+      background: #000000;
+      color: #ffffff !important;
+      padding: 16px 40px;
+      text-decoration: none;
+      border-radius: 4px;
+      font-weight: 600;
+      font-size: 14px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .footer {
+      margin-top: 50px;
+      padding-top: 30px;
+      border-top: 1px solid #f0f0f0;
+      font-size: 12px;
+      color: #999999;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo-container">
+      <div class="logo">VERSO</div>
+    </div>
 
-          <a href="${params.resetUrl}" class="button">Reset Password</a>
+    <div class="greeting">Dear ${displayName},</div>
 
-          <p>If you didn't request this password reset, please ignore this email and your password will remain unchanged.</p>
-        </div>
-        <div class="footer">
-          <p>&copy; ${new Date().getFullYear()} VERSO Holdings. All rights reserved.</p>
-          <p>This is an automated message, please do not reply.</p>
-        </div>
+    <div class="content">
+      <p>We received a request to reset the password for your VERSO account.</p>
+      <p>Click the button below to create a new password. For security reasons, this link will expire in 1 hour.</p>
+    </div>
+
+    <div class="button-container">
+      <a href="${params.resetUrl}" class="button">Reset Password</a>
+    </div>
+
+    <div class="content">
+      <div class="alert-box">
+        <strong>Didn't request this?</strong><br>
+        If you didn't request a password reset, you can safely ignore this email. Your password will remain unchanged.
       </div>
-    </body>
-    </html>
+      <p style="font-size: 13px; color: #666666;">If you're having trouble clicking the button, copy and paste the following link into your browser:</p>
+      <p style="font-size: 12px; color: #999999; word-break: break-all;">${params.resetUrl}</p>
+    </div>
+
+    <div class="footer">
+      &copy; ${new Date().getFullYear()} VERSO Holdings. All rights reserved.
+    </div>
+  </div>
+</body>
+</html>
   `
 
   return sendEmail({
     to: params.email,
-    subject: 'Password Reset Request - VERSO Tech',
+    subject: 'Reset Your Password - VERSO',
     html,
   })
 }
@@ -260,6 +349,166 @@ export async function sendSecurityAlertEmail(params: {
   return sendEmail({
     to: params.email,
     subject: `Security Alert: ${alertTitles[params.alertType]} - VERSO Tech`,
+    html,
+  })
+}
+
+/**
+ * Send invitation email to join an entity
+ * Uses clean, minimal design matching VERSO brand
+ */
+export async function sendInvitationEmail(params: {
+  email: string
+  inviteeName?: string
+  entityName: string
+  entityType: string
+  role: string
+  inviterName: string
+  acceptUrl: string
+  expiresAt: string
+}): Promise<EmailResult> {
+  const displayName = params.inviteeName || params.email.split('@')[0]
+  const isInvestor = params.entityType === 'investor'
+
+  // Investor-specific content (using &mdash; for em dash to avoid encoding issues)
+  const investorContent = `
+    <p><strong>Welcome to VERSO Holdings</strong> &mdash; your gateway to exclusive investment opportunities.</p>
+    <p>You have been invited by <strong>${params.inviterName}</strong> to join <strong>${params.entityName}</strong> on the VERSO Holdings Investor Portal.</p>
+    <p>This secure platform provides you with comprehensive access to your investment portfolio, performance analytics, and exclusive deal opportunities.</p>
+    <p>Through your personalized dashboard, you&apos;ll be able to:</p>
+    <ul style="margin: 20px 0; padding-left: 20px;">
+      <li>Monitor your portfolio performance in real-time</li>
+      <li>Access quarterly statements and K-1 documents</li>
+      <li>Review and participate in new investment opportunities</li>
+      <li>Communicate directly with your relationship manager</li>
+      <li>Complete required compliance documentation</li>
+    </ul>
+    <p>Click the button below to set up your account and access your investor portal.</p>
+  `
+
+  // Non-investor (staff, lawyer, arranger, etc.) content
+  const professionalContent = `
+    <p><strong>Welcome to VERSOTECH</strong> &mdash; the future of investment banking.</p>
+    <p>You have been invited by <strong>${params.inviterName}</strong> to join <strong>${params.entityName}</strong> on the VERSOTECH platform.</p>
+    <p>VERSOTECH is an AI-powered investment banking platform designed to revolutionize how we work. As a member, you will have access to cutting-edge tools that enhance productivity and streamline complex workflows.</p>
+    <p>Our platform integrates advanced automation, intelligent document processing, and real-time analytics to support your daily operations. From deal management to investor relations, VERSOTECH empowers you to deliver exceptional results.</p>
+    <p>Click the button below to set up your account and begin exploring the platform.</p>
+  `
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!--[if mso]>
+  <style type="text/css">
+    body, table, td {font-family: Arial, Helvetica, sans-serif !important;}
+  </style>
+  <![endif]-->
+  <link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@700;800&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      line-height: 1.7;
+      color: #1a1a1a;
+      background: #ffffff;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 50px 40px;
+      background: #ffffff;
+    }
+    .logo-container {
+      text-align: center;
+      margin-bottom: 50px;
+      padding-bottom: 30px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .logo {
+      font-family: 'League Spartan', Arial, Helvetica, sans-serif;
+      font-size: 48px;
+      font-weight: 800;
+      letter-spacing: 8px;
+      color: #000000;
+      text-transform: uppercase;
+      margin: 0;
+    }
+    .greeting {
+      font-size: 16px;
+      margin-bottom: 30px;
+    }
+    .content {
+      font-size: 15px;
+      color: #333333;
+    }
+    .content p {
+      margin-bottom: 20px;
+    }
+    .content ul {
+      color: #333333;
+    }
+    .content li {
+      margin-bottom: 8px;
+    }
+    .button-container {
+      text-align: center;
+      margin: 45px 0;
+    }
+    .button {
+      display: inline-block;
+      background: #000000;
+      color: #ffffff !important;
+      padding: 16px 40px;
+      text-decoration: none;
+      border-radius: 4px;
+      font-weight: 600;
+      font-size: 14px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .footer {
+      margin-top: 50px;
+      padding-top: 30px;
+      border-top: 1px solid #f0f0f0;
+      font-size: 12px;
+      color: #999999;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo-container">
+      <div class="logo">VERSO</div>
+    </div>
+
+    <div class="greeting">Dear ${displayName},</div>
+
+    <div class="content">
+      ${isInvestor ? investorContent : professionalContent}
+    </div>
+
+    <div class="button-container">
+      <a href="${params.acceptUrl}" class="button">${isInvestor ? 'Access Investor Portal' : 'Access VERSOTECH'}</a>
+    </div>
+
+    <div class="footer">
+      &copy; ${new Date().getFullYear()} VERSO Holdings. All rights reserved.
+    </div>
+  </div>
+</body>
+</html>
+  `
+
+  return sendEmail({
+    to: params.email,
+    subject: isInvestor
+      ? `Welcome to VERSO Holdings - ${params.entityName}`
+      : `Welcome to VERSOTECH - ${params.entityName}`,
     html,
   })
 }

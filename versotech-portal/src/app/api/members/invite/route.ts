@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { sendInvitationEmail } from '@/lib/email/resend-service'
 
 // Valid entity types for member invitations
 const VALID_ENTITY_TYPES = ['partner', 'investor', 'introducer', 'commercial_partner', 'lawyer', 'arranger'] as const
@@ -211,9 +212,26 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to create invitation' }, { status: 500 })
     }
 
-    // TODO: Send invitation email
-    // For now, we'll return the invitation token that can be used to construct the accept URL
+    // Construct accept URL
     const acceptUrl = `${process.env.NEXT_PUBLIC_APP_URL}/invitation/accept?token=${invitation.invitation_token}`
+
+    // Send invitation email via Resend
+    const emailResult = await sendInvitationEmail({
+      email: invitation.email,
+      inviteeName: undefined, // Will use email prefix as fallback
+      entityName: entityName,
+      entityType: entity_type,
+      role: invitation.role,
+      inviterName: inviterName,
+      acceptUrl: acceptUrl,
+      expiresAt: invitation.expires_at
+    })
+
+    if (!emailResult.success) {
+      console.error('Failed to send invitation email:', emailResult.error)
+      // Don't fail the request - invitation is created, email just didn't send
+      // User can resend later
+    }
 
     return NextResponse.json({
       success: true,
@@ -225,7 +243,10 @@ export async function POST(request: NextRequest) {
         expires_at: invitation.expires_at,
         accept_url: acceptUrl
       },
-      message: `Invitation sent to ${email}`
+      email_sent: emailResult.success,
+      message: emailResult.success
+        ? `Invitation sent to ${email}`
+        : `Invitation created for ${email} (email delivery pending)`
     })
 
   } catch (error) {
