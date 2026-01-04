@@ -213,25 +213,37 @@ function AuthCallbackContent() {
     console.log('[auth-callback] Current URL hash:', window.location.hash ? 'Present (tokens in hash)' : 'Empty')
     console.log('[auth-callback] Code param:', code ? 'Present (PKCE flow)' : 'Empty')
 
+    // CRITICAL: Detect recovery type EARLY from hash fragment before any auth processing
+    // This must happen before onAuthStateChange fires
+    let isRecoveryFlow = authType === 'recovery'
+    if (window.location.hash) {
+      const earlyHashParams = new URLSearchParams(window.location.hash.substring(1))
+      const hashAuthType = earlyHashParams.get('type')
+      if (hashAuthType === 'recovery') {
+        isRecoveryFlow = true
+        console.log('[auth-callback] RECOVERY FLOW DETECTED from hash!')
+      }
+    }
+
     // Set up auth state change listener FIRST
     // The implicit flow client will automatically process hash fragments
     // and fire SIGNED_IN event when tokens are detected
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('[auth-callback] Auth state changed:', event, session?.user?.email)
+        console.log('[auth-callback] Auth state changed:', event, session?.user?.email, 'isRecovery:', isRecoveryFlow)
 
         if (event === 'SIGNED_IN' && session?.user) {
           // CRITICAL: Sync session to main app client for page navigation
           if (session.access_token && session.refresh_token) {
             await syncSessionToMainClient(session.access_token, session.refresh_token)
           }
-          handleAuthenticatedUser(session.user)
+          handleAuthenticatedUser(session.user, isRecoveryFlow)
         } else if (event === 'TOKEN_REFRESHED' && session?.user) {
           // Also sync on token refresh
           if (session.access_token && session.refresh_token) {
             await syncSessionToMainClient(session.access_token, session.refresh_token)
           }
-          handleAuthenticatedUser(session.user)
+          handleAuthenticatedUser(session.user, isRecoveryFlow)
         } else if (event === 'INITIAL_SESSION' && session?.user) {
           // This fires when client initializes and finds a session
           console.log('[auth-callback] Initial session detected')
@@ -239,7 +251,7 @@ function AuthCallbackContent() {
           if (session.access_token && session.refresh_token) {
             await syncSessionToMainClient(session.access_token, session.refresh_token)
           }
-          handleAuthenticatedUser(session.user)
+          handleAuthenticatedUser(session.user, isRecoveryFlow)
         }
       }
     )
@@ -250,8 +262,8 @@ function AuthCallbackContent() {
       const { data: { user: existingUser } } = await supabase.auth.getUser()
 
       if (existingUser) {
-        console.log('[auth-callback] Found existing session')
-        handleAuthenticatedUser(existingUser)
+        console.log('[auth-callback] Found existing session, isRecovery:', isRecoveryFlow)
+        handleAuthenticatedUser(existingUser, isRecoveryFlow)
         return
       }
 
@@ -271,7 +283,7 @@ function AuthCallbackContent() {
         }
 
         if (data?.user) {
-          handleAuthenticatedUser(data.user)
+          handleAuthenticatedUser(data.user, isRecoveryFlow)
           return
         }
       }
