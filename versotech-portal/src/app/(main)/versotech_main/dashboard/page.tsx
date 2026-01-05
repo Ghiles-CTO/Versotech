@@ -1,5 +1,6 @@
 import { getCurrentUser } from '@/lib/auth'
 import { redirect } from 'next/navigation'
+import { cookies } from 'next/headers'
 import { CEODashboard } from './ceo-dashboard'
 import { PersonaDashboard } from './persona-dashboard'
 import { getCachedStaffDashboardData } from '@/lib/staff/dashboard-cache'
@@ -13,11 +14,17 @@ export default async function UnifiedDashboardPage() {
     redirect('/versotech_main/login')
   }
 
-  // CEO users (ceo or staff_admin) get the full executive dashboard
-  const isCEO = user.role === 'staff_admin' || user.role === 'ceo'
+  // Check the active persona from cookie (set by client-side persona switcher)
+  const cookieStore = await cookies()
+  const activePersonaType = cookieStore.get('verso_active_persona_type')?.value
 
-  if (isCEO) {
-    // Fetch real dashboard data for CEO users
+  // CEO users (ceo or staff_admin) get the full executive dashboard
+  // UNLESS they've switched to a different persona via the persona switcher
+  const isCEOUser = user.role === 'staff_admin' || user.role === 'ceo'
+  const isViewingAsCEO = !activePersonaType || activePersonaType === 'ceo' || activePersonaType === 'staff'
+
+  if (isCEOUser && isViewingAsCEO) {
+    // Fetch real dashboard data for CEO users viewing as CEO/staff
     const data = await getCachedStaffDashboardData()
 
     // Transform data for realtime component

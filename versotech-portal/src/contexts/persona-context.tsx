@@ -7,7 +7,7 @@ import { createClient } from '@/lib/supabase/client'
  * Persona type matching get_user_personas() function return
  */
 export interface Persona {
-  persona_type: 'staff' | 'investor' | 'arranger' | 'introducer' | 'partner' | 'commercial_partner' | 'lawyer'
+  persona_type: 'ceo' | 'staff' | 'investor' | 'arranger' | 'introducer' | 'partner' | 'commercial_partner' | 'lawyer'
   entity_id: string
   entity_name: string
   entity_logo_url: string | null
@@ -43,6 +43,15 @@ interface PersonaContextState {
 const PersonaContext = createContext<PersonaContextState | undefined>(undefined)
 
 const ACTIVE_PERSONA_KEY = 'verso_active_persona'
+const ACTIVE_PERSONA_TYPE_COOKIE = 'verso_active_persona_type'
+
+/**
+ * Set a cookie that the server can read to determine active persona type
+ */
+function setPersonaCookie(personaType: string) {
+  // Set cookie with 1 year expiry, accessible to server
+  document.cookie = `${ACTIVE_PERSONA_TYPE_COOKIE}=${personaType}; path=/; max-age=31536000; SameSite=Lax`
+}
 
 interface PersonaProviderProps {
   children: ReactNode
@@ -93,17 +102,19 @@ export function PersonaProvider({ children, initialPersonas = [] }: PersonaProvi
 
       if (!selectedPersona) {
         // Priority order for default persona selection:
-        // 1. Staff (CEO/admin first)
-        // 2. Business personas (introducer, partner, arranger, commercial_partner)
-        // 3. Investor (lowest priority since they're often dual-persona with business roles)
+        // 1. CEO (highest - Verso Capital management)
+        // 2. Staff (ops, rm)
+        // 3. Business personas (arranger, introducer, partner, commercial_partner)
+        // 4. Investor (lowest priority since they're often dual-persona with business roles)
         const personaPriority: Record<string, number> = {
-          'staff': 1,
-          'arranger': 2,
-          'introducer': 3,
-          'partner': 4,
-          'commercial_partner': 5,
-          'lawyer': 6,
-          'investor': 7, // Investor is lowest priority for dual-persona users
+          'ceo': 1,      // CEO is highest priority
+          'staff': 2,
+          'arranger': 3,
+          'introducer': 4,
+          'partner': 5,
+          'commercial_partner': 6,
+          'lawyer': 7,
+          'investor': 8, // Investor is lowest priority for dual-persona users
         }
 
         // Find the primary persona with highest priority (lowest number)
@@ -120,6 +131,10 @@ export function PersonaProvider({ children, initialPersonas = [] }: PersonaProvi
       }
 
       setActivePersona(selectedPersona)
+      // Set cookie for server-side persona detection on initial load
+      if (selectedPersona) {
+        setPersonaCookie(selectedPersona.persona_type)
+      }
 
     } catch (err) {
       console.error('[persona-context] Unexpected error:', err)
@@ -133,6 +148,11 @@ export function PersonaProvider({ children, initialPersonas = [] }: PersonaProvi
   const switchPersona = useCallback((persona: Persona) => {
     setActivePersona(persona)
     localStorage.setItem(ACTIVE_PERSONA_KEY, persona.entity_id)
+    // Set cookie for server-side persona detection
+    setPersonaCookie(persona.persona_type)
+    // Force page reload to update server-rendered content
+    // This ensures the dashboard shows the correct persona view
+    window.location.reload()
   }, [])
 
   // Load personas on mount if not provided
@@ -149,13 +169,14 @@ export function PersonaProvider({ children, initialPersonas = [] }: PersonaProvi
       if (!selectedPersona) {
         // Same priority order as refreshPersonas
         const personaPriority: Record<string, number> = {
-          'staff': 1,
-          'arranger': 2,
-          'introducer': 3,
-          'partner': 4,
-          'commercial_partner': 5,
-          'lawyer': 6,
-          'investor': 7,
+          'ceo': 1,
+          'staff': 2,
+          'arranger': 3,
+          'introducer': 4,
+          'partner': 5,
+          'commercial_partner': 6,
+          'lawyer': 7,
+          'investor': 8,
         }
 
         const primaryPersonas = initialPersonas.filter(p => p.is_primary)
@@ -176,12 +197,8 @@ export function PersonaProvider({ children, initialPersonas = [] }: PersonaProvi
   }, [initialPersonas, refreshPersonas])
 
   // Derived state helpers
-  // CEO check: persona_type === 'staff' AND (role_in_entity === 'ceo' OR 'staff_admin')
-  // Note: staff_admin users have CEO-level access until proper role migration
-  const isCEO = personas.some(p =>
-    p.persona_type === 'staff' &&
-    (p.role_in_entity === 'ceo' || p.role_in_entity === 'staff_admin')
-  )
+  // CEO check: user has a 'ceo' persona (from ceo_users table)
+  const isCEO = personas.some(p => p.persona_type === 'ceo')
 
   // Staff check: any staff persona
   const isStaff = personas.some(p => p.persona_type === 'staff')
@@ -256,6 +273,20 @@ export function usePersona() {
  */
 export function getNavItemsForPersona(persona: Persona): { href: string; label: string; icon?: string }[] {
   const baseItems: Record<string, { href: string; label: string; icon?: string }[]> = {
+    // CEO persona - full access to Verso Capital management
+    ceo: [
+      { href: '/versotech_main/dashboard', label: 'Dashboard' },
+      { href: '/versotech_main/ceo-profile', label: 'CEO Profile' },
+      { href: '/versotech_main/deals', label: 'Deals' },
+      { href: '/versotech_main/subscriptions', label: 'Subscriptions' },
+      { href: '/versotech_main/investors', label: 'Investors' },
+      { href: '/versotech_main/documents', label: 'Documents' },
+      { href: '/versotech_main/messages', label: 'Messages' },
+      { href: '/versotech_main/users', label: 'Users' },
+      { href: '/versotech_main/kyc-review', label: 'KYC Review' },
+      { href: '/versotech_main/fees', label: 'Fees' },
+      { href: '/versotech_main/audit', label: 'Audit' },
+    ],
     staff: [
       { href: '/versotech_main/dashboard', label: 'Dashboard' },
       { href: '/versotech_main/deals', label: 'Deals' },
@@ -302,17 +333,5 @@ export function getNavItemsForPersona(persona: Persona): { href: string; label: 
     ],
   }
 
-  const items = [...(baseItems[persona.persona_type] || [])]
-
-  // Add CEO-specific items for staff with ceo or staff_admin role
-  if (persona.persona_type === 'staff' && (persona.role_in_entity === 'ceo' || persona.role_in_entity === 'staff_admin')) {
-    items.push(
-      { href: '/versotech_main/users', label: 'Users' },
-      { href: '/versotech_main/kyc-review', label: 'KYC Review' },
-      { href: '/versotech_main/fees', label: 'Fees' },
-      { href: '/versotech_main/audit', label: 'Audit' },
-    )
-  }
-
-  return items
+  return [...(baseItems[persona.persona_type] || [])]
 }
