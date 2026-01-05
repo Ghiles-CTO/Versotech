@@ -51,7 +51,32 @@ interface NavItem {
 
 // Navigation items for each persona type
 const PERSONA_NAV_ITEMS: Record<string, NavItem[]> = {
-  // Staff persona - common items for all staff roles
+  // CEO persona - Verso Capital management (full access)
+  // Note: CEO Profile is accessed via user menu (Profile Settings), not sidebar
+  ceo: [
+    { name: 'Dashboard', href: '/versotech_main/dashboard', icon: LayoutDashboard, description: 'Overview' },
+    { name: 'Messages', href: '/versotech_main/messages', icon: MessageSquare, description: 'Inbox' },
+    { name: 'Approvals', href: '/versotech_main/approvals', icon: UserCheck, description: 'Pending approvals' },
+    { name: 'Deals', href: '/versotech_main/deals', icon: Activity, description: 'Deal management' },
+    { name: 'Vehicles', href: '/versotech_main/entities', icon: Building2, description: 'Investment vehicles' },
+    { name: 'Investors', href: '/versotech_main/investors', icon: Users, description: 'Investor relations' },
+    { name: 'Subscriptions', href: '/versotech_main/subscriptions', icon: FileText, description: 'Subscription tracking' },
+    { name: 'Requests', href: '/versotech_main/requests', icon: ClipboardList, description: 'Service requests' },
+    { name: 'Documents', href: '/versotech_main/documents', icon: FileText, description: 'Document center' },
+    { name: 'VersoSign', href: '/versotech_main/versosign', icon: FileSignature, description: 'E-signatures' },
+    { name: 'Introducers', href: '/versotech_main/introducers', icon: HandHeart, description: 'Partners' },
+    { name: 'Arrangers', href: '/versotech_main/arrangers', icon: Briefcase, description: 'Regulated entities' },
+    { name: 'Users', href: '/versotech_main/users', icon: Users, description: 'All user types' },
+    { name: 'Calendar', href: '/versotech_main/calendar', icon: Calendar, description: 'Schedule' },
+    { name: 'KYC Review', href: '/versotech_main/kyc-review', icon: UserCheck, description: 'KYC compliance' },
+    { name: 'Fees', href: '/versotech_main/fees', icon: Calculator, description: 'Billing' },
+    { name: 'Reconciliation', href: '/versotech_main/reconciliation', icon: Calculator, description: 'Payments' },
+    { name: 'Audit', href: '/versotech_main/audit', icon: Shield, description: 'Compliance logs' },
+    { name: 'Processes', href: '/versotech_main/processes', icon: Workflow, description: 'Workflows' },
+    { name: 'Admin', href: '/versotech_main/admin', icon: Database, description: 'System settings' },
+  ],
+
+  // Staff persona - common items for non-CEO staff roles (staff_ops, staff_rm)
   staff: [
     { name: 'Dashboard', href: '/versotech_main/dashboard', icon: LayoutDashboard, description: 'Overview' },
     { name: 'Messages', href: '/versotech_main/messages', icon: MessageSquare, description: 'Inbox' },
@@ -67,16 +92,6 @@ const PERSONA_NAV_ITEMS: Record<string, NavItem[]> = {
     { name: 'Arrangers', href: '/versotech_main/arrangers', icon: Briefcase, description: 'Regulated entities' },
     { name: 'Users', href: '/versotech_main/users', icon: Users, description: 'All user types' },
     { name: 'Calendar', href: '/versotech_main/calendar', icon: Calendar, description: 'Schedule' },
-  ],
-
-  // CEO extras (only for staff with role_in_entity === 'ceo')
-  staff_ceo_extras: [
-    { name: 'KYC Review', href: '/versotech_main/kyc-review', icon: UserCheck, description: 'KYC compliance' },
-    { name: 'Fees', href: '/versotech_main/fees', icon: Calculator, description: 'Billing' },
-    { name: 'Reconciliation', href: '/versotech_main/reconciliation', icon: Calculator, description: 'Payments' },
-    { name: 'Audit', href: '/versotech_main/audit', icon: Shield, description: 'Compliance logs' },
-    { name: 'Processes', href: '/versotech_main/processes', icon: Workflow, description: 'Workflows' },
-    { name: 'Admin', href: '/versotech_main/admin', icon: Database, description: 'System settings' },
   ],
 
   // Investor persona
@@ -159,14 +174,8 @@ const PERSONA_NAV_ITEMS: Record<string, NavItem[]> = {
  * Get navigation items for a specific persona
  */
 function getNavForPersona(persona: Persona): NavItem[] {
-  const baseItems = PERSONA_NAV_ITEMS[persona.persona_type] || []
-
-  // Add CEO extras for staff with ceo or staff_admin role
-  if (persona.persona_type === 'staff' && (persona.role_in_entity === 'ceo' || persona.role_in_entity === 'staff_admin')) {
-    return [...baseItems, ...PERSONA_NAV_ITEMS.staff_ceo_extras]
-  }
-
-  return baseItems
+  // CEO persona now has its own nav items (no longer uses staff + extras)
+  return PERSONA_NAV_ITEMS[persona.persona_type] || []
 }
 
 /**
