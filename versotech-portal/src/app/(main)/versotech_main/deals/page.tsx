@@ -53,7 +53,7 @@ export default async function DealsPage() {
   })
 
   const hasStaffAccess = personas?.some(
-    (p: any) => p.persona_type === 'staff'
+    (p: any) => p.persona_type === 'staff' || p.persona_type === 'ceo'
   ) || false
 
   let dealsData: Deal[] = []

@@ -651,7 +651,8 @@ export async function middleware(request: NextRequest) {
         return NextResponse.redirect(new URL('/versotech_main/dashboard', request.url))
       }
 
-      if (matchesPrefix(staffPaths) && !hasPersona('staff')) {
+      // CEO users have full access to staff paths (they have 'ceo' persona, not 'staff')
+      if (matchesPrefix(staffPaths) && !hasAnyPersona(['staff', 'ceo'])) {
         return NextResponse.redirect(new URL('/versotech_main/dashboard', request.url))
       }
 
