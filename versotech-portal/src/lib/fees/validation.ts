@@ -99,19 +99,55 @@ const dateStringSchema = z.string().refine(
   { message: 'Invalid date format. Expected YYYY-MM-DD or ISO datetime.' }
 );
 
-// Fee Plan schemas
+/**
+ * Fee Plan schemas
+ *
+ * IMPORTANT: Per Fred's requirements (2024), fee plans are commercial agreements
+ * with introducers/partners, NOT investor-facing fee disclosures.
+ *
+ * Required fields:
+ * - deal_id: Must be linked to a specific deal (no global templates)
+ * - term_sheet_id: Must be derived from a published term sheet
+ * - Entity: ONE of introducer_id, partner_id, or commercial_partner_id
+ *
+ * Fee values must NOT exceed term sheet limits.
+ */
 export const createFeePlanSchema = z.object({
-  deal_id: optionalFlexibleUuidSchema,
+  // Required: Must be linked to a deal (no global templates per Fred)
+  deal_id: flexibleUuidSchema,
   vehicle_id: optionalFlexibleUuidSchema,
   name: z.string().min(1).max(200),
   description: z.string().optional(),
+  // Note: is_default is deprecated - fee models must be manually created
   is_default: z.boolean().optional().default(false),
   effective_from: dateStringSchema.optional(),
   effective_until: dateStringSchema.optional(),
-  components: z.array(feeComponentSchema).min(1),
-});
+  components: z.array(feeComponentSchema).default([]),
 
-export const updateFeePlanSchema = createFeePlanSchema.partial().extend({
+  // NEW: Required term sheet link (for fee limit validation)
+  term_sheet_id: flexibleUuidSchema,
+
+  // NEW: Entity link - exactly ONE must be provided
+  introducer_id: optionalFlexibleUuidSchema,
+  partner_id: optionalFlexibleUuidSchema,
+  commercial_partner_id: optionalFlexibleUuidSchema,
+}).refine(
+  (data) => {
+    // Ensure exactly one entity is provided
+    const entityCount = [
+      data.introducer_id,
+      data.partner_id,
+      data.commercial_partner_id,
+    ].filter(Boolean).length;
+    return entityCount === 1;
+  },
+  {
+    message: 'Exactly one entity must be specified: introducer_id, partner_id, or commercial_partner_id',
+    path: ['entity'],
+  }
+);
+
+export const updateFeePlanSchema = createFeePlanSchema.partial().safeExtend({
   is_active: z.boolean().optional(),
 });
 

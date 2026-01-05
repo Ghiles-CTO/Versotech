@@ -991,6 +991,132 @@ export type Database = {
           },
         ]
       }
+      ceo_entity: {
+        Row: {
+          id: string
+          legal_name: string
+          display_name: string | null
+          registration_number: string | null
+          tax_id: string | null
+          registered_address: string | null
+          city: string | null
+          postal_code: string | null
+          country: string | null
+          email: string | null
+          phone: string | null
+          website: string | null
+          logo_url: string | null
+          metadata: Json | null
+          status: string | null
+          created_at: string | null
+          created_by: string | null
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          id?: string
+          legal_name: string
+          display_name?: string | null
+          registration_number?: string | null
+          tax_id?: string | null
+          registered_address?: string | null
+          city?: string | null
+          postal_code?: string | null
+          country?: string | null
+          email?: string | null
+          phone?: string | null
+          website?: string | null
+          logo_url?: string | null
+          metadata?: Json | null
+          status?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          id?: string
+          legal_name?: string
+          display_name?: string | null
+          registration_number?: string | null
+          tax_id?: string | null
+          registered_address?: string | null
+          city?: string | null
+          postal_code?: string | null
+          country?: string | null
+          email?: string | null
+          phone?: string | null
+          website?: string | null
+          logo_url?: string | null
+          metadata?: Json | null
+          status?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ceo_entity_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ceo_entity_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ceo_users: {
+        Row: {
+          user_id: string
+          role: string
+          can_sign: boolean | null
+          is_primary: boolean | null
+          title: string | null
+          created_at: string | null
+          created_by: string | null
+        }
+        Insert: {
+          user_id: string
+          role?: string
+          can_sign?: boolean | null
+          is_primary?: boolean | null
+          title?: string | null
+          created_at?: string | null
+          created_by?: string | null
+        }
+        Update: {
+          user_id?: string
+          role?: string
+          can_sign?: boolean | null
+          is_primary?: boolean | null
+          title?: string | null
+          created_at?: string | null
+          created_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ceo_users_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ceo_users_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       commercial_partner_clients: {
         Row: {
           client_email: string | null
@@ -2321,6 +2447,7 @@ export type Database = {
       deal_memberships: {
         Row: {
           accepted_at: string | null
+          assigned_fee_plan_id: string | null
           data_room_granted_at: string | null
           deal_id: string
           dispatched_at: string | null
@@ -2337,6 +2464,7 @@ export type Database = {
         }
         Insert: {
           accepted_at?: string | null
+          assigned_fee_plan_id?: string | null
           data_room_granted_at?: string | null
           deal_id: string
           dispatched_at?: string | null
@@ -2353,6 +2481,7 @@ export type Database = {
         }
         Update: {
           accepted_at?: string | null
+          assigned_fee_plan_id?: string | null
           data_room_granted_at?: string | null
           deal_id?: string
           dispatched_at?: string | null
@@ -2368,6 +2497,13 @@ export type Database = {
           viewed_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "deal_memberships_assigned_fee_plan_id_fkey"
+            columns: ["assigned_fee_plan_id"]
+            isOneToOne: false
+            referencedRelation: "fee_plans"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "deal_memberships_deal_id_fkey"
             columns: ["deal_id"]

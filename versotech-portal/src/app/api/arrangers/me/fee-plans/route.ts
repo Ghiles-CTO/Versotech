@@ -10,7 +10,7 @@ import { createFeePlanSchema } from '@/lib/fees/validation'
 import { z } from 'zod'
 
 // Extended schema for arranger fee plan creation
-const arrangerCreateFeePlanSchema = createFeePlanSchema.extend({
+const arrangerCreateFeePlanSchema = createFeePlanSchema.safeExtend({
   partner_id: z.string().uuid().optional(),
   introducer_id: z.string().uuid().optional(),
   commercial_partner_id: z.string().uuid().optional(),

@@ -110,5 +110,8 @@ export const AuditEntities = {
   ARRANGER: 'arranger_entities',
   INTRODUCER: 'introducers',
   PARTNER: 'partners',
+  FEE_PLANS: 'arranger_fee_plans',
+  CEO_ENTITY: 'ceo_entity',
+  CEO_USERS: 'ceo_users',
 } as const
 
