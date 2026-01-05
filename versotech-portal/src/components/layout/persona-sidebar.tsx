@@ -52,9 +52,9 @@ interface NavItem {
 // Navigation items for each persona type
 const PERSONA_NAV_ITEMS: Record<string, NavItem[]> = {
   // CEO persona - Verso Capital management (full access)
-  // Note: CEO Profile is accessed via user menu (Profile Settings), not sidebar
   ceo: [
     { name: 'Dashboard', href: '/versotech_main/dashboard', icon: LayoutDashboard, description: 'Overview' },
+    { name: 'Verso Capital', href: '/versotech_main/ceo-profile', icon: Building2, description: 'Company & team' },
     { name: 'Messages', href: '/versotech_main/messages', icon: MessageSquare, description: 'Inbox' },
     { name: 'Approvals', href: '/versotech_main/approvals', icon: UserCheck, description: 'Pending approvals' },
     { name: 'Deals', href: '/versotech_main/deals', icon: Activity, description: 'Deal management' },
