@@ -15,17 +15,8 @@ export default async function ProfilePage() {
     redirect('/versotech_main/login')
   }
 
-  // Check if user is a CEO member - redirect to CEO profile
-  const { data: ceoUser } = await serviceSupabase
-    .from('ceo_users')
-    .select('user_id')
-    .eq('user_id', user.id)
-    .maybeSingle()
-
-  if (ceoUser) {
-    // CEO users should use the dedicated CEO Profile page
-    redirect('/versotech_main/ceo-profile')
-  }
+  // Note: CEO users are routed to /ceo-profile via the user menu based on active persona
+  // No auto-redirect here - allows CEO users viewing as other personas to see this profile
 
   // Fetch complete profile data
   const { data: profile, error } = await supabase

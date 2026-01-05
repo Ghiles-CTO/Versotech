@@ -274,9 +274,9 @@ export function usePersona() {
 export function getNavItemsForPersona(persona: Persona): { href: string; label: string; icon?: string }[] {
   const baseItems: Record<string, { href: string; label: string; icon?: string }[]> = {
     // CEO persona - full access to Verso Capital management
+    // Note: CEO Profile is accessed via user menu (Profile Settings), not sidebar
     ceo: [
       { href: '/versotech_main/dashboard', label: 'Dashboard' },
-      { href: '/versotech_main/ceo-profile', label: 'CEO Profile' },
       { href: '/versotech_main/deals', label: 'Deals' },
       { href: '/versotech_main/subscriptions', label: 'Subscriptions' },
       { href: '/versotech_main/investors', label: 'Investors' },

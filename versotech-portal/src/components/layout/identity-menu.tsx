@@ -32,6 +32,7 @@ import { Profile } from '@/lib/auth'
 import { signOut } from '@/lib/auth-client'
 
 const PERSONA_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
+  ceo: Building2,
   staff: Building2,
   investor: User,
   arranger: Briefcase,
@@ -42,6 +43,7 @@ const PERSONA_ICONS: Record<string, React.ComponentType<{ className?: string }>>
 }
 
 const PERSONA_LABELS: Record<string, string> = {
+  ceo: 'CEO',
   staff: 'Staff',
   investor: 'Investor',
   arranger: 'Arranger',
@@ -90,6 +92,7 @@ export function IdentityMenu({ profile, className }: IdentityMenuProps) {
     setOpen(false)
     // Route to persona-specific profile page
     const profileRoutes: Record<string, string> = {
+      ceo: '/versotech_main/ceo-profile',
       arranger: '/versotech_main/arranger-profile',
       lawyer: '/versotech_main/lawyer-profile',
       // investor and staff use the unified profile
