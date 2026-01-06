@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
+import Link from 'next/link'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -31,6 +32,7 @@ import {
   FileSignature,
   AlertCircle,
   Users,
+  Bell,
 } from 'lucide-react'
 import { formatDate } from '@/lib/format'
 import { cn } from '@/lib/utils'
@@ -44,6 +46,8 @@ import { GDPRControls } from '@/components/profile/gdpr-controls'
 import { MembersManagementTab } from '@/components/members/members-management-tab'
 import { IntroducerKYCDocumentsTab } from '@/components/profile/introducer-kyc-documents-tab'
 import { SignatureSpecimenTab } from '@/components/profile/signature-specimen-tab'
+import { GenericEntityMembersTab } from '@/components/profile/generic-entity-members-tab'
+import { NoticeContactsTab } from '@/components/profile/notice-contacts-tab'
 
 // Import shared KYC dialog components
 import { EntityKYCEditDialog, EntityAddressEditDialog } from '@/components/shared'
@@ -459,6 +463,12 @@ export function IntroducerProfileClient({
             <Users className="h-4 w-4" />
             Members
           </TabsTrigger>
+          {introducerInfo?.type === 'entity' && (
+            <TabsTrigger value="entity-members" className="flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              Directors/UBOs
+            </TabsTrigger>
+          )}
           <TabsTrigger value="kyc" className="flex items-center gap-2">
             <Shield className="h-4 w-4" />
             KYC Documents
@@ -474,6 +484,10 @@ export function IntroducerProfileClient({
           <TabsTrigger value="signature" className="flex items-center gap-2">
             <FileSignature className="h-4 w-4" />
             Signature
+          </TabsTrigger>
+          <TabsTrigger value="notices" className="flex items-center gap-2">
+            <Bell className="h-4 w-4" />
+            Notices
           </TabsTrigger>
         </TabsList>
 
@@ -759,7 +773,7 @@ export function IntroducerProfileClient({
                     You don&apos;t have an active fee agreement. Please contact the arranger to set one up.
                   </p>
                   <Button variant="outline" asChild>
-                    <a href="/versotech_main/introducer-agreements">View All Agreements</a>
+                    <Link href="/versotech_main/introducer-agreements">View All Agreements</Link>
                   </Button>
                 </div>
               )}
@@ -778,6 +792,21 @@ export function IntroducerProfileClient({
             />
           )}
         </TabsContent>
+
+        {/* Entity Members Tab (Directors/UBOs) - Only for entity-type introducers */}
+        {introducerInfo?.type === 'entity' && (
+          <TabsContent value="entity-members" className="space-y-4">
+            <GenericEntityMembersTab
+              entityType="introducer"
+              entityId={introducerInfo.id}
+              entityName={introducerInfo.legal_name || introducerInfo.contact_name || 'Introducer'}
+              apiEndpoint="/api/introducers/me/members"
+              canManage={introducerUserInfo.role === 'admin' || introducerUserInfo.is_primary}
+              title="Directors, UBOs & Signatories"
+              description="Manage directors, beneficial owners (>25% ownership), and authorized signatories with full KYC information. Click on a member to edit their complete KYC profile."
+            />
+          </TabsContent>
+        )}
 
         {/* KYC Documents Tab */}
         <TabsContent value="kyc" className="space-y-4">
@@ -830,6 +859,11 @@ export function IntroducerProfileClient({
               entityId={introducerInfo?.id}
             />
           )}
+        </TabsContent>
+
+        {/* Notices Tab */}
+        <TabsContent value="notices" className="space-y-4">
+          <NoticeContactsTab apiEndpoint="/api/introducers/me/notice-contacts" />
         </TabsContent>
       </Tabs>
 

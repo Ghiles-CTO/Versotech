@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from 'react'
+import { useEffect, useMemo, useState, useCallback, type ChangeEvent, type FormEvent } from 'react'
 import Image from 'next/image'
 import {
   Dialog,
@@ -24,6 +24,20 @@ import {
 import { Switch } from '@/components/ui/switch'
 import { Upload, Trash2, Loader2 } from 'lucide-react'
 import type { Entity } from './entities-views'
+
+interface DropdownOption {
+  id: string
+  name: string
+  email?: string
+  firm_name?: string
+  display_name?: string
+}
+
+interface DropdownOptions {
+  arrangers: DropdownOption[]
+  lawyers: DropdownOption[]
+  managingPartners: DropdownOption[]
+}
 
 const STATUS_OPTIONS = [
   { value: 'LIVE', label: 'Live' },
@@ -67,7 +81,11 @@ const defaultForm = {
   reporting_type: 'Not Required',
   requires_reporting: false,
   notes: '',
-  website_url: ''
+  website_url: '',
+  address: '',
+  arranger_entity_id: '',
+  lawyer_id: '',
+  managing_partner_id: ''
 }
 
 type FormState = typeof defaultForm
@@ -85,6 +103,33 @@ export function CreateEntityModal({ open, onOpenChange, onSuccess }: CreateEntit
   const [logoError, setLogoError] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [dropdownOptions, setDropdownOptions] = useState<DropdownOptions>({
+    arrangers: [],
+    lawyers: [],
+    managingPartners: []
+  })
+  const [dropdownsLoading, setDropdownsLoading] = useState(false)
+
+  const fetchDropdownOptions = useCallback(async () => {
+    setDropdownsLoading(true)
+    try {
+      const response = await fetch('/api/vehicles/dropdown-options')
+      if (response.ok) {
+        const data = await response.json()
+        setDropdownOptions(data)
+      }
+    } catch (err) {
+      console.error('Failed to fetch dropdown options:', err)
+    } finally {
+      setDropdownsLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (open) {
+      void fetchDropdownOptions()
+    }
+  }, [open, fetchDropdownOptions])
 
   useEffect(() => {
     if (!open) {
@@ -99,14 +144,14 @@ export function CreateEntityModal({ open, onOpenChange, onSuccess }: CreateEntit
 
   const reportingNeedsExplanation = useMemo(() => {
     if (!formData.requires_reporting) {
-      return 'Enable to track follow-up obligations for this entity.'
+      return 'Enable to track follow-up obligations for this vehicle.'
     }
 
     if (formData.reporting_type === 'Not Required') {
       return 'Select a reporting channel so stakeholders know where updates are delivered.'
     }
 
-    return 'This entity will appear in reporting queues and reminders.'
+    return 'This vehicle will appear in reporting queues and reminders.'
   }, [formData.requires_reporting, formData.reporting_type])
 
   const handleInputChange = (field: keyof FormState) => (event: ChangeEvent<HTMLInputElement>) => {
@@ -147,7 +192,7 @@ export function CreateEntityModal({ open, onOpenChange, onSuccess }: CreateEntit
     setError(null)
 
     if (!formData.name.trim()) {
-      setError('Entity name is required')
+      setError('Vehicle name is required')
       return
     }
 
@@ -181,7 +226,11 @@ export function CreateEntityModal({ open, onOpenChange, onSuccess }: CreateEntit
         requires_reporting: formData.requires_reporting,
         notes: formData.notes.trim() || null,
         logo_url: logoUrl || null,
-        website_url: formData.website_url.trim() || null
+        website_url: formData.website_url.trim() || null,
+        address: formData.address.trim() || null,
+        arranger_entity_id: formData.arranger_entity_id || null,
+        lawyer_id: formData.lawyer_id || null,
+        managing_partner_id: formData.managing_partner_id || null
       }
 
       const response = await fetch('/api/vehicles', {
@@ -193,13 +242,13 @@ export function CreateEntityModal({ open, onOpenChange, onSuccess }: CreateEntit
       const data = await response.json().catch(() => ({}))
 
       if (!response.ok) {
-        throw new Error(data.details || data.error || 'Failed to create entity')
+        throw new Error(data.details || data.error || 'Failed to create vehicle')
       }
 
       onSuccess(data.vehicle as Entity)
       onOpenChange(false)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong while creating the entity')
+      setError(err instanceof Error ? err.message : 'Something went wrong while creating the vehicle')
     } finally {
       setLoading(false)
     }
@@ -210,20 +259,20 @@ export function CreateEntityModal({ open, onOpenChange, onSuccess }: CreateEntit
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto no-scrollbar rounded-2xl border border-white/10 bg-black/95 text-white shadow-[0_28px_80px_rgba(0,0,0,0.55)] backdrop-blur">
         <form onSubmit={handleSubmit} className="space-y-6">
           <DialogHeader className="space-y-2">
-            <DialogTitle className="text-2xl text-white">Create Entity</DialogTitle>
+            <DialogTitle className="text-2xl text-white">Create Vehicle</DialogTitle>
             <DialogDescription className="text-sm text-white/70">
-              Complete the entity profile used when linking vehicles, deals, and investor reporting.
+              Complete the vehicle profile used when linking deals and investor reporting.
             </DialogDescription>
           </DialogHeader>
 
           <div className="grid gap-5">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="entity-name" className="text-white">
-                  Entity Name *
+                <Label htmlFor="vehicle-name" className="text-white">
+                  Vehicle Name *
                 </Label>
                 <Input
-                  id="entity-name"
+                  id="vehicle-name"
                   value={formData.name}
                   onChange={handleInputChange('name')}
                   placeholder="e.g., Verso Fund II"
@@ -231,11 +280,11 @@ export function CreateEntityModal({ open, onOpenChange, onSuccess }: CreateEntit
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="entity-code" className="text-white">
-                  Entity Code
+                <Label htmlFor="vehicle-code" className="text-white">
+                  Vehicle Code
                 </Label>
                 <Input
-                  id="entity-code"
+                  id="vehicle-code"
                   value={formData.entity_code}
                   onChange={handleInputChange('entity_code')}
                   placeholder="e.g., VC101"
@@ -362,7 +411,7 @@ export function CreateEntityModal({ open, onOpenChange, onSuccess }: CreateEntit
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="former_entity" className="text-white">
-                  Former Entity Name
+                  Former Vehicle Name
                 </Label>
                 <Input
                   id="former_entity"
@@ -387,8 +436,94 @@ export function CreateEntityModal({ open, onOpenChange, onSuccess }: CreateEntit
               </div>
             </div>
 
+            <div className="space-y-2">
+              <Label htmlFor="address" className="text-white">
+                Address
+              </Label>
+              <Textarea
+                id="address"
+                rows={2}
+                value={formData.address}
+                onChange={(event) => setFormData((prev) => ({ ...prev, address: event.target.value }))}
+                placeholder="Registered address of the vehicle"
+                className="bg-white text-black"
+              />
+            </div>
+
+            <div className="space-y-4 rounded-xl border border-white/10 bg-white/[0.06] p-4">
+              <div className="space-y-1">
+                <Label className="text-white font-medium">Service Providers</Label>
+                <p className="text-xs text-white/60">Assign the arranger, lawyer, and managing partner for this vehicle.</p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-white">Arranger</Label>
+                  <Select
+                    value={formData.arranger_entity_id}
+                    onValueChange={(value) => setFormData((prev) => ({ ...prev, arranger_entity_id: value === 'none' ? '' : value }))}
+                    disabled={dropdownsLoading}
+                  >
+                    <SelectTrigger className="bg-white text-black">
+                      <SelectValue placeholder={dropdownsLoading ? 'Loading...' : 'Select arranger'} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">None</SelectItem>
+                      {dropdownOptions.arrangers.map((arranger) => (
+                        <SelectItem key={arranger.id} value={arranger.id}>
+                          {arranger.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-white">Lawyer</Label>
+                  <Select
+                    value={formData.lawyer_id}
+                    onValueChange={(value) => setFormData((prev) => ({ ...prev, lawyer_id: value === 'none' ? '' : value }))}
+                    disabled={dropdownsLoading}
+                  >
+                    <SelectTrigger className="bg-white text-black">
+                      <SelectValue placeholder={dropdownsLoading ? 'Loading...' : 'Select lawyer'} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">None</SelectItem>
+                      {dropdownOptions.lawyers.map((lawyer) => (
+                        <SelectItem key={lawyer.id} value={lawyer.id}>
+                          {lawyer.name} {lawyer.firm_name && lawyer.name !== lawyer.firm_name ? `(${lawyer.firm_name})` : ''}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-white">Managing Partner</Label>
+                  <Select
+                    value={formData.managing_partner_id}
+                    onValueChange={(value) => setFormData((prev) => ({ ...prev, managing_partner_id: value === 'none' ? '' : value }))}
+                    disabled={dropdownsLoading}
+                  >
+                    <SelectTrigger className="bg-white text-black">
+                      <SelectValue placeholder={dropdownsLoading ? 'Loading...' : 'Select managing partner'} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">None</SelectItem>
+                      {dropdownOptions.managingPartners.map((partner) => (
+                        <SelectItem key={partner.id} value={partner.id}>
+                          {partner.display_name || partner.email}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+
             <div className="space-y-3">
-              <Label className="text-white">Entity Logo</Label>
+              <Label className="text-white">Vehicle Logo</Label>
               <div className="flex flex-col gap-3 rounded-xl border border-white/10 bg-white/[0.06] p-4">
                 <div className="flex items-center gap-4">
                   <div className="h-16 w-16 rounded-lg border border-white/10 bg-white/10 flex items-center justify-center">
@@ -529,7 +664,7 @@ export function CreateEntityModal({ open, onOpenChange, onSuccess }: CreateEntit
                   Creating…
                 </span>
               ) : (
-                'Create Entity'
+                'Create Vehicle'
               )}
             </Button>
           </DialogFooter>

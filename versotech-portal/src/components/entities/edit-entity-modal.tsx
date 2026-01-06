@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react'
 import Image from 'next/image'
 import {
   Dialog,
@@ -33,6 +33,20 @@ import {
 } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { Upload, Trash2, Loader2 } from 'lucide-react'
+
+interface DropdownOption {
+  id: string
+  name: string
+  email?: string
+  firm_name?: string
+  display_name?: string
+}
+
+interface DropdownOptions {
+  arrangers: DropdownOption[]
+  lawyers: DropdownOption[]
+  managingPartners: DropdownOption[]
+}
 
 const STATUS_OPTIONS = [
   { value: 'LIVE', label: 'Live' },
@@ -80,6 +94,10 @@ interface EditEntityModalProps {
     notes: string | null
     logo_url: string | null
     website_url: string | null
+    address: string | null
+    arranger_entity_id: string | null
+    lawyer_id: string | null
+    managing_partner_id: string | null
   }
   open: boolean
   onClose: () => void
@@ -103,7 +121,11 @@ export function EditEntityModal({ entity, open, onClose, onSuccess }: EditEntity
     reporting_type: 'Not Required',
     requires_reporting: false,
     notes: '',
-    website_url: ''
+    website_url: '',
+    address: '',
+    arranger_entity_id: '',
+    lawyer_id: '',
+    managing_partner_id: ''
   })
   const [logoUrl, setLogoUrl] = useState('')
   const [logoUploading, setLogoUploading] = useState(false)
@@ -111,6 +133,33 @@ export function EditEntityModal({ entity, open, onClose, onSuccess }: EditEntity
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [showConfirmation, setShowConfirmation] = useState(false)
+  const [dropdownOptions, setDropdownOptions] = useState<DropdownOptions>({
+    arrangers: [],
+    lawyers: [],
+    managingPartners: []
+  })
+  const [dropdownsLoading, setDropdownsLoading] = useState(false)
+
+  const fetchDropdownOptions = useCallback(async () => {
+    setDropdownsLoading(true)
+    try {
+      const response = await fetch('/api/vehicles/dropdown-options')
+      if (response.ok) {
+        const data = await response.json()
+        setDropdownOptions(data)
+      }
+    } catch (err) {
+      console.error('Failed to fetch dropdown options:', err)
+    } finally {
+      setDropdownsLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (open) {
+      void fetchDropdownOptions()
+    }
+  }, [open, fetchDropdownOptions])
 
   useEffect(() => {
     if (!open) return
@@ -131,7 +180,11 @@ export function EditEntityModal({ entity, open, onClose, onSuccess }: EditEntity
       reporting_type: entity.reporting_type || 'Not Required',
       requires_reporting: entity.requires_reporting ?? false,
       notes: entity.notes || '',
-      website_url: entity.website_url || ''
+      website_url: entity.website_url || '',
+      address: entity.address || '',
+      arranger_entity_id: entity.arranger_entity_id || '',
+      lawyer_id: entity.lawyer_id || '',
+      managing_partner_id: entity.managing_partner_id || ''
     })
     setLogoUrl(entity.logo_url || '')
     setLogoError(null)
@@ -143,14 +196,14 @@ export function EditEntityModal({ entity, open, onClose, onSuccess }: EditEntity
 
   const reportingNeedsExplanation = useMemo(() => {
     if (!formData.requires_reporting) {
-      return 'Enable to track follow-up obligations for this entity.'
+      return 'Enable to track follow-up obligations for this vehicle.'
     }
 
     if (formData.reporting_type === 'Not Required') {
       return 'Select where updates are delivered so stakeholders know the channel.'
     }
 
-    return 'This entity will appear in reporting queues and reminders.'
+    return 'This vehicle will appear in reporting queues and reminders.'
   }, [formData.requires_reporting, formData.reporting_type])
 
   const handleFieldChange =
@@ -187,7 +240,7 @@ export function EditEntityModal({ entity, open, onClose, onSuccess }: EditEntity
 
   const validateForm = () => {
     if (!formData.name.trim()) {
-      setError('Entity name is required')
+      setError('Vehicle name is required')
       return false
     }
 
@@ -236,7 +289,11 @@ export function EditEntityModal({ entity, open, onClose, onSuccess }: EditEntity
         requires_reporting: formData.requires_reporting,
         notes: formData.notes.trim() || null,
         logo_url: logoUrl || null,
-        website_url: formData.website_url.trim() || null
+        website_url: formData.website_url.trim() || null,
+        address: formData.address.trim() || null,
+        arranger_entity_id: formData.arranger_entity_id || null,
+        lawyer_id: formData.lawyer_id || null,
+        managing_partner_id: formData.managing_partner_id || null
       }
 
       const response = await fetch(`/api/entities/${entity.id}`, {
@@ -248,13 +305,13 @@ export function EditEntityModal({ entity, open, onClose, onSuccess }: EditEntity
       const data = await response.json().catch(() => ({}))
 
       if (!response.ok) {
-        throw new Error(data.details || data.error || 'Failed to update entity')
+        throw new Error(data.details || data.error || 'Failed to update vehicle')
       }
 
       onSuccess(data.entity)
       onClose()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update entity')
+      setError(err instanceof Error ? err.message : 'Failed to update vehicle')
     } finally {
       setLoading(false)
     }
@@ -266,9 +323,9 @@ export function EditEntityModal({ entity, open, onClose, onSuccess }: EditEntity
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto no-scrollbar rounded-2xl border border-white/10 bg-black/95 text-white shadow-[0_28px_80px_rgba(0,0,0,0.55)] backdrop-blur">
           <form onSubmit={handleSubmit} className="space-y-6">
             <DialogHeader className="space-y-2">
-              <DialogTitle className="text-2xl text-white">Edit Entity</DialogTitle>
+              <DialogTitle className="text-2xl text-white">Edit Vehicle</DialogTitle>
               <DialogDescription className="text-sm text-white/70">
-                Update the entity profile. Changes are applied immediately across deals and reporting.
+                Update the vehicle profile. Changes are applied immediately across deals and reporting.
               </DialogDescription>
             </DialogHeader>
 
@@ -276,19 +333,19 @@ export function EditEntityModal({ entity, open, onClose, onSuccess }: EditEntity
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="name" className="text-white">
-                    Entity Name *
+                    Vehicle Name *
                   </Label>
                   <Input
                     id="name"
                     value={formData.name}
                     onChange={(event) => handleFieldChange('name')(event.target.value)}
-                    placeholder="Legal entity name"
+                    placeholder="Legal vehicle name"
                     className="bg-white text-black"
                   />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="entity_code" className="text-white">
-                    Entity Code
+                    Vehicle Code
                   </Label>
                   <Input
                     id="entity_code"
@@ -418,7 +475,7 @@ export function EditEntityModal({ entity, open, onClose, onSuccess }: EditEntity
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="former_entity" className="text-white">
-                    Former Entity Name
+                    Former Vehicle Name
                   </Label>
                   <Input
                     id="former_entity"
@@ -443,14 +500,100 @@ export function EditEntityModal({ entity, open, onClose, onSuccess }: EditEntity
                 </div>
               </div>
 
+              <div className="space-y-2">
+                <Label htmlFor="address" className="text-white">
+                  Address
+                </Label>
+                <Textarea
+                  id="address"
+                  rows={2}
+                  value={formData.address}
+                  onChange={(event) => handleFieldChange('address')(event.target.value)}
+                  placeholder="Registered address of the vehicle"
+                  className="bg-white text-black"
+                />
+              </div>
+
+              <div className="space-y-4 rounded-xl border border-white/10 bg-white/[0.06] p-4">
+                <div className="space-y-1">
+                  <Label className="text-white font-medium">Service Providers</Label>
+                  <p className="text-xs text-white/60">Assign the arranger, lawyer, and managing partner for this vehicle.</p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-white">Arranger</Label>
+                    <Select
+                      value={formData.arranger_entity_id}
+                      onValueChange={(value) => setFormData((prev) => ({ ...prev, arranger_entity_id: value === 'none' ? '' : value }))}
+                      disabled={dropdownsLoading}
+                    >
+                      <SelectTrigger className="bg-white text-black">
+                        <SelectValue placeholder={dropdownsLoading ? 'Loading...' : 'Select arranger'} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">None</SelectItem>
+                        {dropdownOptions.arrangers.map((arranger) => (
+                          <SelectItem key={arranger.id} value={arranger.id}>
+                            {arranger.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-white">Lawyer</Label>
+                    <Select
+                      value={formData.lawyer_id}
+                      onValueChange={(value) => setFormData((prev) => ({ ...prev, lawyer_id: value === 'none' ? '' : value }))}
+                      disabled={dropdownsLoading}
+                    >
+                      <SelectTrigger className="bg-white text-black">
+                        <SelectValue placeholder={dropdownsLoading ? 'Loading...' : 'Select lawyer'} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">None</SelectItem>
+                        {dropdownOptions.lawyers.map((lawyer) => (
+                          <SelectItem key={lawyer.id} value={lawyer.id}>
+                            {lawyer.name} {lawyer.firm_name && lawyer.name !== lawyer.firm_name ? `(${lawyer.firm_name})` : ''}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-white">Managing Partner</Label>
+                    <Select
+                      value={formData.managing_partner_id}
+                      onValueChange={(value) => setFormData((prev) => ({ ...prev, managing_partner_id: value === 'none' ? '' : value }))}
+                      disabled={dropdownsLoading}
+                    >
+                      <SelectTrigger className="bg-white text-black">
+                        <SelectValue placeholder={dropdownsLoading ? 'Loading...' : 'Select managing partner'} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">None</SelectItem>
+                        {dropdownOptions.managingPartners.map((partner) => (
+                          <SelectItem key={partner.id} value={partner.id}>
+                            {partner.display_name || partner.email}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+
               <div className="space-y-3">
-                <Label className="text-white">Entity Logo</Label>
+                <Label className="text-white">Vehicle Logo</Label>
                 <div className="flex flex-col gap-3 rounded-xl border border-white/10 bg-white/[0.06] p-4">
                   <div className="flex items-center gap-4">
                     <div className="h-16 w-16 rounded-lg border border-white/10 bg-white/10 flex items-center justify-center">
                       {logoUrl ? (
 
-                        <Image src={logoUrl} alt="Entity logo preview" width={64} height={64} className="h-full w-full rounded object-contain p-1" />
+                        <Image src={logoUrl} alt="Vehicle logo preview" width={64} height={64} className="h-full w-full rounded object-contain p-1" />
                       ) : (
                         <span className="text-xs text-white/60">Upload logo</span>
                       )}
@@ -552,7 +695,7 @@ export function EditEntityModal({ entity, open, onClose, onSuccess }: EditEntity
                   rows={3}
                   value={formData.notes}
                   onChange={(event) => handleFieldChange('notes')(event.target.value)}
-                  placeholder="Add any additional context for this entity."
+                  placeholder="Add any additional context for this vehicle."
                   className="bg-white text-black"
                 />
               </div>

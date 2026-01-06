@@ -85,6 +85,10 @@ export const feeComponentSchema = z.object({
   payment_schedule: paymentScheduleSchema.optional(),
   tier_threshold_multiplier: z.number().positive().optional(),
   next_tier_component_id: optionalFlexibleUuidSchema,
+  // NEW: Payment timing fields for DOC 3
+  payment_days_after_event: z.number().int().min(1).max(90).optional(),
+  performance_cap_percent: z.number().min(0).max(100).optional(),
+  has_no_cap: z.boolean().optional(),
 });
 
 // Date string schema for DATE columns (accepts YYYY-MM-DD or ISO datetime)
@@ -131,6 +135,13 @@ export const createFeePlanSchema = z.object({
   introducer_id: optionalFlexibleUuidSchema,
   partner_id: optionalFlexibleUuidSchema,
   commercial_partner_id: optionalFlexibleUuidSchema,
+
+  // NEW: Agreement fields for DOC 3 generation (introducers & partners)
+  agreement_duration_months: z.number().int().min(1).max(120).optional().default(36),
+  // Non-circumvention: null = indefinite, number = specific months
+  non_circumvention_months: z.number().int().min(1).max(240).nullable().optional(),
+  vat_registration_number: z.string().max(50).nullable().optional(),
+  governing_law: z.string().optional().default('British Virgin Islands'),
 }).refine(
   (data) => {
     // Ensure exactly one entity is provided
@@ -147,6 +158,8 @@ export const createFeePlanSchema = z.object({
   }
 );
 
+// For updates, all fields are optional except we add is_active
+// Note: Uses .safeExtend() because createFeePlanSchema has a refinement
 export const updateFeePlanSchema = createFeePlanSchema.partial().safeExtend({
   is_active: z.boolean().optional(),
 });

@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { FileText, Upload, Download, CheckCircle, Clock, AlertCircle, Loader2, Send, Eye } from 'lucide-react'
+import { FileText, Upload, Download, CheckCircle, Clock, AlertCircle, Loader2, Send, Eye, RefreshCw, BadgeCheck } from 'lucide-react'
 import { toast } from 'sonner'
 import { useDocumentViewer } from '@/hooks/useDocumentViewer'
 import { DocumentViewerFullscreen } from '@/components/documents/DocumentViewerFullscreen'
@@ -44,6 +44,8 @@ export function SubscriptionDocumentsTab({ subscriptionId }: SubscriptionDocumen
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [signatoryDialogOpen, setSignatoryDialogOpen] = useState(false)
   const [selectedDocumentForSignature, setSelectedDocumentForSignature] = useState<Document | null>(null)
+  const [regenerating, setRegenerating] = useState(false)
+  const [markingFinalId, setMarkingFinalId] = useState<string | null>(null)
 
   // Document viewer hook
   const {
@@ -230,6 +232,57 @@ export function SubscriptionDocumentsTab({ subscriptionId }: SubscriptionDocumen
     }
   }
 
+  const handleRegenerate = async () => {
+    setRegenerating(true)
+    try {
+      const response = await fetch(`/api/subscriptions/${subscriptionId}/regenerate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to regenerate subscription pack')
+      }
+
+      const data = await response.json()
+      toast.success('Subscription pack regenerated successfully')
+      console.log('Regeneration result:', data)
+      fetchDocuments() // Refresh document list
+    } catch (error) {
+      console.error('Error regenerating subscription pack:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to regenerate subscription pack')
+    } finally {
+      setRegenerating(false)
+    }
+  }
+
+  const handleMarkAsFinal = async (documentId: string) => {
+    setMarkingFinalId(documentId)
+    try {
+      const response = await fetch(
+        `/api/subscriptions/${subscriptionId}/documents/${documentId}/mark-final`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        }
+      )
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to mark document as final')
+      }
+
+      toast.success('Document marked as final - ready for signature')
+      fetchDocuments() // Refresh document list
+    } catch (error) {
+      console.error('Error marking document as final:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to mark document as final')
+    } finally {
+      setMarkingFinalId(null)
+    }
+  }
+
   const formatFileSize = (bytes: number) => {
     if (bytes < 1024) return `${bytes} B`
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
@@ -260,13 +313,32 @@ export function SubscriptionDocumentsTab({ subscriptionId }: SubscriptionDocumen
                 Manage draft and final subscription pack documents
               </CardDescription>
             </div>
-            <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
-              <DialogTrigger asChild>
-                <Button className="gap-2">
-                  <Upload className="h-4 w-4" />
-                  Upload Final Pack
-                </Button>
-              </DialogTrigger>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                className="gap-2"
+                onClick={handleRegenerate}
+                disabled={regenerating}
+              >
+                {regenerating ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Regenerating...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="h-4 w-4" />
+                    Regenerate Pack
+                  </>
+                )}
+              </Button>
+              <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button className="gap-2">
+                    <Upload className="h-4 w-4" />
+                    Upload Final Pack
+                  </Button>
+                </DialogTrigger>
               <DialogContent className="bg-black border border-white/10">
                 <DialogHeader>
                   <DialogTitle className="text-foreground">Upload Final Subscription Pack</DialogTitle>
@@ -319,6 +391,7 @@ export function SubscriptionDocumentsTab({ subscriptionId }: SubscriptionDocumen
                 </DialogFooter>
               </DialogContent>
             </Dialog>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
@@ -400,6 +473,27 @@ export function SubscriptionDocumentsTab({ subscriptionId }: SubscriptionDocumen
                         </>
                       )}
                     </Button>
+                    {document.status === 'draft' && (
+                      <Button
+                        variant="default"
+                        size="sm"
+                        className="gap-2 bg-cyan-600 hover:bg-cyan-700"
+                        onClick={() => handleMarkAsFinal(document.id)}
+                        disabled={markingFinalId === document.id}
+                      >
+                        {markingFinalId === document.id ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            Marking...
+                          </>
+                        ) : (
+                          <>
+                            <BadgeCheck className="h-4 w-4" />
+                            Mark as Final
+                          </>
+                        )}
+                      </Button>
+                    )}
                     {(document.status === 'published' || document.status === 'final') && !document.ready_for_signature && (
                       <Button
                         variant="default"

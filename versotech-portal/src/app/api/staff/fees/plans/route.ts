@@ -239,9 +239,15 @@ export async function POST(request: NextRequest) {
 
       if (componentsError) {
         console.error('Error creating fee components:', componentsError);
+        console.error('Component inserts attempted:', JSON.stringify(componentInserts, null, 2));
         // Rollback: delete the created fee plan
         await supabase.from('fee_plans').delete().eq('id', feePlan.id);
-        return NextResponse.json({ error: 'Failed to create fee components' }, { status: 500 });
+        return NextResponse.json({
+          error: 'Failed to create fee components',
+          details: componentsError.message,
+          code: componentsError.code,
+          hint: componentsError.hint,
+        }, { status: 500 });
       }
       createdComponents = comps || [];
     }

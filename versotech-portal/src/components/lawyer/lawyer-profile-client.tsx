@@ -28,6 +28,7 @@ import {
   Shield,
   Clock,
   AlertTriangle,
+  Bell,
 } from 'lucide-react'
 import { MembersManagementTab } from '@/components/members/members-management-tab'
 import { SignatureSpecimenTab } from '@/components/profile/signature-specimen-tab'
@@ -35,6 +36,8 @@ import { PasswordChangeForm } from '@/components/profile/password-change-form'
 import { PreferencesEditor } from '@/components/profile/preferences-editor'
 import { LawyerKYCDocumentsTab } from '@/components/profile/lawyer-kyc-documents-tab'
 import { EntityAddressEditDialog } from '@/components/shared'
+import { GenericEntityMembersTab } from '@/components/profile/generic-entity-members-tab'
+import { NoticeContactsTab } from '@/components/profile/notice-contacts-tab'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import Image from 'next/image'
@@ -358,6 +361,10 @@ export function LawyerProfileClient({
             <Users className="h-4 w-4" />
             Members
           </TabsTrigger>
+          <TabsTrigger value="entity-members" className="flex items-center gap-2">
+            <Users className="h-4 w-4" />
+            Directors/UBOs
+          </TabsTrigger>
           <TabsTrigger value="kyc" className="flex items-center gap-2">
             <Shield className="h-4 w-4" />
             KYC
@@ -373,6 +380,10 @@ export function LawyerProfileClient({
           <TabsTrigger value="preferences" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
             Preferences
+          </TabsTrigger>
+          <TabsTrigger value="notices" className="flex items-center gap-2">
+            <Bell className="h-4 w-4" />
+            Notices
           </TabsTrigger>
         </TabsList>
 
@@ -609,6 +620,30 @@ export function LawyerProfileClient({
           )}
         </TabsContent>
 
+        {/* Entity Members Tab (Directors/UBOs) */}
+        <TabsContent value="entity-members" className="space-y-4">
+          {lawyerInfo ? (
+            <GenericEntityMembersTab
+              entityType="lawyer"
+              entityId={lawyerInfo.id}
+              entityName={lawyerInfo.firm_name || lawyerInfo.display_name || 'Law Firm'}
+              apiEndpoint="/api/lawyers/me/members"
+              canManage={lawyerUserInfo.role === 'admin' || lawyerUserInfo.is_primary}
+              title="Directors, UBOs & Signatories"
+              description="Manage firm partners, directors, beneficial owners (>25% ownership), and authorized signatories with full KYC information."
+            />
+          ) : (
+            <Card>
+              <CardContent className="py-8 text-center">
+                <AlertCircle className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
+                <p className="text-muted-foreground">
+                  No law firm linked to your account
+                </p>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
         {/* KYC Tab */}
         <TabsContent value="kyc" className="space-y-4">
           {lawyerInfo ? (
@@ -668,6 +703,11 @@ export function LawyerProfileClient({
         {/* Preferences Tab */}
         <TabsContent value="preferences" className="space-y-4">
           <PreferencesEditor variant="investor" />
+        </TabsContent>
+
+        {/* Notices Tab */}
+        <TabsContent value="notices" className="space-y-4">
+          <NoticeContactsTab apiEndpoint="/api/lawyers/me/notice-contacts" />
         </TabsContent>
       </Tabs>
 

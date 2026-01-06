@@ -38,6 +38,10 @@ interface FeePlanEditModalProps {
   initialTermSheetId?: string;
 }
 
+/**
+ * Fee Component Form - Simplified
+ * Agreement-specific fields (hurdle, catchup, payment timing) are now at plan-level
+ */
 interface FeeComponentForm {
   id?: string;
   kind: 'subscription' | 'management' | 'performance' | 'spread_markup' | 'flat' | 'bd_fee' | 'finra_fee' | 'other';
@@ -46,14 +50,11 @@ interface FeeComponentForm {
   rate_bps?: number;
   flat_amount?: number;
   description?: string;
+  // Management fee specific
   duration_periods?: number;
   duration_unit?: 'years' | 'months' | 'quarters' | 'life_of_vehicle';
   payment_schedule?: 'upfront' | 'recurring' | 'on_demand';
   tier_threshold_multiplier?: number;
-  hurdle_rate_bps?: number;
-  has_catchup?: boolean;
-  catchup_rate_bps?: number;
-  has_high_water_mark?: boolean;
 }
 
 export default function FeePlanEditModal({
@@ -82,6 +83,31 @@ export default function FeePlanEditModal({
   const [entityType, setEntityType] = useState<EntityType | undefined>();
   const [entityId, setEntityId] = useState<string | undefined>();
 
+  // =====================================================
+  // AGREEMENT TERMS - All DOC 3 fields at plan level
+  // =====================================================
+
+  // General Terms
+  const [agreementDurationMonths, setAgreementDurationMonths] = useState<number>(36);
+  const [nonCircumventionMonths, setNonCircumventionMonths] = useState<number | null>(null); // null = indefinite
+  const [nonCircumventionIndefinite, setNonCircumventionIndefinite] = useState<boolean>(true);
+  const [governingLaw, setGoverningLaw] = useState<string>('British Virgin Islands');
+
+  // Introduction Fee Terms (subscription fee)
+  const [introFeePaymentDays, setIntroFeePaymentDays] = useState<number>(3);
+
+  // Performance Fee Terms (carried interest)
+  const [perfFeePaymentDays, setPerfFeePaymentDays] = useState<number>(10);
+  const [hurdleRateBps, setHurdleRateBps] = useState<number | undefined>();
+  const [hasCatchup, setHasCatchup] = useState<boolean>(false);
+  const [catchupRateBps, setCatchupRateBps] = useState<number | undefined>();
+  const [hasHighWaterMark, setHasHighWaterMark] = useState<boolean>(false);
+  const [hasNoCap, setHasNoCap] = useState<boolean>(true);
+  const [performanceCapPercent, setPerformanceCapPercent] = useState<number | undefined>();
+
+  // VAT
+  const [vatRegistrationNumber, setVatRegistrationNumber] = useState<string>('');
+
   const resetForm = useCallback(() => {
     setName('');
     setDescription('');
@@ -90,11 +116,25 @@ export default function FeePlanEditModal({
     setComponents([]);
     setError(null);
     setValidationErrors([]);
-    // Reset new fields - but keep initialTermSheetId if provided
+    // Reset term sheet and entity
     setTermSheetId(initialTermSheetId);
     setSelectedTermSheet(null);
     setEntityType(undefined);
     setEntityId(undefined);
+    // Reset ALL agreement fields to defaults
+    setAgreementDurationMonths(36);
+    setNonCircumventionMonths(null);
+    setNonCircumventionIndefinite(true);
+    setGoverningLaw('British Virgin Islands');
+    setIntroFeePaymentDays(3);
+    setPerfFeePaymentDays(10);
+    setHurdleRateBps(undefined);
+    setHasCatchup(false);
+    setCatchupRateBps(undefined);
+    setHasHighWaterMark(false);
+    setHasNoCap(true);
+    setPerformanceCapPercent(undefined);
+    setVatRegistrationNumber('');
   }, [dealId, initialTermSheetId]);
 
   useEffect(() => {
@@ -126,7 +166,34 @@ export default function FeePlanEditModal({
           setEntityId(undefined);
         }
 
-        const formComponents: FeeComponentForm[] = (feePlan.components || []).map((comp: any) => ({
+        // Load agreement fields (plan-level)
+        setAgreementDurationMonths(fp.agreement_duration_months ?? 36);
+        const ncMonths = fp.non_circumvention_months;
+        setNonCircumventionMonths(ncMonths ?? null);
+        setNonCircumventionIndefinite(ncMonths === null || ncMonths === undefined);
+        setGoverningLaw(fp.governing_law ?? 'British Virgin Islands');
+        setVatRegistrationNumber(fp.vat_registration_number ?? '');
+
+        // Extract agreement terms from components (if they were saved at component level)
+        // Cast to any because these fields may exist on older fee plans
+        const existingComponents = (feePlan.components || []) as any[];
+        const subscriptionComp = existingComponents.find((c) => c.kind === 'subscription');
+        const performanceComp = existingComponents.find((c) => c.kind === 'performance');
+
+        // Introduction fee terms from subscription component
+        setIntroFeePaymentDays(subscriptionComp?.payment_days_after_event ?? 3);
+
+        // Performance fee terms from performance component
+        setPerfFeePaymentDays(performanceComp?.payment_days_after_event ?? 10);
+        setHurdleRateBps(performanceComp?.hurdle_rate_bps ?? undefined);
+        setHasCatchup(performanceComp?.has_catchup ?? false);
+        setCatchupRateBps(performanceComp?.catchup_rate_bps ?? undefined);
+        setHasHighWaterMark(performanceComp?.has_high_water_mark ?? false);
+        setHasNoCap(performanceComp?.has_no_cap ?? true);
+        setPerformanceCapPercent(performanceComp?.performance_cap_percent ?? undefined);
+
+        // Map components (simplified - without agreement-specific fields)
+        const formComponents: FeeComponentForm[] = existingComponents.map((comp: any) => ({
           id: comp.id,
           kind: comp.kind,
           calc_method: comp.calc_method || 'percent_per_annum',
@@ -138,10 +205,6 @@ export default function FeePlanEditModal({
           duration_unit: comp.duration_unit || undefined,
           payment_schedule: comp.payment_schedule || 'recurring',
           tier_threshold_multiplier: comp.tier_threshold_multiplier || undefined,
-          hurdle_rate_bps: comp.hurdle_rate_bps || undefined,
-          has_catchup: comp.has_catchup || false,
-          catchup_rate_bps: comp.catchup_rate_bps || undefined,
-          has_high_water_mark: comp.has_high_water_mark || false,
         }));
         setComponents(formComponents);
       } else {
@@ -180,12 +243,12 @@ export default function FeePlanEditModal({
     setComponents([
       ...components,
       {
-        kind: 'management',
-        calc_method: 'percent_per_annum',
-        frequency: 'quarterly',
+        kind: 'subscription',
+        calc_method: 'percent_of_investment',
+        frequency: 'one_time',
         rate_bps: undefined,
         flat_amount: undefined,
-        payment_schedule: 'recurring',
+        payment_schedule: 'upfront',
       },
     ]);
   };
@@ -239,6 +302,43 @@ export default function FeePlanEditModal({
         commercial_partner_id: entityType === 'commercial_partner' ? entityId : undefined,
       };
 
+      // Build components with agreement terms merged in
+      const componentsWithAgreementTerms = components.map((c) => {
+        // Map 'description' (form field) to 'notes' (database column)
+        // Exclude 'id' for new components (database generates it)
+        const { description, id, ...rest } = c;
+        const base = {
+          ...rest,
+          notes: description?.trim() || undefined,
+          // Only include id if it's a valid UUID (for existing components)
+          ...(id && id.length > 10 ? { id } : {}),
+        };
+
+        // Merge plan-level intro fee terms into subscription component
+        if (c.kind === 'subscription') {
+          return {
+            ...base,
+            payment_days_after_event: introFeePaymentDays,
+          };
+        }
+
+        // Merge plan-level performance fee terms into performance component
+        if (c.kind === 'performance') {
+          return {
+            ...base,
+            payment_days_after_event: perfFeePaymentDays,
+            hurdle_rate_bps: hurdleRateBps,
+            has_catchup: hasCatchup,
+            catchup_rate_bps: hasCatchup ? catchupRateBps : undefined,
+            has_high_water_mark: hasHighWaterMark,
+            has_no_cap: hasNoCap,
+            performance_cap_percent: hasNoCap ? undefined : performanceCapPercent,
+          };
+        }
+
+        return base;
+      });
+
       const payload = {
         name: name.trim(),
         description: description.trim() || undefined,
@@ -246,10 +346,13 @@ export default function FeePlanEditModal({
         term_sheet_id: termSheetId,
         ...entityFields,
         is_active: isActive,
-        components: components.map((c) => ({
-          ...c,
-          description: c.description?.trim() || undefined,
-        })),
+        // Agreement terms (plan-level fields)
+        agreement_duration_months: agreementDurationMonths,
+        non_circumvention_months: nonCircumventionIndefinite ? null : nonCircumventionMonths,
+        governing_law: governingLaw,
+        vat_registration_number: vatRegistrationNumber.trim() || null,
+        // Components with agreement terms merged in
+        components: componentsWithAgreementTerms,
       };
 
       const url = feePlan
@@ -357,36 +460,48 @@ export default function FeePlanEditModal({
               />
             </div>
 
-            {/* Deal Selector - REQUIRED (no more global templates) */}
-            <div className="space-y-3">
-              <Label htmlFor="deal" className="text-white font-medium">
-                Deal <span className="text-red-400">*</span>
-              </Label>
-              <Select
-                value={selectedDealId || 'none'}
-                onValueChange={(val) => {
-                  setSelectedDealId(val === 'none' ? undefined : val);
-                  // Reset term sheet and entity when deal changes
-                  setTermSheetId(undefined);
-                  setSelectedTermSheet(null);
-                  setEntityType(undefined);
-                  setEntityId(undefined);
-                }}
-              >
-                <SelectTrigger id="deal" className="bg-black border-gray-700 text-white h-11">
-                  <SelectValue placeholder="Select a deal" />
-                </SelectTrigger>
-                <SelectContent className="bg-black border-gray-700 text-white">
-                  <SelectItem value="none" disabled>Select a deal...</SelectItem>
-                  {deals.map((deal) => (
-                    <SelectItem key={deal.id} value={deal.id}>{deal.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-gray-500">
-                Fee models must be linked to a specific deal. Global templates are not allowed.
-              </p>
-            </div>
+            {/* Deal - Show read-only when dealId prop passed, otherwise show selector */}
+            {dealId ? (
+              <div className="space-y-3">
+                <Label className="text-white font-medium">Deal</Label>
+                <div className="bg-gray-900/50 border border-gray-700 rounded-md px-4 py-3 text-white">
+                  {deals.find(d => d.id === dealId)?.name || 'Loading...'}
+                </div>
+                <p className="text-xs text-gray-500">
+                  Creating fee model for this deal.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <Label htmlFor="deal" className="text-white font-medium">
+                  Deal <span className="text-red-400">*</span>
+                </Label>
+                <Select
+                  value={selectedDealId || 'none'}
+                  onValueChange={(val) => {
+                    setSelectedDealId(val === 'none' ? undefined : val);
+                    // Reset term sheet and entity when deal changes
+                    setTermSheetId(undefined);
+                    setSelectedTermSheet(null);
+                    setEntityType(undefined);
+                    setEntityId(undefined);
+                  }}
+                >
+                  <SelectTrigger id="deal" className="bg-black border-gray-700 text-white h-11">
+                    <SelectValue placeholder="Select a deal" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-black border-gray-700 text-white">
+                    <SelectItem value="none" disabled>Select a deal...</SelectItem>
+                    {deals.map((deal) => (
+                      <SelectItem key={deal.id} value={deal.id}>{deal.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-gray-500">
+                  Fee models must be linked to a specific deal.
+                </p>
+              </div>
+            )}
 
             {/* Term Sheet Selector - REQUIRED */}
             <TermSheetSelector
@@ -396,7 +511,7 @@ export default function FeePlanEditModal({
               required={true}
             />
 
-            {/* Entity Selector - REQUIRED */}
+            {/* Entity Selector - REQUIRED (Introducer or Partner only for now) */}
             <EntitySelector
               dealId={selectedDealId}
               entityType={entityType}
@@ -404,6 +519,7 @@ export default function FeePlanEditModal({
               entityId={entityId}
               onEntityIdChange={setEntityId}
               required={true}
+              excludeTypes={['commercial_partner']}
             />
 
             {/* Validation Warnings */}
@@ -588,94 +704,6 @@ export default function FeePlanEditModal({
                         </div>
                       )}
 
-                      {component.kind === 'performance' && (
-                        <div className="pt-4 border-t border-gray-700 space-y-5">
-                          <div className="space-y-3">
-                            <Label className="text-white text-sm font-medium">Hurdle Rate (bps)</Label>
-                            <Input
-                              type="number"
-                              value={component.hurdle_rate_bps || ''}
-                              onChange={(e) =>
-                                updateComponent(index, {
-                                  hurdle_rate_bps: e.target.value ? parseFloat(e.target.value) : undefined,
-                                })
-                              }
-                              placeholder="800"
-                              className="bg-gray-900 border-gray-700 text-white h-11"
-                            />
-                            {component.hurdle_rate_bps && (
-                              <p className="text-xs text-blue-400 font-medium">
-                                = {(component.hurdle_rate_bps / 100).toFixed(2)}% preferred return
-                              </p>
-                            )}
-                          </div>
-
-                          <div className="flex items-center gap-3">
-                            <Checkbox
-                              id={`catchup-${index}`}
-                              checked={component.has_catchup || false}
-                              onCheckedChange={(checked) =>
-                                updateComponent(index, { has_catchup: checked as boolean })
-                              }
-                            />
-                            <Label htmlFor={`catchup-${index}`} className="text-white cursor-pointer">
-                              Enable GP Catchup
-                            </Label>
-                          </div>
-
-                          {component.has_catchup && (
-                            <div className="ml-6 space-y-3">
-                              <Label className="text-white text-sm font-medium">Catchup Rate (bps)</Label>
-                              <Input
-                                type="number"
-                                value={component.catchup_rate_bps || ''}
-                                onChange={(e) =>
-                                  updateComponent(index, {
-                                    catchup_rate_bps: e.target.value ? parseFloat(e.target.value) : undefined,
-                                  })
-                                }
-                                placeholder="10000"
-                                className="bg-gray-900 border-gray-700 text-white h-11"
-                              />
-                              {component.catchup_rate_bps && (
-                                <p className="text-xs text-blue-400 font-medium">
-                                  = {(component.catchup_rate_bps / 100).toFixed(2)}% catchup
-                                </p>
-                              )}
-                            </div>
-                          )}
-
-                          <div className="flex items-center gap-3">
-                            <Checkbox
-                              id={`hwm-${index}`}
-                              checked={component.has_high_water_mark || false}
-                              onCheckedChange={(checked) =>
-                                updateComponent(index, { has_high_water_mark: checked as boolean })
-                              }
-                            />
-                            <Label htmlFor={`hwm-${index}`} className="text-white cursor-pointer">
-                              High Water Mark
-                            </Label>
-                          </div>
-
-                          <div className="space-y-3">
-                            <Label className="text-white text-sm font-medium">Tier Threshold Multiplier</Label>
-                            <Input
-                              type="number"
-                              step="0.1"
-                              value={component.tier_threshold_multiplier || ''}
-                              onChange={(e) =>
-                                updateComponent(index, {
-                                  tier_threshold_multiplier: e.target.value ? parseFloat(e.target.value) : undefined,
-                                })
-                              }
-                              placeholder="1.5"
-                              className="bg-gray-900 border-gray-700 text-white h-11"
-                            />
-                          </div>
-                        </div>
-                      )}
-
                       <div className="pt-4 border-t border-gray-700 space-y-3">
                         <Label className="text-white text-sm font-medium">Notes</Label>
                         <Textarea
@@ -692,6 +720,262 @@ export default function FeePlanEditModal({
               </div>
             )}
           </div>
+
+          {/* =================================================================
+              AGREEMENT TERMS - Consolidated DOC 3 Fields
+              Only shows for Introducers and Partners
+              ================================================================= */}
+          {(entityType === 'introducer' || entityType === 'partner') && (
+            <div className="space-y-6 bg-blue-500/5 p-6 rounded-lg border border-blue-500/20">
+              <h3 className="text-lg font-semibold text-blue-400 border-b border-blue-500/20 pb-3">
+                Agreement Terms {entityType === 'introducer' ? '(DOC 3 - Introducer Agreement)' : '(Placement Agreement)'}
+              </h3>
+              <p className="text-sm text-gray-400">
+                These terms will be included in the generated agreement document.
+              </p>
+
+              {/* General Terms */}
+              <div className="space-y-4">
+                <h4 className="text-sm font-semibold text-white flex items-center gap-2">
+                  <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                  General Terms
+                </h4>
+                <div className="grid grid-cols-3 gap-4 pl-4">
+                  <div className="space-y-2">
+                    <Label className="text-white text-sm font-medium">Agreement Duration *</Label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="number"
+                        min="1"
+                        value={agreementDurationMonths}
+                        onChange={(e) => setAgreementDurationMonths(parseInt(e.target.value) || 36)}
+                        className="bg-black border-gray-700 text-white h-10 w-20"
+                      />
+                      <span className="text-gray-400 text-sm">months</span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-white text-sm font-medium">Non-Circumvention *</Label>
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        id="nc_indefinite"
+                        checked={nonCircumventionIndefinite}
+                        onCheckedChange={(checked) => {
+                          setNonCircumventionIndefinite(checked as boolean);
+                          if (checked) setNonCircumventionMonths(null);
+                        }}
+                      />
+                      <Label htmlFor="nc_indefinite" className="text-white text-sm cursor-pointer">
+                        Indefinite
+                      </Label>
+                      {!nonCircumventionIndefinite && (
+                        <>
+                          <Input
+                            type="number"
+                            min="1"
+                            value={nonCircumventionMonths || ''}
+                            onChange={(e) => setNonCircumventionMonths(parseInt(e.target.value) || null)}
+                            placeholder="24"
+                            className="bg-black border-gray-700 text-white h-10 w-20"
+                          />
+                          <span className="text-gray-400 text-sm">months</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-white text-sm font-medium">Governing Law</Label>
+                    <Select value={governingLaw} onValueChange={setGoverningLaw}>
+                      <SelectTrigger className="bg-black border-gray-700 text-white h-10">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-black border-gray-700 text-white">
+                        <SelectItem value="British Virgin Islands">British Virgin Islands</SelectItem>
+                        <SelectItem value="England and Wales">England and Wales</SelectItem>
+                        <SelectItem value="Cayman Islands">Cayman Islands</SelectItem>
+                        <SelectItem value="Delaware, USA">Delaware, USA</SelectItem>
+                        <SelectItem value="Singapore">Singapore</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Introduction Fee Terms */}
+              <div className="space-y-4">
+                <h4 className="text-sm font-semibold text-white flex items-center gap-2">
+                  <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                  Introduction Fee Terms
+                </h4>
+                <div className="grid grid-cols-3 gap-4 pl-4">
+                  <div className="space-y-2">
+                    <Label className="text-white text-sm font-medium">Subscription Fee Rate</Label>
+                    <div className="bg-gray-900/50 border border-gray-700 rounded-md px-3 py-2 text-white">
+                      {components.find(c => c.kind === 'subscription')?.rate_bps
+                        ? `${(components.find(c => c.kind === 'subscription')!.rate_bps! / 100).toFixed(2)}%`
+                        : <span className="text-gray-500">Add subscription component</span>}
+                    </div>
+                    <p className="text-xs text-gray-500">Set via subscription fee component above</p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-white text-sm font-medium">Payment After Completion</Label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="number"
+                        min="1"
+                        max="90"
+                        value={introFeePaymentDays}
+                        onChange={(e) => setIntroFeePaymentDays(parseInt(e.target.value) || 3)}
+                        className="bg-black border-gray-700 text-white h-10 w-20"
+                      />
+                      <span className="text-gray-400 text-sm">business days</span>
+                    </div>
+                    <p className="text-xs text-gray-500">After share certificate issuance</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Performance Fee Terms */}
+              <div className="space-y-4">
+                <h4 className="text-sm font-semibold text-white flex items-center gap-2">
+                  <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
+                  Performance Fee (Carried Interest) Terms
+                </h4>
+                <div className="grid grid-cols-3 gap-4 pl-4">
+                  <div className="space-y-2">
+                    <Label className="text-white text-sm font-medium">Carried Interest Rate</Label>
+                    <div className="bg-gray-900/50 border border-gray-700 rounded-md px-3 py-2 text-white">
+                      {components.find(c => c.kind === 'performance')?.rate_bps
+                        ? `${(components.find(c => c.kind === 'performance')!.rate_bps! / 100).toFixed(2)}%`
+                        : <span className="text-gray-500">Add performance component</span>}
+                    </div>
+                    <p className="text-xs text-gray-500">Set via performance fee component above</p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-white text-sm font-medium">Payment After Redemption</Label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="number"
+                        min="1"
+                        max="90"
+                        value={perfFeePaymentDays}
+                        onChange={(e) => setPerfFeePaymentDays(parseInt(e.target.value) || 10)}
+                        className="bg-black border-gray-700 text-white h-10 w-20"
+                      />
+                      <span className="text-gray-400 text-sm">business days</span>
+                    </div>
+                    <p className="text-xs text-gray-500">After redemption/exit event</p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-white text-sm font-medium">Hurdle Rate</Label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="number"
+                        min="0"
+                        value={hurdleRateBps || ''}
+                        onChange={(e) => setHurdleRateBps(e.target.value ? parseFloat(e.target.value) : undefined)}
+                        placeholder="800"
+                        className="bg-black border-gray-700 text-white h-10 w-24"
+                      />
+                      <span className="text-gray-400 text-sm">bps</span>
+                    </div>
+                    {hurdleRateBps && (
+                      <p className="text-xs text-blue-400">= {(hurdleRateBps / 100).toFixed(2)}% preferred return</p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-4 pl-4 pt-2">
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        id="has_catchup"
+                        checked={hasCatchup}
+                        onCheckedChange={(checked) => setHasCatchup(checked as boolean)}
+                      />
+                      <Label htmlFor="has_catchup" className="text-white text-sm cursor-pointer">GP Catchup</Label>
+                    </div>
+                    {hasCatchup && (
+                      <div className="flex items-center gap-2 ml-6">
+                        <Input
+                          type="number"
+                          value={catchupRateBps || ''}
+                          onChange={(e) => setCatchupRateBps(e.target.value ? parseFloat(e.target.value) : undefined)}
+                          placeholder="10000"
+                          className="bg-black border-gray-700 text-white h-9 w-24"
+                        />
+                        <span className="text-gray-400 text-xs">bps</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="has_hwm"
+                      checked={hasHighWaterMark}
+                      onCheckedChange={(checked) => setHasHighWaterMark(checked as boolean)}
+                    />
+                    <Label htmlFor="has_hwm" className="text-white text-sm cursor-pointer">High Water Mark</Label>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        id="has_no_cap"
+                        checked={hasNoCap}
+                        onCheckedChange={(checked) => {
+                          setHasNoCap(checked as boolean);
+                          if (checked) setPerformanceCapPercent(undefined);
+                        }}
+                      />
+                      <Label htmlFor="has_no_cap" className="text-white text-sm cursor-pointer">No Cap</Label>
+                    </div>
+                    {!hasNoCap && (
+                      <div className="flex items-center gap-2 ml-6">
+                        <Input
+                          type="number"
+                          step="0.1"
+                          min="0"
+                          max="100"
+                          value={performanceCapPercent || ''}
+                          onChange={(e) => setPerformanceCapPercent(e.target.value ? parseFloat(e.target.value) : undefined)}
+                          placeholder="20"
+                          className="bg-black border-gray-700 text-white h-9 w-20"
+                        />
+                        <span className="text-gray-400 text-xs">% cap</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* VAT */}
+              <div className="space-y-4">
+                <h4 className="text-sm font-semibold text-white flex items-center gap-2">
+                  <span className="w-2 h-2 bg-amber-500 rounded-full"></span>
+                  VAT
+                </h4>
+                <div className="pl-4">
+                  <div className="space-y-2 max-w-xs">
+                    <Label className="text-white text-sm font-medium">VAT Registration Number</Label>
+                    <Input
+                      type="text"
+                      value={vatRegistrationNumber}
+                      onChange={(e) => setVatRegistrationNumber(e.target.value)}
+                      placeholder="e.g., GB123456789"
+                      className="bg-black border-gray-700 text-white h-10"
+                    />
+                    <p className="text-xs text-gray-500">Leave blank if VAT not applicable</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         <DialogFooter className="border-t border-gray-700 pt-6 gap-3">

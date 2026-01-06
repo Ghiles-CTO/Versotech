@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Plus, DollarSign, Edit, FileText, Users, Building2, Briefcase, CheckCircle, Clock, XCircle } from 'lucide-react'
+import { Plus, DollarSign, Edit, FileText, Users, Building2, Briefcase, CheckCircle, Clock, XCircle, FileSignature, Loader2 } from 'lucide-react'
 import FeePlanEditModal from '@/components/fees/FeePlanEditModal'
 import { useRouter } from 'next/navigation'
 
@@ -17,6 +17,7 @@ export function DealFeePlansTab({ dealId, feePlans }: DealFeePlansTabProps) {
   const router = useRouter()
   const [modalOpen, setModalOpen] = useState(false)
   const [selectedPlan, setSelectedPlan] = useState<any>(null)
+  const [generatingAgreement, setGeneratingAgreement] = useState<string | null>(null)
 
   const feeKindLabels: Record<string, string> = {
     subscription: 'Subscription Fee',
@@ -33,21 +34,24 @@ export function DealFeePlansTab({ dealId, feePlans }: DealFeePlansTabProps) {
       return {
         type: 'Introducer',
         icon: <Users className="h-4 w-4 text-blue-400" />,
-        name: plan.introducer?.name || plan.introducer?.company_name || 'Unknown'
+        // Introducers table uses 'legal_name', not 'name' or 'company_name'
+        name: plan.introducer?.legal_name || plan.introducer?.name || plan.introducer?.company_name || 'Unknown'
       }
     }
     if (plan.partner_id) {
       return {
         type: 'Partner',
         icon: <Building2 className="h-4 w-4 text-green-400" />,
-        name: plan.partner?.name || plan.partner?.company_name || 'Unknown'
+        // Partners table has 'name' and 'legal_name'
+        name: plan.partner?.name || plan.partner?.legal_name || plan.partner?.company_name || 'Unknown'
       }
     }
     if (plan.commercial_partner_id) {
       return {
         type: 'Commercial Partner',
         icon: <Briefcase className="h-4 w-4 text-purple-400" />,
-        name: plan.commercial_partner?.name || plan.commercial_partner?.company_name || 'Unknown'
+        // Commercial partners table has 'name' and 'legal_name'
+        name: plan.commercial_partner?.name || plan.commercial_partner?.legal_name || plan.commercial_partner?.company_name || 'Unknown'
       }
     }
     return null
@@ -114,6 +118,90 @@ export function DealFeePlansTab({ dealId, feePlans }: DealFeePlansTabProps) {
     setSelectedPlan(null)
   }
 
+  // Generate Introducer Agreement (DOC 3)
+  const handleGenerateIntroducerAgreement = async (plan: any) => {
+    if (!plan.introducer_id) return
+
+    setGeneratingAgreement(plan.id)
+    try {
+      const res = await fetch(`/api/staff/fees/plans/${plan.id}/generate-agreement`, {
+        method: 'POST',
+      })
+
+      if (!res.ok) {
+        const data = await res.json()
+        alert(`Failed to generate agreement: ${data.error || 'Unknown error'}`)
+        return
+      }
+
+      alert('Introducer Agreement generated successfully!')
+      router.refresh()
+    } catch (error) {
+      console.error('Error generating introducer agreement:', error)
+      alert('Failed to generate agreement')
+    } finally {
+      setGeneratingAgreement(null)
+    }
+  }
+
+  // Generate Partner Placement Agreement
+  const handleGeneratePartnerAgreement = async (plan: any) => {
+    if (!plan.partner_id) return
+
+    setGeneratingAgreement(plan.id)
+    try {
+      const res = await fetch(`/api/staff/fees/plans/${plan.id}/generate-placement-agreement`, {
+        method: 'POST',
+      })
+
+      if (!res.ok) {
+        const data = await res.json()
+        alert(`Failed to generate placement agreement: ${data.error || 'Unknown error'}`)
+        return
+      }
+
+      alert('Placement Agreement generated successfully!')
+      router.refresh()
+    } catch (error) {
+      console.error('Error generating placement agreement:', error)
+      alert('Failed to generate placement agreement')
+    } finally {
+      setGeneratingAgreement(null)
+    }
+  }
+
+  // Unified handler that routes to correct agreement type
+  const handleGenerateAgreement = async (plan: any) => {
+    if (plan.introducer_id) {
+      await handleGenerateIntroducerAgreement(plan)
+    } else if (plan.partner_id) {
+      await handleGeneratePartnerAgreement(plan)
+    }
+  }
+
+  // Check if agreement has been generated for this plan
+  const hasGeneratedAgreement = (plan: any) => {
+    if (plan.introducer_id && plan.generated_agreement_id) return true
+    if (plan.partner_id && plan.generated_placement_agreement_id) return true
+    return false
+  }
+
+  // Check if this plan can have an agreement generated
+  const canGenerateAgreement = (plan: any) => {
+    // Introducers: need introducer_id and no existing agreement
+    if (plan.introducer_id && !plan.generated_agreement_id) return true
+    // Partners: need partner_id and no existing placement agreement
+    if (plan.partner_id && !plan.generated_placement_agreement_id) return true
+    return false
+  }
+
+  // Get appropriate tooltip for generate button
+  const getGenerateTooltip = (plan: any) => {
+    if (plan.introducer_id) return 'Generate Introducer Agreement (DOC 3)'
+    if (plan.partner_id) return 'Generate Placement Agreement'
+    return ''
+  }
+
   return (
     <div className="space-y-6">
       {/* Fee Plans Section (for investors) */}
@@ -157,14 +245,38 @@ export function DealFeePlansTab({ dealId, feePlans }: DealFeePlansTabProps) {
                             <CardDescription className="mt-1">{plan.description}</CardDescription>
                           )}
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleEdit(plan)}
-                          className="text-blue-400 hover:text-blue-300"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
+                        <div className="flex items-center gap-1">
+                          {/* Generate Agreement button - for introducers and partners */}
+                          {canGenerateAgreement(plan) && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleGenerateAgreement(plan)}
+                              disabled={generatingAgreement === plan.id}
+                              className="text-green-400 hover:text-green-300"
+                              title={getGenerateTooltip(plan)}
+                            >
+                              {generatingAgreement === plan.id ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <FileSignature className="h-4 w-4" />
+                              )}
+                            </Button>
+                          )}
+                          {hasGeneratedAgreement(plan) && (
+                            <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs">
+                              Agreement Generated
+                            </Badge>
+                          )}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEdit(plan)}
+                            className="text-blue-400 hover:text-blue-300"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
 
                       {/* Term Sheet & Entity Info */}

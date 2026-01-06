@@ -98,7 +98,7 @@ export function EntitiesPageClient({ entities }: EntitiesPageClientProps) {
     setItems((prev) => [entity, ...prev])
     setCreateOpen(false)
     setBannerTone('success')
-    setBannerMessage(`Entity "${entity.name}" created successfully.`)
+    setBannerMessage(`Vehicle "${entity.name}" created successfully.`)
     setTimeout(() => setBannerMessage(null), 4000)
     router.refresh()
   }
@@ -107,7 +107,7 @@ export function EntitiesPageClient({ entities }: EntitiesPageClientProps) {
     setItems((prev) => prev.map((item) => (item.id === entity.id ? entity : item)))
     setEditEntity(null)
     setBannerTone('success')
-    setBannerMessage(`Entity "${entity.name}" updated successfully.`)
+    setBannerMessage(`Vehicle "${entity.name}" updated successfully.`)
     setTimeout(() => setBannerMessage(null), 4000)
     router.refresh()
   }
@@ -240,7 +240,7 @@ export function EntitiesPageClient({ entities }: EntitiesPageClientProps) {
                     <TableCell colSpan={9} className="py-12 text-center text-muted-foreground">
                       <div className="flex flex-col items-center gap-2">
                         <AlertCircle className="h-6 w-6" />
-                        <p>No vehicles found. Try adjusting your filters or create a new vehicle.</p>
+                        <p>No vehicles found. Try adjusting your filters or create a new one.</p>
                       </div>
                     </TableCell>
                   </TableRow>

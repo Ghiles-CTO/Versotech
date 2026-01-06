@@ -86,7 +86,9 @@ const emptyForm = {
   maximum_ticket: '',
   subscription_fee_percent: '',
   management_fee_percent: '',
+  management_fee_clause: '',
   carried_interest_percent: '',
+  performance_fee_clause: '',
   legal_counsel: '',
   interest_confirmation_deadline: '',
   validity_date: '',
@@ -119,7 +121,9 @@ function mapTermSheetToForm(termSheet?: TermSheet): FormState {
     maximum_ticket: termSheet.maximum_ticket ?? '',
     subscription_fee_percent: termSheet.subscription_fee_percent ?? '',
     management_fee_percent: termSheet.management_fee_percent ?? '',
+    management_fee_clause: termSheet.management_fee_clause ?? '',
     carried_interest_percent: termSheet.carried_interest_percent ?? '',
+    performance_fee_clause: termSheet.performance_fee_clause ?? '',
     legal_counsel: termSheet.legal_counsel ?? '',
     interest_confirmation_deadline: termSheet.interest_confirmation_deadline
       ? termSheet.interest_confirmation_deadline.slice(0, 16)
@@ -158,7 +162,9 @@ function buildPayload(values: FormState) {
     maximum_ticket: toNumber(values.maximum_ticket),
     subscription_fee_percent: toNumber(values.subscription_fee_percent),
     management_fee_percent: toNumber(values.management_fee_percent),
+    management_fee_clause: values.management_fee_clause || null,
     carried_interest_percent: toNumber(values.carried_interest_percent),
+    performance_fee_clause: values.performance_fee_clause || null,
     legal_counsel: values.legal_counsel || null,
     interest_confirmation_deadline: values.interest_confirmation_deadline || null,
     validity_date: values.validity_date || null,
@@ -1212,6 +1218,35 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
                   value={formValues.carried_interest_percent}
                   onChange={event => setFormValues(prev => ({ ...prev, carried_interest_percent: event.target.value }))}
                 />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="management_fee_clause">Management Fee Clause</Label>
+                <Textarea
+                  id="management_fee_clause"
+                  rows={2}
+                  placeholder="e.g., 2% p.a. of Net Asset Value, payable quarterly in arrears"
+                  value={formValues.management_fee_clause}
+                  onChange={event => setFormValues(prev => ({ ...prev, management_fee_clause: event.target.value }))}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Full description for term sheet template (replaces % in investor view)
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="performance_fee_clause">Performance Fee Clause</Label>
+                <Textarea
+                  id="performance_fee_clause"
+                  rows={2}
+                  placeholder="e.g., 20% of profits above hurdle rate, with high-water mark"
+                  value={formValues.performance_fee_clause}
+                  onChange={event => setFormValues(prev => ({ ...prev, performance_fee_clause: event.target.value }))}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Full description for term sheet template (replaces % in investor view)
+                </p>
               </div>
             </div>
 

@@ -5,7 +5,15 @@ import * as TabsPrimitive from "@radix-ui/react-tabs"
 
 import { cn } from "@/lib/utils"
 
-const Tabs = TabsPrimitive.Root
+// Wrapper to provide stable ID for SSR hydration
+const Tabs = React.forwardRef<
+  React.ElementRef<typeof TabsPrimitive.Root>,
+  React.ComponentPropsWithoutRef<typeof TabsPrimitive.Root>
+>(({ id, ...props }, ref) => {
+  const generatedId = React.useId()
+  return <TabsPrimitive.Root ref={ref} id={id ?? generatedId} {...props} />
+})
+Tabs.displayName = "Tabs"
 
 const TabsList = React.forwardRef<
   React.ElementRef<typeof TabsPrimitive.List>,

@@ -21,10 +21,13 @@ import {
   FileSignature,
   Shield,
   Edit,
+  Bell,
 } from 'lucide-react'
 import { MembersManagementTab } from '@/components/members/members-management-tab'
 import { PartnerKYCDocumentsTab } from '@/components/profile/partner-kyc-documents-tab'
 import { SignatureSpecimenTab } from '@/components/profile/signature-specimen-tab'
+import { GenericEntityMembersTab } from '@/components/profile/generic-entity-members-tab'
+import { NoticeContactsTab } from '@/components/profile/notice-contacts-tab'
 import { EntityKYCEditDialog, EntityAddressEditDialog } from '@/components/shared'
 import { formatDate } from '@/lib/format'
 
@@ -162,8 +165,14 @@ export function PartnerProfileClient({
           </TabsTrigger>
           <TabsTrigger value="members" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
-            Members
+            Team
           </TabsTrigger>
+          {partnerInfo.type === 'entity' && (
+            <TabsTrigger value="entity-members" className="flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              Directors/UBOs
+            </TabsTrigger>
+          )}
           <TabsTrigger value="kyc" className="flex items-center gap-2">
             <Shield className="h-4 w-4" />
             KYC Documents
@@ -171,6 +180,10 @@ export function PartnerProfileClient({
           <TabsTrigger value="signature" className="flex items-center gap-2">
             <FileSignature className="h-4 w-4" />
             Signature
+          </TabsTrigger>
+          <TabsTrigger value="notices" className="flex items-center gap-2">
+            <Bell className="h-4 w-4" />
+            Notices
           </TabsTrigger>
         </TabsList>
 
@@ -466,7 +479,7 @@ export function PartnerProfileClient({
           )}
         </TabsContent>
 
-        {/* Members Tab */}
+        {/* Team Members Tab (User Accounts) */}
         <TabsContent value="members" className="space-y-4">
           <MembersManagementTab
             entityType="partner"
@@ -475,6 +488,21 @@ export function PartnerProfileClient({
             showSignatoryOption={true}
           />
         </TabsContent>
+
+        {/* Entity Members Tab (Directors/UBOs/Signatories KYC) */}
+        {partnerInfo.type === 'entity' && (
+          <TabsContent value="entity-members" className="space-y-4">
+            <GenericEntityMembersTab
+              entityType="partner"
+              entityId={partnerInfo.id}
+              entityName={partnerInfo.name}
+              apiEndpoint="/api/partners/me/members"
+              canManage={partnerUserInfo.role === 'admin' || partnerUserInfo.is_primary}
+              title="Directors, UBOs & Signatories"
+              description="Manage directors, beneficial owners (>25% ownership), and authorized signatories with full KYC information"
+            />
+          </TabsContent>
+        )}
 
         {/* KYC Documents Tab */}
         <TabsContent value="kyc" className="space-y-4">
@@ -514,6 +542,11 @@ export function PartnerProfileClient({
               entityId={partnerInfo?.id}
             />
           )}
+        </TabsContent>
+
+        {/* Notices Tab */}
+        <TabsContent value="notices" className="space-y-4">
+          <NoticeContactsTab apiEndpoint="/api/partners/me/notice-contacts" />
         </TabsContent>
       </Tabs>
 

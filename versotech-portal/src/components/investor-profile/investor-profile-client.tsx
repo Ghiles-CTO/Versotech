@@ -23,10 +23,12 @@ import {
   FileSignature,
   FileText,
   Edit,
+  Bell,
 } from 'lucide-react'
 import { MembersManagementTab } from '@/components/members/members-management-tab'
 import { KYCDocumentsTab } from '@/components/profile/kyc-documents-tab'
 import { SignatureSpecimenTab } from '@/components/profile/signature-specimen-tab'
+import { NoticeContactsTab } from '@/components/profile/notice-contacts-tab'
 import { EntityKYCEditDialog, EntityAddressEditDialog } from '@/components/shared'
 import { formatDate } from '@/lib/format'
 
@@ -46,10 +48,11 @@ type InvestorInfo = {
   onboarding_status: string | null
   country: string | null
   country_of_incorporation: string | null
+  entity_identifier: string | null // Company registration number
   tax_residency: string | null
   email: string | null
   phone: string | null
-  registered_address: string | null
+  registered_address: string | null // Legacy single field
   city: string | null
   representative_name: string | null
   representative_title: string | null
@@ -60,12 +63,13 @@ type InvestorInfo = {
   // Individual KYC fields
   first_name: string | null
   middle_name: string | null
+  middle_initial: string | null
   last_name: string | null
   name_suffix: string | null
   date_of_birth: string | null
   country_of_birth: string | null
   nationality: string | null
-  // Residential address
+  // Residential address (for individuals)
   residential_street: string | null
   residential_line_2: string | null
   residential_city: string | null
@@ -87,11 +91,18 @@ type InvestorInfo = {
   id_issue_date: string | null
   id_expiry_date: string | null
   id_issuing_country: string | null
-  // Address fields
+  // Mailing/Contact address fields
   address_line_1: string | null
   address_line_2: string | null
   state_province: string | null
   postal_code: string | null
+  // Structured Registered Address (for entities)
+  registered_address_line_1: string | null
+  registered_address_line_2: string | null
+  registered_city: string | null
+  registered_state: string | null
+  registered_postal_code: string | null
+  registered_country: string | null
 }
 
 type InvestorUserInfo = {
@@ -190,6 +201,10 @@ export function InvestorProfileClient({
             <FileSignature className="h-4 w-4" />
             Signature
           </TabsTrigger>
+          <TabsTrigger value="notices" className="flex items-center gap-2">
+            <Bell className="h-4 w-4" />
+            Notices
+          </TabsTrigger>
         </TabsList>
 
         {/* Overview Tab */}
@@ -273,6 +288,14 @@ export function InvestorProfileClient({
                     </Badge>
                   </div>
                 )}
+                {investorInfo.entity_identifier && investorInfo.type !== 'individual' && (
+                  <div className="space-y-2">
+                    <Label className="text-muted-foreground">Registration Number</Label>
+                    <div className="font-medium">
+                      {investorInfo.entity_identifier}
+                    </div>
+                  </div>
+                )}
                 {investorInfo.representative_name && (
                   <div className="space-y-2">
                     <Label className="text-muted-foreground">Representative</Label>
@@ -340,12 +363,12 @@ export function InvestorProfileClient({
               </CardContent>
             </Card>
 
-            {/* Address */}
+            {/* Mailing Address */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <MapPin className="h-5 w-5" />
-                  Address
+                  {investorInfo.type === 'individual' ? 'Address' : 'Mailing Address'}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -371,6 +394,57 @@ export function InvestorProfileClient({
               </CardContent>
             </Card>
           </div>
+
+          {/* Registered Address for Entity Investors */}
+          {investorInfo.type !== 'individual' && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Building2 className="h-5 w-5" />
+                  Registered Address
+                </CardTitle>
+                <CardDescription>
+                  Official company registered address
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {(investorInfo.registered_address_line_1 || investorInfo.registered_address) ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-muted-foreground">Address Line 1</Label>
+                      <div className="font-medium">
+                        {investorInfo.registered_address_line_1 || investorInfo.registered_address || 'Not set'}
+                      </div>
+                    </div>
+                    {investorInfo.registered_address_line_2 && (
+                      <div className="space-y-2">
+                        <Label className="text-muted-foreground">Address Line 2</Label>
+                        <div className="font-medium">{investorInfo.registered_address_line_2}</div>
+                      </div>
+                    )}
+                    <div className="space-y-2">
+                      <Label className="text-muted-foreground">City</Label>
+                      <div className="font-medium">{investorInfo.registered_city || 'Not set'}</div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-muted-foreground">State/Province</Label>
+                      <div className="font-medium">{investorInfo.registered_state || 'Not set'}</div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-muted-foreground">Postal Code</Label>
+                      <div className="font-medium">{investorInfo.registered_postal_code || 'Not set'}</div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-muted-foreground">Country</Label>
+                      <div className="font-medium">{investorInfo.registered_country || 'Not set'}</div>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground text-sm">No registered address information available</p>
+                )}
+              </CardContent>
+            </Card>
+          )}
 
           {/* Personal KYC for Individual Investors */}
           {investorInfo.type === 'individual' && (
@@ -599,6 +673,11 @@ export function InvestorProfileClient({
           ) : (
             <SignatureSpecimenTab />
           )}
+        </TabsContent>
+
+        {/* Notices Tab */}
+        <TabsContent value="notices" className="space-y-4">
+          <NoticeContactsTab apiEndpoint="/api/investors/me/notice-contacts" />
         </TabsContent>
       </Tabs>
 

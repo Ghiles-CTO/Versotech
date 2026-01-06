@@ -135,12 +135,24 @@ export function ArrangerDashboard({ arrangerId, userId, persona }: ArrangerDashb
           })
         }
 
-        // Fetch deals where this arranger is assigned (mandates)
-        const { data: deals } = await supabase
-          .from('deals')
-          .select('id, name, status, target_amount, currency, created_at')
+        // VEHICLE-LEVEL ARCHITECTURE: Fetch vehicles assigned to this arranger first
+        const { data: arrangerVehicles } = await supabase
+          .from('vehicles')
+          .select('id, name, lawyer_id')
           .eq('arranger_entity_id', arrangerId)
-          .order('created_at', { ascending: false })
+
+        const vehicleIds = (arrangerVehicles || []).map((v: any) => v.id)
+
+        // Then fetch all deals under those vehicles (mandates)
+        let deals: any[] = []
+        if (vehicleIds.length > 0) {
+          const { data: vehicleDeals } = await supabase
+            .from('deals')
+            .select('id, name, status, target_amount, currency, created_at, vehicle_id')
+            .in('vehicle_id', vehicleIds)
+            .order('created_at', { ascending: false })
+          deals = vehicleDeals || []
+        }
 
         const mandates = deals || []
         // Deal statuses: draft, open, allocation_pending, closed, cancelled
@@ -177,7 +189,14 @@ export function ArrangerDashboard({ arrangerId, userId, persona }: ArrangerDashb
         let partnersCount = 0
         let introducersCount = 0
         let cpCount = 0
-        let lawyersCount = 0
+
+        // VEHICLE-LEVEL: Lawyers are assigned to vehicles, count them regardless of deals
+        const uniqueLawyers = new Set(
+          (arrangerVehicles || [])
+            .filter((v: any) => v.lawyer_id)
+            .map((v: any) => v.lawyer_id)
+        )
+        const lawyersCount = uniqueLawyers.size
 
         if (dealIds.length > 0) {
           // Get subscriptions on arranger's deals for relationship tracking
@@ -215,15 +234,6 @@ export function ArrangerDashboard({ arrangerId, userId, persona }: ArrangerDashb
               .map((s: any) => s.proxy_commercial_partner_id)
           )
           cpCount = cpIds.size
-
-          // Lawyers assigned to arranger's deals
-          const { data: lawyerAssignments } = await supabase
-            .from('deal_lawyer_assignments')
-            .select('lawyer_id')
-            .in('deal_id', dealIds)
-
-          const uniqueLawyers = new Set((lawyerAssignments || []).map((a: any) => a.lawyer_id))
-          lawyersCount = uniqueLawyers.size
         }
 
         // Fetch pending agreements (introducer and placement) - SCOPED TO THIS ARRANGER

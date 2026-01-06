@@ -83,6 +83,7 @@ export default async function InvestorProfilePage() {
         onboarding_status: investor.onboarding_status,
         country: investor.country,
         country_of_incorporation: investor.country_of_incorporation,
+        entity_identifier: investor.entity_identifier,
         tax_residency: investor.tax_residency,
         email: investor.email,
         phone: investor.phone,
@@ -97,12 +98,13 @@ export default async function InvestorProfilePage() {
         // Individual KYC fields
         first_name: investor.first_name,
         middle_name: investor.middle_name,
+        middle_initial: investor.middle_initial,
         last_name: investor.last_name,
         name_suffix: investor.name_suffix,
         date_of_birth: investor.date_of_birth,
         country_of_birth: investor.country_of_birth,
         nationality: investor.nationality,
-        // Residential address
+        // Residential address (for individuals)
         residential_street: investor.residential_street,
         residential_line_2: investor.residential_line_2,
         residential_city: investor.residential_city,
@@ -124,11 +126,18 @@ export default async function InvestorProfilePage() {
         id_issue_date: investor.id_issue_date,
         id_expiry_date: investor.id_expiry_date,
         id_issuing_country: investor.id_issuing_country,
-        // Address fields
+        // Mailing/Contact address fields
         address_line_1: investor.address_line_1,
         address_line_2: investor.address_line_2,
         state_province: investor.state_province,
         postal_code: investor.postal_code,
+        // Structured Registered Address (for entities)
+        registered_address_line_1: investor.registered_address_line_1,
+        registered_address_line_2: investor.registered_address_line_2,
+        registered_city: investor.registered_city,
+        registered_state: investor.registered_state,
+        registered_postal_code: investor.registered_postal_code,
+        registered_country: investor.registered_country,
       }}
       investorUserInfo={{
         role: investorUser.role,

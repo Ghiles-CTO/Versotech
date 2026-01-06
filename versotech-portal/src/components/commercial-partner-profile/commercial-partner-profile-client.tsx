@@ -30,6 +30,7 @@ import {
   Shield,
   Scale,
   Users,
+  Bell,
 } from 'lucide-react'
 import { formatDate } from '@/lib/format'
 import { cn } from '@/lib/utils'
@@ -43,6 +44,8 @@ import { GDPRControls } from '@/components/profile/gdpr-controls'
 import { MembersManagementTab } from '@/components/members/members-management-tab'
 import { CommercialPartnerKYCDocumentsTab } from '@/components/profile/commercial-partner-kyc-documents-tab'
 import { SignatureSpecimenTab } from '@/components/profile/signature-specimen-tab'
+import { GenericEntityMembersTab } from '@/components/profile/generic-entity-members-tab'
+import { NoticeContactsTab } from '@/components/profile/notice-contacts-tab'
 
 type CommercialPartnerInfo = {
   id: string
@@ -412,6 +415,12 @@ export function CommercialPartnerProfileClient({
             <Users className="h-4 w-4" />
             Members
           </TabsTrigger>
+          {cpInfo?.type === 'entity' && (
+            <TabsTrigger value="entity-members" className="flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              Directors/UBOs
+            </TabsTrigger>
+          )}
           <TabsTrigger value="kyc" className="flex items-center gap-2">
             <Shield className="h-4 w-4" />
             KYC Documents
@@ -427,6 +436,10 @@ export function CommercialPartnerProfileClient({
           <TabsTrigger value="signature" className="flex items-center gap-2">
             <FileSignature className="h-4 w-4" />
             Signature
+          </TabsTrigger>
+          <TabsTrigger value="notices" className="flex items-center gap-2">
+            <Bell className="h-4 w-4" />
+            Notices
           </TabsTrigger>
         </TabsList>
 
@@ -633,6 +646,21 @@ export function CommercialPartnerProfileClient({
           )}
         </TabsContent>
 
+        {/* Entity Members Tab (Directors/UBOs) - Only for entity-type commercial partners */}
+        {cpInfo?.type === 'entity' && (
+          <TabsContent value="entity-members" className="space-y-4">
+            <GenericEntityMembersTab
+              entityType="commercial_partner"
+              entityId={cpInfo.id}
+              entityName={cpInfo.name || cpInfo.legal_name || 'Commercial Partner'}
+              apiEndpoint="/api/commercial-partners/me/members"
+              canManage={cpUserInfo.role === 'admin' || cpUserInfo.is_primary}
+              title="Directors, UBOs & Signatories"
+              description="Manage directors, beneficial owners (>25% ownership), and authorized signatories with full KYC information."
+            />
+          </TabsContent>
+        )}
+
         {/* KYC Documents Tab */}
         <TabsContent value="kyc" className="space-y-4">
           {cpInfo && (
@@ -684,6 +712,11 @@ export function CommercialPartnerProfileClient({
               entityId={cpInfo?.id}
             />
           )}
+        </TabsContent>
+
+        {/* Notices Tab */}
+        <TabsContent value="notices" className="space-y-4">
+          <NoticeContactsTab apiEndpoint="/api/commercial-partners/me/notice-contacts" />
         </TabsContent>
       </Tabs>
     </div>

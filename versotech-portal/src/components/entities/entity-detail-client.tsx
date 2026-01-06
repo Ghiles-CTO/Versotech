@@ -101,6 +101,10 @@ interface EntityDetailClientProps {
     website_url: string | null
     created_at: string
     updated_at: string | null
+    address: string | null
+    arranger_entity_id: string | null
+    lawyer_id: string | null
+    managing_partner_id: string | null
   }
   directors: Director[]
   deals: LinkedDeal[]

@@ -172,31 +172,46 @@ export default function MyMandatesPage() {
         if (arrangerError) throw arrangerError
         setArrangerInfo(arranger)
 
-        // Fetch deals (mandates) for this arranger
-        const { data: deals, error: dealsError } = await supabase
-          .from('deals')
-          .select(`
-            id,
-            name,
-            company_name,
-            company_logo_url,
-            deal_type,
-            status,
-            currency,
-            target_amount,
-            raised_amount,
-            minimum_investment,
-            sector,
-            stage,
-            location,
-            open_at,
-            close_at,
-            created_at
-          `)
+        // VEHICLE-LEVEL ARCHITECTURE: Fetch vehicles assigned to this arranger first
+        const { data: arrangerVehicles, error: vehiclesError } = await supabase
+          .from('vehicles')
+          .select('id, name')
           .eq('arranger_entity_id', arrangerUser.arranger_id)
-          .order('created_at', { ascending: false })
 
-        if (dealsError) throw dealsError
+        if (vehiclesError) throw vehiclesError
+
+        const vehicleIds = (arrangerVehicles || []).map((v: any) => v.id)
+
+        // Then fetch all deals under those vehicles (mandates)
+        let deals: any[] = []
+        if (vehicleIds.length > 0) {
+          const { data: vehicleDeals, error: dealsError } = await supabase
+            .from('deals')
+            .select(`
+              id,
+              name,
+              company_name,
+              company_logo_url,
+              deal_type,
+              status,
+              currency,
+              target_amount,
+              raised_amount,
+              minimum_investment,
+              sector,
+              stage,
+              location,
+              open_at,
+              close_at,
+              created_at,
+              vehicle_id
+            `)
+            .in('vehicle_id', vehicleIds)
+            .order('created_at', { ascending: false })
+
+          if (dealsError) throw dealsError
+          deals = vehicleDeals || []
+        }
 
         // Get investor counts for each deal
         const dealIds = (deals || []).map(d => d.id)
@@ -322,33 +337,48 @@ export default function MyMandatesPage() {
     }
 
     async function fetchAllMandates(supabase: any) {
-      // Staff view - show all deals with arrangers
-      const { data: deals, error: dealsError } = await supabase
-        .from('deals')
-        .select(`
-          id,
-          name,
-          company_name,
-          company_logo_url,
-          deal_type,
-          status,
-          currency,
-          target_amount,
-          raised_amount,
-          minimum_investment,
-          sector,
-          stage,
-          location,
-          open_at,
-          close_at,
-          created_at,
-          arranger_entity_id
-        `)
+      // VEHICLE-LEVEL ARCHITECTURE: Staff view - show deals under vehicles that have arrangers
+      // First get all vehicles with arranger_entity_id assigned
+      const { data: vehiclesWithArrangers, error: vehiclesError } = await supabase
+        .from('vehicles')
+        .select('id')
         .not('arranger_entity_id', 'is', null)
-        .order('created_at', { ascending: false })
-        .limit(100)
 
-      if (dealsError) throw dealsError
+      if (vehiclesError) throw vehiclesError
+
+      const vehicleIds = (vehiclesWithArrangers || []).map((v: any) => v.id)
+
+      // Then get deals under those vehicles
+      let deals: any[] = []
+      if (vehicleIds.length > 0) {
+        const { data: vehicleDeals, error: dealsError } = await supabase
+          .from('deals')
+          .select(`
+            id,
+            name,
+            company_name,
+            company_logo_url,
+            deal_type,
+            status,
+            currency,
+            target_amount,
+            raised_amount,
+            minimum_investment,
+            sector,
+            stage,
+            location,
+            open_at,
+            close_at,
+            created_at,
+            vehicle_id
+          `)
+          .in('vehicle_id', vehicleIds)
+          .order('created_at', { ascending: false })
+          .limit(100)
+
+        if (dealsError) throw dealsError
+        deals = vehicleDeals || []
+      }
 
       const processedMandates: Mandate[] = (deals || []).map((deal: any) => ({
         id: deal.id,

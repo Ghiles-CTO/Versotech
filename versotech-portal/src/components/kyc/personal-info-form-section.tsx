@@ -33,7 +33,7 @@ export function PersonalInfoFormSection<T extends FieldValues>({
 
   const content = (
     <div className="space-y-6">
-      {/* Name Fields */}
+      {/* Name Fields - Row 1 */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <FormField
           control={control}
@@ -75,6 +75,26 @@ export function PersonalInfoFormSection<T extends FieldValues>({
 
         <FormField
           control={control}
+          name={fieldName('middle_initial')}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>M.I.</FormLabel>
+              <FormControl>
+                <Input
+                  {...field}
+                  value={field.value || ''}
+                  placeholder="W"
+                  maxLength={5}
+                  disabled={disabled}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={control}
           name={fieldName('last_name')}
           render={({ field }) => (
             <FormItem>
@@ -91,7 +111,10 @@ export function PersonalInfoFormSection<T extends FieldValues>({
             </FormItem>
           )}
         />
+      </div>
 
+      {/* Name Fields - Row 2 (Suffix) */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <FormField
           control={control}
           name={fieldName('name_suffix')}

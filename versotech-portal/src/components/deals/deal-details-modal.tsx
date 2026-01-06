@@ -87,7 +87,9 @@ interface FeeStructure {
   structure: string | null
   subscription_fee_percent: number | null
   management_fee_percent: number | null
+  management_fee_clause: string | null
   carried_interest_percent: number | null
+  performance_fee_clause: string | null
   legal_counsel: string | null
   interest_confirmation_deadline: string | null
   capital_call_timeline: string | null
@@ -265,10 +267,11 @@ export function DealDetailsModal({ deal, investorId, children }: DealDetailsModa
       { label: 'Issuer', value: termSheet.issuer ?? deal.company_name ?? '—' },
       { label: 'Vehicle', value: termSheet.vehicle ?? deal.vehicles?.name ?? '—' },
       { label: 'Exclusive Arranger', value: termSheet.exclusive_arranger ?? '—' },
+      { label: 'Purchaser', value: termSheet.purchaser ?? '—' },
       { label: 'Seller', value: termSheet.seller ?? '—' },
       { label: 'Structure', value: termSheet.structure ?? '—' },
       {
-        label: 'Allocation “Up to”',
+        label: 'Allocation "Up to"',
         value: formatCurrency(termSheet.allocation_up_to, deal.currency)
       },
       {
@@ -286,22 +289,24 @@ export function DealDetailsModal({ deal, investorId, children }: DealDetailsModa
         value: formatCurrency(termSheet.maximum_ticket, deal.currency)
       },
       {
-        label: 'Subscription Fee %',
+        label: 'Subscription Fee',
         value: termSheet.subscription_fee_percent !== null
           ? `${(termSheet.subscription_fee_percent * 100).toFixed(2)}%`
           : '—'
       },
       {
-        label: 'Management Fee %',
-        value: termSheet.management_fee_percent !== null
-          ? `${(termSheet.management_fee_percent * 100).toFixed(2)}%`
-          : '—'
+        label: 'Management Fee',
+        value: termSheet.management_fee_clause
+          ?? (termSheet.management_fee_percent !== null
+            ? `${(termSheet.management_fee_percent * 100).toFixed(2)}%`
+            : '—')
       },
       {
-        label: 'Carried Interest %',
-        value: termSheet.carried_interest_percent !== null
-          ? `${(termSheet.carried_interest_percent * 100).toFixed(2)}%`
-          : '—'
+        label: 'Performance Fee',
+        value: termSheet.performance_fee_clause
+          ?? (termSheet.carried_interest_percent !== null
+            ? `${(termSheet.carried_interest_percent * 100).toFixed(2)}%`
+            : '—')
       },
       { label: 'Legal Counsel', value: termSheet.legal_counsel ?? '—' },
       {

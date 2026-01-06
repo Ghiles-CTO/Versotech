@@ -29,6 +29,7 @@ import {
   Camera,
   Upload,
   Users,
+  Bell,
 } from 'lucide-react'
 import { formatDate } from '@/lib/format'
 import { cn } from '@/lib/utils'
@@ -42,6 +43,8 @@ import { PreferencesEditor } from '@/components/profile/preferences-editor'
 import { GDPRControls } from '@/components/profile/gdpr-controls'
 import { ArrangerKYCDocumentsTab } from '@/components/profile/arranger-kyc-documents-tab'
 import { MembersManagementTab } from '@/components/members/members-management-tab'
+import { GenericEntityMembersTab } from '@/components/profile/generic-entity-members-tab'
+import { NoticeContactsTab } from '@/components/profile/notice-contacts-tab'
 
 type ArrangerInfo = {
   id: string
@@ -583,6 +586,10 @@ export function ArrangerProfileClient({
             <Users className="h-4 w-4" />
             <span className="hidden sm:inline">Members</span>
           </TabsTrigger>
+          <TabsTrigger value="entity-members" className="flex items-center gap-2 text-xs sm:text-sm">
+            <Users className="h-4 w-4" />
+            <span className="hidden sm:inline">Directors/UBOs</span>
+          </TabsTrigger>
           <TabsTrigger value="regulatory" className="flex items-center gap-2 text-xs sm:text-sm">
             <FileText className="h-4 w-4" />
             <span className="hidden sm:inline">Regulatory</span>
@@ -610,6 +617,10 @@ export function ArrangerProfileClient({
           <TabsTrigger value="privacy" className="flex items-center gap-2 text-xs sm:text-sm">
             <Shield className="h-4 w-4" />
             <span className="hidden sm:inline">Privacy</span>
+          </TabsTrigger>
+          <TabsTrigger value="notices" className="flex items-center gap-2 text-xs sm:text-sm">
+            <Bell className="h-4 w-4" />
+            <span className="hidden sm:inline">Notices</span>
           </TabsTrigger>
         </TabsList>
 
@@ -689,6 +700,19 @@ export function ArrangerProfileClient({
             entityId={arrangerInfo.id}
             entityName={arrangerInfo.legal_name}
             showSignatoryOption={true}
+          />
+        </TabsContent>
+
+        {/* Entity Members Tab (Directors/UBOs) */}
+        <TabsContent value="entity-members">
+          <GenericEntityMembersTab
+            entityType="arranger"
+            entityId={arrangerInfo.id}
+            entityName={arrangerInfo.legal_name}
+            apiEndpoint="/api/arrangers/me/members"
+            canManage={arrangerUserInfo.role === 'admin'}
+            title="Directors, UBOs & Signatories"
+            description="Manage directors, beneficial owners (>25% ownership), and authorized signatories with full KYC information."
           />
         </TabsContent>
 
@@ -912,6 +936,11 @@ export function ArrangerProfileClient({
         {/* Privacy Tab */}
         <TabsContent value="privacy">
           <GDPRControls variant="light" />
+        </TabsContent>
+
+        {/* Notices Tab */}
+        <TabsContent value="notices">
+          <NoticeContactsTab apiEndpoint="/api/arrangers/me/notice-contacts" />
         </TabsContent>
       </Tabs>
     </div>

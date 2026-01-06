@@ -29,6 +29,8 @@ interface EntitySelectorProps {
   onEntityIdChange: (id: string | undefined) => void;
   required?: boolean;
   disabled?: boolean;
+  /** Entity types to exclude from selection */
+  excludeTypes?: EntityType[];
 }
 
 export function EntitySelector({
@@ -39,6 +41,7 @@ export function EntitySelector({
   onEntityIdChange,
   required = true,
   disabled = false,
+  excludeTypes = [],
 }: EntitySelectorProps) {
   const [loading, setLoading] = useState(false);
   const [entities, setEntities] = useState<Entity[]>([]);
@@ -80,7 +83,28 @@ export function EntitySelector({
       }
 
       const json = await res.json();
-      const entityList = json.introducers || json.partners || json.commercial_partners || [];
+      // Handle different response formats from various endpoints
+      let entityList = json.introducers || json.partners || json.commercial_partners || [];
+
+      // Deal-specific endpoints return { data: [...] } with transformed entities
+      if (entityList.length === 0 && json.data && Array.isArray(json.data)) {
+        // Transform the deal-specific format to entity format
+        entityList = json.data
+          .filter((item: any) => item.entity_type === type.replace('_', ''))
+          .map((item: any) => ({
+            id: item.entity_id,
+            name: item.entity_name,
+            email: item.entity_email,
+          }));
+      }
+
+      // If still empty, fall back to admin endpoint to get ALL entities
+      if (entityList.length === 0) {
+        console.log(`No ${type}s found for deal, loading all ${type}s from admin endpoint`);
+        await loadEntitiesFallback(type);
+        return;
+      }
+
       setEntities(entityList);
 
       // If current value is not in the list, clear it
@@ -96,18 +120,19 @@ export function EntitySelector({
   };
 
   // Fallback to load all entities of a type (not deal-specific)
+  // Uses admin endpoints which list all entities in the system
   const loadEntitiesFallback = async (type: EntityType) => {
     try {
       let endpoint = '';
       switch (type) {
         case 'introducer':
-          endpoint = '/api/introducers';
+          endpoint = '/api/admin/introducers';
           break;
         case 'partner':
-          endpoint = '/api/partners';
+          endpoint = '/api/admin/partners';
           break;
         case 'commercial_partner':
-          endpoint = '/api/commercial-partners';
+          endpoint = '/api/admin/commercial-partners';
           break;
       }
 
@@ -117,8 +142,18 @@ export function EntitySelector({
       }
 
       const json = await res.json();
+      // Admin endpoints return data in various formats - handle all possibilities
       const entityList = json.introducers || json.partners || json.commercial_partners || json.data || [];
-      setEntities(entityList);
+
+      // Map the entity list to a common format
+      const normalizedEntities = entityList.map((entity: any) => ({
+        id: entity.id,
+        name: entity.name || entity.legal_name || entity.company_name || entity.contact_name,
+        email: entity.email || entity.contact_email,
+        company_name: entity.company_name || entity.legal_name,
+      }));
+
+      setEntities(normalizedEntities);
     } catch (err) {
       console.error('Error in fallback loading:', err);
       setError(`Failed to load ${type}s`);
@@ -203,24 +238,30 @@ export function EntitySelector({
             {!required && (
               <SelectItem value="none">No entity</SelectItem>
             )}
-            <SelectItem value="introducer">
-              <div className="flex items-center gap-2">
-                <Users className="h-4 w-4 text-blue-400" />
-                <span>Introducer</span>
-              </div>
-            </SelectItem>
-            <SelectItem value="partner">
-              <div className="flex items-center gap-2">
-                <Building2 className="h-4 w-4 text-green-400" />
-                <span>Partner</span>
-              </div>
-            </SelectItem>
-            <SelectItem value="commercial_partner">
-              <div className="flex items-center gap-2">
-                <Briefcase className="h-4 w-4 text-purple-400" />
-                <span>Commercial Partner</span>
-              </div>
-            </SelectItem>
+            {!excludeTypes.includes('introducer') && (
+              <SelectItem value="introducer">
+                <div className="flex items-center gap-2">
+                  <Users className="h-4 w-4 text-blue-400" />
+                  <span>Introducer</span>
+                </div>
+              </SelectItem>
+            )}
+            {!excludeTypes.includes('partner') && (
+              <SelectItem value="partner">
+                <div className="flex items-center gap-2">
+                  <Building2 className="h-4 w-4 text-green-400" />
+                  <span>Partner</span>
+                </div>
+              </SelectItem>
+            )}
+            {!excludeTypes.includes('commercial_partner') && (
+              <SelectItem value="commercial_partner">
+                <div className="flex items-center gap-2">
+                  <Briefcase className="h-4 w-4 text-purple-400" />
+                  <span>Commercial Partner</span>
+                </div>
+              </SelectItem>
+            )}
           </SelectContent>
         </Select>
       </div>

@@ -106,43 +106,44 @@ export function LawyerDashboard({ lawyerId, userId, persona }: LawyerDashboardPr
           })
         }
 
-        // Get deal assignments with nested deal data (FK select bypasses direct RLS)
-        const { data: assignments } = await supabase
-          .from('deal_lawyer_assignments')
-          .select(`
-            deal_id,
-            deal:deal_id (
-              id,
-              name,
-              status,
-              target_amount,
-              currency
-            )
-          `)
+        // VEHICLE-LEVEL ARCHITECTURE: Get vehicles assigned to this lawyer first
+        const { data: lawyerVehicles } = await supabase
+          .from('vehicles')
+          .select('id, name')
           .eq('lawyer_id', lawyerId)
-          .order('assigned_at', { ascending: false })
-          .limit(5)
 
-        // Extract deals from nested select
-        const dealsFromAssignments = (assignments || [])
-          .filter((a: any) => a.deal)
-          .map((a: any) => ({
-            id: a.deal.id,
-            name: a.deal.name,
-            status: a.deal.status,
-            target_amount: a.deal.target_amount,
-            currency: a.deal.currency || 'USD',
+        const vehicleIds = (lawyerVehicles || []).map((v: any) => v.id)
+
+        // Then get all deals under those vehicles
+        let dealsFromVehicles: AssignedDeal[] = []
+        let dealIds: string[] = []
+
+        if (vehicleIds.length > 0) {
+          const { data: vehicleDeals } = await supabase
+            .from('deals')
+            .select('id, name, status, target_amount, currency, vehicle_id')
+            .in('vehicle_id', vehicleIds)
+            .order('created_at', { ascending: false })
+            .limit(10)
+
+          dealsFromVehicles = (vehicleDeals || []).map((d: any) => ({
+            id: d.id,
+            name: d.name,
+            status: d.status,
+            target_amount: d.target_amount,
+            currency: d.currency || 'USD',
           }))
 
-        let dealIds = (assignments || []).map((a: any) => a.deal_id).filter(Boolean)
+          dealIds = (vehicleDeals || []).map((d: any) => d.id)
+        }
 
-        // Fallback to lawyers.assigned_deals if no assignments
+        // Fallback to lawyers.assigned_deals if no vehicle assignments (legacy support)
         if (!dealIds.length && lawyer?.assigned_deals?.length) {
           dealIds = lawyer.assigned_deals
         }
 
-        // Set assigned deals from nested query result
-        setAssignedDeals(dealsFromAssignments)
+        // Set assigned deals from vehicle query result
+        setAssignedDeals(dealsFromVehicles)
 
         if (dealIds.length > 0) {
           // Fetch subscriptions for these deals (signed/committed statuses)

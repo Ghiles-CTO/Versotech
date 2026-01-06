@@ -105,6 +105,14 @@ export default async function DealDetailPage({ params }: PageParams) {
         description,
         is_default,
         is_active,
+        term_sheet_id,
+        introducer_id,
+        partner_id,
+        commercial_partner_id,
+        status,
+        accepted_at,
+        generated_agreement_id,
+        generated_placement_agreement_id,
         fee_components (
           id,
           kind,
@@ -122,6 +130,35 @@ export default async function DealDetailPage({ params }: PageParams) {
           tier_threshold_multiplier,
           base_calculation,
           notes
+        ),
+        term_sheet:term_sheet_id (
+          id,
+          version,
+          status,
+          term_sheet_date,
+          subscription_fee_percent,
+          management_fee_percent,
+          carried_interest_percent
+        ),
+        introducer:introducer_id (
+          id,
+          legal_name,
+          contact_name,
+          email
+        ),
+        partner:partner_id (
+          id,
+          name,
+          legal_name,
+          contact_name,
+          contact_email
+        ),
+        commercial_partner:commercial_partner_id (
+          id,
+          name,
+          legal_name,
+          contact_name,
+          contact_email
         )
       ),
       share_lots (

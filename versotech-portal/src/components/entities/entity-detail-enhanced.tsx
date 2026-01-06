@@ -167,6 +167,13 @@ interface Entity {
   updated_at: string | null
   logo_url: string | null
   website_url: string | null
+  address: string | null
+  arranger_entity_id: string | null
+  lawyer_id: string | null
+  managing_partner_id: string | null
+  arranger_entity?: { id: string; legal_name: string; email?: string | null } | null
+  lawyer?: { id: string; firm_name: string; display_name?: string | null; primary_contact_email?: string | null } | null
+  managing_partner?: { id: string; display_name: string | null; email?: string | null } | null
 }
 
 interface Valuation {
@@ -1479,12 +1486,78 @@ export function EntityDetailEnhanced({
                   </Badge>
                 </div>
               )}
-              <div className="md:col-span-2">
-                <p className="text-muted-foreground">Notes</p>
-                <p className="text-foreground whitespace-pre-wrap leading-relaxed">
-                  {entity.notes?.trim() || 'No notes recorded yet.'}
-                </p>
+              {entity.address && (
+                <div className="md:col-span-2">
+                  <p className="text-muted-foreground">Address</p>
+                  <p className="text-foreground whitespace-pre-wrap">{entity.address}</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Service Providers Section */}
+          <Card className="border border-white/10 bg-white/5">
+            <CardHeader>
+              <CardTitle className="text-lg">Service Providers</CardTitle>
+              <CardDescription>Arranger, lawyer, and managing partner assignments for this vehicle</CardDescription>
+            </CardHeader>
+            <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <p className="text-muted-foreground">Arranger</p>
+                {entity.arranger_entity ? (
+                  <div>
+                    <p className="text-foreground font-medium">{entity.arranger_entity.legal_name}</p>
+                    {entity.arranger_entity.email && (
+                      <p className="text-xs text-muted-foreground">{entity.arranger_entity.email}</p>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-foreground">—</p>
+                )}
               </div>
+              <div>
+                <p className="text-muted-foreground">Lawyer</p>
+                {entity.lawyer ? (
+                  <div>
+                    <p className="text-foreground font-medium">
+                      {entity.lawyer.display_name || entity.lawyer.firm_name}
+                    </p>
+                    {entity.lawyer.firm_name && entity.lawyer.display_name && entity.lawyer.firm_name !== entity.lawyer.display_name && (
+                      <p className="text-xs text-muted-foreground">{entity.lawyer.firm_name}</p>
+                    )}
+                    {entity.lawyer.primary_contact_email && (
+                      <p className="text-xs text-muted-foreground">{entity.lawyer.primary_contact_email}</p>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-foreground">—</p>
+                )}
+              </div>
+              <div>
+                <p className="text-muted-foreground">Managing Partner</p>
+                {entity.managing_partner ? (
+                  <div>
+                    <p className="text-foreground font-medium">{entity.managing_partner.display_name || entity.managing_partner.email}</p>
+                    {entity.managing_partner.email && entity.managing_partner.display_name && (
+                      <p className="text-xs text-muted-foreground">{entity.managing_partner.email}</p>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-foreground">—</p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Notes Section */}
+          <Card className="border border-white/10 bg-white/5">
+            <CardHeader>
+              <CardTitle className="text-lg">Notes</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-foreground whitespace-pre-wrap leading-relaxed">
+                {entity.notes?.trim() || 'No notes recorded yet.'}
+              </p>
             </CardContent>
           </Card>
         </TabsContent>

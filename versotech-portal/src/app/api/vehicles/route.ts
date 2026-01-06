@@ -1,5 +1,82 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
+
+/**
+ * POST /api/vehicles
+ * Creates a new vehicle with all associated fields including
+ * arranger, lawyer, and managing partner assignments.
+ */
+export async function POST(request: NextRequest) {
+  try {
+    const supabase = await createClient()
+
+    // Check authentication
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const body = await request.json()
+
+    // Validate required fields
+    if (!body.name?.trim()) {
+      return NextResponse.json({ error: 'Vehicle name is required' }, { status: 400 })
+    }
+    if (!body.domicile?.trim()) {
+      return NextResponse.json({ error: 'Domicile is required' }, { status: 400 })
+    }
+
+    // Prepare the vehicle data
+    const vehicleData = {
+      name: body.name.trim(),
+      entity_code: body.entity_code || null,
+      platform: body.platform || null,
+      investment_name: body.investment_name || null,
+      former_entity: body.former_entity || null,
+      type: body.type || 'fund',
+      status: body.status || 'LIVE',
+      domicile: body.domicile.trim(),
+      currency: body.currency || 'USD',
+      formation_date: body.formation_date || null,
+      legal_jurisdiction: body.legal_jurisdiction || null,
+      registration_number: body.registration_number || null,
+      reporting_type: body.reporting_type || 'Not Required',
+      requires_reporting: body.requires_reporting || false,
+      notes: body.notes || null,
+      logo_url: body.logo_url || null,
+      website_url: body.website_url || null,
+      address: body.address || null,
+      arranger_entity_id: body.arranger_entity_id || null,
+      lawyer_id: body.lawyer_id || null,
+      managing_partner_id: body.managing_partner_id || null
+    }
+
+    // Insert the vehicle
+    const serviceSupabase = createServiceClient()
+    const { data: vehicle, error: insertError } = await serviceSupabase
+      .from('vehicles')
+      .insert(vehicleData)
+      .select()
+      .single()
+
+    if (insertError) {
+      console.error('[POST /api/vehicles] Insert error:', insertError)
+      return NextResponse.json(
+        { error: 'Failed to create vehicle', details: insertError.message },
+        { status: 500 }
+      )
+    }
+
+    return NextResponse.json({ vehicle }, { status: 201 })
+
+  } catch (error) {
+    console.error('[POST /api/vehicles] Unexpected error:', error)
+    return NextResponse.json(
+      { error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown error' },
+      { status: 500 }
+    )
+  }
+}
 
 export async function GET(request: Request) {
   try {

@@ -36,10 +36,28 @@ export async function GET(
       )
     }
 
-    // Get entity details with all fields
+    // Get entity details with all fields and related service providers
     const { data: entity, error: entityError } = await supabase
       .from('vehicles')
-      .select('*')
+      .select(`
+        *,
+        arranger_entity:arranger_entities!vehicles_arranger_entity_id_fkey (
+          id,
+          legal_name,
+          email
+        ),
+        lawyer:lawyers!vehicles_lawyer_id_fkey (
+          id,
+          firm_name,
+          display_name,
+          primary_contact_email
+        ),
+        managing_partner:profiles!vehicles_managing_partner_id_fkey (
+          id,
+          display_name,
+          email
+        )
+      `)
       .eq('id', entityId)
       .single()
 
@@ -335,7 +353,7 @@ export async function GET(
 }
 
 const updateEntitySchema = z.object({
-  name: z.string().min(1, 'Entity name is required').optional(),
+  name: z.string().min(1, 'Vehicle name is required').optional(),
   entity_code: z.string().optional().nullable(),
   platform: z.string().optional().nullable(),
   investment_name: z.string().optional().nullable(),
@@ -351,7 +369,11 @@ const updateEntitySchema = z.object({
   requires_reporting: z.boolean().optional().nullable(),
   notes: z.string().optional().nullable(),
   logo_url: z.string().url('Logo must be a valid URL').optional().nullable(),
-  website_url: z.string().url('Website must be a valid URL').optional().nullable()
+  website_url: z.string().url('Website must be a valid URL').optional().nullable(),
+  address: z.string().optional().nullable(),
+  arranger_entity_id: z.string().uuid('Arranger must be a valid UUID').optional().nullable(),
+  lawyer_id: z.string().uuid('Lawyer must be a valid UUID').optional().nullable(),
+  managing_partner_id: z.string().uuid('Managing partner must be a valid UUID').optional().nullable()
 })
 
 export async function PATCH(
@@ -401,7 +423,11 @@ export async function PATCH(
       website_url:
         validatedData.website_url === undefined
           ? undefined
-          : validatedData.website_url?.trim() || null
+          : validatedData.website_url?.trim() || null,
+      address: validatedData.address?.trim() || null,
+      arranger_entity_id: validatedData.arranger_entity_id || null,
+      lawyer_id: validatedData.lawyer_id || null,
+      managing_partner_id: validatedData.managing_partner_id || null
     }
 
     const { data: entity, error } = await supabase
