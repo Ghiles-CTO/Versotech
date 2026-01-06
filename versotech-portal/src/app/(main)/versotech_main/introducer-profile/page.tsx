@@ -121,6 +121,49 @@ export default async function IntroducerProfilePage() {
         created_at: introducer.created_at,
         logo_url: introducer.logo_url,
         kyc_status: introducer.kyc_status,
+        // Entity type
+        type: introducer.type,
+        // Address fields
+        address_line_1: introducer.address_line_1,
+        address_line_2: introducer.address_line_2,
+        city: introducer.city,
+        state_province: introducer.state_province,
+        postal_code: introducer.postal_code,
+        country: introducer.country,
+        // Phone/contact
+        phone: introducer.phone,
+        phone_mobile: introducer.phone_mobile,
+        phone_office: introducer.phone_office,
+        website: introducer.website,
+        // Individual KYC fields
+        first_name: introducer.first_name,
+        middle_name: introducer.middle_name,
+        last_name: introducer.last_name,
+        name_suffix: introducer.name_suffix,
+        date_of_birth: introducer.date_of_birth,
+        country_of_birth: introducer.country_of_birth,
+        nationality: introducer.nationality,
+        // US Tax compliance
+        is_us_citizen: introducer.is_us_citizen,
+        is_us_taxpayer: introducer.is_us_taxpayer,
+        us_taxpayer_id: introducer.us_taxpayer_id,
+        country_of_tax_residency: introducer.country_of_tax_residency,
+        // ID Document
+        id_type: introducer.id_type,
+        id_number: introducer.id_number,
+        id_issue_date: introducer.id_issue_date,
+        id_expiry_date: introducer.id_expiry_date,
+        id_issuing_country: introducer.id_issuing_country,
+        // Residential Address
+        residential_street: introducer.residential_street,
+        residential_city: introducer.residential_city,
+        residential_state: introducer.residential_state,
+        residential_postal_code: introducer.residential_postal_code,
+        residential_country: introducer.residential_country,
+        // Entity fields
+        country_of_incorporation: introducer.country_of_incorporation,
+        registration_number: introducer.registration_number,
+        tax_id: introducer.tax_id,
       } : null}
       introducerUserInfo={{
         role: introducerUser.role,

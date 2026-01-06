@@ -50,8 +50,8 @@ const individualKycEditSchema = z.object({
   residential_country: z.string().optional().nullable(),
 
   // Tax Information
-  is_us_citizen: z.boolean().default(false),
-  is_us_taxpayer: z.boolean().default(false),
+  is_us_citizen: z.boolean(),
+  is_us_taxpayer: z.boolean(),
   us_taxpayer_id: z.string().optional().nullable(),
   country_of_tax_residency: z.string().optional().nullable(),
   tax_id_number: z.string().max(50).optional().nullable(),

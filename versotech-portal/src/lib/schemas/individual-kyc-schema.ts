@@ -17,7 +17,7 @@ const validCountryCodes = COUNTRIES.map((c) => c.code) as [string, ...string[]]
  * Country code schema - validates against ISO 3166-1 alpha-2 codes
  */
 export const countryCodeSchema = z.enum(validCountryCodes, {
-  errorMap: () => ({ message: 'Please select a valid country' }),
+  message: 'Please select a valid country',
 })
 
 /**

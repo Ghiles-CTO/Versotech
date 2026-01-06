@@ -223,11 +223,15 @@ export async function PUT(request: NextRequest) {
     const updateData = validation.data
 
     // Filter out empty/undefined values and build update object
-    const updateFields: Record<string, string | null> = {}
+    const updateFields: Record<string, string | boolean | null> = {}
     for (const [key, value] of Object.entries(updateData)) {
       if (value !== undefined) {
-        // Convert empty strings to null for optional fields
-        updateFields[key] = value === '' ? null : value
+        // Convert empty strings to null for optional string fields
+        if (typeof value === 'string') {
+          updateFields[key] = value === '' ? null : value
+        } else {
+          updateFields[key] = value
+        }
       }
     }
 

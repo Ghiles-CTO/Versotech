@@ -48,27 +48,7 @@ export default async function PartnerProfilePage() {
   // Fetch partner details
   const { data: partner } = await serviceSupabase
     .from('partners')
-    .select(`
-      id,
-      name,
-      legal_name,
-      type,
-      partner_type,
-      status,
-      contact_name,
-      contact_email,
-      contact_phone,
-      website,
-      address_line_1,
-      address_line_2,
-      city,
-      postal_code,
-      country,
-      preferred_sectors,
-      preferred_geographies,
-      kyc_status,
-      logo_url
-    `)
+    .select('*')
     .eq('id', partnerUser.partner_id)
     .single()
 
@@ -105,13 +85,49 @@ export default async function PartnerProfilePage() {
         contact_phone: partner.contact_phone,
         website: partner.website,
         address_line_1: partner.address_line_1,
+        address_line_2: partner.address_line_2,
         city: partner.city,
+        state_province: partner.state_province,
         postal_code: partner.postal_code,
         country: partner.country,
         preferred_sectors: partner.preferred_sectors,
         preferred_geographies: partner.preferred_geographies,
         kyc_status: partner.kyc_status,
-        logo_url: partner.logo_url
+        logo_url: partner.logo_url,
+        // Phone numbers
+        phone: partner.phone,
+        phone_mobile: partner.phone_mobile,
+        phone_office: partner.phone_office,
+        email: partner.email,
+        // Individual KYC fields
+        first_name: partner.first_name,
+        middle_name: partner.middle_name,
+        last_name: partner.last_name,
+        name_suffix: partner.name_suffix,
+        date_of_birth: partner.date_of_birth,
+        country_of_birth: partner.country_of_birth,
+        nationality: partner.nationality,
+        // US Tax compliance
+        is_us_citizen: partner.is_us_citizen,
+        is_us_taxpayer: partner.is_us_taxpayer,
+        us_taxpayer_id: partner.us_taxpayer_id,
+        country_of_tax_residency: partner.country_of_tax_residency,
+        // Entity fields
+        country_of_incorporation: partner.country_of_incorporation,
+        registration_number: partner.registration_number,
+        tax_id: partner.tax_id,
+        // ID Document
+        id_type: partner.id_type,
+        id_number: partner.id_number,
+        id_issue_date: partner.id_issue_date,
+        id_expiry_date: partner.id_expiry_date,
+        id_issuing_country: partner.id_issuing_country,
+        // Residential Address
+        residential_street: partner.residential_street,
+        residential_city: partner.residential_city,
+        residential_state: partner.residential_state,
+        residential_postal_code: partner.residential_postal_code,
+        residential_country: partner.residential_country,
       }}
       partnerUserInfo={{
         role: partnerUser.role,

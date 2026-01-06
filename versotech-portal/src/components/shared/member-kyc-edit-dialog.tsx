@@ -70,8 +70,8 @@ const memberKycEditSchema = z.object({
   residential_country: z.string().optional().nullable(),
 
   // Tax Information
-  is_us_citizen: z.boolean().default(false),
-  is_us_taxpayer: z.boolean().default(false),
+  is_us_citizen: z.boolean(),
+  is_us_taxpayer: z.boolean(),
   us_taxpayer_id: z.string().optional().nullable(),
   country_of_tax_residency: z.string().optional().nullable(),
   tax_id_number: z.string().max(50).optional().nullable(),
@@ -84,7 +84,7 @@ const memberKycEditSchema = z.object({
   id_issuing_country: z.string().optional().nullable(),
 
   // UBO-specific
-  ownership_percentage: z.coerce.number().min(0).max(100).optional().nullable(),
+  ownership_percentage: z.number().min(0).max(100).optional().nullable(),
 })
 
 type MemberKycEditForm = z.infer<typeof memberKycEditSchema>
