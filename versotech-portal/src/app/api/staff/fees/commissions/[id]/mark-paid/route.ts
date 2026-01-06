@@ -14,10 +14,12 @@ import { z } from 'zod';
 
 const markPaidSchema = z.object({
   payment_reference: z.string().optional(),
-  commission_type: z.enum(['partner', 'introducer', 'commercial-partner']).default('introducer'),
+  // Accept both underscored (from new API) and hyphenated (legacy) formats
+  entity_type: z.enum(['partner', 'introducer', 'commercial_partner', 'commercial-partner']).optional(),
+  commission_type: z.enum(['partner', 'introducer', 'commercial-partner']).optional(),
 });
 
-// Configuration for different commission types
+// Configuration for different commission types (use underscored keys for consistency)
 const COMMISSION_CONFIG = {
   'partner': {
     table: 'partner_commissions',
@@ -35,7 +37,7 @@ const COMMISSION_CONFIG = {
     commissionLink: '/versotech_main/my-commissions',
     arrangerLink: '/versotech_main/payment-requests',
   },
-  'commercial-partner': {
+  'commercial_partner': {
     table: 'commercial_partner_commissions',
     userTable: 'commercial_partner_users',
     entityIdField: 'commercial_partner_id',
@@ -44,6 +46,8 @@ const COMMISSION_CONFIG = {
     arrangerLink: '/versotech_main/payment-requests',
   },
 } as const;
+
+type EntityTypeKey = keyof typeof COMMISSION_CONFIG;
 
 export async function POST(
   request: NextRequest,
@@ -73,11 +77,23 @@ export async function POST(
 
     const body = await request.json().catch(() => ({}));
     const validation = markPaidSchema.safeParse(body);
-    const { payment_reference, commission_type } = validation.success
-      ? validation.data
-      : { payment_reference: undefined, commission_type: 'introducer' as const };
+    const validData = validation.success ? validation.data : {};
+    const payment_reference = validData.payment_reference;
 
-    const config = COMMISSION_CONFIG[commission_type];
+    // Support both entity_type (new) and commission_type (legacy) parameters
+    // Normalize commercial-partner to commercial_partner
+    let entityType: EntityTypeKey = 'introducer';
+    if (validData.entity_type) {
+      entityType = validData.entity_type === 'commercial-partner'
+        ? 'commercial_partner'
+        : validData.entity_type as EntityTypeKey;
+    } else if (validData.commission_type) {
+      entityType = validData.commission_type === 'commercial-partner'
+        ? 'commercial_partner'
+        : validData.commission_type as EntityTypeKey;
+    }
+
+    const config = COMMISSION_CONFIG[entityType];
 
     // Fetch commission with details before updating
     const { data: commission, error: fetchError } = await serviceSupabase
@@ -186,7 +202,7 @@ export async function POST(
       actor_id: user.id,
       action_details: {
         description: 'Commission marked as paid',
-        commission_type,
+        entity_type: entityType,
         amount: commissionData.accrual_amount,
         currency: commissionData.currency,
         payment_reference: payment_reference || null,

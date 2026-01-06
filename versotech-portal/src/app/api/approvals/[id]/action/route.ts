@@ -5,6 +5,7 @@ import { NextResponse } from 'next/server'
 import { triggerWorkflow } from '@/lib/trigger-workflow'
 import { createSignatureRequest } from '@/lib/signature/client'
 import { getCeoSigner } from '@/lib/staff/ceo-signer'
+import { sendInvitationEmail } from '@/lib/email/resend-service'
 
 /**
  * Generate subscription pack filename with standardized format:
@@ -1378,6 +1379,94 @@ async function handleEntityApproval(
           }
         }
 
+      case 'member_invitation':
+        // CEO approved member invitation - now send the actual invitation email
+        const invitationId = entityId
+
+        // Get the invitation details
+        const { data: invitation, error: inviteFetchError } = await supabase
+          .from('member_invitations')
+          .select('*')
+          .eq('id', invitationId)
+          .single()
+
+        if (inviteFetchError || !invitation) {
+          console.error('Error fetching invitation:', inviteFetchError)
+          return { success: false, error: 'Member invitation not found' }
+        }
+
+        if (invitation.status !== 'pending_approval') {
+          return { success: false, error: 'Invitation is not pending approval' }
+        }
+
+        // Update invitation status to 'pending' (ready for acceptance)
+        // Reset expiry to 7 days from now since approval may have taken time
+        const newExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+
+        const { error: inviteUpdateError } = await supabase
+          .from('member_invitations')
+          .update({
+            status: 'pending',
+            expires_at: newExpiresAt
+          })
+          .eq('id', invitationId)
+
+        if (inviteUpdateError) {
+          console.error('Error updating invitation status:', inviteUpdateError)
+          return { success: false, error: 'Failed to update invitation status' }
+        }
+
+        // Send the invitation email
+        const acceptUrl = `${process.env.NEXT_PUBLIC_APP_URL}/invitation/accept?token=${invitation.invitation_token}`
+
+        const emailResult = await sendInvitationEmail({
+          email: invitation.email,
+          inviteeName: undefined,
+          entityName: invitation.entity_name || metadata.entity_name || 'the organization',
+          entityType: invitation.entity_type,
+          role: invitation.role,
+          inviterName: invitation.invited_by_name || 'A team member',
+          acceptUrl: acceptUrl,
+          expiresAt: newExpiresAt
+        })
+
+        if (!emailResult.success) {
+          console.error('Failed to send invitation email:', emailResult.error)
+          // Don't fail - invitation is approved, email can be resent
+        }
+
+        // Notify the inviter that their invitation was approved
+        if (invitation.invited_by) {
+          await supabase.from('investor_notifications').insert({
+            user_id: invitation.invited_by,
+            title: 'Member Invitation Approved',
+            message: `Your invitation to ${invitation.email} has been approved and sent.`,
+            type: 'member_invitation_approved',
+            metadata: {
+              invitation_id: invitationId,
+              invitee_email: invitation.email,
+              entity_type: invitation.entity_type
+            }
+          })
+        }
+
+        console.log('✅ Member invitation approved and email sent:', {
+          invitation_id: invitationId,
+          email: invitation.email,
+          entity_type: invitation.entity_type,
+          email_sent: emailResult.success
+        })
+
+        return {
+          success: true,
+          notificationData: {
+            type: 'member_invitation_approved',
+            invitation_id: invitationId,
+            email: invitation.email,
+            email_sent: emailResult.success
+          }
+        }
+
       default:
         console.log(`No specific approval handler for entity type: ${entityType}`)
     }
@@ -1480,6 +1569,33 @@ async function handleEntityRejection(
           title: 'Profile Update Rejected',
           message: `Your profile update request was rejected. ${reason ? `Reason: ${reason}` : ''}`,
           link: '/versotech_main/arranger-profile',
+        })
+      }
+    }
+
+    if (entityType === 'member_invitation') {
+      // Update invitation status to 'rejected'
+      await supabase
+        .from('member_invitations')
+        .update({
+          status: 'rejected'
+        })
+        .eq('id', entityId)
+
+      // Notify the inviter that their invitation was rejected
+      if (approval.requested_by) {
+        const metadata = approval.entity_metadata || {}
+        await supabase.from('investor_notifications').insert({
+          user_id: approval.requested_by,
+          title: 'Member Invitation Rejected',
+          message: `Your invitation to ${metadata.email || 'the user'} was rejected. ${reason ? `Reason: ${reason}` : ''}`,
+          type: 'member_invitation_rejected',
+          metadata: {
+            invitation_id: entityId,
+            invitee_email: metadata.email,
+            entity_type: metadata.entity_type,
+            rejection_reason: reason
+          }
         })
       }
     }

@@ -12,10 +12,30 @@ import { z } from 'zod'
 // Schema for lawyer self-service profile updates
 // Note: KYC status, is_active, and firm_name are admin-managed (read-only for lawyers)
 const profileUpdateSchema = z.object({
+  // Display fields
   display_name: z.string().min(1).max(255).optional(),
   primary_contact_name: z.string().min(1).max(255).optional(),
-  primary_contact_email: z.string().email().max(255).optional(),
+  primary_contact_email: z.string().email().max(255).optional().nullable(),
   primary_contact_phone: z.string().max(50).optional().nullable(),
+
+  // Address fields
+  address_line_1: z.string().max(255).optional().nullable(),
+  address_line_2: z.string().max(255).optional().nullable(),
+  city: z.string().max(100).optional().nullable(),
+  state_province: z.string().max(100).optional().nullable(),
+  postal_code: z.string().max(20).optional().nullable(),
+  country: z.string().max(2).optional().nullable(),
+
+  // Phone numbers
+  phone: z.string().max(30).optional().nullable(),
+  phone_mobile: z.string().max(30).optional().nullable(),
+  phone_office: z.string().max(30).optional().nullable(),
+  website: z.string().url().max(255).optional().nullable().or(z.literal('')),
+
+  // Entity info
+  registration_number: z.string().max(100).optional().nullable(),
+  country_of_incorporation: z.string().max(2).optional().nullable(),
+  tax_id: z.string().max(50).optional().nullable(),
 })
 
 /**

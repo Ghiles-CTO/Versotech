@@ -10,6 +10,7 @@ export type ApprovalEntityType =
   | 'document_access'
   | 'permission_grant'
   | 'gdpr_deletion_request'
+  | 'member_invitation'
 
 // Approval status values
 export type ApprovalStatus =

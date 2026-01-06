@@ -33,6 +33,8 @@ import { MembersManagementTab } from '@/components/members/members-management-ta
 import { SignatureSpecimenTab } from '@/components/profile/signature-specimen-tab'
 import { PasswordChangeForm } from '@/components/profile/password-change-form'
 import { PreferencesEditor } from '@/components/profile/preferences-editor'
+import { LawyerKYCDocumentsTab } from '@/components/profile/lawyer-kyc-documents-tab'
+import { EntityAddressEditDialog } from '@/components/shared'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import Image from 'next/image'
@@ -54,6 +56,23 @@ type LawyerInfo = {
   logo_url?: string | null
   kyc_status?: string | null
   primary_contact_name?: string | null
+  primary_contact_email?: string | null
+  primary_contact_phone?: string | null
+  // Address fields
+  address_line_1?: string | null
+  address_line_2?: string | null
+  city?: string | null
+  state_province?: string | null
+  postal_code?: string | null
+  country?: string | null
+  // Phone numbers
+  phone_mobile?: string | null
+  phone_office?: string | null
+  website?: string | null
+  // Entity fields
+  registration_number?: string | null
+  country_of_incorporation?: string | null
+  tax_id?: string | null
 }
 
 type LawyerUserInfo = {
@@ -135,6 +154,7 @@ export function LawyerProfileClient({
   const [isEditing, setIsEditing] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [isUploadingLogo, setIsUploadingLogo] = useState(false)
+  const [showAddressDialog, setShowAddressDialog] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Edit state
@@ -338,6 +358,10 @@ export function LawyerProfileClient({
             <Users className="h-4 w-4" />
             Members
           </TabsTrigger>
+          <TabsTrigger value="kyc" className="flex items-center gap-2">
+            <Shield className="h-4 w-4" />
+            KYC
+          </TabsTrigger>
           <TabsTrigger value="signature" className="flex items-center gap-2">
             <FileSignature className="h-4 w-4" />
             Signature
@@ -484,6 +508,61 @@ export function LawyerProfileClient({
             </Card>
           </div>
 
+          {/* Address & Contact Card */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <Building2 className="h-5 w-5" />
+                  Address & Contact
+                </CardTitle>
+                <CardDescription>
+                  Firm address and contact details
+                </CardDescription>
+              </div>
+              {canEdit && (
+                <Button variant="outline" size="sm" onClick={() => setShowAddressDialog(true)}>
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit
+                </Button>
+              )}
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label className="text-muted-foreground">Address</Label>
+                  <div className="font-medium">
+                    {[
+                      lawyerInfo?.address_line_1,
+                      lawyerInfo?.address_line_2,
+                      lawyerInfo?.city,
+                      lawyerInfo?.state_province,
+                      lawyerInfo?.postal_code,
+                      lawyerInfo?.country
+                    ].filter(Boolean).join(', ') || 'Not set'}
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-muted-foreground">Phone</Label>
+                  <div className="font-medium flex items-center gap-2">
+                    <Phone className="h-4 w-4 text-muted-foreground" />
+                    {lawyerInfo?.phone || lawyerInfo?.phone_office || lawyerInfo?.phone_mobile || 'Not set'}
+                  </div>
+                </div>
+                {lawyerInfo?.website && (
+                  <div className="space-y-2">
+                    <Label className="text-muted-foreground">Website</Label>
+                    <div className="font-medium">
+                      <a href={lawyerInfo.website} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                        {lawyerInfo.website}
+                      </a>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Specializations Card */}
           {lawyerInfo?.specializations?.length ? (
             <Card>
@@ -517,6 +596,26 @@ export function LawyerProfileClient({
               entityId={lawyerInfo.id}
               entityName={lawyerInfo.firm_name || lawyerInfo.display_name || 'Law Firm'}
               showSignatoryOption={true}
+            />
+          ) : (
+            <Card>
+              <CardContent className="py-8 text-center">
+                <AlertCircle className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
+                <p className="text-muted-foreground">
+                  No law firm linked to your account
+                </p>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        {/* KYC Tab */}
+        <TabsContent value="kyc" className="space-y-4">
+          {lawyerInfo ? (
+            <LawyerKYCDocumentsTab
+              lawyerId={lawyerInfo.id}
+              lawyerName={lawyerInfo.firm_name || lawyerInfo.display_name}
+              kycStatus={lawyerInfo.kyc_status || undefined}
             />
           ) : (
             <Card>
@@ -571,6 +670,31 @@ export function LawyerProfileClient({
           <PreferencesEditor variant="investor" />
         </TabsContent>
       </Tabs>
+
+      {/* Address Edit Dialog */}
+      {lawyerInfo && (
+        <EntityAddressEditDialog
+          open={showAddressDialog}
+          onOpenChange={setShowAddressDialog}
+          entityType="lawyer"
+          entityName={lawyerInfo.firm_name || lawyerInfo.display_name}
+          initialData={{
+            address_line_1: lawyerInfo.address_line_1,
+            address_line_2: lawyerInfo.address_line_2,
+            city: lawyerInfo.city,
+            state_province: lawyerInfo.state_province,
+            postal_code: lawyerInfo.postal_code,
+            country: lawyerInfo.country,
+            email: lawyerInfo.email || lawyerInfo.primary_contact_email,
+            phone: lawyerInfo.phone || lawyerInfo.primary_contact_phone,
+            phone_mobile: lawyerInfo.phone_mobile,
+            phone_office: lawyerInfo.phone_office,
+            website: lawyerInfo.website,
+          }}
+          apiEndpoint="/api/lawyers/me/profile"
+          onSuccess={() => window.location.reload()}
+        />
+      )}
     </div>
   )
 }

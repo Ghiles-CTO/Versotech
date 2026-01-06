@@ -35,8 +35,12 @@ import {
   XCircle,
   Plus,
   UserPlus,
-  Users
+  Users,
+  FileText,
+  Send
 } from 'lucide-react'
+import { toast } from 'sonner'
+import FeePlanEditModal from '@/components/fees/FeePlanEditModal'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { AddPartnerModal } from '@/components/users/add-partner-modal'
@@ -48,6 +52,12 @@ type PartnerUser = {
   email: string
   role: string
   isPrimary: boolean
+}
+
+type FeePlanSummary = {
+  total: number
+  accepted: number
+  pending: number
 }
 
 type Partner = {
@@ -70,6 +80,7 @@ type Partner = {
   kycStatus: string | null
   createdAt: string
   users: PartnerUser[]
+  feePlans: FeePlanSummary
 }
 
 type PartnerStats = {
@@ -129,9 +140,31 @@ export default function PartnersContent() {
   const [showInviteDialog, setShowInviteDialog] = useState(false)
   const [selectedPartner, setSelectedPartner] = useState<Partner | null>(null)
 
+  // Fee plan modal state
+  const [feePlanModalOpen, setFeePlanModalOpen] = useState(false)
+  const [selectedPartnerForFeePlan, setSelectedPartnerForFeePlan] = useState<Partner | null>(null)
+
   const handleInviteClick = (partner: Partner) => {
     setSelectedPartner(partner)
     setShowInviteDialog(true)
+  }
+
+  // Handler for creating a fee plan for a partner
+  const handleCreateFeePlan = (partner: Partner) => {
+    setSelectedPartnerForFeePlan(partner)
+    setFeePlanModalOpen(true)
+  }
+
+  const handleFeePlanSuccess = () => {
+    setFeePlanModalOpen(false)
+    setSelectedPartnerForFeePlan(null)
+    toast.success('Fee plan created successfully')
+    router.refresh()
+  }
+
+  // Handler for dispatching investor through a partner
+  const handleDispatchInvestor = (partner: Partner) => {
+    toast.info(`To dispatch an investor through ${partner.name}, go to a deal's Members tab and use "Add Participant"`)
   }
 
   const refreshData = () => {
@@ -174,6 +207,11 @@ export default function PartnersContent() {
               display_name,
               email
             )
+          ),
+          fee_plans (
+            id,
+            status,
+            is_active
           )
         `)
         .order('created_at', { ascending: false })
@@ -191,6 +229,16 @@ export default function PartnersContent() {
             isPrimary: pu.is_primary || false
           }
         })
+
+        // Calculate fee plan summary
+        const feePlansData = p.fee_plans || []
+        const feePlans: FeePlanSummary = {
+          total: feePlansData.length,
+          accepted: feePlansData.filter((fp: any) => fp.status === 'accepted').length,
+          pending: feePlansData.filter((fp: any) =>
+            fp.status === 'sent' || fp.status === 'pending_signature' || fp.status === 'draft'
+          ).length,
+        }
 
         return {
           id: p.id,
@@ -211,7 +259,8 @@ export default function PartnersContent() {
           preferredGeographies: p.preferred_geographies,
           kycStatus: p.kyc_status,
           createdAt: p.created_at,
-          users
+          users,
+          feePlans
         }
       })
 
@@ -354,6 +403,7 @@ export default function PartnersContent() {
                 <TableHead>Partner</TableHead>
                 <TableHead>Type</TableHead>
                 <TableHead>Users</TableHead>
+                <TableHead>Fee Plans</TableHead>
                 <TableHead>Contact</TableHead>
                 <TableHead>Investment Range</TableHead>
                 <TableHead>KYC</TableHead>
@@ -364,7 +414,7 @@ export default function PartnersContent() {
             <TableBody>
               {filteredPartners.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                     No partners found
                   </TableCell>
                 </TableRow>
@@ -392,6 +442,24 @@ export default function PartnersContent() {
                         <Users className="h-4 w-4 text-muted-foreground" />
                         <span className="text-sm font-medium">{partner.users.length}</span>
                       </div>
+                    </TableCell>
+                    <TableCell>
+                      {partner.feePlans.total === 0 ? (
+                        <span className="text-sm text-muted-foreground">None</span>
+                      ) : (
+                        <div className="flex items-center gap-1.5">
+                          <FileText className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-sm font-medium">
+                            {partner.feePlans.accepted}/{partner.feePlans.total}
+                          </span>
+                          {partner.feePlans.accepted === partner.feePlans.total && partner.feePlans.total > 0 && (
+                            <CheckCircle2 className="h-3.5 w-3.5 text-green-400" />
+                          )}
+                          {partner.feePlans.pending > 0 && (
+                            <Clock className="h-3.5 w-3.5 text-yellow-400" />
+                          )}
+                        </div>
+                      )}
                     </TableCell>
                     <TableCell>
                       {partner.contactName ? (
@@ -449,6 +517,15 @@ export default function PartnersContent() {
                               Visit Website
                             </DropdownMenuItem>
                           )}
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={() => handleCreateFeePlan(partner)}>
+                            <FileText className="mr-2 h-4 w-4" />
+                            Create Fee Plan
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleDispatchInvestor(partner)}>
+                            <Send className="mr-2 h-4 w-4" />
+                            Dispatch Investor
+                          </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
@@ -478,6 +555,16 @@ export default function PartnersContent() {
           onSuccess={refreshData}
         />
       )}
+
+      {/* Fee Plan Modal */}
+      <FeePlanEditModal
+        open={feePlanModalOpen}
+        onClose={() => {
+          setFeePlanModalOpen(false)
+          setSelectedPartnerForFeePlan(null)
+        }}
+        onSuccess={handleFeePlanSuccess}
+      />
     </div>
   )
 }

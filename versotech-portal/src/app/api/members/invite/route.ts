@@ -172,24 +172,28 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Check for existing pending invitation
+    // Check for existing pending or pending_approval invitation
     const { data: existingInvitation } = await serviceSupabase
       .from('member_invitations')
       .select('id, status')
       .eq('entity_type', entity_type)
       .eq('entity_id', entity_id)
       .eq('email', email.toLowerCase())
-      .eq('status', 'pending')
+      .in('status', ['pending', 'pending_approval'])
       .maybeSingle()
 
     if (existingInvitation) {
+      const statusMsg = existingInvitation.status === 'pending_approval'
+        ? 'An invitation is already awaiting CEO approval for this email'
+        : 'A pending invitation already exists for this email'
       return NextResponse.json(
-        { error: 'A pending invitation already exists for this email' },
+        { error: statusMsg },
         { status: 400 }
       )
     }
 
-    // Create the invitation
+    // Create the invitation with 'pending_approval' status
+    // The database trigger will automatically create a CEO approval request
     const { data: invitation, error: insertError } = await serviceSupabase
       .from('member_invitations')
       .insert({
@@ -201,8 +205,8 @@ export async function POST(request: NextRequest) {
         is_signatory,
         invited_by: user.id,
         invited_by_name: inviterName,
-        status: 'pending',
-        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 days
+        status: 'pending_approval', // Changed: requires CEO approval before email is sent
+        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 days from approval
       })
       .select()
       .single()
@@ -212,26 +216,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to create invitation' }, { status: 500 })
     }
 
-    // Construct accept URL
-    const acceptUrl = `${process.env.NEXT_PUBLIC_APP_URL}/invitation/accept?token=${invitation.invitation_token}`
-
-    // Send invitation email via Resend
-    const emailResult = await sendInvitationEmail({
-      email: invitation.email,
-      inviteeName: undefined, // Will use email prefix as fallback
-      entityName: entityName,
-      entityType: entity_type,
-      role: invitation.role,
-      inviterName: inviterName,
-      acceptUrl: acceptUrl,
-      expiresAt: invitation.expires_at
-    })
-
-    if (!emailResult.success) {
-      console.error('Failed to send invitation email:', emailResult.error)
-      // Don't fail the request - invitation is created, email just didn't send
-      // User can resend later
-    }
+    // NOTE: Email is NOT sent here anymore
+    // Email will be sent when CEO approves the invitation via /api/approvals/[id]/action
+    // The approval is automatically created by the database trigger
 
     return NextResponse.json({
       success: true,
@@ -240,13 +227,10 @@ export async function POST(request: NextRequest) {
         email: invitation.email,
         role: invitation.role,
         is_signatory: invitation.is_signatory,
-        expires_at: invitation.expires_at,
-        accept_url: acceptUrl
+        status: 'pending_approval'
       },
-      email_sent: emailResult.success,
-      message: emailResult.success
-        ? `Invitation sent to ${email}`
-        : `Invitation created for ${email} (email delivery pending)`
+      requires_approval: true,
+      message: `Invitation request created for ${email}. Awaiting CEO approval before the invitation email is sent.`
     })
 
   } catch (error) {
@@ -358,7 +342,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Invitation not found' }, { status: 404 })
     }
 
-    if (invitation.status !== 'pending') {
+    if (!['pending', 'pending_approval'].includes(invitation.status)) {
       return NextResponse.json(
         { error: 'Only pending invitations can be cancelled' },
         { status: 400 }
@@ -396,6 +380,16 @@ export async function DELETE(request: NextRequest) {
     if (updateError) {
       console.error('Error cancelling invitation:', updateError)
       return NextResponse.json({ error: 'Failed to cancel invitation' }, { status: 500 })
+    }
+
+    // If there was a pending approval, cancel it too
+    if (invitation.status === 'pending_approval') {
+      await serviceSupabase
+        .from('approvals')
+        .update({ status: 'cancelled', resolved_at: new Date().toISOString() })
+        .eq('entity_type', 'member_invitation')
+        .eq('entity_id', invitationId)
+        .eq('status', 'pending')
     }
 
     return NextResponse.json({ success: true, message: 'Invitation cancelled' })

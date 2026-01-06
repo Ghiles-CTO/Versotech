@@ -28,6 +28,7 @@ export function ApprovalFilters({ onFilterChange, currentFilters }: ApprovalFilt
   const [filters, setFilters] = useState<FilterState>(currentFilters)
 
   const entityTypes: { value: ApprovalEntityType; label: string }[] = [
+    { value: 'member_invitation', label: 'Member Invitations' },
     { value: 'deal_interest', label: 'Deal Interests' },
     { value: 'deal_subscription', label: 'Subscriptions' },
     { value: 'allocation', label: 'Allocations' },

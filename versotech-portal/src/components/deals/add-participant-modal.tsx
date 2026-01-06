@@ -39,11 +39,48 @@ interface AddParticipantModalProps {
 }
 
 type ParticipantCategory = 'investor' | 'partner' | 'introducer' | 'commercial_partner'
+type ReferringEntityType = 'partner' | 'introducer' | 'commercial_partner'
 
 interface FeeComponent {
   kind: string
   rate_bps?: number
   flat_amount?: number
+}
+
+interface FeePlan {
+  id: string
+  name: string
+  description?: string
+  status: string
+  is_default: boolean
+  is_active: boolean
+  accepted_at?: string
+  fee_components: FeeComponent[]
+}
+
+interface FeePlansResponse {
+  fee_plans: FeePlan[]
+  accepted_plans: FeePlan[]
+  can_dispatch: boolean
+  message: string | null
+  entity_name: string
+}
+
+interface TermSheet {
+  id: string
+  version: number
+  status: string
+  subscription_fee_percent: number | null
+  management_fee_percent: number | null
+  carried_interest_percent: number | null
+  term_sheet_date: string | null
+}
+
+// Roles that require a referring entity and fee plan
+const ROLES_REQUIRING_REFERRER: Record<string, ReferringEntityType> = {
+  'partner_investor': 'partner',
+  'introducer_investor': 'introducer',
+  'commercial_partner_investor': 'commercial_partner',
 }
 
 const PARTICIPANT_CATEGORIES = [
@@ -118,11 +155,32 @@ export function AddParticipantModal({ dealId, onParticipantAdded }: AddParticipa
   const [investorRole, setInvestorRole] = useState('investor')
   const [email, setEmail] = useState('')
 
+  // Referring entity fields (for roles like introducer_investor, partner_investor)
+  const [referringEntitySearch, setReferringEntitySearch] = useState('')
+  const [referringEntityResults, setReferringEntityResults] = useState<any[]>([])
+  const [selectedReferringEntity, setSelectedReferringEntity] = useState<any>(null)
+  const [referringEntityLoading, setReferringEntityLoading] = useState(false)
+  const [hasReferringEntitySearched, setHasReferringEntitySearched] = useState(false)
+
+  // Fee plan selection (when dispatching through an entity)
+  const [feePlansData, setFeePlansData] = useState<FeePlansResponse | null>(null)
+  const [feePlansLoading, setFeePlansLoading] = useState(false)
+  const [selectedFeePlanId, setSelectedFeePlanId] = useState<string | null>(null)
+
+  // Term sheet selection (for all investors - determines investor class)
+  const [publishedTermSheets, setPublishedTermSheets] = useState<TermSheet[]>([])
+  const [selectedTermSheetId, setSelectedTermSheetId] = useState<string | null>(null)
+  const [termSheetsLoading, setTermSheetsLoading] = useState(false)
+
   // Entity-specific fields (partner/introducer/commercial_partner)
   const [feePlanName, setFeePlanName] = useState('')
   const [feeComponents, setFeeComponents] = useState<FeeComponent[]>([
     { kind: 'subscription', rate_bps: 200 },
   ])
+
+  // Check if current role requires a referring entity
+  const requiresReferrer = !!ROLES_REQUIRING_REFERRER[investorRole]
+  const referrerEntityType = ROLES_REQUIRING_REFERRER[investorRole]
 
   // Reset form when modal closes
   useEffect(() => {
@@ -138,8 +196,73 @@ export function AddParticipantModal({ dealId, onParticipantAdded }: AddParticipa
       setError(null)
       setSearchError(null)
       setHasSearched(false)
+      // Reset referring entity state
+      setReferringEntitySearch('')
+      setReferringEntityResults([])
+      setSelectedReferringEntity(null)
+      setHasReferringEntitySearched(false)
+      setFeePlansData(null)
+      setSelectedFeePlanId(null)
+      // Reset term sheet state
+      setPublishedTermSheets([])
+      setSelectedTermSheetId(null)
     }
   }, [open])
+
+  // Reset referring entity and term sheet when role changes
+  useEffect(() => {
+    setSelectedReferringEntity(null)
+    setReferringEntitySearch('')
+    setReferringEntityResults([])
+    setHasReferringEntitySearched(false)
+    setFeePlansData(null)
+    setSelectedFeePlanId(null)
+    // Keep term sheet selected if changing between investor roles
+    // Only reset if switching to non-investor roles
+  }, [investorRole])
+
+  // Fetch published term sheets when category is investor
+  useEffect(() => {
+    if (category === 'investor') {
+      fetchPublishedTermSheets()
+    } else {
+      setPublishedTermSheets([])
+      setSelectedTermSheetId(null)
+    }
+  }, [category])
+
+  // Reset fee plans when term sheet changes (re-fetch with term sheet filter)
+  useEffect(() => {
+    if (selectedReferringEntity && referrerEntityType && selectedTermSheetId) {
+      fetchFeePlans()
+    } else if (!selectedTermSheetId) {
+      // Clear fee plans if no term sheet selected
+      setFeePlansData(null)
+      setSelectedFeePlanId(null)
+    }
+  }, [selectedTermSheetId])
+
+  // Search referring entities when query changes
+  useEffect(() => {
+    if (!requiresReferrer || !referringEntitySearch || referringEntitySearch.length < 2) {
+      setReferringEntityResults([])
+      return
+    }
+
+    const timer = setTimeout(() => {
+      searchReferringEntities()
+    }, 300)
+
+    return () => clearTimeout(timer)
+  }, [referringEntitySearch, referrerEntityType])
+
+  // Fetch fee plans when referring entity is selected AND term sheet is selected
+  // Term sheet must be selected first to filter fee plans correctly
+  useEffect(() => {
+    if (selectedReferringEntity && referrerEntityType && selectedTermSheetId) {
+      fetchFeePlans()
+    }
+  }, [selectedReferringEntity, referrerEntityType])
 
   // Search when query changes
   useEffect(() => {
@@ -208,6 +331,108 @@ export function AddParticipantModal({ dealId, onParticipantAdded }: AddParticipa
     }
   }
 
+  // Search for referring entities (partners/introducers/commercial_partners)
+  const searchReferringEntities = async () => {
+    if (!referrerEntityType) return
+
+    setReferringEntityLoading(true)
+    setHasReferringEntitySearched(true)
+    try {
+      let endpoint = ''
+      if (referrerEntityType === 'partner') {
+        endpoint = `/api/admin/partners?search=${encodeURIComponent(referringEntitySearch)}&status=active`
+      } else if (referrerEntityType === 'introducer') {
+        endpoint = `/api/admin/introducers?search=${encodeURIComponent(referringEntitySearch)}&status=active`
+      } else if (referrerEntityType === 'commercial_partner') {
+        endpoint = `/api/admin/commercial-partners?search=${encodeURIComponent(referringEntitySearch)}&status=active`
+      }
+
+      const response = await fetch(endpoint)
+      if (!response.ok) {
+        setReferringEntityResults([])
+        return
+      }
+
+      const data = await response.json()
+      let results: any[] = []
+      if (referrerEntityType === 'partner') {
+        results = data.partners || data.data || []
+      } else if (referrerEntityType === 'introducer') {
+        results = data.introducers || data.data || []
+      } else if (referrerEntityType === 'commercial_partner') {
+        results = data.partners || data.commercial_partners || data.data || []
+      }
+      setReferringEntityResults(Array.isArray(results) ? results.slice(0, 10) : [])
+    } catch (err) {
+      console.error('Referring entity search failed:', err)
+      setReferringEntityResults([])
+    } finally {
+      setReferringEntityLoading(false)
+    }
+  }
+
+  // Fetch published term sheets for the deal
+  const fetchPublishedTermSheets = async () => {
+    setTermSheetsLoading(true)
+    try {
+      const response = await fetch(`/api/deals/${dealId}/fee-structures?status=published`)
+      if (!response.ok) {
+        console.error('Failed to fetch term sheets')
+        setPublishedTermSheets([])
+        return
+      }
+      const data = await response.json()
+      // API returns { term_sheets: [...] }
+      const termSheets = data.term_sheets || []
+      setPublishedTermSheets(termSheets)
+    } catch (err) {
+      console.error('Term sheets fetch failed:', err)
+      setPublishedTermSheets([])
+    } finally {
+      setTermSheetsLoading(false)
+    }
+  }
+
+  // Fetch fee plans for the selected referring entity
+  const fetchFeePlans = async () => {
+    if (!selectedReferringEntity || !referrerEntityType) return
+
+    setFeePlansLoading(true)
+    setFeePlansData(null)
+    setSelectedFeePlanId(null)
+    try {
+      // Include term_sheet_id filter if selected
+      let endpoint = `/api/deals/${dealId}/dispatch/fee-plans?entity_id=${selectedReferringEntity.id}&entity_type=${referrerEntityType}`
+      if (selectedTermSheetId) {
+        endpoint += `&term_sheet_id=${selectedTermSheetId}`
+      }
+      const response = await fetch(endpoint)
+
+      if (!response.ok) {
+        console.error('Failed to fetch fee plans')
+        return
+      }
+
+      const data: FeePlansResponse = await response.json()
+      setFeePlansData(data)
+
+      // Auto-select if only one accepted plan
+      if (data.accepted_plans.length === 1) {
+        setSelectedFeePlanId(data.accepted_plans[0].id)
+      }
+    } catch (err) {
+      console.error('Fee plans fetch failed:', err)
+    } finally {
+      setFeePlansLoading(false)
+    }
+  }
+
+  const handleSelectReferringEntity = (entity: any) => {
+    setSelectedReferringEntity(entity)
+    setReferringEntitySearch('')
+    setReferringEntityResults([])
+  }
+
   const handleSelectEntity = (entity: any) => {
     setSelectedEntity(entity)
     setSearchQuery('')
@@ -247,6 +472,27 @@ export function AddParticipantModal({ dealId, onParticipantAdded }: AddParticipa
         setError('Please select an investor or enter an email')
         return
       }
+      // All investors must select a term sheet (investor class)
+      if (!selectedTermSheetId) {
+        setError('Please select a term sheet for this investor')
+        return
+      }
+      // Validate referrer and fee plan for roles that require them
+      if (requiresReferrer) {
+        if (!selectedReferringEntity) {
+          const entityLabel = referrerEntityType?.replace('_', ' ') || 'entity'
+          setError(`Please select a ${entityLabel} for this investor role`)
+          return
+        }
+        if (!feePlansData?.can_dispatch) {
+          setError(feePlansData?.message || 'No accepted fee plan available for this entity')
+          return
+        }
+        if (!selectedFeePlanId) {
+          setError('Please select a fee plan')
+          return
+        }
+      }
     } else {
       if (!selectedEntity) {
         setError(`Please select a ${category.replace('_', ' ')}`)
@@ -263,21 +509,33 @@ export function AddParticipantModal({ dealId, onParticipantAdded }: AddParticipa
 
     try {
       if (category === 'investor') {
+        // Build request body with optional referrer and fee plan
+        const requestBody: Record<string, any> = {
+          investor_id: selectedEntity?.id || undefined,
+          email: email || undefined,
+          role: investorRole,
+          send_notification: true,
+          // Always include term sheet for investors
+          term_sheet_id: selectedTermSheetId,
+        }
+
+        // Add referrer and fee plan if required
+        if (requiresReferrer && selectedReferringEntity && selectedFeePlanId) {
+          requestBody.referred_by_entity_id = selectedReferringEntity.id
+          requestBody.referred_by_entity_type = referrerEntityType
+          requestBody.assigned_fee_plan_id = selectedFeePlanId
+        }
+
         // Add via deal_memberships
         const response = await fetch(`/api/deals/${dealId}/members`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            investor_id: selectedEntity?.id || undefined,
-            email: email || undefined,
-            role: investorRole,
-            send_notification: true,
-          }),
+          body: JSON.stringify(requestBody),
         })
 
         if (!response.ok) {
           const data = await response.json()
-          throw new Error(data.error || 'Failed to add investor')
+          throw new Error(data.message || data.error || 'Failed to add investor')
         }
       } else {
         // Add via fee_plans (partners/introducers/commercial_partners)
@@ -321,7 +579,15 @@ export function AddParticipantModal({ dealId, onParticipantAdded }: AddParticipa
   const isFormValid = () => {
     if (!category) return false
     if (category === 'investor') {
-      return !!(selectedEntity || email.trim())
+      const hasInvestor = !!(selectedEntity || email.trim())
+      if (!hasInvestor) return false
+      // Additional validation for roles requiring referrer
+      if (requiresReferrer) {
+        if (!selectedReferringEntity) return false
+        if (!feePlansData?.can_dispatch) return false
+        if (!selectedFeePlanId) return false
+      }
+      return true
     } else {
       return !!(selectedEntity && feePlanName.trim())
     }
@@ -501,6 +767,214 @@ export function AddParticipantModal({ dealId, onParticipantAdded }: AddParticipa
                       ))}
                     </SelectContent>
                   </Select>
+                </div>
+              )}
+
+              {/* Term Sheet Selection - Required for ALL investors */}
+              {category === 'investor' && (
+                <div className="space-y-2">
+                  <Label>Term Sheet (Investor Class)</Label>
+                  {termSheetsLoading ? (
+                    <div className="flex items-center justify-center py-4">
+                      <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                      <span className="ml-2 text-sm text-muted-foreground">Loading term sheets...</span>
+                    </div>
+                  ) : publishedTermSheets.length === 0 ? (
+                    <div className="p-3 rounded-lg border border-amber-500/30 bg-amber-500/5 text-amber-300 text-sm">
+                      <div className="flex items-center gap-2">
+                        <AlertCircle className="h-4 w-4" />
+                        <span>No published term sheets available for this deal. Please publish a term sheet first.</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <Select value={selectedTermSheetId || ''} onValueChange={setSelectedTermSheetId}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select term sheet for this investor" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {publishedTermSheets.map((ts) => (
+                          <SelectItem key={ts.id} value={ts.id}>
+                            v{ts.version} — {ts.subscription_fee_percent ?? 0}% sub / {ts.management_fee_percent ?? 0}% mgmt / {ts.carried_interest_percent ?? 0}% carry
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                  {selectedTermSheetId && (
+                    <p className="text-xs text-muted-foreground">
+                      This term sheet will determine the fee structure the investor sees.
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Referring Entity Selection - for roles requiring an introducer/partner/commercial_partner */}
+              {category === 'investor' && requiresReferrer && (
+                <div className="space-y-3 p-4 rounded-lg border border-amber-500/30 bg-amber-500/5">
+                  <div className="flex items-center gap-2">
+                    <AlertCircle className="h-4 w-4 text-amber-400" />
+                    <Label className="text-amber-300">
+                      Referring {referrerEntityType?.replace('_', ' ')} Required
+                    </Label>
+                  </div>
+
+                  {/* Search for Referring Entity */}
+                  {!selectedReferringEntity && (
+                    <>
+                      <div className="relative">
+                        <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          placeholder={`Search ${referrerEntityType?.replace('_', ' ')}s...`}
+                          value={referringEntitySearch}
+                          onChange={(e) => setReferringEntitySearch(e.target.value)}
+                          className="pl-10"
+                        />
+                      </div>
+
+                      {referringEntityLoading && (
+                        <div className="flex items-center justify-center py-2">
+                          <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                        </div>
+                      )}
+
+                      {!referringEntityLoading && hasReferringEntitySearched && referringEntityResults.length === 0 && referringEntitySearch.length >= 2 && (
+                        <div className="text-center py-2 text-muted-foreground text-sm">
+                          No {referrerEntityType?.replace('_', ' ')}s found
+                        </div>
+                      )}
+
+                      {!referringEntityLoading && referringEntityResults.length > 0 && (
+                        <div className="max-h-32 overflow-y-auto border border-white/10 rounded-lg">
+                          {referringEntityResults.map((entity) => (
+                            <div
+                              key={entity.id}
+                              onClick={() => handleSelectReferringEntity(entity)}
+                              className="p-2 hover:bg-white/5 cursor-pointer border-b border-white/5 last:border-0 text-sm"
+                            >
+                              <p className="font-medium">{getEntityDisplayName(entity)}</p>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </>
+                  )}
+
+                  {/* Selected Referring Entity */}
+                  {selectedReferringEntity && (
+                    <div className="space-y-3">
+                      <div className="p-3 rounded-lg border border-amber-500/30 bg-amber-500/10">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-medium text-amber-200">
+                              {getEntityDisplayName(selectedReferringEntity)}
+                            </p>
+                            <p className="text-xs text-amber-300/70">
+                              {referrerEntityType?.replace('_', ' ')}
+                            </p>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedReferringEntity(null)
+                              setFeePlansData(null)
+                              setSelectedFeePlanId(null)
+                            }}
+                            className="text-amber-300 hover:text-amber-100"
+                          >
+                            Change
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Warning: Term sheet required before fee plan selection */}
+                      {!selectedTermSheetId && (
+                        <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/30">
+                          <div className="flex items-start gap-2">
+                            <AlertCircle className="h-4 w-4 text-blue-400 mt-0.5" />
+                            <div>
+                              <p className="text-sm text-blue-300 font-medium">Term Sheet Required</p>
+                              <p className="text-xs text-blue-300/80 mt-1">
+                                Please select a term sheet above first. Fee plans are linked to specific term sheets.
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Fee Plan Selection */}
+                      {selectedTermSheetId && feePlansLoading && (
+                        <div className="flex items-center justify-center py-3">
+                          <Loader2 className="h-4 w-4 animate-spin text-muted-foreground mr-2" />
+                          <span className="text-sm text-muted-foreground">Loading fee plans...</span>
+                        </div>
+                      )}
+
+                      {selectedTermSheetId && !feePlansLoading && feePlansData && !feePlansData.can_dispatch && (
+                        <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/30">
+                          <div className="flex items-start gap-2">
+                            <AlertCircle className="h-4 w-4 text-destructive mt-0.5" />
+                            <div>
+                              <p className="text-sm text-destructive font-medium">Cannot Dispatch</p>
+                              <p className="text-xs text-destructive/80 mt-1">
+                                {feePlansData.message || 'No accepted fee plan available for this term sheet'}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {selectedTermSheetId && !feePlansLoading && feePlansData && feePlansData.can_dispatch && (
+                        <div className="space-y-2">
+                          <Label>Select Fee Plan</Label>
+                          <Select
+                            value={selectedFeePlanId || ''}
+                            onValueChange={setSelectedFeePlanId}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select an accepted fee plan" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {feePlansData.accepted_plans.map((plan) => (
+                                <SelectItem key={plan.id} value={plan.id}>
+                                  <div className="flex items-center gap-2">
+                                    <span>{plan.name}</span>
+                                    {plan.is_default && (
+                                      <span className="text-xs bg-primary/20 text-primary px-1.5 py-0.5 rounded">
+                                        Default
+                                      </span>
+                                    )}
+                                  </div>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+
+                          {/* Display selected fee plan details */}
+                          {selectedFeePlanId && (
+                            <div className="p-2 rounded bg-muted/30 text-xs space-y-1">
+                              {feePlansData.accepted_plans
+                                .find(p => p.id === selectedFeePlanId)
+                                ?.fee_components.map((fc, idx) => (
+                                  <div key={idx} className="flex justify-between">
+                                    <span className="text-muted-foreground capitalize">
+                                      {fc.kind.replace('_', ' ')}
+                                    </span>
+                                    <span>
+                                      {fc.rate_bps !== undefined
+                                        ? `${(fc.rate_bps / 100).toFixed(2)}%`
+                                        : fc.flat_amount !== undefined
+                                          ? `$${fc.flat_amount.toLocaleString()}`
+                                          : '-'}
+                                    </span>
+                                  </div>
+                                ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
 

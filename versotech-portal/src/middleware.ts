@@ -312,25 +312,17 @@ export async function middleware(request: NextRequest) {
     const isPublicRoute = publicRoutes.includes(pathname) || pathname.startsWith('/sign/')
     const isLoginRoute = pathname === '/versoholdings/login' || pathname === '/versotech/login' || pathname === '/versotech_main/login'
 
-    // Step 1: Get session from cookies (no network call)
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-
+    // Step 1: Use getUser() for authenticated validation (recommended by Supabase)
+    // This contacts the Supabase Auth server to validate the session, ensuring authenticity
     let user = null
     let authError = null
 
-    // Step 2: If session exists, validate and refresh if needed
-    if (session) {
-      // Check if access token is expired or about to expire
-      const expiresAt = session.expires_at ? session.expires_at * 1000 : 0
-      const now = Date.now()
-      const isExpired = expiresAt <= now
-      const isExpiringSoon = expiresAt <= now + 300000 // Within 5 minutes (industry standard)
+    const { data: { user: validatedUser }, error: userError } = await supabase.auth.getUser()
 
-      if (isExpired || isExpiringSoon) {
-        console.log('[middleware] Token expired or expiring soon, attempting refresh...', {
-          expiresAt: new Date(expiresAt).toISOString(),
-          now: new Date(now).toISOString(),
-        })
+    if (userError) {
+      // Check if token needs refresh
+      if (userError.message?.includes('token') || userError.message?.includes('expired')) {
+        console.log('[middleware] Token validation failed, attempting refresh...')
 
         // Attempt to refresh the session with retry logic for transient failures
         let refreshAttempts = 0
@@ -366,31 +358,16 @@ export async function middleware(request: NextRequest) {
 
         if (refreshError) {
           console.warn('[middleware] Token refresh failed after retries:', refreshError.message)
-          // TODO: Add monitoring/alerting here for production
-          // Example: Sentry.captureException(refreshError, { tags: { type: 'token_refresh_failure' } })
           authError = refreshError
         } else if (refreshedSession) {
           user = refreshedSession.user
         }
       } else {
-        // Session is still valid, use it
-        user = session.user
-      }
-    } else if (sessionError) {
-      console.warn('[middleware] Session retrieval error:', sessionError.message)
-      authError = sessionError
-    }
-
-    // Step 3: If we still don't have a user but had a session, try getUser as final validation
-    if (!user && session && !authError) {
-      const { data: { user: validatedUser }, error: userError } = await supabase.auth.getUser()
-
-      if (userError) {
         console.warn('[middleware] User validation failed:', userError.message)
         authError = userError
-      } else {
-        user = validatedUser
       }
+    } else {
+      user = validatedUser
     }
 
     // Step 4: Handle authentication failure

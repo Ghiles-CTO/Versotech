@@ -5,7 +5,7 @@ import { Approval } from '@/types/approvals'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Clock, DollarSign, LayoutGrid, ListFilter } from 'lucide-react'
+import { Clock, DollarSign, LayoutGrid, ListFilter, Mail, Shield } from 'lucide-react'
 import { format } from 'date-fns'
 
 interface ApprovalsKanbanViewProps {
@@ -105,7 +105,9 @@ export function ApprovalsKanbanView({ approvals, onApprovalClick }: ApprovalsKan
                             {approval.entity_type.replace(/_/g, ' ')}
                           </Badge>
                           <p className="font-semibold text-sm truncate text-white">
-                            {approval.related_deal?.name || approval.related_investor?.legal_name || 'Unknown'}
+                            {approval.entity_type === 'member_invitation'
+                              ? approval.entity_metadata?.email || 'Unknown'
+                              : (approval.related_deal?.name || approval.related_investor?.legal_name || 'Unknown')}
                           </p>
                         </div>
                         {groupBy === 'status' ? (
@@ -138,7 +140,23 @@ export function ApprovalsKanbanView({ approvals, onApprovalClick }: ApprovalsKan
                           Assigned: {approval.assigned_to_profile.display_name}
                         </p>
                       )}
-                      {approval.related_investor && (
+                      {approval.entity_type === 'member_invitation' && approval.entity_metadata && (
+                        <>
+                          <p className="text-xs text-slate-400 truncate">
+                            {approval.entity_metadata.entity_name}
+                          </p>
+                          <div className="flex items-center gap-2 text-xs text-slate-400">
+                            <span className="capitalize">{approval.entity_metadata.role || 'Member'}</span>
+                            {approval.entity_metadata.is_signatory && (
+                              <Badge className="text-[10px] bg-amber-500/20 text-amber-300 px-1 py-0">
+                                <Shield className="h-2.5 w-2.5 mr-0.5" />
+                                Signatory
+                              </Badge>
+                            )}
+                          </div>
+                        </>
+                      )}
+                      {approval.entity_type !== 'member_invitation' && approval.related_investor && (
                         <p className="text-xs text-slate-400 truncate">
                           {approval.related_investor.legal_name}
                         </p>

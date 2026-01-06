@@ -3,7 +3,9 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { z } from 'zod'
 import { auditLogger, AuditActions, AuditEntities } from '@/lib/audit'
 import { marked } from 'marked'
-import { syncTermSheetToFeePlan } from '@/lib/fees/term-sheet-sync'
+// NOTE: syncTermSheetToFeePlan is deprecated and no longer called.
+// Fee models must be manually created and linked to term sheets.
+// See: FEE_SYSTEM_ANALYSIS_AND_REFACTORING_PLAN.md
 
 const termSheetFieldsSchema = z.object({
   term_sheet_date: z.string().optional().nullable(),
@@ -204,19 +206,9 @@ export async function POST(
     }
   })
 
-  // If term sheet is published, sync to fee plan
-  if (data.status === 'published') {
-    const syncResult = await syncTermSheetToFeePlan(
-      serviceSupabase,
-      data,
-      dealId,
-      user.id
-    );
-
-    if (!syncResult.success) {
-      console.warn('Failed to sync term sheet to fee plan:', syncResult.error);
-    }
-  }
+  // NOTE: Auto-sync to fee plan has been removed.
+  // Fee models must be manually created by staff and linked to term sheets.
+  // See: FEE_SYSTEM_ANALYSIS_AND_REFACTORING_PLAN.md
 
   return NextResponse.json({ term_sheet: data })
 }
@@ -327,19 +319,9 @@ export async function PATCH(
     }
   })
 
-  // If term sheet is published, sync to fee plan
-  if (data.status === 'published') {
-    const syncResult = await syncTermSheetToFeePlan(
-      serviceSupabase,
-      data,
-      dealId,
-      user.id
-    );
-
-    if (!syncResult.success) {
-      console.warn('Failed to sync term sheet to fee plan:', syncResult.error);
-    }
-  }
+  // NOTE: Auto-sync to fee plan has been removed.
+  // Fee models must be manually created by staff and linked to term sheets.
+  // See: FEE_SYSTEM_ANALYSIS_AND_REFACTORING_PLAN.md
 
   return NextResponse.json({ term_sheet: data })
 }

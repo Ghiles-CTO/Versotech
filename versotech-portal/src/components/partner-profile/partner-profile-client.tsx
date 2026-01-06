@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Label } from '@/components/ui/label'
 import {
@@ -19,10 +20,13 @@ import {
   Target,
   FileSignature,
   Shield,
+  Edit,
 } from 'lucide-react'
 import { MembersManagementTab } from '@/components/members/members-management-tab'
 import { PartnerKYCDocumentsTab } from '@/components/profile/partner-kyc-documents-tab'
 import { SignatureSpecimenTab } from '@/components/profile/signature-specimen-tab'
+import { EntityKYCEditDialog, EntityAddressEditDialog } from '@/components/shared'
+import { formatDate } from '@/lib/format'
 
 type Profile = {
   full_name: string | null
@@ -42,13 +46,49 @@ type PartnerInfo = {
   contact_phone: string | null
   website: string | null
   address_line_1: string | null
+  address_line_2: string | null
   city: string | null
+  state_province: string | null
   postal_code: string | null
   country: string | null
   preferred_sectors: string[] | null
   preferred_geographies: string[] | null
   kyc_status: string | null
   logo_url: string | null
+  // Phone numbers
+  phone: string | null
+  phone_mobile: string | null
+  phone_office: string | null
+  email: string | null
+  // Individual KYC fields
+  first_name: string | null
+  middle_name: string | null
+  last_name: string | null
+  name_suffix: string | null
+  date_of_birth: string | null
+  country_of_birth: string | null
+  nationality: string | null
+  // US Tax compliance
+  is_us_citizen: boolean | null
+  is_us_taxpayer: boolean | null
+  us_taxpayer_id: string | null
+  country_of_tax_residency: string | null
+  // Entity fields
+  country_of_incorporation: string | null
+  registration_number: string | null
+  tax_id: string | null
+  // ID Document
+  id_type: string | null
+  id_number: string | null
+  id_issue_date: string | null
+  id_expiry_date: string | null
+  id_issuing_country: string | null
+  // Residential Address
+  residential_street: string | null
+  residential_city: string | null
+  residential_state: string | null
+  residential_postal_code: string | null
+  residential_country: string | null
 }
 
 type PartnerUserInfo = {
@@ -85,6 +125,8 @@ export function PartnerProfileClient({
   partnerUserInfo
 }: PartnerProfileClientProps) {
   const [activeTab, setActiveTab] = useState('overview')
+  const [showKycDialog, setShowKycDialog] = useState(false)
+  const [showAddressDialog, setShowAddressDialog] = useState(false)
 
   const statusBadge = STATUS_BADGES[partnerInfo.status] || STATUS_BADGES.pending
   const StatusIcon = statusBadge.icon
@@ -224,11 +266,17 @@ export function PartnerProfileClient({
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Contact Info */}
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Phone className="h-5 w-5" />
-                  Contact Information
-                </CardTitle>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <Phone className="h-5 w-5" />
+                    Contact Information
+                  </CardTitle>
+                </div>
+                <Button variant="outline" size="sm" onClick={() => setShowAddressDialog(true)}>
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit
+                </Button>
               </CardHeader>
               <CardContent className="space-y-4">
                 {partnerInfo.contact_name && (
@@ -237,21 +285,30 @@ export function PartnerProfileClient({
                     <div className="font-medium">{partnerInfo.contact_name}</div>
                   </div>
                 )}
-                {partnerInfo.contact_email && (
+                {(partnerInfo.email || partnerInfo.contact_email) && (
                   <div className="space-y-2">
-                    <Label className="text-muted-foreground">Contact Email</Label>
+                    <Label className="text-muted-foreground">Email</Label>
                     <div className="font-medium flex items-center gap-2">
                       <Mail className="h-4 w-4 text-muted-foreground" />
-                      {partnerInfo.contact_email}
+                      {partnerInfo.email || partnerInfo.contact_email}
                     </div>
                   </div>
                 )}
-                {partnerInfo.contact_phone && (
+                {(partnerInfo.phone || partnerInfo.contact_phone) && (
                   <div className="space-y-2">
-                    <Label className="text-muted-foreground">Contact Phone</Label>
+                    <Label className="text-muted-foreground">Phone</Label>
                     <div className="font-medium flex items-center gap-2">
                       <Phone className="h-4 w-4 text-muted-foreground" />
-                      {partnerInfo.contact_phone}
+                      {partnerInfo.phone || partnerInfo.contact_phone}
+                    </div>
+                  </div>
+                )}
+                {partnerInfo.phone_mobile && (
+                  <div className="space-y-2">
+                    <Label className="text-muted-foreground">Mobile</Label>
+                    <div className="font-medium flex items-center gap-2">
+                      <Phone className="h-4 w-4 text-muted-foreground" />
+                      {partnerInfo.phone_mobile}
                     </div>
                   </div>
                 )}
@@ -271,7 +328,7 @@ export function PartnerProfileClient({
                     </div>
                   </div>
                 )}
-                {!partnerInfo.contact_name && !partnerInfo.contact_email && !partnerInfo.contact_phone && !partnerInfo.website && (
+                {!partnerInfo.contact_name && !partnerInfo.email && !partnerInfo.contact_email && !partnerInfo.phone && !partnerInfo.contact_phone && !partnerInfo.website && (
                   <p className="text-muted-foreground text-sm">No contact information available</p>
                 )}
               </CardContent>
@@ -291,9 +348,12 @@ export function PartnerProfileClient({
                     <div className="font-medium">
                       {partnerInfo.address_line_1}
                     </div>
-                    {(partnerInfo.city || partnerInfo.postal_code || partnerInfo.country) && (
+                    {partnerInfo.address_line_2 && (
+                      <div className="text-muted-foreground">{partnerInfo.address_line_2}</div>
+                    )}
+                    {(partnerInfo.city || partnerInfo.state_province || partnerInfo.postal_code || partnerInfo.country) && (
                       <div className="text-muted-foreground">
-                        {[partnerInfo.city, partnerInfo.postal_code, partnerInfo.country]
+                        {[partnerInfo.city, partnerInfo.state_province, partnerInfo.postal_code, partnerInfo.country]
                           .filter(Boolean)
                           .join(', ')}
                       </div>
@@ -305,6 +365,67 @@ export function PartnerProfileClient({
               </CardContent>
             </Card>
           </div>
+
+          {/* Personal KYC for Individual Partners */}
+          {partnerInfo.type === 'individual' && (
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <Shield className="h-5 w-5" />
+                    Personal KYC Information
+                  </CardTitle>
+                  <CardDescription>
+                    Your personal identification and tax details
+                  </CardDescription>
+                </div>
+                <Button variant="outline" size="sm" onClick={() => setShowKycDialog(true)}>
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit
+                </Button>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label className="text-muted-foreground">Full Name</Label>
+                    <div className="font-medium">
+                      {[partnerInfo.first_name, partnerInfo.middle_name, partnerInfo.last_name, partnerInfo.name_suffix]
+                        .filter(Boolean).join(' ') || 'Not set'}
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-muted-foreground">Date of Birth</Label>
+                    <div className="font-medium">
+                      {partnerInfo.date_of_birth ? formatDate(partnerInfo.date_of_birth) : 'Not set'}
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-muted-foreground">Nationality</Label>
+                    <div className="font-medium">{partnerInfo.nationality || 'Not set'}</div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-muted-foreground">US Person</Label>
+                    <div className="font-medium">
+                      {partnerInfo.is_us_citizen || partnerInfo.is_us_taxpayer ? 'Yes' : 'No'}
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-muted-foreground">ID Document</Label>
+                    <div className="font-medium capitalize">
+                      {partnerInfo.id_type?.replace('_', ' ') || 'Not set'}
+                      {partnerInfo.id_number && ` (${partnerInfo.id_number})`}
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-muted-foreground">ID Expiry Date</Label>
+                    <div className="font-medium">
+                      {partnerInfo.id_expiry_date ? formatDate(partnerInfo.id_expiry_date) : 'Not set'}
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Preferences */}
           {(partnerInfo.preferred_sectors?.length || partnerInfo.preferred_geographies?.length) && (
@@ -395,6 +516,66 @@ export function PartnerProfileClient({
           )}
         </TabsContent>
       </Tabs>
+
+      {/* KYC Edit Dialogs */}
+      {partnerInfo.type === 'individual' && (
+        <EntityKYCEditDialog
+          open={showKycDialog}
+          onOpenChange={setShowKycDialog}
+          entityType="partner"
+          entityId={partnerInfo.id}
+          entityName={partnerInfo.name}
+          initialData={{
+            first_name: partnerInfo.first_name,
+            middle_name: partnerInfo.middle_name,
+            last_name: partnerInfo.last_name,
+            name_suffix: partnerInfo.name_suffix,
+            date_of_birth: partnerInfo.date_of_birth,
+            nationality: partnerInfo.nationality,
+            country_of_birth: partnerInfo.country_of_birth,
+            phone_mobile: partnerInfo.phone_mobile,
+            phone_office: partnerInfo.phone_office,
+            is_us_citizen: partnerInfo.is_us_citizen ?? false,
+            is_us_taxpayer: partnerInfo.is_us_taxpayer ?? false,
+            us_taxpayer_id: partnerInfo.us_taxpayer_id,
+            country_of_tax_residency: partnerInfo.country_of_tax_residency,
+            id_type: partnerInfo.id_type,
+            id_number: partnerInfo.id_number,
+            id_issue_date: partnerInfo.id_issue_date,
+            id_expiry_date: partnerInfo.id_expiry_date,
+            id_issuing_country: partnerInfo.id_issuing_country,
+            residential_street: partnerInfo.residential_street,
+            residential_city: partnerInfo.residential_city,
+            residential_state: partnerInfo.residential_state,
+            residential_postal_code: partnerInfo.residential_postal_code,
+            residential_country: partnerInfo.residential_country,
+          }}
+          apiEndpoint="/api/partners/me"
+          onSuccess={() => window.location.reload()}
+        />
+      )}
+
+      <EntityAddressEditDialog
+        open={showAddressDialog}
+        onOpenChange={setShowAddressDialog}
+        entityType="partner"
+        entityName={partnerInfo.name}
+        initialData={{
+          address_line_1: partnerInfo.address_line_1,
+          address_line_2: partnerInfo.address_line_2,
+          city: partnerInfo.city,
+          state_province: partnerInfo.state_province,
+          postal_code: partnerInfo.postal_code,
+          country: partnerInfo.country,
+          email: partnerInfo.email || partnerInfo.contact_email,
+          phone: partnerInfo.phone || partnerInfo.contact_phone,
+          phone_mobile: partnerInfo.phone_mobile,
+          phone_office: partnerInfo.phone_office,
+          website: partnerInfo.website,
+        }}
+        apiEndpoint="/api/partners/me"
+        onSuccess={() => window.location.reload()}
+      />
     </div>
   )
 }

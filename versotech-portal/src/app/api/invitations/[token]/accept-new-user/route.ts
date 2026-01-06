@@ -147,6 +147,8 @@ export async function POST(
     }
 
     // Create the user-entity link
+    // Since this invitation was CEO-approved before the email was sent,
+    // the new member is automatically CEO-approved
     const userTable = USER_TABLES[invitation.entity_type]
     const entityIdColumn = ENTITY_ID_COLUMNS[invitation.entity_type]
 
@@ -155,7 +157,10 @@ export async function POST(
       [entityIdColumn]: invitation.entity_id,
       role: invitation.role,
       is_primary: false,
-      created_by: invitation.invited_by
+      created_by: invitation.invited_by,
+      // CEO pre-approved this member via the invitation approval workflow
+      ceo_approval_status: 'approved',
+      ceo_approved_at: new Date().toISOString()
     }
 
     // Add signatory fields if applicable

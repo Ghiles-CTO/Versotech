@@ -60,6 +60,17 @@ interface MandateDetailClientProps {
   pendingTasks: any[]
   interests: any[]
   signatureHistory: any[]
+  /**
+   * The type of viewer: 'introducer', 'partner', or 'arranger'
+   * - Introducers: Can see fee models but NOT term sheets (per Fred's requirements)
+   * - Partners: Can see BOTH term sheets AND fee models
+   * - Arrangers/Staff: Can see everything
+   */
+  viewerType?: 'introducer' | 'partner' | 'arranger' | 'staff'
+  /**
+   * Fee model assigned to this viewer for this deal (for introducers/partners)
+   */
+  feeModel?: any
 }
 
 // Signature status colors
@@ -79,8 +90,14 @@ export function MandateDetailClient({
   subscriptions,
   pendingTasks,
   interests,
-  signatureHistory
+  signatureHistory,
+  viewerType = 'arranger',
+  feeModel
 }: MandateDetailClientProps) {
+  // Per Fred's requirements:
+  // - Introducers: Can see ONLY fee models, NOT term sheets
+  // - Partners: Can see BOTH term sheets AND fee models
+  const canViewTermSheets = viewerType !== 'introducer'
   const [activeTab, setActiveTab] = useState('overview')
   const [sigDateFrom, setSigDateFrom] = useState('')
   const [sigDateTo, setSigDateTo] = useState('')
@@ -274,10 +291,19 @@ export function MandateDetailClient({
             <Users className="h-4 w-4 mr-2" />
             Investors ({enhancedMembers.length})
           </TabsTrigger>
-          <TabsTrigger value="termsheets" className="data-[state=active]:bg-white/10">
-            <ScrollText className="h-4 w-4 mr-2" />
-            Term Sheets ({termSheets.length})
-          </TabsTrigger>
+          {canViewTermSheets && (
+            <TabsTrigger value="termsheets" className="data-[state=active]:bg-white/10">
+              <ScrollText className="h-4 w-4 mr-2" />
+              Term Sheets ({termSheets.length})
+            </TabsTrigger>
+          )}
+          {/* Fee Model Tab - Always visible for introducers/partners */}
+          {(viewerType === 'introducer' || viewerType === 'partner') && (
+            <TabsTrigger value="feemodel" className="data-[state=active]:bg-white/10">
+              <HandCoins className="h-4 w-4 mr-2" />
+              Fee Model
+            </TabsTrigger>
+          )}
           <TabsTrigger value="dataroom" className="data-[state=active]:bg-white/10">
             <FolderOpen className="h-4 w-4 mr-2" />
             Data Room ({dataRoomDocuments.length})
@@ -484,7 +510,8 @@ export function MandateDetailClient({
           )}
         </TabsContent>
 
-        {/* Term Sheets Tab */}
+        {/* Term Sheets Tab - Hidden from Introducers per Fred's requirements */}
+        {canViewTermSheets && (
         <TabsContent value="termsheets" className="space-y-6">
           <Card className="border border-white/10 bg-white/5">
             <CardHeader>
@@ -604,6 +631,124 @@ export function MandateDetailClient({
             </CardContent>
           </Card>
         </TabsContent>
+        )}
+
+        {/* Fee Model Tab - For introducers/partners to see their commission agreement */}
+        {(viewerType === 'introducer' || viewerType === 'partner') && (
+          <TabsContent value="feemodel" className="space-y-6">
+            <Card className="border border-white/10 bg-white/5">
+              <CardHeader>
+                <CardTitle className="text-foreground flex items-center gap-2">
+                  <HandCoins className="h-5 w-5" />
+                  Your Fee Model
+                </CardTitle>
+                <CardDescription>
+                  Commission agreement for this investment opportunity
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {!feeModel ? (
+                  <div className="text-center py-8">
+                    <div className="text-muted-foreground mb-2">No fee model assigned yet</div>
+                    <p className="text-sm text-muted-foreground/70">
+                      A fee model will be created and assigned to you by the deal manager.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    {/* Fee Model Header */}
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="font-medium text-foreground">{feeModel.name}</h3>
+                        {feeModel.description && (
+                          <p className="text-sm text-muted-foreground mt-1">{feeModel.description}</p>
+                        )}
+                      </div>
+                      <Badge
+                        className={
+                          feeModel.status === 'accepted'
+                            ? 'bg-emerald-500/20 text-emerald-200 border-emerald-400/30'
+                            : feeModel.status === 'sent' || feeModel.status === 'pending_signature'
+                              ? 'bg-amber-500/20 text-amber-200 border-amber-400/30'
+                              : 'bg-white/10 text-foreground border-white/20'
+                        }
+                      >
+                        {feeModel.status === 'accepted' && <CheckCircle className="h-3 w-3 mr-1" />}
+                        {feeModel.status === 'pending_signature' && <Clock className="h-3 w-3 mr-1" />}
+                        {feeModel.status || 'Draft'}
+                      </Badge>
+                    </div>
+
+                    {/* Fee Components */}
+                    {feeModel.fee_components && feeModel.fee_components.length > 0 ? (
+                      <div className="space-y-3">
+                        <label className="text-sm text-muted-foreground font-medium">Fee Structure</label>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          {feeModel.fee_components.map((comp: any) => (
+                            <div
+                              key={comp.id}
+                              className="bg-white/5 rounded-lg p-4 border border-white/10"
+                            >
+                              <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">
+                                {comp.kind?.replace('_', ' ')}
+                              </p>
+                              <p className="text-lg font-semibold text-foreground">
+                                {comp.rate_bps ? `${(comp.rate_bps / 100).toFixed(2)}%` :
+                                 comp.flat_amount ? `$${Number(comp.flat_amount).toLocaleString()}` : '—'}
+                              </p>
+                              {comp.payment_schedule && (
+                                <p className="text-xs text-muted-foreground mt-1 capitalize">
+                                  {comp.payment_schedule.replace('_', ' ')}
+                                </p>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-center py-4 text-muted-foreground">
+                        No fee components defined
+                      </div>
+                    )}
+
+                    {/* Acceptance Status */}
+                    {feeModel.status === 'accepted' && feeModel.accepted_at && (
+                      <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-4">
+                        <div className="flex items-center gap-2 text-emerald-400">
+                          <CheckCircle className="h-5 w-5" />
+                          <span className="font-medium">Fee Model Accepted</span>
+                        </div>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Accepted on {formatDate(feeModel.accepted_at)}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Pending Acceptance Action */}
+                    {(feeModel.status === 'sent' || feeModel.status === 'pending_signature') && (
+                      <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="flex items-center gap-2 text-amber-400">
+                              <Clock className="h-5 w-5" />
+                              <span className="font-medium">Pending Your Acceptance</span>
+                            </div>
+                            <p className="text-sm text-muted-foreground mt-1">
+                              Please review and accept this fee model to proceed with investor dispatch.
+                            </p>
+                          </div>
+                          <Button className="bg-amber-500 hover:bg-amber-600 text-white">
+                            Accept Fee Model
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
 
         {/* Investors Tab - Names visible, amounts hidden */}
         <TabsContent value="investors" className="space-y-6">

@@ -97,7 +97,13 @@ export function ApprovalsDatabaseView({ approvals, onApprovalClick }: ApprovalsD
           a.related_investor?.legal_name?.toLowerCase().includes(query) ||
           a.requested_by_profile?.display_name?.toLowerCase().includes(query) ||
           a.assigned_to_profile?.display_name?.toLowerCase().includes(query) ||
-          a.id.toLowerCase().includes(query)
+          a.id.toLowerCase().includes(query) ||
+          // Member invitation specific search
+          (a.entity_type === 'member_invitation' && (
+            a.entity_metadata?.email?.toLowerCase().includes(query) ||
+            a.entity_metadata?.entity_name?.toLowerCase().includes(query) ||
+            a.entity_metadata?.role?.toLowerCase().includes(query)
+          ))
       )
     }
 
@@ -449,20 +455,34 @@ export function ApprovalsDatabaseView({ approvals, onApprovalClick }: ApprovalsD
                       {visibleColumns.deal_investor && (
                         <TableCell>
                           <div className="space-y-1">
-                            {approval.related_deal && (
-                              <p className="font-medium text-white text-sm">
-                                {approval.related_deal.name}
-                              </p>
-                            )}
-                            {approval.related_investor && (
-                              <p className="text-xs text-slate-400">
-                                {approval.related_investor.legal_name}
-                              </p>
-                            )}
-                            {!approval.related_deal && !approval.related_investor && (
-                              <p className="text-xs text-slate-500 font-mono">
-                                {approval.entity_id.substring(0, 12)}...
-                              </p>
+                            {approval.entity_type === 'member_invitation' && approval.entity_metadata ? (
+                              <>
+                                <p className="font-medium text-white text-sm">
+                                  {approval.entity_metadata.email}
+                                </p>
+                                <p className="text-xs text-slate-400">
+                                  {approval.entity_metadata.entity_name} • {approval.entity_metadata.role || 'Member'}
+                                  {approval.entity_metadata.is_signatory && ' • Signatory'}
+                                </p>
+                              </>
+                            ) : (
+                              <>
+                                {approval.related_deal && (
+                                  <p className="font-medium text-white text-sm">
+                                    {approval.related_deal.name}
+                                  </p>
+                                )}
+                                {approval.related_investor && (
+                                  <p className="text-xs text-slate-400">
+                                    {approval.related_investor.legal_name}
+                                  </p>
+                                )}
+                                {!approval.related_deal && !approval.related_investor && (
+                                  <p className="text-xs text-slate-500 font-mono">
+                                    {approval.entity_id.substring(0, 12)}...
+                                  </p>
+                                )}
+                              </>
                             )}
                           </div>
                         </TableCell>

@@ -10,7 +10,10 @@ import {
   User,
   Building2,
   CheckCircle2,
-  XCircle
+  XCircle,
+  Mail,
+  UserPlus,
+  Shield
 } from 'lucide-react'
 import { format } from 'date-fns'
 
@@ -68,41 +71,76 @@ export function ApprovalsListView({
                 </div>
 
                 <h3 className="font-semibold text-lg text-foreground">
-                  {approval.related_deal?.name || approval.related_investor?.legal_name || 'Approval Request'}
+                  {approval.entity_type === 'member_invitation'
+                    ? `Member Invitation: ${approval.entity_metadata?.email || 'Unknown'}`
+                    : (approval.related_deal?.name || approval.related_investor?.legal_name || 'Approval Request')}
                 </h3>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
-                  {approval.related_investor && (
+                {/* Member Invitation specific info */}
+                {approval.entity_type === 'member_invitation' && approval.entity_metadata && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
                     <div className="flex items-center gap-2 text-muted-foreground">
-                      <User className="h-4 w-4 flex-shrink-0" />
-                      <span className="truncate">{approval.related_investor.legal_name}</span>
+                      <Mail className="h-4 w-4 flex-shrink-0" />
+                      <span className="truncate">{approval.entity_metadata.email}</span>
                     </div>
-                  )}
-
-                  {approval.related_deal && (
                     <div className="flex items-center gap-2 text-muted-foreground">
                       <Building2 className="h-4 w-4 flex-shrink-0" />
-                      <span className="truncate capitalize">{approval.related_deal.deal_type || 'Deal'}</span>
+                      <span className="truncate">{approval.entity_metadata.entity_name}</span>
                     </div>
-                  )}
-
-                  {approval.sla_breach_at && (
                     <div className="flex items-center gap-2 text-muted-foreground">
-                      <Clock className="h-4 w-4 flex-shrink-0" />
-                      <span>Due {format(new Date(approval.sla_breach_at), 'MMM dd, HH:mm')}</span>
+                      <UserPlus className="h-4 w-4 flex-shrink-0" />
+                      <span className="truncate capitalize">{approval.entity_metadata.role || 'Member'}</span>
                     </div>
-                  )}
+                    {approval.entity_metadata.is_signatory && (
+                      <div className="flex items-center gap-2 text-amber-400 font-medium">
+                        <Shield className="h-4 w-4 flex-shrink-0" />
+                        <span>Signatory</span>
+                      </div>
+                    )}
+                    {approval.sla_breach_at && (
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <Clock className="h-4 w-4 flex-shrink-0" />
+                        <span>Due {format(new Date(approval.sla_breach_at), 'MMM dd, HH:mm')}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
 
-                  {approval.entity_metadata?.indicative_amount && (
-                    <div className="flex items-center gap-2 font-semibold text-emerald-400">
-                      <DollarSign className="h-4 w-4 flex-shrink-0" />
-                      <span>
-                        {approval.entity_metadata.indicative_currency || 'USD'}{' '}
-                        {approval.entity_metadata.indicative_amount.toLocaleString()}
-                      </span>
-                    </div>
-                  )}
-                </div>
+                {/* Standard approval info */}
+                {approval.entity_type !== 'member_invitation' && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
+                    {approval.related_investor && (
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <User className="h-4 w-4 flex-shrink-0" />
+                        <span className="truncate">{approval.related_investor.legal_name}</span>
+                      </div>
+                    )}
+
+                    {approval.related_deal && (
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <Building2 className="h-4 w-4 flex-shrink-0" />
+                        <span className="truncate capitalize">{approval.related_deal.deal_type || 'Deal'}</span>
+                      </div>
+                    )}
+
+                    {approval.sla_breach_at && (
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <Clock className="h-4 w-4 flex-shrink-0" />
+                        <span>Due {format(new Date(approval.sla_breach_at), 'MMM dd, HH:mm')}</span>
+                      </div>
+                    )}
+
+                    {approval.entity_metadata?.indicative_amount && (
+                      <div className="flex items-center gap-2 font-semibold text-emerald-400">
+                        <DollarSign className="h-4 w-4 flex-shrink-0" />
+                        <span>
+                          {approval.entity_metadata.indicative_currency || 'USD'}{' '}
+                          {approval.entity_metadata.indicative_amount.toLocaleString()}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 <div className="flex items-center gap-4 text-sm text-muted-foreground">
                   <span>

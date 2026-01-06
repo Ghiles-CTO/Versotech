@@ -304,78 +304,165 @@ export type Database = {
       arranger_entities: {
         Row: {
           address: string | null
+          address_line_1: string | null
+          address_line_2: string | null
+          city: string | null
+          country: string | null
+          country_of_birth: string | null
+          country_of_incorporation: string | null
+          country_of_tax_residency: string | null
           created_at: string | null
           created_by: string | null
+          date_of_birth: string | null
           email: string | null
+          first_name: string | null
           id: string
+          id_expiry_date: string | null
+          id_issue_date: string | null
+          id_issuing_country: string | null
+          id_number: string | null
+          id_type: string | null
+          is_us_citizen: boolean | null
+          is_us_taxpayer: boolean | null
           kyc_approved_at: string | null
           kyc_approved_by: string | null
           kyc_expires_at: string | null
           kyc_notes: string | null
           kyc_status: string | null
+          kyc_submitted_at: string | null
+          kyc_submitted_by: string | null
+          last_name: string | null
           legal_name: string
           license_expiry_date: string | null
           license_number: string | null
           license_type: string | null
           logo_url: string | null
           metadata: Json | null
+          middle_name: string | null
+          name_suffix: string | null
+          nationality: string | null
           phone: string | null
+          phone_mobile: string | null
+          phone_office: string | null
+          postal_code: string | null
           registration_number: string | null
           regulator: string | null
+          state_province: string | null
           status: string | null
           tax_id: string | null
+          type: string | null
           updated_at: string | null
           updated_by: string | null
+          us_taxpayer_id: string | null
+          website: string | null
         }
         Insert: {
           address?: string | null
+          address_line_1?: string | null
+          address_line_2?: string | null
+          city?: string | null
+          country?: string | null
+          country_of_birth?: string | null
+          country_of_incorporation?: string | null
+          country_of_tax_residency?: string | null
           created_at?: string | null
           created_by?: string | null
+          date_of_birth?: string | null
           email?: string | null
+          first_name?: string | null
           id?: string
+          id_expiry_date?: string | null
+          id_issue_date?: string | null
+          id_issuing_country?: string | null
+          id_number?: string | null
+          id_type?: string | null
+          is_us_citizen?: boolean | null
+          is_us_taxpayer?: boolean | null
           kyc_approved_at?: string | null
           kyc_approved_by?: string | null
           kyc_expires_at?: string | null
           kyc_notes?: string | null
           kyc_status?: string | null
+          kyc_submitted_at?: string | null
+          kyc_submitted_by?: string | null
+          last_name?: string | null
           legal_name: string
           license_expiry_date?: string | null
           license_number?: string | null
           license_type?: string | null
           logo_url?: string | null
           metadata?: Json | null
+          middle_name?: string | null
+          name_suffix?: string | null
+          nationality?: string | null
           phone?: string | null
+          phone_mobile?: string | null
+          phone_office?: string | null
+          postal_code?: string | null
           registration_number?: string | null
           regulator?: string | null
+          state_province?: string | null
           status?: string | null
           tax_id?: string | null
+          type?: string | null
           updated_at?: string | null
           updated_by?: string | null
+          us_taxpayer_id?: string | null
+          website?: string | null
         }
         Update: {
           address?: string | null
+          address_line_1?: string | null
+          address_line_2?: string | null
+          city?: string | null
+          country?: string | null
+          country_of_birth?: string | null
+          country_of_incorporation?: string | null
+          country_of_tax_residency?: string | null
           created_at?: string | null
           created_by?: string | null
+          date_of_birth?: string | null
           email?: string | null
+          first_name?: string | null
           id?: string
+          id_expiry_date?: string | null
+          id_issue_date?: string | null
+          id_issuing_country?: string | null
+          id_number?: string | null
+          id_type?: string | null
+          is_us_citizen?: boolean | null
+          is_us_taxpayer?: boolean | null
           kyc_approved_at?: string | null
           kyc_approved_by?: string | null
           kyc_expires_at?: string | null
           kyc_notes?: string | null
           kyc_status?: string | null
+          kyc_submitted_at?: string | null
+          kyc_submitted_by?: string | null
+          last_name?: string | null
           legal_name?: string
           license_expiry_date?: string | null
           license_number?: string | null
           license_type?: string | null
           logo_url?: string | null
           metadata?: Json | null
+          middle_name?: string | null
+          name_suffix?: string | null
+          nationality?: string | null
           phone?: string | null
+          phone_mobile?: string | null
+          phone_office?: string | null
+          postal_code?: string | null
           registration_number?: string | null
           regulator?: string | null
+          state_province?: string | null
           status?: string | null
           tax_id?: string | null
+          type?: string | null
           updated_at?: string | null
           updated_by?: string | null
+          us_taxpayer_id?: string | null
+          website?: string | null
         }
         Relationships: [
           {
@@ -393,6 +480,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "arranger_entities_kyc_submitted_by_fkey"
+            columns: ["kyc_submitted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "arranger_entities_updated_by_fkey"
             columns: ["updated_by"]
             isOneToOne: false
@@ -404,84 +498,153 @@ export type Database = {
       arranger_members: {
         Row: {
           arranger_id: string
+          country_of_birth: string | null
+          country_of_tax_residency: string | null
           created_at: string
           created_by: string | null
+          date_of_birth: string | null
           effective_from: string | null
           effective_to: string | null
           email: string | null
+          first_name: string | null
           full_name: string
           id: string
           id_expiry_date: string | null
+          id_issue_date: string | null
+          id_issuing_country: string | null
           id_number: string | null
           id_type: string | null
           is_active: boolean
           is_beneficial_owner: boolean
           is_signatory: boolean
+          is_us_citizen: boolean | null
+          is_us_taxpayer: boolean | null
+          kyc_approved_at: string | null
+          kyc_approved_by: string | null
+          kyc_expiry_date: string | null
+          kyc_notes: string | null
+          kyc_status: string | null
+          last_name: string | null
+          middle_name: string | null
+          name_suffix: string | null
           nationality: string | null
           ownership_percentage: number | null
           phone: string | null
+          phone_mobile: string | null
+          phone_office: string | null
+          proof_of_address_date: string | null
+          proof_of_address_expiry: string | null
           residential_city: string | null
           residential_country: string | null
+          residential_line_2: string | null
           residential_postal_code: string | null
           residential_state: string | null
           residential_street: string | null
           role: string
           role_title: string | null
+          tax_id_number: string | null
           updated_at: string
+          us_taxpayer_id: string | null
         }
         Insert: {
           arranger_id: string
+          country_of_birth?: string | null
+          country_of_tax_residency?: string | null
           created_at?: string
           created_by?: string | null
+          date_of_birth?: string | null
           effective_from?: string | null
           effective_to?: string | null
           email?: string | null
+          first_name?: string | null
           full_name: string
           id?: string
           id_expiry_date?: string | null
+          id_issue_date?: string | null
+          id_issuing_country?: string | null
           id_number?: string | null
           id_type?: string | null
           is_active?: boolean
           is_beneficial_owner?: boolean
           is_signatory?: boolean
+          is_us_citizen?: boolean | null
+          is_us_taxpayer?: boolean | null
+          kyc_approved_at?: string | null
+          kyc_approved_by?: string | null
+          kyc_expiry_date?: string | null
+          kyc_notes?: string | null
+          kyc_status?: string | null
+          last_name?: string | null
+          middle_name?: string | null
+          name_suffix?: string | null
           nationality?: string | null
           ownership_percentage?: number | null
           phone?: string | null
+          phone_mobile?: string | null
+          phone_office?: string | null
+          proof_of_address_date?: string | null
+          proof_of_address_expiry?: string | null
           residential_city?: string | null
           residential_country?: string | null
+          residential_line_2?: string | null
           residential_postal_code?: string | null
           residential_state?: string | null
           residential_street?: string | null
           role: string
           role_title?: string | null
+          tax_id_number?: string | null
           updated_at?: string
+          us_taxpayer_id?: string | null
         }
         Update: {
           arranger_id?: string
+          country_of_birth?: string | null
+          country_of_tax_residency?: string | null
           created_at?: string
           created_by?: string | null
+          date_of_birth?: string | null
           effective_from?: string | null
           effective_to?: string | null
           email?: string | null
+          first_name?: string | null
           full_name?: string
           id?: string
           id_expiry_date?: string | null
+          id_issue_date?: string | null
+          id_issuing_country?: string | null
           id_number?: string | null
           id_type?: string | null
           is_active?: boolean
           is_beneficial_owner?: boolean
           is_signatory?: boolean
+          is_us_citizen?: boolean | null
+          is_us_taxpayer?: boolean | null
+          kyc_approved_at?: string | null
+          kyc_approved_by?: string | null
+          kyc_expiry_date?: string | null
+          kyc_notes?: string | null
+          kyc_status?: string | null
+          last_name?: string | null
+          middle_name?: string | null
+          name_suffix?: string | null
           nationality?: string | null
           ownership_percentage?: number | null
           phone?: string | null
+          phone_mobile?: string | null
+          phone_office?: string | null
+          proof_of_address_date?: string | null
+          proof_of_address_expiry?: string | null
           residential_city?: string | null
           residential_country?: string | null
+          residential_line_2?: string | null
           residential_postal_code?: string | null
           residential_state?: string | null
           residential_street?: string | null
           role?: string
           role_title?: string | null
+          tax_id_number?: string | null
           updated_at?: string
+          us_taxpayer_id?: string | null
         }
         Relationships: [
           {
@@ -503,26 +666,44 @@ export type Database = {
       arranger_users: {
         Row: {
           arranger_id: string
+          can_sign: boolean
+          ceo_approval_status: string | null
+          ceo_approved_at: string | null
+          ceo_approved_by: string | null
           created_at: string
           created_by: string | null
           is_primary: boolean
           role: string
+          signature_specimen_uploaded_at: string | null
+          signature_specimen_url: string | null
           user_id: string
         }
         Insert: {
           arranger_id: string
+          can_sign?: boolean
+          ceo_approval_status?: string | null
+          ceo_approved_at?: string | null
+          ceo_approved_by?: string | null
           created_at?: string
           created_by?: string | null
           is_primary?: boolean
           role?: string
+          signature_specimen_uploaded_at?: string | null
+          signature_specimen_url?: string | null
           user_id: string
         }
         Update: {
           arranger_id?: string
+          can_sign?: boolean
+          ceo_approval_status?: string | null
+          ceo_approved_at?: string | null
+          ceo_approved_by?: string | null
           created_at?: string
           created_by?: string | null
           is_primary?: boolean
           role?: string
+          signature_specimen_uploaded_at?: string | null
+          signature_specimen_url?: string | null
           user_id?: string
         }
         Relationships: [
@@ -531,6 +712,13 @@ export type Database = {
             columns: ["arranger_id"]
             isOneToOne: false
             referencedRelation: "arranger_entities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "arranger_users_ceo_approved_by_fkey"
+            columns: ["ceo_approved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
@@ -730,6 +918,68 @@ export type Database = {
             columns: ["related_investor_id"]
             isOneToOne: false
             referencedRelation: "investors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bank_details: {
+        Row: {
+          account_holder_name: string
+          account_number: string | null
+          bank_name: string
+          created_at: string | null
+          created_by: string | null
+          currency: string | null
+          entity_id: string
+          entity_type: string
+          iban: string | null
+          id: string
+          is_primary: boolean | null
+          notes: string | null
+          routing_number: string | null
+          swift_bic: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          account_holder_name: string
+          account_number?: string | null
+          bank_name: string
+          created_at?: string | null
+          created_by?: string | null
+          currency?: string | null
+          entity_id: string
+          entity_type: string
+          iban?: string | null
+          id?: string
+          is_primary?: boolean | null
+          notes?: string | null
+          routing_number?: string | null
+          swift_bic?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          account_holder_name?: string
+          account_number?: string | null
+          bank_name?: string
+          created_at?: string | null
+          created_by?: string | null
+          currency?: string | null
+          entity_id?: string
+          entity_type?: string
+          iban?: string | null
+          id?: string
+          is_primary?: boolean | null
+          notes?: string | null
+          routing_number?: string | null
+          swift_bic?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_details_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -993,67 +1243,67 @@ export type Database = {
       }
       ceo_entity: {
         Row: {
-          id: string
-          legal_name: string
-          display_name: string | null
-          registration_number: string | null
-          tax_id: string | null
-          registered_address: string | null
           city: string | null
-          postal_code: string | null
           country: string | null
-          email: string | null
-          phone: string | null
-          website: string | null
-          logo_url: string | null
-          metadata: Json | null
-          status: string | null
           created_at: string | null
           created_by: string | null
+          display_name: string | null
+          email: string | null
+          id: string
+          legal_name: string
+          logo_url: string | null
+          metadata: Json | null
+          phone: string | null
+          postal_code: string | null
+          registered_address: string | null
+          registration_number: string | null
+          status: string | null
+          tax_id: string | null
           updated_at: string | null
           updated_by: string | null
+          website: string | null
         }
         Insert: {
+          city?: string | null
+          country?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          display_name?: string | null
+          email?: string | null
           id?: string
           legal_name: string
-          display_name?: string | null
-          registration_number?: string | null
-          tax_id?: string | null
-          registered_address?: string | null
-          city?: string | null
-          postal_code?: string | null
-          country?: string | null
-          email?: string | null
-          phone?: string | null
-          website?: string | null
           logo_url?: string | null
           metadata?: Json | null
+          phone?: string | null
+          postal_code?: string | null
+          registered_address?: string | null
+          registration_number?: string | null
           status?: string | null
-          created_at?: string | null
-          created_by?: string | null
+          tax_id?: string | null
           updated_at?: string | null
           updated_by?: string | null
+          website?: string | null
         }
         Update: {
-          id?: string
-          legal_name?: string
-          display_name?: string | null
-          registration_number?: string | null
-          tax_id?: string | null
-          registered_address?: string | null
           city?: string | null
-          postal_code?: string | null
           country?: string | null
-          email?: string | null
-          phone?: string | null
-          website?: string | null
-          logo_url?: string | null
-          metadata?: Json | null
-          status?: string | null
           created_at?: string | null
           created_by?: string | null
+          display_name?: string | null
+          email?: string | null
+          id?: string
+          legal_name?: string
+          logo_url?: string | null
+          metadata?: Json | null
+          phone?: string | null
+          postal_code?: string | null
+          registered_address?: string | null
+          registration_number?: string | null
+          status?: string | null
+          tax_id?: string | null
           updated_at?: string | null
           updated_by?: string | null
+          website?: string | null
         }
         Relationships: [
           {
@@ -1074,44 +1324,44 @@ export type Database = {
       }
       ceo_users: {
         Row: {
-          user_id: string
-          role: string
           can_sign: boolean | null
-          is_primary: boolean | null
-          title: string | null
           created_at: string | null
           created_by: string | null
+          is_primary: boolean | null
+          role: string
+          title: string | null
+          user_id: string
         }
         Insert: {
-          user_id: string
-          role?: string
           can_sign?: boolean | null
-          is_primary?: boolean | null
-          title?: string | null
           created_at?: string | null
           created_by?: string | null
+          is_primary?: boolean | null
+          role?: string
+          title?: string | null
+          user_id: string
         }
         Update: {
-          user_id?: string
-          role?: string
           can_sign?: boolean | null
-          is_primary?: boolean | null
-          title?: string | null
           created_at?: string | null
           created_by?: string | null
+          is_primary?: boolean | null
+          role?: string
+          title?: string | null
+          user_id?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "ceo_users_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: true
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "ceo_users_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ceo_users_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -1191,87 +1441,278 @@ export type Database = {
           },
         ]
       }
+      commercial_partner_commissions: {
+        Row: {
+          accrual_amount: number
+          approved_at: string | null
+          approved_by: string | null
+          arranger_id: string
+          base_amount: number | null
+          basis_type: string | null
+          commercial_partner_id: string
+          created_at: string
+          currency: string | null
+          deal_id: string | null
+          fee_plan_id: string | null
+          id: string
+          investor_id: string | null
+          invoice_id: string | null
+          notes: string | null
+          paid_at: string | null
+          payment_due_date: string | null
+          payment_reference: string | null
+          rate_bps: number
+          status: string | null
+          updated_at: string
+        }
+        Insert: {
+          accrual_amount: number
+          approved_at?: string | null
+          approved_by?: string | null
+          arranger_id: string
+          base_amount?: number | null
+          basis_type?: string | null
+          commercial_partner_id: string
+          created_at?: string
+          currency?: string | null
+          deal_id?: string | null
+          fee_plan_id?: string | null
+          id?: string
+          investor_id?: string | null
+          invoice_id?: string | null
+          notes?: string | null
+          paid_at?: string | null
+          payment_due_date?: string | null
+          payment_reference?: string | null
+          rate_bps?: number
+          status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          accrual_amount?: number
+          approved_at?: string | null
+          approved_by?: string | null
+          arranger_id?: string
+          base_amount?: number | null
+          basis_type?: string | null
+          commercial_partner_id?: string
+          created_at?: string
+          currency?: string | null
+          deal_id?: string | null
+          fee_plan_id?: string | null
+          id?: string
+          investor_id?: string | null
+          invoice_id?: string | null
+          notes?: string | null
+          paid_at?: string | null
+          payment_due_date?: string | null
+          payment_reference?: string | null
+          rate_bps?: number
+          status?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commercial_partner_commissions_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commercial_partner_commissions_arranger_id_fkey"
+            columns: ["arranger_id"]
+            isOneToOne: false
+            referencedRelation: "arranger_entities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commercial_partner_commissions_commercial_partner_id_fkey"
+            columns: ["commercial_partner_id"]
+            isOneToOne: false
+            referencedRelation: "commercial_partners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commercial_partner_commissions_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commercial_partner_commissions_fee_plan_id_fkey"
+            columns: ["fee_plan_id"]
+            isOneToOne: false
+            referencedRelation: "fee_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commercial_partner_commissions_investor_id_fkey"
+            columns: ["investor_id"]
+            isOneToOne: false
+            referencedRelation: "investors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commercial_partner_commissions_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       commercial_partner_members: {
         Row: {
           commercial_partner_id: string
+          country_of_birth: string | null
+          country_of_tax_residency: string | null
           created_at: string
           created_by: string | null
+          date_of_birth: string | null
           effective_from: string | null
           effective_to: string | null
           email: string | null
+          first_name: string | null
           full_name: string
           id: string
           id_expiry_date: string | null
+          id_issue_date: string | null
+          id_issuing_country: string | null
           id_number: string | null
           id_type: string | null
           is_active: boolean
           is_beneficial_owner: boolean
           is_signatory: boolean
+          is_us_citizen: boolean | null
+          is_us_taxpayer: boolean | null
+          kyc_approved_at: string | null
+          kyc_approved_by: string | null
+          kyc_expiry_date: string | null
+          kyc_notes: string | null
+          kyc_status: string | null
+          last_name: string | null
+          middle_name: string | null
+          name_suffix: string | null
           nationality: string | null
           ownership_percentage: number | null
           phone: string | null
+          phone_mobile: string | null
+          phone_office: string | null
+          proof_of_address_date: string | null
+          proof_of_address_expiry: string | null
           residential_city: string | null
           residential_country: string | null
+          residential_line_2: string | null
           residential_postal_code: string | null
           residential_state: string | null
           residential_street: string | null
           role: string
           role_title: string | null
+          tax_id_number: string | null
           updated_at: string
+          us_taxpayer_id: string | null
         }
         Insert: {
           commercial_partner_id: string
+          country_of_birth?: string | null
+          country_of_tax_residency?: string | null
           created_at?: string
           created_by?: string | null
+          date_of_birth?: string | null
           effective_from?: string | null
           effective_to?: string | null
           email?: string | null
+          first_name?: string | null
           full_name: string
           id?: string
           id_expiry_date?: string | null
+          id_issue_date?: string | null
+          id_issuing_country?: string | null
           id_number?: string | null
           id_type?: string | null
           is_active?: boolean
           is_beneficial_owner?: boolean
           is_signatory?: boolean
+          is_us_citizen?: boolean | null
+          is_us_taxpayer?: boolean | null
+          kyc_approved_at?: string | null
+          kyc_approved_by?: string | null
+          kyc_expiry_date?: string | null
+          kyc_notes?: string | null
+          kyc_status?: string | null
+          last_name?: string | null
+          middle_name?: string | null
+          name_suffix?: string | null
           nationality?: string | null
           ownership_percentage?: number | null
           phone?: string | null
+          phone_mobile?: string | null
+          phone_office?: string | null
+          proof_of_address_date?: string | null
+          proof_of_address_expiry?: string | null
           residential_city?: string | null
           residential_country?: string | null
+          residential_line_2?: string | null
           residential_postal_code?: string | null
           residential_state?: string | null
           residential_street?: string | null
           role: string
           role_title?: string | null
+          tax_id_number?: string | null
           updated_at?: string
+          us_taxpayer_id?: string | null
         }
         Update: {
           commercial_partner_id?: string
+          country_of_birth?: string | null
+          country_of_tax_residency?: string | null
           created_at?: string
           created_by?: string | null
+          date_of_birth?: string | null
           effective_from?: string | null
           effective_to?: string | null
           email?: string | null
+          first_name?: string | null
           full_name?: string
           id?: string
           id_expiry_date?: string | null
+          id_issue_date?: string | null
+          id_issuing_country?: string | null
           id_number?: string | null
           id_type?: string | null
           is_active?: boolean
           is_beneficial_owner?: boolean
           is_signatory?: boolean
+          is_us_citizen?: boolean | null
+          is_us_taxpayer?: boolean | null
+          kyc_approved_at?: string | null
+          kyc_approved_by?: string | null
+          kyc_expiry_date?: string | null
+          kyc_notes?: string | null
+          kyc_status?: string | null
+          last_name?: string | null
+          middle_name?: string | null
+          name_suffix?: string | null
           nationality?: string | null
           ownership_percentage?: number | null
           phone?: string | null
+          phone_mobile?: string | null
+          phone_office?: string | null
+          proof_of_address_date?: string | null
+          proof_of_address_expiry?: string | null
           residential_city?: string | null
           residential_country?: string | null
+          residential_line_2?: string | null
           residential_postal_code?: string | null
           residential_state?: string | null
           residential_street?: string | null
           role?: string
           role_title?: string | null
+          tax_id_number?: string | null
           updated_at?: string
+          us_taxpayer_id?: string | null
         }
         Relationships: [
           {
@@ -1294,34 +1735,56 @@ export type Database = {
         Row: {
           can_execute_for_clients: boolean
           can_sign: boolean
+          ceo_approval_status: string | null
+          ceo_approved_at: string | null
+          ceo_approved_by: string | null
           commercial_partner_id: string
           created_at: string
           created_by: string | null
           is_primary: boolean
           role: string
+          signature_specimen_uploaded_at: string | null
+          signature_specimen_url: string | null
           user_id: string
         }
         Insert: {
           can_execute_for_clients?: boolean
           can_sign?: boolean
+          ceo_approval_status?: string | null
+          ceo_approved_at?: string | null
+          ceo_approved_by?: string | null
           commercial_partner_id: string
           created_at?: string
           created_by?: string | null
           is_primary?: boolean
           role?: string
+          signature_specimen_uploaded_at?: string | null
+          signature_specimen_url?: string | null
           user_id: string
         }
         Update: {
           can_execute_for_clients?: boolean
           can_sign?: boolean
+          ceo_approval_status?: string | null
+          ceo_approved_at?: string | null
+          ceo_approved_by?: string | null
           commercial_partner_id?: string
           created_at?: string
           created_by?: string | null
           is_primary?: boolean
           role?: string
+          signature_specimen_uploaded_at?: string | null
+          signature_specimen_url?: string | null
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "commercial_partner_users_ceo_approved_by_fkey"
+            columns: ["ceo_approved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "commercial_partner_users_cp_fk"
             columns: ["commercial_partner_id"]
@@ -1780,93 +2243,150 @@ export type Database = {
       counterparty_entity_members: {
         Row: {
           counterparty_entity_id: string
+          country_of_birth: string | null
+          country_of_tax_residency: string | null
           created_at: string | null
           created_by: string | null
+          date_of_birth: string | null
           effective_from: string | null
           effective_to: string | null
           email: string | null
+          first_name: string | null
           full_name: string
           id: string
           id_expiry_date: string | null
+          id_issue_date: string | null
+          id_issuing_country: string | null
           id_number: string | null
           id_type: string | null
           is_active: boolean | null
           is_beneficial_owner: boolean | null
+          is_us_citizen: boolean | null
+          is_us_taxpayer: boolean | null
           kyc_approved_at: string | null
           kyc_approved_by: string | null
           kyc_expiry_date: string | null
+          kyc_notes: string | null
           kyc_status: string | null
+          last_name: string | null
+          middle_name: string | null
+          name_suffix: string | null
           nationality: string | null
           ownership_percentage: number | null
           phone: string | null
+          phone_mobile: string | null
+          phone_office: string | null
+          proof_of_address_date: string | null
+          proof_of_address_expiry: string | null
           residential_city: string | null
           residential_country: string | null
+          residential_line_2: string | null
           residential_postal_code: string | null
           residential_state: string | null
           residential_street: string | null
           role: string
           role_title: string | null
+          tax_id_number: string | null
           updated_at: string | null
+          us_taxpayer_id: string | null
         }
         Insert: {
           counterparty_entity_id: string
+          country_of_birth?: string | null
+          country_of_tax_residency?: string | null
           created_at?: string | null
           created_by?: string | null
+          date_of_birth?: string | null
           effective_from?: string | null
           effective_to?: string | null
           email?: string | null
+          first_name?: string | null
           full_name: string
           id?: string
           id_expiry_date?: string | null
+          id_issue_date?: string | null
+          id_issuing_country?: string | null
           id_number?: string | null
           id_type?: string | null
           is_active?: boolean | null
           is_beneficial_owner?: boolean | null
+          is_us_citizen?: boolean | null
+          is_us_taxpayer?: boolean | null
           kyc_approved_at?: string | null
           kyc_approved_by?: string | null
           kyc_expiry_date?: string | null
+          kyc_notes?: string | null
           kyc_status?: string | null
+          last_name?: string | null
+          middle_name?: string | null
+          name_suffix?: string | null
           nationality?: string | null
           ownership_percentage?: number | null
           phone?: string | null
+          phone_mobile?: string | null
+          phone_office?: string | null
+          proof_of_address_date?: string | null
+          proof_of_address_expiry?: string | null
           residential_city?: string | null
           residential_country?: string | null
+          residential_line_2?: string | null
           residential_postal_code?: string | null
           residential_state?: string | null
           residential_street?: string | null
           role: string
           role_title?: string | null
+          tax_id_number?: string | null
           updated_at?: string | null
+          us_taxpayer_id?: string | null
         }
         Update: {
           counterparty_entity_id?: string
+          country_of_birth?: string | null
+          country_of_tax_residency?: string | null
           created_at?: string | null
           created_by?: string | null
+          date_of_birth?: string | null
           effective_from?: string | null
           effective_to?: string | null
           email?: string | null
+          first_name?: string | null
           full_name?: string
           id?: string
           id_expiry_date?: string | null
+          id_issue_date?: string | null
+          id_issuing_country?: string | null
           id_number?: string | null
           id_type?: string | null
           is_active?: boolean | null
           is_beneficial_owner?: boolean | null
+          is_us_citizen?: boolean | null
+          is_us_taxpayer?: boolean | null
           kyc_approved_at?: string | null
           kyc_approved_by?: string | null
           kyc_expiry_date?: string | null
+          kyc_notes?: string | null
           kyc_status?: string | null
+          last_name?: string | null
+          middle_name?: string | null
+          name_suffix?: string | null
           nationality?: string | null
           ownership_percentage?: number | null
           phone?: string | null
+          phone_mobile?: string | null
+          phone_office?: string | null
+          proof_of_address_date?: string | null
+          proof_of_address_expiry?: string | null
           residential_city?: string | null
           residential_country?: string | null
+          residential_line_2?: string | null
           residential_postal_code?: string | null
           residential_state?: string | null
           residential_street?: string | null
           role?: string
           role_title?: string | null
+          tax_id_number?: string | null
           updated_at?: string | null
+          us_taxpayer_id?: string | null
         }
         Relationships: [
           {
@@ -2723,6 +3243,7 @@ export type Database = {
         Row: {
           arranger_entity_id: string | null
           close_at: string | null
+          closed_processed_at: string | null
           company_id: string | null
           company_logo_url: string | null
           company_name: string | null
@@ -2753,6 +3274,7 @@ export type Database = {
         Insert: {
           arranger_entity_id?: string | null
           close_at?: string | null
+          closed_processed_at?: string | null
           company_id?: string | null
           company_logo_url?: string | null
           company_name?: string | null
@@ -2783,6 +3305,7 @@ export type Database = {
         Update: {
           arranger_entity_id?: string | null
           close_at?: string | null
+          closed_processed_at?: string | null
           company_id?: string | null
           company_logo_url?: string | null
           company_name?: string | null
@@ -3238,6 +3761,8 @@ export type Database = {
       documents: {
         Row: {
           arranger_entity_id: string | null
+          arranger_user_id: string | null
+          commercial_partner_id: string | null
           created_at: string | null
           created_by: string | null
           current_version: number | null
@@ -3249,12 +3774,15 @@ export type Database = {
           file_size_bytes: number | null
           folder_id: string | null
           id: string
+          introducer_id: string | null
           is_published: boolean | null
+          lawyer_id: string | null
           link_type: string | null
           mime_type: string | null
           name: string | null
           owner_investor_id: string | null
           owner_user_id: string | null
+          partner_id: string | null
           published_at: string | null
           ready_for_signature: boolean | null
           signature_workflow_run_id: string | null
@@ -3269,6 +3797,8 @@ export type Database = {
         }
         Insert: {
           arranger_entity_id?: string | null
+          arranger_user_id?: string | null
+          commercial_partner_id?: string | null
           created_at?: string | null
           created_by?: string | null
           current_version?: number | null
@@ -3280,12 +3810,15 @@ export type Database = {
           file_size_bytes?: number | null
           folder_id?: string | null
           id?: string
+          introducer_id?: string | null
           is_published?: boolean | null
+          lawyer_id?: string | null
           link_type?: string | null
           mime_type?: string | null
           name?: string | null
           owner_investor_id?: string | null
           owner_user_id?: string | null
+          partner_id?: string | null
           published_at?: string | null
           ready_for_signature?: boolean | null
           signature_workflow_run_id?: string | null
@@ -3300,6 +3833,8 @@ export type Database = {
         }
         Update: {
           arranger_entity_id?: string | null
+          arranger_user_id?: string | null
+          commercial_partner_id?: string | null
           created_at?: string | null
           created_by?: string | null
           current_version?: number | null
@@ -3311,12 +3846,15 @@ export type Database = {
           file_size_bytes?: number | null
           folder_id?: string | null
           id?: string
+          introducer_id?: string | null
           is_published?: boolean | null
+          lawyer_id?: string | null
           link_type?: string | null
           mime_type?: string | null
           name?: string | null
           owner_investor_id?: string | null
           owner_user_id?: string | null
+          partner_id?: string | null
           published_at?: string | null
           ready_for_signature?: boolean | null
           signature_workflow_run_id?: string | null
@@ -3335,6 +3873,13 @@ export type Database = {
             columns: ["arranger_entity_id"]
             isOneToOne: false
             referencedRelation: "arranger_entities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_commercial_partner_id_fkey"
+            columns: ["commercial_partner_id"]
+            isOneToOne: false
+            referencedRelation: "commercial_partners"
             referencedColumns: ["id"]
           },
           {
@@ -3373,6 +3918,20 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "documents_introducer_id_fkey"
+            columns: ["introducer_id"]
+            isOneToOne: false
+            referencedRelation: "introducers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_lawyer_id_fkey"
+            columns: ["lawyer_id"]
+            isOneToOne: false
+            referencedRelation: "lawyers"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "documents_owner_investor_id_fkey"
             columns: ["owner_investor_id"]
             isOneToOne: false
@@ -3384,6 +3943,13 @@ export type Database = {
             columns: ["owner_user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partners"
             referencedColumns: ["id"]
           },
           {
@@ -3420,6 +3986,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "vehicles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_documents_arranger_user"
+            columns: ["arranger_entity_id", "arranger_user_id"]
+            isOneToOne: false
+            referencedRelation: "arranger_users"
+            referencedColumns: ["arranger_id", "user_id"]
           },
         ]
       }
@@ -3725,6 +4298,137 @@ export type Database = {
           },
         ]
       }
+      entity_notice_contacts: {
+        Row: {
+          address_line_1: string | null
+          address_line_2: string | null
+          arranger_entity_id: string | null
+          city: string | null
+          commercial_partner_id: string | null
+          contact_name: string
+          contact_title: string | null
+          contact_type: string
+          country: string | null
+          created_at: string | null
+          created_by: string | null
+          email: string | null
+          id: string
+          introducer_id: string | null
+          investor_id: string | null
+          is_active: boolean | null
+          lawyer_id: string | null
+          partner_id: string | null
+          phone: string | null
+          postal_code: string | null
+          preferred_method: string | null
+          receive_copies: boolean | null
+          state_province: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          address_line_1?: string | null
+          address_line_2?: string | null
+          arranger_entity_id?: string | null
+          city?: string | null
+          commercial_partner_id?: string | null
+          contact_name: string
+          contact_title?: string | null
+          contact_type?: string
+          country?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          email?: string | null
+          id?: string
+          introducer_id?: string | null
+          investor_id?: string | null
+          is_active?: boolean | null
+          lawyer_id?: string | null
+          partner_id?: string | null
+          phone?: string | null
+          postal_code?: string | null
+          preferred_method?: string | null
+          receive_copies?: boolean | null
+          state_province?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          address_line_1?: string | null
+          address_line_2?: string | null
+          arranger_entity_id?: string | null
+          city?: string | null
+          commercial_partner_id?: string | null
+          contact_name?: string
+          contact_title?: string | null
+          contact_type?: string
+          country?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          email?: string | null
+          id?: string
+          introducer_id?: string | null
+          investor_id?: string | null
+          is_active?: boolean | null
+          lawyer_id?: string | null
+          partner_id?: string | null
+          phone?: string | null
+          postal_code?: string | null
+          preferred_method?: string | null
+          receive_copies?: boolean | null
+          state_province?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "entity_notice_contacts_arranger_entity_id_fkey"
+            columns: ["arranger_entity_id"]
+            isOneToOne: false
+            referencedRelation: "arranger_entities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "entity_notice_contacts_commercial_partner_id_fkey"
+            columns: ["commercial_partner_id"]
+            isOneToOne: false
+            referencedRelation: "commercial_partners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "entity_notice_contacts_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "entity_notice_contacts_introducer_id_fkey"
+            columns: ["introducer_id"]
+            isOneToOne: false
+            referencedRelation: "introducers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "entity_notice_contacts_investor_id_fkey"
+            columns: ["investor_id"]
+            isOneToOne: false
+            referencedRelation: "investors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "entity_notice_contacts_lawyer_id_fkey"
+            columns: ["lawyer_id"]
+            isOneToOne: false
+            referencedRelation: "lawyers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "entity_notice_contacts_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       entity_stakeholders: {
         Row: {
           company_name: string | null
@@ -4011,6 +4715,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "fee_events_payee_arranger_id_fkey"
+            columns: ["payee_arranger_id"]
+            isOneToOne: false
+            referencedRelation: "arranger_entities"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "fee_events_payment_id_fkey"
             columns: ["payment_id"]
             isOneToOne: false
@@ -4021,6 +4732,8 @@ export type Database = {
       }
       fee_plans: {
         Row: {
+          accepted_at: string | null
+          accepted_by: string | null
           commercial_partner_id: string | null
           created_at: string | null
           created_by: string | null
@@ -4031,14 +4744,23 @@ export type Database = {
           effective_until: string | null
           id: string
           introducer_id: string | null
+          invoice_requests_enabled: boolean | null
+          invoice_requests_enabled_at: string | null
           is_active: boolean
           is_default: boolean | null
           name: string
           partner_id: string | null
+          sent_at: string | null
+          sent_by: string | null
+          signature_data: Json | null
+          status: string | null
+          term_sheet_id: string | null
           updated_at: string
           vehicle_id: string | null
         }
         Insert: {
+          accepted_at?: string | null
+          accepted_by?: string | null
           commercial_partner_id?: string | null
           created_at?: string | null
           created_by?: string | null
@@ -4049,14 +4771,23 @@ export type Database = {
           effective_until?: string | null
           id?: string
           introducer_id?: string | null
+          invoice_requests_enabled?: boolean | null
+          invoice_requests_enabled_at?: string | null
           is_active?: boolean
           is_default?: boolean | null
           name: string
           partner_id?: string | null
+          sent_at?: string | null
+          sent_by?: string | null
+          signature_data?: Json | null
+          status?: string | null
+          term_sheet_id?: string | null
           updated_at?: string
           vehicle_id?: string | null
         }
         Update: {
+          accepted_at?: string | null
+          accepted_by?: string | null
           commercial_partner_id?: string | null
           created_at?: string | null
           created_by?: string | null
@@ -4067,14 +4798,35 @@ export type Database = {
           effective_until?: string | null
           id?: string
           introducer_id?: string | null
+          invoice_requests_enabled?: boolean | null
+          invoice_requests_enabled_at?: string | null
           is_active?: boolean
           is_default?: boolean | null
           name?: string
           partner_id?: string | null
+          sent_at?: string | null
+          sent_by?: string | null
+          signature_data?: Json | null
+          status?: string | null
+          term_sheet_id?: string | null
           updated_at?: string
           vehicle_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "fee_plans_accepted_by_fkey"
+            columns: ["accepted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fee_plans_commercial_partner_id_fkey"
+            columns: ["commercial_partner_id"]
+            isOneToOne: false
+            referencedRelation: "commercial_partners"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "fee_plans_created_by_arranger_id_fkey"
             columns: ["created_by_arranger_id"]
@@ -4094,6 +4846,34 @@ export type Database = {
             columns: ["deal_id"]
             isOneToOne: false
             referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fee_plans_introducer_id_fkey"
+            columns: ["introducer_id"]
+            isOneToOne: false
+            referencedRelation: "introducers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fee_plans_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fee_plans_sent_by_fkey"
+            columns: ["sent_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fee_plans_term_sheet_id_fkey"
+            columns: ["term_sheet_id"]
+            isOneToOne: false
+            referencedRelation: "deal_fee_structures"
             referencedColumns: ["id"]
           },
           {
@@ -4252,7 +5032,6 @@ export type Database = {
           id: string
           introducer_id: string
           introducer_signature_request_id: string | null
-          notes: string | null
           payment_terms: string | null
           pdf_url: string | null
           signed_date: string | null
@@ -4278,7 +5057,6 @@ export type Database = {
           id?: string
           introducer_id: string
           introducer_signature_request_id?: string | null
-          notes?: string | null
           payment_terms?: string | null
           pdf_url?: string | null
           signed_date?: string | null
@@ -4304,7 +5082,6 @@ export type Database = {
           id?: string
           introducer_id?: string
           introducer_signature_request_id?: string | null
-          notes?: string | null
           payment_terms?: string | null
           pdf_url?: string | null
           signed_date?: string | null
@@ -4314,6 +5091,27 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "introducer_agreements_arranger_id_fkey"
+            columns: ["arranger_id"]
+            isOneToOne: false
+            referencedRelation: "arranger_entities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "introducer_agreements_arranger_signature_request_id_fkey"
+            columns: ["arranger_signature_request_id"]
+            isOneToOne: false
+            referencedRelation: "signature_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "introducer_agreements_ceo_signature_request_id_fkey"
+            columns: ["ceo_signature_request_id"]
+            isOneToOne: false
+            referencedRelation: "signature_requests"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "introducer_agreements_created_by_fkey"
             columns: ["created_by"]
@@ -4335,6 +5133,13 @@ export type Database = {
             referencedRelation: "introducers"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "introducer_agreements_introducer_signature_request_id_fkey"
+            columns: ["introducer_signature_request_id"]
+            isOneToOne: false
+            referencedRelation: "signature_requests"
+            referencedColumns: ["id"]
+          },
         ]
       }
       introducer_commissions: {
@@ -4342,11 +5147,13 @@ export type Database = {
           accrual_amount: number
           approved_at: string | null
           approved_by: string | null
+          arranger_id: string | null
           base_amount: number | null
           basis_type: string | null
           created_at: string | null
           currency: string | null
           deal_id: string | null
+          fee_plan_id: string | null
           id: string
           introducer_id: string | null
           introduction_id: string | null
@@ -4357,17 +5164,23 @@ export type Database = {
           payment_due_date: string | null
           payment_reference: string | null
           rate_bps: number
+          rejected_at: string | null
+          rejected_by: string | null
+          rejection_reason: string | null
           status: string | null
+          updated_at: string | null
         }
         Insert: {
           accrual_amount: number
           approved_at?: string | null
           approved_by?: string | null
+          arranger_id?: string | null
           base_amount?: number | null
           basis_type?: string | null
           created_at?: string | null
           currency?: string | null
           deal_id?: string | null
+          fee_plan_id?: string | null
           id?: string
           introducer_id?: string | null
           introduction_id?: string | null
@@ -4378,17 +5191,23 @@ export type Database = {
           payment_due_date?: string | null
           payment_reference?: string | null
           rate_bps: number
+          rejected_at?: string | null
+          rejected_by?: string | null
+          rejection_reason?: string | null
           status?: string | null
+          updated_at?: string | null
         }
         Update: {
           accrual_amount?: number
           approved_at?: string | null
           approved_by?: string | null
+          arranger_id?: string | null
           base_amount?: number | null
           basis_type?: string | null
           created_at?: string | null
           currency?: string | null
           deal_id?: string | null
+          fee_plan_id?: string | null
           id?: string
           introducer_id?: string | null
           introduction_id?: string | null
@@ -4399,7 +5218,11 @@ export type Database = {
           payment_due_date?: string | null
           payment_reference?: string | null
           rate_bps?: number
+          rejected_at?: string | null
+          rejected_by?: string | null
+          rejection_reason?: string | null
           status?: string | null
+          updated_at?: string | null
         }
         Relationships: [
           {
@@ -4410,10 +5233,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "introducer_commissions_arranger_id_fkey"
+            columns: ["arranger_id"]
+            isOneToOne: false
+            referencedRelation: "arranger_entities"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "introducer_commissions_deal_id_fkey"
             columns: ["deal_id"]
             isOneToOne: false
             referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "introducer_commissions_fee_plan_id_fkey"
+            columns: ["fee_plan_id"]
+            isOneToOne: false
+            referencedRelation: "fee_plans"
             referencedColumns: ["id"]
           },
           {
@@ -4437,89 +5274,165 @@ export type Database = {
             referencedRelation: "investors"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "introducer_commissions_rejected_by_fkey"
+            columns: ["rejected_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       introducer_members: {
         Row: {
+          country_of_birth: string | null
+          country_of_tax_residency: string | null
           created_at: string
           created_by: string | null
+          date_of_birth: string | null
           effective_from: string | null
           effective_to: string | null
           email: string | null
+          first_name: string | null
           full_name: string
           id: string
           id_expiry_date: string | null
+          id_issue_date: string | null
+          id_issuing_country: string | null
           id_number: string | null
           id_type: string | null
           introducer_id: string
           is_active: boolean
           is_beneficial_owner: boolean
           is_signatory: boolean
+          is_us_citizen: boolean | null
+          is_us_taxpayer: boolean | null
+          kyc_approved_at: string | null
+          kyc_approved_by: string | null
+          kyc_expiry_date: string | null
+          kyc_notes: string | null
+          kyc_status: string | null
+          last_name: string | null
+          middle_name: string | null
+          name_suffix: string | null
           nationality: string | null
           ownership_percentage: number | null
           phone: string | null
+          phone_mobile: string | null
+          phone_office: string | null
+          proof_of_address_date: string | null
+          proof_of_address_expiry: string | null
           residential_city: string | null
           residential_country: string | null
+          residential_line_2: string | null
           residential_postal_code: string | null
           residential_state: string | null
           residential_street: string | null
           role: string
           role_title: string | null
+          tax_id_number: string | null
           updated_at: string
+          us_taxpayer_id: string | null
         }
         Insert: {
+          country_of_birth?: string | null
+          country_of_tax_residency?: string | null
           created_at?: string
           created_by?: string | null
+          date_of_birth?: string | null
           effective_from?: string | null
           effective_to?: string | null
           email?: string | null
+          first_name?: string | null
           full_name: string
           id?: string
           id_expiry_date?: string | null
+          id_issue_date?: string | null
+          id_issuing_country?: string | null
           id_number?: string | null
           id_type?: string | null
           introducer_id: string
           is_active?: boolean
           is_beneficial_owner?: boolean
           is_signatory?: boolean
+          is_us_citizen?: boolean | null
+          is_us_taxpayer?: boolean | null
+          kyc_approved_at?: string | null
+          kyc_approved_by?: string | null
+          kyc_expiry_date?: string | null
+          kyc_notes?: string | null
+          kyc_status?: string | null
+          last_name?: string | null
+          middle_name?: string | null
+          name_suffix?: string | null
           nationality?: string | null
           ownership_percentage?: number | null
           phone?: string | null
+          phone_mobile?: string | null
+          phone_office?: string | null
+          proof_of_address_date?: string | null
+          proof_of_address_expiry?: string | null
           residential_city?: string | null
           residential_country?: string | null
+          residential_line_2?: string | null
           residential_postal_code?: string | null
           residential_state?: string | null
           residential_street?: string | null
           role: string
           role_title?: string | null
+          tax_id_number?: string | null
           updated_at?: string
+          us_taxpayer_id?: string | null
         }
         Update: {
+          country_of_birth?: string | null
+          country_of_tax_residency?: string | null
           created_at?: string
           created_by?: string | null
+          date_of_birth?: string | null
           effective_from?: string | null
           effective_to?: string | null
           email?: string | null
+          first_name?: string | null
           full_name?: string
           id?: string
           id_expiry_date?: string | null
+          id_issue_date?: string | null
+          id_issuing_country?: string | null
           id_number?: string | null
           id_type?: string | null
           introducer_id?: string
           is_active?: boolean
           is_beneficial_owner?: boolean
           is_signatory?: boolean
+          is_us_citizen?: boolean | null
+          is_us_taxpayer?: boolean | null
+          kyc_approved_at?: string | null
+          kyc_approved_by?: string | null
+          kyc_expiry_date?: string | null
+          kyc_notes?: string | null
+          kyc_status?: string | null
+          last_name?: string | null
+          middle_name?: string | null
+          name_suffix?: string | null
           nationality?: string | null
           ownership_percentage?: number | null
           phone?: string | null
+          phone_mobile?: string | null
+          phone_office?: string | null
+          proof_of_address_date?: string | null
+          proof_of_address_expiry?: string | null
           residential_city?: string | null
           residential_country?: string | null
+          residential_line_2?: string | null
           residential_postal_code?: string | null
           residential_state?: string | null
           residential_street?: string | null
           role?: string
           role_title?: string | null
+          tax_id_number?: string | null
           updated_at?: string
+          us_taxpayer_id?: string | null
         }
         Relationships: [
           {
@@ -4541,32 +5454,54 @@ export type Database = {
       introducer_users: {
         Row: {
           can_sign: boolean
+          ceo_approval_status: string | null
+          ceo_approved_at: string | null
+          ceo_approved_by: string | null
           created_at: string
           created_by: string | null
           introducer_id: string
           is_primary: boolean
           role: string
+          signature_specimen_uploaded_at: string | null
+          signature_specimen_url: string | null
           user_id: string
         }
         Insert: {
           can_sign?: boolean
+          ceo_approval_status?: string | null
+          ceo_approved_at?: string | null
+          ceo_approved_by?: string | null
           created_at?: string
           created_by?: string | null
           introducer_id: string
           is_primary?: boolean
           role?: string
+          signature_specimen_uploaded_at?: string | null
+          signature_specimen_url?: string | null
           user_id: string
         }
         Update: {
           can_sign?: boolean
+          ceo_approval_status?: string | null
+          ceo_approved_at?: string | null
+          ceo_approved_by?: string | null
           created_at?: string
           created_by?: string | null
           introducer_id?: string
           is_primary?: boolean
           role?: string
+          signature_specimen_uploaded_at?: string | null
+          signature_specimen_url?: string | null
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "introducer_users_ceo_approved_by_fkey"
+            columns: ["ceo_approved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "introducer_users_created_by_fkey"
             columns: ["created_by"]
@@ -4592,55 +5527,178 @@ export type Database = {
       }
       introducers: {
         Row: {
+          address_line_1: string | null
+          address_line_2: string | null
           agreement_doc_id: string | null
           agreement_expiry_date: string | null
+          city: string | null
           commission_cap_amount: number | null
           contact_name: string | null
+          country: string | null
+          country_of_birth: string | null
+          country_of_incorporation: string | null
+          country_of_tax_residency: string | null
           created_at: string | null
           created_by: string | null
+          date_of_birth: string | null
           default_commission_bps: number | null
+          display_name: string | null
           email: string | null
+          first_name: string | null
           id: string
+          id_expiry_date: string | null
+          id_issue_date: string | null
+          id_issuing_country: string | null
+          id_number: string | null
+          id_type: string | null
+          is_us_citizen: boolean | null
+          is_us_taxpayer: boolean | null
+          kyc_approved_at: string | null
+          kyc_approved_by: string | null
+          kyc_expires_at: string | null
+          kyc_notes: string | null
+          kyc_status: string | null
+          last_name: string | null
           legal_name: string | null
           logo_url: string | null
+          middle_name: string | null
+          name_suffix: string | null
+          nationality: string | null
           notes: string | null
           payment_terms: string | null
+          phone_mobile: string | null
+          phone_office: string | null
+          postal_code: string | null
+          registration_number: string | null
+          residential_city: string | null
+          residential_country: string | null
+          residential_postal_code: string | null
+          residential_state: string | null
+          residential_street: string | null
+          state_province: string | null
           status: string | null
+          tax_id: string | null
+          type: string | null
+          updated_at: string | null
+          us_taxpayer_id: string | null
           user_id: string | null
+          website: string | null
         }
         Insert: {
+          address_line_1?: string | null
+          address_line_2?: string | null
           agreement_doc_id?: string | null
           agreement_expiry_date?: string | null
+          city?: string | null
           commission_cap_amount?: number | null
           contact_name?: string | null
+          country?: string | null
+          country_of_birth?: string | null
+          country_of_incorporation?: string | null
+          country_of_tax_residency?: string | null
           created_at?: string | null
           created_by?: string | null
+          date_of_birth?: string | null
           default_commission_bps?: number | null
+          display_name?: string | null
           email?: string | null
+          first_name?: string | null
           id?: string
+          id_expiry_date?: string | null
+          id_issue_date?: string | null
+          id_issuing_country?: string | null
+          id_number?: string | null
+          id_type?: string | null
+          is_us_citizen?: boolean | null
+          is_us_taxpayer?: boolean | null
+          kyc_approved_at?: string | null
+          kyc_approved_by?: string | null
+          kyc_expires_at?: string | null
+          kyc_notes?: string | null
+          kyc_status?: string | null
+          last_name?: string | null
           legal_name?: string | null
           logo_url?: string | null
+          middle_name?: string | null
+          name_suffix?: string | null
+          nationality?: string | null
           notes?: string | null
           payment_terms?: string | null
+          phone_mobile?: string | null
+          phone_office?: string | null
+          postal_code?: string | null
+          registration_number?: string | null
+          residential_city?: string | null
+          residential_country?: string | null
+          residential_postal_code?: string | null
+          residential_state?: string | null
+          residential_street?: string | null
+          state_province?: string | null
           status?: string | null
+          tax_id?: string | null
+          type?: string | null
+          updated_at?: string | null
+          us_taxpayer_id?: string | null
           user_id?: string | null
+          website?: string | null
         }
         Update: {
+          address_line_1?: string | null
+          address_line_2?: string | null
           agreement_doc_id?: string | null
           agreement_expiry_date?: string | null
+          city?: string | null
           commission_cap_amount?: number | null
           contact_name?: string | null
+          country?: string | null
+          country_of_birth?: string | null
+          country_of_incorporation?: string | null
+          country_of_tax_residency?: string | null
           created_at?: string | null
           created_by?: string | null
+          date_of_birth?: string | null
           default_commission_bps?: number | null
+          display_name?: string | null
           email?: string | null
+          first_name?: string | null
           id?: string
+          id_expiry_date?: string | null
+          id_issue_date?: string | null
+          id_issuing_country?: string | null
+          id_number?: string | null
+          id_type?: string | null
+          is_us_citizen?: boolean | null
+          is_us_taxpayer?: boolean | null
+          kyc_approved_at?: string | null
+          kyc_approved_by?: string | null
+          kyc_expires_at?: string | null
+          kyc_notes?: string | null
+          kyc_status?: string | null
+          last_name?: string | null
           legal_name?: string | null
           logo_url?: string | null
+          middle_name?: string | null
+          name_suffix?: string | null
+          nationality?: string | null
           notes?: string | null
           payment_terms?: string | null
+          phone_mobile?: string | null
+          phone_office?: string | null
+          postal_code?: string | null
+          registration_number?: string | null
+          residential_city?: string | null
+          residential_country?: string | null
+          residential_postal_code?: string | null
+          residential_state?: string | null
+          residential_street?: string | null
+          state_province?: string | null
           status?: string | null
+          tax_id?: string | null
+          type?: string | null
+          updated_at?: string | null
+          us_taxpayer_id?: string | null
           user_id?: string | null
+          website?: string | null
         }
         Relationships: [
           {
@@ -4653,6 +5711,13 @@ export type Database = {
           {
             foreignKeyName: "introducers_created_by_fkey"
             columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "introducers_kyc_approved_by_fkey"
+            columns: ["kyc_approved_by"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -5036,29 +6101,46 @@ export type Database = {
       investor_members: {
         Row: {
           can_sign: boolean | null
+          country_of_birth: string | null
+          country_of_tax_residency: string | null
           created_at: string | null
           created_by: string | null
+          date_of_birth: string | null
           effective_from: string | null
           effective_to: string | null
           email: string | null
+          first_name: string | null
           full_name: string
           id: string
           id_expiry_date: string | null
+          id_issue_date: string | null
+          id_issuing_country: string | null
           id_number: string | null
           id_type: string | null
           investor_id: string
           is_active: boolean | null
           is_beneficial_owner: boolean | null
           is_signatory: boolean | null
+          is_us_citizen: boolean | null
+          is_us_taxpayer: boolean | null
           kyc_approved_at: string | null
           kyc_approved_by: string | null
           kyc_expiry_date: string | null
+          kyc_notes: string | null
           kyc_status: string | null
+          last_name: string | null
+          middle_name: string | null
+          name_suffix: string | null
           nationality: string | null
           ownership_percentage: number | null
           phone: string | null
+          phone_mobile: string | null
+          phone_office: string | null
+          proof_of_address_date: string | null
+          proof_of_address_expiry: string | null
           residential_city: string | null
           residential_country: string | null
+          residential_line_2: string | null
           residential_postal_code: string | null
           residential_state: string | null
           residential_street: string | null
@@ -5066,33 +6148,52 @@ export type Database = {
           role_title: string | null
           signature_specimen_uploaded_at: string | null
           signature_specimen_url: string | null
+          tax_id_number: string | null
           updated_at: string | null
+          us_taxpayer_id: string | null
         }
         Insert: {
           can_sign?: boolean | null
+          country_of_birth?: string | null
+          country_of_tax_residency?: string | null
           created_at?: string | null
           created_by?: string | null
+          date_of_birth?: string | null
           effective_from?: string | null
           effective_to?: string | null
           email?: string | null
+          first_name?: string | null
           full_name: string
           id?: string
           id_expiry_date?: string | null
+          id_issue_date?: string | null
+          id_issuing_country?: string | null
           id_number?: string | null
           id_type?: string | null
           investor_id: string
           is_active?: boolean | null
           is_beneficial_owner?: boolean | null
           is_signatory?: boolean | null
+          is_us_citizen?: boolean | null
+          is_us_taxpayer?: boolean | null
           kyc_approved_at?: string | null
           kyc_approved_by?: string | null
           kyc_expiry_date?: string | null
+          kyc_notes?: string | null
           kyc_status?: string | null
+          last_name?: string | null
+          middle_name?: string | null
+          name_suffix?: string | null
           nationality?: string | null
           ownership_percentage?: number | null
           phone?: string | null
+          phone_mobile?: string | null
+          phone_office?: string | null
+          proof_of_address_date?: string | null
+          proof_of_address_expiry?: string | null
           residential_city?: string | null
           residential_country?: string | null
+          residential_line_2?: string | null
           residential_postal_code?: string | null
           residential_state?: string | null
           residential_street?: string | null
@@ -5100,33 +6201,52 @@ export type Database = {
           role_title?: string | null
           signature_specimen_uploaded_at?: string | null
           signature_specimen_url?: string | null
+          tax_id_number?: string | null
           updated_at?: string | null
+          us_taxpayer_id?: string | null
         }
         Update: {
           can_sign?: boolean | null
+          country_of_birth?: string | null
+          country_of_tax_residency?: string | null
           created_at?: string | null
           created_by?: string | null
+          date_of_birth?: string | null
           effective_from?: string | null
           effective_to?: string | null
           email?: string | null
+          first_name?: string | null
           full_name?: string
           id?: string
           id_expiry_date?: string | null
+          id_issue_date?: string | null
+          id_issuing_country?: string | null
           id_number?: string | null
           id_type?: string | null
           investor_id?: string
           is_active?: boolean | null
           is_beneficial_owner?: boolean | null
           is_signatory?: boolean | null
+          is_us_citizen?: boolean | null
+          is_us_taxpayer?: boolean | null
           kyc_approved_at?: string | null
           kyc_approved_by?: string | null
           kyc_expiry_date?: string | null
+          kyc_notes?: string | null
           kyc_status?: string | null
+          last_name?: string | null
+          middle_name?: string | null
+          name_suffix?: string | null
           nationality?: string | null
           ownership_percentage?: number | null
           phone?: string | null
+          phone_mobile?: string | null
+          phone_office?: string | null
+          proof_of_address_date?: string | null
+          proof_of_address_expiry?: string | null
           residential_city?: string | null
           residential_country?: string | null
+          residential_line_2?: string | null
           residential_postal_code?: string | null
           residential_state?: string | null
           residential_street?: string | null
@@ -5134,7 +6254,9 @@ export type Database = {
           role_title?: string | null
           signature_specimen_uploaded_at?: string | null
           signature_specimen_url?: string | null
+          tax_id_number?: string | null
           updated_at?: string | null
+          us_taxpayer_id?: string | null
         }
         Relationships: [
           {
@@ -5164,6 +6286,7 @@ export type Database = {
         Row: {
           created_at: string
           created_by: string | null
+          data: Json | null
           deal_id: string | null
           id: string
           investor_id: string | null
@@ -5177,6 +6300,7 @@ export type Database = {
         Insert: {
           created_at?: string
           created_by?: string | null
+          data?: Json | null
           deal_id?: string | null
           id?: string
           investor_id?: string | null
@@ -5190,6 +6314,7 @@ export type Database = {
         Update: {
           created_at?: string
           created_by?: string | null
+          data?: Json | null
           deal_id?: string | null
           id?: string
           investor_id?: string | null
@@ -5202,6 +6327,20 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "investor_notifications_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_notifications_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "investor_notifications_investor_id_fkey"
             columns: ["investor_id"]
             isOneToOne: false
@@ -5213,6 +6352,142 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      investor_sale_requests: {
+        Row: {
+          amount_to_sell: number
+          approved_at: string | null
+          asking_price_per_unit: number | null
+          created_at: string | null
+          created_by: string | null
+          deal_id: string | null
+          id: string
+          investor_id: string
+          matched_at: string | null
+          matched_buyer_id: string | null
+          matched_deal_id: string | null
+          notes: string | null
+          payment_completed_at: string | null
+          rejection_reason: string | null
+          status: string
+          status_notes: string | null
+          subscription_id: string
+          transfer_completed_at: string | null
+          updated_at: string | null
+          updated_by: string | null
+          vehicle_id: string | null
+        }
+        Insert: {
+          amount_to_sell: number
+          approved_at?: string | null
+          asking_price_per_unit?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          deal_id?: string | null
+          id?: string
+          investor_id: string
+          matched_at?: string | null
+          matched_buyer_id?: string | null
+          matched_deal_id?: string | null
+          notes?: string | null
+          payment_completed_at?: string | null
+          rejection_reason?: string | null
+          status?: string
+          status_notes?: string | null
+          subscription_id: string
+          transfer_completed_at?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+          vehicle_id?: string | null
+        }
+        Update: {
+          amount_to_sell?: number
+          approved_at?: string | null
+          asking_price_per_unit?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          deal_id?: string | null
+          id?: string
+          investor_id?: string
+          matched_at?: string | null
+          matched_buyer_id?: string | null
+          matched_deal_id?: string | null
+          notes?: string | null
+          payment_completed_at?: string | null
+          rejection_reason?: string | null
+          status?: string
+          status_notes?: string | null
+          subscription_id?: string
+          transfer_completed_at?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+          vehicle_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "investor_sale_requests_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_sale_requests_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_sale_requests_investor_id_fkey"
+            columns: ["investor_id"]
+            isOneToOne: false
+            referencedRelation: "investors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_sale_requests_matched_buyer_id_fkey"
+            columns: ["matched_buyer_id"]
+            isOneToOne: false
+            referencedRelation: "investors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_sale_requests_matched_deal_id_fkey"
+            columns: ["matched_deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_sale_requests_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_sale_requests_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "investor_sale_requests_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "entity_action_center_summary"
+            referencedColumns: ["vehicle_id"]
+          },
+          {
+            foreignKeyName: "investor_sale_requests_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
             referencedColumns: ["id"]
           },
         ]
@@ -5334,32 +6609,54 @@ export type Database = {
       investor_users: {
         Row: {
           can_sign: boolean
+          ceo_approval_status: string | null
+          ceo_approved_at: string | null
+          ceo_approved_by: string | null
           created_at: string
           created_by: string | null
           investor_id: string
           is_primary: boolean
           role: string
+          signature_specimen_uploaded_at: string | null
+          signature_specimen_url: string | null
           user_id: string
         }
         Insert: {
           can_sign?: boolean
+          ceo_approval_status?: string | null
+          ceo_approved_at?: string | null
+          ceo_approved_by?: string | null
           created_at?: string
           created_by?: string | null
           investor_id: string
           is_primary?: boolean
           role?: string
+          signature_specimen_uploaded_at?: string | null
+          signature_specimen_url?: string | null
           user_id: string
         }
         Update: {
           can_sign?: boolean
+          ceo_approval_status?: string | null
+          ceo_approved_at?: string | null
+          ceo_approved_by?: string | null
           created_at?: string
           created_by?: string | null
           investor_id?: string
           is_primary?: boolean
           role?: string
+          signature_specimen_uploaded_at?: string | null
+          signature_specimen_url?: string | null
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "investor_users_ceo_approved_by_fkey"
+            columns: ["ceo_approved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "investor_users_created_by_fkey"
             columns: ["created_by"]
@@ -5386,135 +6683,198 @@ export type Database = {
       investors: {
         Row: {
           accreditation_expiry: string | null
+          additional_tax_residencies: string[] | null
           aml_last_reviewed_at: string | null
           aml_risk_rating: string | null
           archived_at: string | null
           city: string | null
           commercial_partner_id: string | null
           country: string | null
+          country_of_birth: string | null
           country_of_incorporation: string | null
           created_at: string | null
           created_by: string | null
+          date_of_birth: string | null
           display_name: string | null
           email: string | null
           entity_identifier: string | null
+          first_name: string | null
           id: string
+          id_expiry_date: string | null
+          id_issue_date: string | null
+          id_issuing_country: string | null
+          id_number: string | null
+          id_type: string | null
           is_pep: boolean | null
           is_professional_investor: boolean | null
           is_qualified_purchaser: boolean | null
           is_sanctioned: boolean | null
+          is_us_citizen: boolean | null
+          is_us_taxpayer: boolean | null
           kyc_approved_by: string | null
           kyc_completed_at: string | null
           kyc_expiry_date: string | null
           kyc_status: string | null
+          last_name: string | null
           legal_name: string
           logo_url: string | null
+          middle_name: string | null
+          name_suffix: string | null
+          nationality: string | null
           onboarding_status: string | null
           phone: string | null
           phone_mobile: string | null
           phone_office: string | null
+          postal_code: string | null
           primary_rm: string | null
+          proof_of_address_date: string | null
+          proof_of_address_expiry: string | null
           registered_address: string | null
           representative_name: string | null
           representative_title: string | null
           residential_city: string | null
           residential_country: string | null
+          residential_line_2: string | null
           residential_postal_code: string | null
           residential_state: string | null
           residential_street: string | null
           secondary_rm: string | null
           status: string | null
+          tax_id_number: string | null
           tax_residency: string | null
           type: string | null
           updated_at: string | null
+          us_taxpayer_id: string | null
         }
         Insert: {
           accreditation_expiry?: string | null
+          additional_tax_residencies?: string[] | null
           aml_last_reviewed_at?: string | null
           aml_risk_rating?: string | null
           archived_at?: string | null
           city?: string | null
           commercial_partner_id?: string | null
           country?: string | null
+          country_of_birth?: string | null
           country_of_incorporation?: string | null
           created_at?: string | null
           created_by?: string | null
+          date_of_birth?: string | null
           display_name?: string | null
           email?: string | null
           entity_identifier?: string | null
+          first_name?: string | null
           id?: string
+          id_expiry_date?: string | null
+          id_issue_date?: string | null
+          id_issuing_country?: string | null
+          id_number?: string | null
+          id_type?: string | null
           is_pep?: boolean | null
           is_professional_investor?: boolean | null
           is_qualified_purchaser?: boolean | null
           is_sanctioned?: boolean | null
+          is_us_citizen?: boolean | null
+          is_us_taxpayer?: boolean | null
           kyc_approved_by?: string | null
           kyc_completed_at?: string | null
           kyc_expiry_date?: string | null
           kyc_status?: string | null
+          last_name?: string | null
           legal_name: string
           logo_url?: string | null
+          middle_name?: string | null
+          name_suffix?: string | null
+          nationality?: string | null
           onboarding_status?: string | null
           phone?: string | null
           phone_mobile?: string | null
           phone_office?: string | null
+          postal_code?: string | null
           primary_rm?: string | null
+          proof_of_address_date?: string | null
+          proof_of_address_expiry?: string | null
           registered_address?: string | null
           representative_name?: string | null
           representative_title?: string | null
           residential_city?: string | null
           residential_country?: string | null
+          residential_line_2?: string | null
           residential_postal_code?: string | null
           residential_state?: string | null
           residential_street?: string | null
           secondary_rm?: string | null
           status?: string | null
+          tax_id_number?: string | null
           tax_residency?: string | null
           type?: string | null
           updated_at?: string | null
+          us_taxpayer_id?: string | null
         }
         Update: {
           accreditation_expiry?: string | null
+          additional_tax_residencies?: string[] | null
           aml_last_reviewed_at?: string | null
           aml_risk_rating?: string | null
           archived_at?: string | null
           city?: string | null
           commercial_partner_id?: string | null
           country?: string | null
+          country_of_birth?: string | null
           country_of_incorporation?: string | null
           created_at?: string | null
           created_by?: string | null
+          date_of_birth?: string | null
           display_name?: string | null
           email?: string | null
           entity_identifier?: string | null
+          first_name?: string | null
           id?: string
+          id_expiry_date?: string | null
+          id_issue_date?: string | null
+          id_issuing_country?: string | null
+          id_number?: string | null
+          id_type?: string | null
           is_pep?: boolean | null
           is_professional_investor?: boolean | null
           is_qualified_purchaser?: boolean | null
           is_sanctioned?: boolean | null
+          is_us_citizen?: boolean | null
+          is_us_taxpayer?: boolean | null
           kyc_approved_by?: string | null
           kyc_completed_at?: string | null
           kyc_expiry_date?: string | null
           kyc_status?: string | null
+          last_name?: string | null
           legal_name?: string
           logo_url?: string | null
+          middle_name?: string | null
+          name_suffix?: string | null
+          nationality?: string | null
           onboarding_status?: string | null
           phone?: string | null
           phone_mobile?: string | null
           phone_office?: string | null
+          postal_code?: string | null
           primary_rm?: string | null
+          proof_of_address_date?: string | null
+          proof_of_address_expiry?: string | null
           registered_address?: string | null
           representative_name?: string | null
           representative_title?: string | null
           residential_city?: string | null
           residential_country?: string | null
+          residential_line_2?: string | null
           residential_postal_code?: string | null
           residential_state?: string | null
           residential_street?: string | null
           secondary_rm?: string | null
           status?: string | null
+          tax_id_number?: string | null
           tax_residency?: string | null
           type?: string | null
           updated_at?: string | null
+          us_taxpayer_id?: string | null
         }
         Relationships: [
           {
@@ -5668,6 +7028,7 @@ export type Database = {
           investor_id: string | null
           invoice_number: string | null
           match_status: string | null
+          notes: string | null
           paid_amount: number
           paid_at: string | null
           reminder_days_before: number | null
@@ -5692,6 +7053,7 @@ export type Database = {
           investor_id?: string | null
           invoice_number?: string | null
           match_status?: string | null
+          notes?: string | null
           paid_amount?: number
           paid_at?: string | null
           reminder_days_before?: number | null
@@ -5716,6 +7078,7 @@ export type Database = {
           investor_id?: string | null
           invoice_number?: string | null
           match_status?: string | null
+          notes?: string | null
           paid_amount?: number
           paid_at?: string | null
           reminder_days_before?: number | null
@@ -5766,17 +7129,31 @@ export type Database = {
       }
       kyc_submissions: {
         Row: {
+          arranger_entity_id: string | null
+          arranger_member_id: string | null
+          commercial_partner_id: string | null
+          commercial_partner_member_id: string | null
           counterparty_entity_id: string | null
           counterparty_member_id: string | null
           created_at: string
           custom_label: string | null
+          document_age_days_at_submission: number | null
+          document_date: string | null
           document_id: string | null
           document_type: string
+          document_valid_from: string | null
+          document_valid_to: string | null
           expiry_date: string | null
           id: string
+          introducer_id: string | null
+          introducer_member_id: string | null
           investor_id: string
           investor_member_id: string | null
+          lawyer_id: string | null
+          lawyer_member_id: string | null
           metadata: Json | null
+          partner_id: string | null
+          partner_member_id: string | null
           previous_submission_id: string | null
           rejection_reason: string | null
           reviewed_at: string | null
@@ -5784,20 +7161,38 @@ export type Database = {
           status: string
           submitted_at: string
           updated_at: string
+          verification_method: string | null
+          verification_notes: string | null
+          verified_at: string | null
+          verified_by: string | null
           version: number
         }
         Insert: {
+          arranger_entity_id?: string | null
+          arranger_member_id?: string | null
+          commercial_partner_id?: string | null
+          commercial_partner_member_id?: string | null
           counterparty_entity_id?: string | null
           counterparty_member_id?: string | null
           created_at?: string
           custom_label?: string | null
+          document_age_days_at_submission?: number | null
+          document_date?: string | null
           document_id?: string | null
           document_type: string
+          document_valid_from?: string | null
+          document_valid_to?: string | null
           expiry_date?: string | null
           id?: string
+          introducer_id?: string | null
+          introducer_member_id?: string | null
           investor_id: string
           investor_member_id?: string | null
+          lawyer_id?: string | null
+          lawyer_member_id?: string | null
           metadata?: Json | null
+          partner_id?: string | null
+          partner_member_id?: string | null
           previous_submission_id?: string | null
           rejection_reason?: string | null
           reviewed_at?: string | null
@@ -5805,20 +7200,38 @@ export type Database = {
           status?: string
           submitted_at?: string
           updated_at?: string
+          verification_method?: string | null
+          verification_notes?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
           version?: number
         }
         Update: {
+          arranger_entity_id?: string | null
+          arranger_member_id?: string | null
+          commercial_partner_id?: string | null
+          commercial_partner_member_id?: string | null
           counterparty_entity_id?: string | null
           counterparty_member_id?: string | null
           created_at?: string
           custom_label?: string | null
+          document_age_days_at_submission?: number | null
+          document_date?: string | null
           document_id?: string | null
           document_type?: string
+          document_valid_from?: string | null
+          document_valid_to?: string | null
           expiry_date?: string | null
           id?: string
+          introducer_id?: string | null
+          introducer_member_id?: string | null
           investor_id?: string
           investor_member_id?: string | null
+          lawyer_id?: string | null
+          lawyer_member_id?: string | null
           metadata?: Json | null
+          partner_id?: string | null
+          partner_member_id?: string | null
           previous_submission_id?: string | null
           rejection_reason?: string | null
           reviewed_at?: string | null
@@ -5826,6 +7239,10 @@ export type Database = {
           status?: string
           submitted_at?: string
           updated_at?: string
+          verification_method?: string | null
+          verification_notes?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
           version?: number
         }
         Relationships: [
@@ -5834,6 +7251,34 @@ export type Database = {
             columns: ["previous_submission_id"]
             isOneToOne: false
             referencedRelation: "kyc_submissions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "kyc_submissions_arranger_entity_id_fkey"
+            columns: ["arranger_entity_id"]
+            isOneToOne: false
+            referencedRelation: "arranger_entities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "kyc_submissions_arranger_member_id_fkey"
+            columns: ["arranger_member_id"]
+            isOneToOne: false
+            referencedRelation: "arranger_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "kyc_submissions_commercial_partner_id_fkey"
+            columns: ["commercial_partner_id"]
+            isOneToOne: false
+            referencedRelation: "commercial_partners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "kyc_submissions_commercial_partner_member_id_fkey"
+            columns: ["commercial_partner_member_id"]
+            isOneToOne: false
+            referencedRelation: "commercial_partner_members"
             referencedColumns: ["id"]
           },
           {
@@ -5858,6 +7303,20 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "kyc_submissions_introducer_id_fkey"
+            columns: ["introducer_id"]
+            isOneToOne: false
+            referencedRelation: "introducers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "kyc_submissions_introducer_member_id_fkey"
+            columns: ["introducer_member_id"]
+            isOneToOne: false
+            referencedRelation: "introducer_members"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "kyc_submissions_investor_id_fkey"
             columns: ["investor_id"]
             isOneToOne: false
@@ -5872,8 +7331,43 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "kyc_submissions_lawyer_id_fkey"
+            columns: ["lawyer_id"]
+            isOneToOne: false
+            referencedRelation: "lawyers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "kyc_submissions_lawyer_member_id_fkey"
+            columns: ["lawyer_member_id"]
+            isOneToOne: false
+            referencedRelation: "lawyer_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "kyc_submissions_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "kyc_submissions_partner_member_id_fkey"
+            columns: ["partner_member_id"]
+            isOneToOne: false
+            referencedRelation: "partner_members"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "kyc_submissions_reviewed_by_fkey"
             columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "kyc_submissions_verified_by_fkey"
+            columns: ["verified_by"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -5884,83 +7378,152 @@ export type Database = {
         Row: {
           bar_jurisdiction: string | null
           bar_number: string | null
+          country_of_birth: string | null
+          country_of_tax_residency: string | null
           created_at: string
           created_by: string | null
+          date_of_birth: string | null
           effective_from: string | null
           effective_to: string | null
           email: string | null
+          first_name: string | null
           full_name: string
           id: string
           id_expiry_date: string | null
+          id_issue_date: string | null
+          id_issuing_country: string | null
           id_number: string | null
           id_type: string | null
           is_active: boolean
           is_signatory: boolean
+          is_us_citizen: boolean | null
+          is_us_taxpayer: boolean | null
+          kyc_approved_at: string | null
+          kyc_approved_by: string | null
+          kyc_expiry_date: string | null
+          kyc_notes: string | null
+          kyc_status: string | null
+          last_name: string | null
           lawyer_id: string
+          middle_name: string | null
+          name_suffix: string | null
           nationality: string | null
           phone: string | null
+          phone_mobile: string | null
+          phone_office: string | null
+          proof_of_address_date: string | null
+          proof_of_address_expiry: string | null
           residential_city: string | null
           residential_country: string | null
+          residential_line_2: string | null
           residential_postal_code: string | null
           residential_state: string | null
           residential_street: string | null
           role: string
           role_title: string | null
+          tax_id_number: string | null
           updated_at: string
+          us_taxpayer_id: string | null
         }
         Insert: {
           bar_jurisdiction?: string | null
           bar_number?: string | null
+          country_of_birth?: string | null
+          country_of_tax_residency?: string | null
           created_at?: string
           created_by?: string | null
+          date_of_birth?: string | null
           effective_from?: string | null
           effective_to?: string | null
           email?: string | null
+          first_name?: string | null
           full_name: string
           id?: string
           id_expiry_date?: string | null
+          id_issue_date?: string | null
+          id_issuing_country?: string | null
           id_number?: string | null
           id_type?: string | null
           is_active?: boolean
           is_signatory?: boolean
+          is_us_citizen?: boolean | null
+          is_us_taxpayer?: boolean | null
+          kyc_approved_at?: string | null
+          kyc_approved_by?: string | null
+          kyc_expiry_date?: string | null
+          kyc_notes?: string | null
+          kyc_status?: string | null
+          last_name?: string | null
           lawyer_id: string
+          middle_name?: string | null
+          name_suffix?: string | null
           nationality?: string | null
           phone?: string | null
+          phone_mobile?: string | null
+          phone_office?: string | null
+          proof_of_address_date?: string | null
+          proof_of_address_expiry?: string | null
           residential_city?: string | null
           residential_country?: string | null
+          residential_line_2?: string | null
           residential_postal_code?: string | null
           residential_state?: string | null
           residential_street?: string | null
           role: string
           role_title?: string | null
+          tax_id_number?: string | null
           updated_at?: string
+          us_taxpayer_id?: string | null
         }
         Update: {
           bar_jurisdiction?: string | null
           bar_number?: string | null
+          country_of_birth?: string | null
+          country_of_tax_residency?: string | null
           created_at?: string
           created_by?: string | null
+          date_of_birth?: string | null
           effective_from?: string | null
           effective_to?: string | null
           email?: string | null
+          first_name?: string | null
           full_name?: string
           id?: string
           id_expiry_date?: string | null
+          id_issue_date?: string | null
+          id_issuing_country?: string | null
           id_number?: string | null
           id_type?: string | null
           is_active?: boolean
           is_signatory?: boolean
+          is_us_citizen?: boolean | null
+          is_us_taxpayer?: boolean | null
+          kyc_approved_at?: string | null
+          kyc_approved_by?: string | null
+          kyc_expiry_date?: string | null
+          kyc_notes?: string | null
+          kyc_status?: string | null
+          last_name?: string | null
           lawyer_id?: string
+          middle_name?: string | null
+          name_suffix?: string | null
           nationality?: string | null
           phone?: string | null
+          phone_mobile?: string | null
+          phone_office?: string | null
+          proof_of_address_date?: string | null
+          proof_of_address_expiry?: string | null
           residential_city?: string | null
           residential_country?: string | null
+          residential_line_2?: string | null
           residential_postal_code?: string | null
           residential_state?: string | null
           residential_street?: string | null
           role?: string
           role_title?: string | null
+          tax_id_number?: string | null
           updated_at?: string
+          us_taxpayer_id?: string | null
         }
         Relationships: [
           {
@@ -5982,32 +7545,54 @@ export type Database = {
       lawyer_users: {
         Row: {
           can_sign: boolean
+          ceo_approval_status: string | null
+          ceo_approved_at: string | null
+          ceo_approved_by: string | null
           created_at: string
           created_by: string | null
           is_primary: boolean
           lawyer_id: string
           role: string
+          signature_specimen_uploaded_at: string | null
+          signature_specimen_url: string | null
           user_id: string
         }
         Insert: {
           can_sign?: boolean
+          ceo_approval_status?: string | null
+          ceo_approved_at?: string | null
+          ceo_approved_by?: string | null
           created_at?: string
           created_by?: string | null
           is_primary?: boolean
           lawyer_id: string
           role?: string
+          signature_specimen_uploaded_at?: string | null
+          signature_specimen_url?: string | null
           user_id: string
         }
         Update: {
           can_sign?: boolean
+          ceo_approval_status?: string | null
+          ceo_approved_at?: string | null
+          ceo_approved_by?: string | null
           created_at?: string
           created_by?: string | null
           is_primary?: boolean
           lawyer_id?: string
           role?: string
+          signature_specimen_uploaded_at?: string | null
+          signature_specimen_url?: string | null
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "lawyer_users_ceo_approved_by_fkey"
+            columns: ["ceo_approved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "lawyer_users_created_by_fkey"
             columns: ["created_by"]
@@ -6136,6 +7721,60 @@ export type Database = {
           },
         ]
       }
+      member_invitations: {
+        Row: {
+          accepted_at: string | null
+          accepted_by_user_id: string | null
+          created_at: string
+          email: string
+          entity_id: string
+          entity_name: string | null
+          entity_type: string
+          expires_at: string
+          id: string
+          invitation_token: string
+          invited_by: string
+          invited_by_name: string | null
+          is_signatory: boolean
+          role: string
+          status: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          accepted_by_user_id?: string | null
+          created_at?: string
+          email: string
+          entity_id: string
+          entity_name?: string | null
+          entity_type: string
+          expires_at?: string
+          id?: string
+          invitation_token?: string
+          invited_by: string
+          invited_by_name?: string | null
+          is_signatory?: boolean
+          role?: string
+          status?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          accepted_by_user_id?: string | null
+          created_at?: string
+          email?: string
+          entity_id?: string
+          entity_name?: string | null
+          entity_type?: string
+          expires_at?: string
+          id?: string
+          invitation_token?: string
+          invited_by?: string
+          invited_by_name?: string | null
+          is_signatory?: boolean
+          role?: string
+          status?: string
+        }
+        Relationships: []
+      }
       message_reads: {
         Row: {
           message_id: string
@@ -6233,87 +7872,333 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          created_at: string | null
+          data: Json | null
+          id: string
+          link: string | null
+          message: string | null
+          read: boolean | null
+          title: string
+          type: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          data?: Json | null
+          id?: string
+          link?: string | null
+          message?: string | null
+          read?: boolean | null
+          title: string
+          type: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          data?: Json | null
+          id?: string
+          link?: string | null
+          message?: string | null
+          read?: boolean | null
+          title?: string
+          type?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      partner_commissions: {
+        Row: {
+          accrual_amount: number
+          approved_at: string | null
+          approved_by: string | null
+          arranger_id: string | null
+          base_amount: number | null
+          basis_type: string | null
+          created_at: string | null
+          currency: string | null
+          deal_id: string | null
+          fee_plan_id: string | null
+          id: string
+          investor_id: string | null
+          invoice_id: string | null
+          notes: string | null
+          paid_at: string | null
+          partner_id: string | null
+          payment_due_date: string | null
+          payment_reference: string | null
+          rate_bps: number
+          rejected_at: string | null
+          rejected_by: string | null
+          rejection_reason: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          accrual_amount: number
+          approved_at?: string | null
+          approved_by?: string | null
+          arranger_id?: string | null
+          base_amount?: number | null
+          basis_type?: string | null
+          created_at?: string | null
+          currency?: string | null
+          deal_id?: string | null
+          fee_plan_id?: string | null
+          id?: string
+          investor_id?: string | null
+          invoice_id?: string | null
+          notes?: string | null
+          paid_at?: string | null
+          partner_id?: string | null
+          payment_due_date?: string | null
+          payment_reference?: string | null
+          rate_bps: number
+          rejected_at?: string | null
+          rejected_by?: string | null
+          rejection_reason?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          accrual_amount?: number
+          approved_at?: string | null
+          approved_by?: string | null
+          arranger_id?: string | null
+          base_amount?: number | null
+          basis_type?: string | null
+          created_at?: string | null
+          currency?: string | null
+          deal_id?: string | null
+          fee_plan_id?: string | null
+          id?: string
+          investor_id?: string | null
+          invoice_id?: string | null
+          notes?: string | null
+          paid_at?: string | null
+          partner_id?: string | null
+          payment_due_date?: string | null
+          payment_reference?: string | null
+          rate_bps?: number
+          rejected_at?: string | null
+          rejected_by?: string | null
+          rejection_reason?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_commissions_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_commissions_arranger_id_fkey"
+            columns: ["arranger_id"]
+            isOneToOne: false
+            referencedRelation: "arranger_entities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_commissions_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_commissions_fee_plan_id_fkey"
+            columns: ["fee_plan_id"]
+            isOneToOne: false
+            referencedRelation: "fee_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_commissions_investor_id_fkey"
+            columns: ["investor_id"]
+            isOneToOne: false
+            referencedRelation: "investors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_commissions_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_commissions_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_commissions_rejected_by_fkey"
+            columns: ["rejected_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       partner_members: {
         Row: {
+          country_of_birth: string | null
+          country_of_tax_residency: string | null
           created_at: string
           created_by: string | null
+          date_of_birth: string | null
           effective_from: string | null
           effective_to: string | null
           email: string | null
+          first_name: string | null
           full_name: string
           id: string
           id_expiry_date: string | null
+          id_issue_date: string | null
+          id_issuing_country: string | null
           id_number: string | null
           id_type: string | null
           is_active: boolean
           is_beneficial_owner: boolean
           is_signatory: boolean
+          is_us_citizen: boolean | null
+          is_us_taxpayer: boolean | null
+          kyc_approved_at: string | null
+          kyc_approved_by: string | null
+          kyc_expiry_date: string | null
+          kyc_notes: string | null
+          kyc_status: string | null
+          last_name: string | null
+          middle_name: string | null
+          name_suffix: string | null
           nationality: string | null
           ownership_percentage: number | null
           partner_id: string
           phone: string | null
+          phone_mobile: string | null
+          phone_office: string | null
+          proof_of_address_date: string | null
+          proof_of_address_expiry: string | null
           residential_city: string | null
           residential_country: string | null
+          residential_line_2: string | null
           residential_postal_code: string | null
           residential_state: string | null
           residential_street: string | null
           role: string
           role_title: string | null
+          tax_id_number: string | null
           updated_at: string
+          us_taxpayer_id: string | null
         }
         Insert: {
+          country_of_birth?: string | null
+          country_of_tax_residency?: string | null
           created_at?: string
           created_by?: string | null
+          date_of_birth?: string | null
           effective_from?: string | null
           effective_to?: string | null
           email?: string | null
+          first_name?: string | null
           full_name: string
           id?: string
           id_expiry_date?: string | null
+          id_issue_date?: string | null
+          id_issuing_country?: string | null
           id_number?: string | null
           id_type?: string | null
           is_active?: boolean
           is_beneficial_owner?: boolean
           is_signatory?: boolean
+          is_us_citizen?: boolean | null
+          is_us_taxpayer?: boolean | null
+          kyc_approved_at?: string | null
+          kyc_approved_by?: string | null
+          kyc_expiry_date?: string | null
+          kyc_notes?: string | null
+          kyc_status?: string | null
+          last_name?: string | null
+          middle_name?: string | null
+          name_suffix?: string | null
           nationality?: string | null
           ownership_percentage?: number | null
           partner_id: string
           phone?: string | null
+          phone_mobile?: string | null
+          phone_office?: string | null
+          proof_of_address_date?: string | null
+          proof_of_address_expiry?: string | null
           residential_city?: string | null
           residential_country?: string | null
+          residential_line_2?: string | null
           residential_postal_code?: string | null
           residential_state?: string | null
           residential_street?: string | null
           role: string
           role_title?: string | null
+          tax_id_number?: string | null
           updated_at?: string
+          us_taxpayer_id?: string | null
         }
         Update: {
+          country_of_birth?: string | null
+          country_of_tax_residency?: string | null
           created_at?: string
           created_by?: string | null
+          date_of_birth?: string | null
           effective_from?: string | null
           effective_to?: string | null
           email?: string | null
+          first_name?: string | null
           full_name?: string
           id?: string
           id_expiry_date?: string | null
+          id_issue_date?: string | null
+          id_issuing_country?: string | null
           id_number?: string | null
           id_type?: string | null
           is_active?: boolean
           is_beneficial_owner?: boolean
           is_signatory?: boolean
+          is_us_citizen?: boolean | null
+          is_us_taxpayer?: boolean | null
+          kyc_approved_at?: string | null
+          kyc_approved_by?: string | null
+          kyc_expiry_date?: string | null
+          kyc_notes?: string | null
+          kyc_status?: string | null
+          last_name?: string | null
+          middle_name?: string | null
+          name_suffix?: string | null
           nationality?: string | null
           ownership_percentage?: number | null
           partner_id?: string
           phone?: string | null
+          phone_mobile?: string | null
+          phone_office?: string | null
+          proof_of_address_date?: string | null
+          proof_of_address_expiry?: string | null
           residential_city?: string | null
           residential_country?: string | null
+          residential_line_2?: string | null
           residential_postal_code?: string | null
           residential_state?: string | null
           residential_street?: string | null
           role?: string
           role_title?: string | null
+          tax_id_number?: string | null
           updated_at?: string
+          us_taxpayer_id?: string | null
         }
         Relationships: [
           {
@@ -6335,32 +8220,54 @@ export type Database = {
       partner_users: {
         Row: {
           can_sign: boolean
+          ceo_approval_status: string | null
+          ceo_approved_at: string | null
+          ceo_approved_by: string | null
           created_at: string
           created_by: string | null
           is_primary: boolean
           partner_id: string
           role: string
+          signature_specimen_uploaded_at: string | null
+          signature_specimen_url: string | null
           user_id: string
         }
         Insert: {
           can_sign?: boolean
+          ceo_approval_status?: string | null
+          ceo_approved_at?: string | null
+          ceo_approved_by?: string | null
           created_at?: string
           created_by?: string | null
           is_primary?: boolean
           partner_id: string
           role?: string
+          signature_specimen_uploaded_at?: string | null
+          signature_specimen_url?: string | null
           user_id: string
         }
         Update: {
           can_sign?: boolean
+          ceo_approval_status?: string | null
+          ceo_approved_at?: string | null
+          ceo_approved_by?: string | null
           created_at?: string
           created_by?: string | null
           is_primary?: boolean
           partner_id?: string
           role?: string
+          signature_specimen_uploaded_at?: string | null
+          signature_specimen_url?: string | null
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "partner_users_ceo_approved_by_fkey"
+            columns: ["ceo_approved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "partner_users_created_by_fkey"
             columns: ["created_by"]
@@ -6633,9 +8540,13 @@ export type Database = {
         Row: {
           agreement_document_id: string | null
           agreement_type: string
+          approved_at: string | null
           arranger_id: string | null
+          arranger_signature_request_id: string | null
+          ceo_signature_request_id: string | null
           commercial_partner_id: string
           commission_cap_amount: number | null
+          cp_signature_request_id: string | null
           created_at: string
           created_by: string | null
           deal_types: string[] | null
@@ -6645,7 +8556,12 @@ export type Database = {
           expiry_date: string | null
           id: string
           payment_terms: string | null
+          pdf_url: string | null
+          rejected_at: string | null
+          rejection_reason: string | null
+          sent_at: string | null
           signed_date: string | null
+          signed_pdf_url: string | null
           status: string
           territory: string | null
           updated_at: string
@@ -6653,9 +8569,13 @@ export type Database = {
         Insert: {
           agreement_document_id?: string | null
           agreement_type?: string
+          approved_at?: string | null
           arranger_id?: string | null
+          arranger_signature_request_id?: string | null
+          ceo_signature_request_id?: string | null
           commercial_partner_id: string
           commission_cap_amount?: number | null
+          cp_signature_request_id?: string | null
           created_at?: string
           created_by?: string | null
           deal_types?: string[] | null
@@ -6665,7 +8585,12 @@ export type Database = {
           expiry_date?: string | null
           id?: string
           payment_terms?: string | null
+          pdf_url?: string | null
+          rejected_at?: string | null
+          rejection_reason?: string | null
+          sent_at?: string | null
           signed_date?: string | null
+          signed_pdf_url?: string | null
           status?: string
           territory?: string | null
           updated_at?: string
@@ -6673,9 +8598,13 @@ export type Database = {
         Update: {
           agreement_document_id?: string | null
           agreement_type?: string
+          approved_at?: string | null
           arranger_id?: string | null
+          arranger_signature_request_id?: string | null
+          ceo_signature_request_id?: string | null
           commercial_partner_id?: string
           commission_cap_amount?: number | null
+          cp_signature_request_id?: string | null
           created_at?: string
           created_by?: string | null
           deal_types?: string[] | null
@@ -6685,17 +8614,50 @@ export type Database = {
           expiry_date?: string | null
           id?: string
           payment_terms?: string | null
+          pdf_url?: string | null
+          rejected_at?: string | null
+          rejection_reason?: string | null
+          sent_at?: string | null
           signed_date?: string | null
+          signed_pdf_url?: string | null
           status?: string
           territory?: string | null
           updated_at?: string
         }
         Relationships: [
           {
+            foreignKeyName: "placement_agreements_arranger_id_fkey"
+            columns: ["arranger_id"]
+            isOneToOne: false
+            referencedRelation: "arranger_entities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "placement_agreements_arranger_signature_request_id_fkey"
+            columns: ["arranger_signature_request_id"]
+            isOneToOne: false
+            referencedRelation: "signature_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "placement_agreements_ceo_signature_request_id_fkey"
+            columns: ["ceo_signature_request_id"]
+            isOneToOne: false
+            referencedRelation: "signature_requests"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "placement_agreements_cp_fk"
             columns: ["commercial_partner_id"]
             isOneToOne: false
             referencedRelation: "commercial_partners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "placement_agreements_cp_signature_request_id_fkey"
+            columns: ["cp_signature_request_id"]
+            isOneToOne: false
+            referencedRelation: "signature_requests"
             referencedColumns: ["id"]
           },
           {
@@ -6781,6 +8743,7 @@ export type Database = {
           password_set: boolean | null
           phone: string | null
           role: Database["public"]["Enums"]["user_role"]
+          signature_specimen_url: string | null
           title: string | null
           updated_at: string | null
         }
@@ -6798,6 +8761,7 @@ export type Database = {
           password_set?: boolean | null
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
+          signature_specimen_url?: string | null
           title?: string | null
           updated_at?: string | null
         }
@@ -6815,6 +8779,7 @@ export type Database = {
           password_set?: boolean | null
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
+          signature_specimen_url?: string | null
           title?: string | null
           updated_at?: string | null
         }
@@ -7316,6 +9281,20 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "signature_requests_introducer_agreement_id_fkey"
+            columns: ["introducer_agreement_id"]
+            isOneToOne: false
+            referencedRelation: "introducer_agreements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "signature_requests_introducer_id_fkey"
+            columns: ["introducer_id"]
+            isOneToOne: false
+            referencedRelation: "introducers"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "signature_requests_investor_id_fkey"
             columns: ["investor_id"]
             isOneToOne: false
@@ -7327,6 +9306,20 @@ export type Database = {
             columns: ["member_id"]
             isOneToOne: false
             referencedRelation: "investor_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "signature_requests_placement_agreement_id_fkey"
+            columns: ["placement_agreement_id"]
+            isOneToOne: false
+            referencedRelation: "placement_agreements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "signature_requests_placement_id_fkey"
+            columns: ["placement_id"]
+            isOneToOne: false
+            referencedRelation: "commercial_partners"
             referencedColumns: ["id"]
           },
           {
@@ -7591,6 +9584,10 @@ export type Database = {
           proxy_authorization_doc_id: string | null
           proxy_commercial_partner_id: string | null
           proxy_user_id: string | null
+          rejected_at: string | null
+          rejected_by: string | null
+          rejection_notes: string | null
+          rejection_reason: string | null
           signed_at: string | null
           signed_doc_id: string | null
           sourcing_contract_ref: string | null
@@ -7646,6 +9643,10 @@ export type Database = {
           proxy_authorization_doc_id?: string | null
           proxy_commercial_partner_id?: string | null
           proxy_user_id?: string | null
+          rejected_at?: string | null
+          rejected_by?: string | null
+          rejection_notes?: string | null
+          rejection_reason?: string | null
           signed_at?: string | null
           signed_doc_id?: string | null
           sourcing_contract_ref?: string | null
@@ -7701,6 +9702,10 @@ export type Database = {
           proxy_authorization_doc_id?: string | null
           proxy_commercial_partner_id?: string | null
           proxy_user_id?: string | null
+          rejected_at?: string | null
+          rejected_by?: string | null
+          rejection_notes?: string | null
+          rejection_reason?: string | null
           signed_at?: string | null
           signed_doc_id?: string | null
           sourcing_contract_ref?: string | null
@@ -7763,6 +9768,13 @@ export type Database = {
             columns: ["proxy_commercial_partner_id"]
             isOneToOne: false
             referencedRelation: "commercial_partners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscriptions_rejected_by_fkey"
+            columns: ["rejected_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
@@ -7980,6 +9992,7 @@ export type Database = {
           owner_investor_id: string | null
           owner_user_id: string | null
           priority: string | null
+          related_deal_id: string | null
           related_entity_id: string | null
           related_entity_type: string | null
           started_at: string | null
@@ -8002,6 +10015,7 @@ export type Database = {
           owner_investor_id?: string | null
           owner_user_id?: string | null
           priority?: string | null
+          related_deal_id?: string | null
           related_entity_id?: string | null
           related_entity_type?: string | null
           started_at?: string | null
@@ -8024,6 +10038,7 @@ export type Database = {
           owner_investor_id?: string | null
           owner_user_id?: string | null
           priority?: string | null
+          related_deal_id?: string | null
           related_entity_id?: string | null
           related_entity_type?: string | null
           started_at?: string | null
@@ -8051,6 +10066,13 @@ export type Database = {
             columns: ["owner_user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_related_deal_id_fkey"
+            columns: ["related_deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
             referencedColumns: ["id"]
           },
         ]
@@ -8612,12 +10634,31 @@ export type Database = {
         Args: { p_approval_id: string }
         Returns: boolean
       }
+      check_deal_arranger_access: {
+        Args: { p_deal_id: string }
+        Returns: boolean
+      }
       check_entity_compliance: {
         Args: never
         Returns: {
           issues_found: number
           vehicle_id: string
         }[]
+      }
+      check_partner_referral_access: {
+        Args: {
+          p_referred_by_entity_id: string
+          p_referred_by_entity_type: string
+        }
+        Returns: boolean
+      }
+      check_partner_referred_investor: {
+        Args: { p_investor_id: string }
+        Returns: boolean
+      }
+      check_partner_referred_to_deal: {
+        Args: { p_deal_id: string }
+        Returns: boolean
       }
       create_default_entity_folders: {
         Args: { p_vehicle_id: string }
@@ -8648,6 +10689,7 @@ export type Database = {
           owner_investor_id: string | null
           owner_user_id: string | null
           priority: string | null
+          related_deal_id: string | null
           related_entity_id: string | null
           related_entity_type: string | null
           started_at: string | null
@@ -8821,6 +10863,7 @@ export type Database = {
           vehicle_id: string
         }[]
       }
+      get_my_arranger_id: { Args: never; Returns: string }
       get_my_investor_ids: { Args: never; Returns: string[] }
       get_or_create_investor: {
         Args: { p_name: string; p_type: string }
@@ -8873,7 +10916,33 @@ export type Database = {
       }
       has_document_access: { Args: { p_document_id: string }; Returns: boolean }
       has_vehicle_access: { Args: { p_vehicle_id: string }; Returns: boolean }
+      is_arranger_admin: { Args: { p_arranger_id: string }; Returns: boolean }
       is_ceo: { Args: never; Returns: boolean }
+      is_commercial_partner_admin: {
+        Args: { p_commercial_partner_id: string }
+        Returns: boolean
+      }
+      is_deal_for_my_arranger: { Args: { p_deal_id: string }; Returns: boolean }
+      is_introducer_admin: {
+        Args: { p_introducer_id: string }
+        Returns: boolean
+      }
+      is_introducer_user: { Args: never; Returns: boolean }
+      is_lawyer_admin: { Args: { p_lawyer_id: string }; Returns: boolean }
+      is_lawyer_for_deal: { Args: { p_deal_id: string }; Returns: boolean }
+      is_lawyer_for_investor: {
+        Args: { p_investor_id: string }
+        Returns: boolean
+      }
+      is_my_arranger_deal: {
+        Args: { p_arranger_entity_id: string }
+        Returns: boolean
+      }
+      is_partner_admin: { Args: { p_partner_id: string }; Returns: boolean }
+      is_partner_for_term_sheet: {
+        Args: { term_sheet_id: string }
+        Returns: boolean
+      }
       is_staff: { Args: never; Returns: boolean }
       is_staff_user: { Args: never; Returns: boolean }
       is_user_dispatched_to_deal: {
@@ -8980,6 +11049,7 @@ export type Database = {
         | "commercial_partner_investor"
         | "commercial_partner_proxy"
         | "arranger"
+        | "partner"
       deal_status_enum:
         | "draft"
         | "open"
@@ -9100,6 +11170,7 @@ export type Database = {
         | "commercial_partner"
         | "lawyer"
         | "ceo"
+        | "multi_persona"
       vehicle_type:
         | "fund"
         | "spv"
@@ -9260,6 +11331,7 @@ export const Constants = {
         "commercial_partner_investor",
         "commercial_partner_proxy",
         "arranger",
+        "partner",
       ],
       deal_status_enum: [
         "draft",
@@ -9394,6 +11466,7 @@ export const Constants = {
         "commercial_partner",
         "lawyer",
         "ceo",
+        "multi_persona",
       ],
       vehicle_type: [
         "fund",
@@ -9408,4 +11481,3 @@ export const Constants = {
     },
   },
 } as const
-

@@ -237,6 +237,13 @@ interface Opportunity {
   can_subscribe: boolean
   can_sign_subscription: boolean
   is_tracking_only?: boolean
+  // PERSONA-BASED ACCESS CONTROLS (per Fred's meeting requirements)
+  access_controls?: {
+    can_view_term_sheet: boolean
+    can_view_data_room: boolean
+    has_auto_data_room_access: boolean
+    restriction_reason: string | null
+  }
 }
 
 function formatCurrency(amount: number | null, currency: string = 'USD'): string {
@@ -618,7 +625,8 @@ export default function OpportunityDetailPage() {
               )}
 
               {/* Secondary: Data Room Interest */}
-              {canExpressInterest && (
+              {/* PERSONA ACCESS RULE: Hide for introducers and lawyers who can't access data room */}
+              {canExpressInterest && opportunity.access_controls?.can_view_data_room !== false && (
                 <Button
                   variant="outline"
                   className="w-full h-auto py-3 border-dashed"
@@ -677,12 +685,15 @@ export default function OpportunityDetailPage() {
       <Tabs defaultValue="overview" className="space-y-4">
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="data-room" className="relative">
-            Data Room
-            {!opportunity.data_room.has_access && (
-              <Lock className="w-3 h-3 ml-1" />
-            )}
-          </TabsTrigger>
+          {/* PERSONA ACCESS RULE: Hide Data Room tab for introducers and lawyers */}
+          {(opportunity.access_controls?.can_view_data_room !== false) && (
+            <TabsTrigger value="data-room" className="relative">
+              Data Room
+              {!opportunity.data_room.has_access && (
+                <Lock className="w-3 h-3 ml-1" />
+              )}
+            </TabsTrigger>
+          )}
           <TabsTrigger value="faqs">FAQs</TabsTrigger>
         </TabsList>
 
@@ -798,7 +809,8 @@ export default function OpportunityDetailPage() {
           </div>
 
           {/* Term Sheet */}
-          {opportunity.fee_structures.length > 0 && (() => {
+          {/* PERSONA ACCESS RULE: Hide Term Sheet for introducers and lawyers */}
+          {opportunity.access_controls?.can_view_term_sheet !== false && opportunity.fee_structures.length > 0 && (() => {
             const termSheet = opportunity.fee_structures.find(ts => ts.status === 'published') || opportunity.fee_structures[0]
             if (!termSheet) return null
 
@@ -1069,36 +1081,44 @@ export default function OpportunityDetailPage() {
         </TabsContent>
 
         {/* Data Room Tab */}
-        <TabsContent value="data-room" className="space-y-4">
-          {/* Access details banner when has access */}
-          {opportunity.data_room.has_access && opportunity.data_room.access_details && (
-            <Card>
-              <CardContent className="py-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                    Access granted: {formatDate(opportunity.data_room.access_details.granted_at)}
-                  </div>
-                  {opportunity.data_room.access_details.expires_at && (
-                    <div className="flex items-center gap-2 text-sm text-amber-600">
-                      <Clock className="w-4 h-4" />
-                      Expires: {formatDate(opportunity.data_room.access_details.expires_at)}
+        {/* PERSONA ACCESS RULE: Hide Data Room content for introducers and lawyers */}
+        {(opportunity.access_controls?.can_view_data_room !== false) && (
+          <TabsContent value="data-room" className="space-y-4">
+            {/* Access details banner when has access */}
+            {opportunity.data_room.has_access && opportunity.data_room.access_details && (
+              <Card>
+                <CardContent className="py-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                      Access granted: {formatDate(opportunity.data_room.access_details.granted_at)}
+                      {opportunity.access_controls?.has_auto_data_room_access && (
+                        <span className="ml-2 text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">
+                          Auto-granted (Arranger)
+                        </span>
+                      )}
                     </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          )}
+                    {opportunity.data_room.access_details.expires_at && (
+                      <div className="flex items-center gap-2 text-sm text-amber-600">
+                        <Clock className="w-4 h-4" />
+                        Expires: {formatDate(opportunity.data_room.access_details.expires_at)}
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
-          {/* Data Room Viewer with folder grouping and featured docs */}
-          <DataRoomViewer
-            documents={opportunity.data_room.documents as DataRoomDocument[]}
-            hasAccess={opportunity.data_room.has_access}
-            requiresNda={opportunity.data_room.requires_nda}
-            dealId={opportunity.id}
-            onRequestAccess={opportunity.can_sign_nda ? () => setShowNdaDialog(true) : undefined}
-          />
-        </TabsContent>
+            {/* Data Room Viewer with folder grouping and featured docs */}
+            <DataRoomViewer
+              documents={opportunity.data_room.documents as DataRoomDocument[]}
+              hasAccess={opportunity.data_room.has_access}
+              requiresNda={opportunity.data_room.requires_nda}
+              dealId={opportunity.id}
+              onRequestAccess={opportunity.can_sign_nda ? () => setShowNdaDialog(true) : undefined}
+            />
+          </TabsContent>
+        )}
 
         {/* FAQs Tab */}
         <TabsContent value="faqs" className="space-y-4">

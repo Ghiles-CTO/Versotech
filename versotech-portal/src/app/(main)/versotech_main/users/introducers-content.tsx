@@ -31,6 +31,11 @@ type IntroducerRecord = {
     created_at: string | null
     paid_at: string | null
   }> | null
+  fee_plans?: Array<{
+    id: string
+    status: string | null
+    is_active: boolean | null
+  }> | null
 }
 
 export default function IntroducersContent() {
@@ -80,6 +85,11 @@ export default function IntroducersContent() {
               status,
               created_at,
               paid_at
+            ),
+            fee_plans (
+              id,
+              status,
+              is_active
             )
           `)
           .order('created_at', { ascending: false })
@@ -92,6 +102,7 @@ export default function IntroducersContent() {
         const processedIntroducers: IntroducersDashboardProps['introducers'] = introducersRecords.map((record) => {
           const introductions = Array.isArray(record.introductions) ? record.introductions : []
           const commissions = Array.isArray(record.introducer_commissions) ? record.introducer_commissions : []
+          const feePlansData = Array.isArray(record.fee_plans) ? record.fee_plans : []
 
           let latestIntroduction: string | null = null
 
@@ -127,6 +138,15 @@ export default function IntroducersContent() {
 
           const successfulAllocations = introductions.filter((intro) => intro?.status === 'allocated').length
 
+          // Calculate fee plan counts
+          const feePlans = {
+            total: feePlansData.length,
+            accepted: feePlansData.filter((fp) => fp?.status === 'accepted').length,
+            pending: feePlansData.filter((fp) =>
+              fp?.status === 'sent' || fp?.status === 'pending_signature' || fp?.status === 'draft'
+            ).length,
+          }
+
           return {
             id: record.id,
             legalName: record.legal_name ?? 'Unnamed Introducer',
@@ -142,6 +162,7 @@ export default function IntroducersContent() {
             totalCommissionPaid,
             pendingCommission,
             lastIntroductionAt: latestIntroduction,
+            feePlans,
           }
         })
 

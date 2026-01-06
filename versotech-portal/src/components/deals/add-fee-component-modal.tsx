@@ -29,7 +29,7 @@ export function AddFeeComponentModal({ dealId, feePlanId }: AddFeeComponentModal
     flat_amount: '',
     frequency: 'one_time',
     hurdle_rate_bps: '',
-    high_watermark: false,
+    has_high_water_mark: false,
     notes: ''
   })
 
@@ -60,7 +60,7 @@ export function AddFeeComponentModal({ dealId, feePlanId }: AddFeeComponentModal
           flat_amount: formData.flat_amount ? parseFloat(formData.flat_amount) : undefined,
           frequency: formData.frequency,
           hurdle_rate_bps: formData.hurdle_rate_bps ? parseInt(formData.hurdle_rate_bps) : undefined,
-          high_watermark: formData.high_watermark,
+          has_high_water_mark: formData.has_high_water_mark,
           notes: formData.notes || undefined
         })
       })
@@ -78,7 +78,7 @@ export function AddFeeComponentModal({ dealId, feePlanId }: AddFeeComponentModal
         flat_amount: '',
         frequency: 'one_time',
         hurdle_rate_bps: '',
-        high_watermark: false,
+        has_high_water_mark: false,
         notes: ''
       })
       setOpen(false)
@@ -201,13 +201,13 @@ export function AddFeeComponentModal({ dealId, feePlanId }: AddFeeComponentModal
 
               <div className="flex items-center space-x-2 pt-8">
                 <Checkbox
-                  id="high_watermark"
-                  checked={formData.high_watermark}
-                  onCheckedChange={(checked) => 
-                    setFormData(prev => ({ ...prev, high_watermark: checked === true }))
+                  id="has_high_water_mark"
+                  checked={formData.has_high_water_mark}
+                  onCheckedChange={(checked) =>
+                    setFormData(prev => ({ ...prev, has_high_water_mark: checked === true }))
                   }
                 />
-                <Label htmlFor="high_watermark" className="cursor-pointer">
+                <Label htmlFor="has_high_water_mark" className="cursor-pointer">
                   Use High Watermark
                 </Label>
               </div>

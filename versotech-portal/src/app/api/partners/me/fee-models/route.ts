@@ -4,6 +4,10 @@ import { NextResponse } from 'next/server'
 /**
  * GET /api/partners/me/fee-models
  * Returns fee models assigned to the current partner or deals they are entitled to.
+ *
+ * IMPORTANT: Per Fred's requirements:
+ * - Partners CAN see term sheets (unlike introducers who cannot)
+ * - This API includes term_sheet data in the response
  */
 export async function GET() {
   const supabase = await createClient()
@@ -58,19 +62,36 @@ export async function GET() {
       ])
     )
 
+    // Partners CAN see term sheets (per Fred's requirements)
     let query = serviceSupabase
       .from('fee_plans')
       .select(`
         id,
         name,
         description,
+        status,
         is_active,
         is_default,
         effective_from,
         effective_until,
+        accepted_at,
+        accepted_by,
+        invoice_requests_enabled,
         deal:deal_id (
           id,
-          name
+          name,
+          company_name,
+          status,
+          close_at
+        ),
+        term_sheet:term_sheet_id (
+          id,
+          version,
+          status,
+          term_sheet_date,
+          subscription_fee_percent,
+          management_fee_percent,
+          carried_interest_percent
         ),
         fee_components (
           id,
@@ -78,7 +99,10 @@ export async function GET() {
           rate_bps,
           flat_amount,
           calc_method,
-          frequency
+          frequency,
+          duration_periods,
+          duration_unit,
+          payment_schedule
         )
       `)
       .order('created_at', { ascending: false })

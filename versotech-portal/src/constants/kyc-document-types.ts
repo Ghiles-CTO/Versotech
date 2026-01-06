@@ -1,13 +1,16 @@
 /**
  * KYC Document Types - VERSO Holdings
  *
- * Compulsory KYC documents for investors.
+ * Compulsory KYC documents for all entities including investors, partners,
+ * introducers, lawyers, arrangers, and commercial partners.
  */
 
 export interface KYCDocumentTypeInfo {
   label: string
   description: string
   category: 'individual' | 'entity' | 'both'
+  /** For member-specific documents */
+  memberOnly?: boolean
 }
 
 /**
@@ -24,7 +27,7 @@ export const SUGGESTED_KYC_DOCUMENT_TYPES: Record<string, KYCDocumentTypeInfo> =
     category: 'both',
   },
 
-  // ===== ENTITY DOCUMENTS =====
+  // ===== ENTITY DOCUMENTS - FORMATION =====
   nda_ndnc: {
     label: 'NDA / NDNC',
     description: 'Non-Disclosure and Non-Circumvention Agreement',
@@ -40,6 +43,33 @@ export const SUGGESTED_KYC_DOCUMENT_TYPES: Record<string, KYCDocumentTypeInfo> =
     description: 'Memorandum and Articles of Association',
     category: 'entity',
   },
+  certificate_of_good_standing: {
+    label: 'Certificate of Good Standing',
+    description: 'Certificate confirming entity is in good standing with registry',
+    category: 'entity',
+  },
+  certificate_of_incumbency: {
+    label: 'Certificate of Incumbency',
+    description: 'Certificate listing current directors and officers',
+    category: 'entity',
+  },
+  company_register_extract: {
+    label: 'Company Register Extract',
+    description: 'Official extract from company registry',
+    category: 'entity',
+  },
+  partnership_agreement: {
+    label: 'Partnership Agreement',
+    description: 'Limited Partnership or General Partnership Agreement',
+    category: 'entity',
+  },
+  operating_agreement: {
+    label: 'Operating Agreement',
+    description: 'LLC Operating Agreement or equivalent',
+    category: 'entity',
+  },
+
+  // ===== ENTITY DOCUMENTS - GOVERNANCE =====
   register_members: {
     label: 'Register of Members',
     description: 'Current register of all members/shareholders',
@@ -50,14 +80,36 @@ export const SUGGESTED_KYC_DOCUMENT_TYPES: Record<string, KYCDocumentTypeInfo> =
     description: 'Current register of all directors',
     category: 'entity',
   },
+  register_beneficial_owners: {
+    label: 'Register of Beneficial Owners',
+    description: 'Register of ultimate beneficial owners (UBOs)',
+    category: 'entity',
+  },
+  directors_declaration: {
+    label: 'Directors Declaration',
+    description: 'Signed declaration from board of directors',
+    category: 'entity',
+  },
+  board_resolution: {
+    label: 'Board Resolution',
+    description: 'Board resolution authorizing investment or account opening',
+    category: 'entity',
+  },
+  authorized_signatory_list: {
+    label: 'Authorized Signatory List',
+    description: 'List of persons authorized to sign on behalf of entity',
+    category: 'entity',
+  },
+  power_of_attorney: {
+    label: 'Power of Attorney',
+    description: 'Power of Attorney document',
+    category: 'entity',
+  },
+
+  // ===== ENTITY DOCUMENTS - FINANCIAL =====
   bank_confirmation: {
     label: 'Bank Confirmation',
     description: 'Confirmation of bank name and jurisdiction for wire transfers',
-    category: 'entity',
-  },
-  trust_deed: {
-    label: 'Trust Deed',
-    description: 'Trust Deed or Declaration of Trust',
     category: 'entity',
   },
   financial_statements: {
@@ -66,26 +118,96 @@ export const SUGGESTED_KYC_DOCUMENT_TYPES: Record<string, KYCDocumentTypeInfo> =
     category: 'entity',
   },
   beneficial_ownership: {
-    label: 'Beneficial Ownership',
-    description: 'Beneficial Ownership Declaration',
+    label: 'Beneficial Ownership Declaration',
+    description: 'Declaration of ultimate beneficial owners',
     category: 'entity',
   },
 
-  // ===== INDIVIDUAL / MEMBER DOCUMENTS =====
-  // Category 'both' because entity investors also need these for their members/directors
+  // ===== TRUST DOCUMENTS =====
+  trust_deed: {
+    label: 'Trust Deed',
+    description: 'Trust Deed or Declaration of Trust',
+    category: 'entity',
+  },
+  trust_schedule: {
+    label: 'Trust Schedule',
+    description: 'Schedule of beneficiaries and settlors',
+    category: 'entity',
+  },
+  letter_of_wishes: {
+    label: 'Letter of Wishes',
+    description: 'Settlor letter of wishes',
+    category: 'entity',
+  },
+
+  // ===== INDIVIDUAL / MEMBER ID DOCUMENTS =====
   passport_id: {
     label: 'ID / Passport',
     description: 'Valid government-issued ID or passport',
     category: 'both',
   },
-  utility_bill: {
-    label: 'Proof of Address',
-    description: 'Recent utility bill or bank statement (less than 3 months old)',
+  passport: {
+    label: 'Passport',
+    description: 'Valid passport (photo page)',
     category: 'both',
   },
+  national_id_card: {
+    label: 'National ID Card',
+    description: 'Government-issued national identification card',
+    category: 'both',
+  },
+  drivers_license: {
+    label: "Driver's License",
+    description: 'Government-issued driving license',
+    category: 'both',
+  },
+  residence_permit: {
+    label: 'Residence Permit',
+    description: 'Valid residence permit or visa',
+    category: 'both',
+  },
+
+  // ===== PROOF OF ADDRESS DOCUMENTS =====
+  utility_bill: {
+    label: 'Utility Bill',
+    description: 'Recent utility bill (less than 3 months old)',
+    category: 'both',
+  },
+  bank_statement: {
+    label: 'Bank Statement',
+    description: 'Recent bank statement (less than 3 months old)',
+    category: 'both',
+  },
+  proof_of_address: {
+    label: 'Proof of Address',
+    description: 'Recent utility bill, bank statement, or official letter',
+    category: 'both',
+  },
+  government_correspondence: {
+    label: 'Government Correspondence',
+    description: 'Recent letter from government agency with address',
+    category: 'both',
+  },
+  council_tax_bill: {
+    label: 'Council Tax Bill',
+    description: 'Council tax or property tax statement',
+    category: 'both',
+  },
+
+  // ===== ACCREDITATION / QUALIFICATION =====
   accreditation_letter: {
     label: 'Accreditation Letter',
     description: 'Accredited Investor verification letter',
+    category: 'individual',
+  },
+  professional_qualification: {
+    label: 'Professional Qualification',
+    description: 'Professional investor qualification or certification',
+    category: 'individual',
+  },
+  sophistication_declaration: {
+    label: 'Sophistication Declaration',
+    description: 'Self-certification as sophisticated investor',
     category: 'individual',
   },
 
@@ -100,10 +222,96 @@ export const SUGGESTED_KYC_DOCUMENT_TYPES: Record<string, KYCDocumentTypeInfo> =
     description: 'IRS form for US persons',
     category: 'individual',
   },
+  tax_return: {
+    label: 'Tax Return',
+    description: 'Recent tax return or tax filing',
+    category: 'both',
+  },
+  tax_residency_certificate: {
+    label: 'Tax Residency Certificate',
+    description: 'Certificate of tax residency from tax authority',
+    category: 'both',
+  },
+
+  // ===== AML / SOURCE OF FUNDS =====
   source_of_funds: {
     label: 'Source of Funds',
     description: 'Source of Funds Declaration',
     category: 'both',
+  },
+  source_of_wealth: {
+    label: 'Source of Wealth',
+    description: 'Source of Wealth Declaration',
+    category: 'both',
+  },
+  employment_letter: {
+    label: 'Employment Letter',
+    description: 'Letter confirming employment and salary',
+    category: 'individual',
+  },
+  business_ownership_proof: {
+    label: 'Business Ownership Proof',
+    description: 'Documentation proving business ownership',
+    category: 'both',
+  },
+
+  // ===== PARTNER / INTRODUCER SPECIFIC =====
+  introducer_agreement: {
+    label: 'Introducer Agreement',
+    description: 'Signed introducer/referral agreement',
+    category: 'entity',
+  },
+  fee_agreement: {
+    label: 'Fee Agreement',
+    description: 'Signed fee sharing or commission agreement',
+    category: 'entity',
+  },
+  regulatory_license: {
+    label: 'Regulatory License',
+    description: 'Financial services or regulatory license',
+    category: 'entity',
+  },
+  professional_indemnity_insurance: {
+    label: 'Professional Indemnity Insurance',
+    description: 'Certificate of professional indemnity insurance',
+    category: 'entity',
+  },
+
+  // ===== LAWYER SPECIFIC =====
+  practicing_certificate: {
+    label: 'Practicing Certificate',
+    description: 'Current practicing certificate from bar association',
+    category: 'entity',
+  },
+  bar_membership: {
+    label: 'Bar Membership',
+    description: 'Bar association membership certificate',
+    category: 'entity',
+  },
+  law_firm_letterhead: {
+    label: 'Law Firm Letterhead',
+    description: 'Official letterhead confirming association',
+    category: 'entity',
+  },
+
+  // ===== MEMBER-SPECIFIC DOCUMENTS =====
+  member_passport: {
+    label: 'Member Passport/ID',
+    description: 'Passport or ID for director/UBO/signatory',
+    category: 'both',
+    memberOnly: true,
+  },
+  member_proof_of_address: {
+    label: 'Member Proof of Address',
+    description: 'Proof of address for director/UBO/signatory',
+    category: 'both',
+    memberOnly: true,
+  },
+  specimen_signature: {
+    label: 'Specimen Signature',
+    description: 'Specimen signature for authorized signatory',
+    category: 'both',
+    memberOnly: true,
   },
 
   // ===== OTHER =====
@@ -141,17 +349,62 @@ function formatDocumentType(documentType: string): string {
 /**
  * Get suggested document types for a specific category
  */
-export function getSuggestedDocumentTypes(category?: 'individual' | 'entity' | 'both'): Array<{
+export function getSuggestedDocumentTypes(
+  category?: 'individual' | 'entity' | 'both',
+  options?: { includeMemberOnly?: boolean }
+): Array<{
+  value: string
+  label: string
+  description: string
+  memberOnly?: boolean
+}> {
+  return Object.entries(SUGGESTED_KYC_DOCUMENT_TYPES)
+    .filter(([_, info]) => {
+      // Filter by category
+      const categoryMatch = !category || info.category === category || info.category === 'both'
+      // Filter member-only documents unless explicitly included
+      const memberMatch = options?.includeMemberOnly || !info.memberOnly
+      return categoryMatch && memberMatch
+    })
+    .map(([value, info]) => ({
+      value,
+      label: info.label,
+      description: info.description,
+      memberOnly: info.memberOnly,
+    }))
+}
+
+/**
+ * Get document types specifically for members (directors, UBOs, signatories)
+ */
+export function getMemberDocumentTypes(): Array<{
   value: string
   label: string
   description: string
 }> {
   return Object.entries(SUGGESTED_KYC_DOCUMENT_TYPES)
-    .filter(([_, info]) => !category || info.category === category || info.category === 'both')
+    .filter(([_, info]) => info.memberOnly || info.category === 'individual' || info.category === 'both')
     .map(([value, info]) => ({
       value,
       label: info.label,
-      description: info.description
+      description: info.description,
+    }))
+}
+
+/**
+ * Get document types for entity-level KYC (excludes member-specific docs)
+ */
+export function getEntityDocumentTypes(): Array<{
+  value: string
+  label: string
+  description: string
+}> {
+  return Object.entries(SUGGESTED_KYC_DOCUMENT_TYPES)
+    .filter(([_, info]) => !info.memberOnly && (info.category === 'entity' || info.category === 'both'))
+    .map(([value, info]) => ({
+      value,
+      label: info.label,
+      description: info.description,
     }))
 }
 

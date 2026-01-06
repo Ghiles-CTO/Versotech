@@ -17,8 +17,24 @@ const dispatchSchema = z.object({
     'commercial_partner_proxy',
     'lawyer',
     'arranger'
-  ]).default('investor')
-})
+  ]).default('investor'),
+  // Fee plan fields - required when dispatching investors through an entity
+  referred_by_entity_id: z.string().uuid().optional(),
+  referred_by_entity_type: z.enum(['partner', 'introducer', 'commercial_partner']).optional(),
+  assigned_fee_plan_id: z.string().uuid().optional()
+}).refine(
+  // If referred_by_entity_id is provided, assigned_fee_plan_id must also be provided
+  (data) => {
+    if (data.referred_by_entity_id && !data.assigned_fee_plan_id) {
+      return false
+    }
+    return true
+  },
+  {
+    message: 'assigned_fee_plan_id is required when dispatching through an introducer/partner',
+    path: ['assigned_fee_plan_id']
+  }
+)
 
 /**
  * POST /api/deals/:id/dispatch
@@ -62,7 +78,53 @@ export async function POST(request: Request, { params }: RouteParams) {
       )
     }
 
-    const { user_ids, role } = validation.data
+    const { user_ids, role, referred_by_entity_id, referred_by_entity_type, assigned_fee_plan_id } = validation.data
+
+    // Fee plan validation: If dispatching through an entity, verify fee plan is accepted
+    if (referred_by_entity_id && assigned_fee_plan_id) {
+      // Build entity filter based on type
+      const entityFilter = referred_by_entity_type === 'partner'
+        ? { partner_id: referred_by_entity_id }
+        : referred_by_entity_type === 'introducer'
+          ? { introducer_id: referred_by_entity_id }
+          : { commercial_partner_id: referred_by_entity_id }
+
+      // Verify the fee plan exists, is accepted, and belongs to the correct entity
+      const { data: feePlan, error: feePlanError } = await serviceSupabase
+        .from('fee_plans')
+        .select('id, status, is_active, partner_id, introducer_id, commercial_partner_id')
+        .eq('id', assigned_fee_plan_id)
+        .eq('deal_id', dealId)
+        .match(entityFilter)
+        .single()
+
+      if (feePlanError || !feePlan) {
+        return NextResponse.json({
+          error: 'Invalid fee plan',
+          message: 'The selected fee plan does not exist or does not belong to the specified entity for this deal.'
+        }, { status: 400 })
+      }
+
+      if (!feePlan.is_active) {
+        return NextResponse.json({
+          error: 'Fee plan inactive',
+          message: 'The selected fee plan is no longer active. Please select a different fee plan.'
+        }, { status: 400 })
+      }
+
+      if (feePlan.status !== 'accepted') {
+        const statusMessages: Record<string, string> = {
+          draft: 'The fee plan has not been sent to the entity yet. Please send it for approval first.',
+          sent: 'The fee plan has been sent but not yet accepted. Please wait for the entity to approve it.',
+          rejected: 'The fee plan was rejected by the entity. Please create and send a new fee plan.',
+          pending_signature: 'The fee plan is pending signature. Please wait for the signing process to complete.'
+        }
+        return NextResponse.json({
+          error: 'Fee plan not accepted',
+          message: statusMessages[feePlan.status] || `The fee plan status is '${feePlan.status}'. Only accepted fee plans can be used for dispatch.`
+        }, { status: 400 })
+      }
+    }
 
     // For introducer_investor role, verify all users have valid introducer agreements
     if (role === 'introducer_investor') {
@@ -272,7 +334,11 @@ export async function POST(request: Request, { params }: RouteParams) {
       role,
       invited_by: user.id,
       invited_at: now,
-      dispatched_at: now // Key field that authorizes entity users
+      dispatched_at: now, // Key field that authorizes entity users
+      // Fee plan linkage - set when dispatching through an introducer/partner
+      referred_by_entity_id: referred_by_entity_id || null,
+      referred_by_entity_type: referred_by_entity_type || null,
+      assigned_fee_plan_id: assigned_fee_plan_id || null
     }))
 
     const { data: createdMemberships, error: createError } = await serviceSupabase
@@ -300,7 +366,11 @@ export async function POST(request: Request, { params }: RouteParams) {
           dispatched_users: newUserIds,
           role,
           skipped_existing: user_ids.length - newUserIds.length,
-          deal_name: deal.name
+          deal_name: deal.name,
+          // Fee plan linkage audit trail
+          referred_by_entity_id: referred_by_entity_id || null,
+          referred_by_entity_type: referred_by_entity_type || null,
+          assigned_fee_plan_id: assigned_fee_plan_id || null
         },
         created_at: now
       })

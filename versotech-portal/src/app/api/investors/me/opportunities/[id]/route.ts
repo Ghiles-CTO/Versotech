@@ -275,11 +275,43 @@ export async function GET(request: Request, { params }: RouteParams) {
       })
 
     // Get fee structures for the deal
-    const { data: feeStructures } = await serviceSupabase
-      .from('deal_fee_structures')
-      .select('*')
-      .eq('deal_id', dealId)
-      .order('created_at', { ascending: true })
+    // PERSONA ACCESS RULES (per Fred's meeting requirements):
+    // - Introducers: CANNOT see term sheet (fee structures)
+    // - Lawyers: CANNOT see term sheet (fee structures)
+    // - All others (investors, partners, arrangers, CPs): CAN see term sheet
+    const isRestrictedFromTermSheet = membership?.role === 'introducer' || membership?.role === 'lawyer'
+
+    let feeStructures: any[] = []
+    if (!isRestrictedFromTermSheet) {
+      // Check if investor has an assigned term sheet (from dispatch)
+      if (membership?.term_sheet_id) {
+        // Fetch ONLY the assigned term sheet - this ensures different investor classes
+        // see their specific fee structure based on how they were dispatched
+        const { data: assignedTermSheet } = await serviceSupabase
+          .from('deal_fee_structures')
+          .select('*')
+          .eq('id', membership.term_sheet_id)
+          .single()
+
+        if (assignedTermSheet) {
+          feeStructures = [assignedTermSheet]
+        }
+      }
+
+      // Fallback: If no assigned term sheet or it wasn't found, get first published
+      // This handles backward compatibility for existing memberships
+      if (feeStructures.length === 0) {
+        const { data: fallbackTermSheet } = await serviceSupabase
+          .from('deal_fee_structures')
+          .select('*')
+          .eq('deal_id', dealId)
+          .eq('status', 'published')
+          .order('created_at', { ascending: true })
+          .limit(1)
+
+        feeStructures = fallbackTermSheet || []
+      }
+    }
 
     // Get FAQs for the deal
     const { data: faqs } = await serviceSupabase
@@ -313,11 +345,29 @@ export async function GET(request: Request, { params }: RouteParams) {
     }
 
     // Get data room documents if investor has access
-    // Entity-level NDA check: ALL signatories must have signed before granting data room access
+    // PERSONA ACCESS RULES (per Fred's meeting requirements):
+    // - Introducers: NEVER get data room access
+    // - Lawyers: NEVER get data room access
+    // - Arrangers: AUTOMATIC access (no NDA required)
+    // - All others (investors, partners, CPs): Access after NDA signed
+    const isRestrictedFromDataRoom = membership?.role === 'introducer' || membership?.role === 'lawyer'
+    const isArrangerWithAutoAccess = membership?.role === 'arranger'
+
     let dataRoomDocuments: any[] = []
-    const hasDataRoomAccess = allSignatoriesSignedNda &&
-      dataRoomAccess && !dataRoomAccess.revoked_at &&
-      (!dataRoomAccess.expires_at || new Date(dataRoomAccess.expires_at) > new Date())
+    let hasDataRoomAccess = false
+
+    if (isRestrictedFromDataRoom) {
+      // Introducers and lawyers NEVER get data room access
+      hasDataRoomAccess = false
+    } else if (isArrangerWithAutoAccess) {
+      // Arrangers get AUTOMATIC access - no NDA required (per Fred: "doesn't need to sign an NDA so it's automatic")
+      hasDataRoomAccess = true
+    } else {
+      // Standard entity-level NDA check: ALL signatories must have signed before granting data room access
+      hasDataRoomAccess = allSignatoriesSignedNda &&
+        dataRoomAccess && !dataRoomAccess.revoked_at &&
+        (!dataRoomAccess.expires_at || new Date(dataRoomAccess.expires_at) > new Date())
+    }
 
     if (hasDataRoomAccess) {
       const { data: docs } = await serviceSupabase
@@ -505,7 +555,22 @@ export async function GET(request: Request, { params }: RouteParams) {
       } : null,
 
       // Indicate if user can use proxy mode (has commercial_partner_proxy role)
-      can_use_proxy_mode: membership?.role === 'commercial_partner_proxy'
+      can_use_proxy_mode: membership?.role === 'commercial_partner_proxy',
+
+      // PERSONA-BASED ACCESS CONTROLS (per Fred's meeting requirements)
+      // These flags tell the frontend which sections to hide/show
+      access_controls: {
+        // Introducers and lawyers cannot see the term sheet
+        can_view_term_sheet: !isRestrictedFromTermSheet,
+        // Introducers and lawyers never get data room access
+        can_view_data_room: !isRestrictedFromDataRoom,
+        // Arrangers get automatic access without NDA
+        has_auto_data_room_access: isArrangerWithAutoAccess,
+        // Reason for restrictions (for UI messaging)
+        restriction_reason: isRestrictedFromTermSheet || isRestrictedFromDataRoom
+          ? `As ${membership?.role === 'introducer' ? 'an introducer' : 'a lawyer'}, you do not have access to ${isRestrictedFromTermSheet && isRestrictedFromDataRoom ? 'the term sheet or data room' : isRestrictedFromTermSheet ? 'the term sheet' : 'the data room'} for this deal.`
+          : null
+      }
     }
 
     return NextResponse.json({ opportunity })

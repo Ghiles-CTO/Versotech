@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "10 days/day1/CP_E2E_COMPLETE.md",
+                "file": "10 days/day5/FEE_SYSTEM_ANALYSIS_AND_REFACTORING_PLAN.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "CP_E2E_COMPLETE"
+              "title": "FEE_SYSTEM_ANALYSIS_AND_REFACTORING_PLAN"
             }
           },
           {
@@ -199,15 +199,25 @@
   },
   "active": "3e117a3b32dcf196",
   "lastOpenFiles": [
+    "10 days/day5/FEE_SYSTEM_AND_DISPATCH_GUIDE.md",
+    "10 days/day5/DISPATCHING_NDA_CLOSING_IMPLEMENTATION.md",
+    "10 days/day5/FEE_SYSTEM_ANALYSIS_AND_REFACTORING_PLAN.md",
+    "10 days/day5/meeting2.md",
+    "10 days/Untitled.md",
+    "10 days/day5",
+    "10 days/VERSO_BUSINESS_PROCESS_MAP.md",
+    "10 days/ARRANGER_PERSONA_STATUS_REPORT.md",
+    "10 days/day1/meeting1.md",
     "10 days/day1/LAWYER_FIX_VERIFICATION.md",
     "10 days/day1/LAWYER_AUDIT_REPORT.md",
-    "10 days/day1/LAWYER_E2E_FINAL.md",
     "10 days/day1/CP_E2E_COMPLETE.md",
     "10 days/day1/COMMERCIAL_PARTNER_AUDIT_REPORT_WORKING.md",
-    "10 days/VERSO_BUSINESS_PROCESS_MAP.md",
-    "10 days/day1/meeting1.md",
-    "10 days/ARRANGER_PERSONA_STATUS_REPORT.md",
     "10 days/PHASE2_STATUS_REPORT.md",
+    "10 days/INTRODUCER_PERSONA_STATUS_REPORT.md",
+    "10 days/INVESTOR_PERSONA_STATUS_REPORT.md",
+    "10 days/PARTNER_PERSONA_STATUS_REPORT.md",
+    "10 days/CEO_PERSONA_STATUS_REPORT.md",
+    "10 days/day1/LAWYER_E2E_FINAL.md",
     "ARRANGER_AUDIT_REPORT.md",
     "ARRANGER_DEEP_AUDIT.md",
     "COMMERCIAL_PARTNER_AUDIT.md",
@@ -216,15 +226,6 @@
     "INTRODUCER_COMPLETE_AUDIT.md",
     "LAWYER_AUDIT.md",
     "Welcome.md",
-    "Pre meeting.md",
-    "PARTNER_AUDIT.md",
-    "TESTING_GUIDE_V3.md",
-    "10 days/CEO_PERSONA_STATUS_REPORT.md",
-    "10 days/COMMERCIAL_PARTNER_PERSONA_STATUS_REPORT.md",
-    "10 days/INTRODUCER_PERSONA_STATUS_REPORT.md",
-    "10 days/INVESTOR_PERSONA_STATUS_REPORT.md",
-    "10 days/LAWYER_PERSONA_STATUS_REPORT.md",
-    "10 days/PARTNER_PERSONA_STATUS_REPORT.md",
     "10 days/day1"
   ]
 }

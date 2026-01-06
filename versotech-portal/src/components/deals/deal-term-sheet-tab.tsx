@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, useCallback } from 'react'
 import {
   Card,
   CardContent,
@@ -22,9 +22,23 @@ import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { format } from 'date-fns'
-import { Loader2, Plus, Copy, Rocket, Archive, Pencil, Upload } from 'lucide-react'
+import { Loader2, Plus, Copy, Rocket, Archive, Pencil, Upload, FileCheck, Users, Building2, Briefcase, Eye, Download, X } from 'lucide-react'
+import FeePlanEditModal from '@/components/fees/FeePlanEditModal'
 
 type TermSheet = Record<string, any>
+
+/** Fee plan with entity and term sheet info for display */
+interface LinkedFeePlan {
+  id: string
+  name: string
+  status: 'draft' | 'sent' | 'pending_signature' | 'accepted' | 'rejected'
+  term_sheet_id: string | null
+  accepted_at: string | null
+  accepted_by: string | null
+  introducer?: { id: string; name: string; company_name?: string } | null
+  partner?: { id: string; name: string; company_name?: string } | null
+  commercial_partner?: { id: string; name: string; company_name?: string } | null
+}
 
 interface DealTermSheetTabProps {
   dealId: string
@@ -37,6 +51,23 @@ const statusClasses: Record<string, string> = {
   draft: 'bg-amber-500/20 text-amber-100',
   published: 'bg-emerald-500/20 text-emerald-100',
   archived: 'bg-slate-500/20 text-slate-100'
+}
+
+/** Fee plan status styling */
+const feePlanStatusClasses: Record<string, string> = {
+  draft: 'bg-slate-500/20 text-slate-300 border-slate-500/30',
+  sent: 'bg-blue-500/20 text-blue-300 border-blue-500/30',
+  pending_signature: 'bg-amber-500/20 text-amber-300 border-amber-500/30',
+  accepted: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
+  rejected: 'bg-red-500/20 text-red-300 border-red-500/30'
+}
+
+const feePlanStatusLabels: Record<string, string> = {
+  draft: 'Draft',
+  sent: 'Sent',
+  pending_signature: 'Pending',
+  accepted: 'Accepted',
+  rejected: 'Rejected'
 }
 
 const emptyForm = {
@@ -153,16 +184,149 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
   const [uploadingAttachmentId, setUploadingAttachmentId] = useState<string | null>(null)
   const fileInputsRef = useRef<Record<string, HTMLInputElement | null>>({})
 
+  // Fee plan state
+  const [feePlans, setFeePlans] = useState<LinkedFeePlan[]>([])
+  const [feePlansLoading, setFeePlansLoading] = useState(false)
+  const [feePlanModalOpen, setFeePlanModalOpen] = useState(false)
+  const [selectedTermSheetIdForFeePlan, setSelectedTermSheetIdForFeePlan] = useState<string | undefined>()
+
+  // Document preview state
+  const [previewOpen, setPreviewOpen] = useState(false)
+  const [previewLoading, setPreviewLoading] = useState(false)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [previewTermSheetId, setPreviewTermSheetId] = useState<string | null>(null)
+  const [previewError, setPreviewError] = useState<string | null>(null)
+
   useEffect(() => {
     setItems(termSheets ?? [])
   }, [termSheets])
+
+  // Fetch fee plans for this deal
+  const fetchFeePlans = useCallback(async () => {
+    setFeePlansLoading(true)
+    try {
+      const response = await fetch(`/api/deals/${dealId}/fee-plans`)
+      if (!response.ok) {
+        console.error('Failed to fetch fee plans')
+        return
+      }
+      const data = await response.json()
+      setFeePlans(data.feePlans || [])
+    } catch (error) {
+      console.error('Error fetching fee plans:', error)
+    } finally {
+      setFeePlansLoading(false)
+    }
+  }, [dealId])
+
+  useEffect(() => {
+    fetchFeePlans()
+  }, [fetchFeePlans])
+
+  // Group fee plans by term sheet ID
+  const feePlansByTermSheet = useMemo(() => {
+    const grouped: Record<string, LinkedFeePlan[]> = {}
+    for (const fp of feePlans) {
+      const tsId = fp.term_sheet_id || 'unlinked'
+      if (!grouped[tsId]) {
+        grouped[tsId] = []
+      }
+      grouped[tsId].push(fp)
+    }
+    return grouped
+  }, [feePlans])
+
+  // Get entity display info from a fee plan
+  const getEntityInfo = (fp: LinkedFeePlan) => {
+    if (fp.introducer) {
+      return {
+        type: 'Introducer',
+        name: fp.introducer.company_name || fp.introducer.name,
+        icon: Users
+      }
+    }
+    if (fp.partner) {
+      return {
+        type: 'Partner',
+        name: fp.partner.company_name || fp.partner.name,
+        icon: Building2
+      }
+    }
+    if (fp.commercial_partner) {
+      return {
+        type: 'Commercial Partner',
+        name: fp.commercial_partner.company_name || fp.commercial_partner.name,
+        icon: Briefcase
+      }
+    }
+    return null
+  }
+
+  // Handle opening the fee plan modal with a pre-selected term sheet
+  const openFeePlanModal = (termSheetId: string) => {
+    setSelectedTermSheetIdForFeePlan(termSheetId)
+    setFeePlanModalOpen(true)
+  }
+
+  const closeFeePlanModal = () => {
+    setFeePlanModalOpen(false)
+    setSelectedTermSheetIdForFeePlan(undefined)
+  }
+
+  const handleFeePlanSuccess = () => {
+    closeFeePlanModal()
+    fetchFeePlans()
+  }
+
+  // Document preview handlers
+  const openPreview = async (termSheetId: string) => {
+    setPreviewTermSheetId(termSheetId)
+    setPreviewOpen(true)
+    setPreviewLoading(true)
+    setPreviewError(null)
+    setPreviewUrl(null)
+
+    try {
+      const response = await fetch(`/api/deals/${dealId}/fee-structures/${termSheetId}/attachment`)
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || 'Failed to load document')
+      }
+      const data = await response.json()
+      setPreviewUrl(data.url)
+    } catch (error) {
+      setPreviewError(error instanceof Error ? error.message : 'Failed to load document')
+    } finally {
+      setPreviewLoading(false)
+    }
+  }
+
+  const closePreview = () => {
+    setPreviewOpen(false)
+    setPreviewUrl(null)
+    setPreviewTermSheetId(null)
+    setPreviewError(null)
+  }
+
+  const handleDownload = () => {
+    if (previewUrl) {
+      window.open(previewUrl, '_blank')
+    }
+  }
 
   const ordered = useMemo(
     () => [...items].sort((a, b) => (b.version ?? 0) - (a.version ?? 0)),
     [items]
   )
 
-  const published = ordered.find(item => item.status === 'published')
+  // Get ALL published term sheets (multiple allowed for different investor classes)
+  const publishedTermSheets = useMemo(
+    () => ordered.filter(item => item.status === 'published'),
+    [ordered]
+  )
+
+  // For backwards compat - first published
+  const published = publishedTermSheets[0]
 
   const handleAttachmentUpload = async (structureId: string, file: File) => {
     setAttachmentError(null)
@@ -331,16 +495,24 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
       </Card>
     )}
 
-      {published && (
-        <Card className="border border-emerald-400/30 bg-emerald-500/10">
-          <CardHeader className="flex flex-row items-start justify-between space-y-0">
-            <div>
-              <CardTitle className="text-foreground">Published Version</CardTitle>
-              <CardDescription>
-                Version {published.version} • Published{' '}
-                {published.published_at ? format(new Date(published.published_at), 'dd MMM yyyy') : '—'}
-              </CardDescription>
-            </div>
+      {/* Published Term Sheets Section */}
+      {publishedTermSheets.length > 0 && (
+        <div className="space-y-4">
+          <h3 className="text-sm font-semibold text-emerald-400 uppercase tracking-wide">
+            Published Term Sheets ({publishedTermSheets.length})
+          </h3>
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+            {publishedTermSheets.map((published) => (
+              <Card key={published.id} className="border border-emerald-400/30 bg-emerald-500/10">
+                <CardHeader className="flex flex-row items-start justify-between space-y-0">
+                  <div>
+                    <CardTitle className="text-foreground">Version {published.version}</CardTitle>
+                    <CardDescription>
+                      Published{' '}
+                      {published.published_at ? format(new Date(published.published_at), 'dd MMM yyyy') : '—'}
+                      {published.vehicle && <span className="ml-2">• {published.vehicle}</span>}
+                    </CardDescription>
+                  </div>
             <div className="flex gap-2">
               <Button
                 variant="outline"
@@ -384,10 +556,23 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="text-xs text-emerald-200">
-              {published.term_sheet_attachment_key
-                ? 'Attachment available for investors to download.'
-                : 'No attachment uploaded yet.'}
+            <div className="flex items-center justify-between">
+              <div className="text-xs text-emerald-200">
+                {published.term_sheet_attachment_key
+                  ? 'Attachment available for investors to download.'
+                  : 'No attachment uploaded yet.'}
+              </div>
+              {published.term_sheet_attachment_key && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2 border-emerald-500/30 hover:bg-emerald-500/10"
+                  onClick={() => openPreview(published.id)}
+                >
+                  <Eye className="h-4 w-4" />
+                  Preview
+                </Button>
+              )}
             </div>
 
             {/* Transaction Details */}
@@ -532,12 +717,78 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
                 </div>
               </>
             )}
+
+            <Separator className="bg-emerald-400/20" />
+
+            {/* Linked Fee Plans Section */}
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="text-xs font-semibold text-emerald-300 uppercase tracking-wide flex items-center gap-2">
+                  <FileCheck className="h-4 w-4" />
+                  Linked Fee Plans
+                </h4>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-1 text-xs h-7 border-emerald-500/30 hover:bg-emerald-500/10"
+                  onClick={() => openFeePlanModal(published.id)}
+                >
+                  <Plus className="h-3 w-3" />
+                  Create Fee Plan
+                </Button>
+              </div>
+
+              {feePlansLoading ? (
+                <div className="flex items-center gap-2 text-emerald-200/60 text-sm py-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Loading fee plans...
+                </div>
+              ) : (feePlansByTermSheet[published.id] || []).length === 0 ? (
+                <div className="text-sm text-emerald-200/60 py-2">
+                  No fee plans linked to this term sheet yet. Create one to define commission terms for introducers or partners.
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {(feePlansByTermSheet[published.id] || []).map(fp => {
+                    const entity = getEntityInfo(fp)
+                    return (
+                      <div
+                        key={fp.id}
+                        className="flex items-center justify-between p-2 rounded-md bg-black/20 border border-emerald-500/10"
+                      >
+                        <div className="flex items-center gap-3">
+                          {entity && (
+                            <div className="flex items-center gap-1 text-xs text-emerald-300/80">
+                              <entity.icon className="h-3.5 w-3.5" />
+                              <span>{entity.type}:</span>
+                              <span className="font-medium text-emerald-100">{entity.name}</span>
+                            </div>
+                          )}
+                          <span className="text-sm text-emerald-100 font-medium">{fp.name}</span>
+                        </div>
+                        <Badge className={`text-xs ${feePlanStatusClasses[fp.status] || feePlanStatusClasses.draft}`}>
+                          {feePlanStatusLabels[fp.status] || fp.status}
+                        </Badge>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
           </CardContent>
         </Card>
+            ))}
+          </div>
+        </div>
       )}
 
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-        {ordered.map(termSheet => (
+      {/* Draft & Archived Versions */}
+      <div className="space-y-4">
+        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+          Other Versions ({ordered.filter(t => t.status !== 'published').length})
+        </h3>
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+          {ordered.filter(termSheet => termSheet.status !== 'published').map(termSheet => (
           <Card key={termSheet.id} className="border border-white/10 bg-white/5">
             <CardHeader className="flex items-start justify-between space-y-0">
               <div>
@@ -553,10 +804,23 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
               </Badge>
             </CardHeader>
             <CardContent className="space-y-4 text-sm">
-              <div className="text-xs text-muted-foreground">
-                {termSheet.term_sheet_attachment_key
-                  ? 'Attachment uploaded.'
-                  : 'No attachment uploaded yet.'}
+              <div className="flex items-center justify-between">
+                <div className="text-xs text-muted-foreground">
+                  {termSheet.term_sheet_attachment_key
+                    ? 'Attachment uploaded.'
+                    : 'No attachment uploaded yet.'}
+                </div>
+                {termSheet.term_sheet_attachment_key && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="gap-1 h-7 text-xs"
+                    onClick={() => openPreview(termSheet.id)}
+                  >
+                    <Eye className="h-3 w-3" />
+                    Preview
+                  </Button>
+                )}
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
@@ -679,6 +943,66 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
                   )}
                 </Button>
               </div>
+
+              {/* Linked Fee Plans - Only show for published term sheets */}
+              {termSheet.status === 'published' && (
+                <>
+                  <Separator />
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
+                        <FileCheck className="h-3.5 w-3.5" />
+                        Linked Fee Plans
+                      </h4>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="gap-1 text-xs h-6 px-2"
+                        onClick={() => openFeePlanModal(termSheet.id)}
+                      >
+                        <Plus className="h-3 w-3" />
+                        Add
+                      </Button>
+                    </div>
+
+                    {feePlansLoading ? (
+                      <div className="flex items-center gap-2 text-muted-foreground text-xs py-1">
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                        Loading...
+                      </div>
+                    ) : (feePlansByTermSheet[termSheet.id] || []).length === 0 ? (
+                      <div className="text-xs text-muted-foreground py-1">
+                        No fee plans linked yet.
+                      </div>
+                    ) : (
+                      <div className="space-y-1.5">
+                        {(feePlansByTermSheet[termSheet.id] || []).map(fp => {
+                          const entity = getEntityInfo(fp)
+                          return (
+                            <div
+                              key={fp.id}
+                              className="flex items-center justify-between py-1 px-2 rounded bg-black/20 text-xs"
+                            >
+                              <div className="flex items-center gap-2 min-w-0">
+                                {entity && (
+                                  <span className="flex items-center gap-1 text-muted-foreground shrink-0">
+                                    <entity.icon className="h-3 w-3" />
+                                    {entity.name}
+                                  </span>
+                                )}
+                                <span className="text-foreground truncate">{fp.name}</span>
+                              </div>
+                              <Badge className={`text-[10px] h-5 shrink-0 ${feePlanStatusClasses[fp.status] || feePlanStatusClasses.draft}`}>
+                                {feePlanStatusLabels[fp.status] || fp.status}
+                              </Badge>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
             </CardContent>
           </Card>
         ))}
@@ -701,6 +1025,7 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
             </CardContent>
           </Card>
         )}
+        </div>
       </div>
 
       <Dialog open={editorOpen} onOpenChange={open => !open && closeEditor()}>
@@ -997,6 +1322,64 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
               Save Term Sheet
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Fee Plan Creation Modal */}
+      <FeePlanEditModal
+        open={feePlanModalOpen}
+        onClose={closeFeePlanModal}
+        onSuccess={handleFeePlanSuccess}
+        dealId={dealId}
+        initialTermSheetId={selectedTermSheetIdForFeePlan}
+      />
+
+      {/* Document Preview Dialog */}
+      <Dialog open={previewOpen} onOpenChange={(open) => !open && closePreview()}>
+        <DialogContent className="max-w-5xl h-[90vh] flex flex-col">
+          <DialogHeader>
+            <div className="flex items-center justify-between pr-8">
+              <DialogTitle className="text-lg font-semibold">Term Sheet Document</DialogTitle>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleDownload}
+                  disabled={!previewUrl || previewLoading}
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Download
+                </Button>
+              </div>
+            </div>
+          </DialogHeader>
+
+          <div className="flex-1 overflow-auto bg-black/20 rounded-lg">
+            {previewLoading && (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center">
+                  <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2 text-blue-600" />
+                  <p className="text-sm text-muted-foreground">Loading document...</p>
+                </div>
+              </div>
+            )}
+
+            {previewError && (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center text-red-400">
+                  <p className="text-sm">{previewError}</p>
+                </div>
+              </div>
+            )}
+
+            {!previewLoading && !previewError && previewUrl && (
+              <iframe
+                src={previewUrl}
+                className="w-full h-full border-0 rounded-lg"
+                title="Term Sheet Preview"
+              />
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </div>

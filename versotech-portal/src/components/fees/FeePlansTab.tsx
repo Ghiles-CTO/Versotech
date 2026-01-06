@@ -26,7 +26,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Plus, Edit, Copy, FileText, Building2, Trash2 } from 'lucide-react';
+import { Plus, Edit, Copy, FileText, Building2, Trash2, Users, Briefcase, FileCheck, AlertTriangle } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import type { FeePlanWithComponents } from '@/lib/fees/types';
 import { formatBps } from '@/lib/fees/calculations';
 import FeePlanEditModal from './FeePlanEditModal';
@@ -36,8 +37,77 @@ interface FeePlanWithDeal extends FeePlanWithComponents {
     id: string;
     name: string;
   };
+  term_sheet?: {
+    id: string;
+    version: number;
+    status: string;
+    subscription_fee_percent?: number | null;
+    management_fee_percent?: number | null;
+    carried_interest_percent?: number | null;
+  } | null;
+  introducer?: {
+    id: string;
+    legal_name: string;
+  } | null;
+  partner?: {
+    id: string;
+    name: string;
+  } | null;
+  commercial_partner?: {
+    id: string;
+    name: string;
+  } | null;
   subscription_count?: number;
 }
+
+// Map fee component kinds to term sheet fields
+const componentToTermSheetField: Record<string, 'subscription_fee_percent' | 'management_fee_percent' | 'carried_interest_percent'> = {
+  subscription: 'subscription_fee_percent',
+  management: 'management_fee_percent',
+  performance: 'carried_interest_percent',
+  carried_interest: 'carried_interest_percent',
+};
+
+// Check if a fee component exceeds term sheet limits
+function getComponentValidation(
+  component: { kind: string; rate_bps?: number | null },
+  termSheet?: FeePlanWithDeal['term_sheet']
+): { isValid: boolean; message?: string; termSheetLimit?: number } {
+  if (!termSheet || !component.rate_bps) {
+    return { isValid: true };
+  }
+
+  const fieldName = componentToTermSheetField[component.kind];
+  if (!fieldName) {
+    return { isValid: true };
+  }
+
+  const termSheetLimit = termSheet[fieldName];
+  if (termSheetLimit === null || termSheetLimit === undefined) {
+    return { isValid: true };
+  }
+
+  // Convert rate_bps to percent (100 bps = 1%)
+  const componentPercent = component.rate_bps / 100;
+
+  if (componentPercent > termSheetLimit) {
+    return {
+      isValid: false,
+      message: `Exceeds term sheet limit (${termSheetLimit}%)`,
+      termSheetLimit,
+    };
+  }
+
+  return { isValid: true, termSheetLimit };
+}
+
+const feePlanStatusStyles: Record<string, string> = {
+  draft: 'bg-slate-500/20 text-slate-400',
+  sent: 'bg-blue-500/20 text-blue-400',
+  pending_signature: 'bg-purple-500/20 text-purple-400',
+  accepted: 'bg-green-500/20 text-green-400',
+  rejected: 'bg-red-500/20 text-red-400',
+};
 
 export default function FeePlansTab() {
   const [plans, setPlans] = useState<FeePlanWithDeal[]>([]);
@@ -184,9 +254,9 @@ export default function FeePlansTab() {
       <Card className="bg-blue-500/10 border-blue-500/30">
         <CardContent className="pt-6">
           <p className="text-sm text-gray-300 leading-relaxed">
-            <strong className="text-blue-400">How Fee Plans Work:</strong> Fee plans are reusable templates that define fee structures.
-            When a commitment is approved, the <strong>Default</strong> plan for that deal automatically applies its fees to the new subscription.
-            The Default plan syncs with the deal's term sheet. You can create additional plans for special cases or future use.
+            <strong className="text-blue-400">How Fee Plans Work:</strong> Fee plans are commercial agreements with introducers/partners.
+            Each fee plan must be linked to a <strong>published term sheet</strong> and an <strong>entity</strong> (introducer, partner, or commercial partner).
+            Fee values cannot exceed the limits set in the term sheet. When an entity accepts a fee plan, investors can be dispatched through them.
           </p>
         </CardContent>
       </Card>
@@ -208,14 +278,19 @@ export default function FeePlansTab() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Plan Name</TableHead>
-                  <TableHead>Applied To Deal</TableHead>
+                  <TableHead>Deal / Term Sheet</TableHead>
+                  <TableHead>Entity</TableHead>
                   <TableHead>Fee Components</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {plans.map((plan) => (
+                {plans.map((plan) => {
+                  const entity = plan.introducer || plan.partner || plan.commercial_partner;
+                  const entityType = plan.introducer ? 'Introducer' : plan.partner ? 'Partner' : plan.commercial_partner ? 'Commercial Partner' : null;
+
+                  return (
                   <TableRow key={plan.id}>
                     <TableCell>
                       <div className="flex items-center gap-2">
@@ -238,36 +313,86 @@ export default function FeePlansTab() {
                             <span>{plan.deal.name}</span>
                           </div>
                         ) : (
-                          <span className="text-muted-foreground">Global template</span>
+                          <span className="text-muted-foreground">No deal linked</span>
                         )}
-                        <div className="text-xs text-muted-foreground">
-                          Used by {plan.subscription_count || 0} subscription{plan.subscription_count !== 1 ? 's' : ''}
-                        </div>
+                        {plan.term_sheet ? (
+                          <div className="flex items-center gap-2">
+                            <FileCheck className="h-3 w-3 text-muted-foreground" />
+                            <span className="text-xs text-muted-foreground">
+                              Term Sheet v{plan.term_sheet.version}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">No term sheet</span>
+                        )}
                       </div>
+                    </TableCell>
+                    <TableCell>
+                      {entity ? (
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            {plan.introducer ? (
+                              <Users className="h-4 w-4 text-blue-400" />
+                            ) : plan.partner ? (
+                              <Briefcase className="h-4 w-4 text-purple-400" />
+                            ) : (
+                              <Building2 className="h-4 w-4 text-green-400" />
+                            )}
+                            <span>{plan.introducer?.legal_name || plan.partner?.name || plan.commercial_partner?.name}</span>
+                          </div>
+                          <div className="text-xs text-muted-foreground">{entityType}</div>
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground">No entity</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <TooltipProvider>
+                        <div className="flex flex-wrap gap-1">
+                          {plan.components?.map((comp) => {
+                            const validation = getComponentValidation(comp, plan.term_sheet);
+                            return (
+                              <Tooltip key={comp.id}>
+                                <TooltipTrigger asChild>
+                                  <Badge
+                                    variant="outline"
+                                    className={`text-xs ${!validation.isValid ? 'border-red-500/50 bg-red-500/10' : ''}`}
+                                  >
+                                    {!validation.isValid && (
+                                      <AlertTriangle className="h-3 w-3 mr-1 text-red-400" />
+                                    )}
+                                    {comp.kind}: {comp.rate_bps ? formatBps(comp.rate_bps) :
+                                                  comp.flat_amount ? `$${comp.flat_amount}` : 'N/A'}
+                                  </Badge>
+                                </TooltipTrigger>
+                                {!validation.isValid && (
+                                  <TooltipContent className="bg-red-900 border-red-700">
+                                    <p className="text-red-200">{validation.message}</p>
+                                  </TooltipContent>
+                                )}
+                              </Tooltip>
+                            );
+                          })}
+                        </div>
+                      </TooltipProvider>
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-wrap gap-1">
-                        {plan.components?.map((comp) => (
-                          <Badge key={comp.id} variant="outline" className="text-xs">
-                            {comp.kind}: {comp.rate_bps ? formatBps(comp.rate_bps) :
-                                          comp.flat_amount ? `$${comp.flat_amount}` : 'N/A'}
+                        {plan.term_sheet?.status && (
+                          <Badge className={feePlanStatusStyles[plan.term_sheet.status] || 'bg-gray-500/20 text-gray-400'}>
+                            {plan.term_sheet.status}
                           </Badge>
-                        ))}
+                        )}
+                        {plan.is_active ? (
+                          <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500">
+                            Active
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="bg-gray-500/10">
+                            Inactive
+                          </Badge>
+                        )}
                       </div>
-                    </TableCell>
-                    <TableCell>
-                      {plan.is_default && (
-                        <Badge variant="default">Default</Badge>
-                      )}
-                      {plan.is_active ? (
-                        <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500">
-                          Active
-                        </Badge>
-                      ) : (
-                        <Badge variant="outline" className="bg-gray-500/10">
-                          Inactive
-                        </Badge>
-                      )}
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex gap-1 justify-end">
@@ -291,7 +416,8 @@ export default function FeePlansTab() {
                       </div>
                     </TableCell>
                   </TableRow>
-                ))}
+                  );
+                })}
               </TableBody>
             </Table>
           </CardContent>
@@ -341,17 +467,34 @@ export default function FeePlansTab() {
                 <p className="text-sm text-muted-foreground mb-3">
                   {plan.description || 'No description'}
                 </p>
-                <div className="space-y-2">
-                  {plan.components?.map((comp) => (
-                    <div key={comp.id} className="text-sm flex justify-between">
-                      <span className="capitalize">{comp.kind}</span>
-                      <span className="font-medium">
-                        {comp.rate_bps ? formatBps(comp.rate_bps) :
-                         comp.flat_amount ? `$${comp.flat_amount}` : 'N/A'}
-                      </span>
-                    </div>
-                  ))}
-                </div>
+                <TooltipProvider>
+                  <div className="space-y-2">
+                    {plan.components?.map((comp) => {
+                      const validation = getComponentValidation(comp, plan.term_sheet);
+                      return (
+                        <div key={comp.id} className={`text-sm flex justify-between items-center ${!validation.isValid ? 'text-red-400' : ''}`}>
+                          <span className="capitalize flex items-center gap-1">
+                            {!validation.isValid && (
+                              <Tooltip>
+                                <TooltipTrigger>
+                                  <AlertTriangle className="h-3 w-3 text-red-400" />
+                                </TooltipTrigger>
+                                <TooltipContent className="bg-red-900 border-red-700">
+                                  <p className="text-red-200">{validation.message}</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            )}
+                            {comp.kind}
+                          </span>
+                          <span className="font-medium">
+                            {comp.rate_bps ? formatBps(comp.rate_bps) :
+                             comp.flat_amount ? `$${comp.flat_amount}` : 'N/A'}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </TooltipProvider>
               </CardContent>
             </Card>
           ))}

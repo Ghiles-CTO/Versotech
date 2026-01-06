@@ -26,7 +26,11 @@ const addMemberSchema = z.object({
   send_notification: z.boolean().default(true),
   // Referral tracking - who referred this investor to the deal
   referred_by_entity_id: z.string().uuid().optional(),
-  referred_by_entity_type: z.enum(['partner', 'introducer', 'commercial_partner']).optional()
+  referred_by_entity_type: z.enum(['partner', 'introducer', 'commercial_partner']).optional(),
+  // Fee plan linkage - required when dispatching through an entity
+  assigned_fee_plan_id: z.string().uuid().optional(),
+  // Term sheet assignment - determines which fee structure investor sees
+  term_sheet_id: z.string().uuid().optional()
 }).refine(
   (data) => data.user_id || data.investor_id || data.email,
   { message: 'Must provide user_id, investor_id, or email' }
@@ -38,6 +42,18 @@ const addMemberSchema = z.object({
     return hasEntityId === hasEntityType
   },
   { message: 'Both referred_by_entity_id and referred_by_entity_type must be provided together' }
+).refine(
+  (data) => {
+    // If referred_by_entity_id is provided, assigned_fee_plan_id must also be provided
+    if (data.referred_by_entity_id && !data.assigned_fee_plan_id) {
+      return false
+    }
+    return true
+  },
+  {
+    message: 'assigned_fee_plan_id is required when adding member through an introducer/partner',
+    path: ['assigned_fee_plan_id']
+  }
 )
 
 export async function GET(
@@ -54,7 +70,7 @@ export async function GET(
 
     const { id: dealId } = await params
 
-    // Fetch members
+    // Fetch members with referrer, fee plan, and term sheet info
     const { data: members, error } = await supabase
       .from('deal_memberships')
       .select(`
@@ -72,6 +88,22 @@ export async function GET(
         invited_by_profile:invited_by (
           display_name,
           email
+        ),
+        assigned_fee_plan:assigned_fee_plan_id (
+          id,
+          name,
+          status,
+          introducer:introducer_id (id, name, company_name),
+          partner:partner_id (id, name, company_name),
+          commercial_partner:commercial_partner_id (id, name, company_name)
+        ),
+        assigned_term_sheet:term_sheet_id (
+          id,
+          version,
+          status,
+          subscription_fee_percent,
+          management_fee_percent,
+          carried_interest_percent
         )
       `)
       .eq('deal_id', dealId)
@@ -181,6 +213,76 @@ export async function POST(
       )
     }
 
+    // Fee plan validation: If adding through an entity, verify fee plan is accepted
+    if (validatedData.referred_by_entity_id && validatedData.assigned_fee_plan_id) {
+      // Build entity filter based on type
+      const entityFilter = validatedData.referred_by_entity_type === 'partner'
+        ? { partner_id: validatedData.referred_by_entity_id }
+        : validatedData.referred_by_entity_type === 'introducer'
+          ? { introducer_id: validatedData.referred_by_entity_id }
+          : { commercial_partner_id: validatedData.referred_by_entity_id }
+
+      // Verify the fee plan exists, is accepted, and belongs to the correct entity
+      const { data: feePlan, error: feePlanError } = await supabase
+        .from('fee_plans')
+        .select('id, status, is_active, partner_id, introducer_id, commercial_partner_id')
+        .eq('id', validatedData.assigned_fee_plan_id)
+        .eq('deal_id', dealId)
+        .match(entityFilter)
+        .single()
+
+      if (feePlanError || !feePlan) {
+        return NextResponse.json({
+          error: 'Invalid fee plan',
+          message: 'The selected fee plan does not exist or does not belong to the specified entity for this deal.'
+        }, { status: 400 })
+      }
+
+      if (!feePlan.is_active) {
+        return NextResponse.json({
+          error: 'Fee plan inactive',
+          message: 'The selected fee plan is no longer active. Please select a different fee plan.'
+        }, { status: 400 })
+      }
+
+      if (feePlan.status !== 'accepted') {
+        const statusMessages: Record<string, string> = {
+          draft: 'The fee plan has not been sent to the entity yet. Please send it for approval first.',
+          sent: 'The fee plan has been sent but not yet accepted. Please wait for the entity to approve it.',
+          rejected: 'The fee plan was rejected by the entity. Please create and send a new fee plan.',
+          pending_signature: 'The fee plan is pending signature. Please wait for the signing process to complete.'
+        }
+        return NextResponse.json({
+          error: 'Fee plan not accepted',
+          message: statusMessages[feePlan.status] || `The fee plan status is '${feePlan.status}'. Only accepted fee plans can be used.`
+        }, { status: 400 })
+      }
+    }
+
+    // Term sheet validation: If provided, verify it exists and is published
+    if (validatedData.term_sheet_id) {
+      const { data: termSheet, error: termSheetError } = await supabase
+        .from('deal_fee_structures')
+        .select('id, status')
+        .eq('id', validatedData.term_sheet_id)
+        .eq('deal_id', dealId)
+        .single()
+
+      if (termSheetError || !termSheet) {
+        return NextResponse.json({
+          error: 'Invalid term sheet',
+          message: 'The selected term sheet does not exist for this deal.'
+        }, { status: 400 })
+      }
+
+      if (termSheet.status !== 'published') {
+        return NextResponse.json({
+          error: 'Term sheet not published',
+          message: 'Only published term sheets can be assigned to investors.'
+        }, { status: 400 })
+      }
+    }
+
     // Check if membership already exists
     const { data: existingMember } = await supabase
       .from('deal_memberships')
@@ -209,7 +311,11 @@ export async function POST(
         accepted_at: new Date().toISOString(), // Auto-accept for staff-added members
         // Referral tracking - who referred this investor to the deal
         referred_by_entity_id: validatedData.referred_by_entity_id || null,
-        referred_by_entity_type: validatedData.referred_by_entity_type || null
+        referred_by_entity_type: validatedData.referred_by_entity_type || null,
+        // Fee plan linkage - required when dispatching through an entity
+        assigned_fee_plan_id: validatedData.assigned_fee_plan_id || null,
+        // Term sheet assignment - determines which fee structure investor sees
+        term_sheet_id: validatedData.term_sheet_id || null
       })
       .select(`
         *,
@@ -274,7 +380,9 @@ export async function POST(
         role: validatedData.role,
         investor_id: resolvedInvestorId,
         referred_by_entity_id: validatedData.referred_by_entity_id || null,
-        referred_by_entity_type: validatedData.referred_by_entity_type || null
+        referred_by_entity_type: validatedData.referred_by_entity_type || null,
+        assigned_fee_plan_id: validatedData.assigned_fee_plan_id || null,
+        term_sheet_id: validatedData.term_sheet_id || null
       }
     })
 

@@ -8,21 +8,60 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 
-// Schema allows all editable fields - KYC fields are NOT included (read-only)
+// Schema allows all editable fields
 const profileUpdateSchema = z.object({
+  // Entity type
+  type: z.enum(['individual', 'entity']).optional(),
+
   // Entity fields
   legal_name: z.string().min(1).max(255).optional(),
-  registration_number: z.string().max(100).optional(),
-  tax_id: z.string().max(100).optional(),
+  registration_number: z.string().max(100).optional().nullable(),
+  tax_id: z.string().max(100).optional().nullable(),
+  country_of_incorporation: z.string().max(2).optional().nullable(),
+
   // Regulatory fields
-  regulator: z.string().max(255).optional(),
-  license_number: z.string().max(100).optional(),
-  license_type: z.string().max(100).optional(),
+  regulator: z.string().max(255).optional().nullable(),
+  license_number: z.string().max(100).optional().nullable(),
+  license_type: z.string().max(100).optional().nullable(),
   license_expiry_date: z.string().optional().nullable(),
+
   // Contact fields
-  email: z.string().email().max(255).optional(),
-  phone: z.string().max(50).optional(),
-  address: z.string().max(500).optional(),
+  email: z.string().email().max(255).optional().nullable(),
+  phone: z.string().max(50).optional().nullable(),
+  phone_mobile: z.string().max(30).optional().nullable(),
+  phone_office: z.string().max(30).optional().nullable(),
+  website: z.string().url().max(255).optional().nullable().or(z.literal('')),
+
+  // Address fields (structured - replacing single 'address' field)
+  address: z.string().max(500).optional().nullable(), // Legacy field
+  address_line_1: z.string().max(255).optional().nullable(),
+  address_line_2: z.string().max(255).optional().nullable(),
+  city: z.string().max(100).optional().nullable(),
+  state_province: z.string().max(100).optional().nullable(),
+  postal_code: z.string().max(20).optional().nullable(),
+  country: z.string().max(2).optional().nullable(),
+
+  // Individual KYC fields (for type='individual')
+  first_name: z.string().max(100).optional().nullable(),
+  middle_name: z.string().max(100).optional().nullable(),
+  last_name: z.string().max(100).optional().nullable(),
+  name_suffix: z.string().max(20).optional().nullable(),
+  date_of_birth: z.string().optional().nullable(),
+  country_of_birth: z.string().max(2).optional().nullable(),
+  nationality: z.string().max(2).optional().nullable(),
+
+  // US Tax compliance
+  is_us_citizen: z.boolean().optional(),
+  is_us_taxpayer: z.boolean().optional(),
+  us_taxpayer_id: z.string().max(20).optional().nullable(),
+  country_of_tax_residency: z.string().max(2).optional().nullable(),
+
+  // ID Document
+  id_type: z.enum(['passport', 'national_id', 'drivers_license', 'residence_permit']).optional().nullable(),
+  id_number: z.string().max(50).optional().nullable(),
+  id_issue_date: z.string().optional().nullable(),
+  id_expiry_date: z.string().optional().nullable(),
+  id_issuing_country: z.string().max(2).optional().nullable(),
 })
 
 /**
@@ -126,7 +165,7 @@ export async function PUT(request: NextRequest) {
     const updateData = validation.data
 
     // Filter out empty/undefined values and build update object
-    const updateFields: Record<string, string | null> = {}
+    const updateFields: Record<string, unknown> = {}
     for (const [key, value] of Object.entries(updateData)) {
       if (value !== undefined) {
         // Convert empty strings to null for optional fields

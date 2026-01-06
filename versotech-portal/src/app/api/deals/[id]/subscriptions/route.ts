@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { auditLogger, AuditActions, AuditEntities } from '@/lib/audit'
 import { trackDealEvent } from '@/lib/analytics'
+import { canEntityInvest, getEligibilityBlockersSummary } from '@/lib/entities/entity-investment-eligibility'
 
 const submissionSchema = z.object({
   investor_id: z.string().uuid().optional(),
@@ -207,6 +208,31 @@ export async function POST(
         { status: 403 }
       )
     }
+  }
+
+  // Entity Investment Eligibility Gate
+  // Check if the investor entity meets all requirements:
+  // 1. Entity KYC must be approved
+  // 2. All signatory members must be CEO-approved with completed KYC
+  const eligibility = await canEntityInvest(serviceSupabase, resolvedInvestorId, 'investor')
+
+  if (!eligibility.canInvest) {
+    const summary = getEligibilityBlockersSummary(eligibility.blockers)
+    console.log('[Subscription] Entity not eligible to invest:', {
+      investor_id: resolvedInvestorId,
+      blockers: eligibility.blockers
+    })
+
+    return NextResponse.json(
+      {
+        error: 'This entity is not eligible to invest at this time',
+        eligibility_error: true,
+        blockers: eligibility.blockers,
+        summary: summary,
+        details: `Unable to submit subscription: ${summary}. Please ensure all KYC requirements are met and signatory members are approved.`
+      },
+      { status: 403 }
+    )
   }
 
   // Note: Data room access check removed - investors can now subscribe directly

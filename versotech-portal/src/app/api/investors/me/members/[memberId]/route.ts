@@ -3,20 +3,59 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 
 const updateMemberSchema = z.object({
-  full_name: z.string().min(1).optional(),
-  role: z.enum(['director', 'shareholder', 'beneficial_owner', 'authorized_signatory', 'officer', 'partner', 'other']).optional(),
+  // Role
+  role: z.enum(['director', 'shareholder', 'beneficial_owner', 'authorized_signatory', 'officer', 'partner', 'ubo', 'signatory', 'authorized_representative', 'beneficiary', 'other']).optional(),
   role_title: z.string().optional().nullable(),
+
+  // Structured name (replaces full_name)
+  full_name: z.string().min(1).optional(),
+  first_name: z.string().max(100).optional().nullable(),
+  middle_name: z.string().max(100).optional().nullable(),
+  last_name: z.string().max(100).optional().nullable(),
+  name_suffix: z.string().max(20).optional().nullable(),
+
+  // Personal Info
+  date_of_birth: z.string().optional().nullable(),
+  country_of_birth: z.string().optional().nullable(),
+  nationality: z.string().optional().nullable(),
+
+  // Contact
   email: z.string().email().optional().nullable(),
   phone: z.string().optional().nullable(),
+  phone_mobile: z.string().optional().nullable(),
+  phone_office: z.string().optional().nullable(),
+
+  // Residential Address
   residential_street: z.string().optional().nullable(),
+  residential_line_2: z.string().optional().nullable(),
   residential_city: z.string().optional().nullable(),
   residential_state: z.string().optional().nullable(),
   residential_postal_code: z.string().optional().nullable(),
   residential_country: z.string().optional().nullable(),
-  nationality: z.string().optional().nullable(),
-  id_type: z.enum(['passport', 'national_id', 'drivers_license', 'other']).optional().nullable(),
+
+  // US Tax compliance
+  is_us_citizen: z.boolean().optional(),
+  is_us_taxpayer: z.boolean().optional(),
+  us_taxpayer_id: z.string().max(20).optional().nullable(),
+  country_of_tax_residency: z.string().optional().nullable(),
+  tax_id_number: z.string().max(50).optional().nullable(),
+
+  // ID Document
+  id_type: z.enum(['passport', 'national_id', 'drivers_license', 'residence_permit', 'other']).optional().nullable(),
   id_number: z.string().optional().nullable(),
+  id_issue_date: z.string().optional().nullable(),
   id_expiry_date: z.string().optional().nullable(),
+  id_issuing_country: z.string().optional().nullable(),
+
+  // Proof of Address tracking
+  proof_of_address_date: z.string().optional().nullable(),
+  proof_of_address_expiry: z.string().optional().nullable(),
+
+  // KYC Status
+  kyc_status: z.enum(['pending', 'submitted', 'approved', 'rejected', 'expired']).optional().nullable(),
+  kyc_expiry_date: z.string().optional().nullable(),
+
+  // Ownership
   ownership_percentage: z.number().min(0).max(100).optional().nullable(),
   is_beneficial_owner: z.boolean().optional(),
   is_signatory: z.boolean().optional(),

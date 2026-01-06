@@ -37,9 +37,9 @@ export async function GET(request: NextRequest, context: RouteContext) {
         introducer_id,
         commercial_partner_id,
         partner:partners(id, name, legal_name, status, contact_email),
-        introducer:introducers(id, legal_name, status, contact_email),
+        introducer:introducers(id, legal_name, status, email),
         commercial_partner:commercial_partners(id, name, legal_name, status, contact_email),
-        fee_components(id, kind, rate_bps, flat_amount, currency)
+        fee_components(id, kind, rate_bps, flat_amount, calc_method, frequency)
       `)
       .eq('deal_id', dealId)
       .or('partner_id.not.is.null,introducer_id.not.is.null,commercial_partner_id.not.is.null')
@@ -79,7 +79,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
         entity_id: entity?.id,
         entity_name: entity?.name || entity?.legal_name || 'Unknown',
         entity_status: entity?.status,
-        entity_email: entity?.contact_email,
+        entity_email: entity?.contact_email || entity?.email, // introducers use 'email', partners/CPs use 'contact_email'
         fee_components: fp.fee_components || [],
       }
     }).filter(Boolean)
@@ -219,9 +219,12 @@ export async function POST(request: NextRequest, context: RouteContext) {
         .map(fc => ({
           fee_plan_id: newFeePlan.id,
           kind: fc.kind,
+          calc_method: fc.calc_method || 'percent_of_investment',
           rate_bps: fc.rate_bps !== undefined && fc.rate_bps !== null ? fc.rate_bps : null,
           flat_amount: fc.flat_amount !== undefined && fc.flat_amount !== null ? fc.flat_amount : null,
-          currency: fc.currency || 'USD',
+          frequency: fc.frequency || 'one_time',
+          has_high_water_mark: fc.has_high_water_mark || false,
+          has_catchup: fc.has_catchup || false,
         }))
 
       if (componentsToInsert.length > 0) {

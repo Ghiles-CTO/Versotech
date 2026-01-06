@@ -31,7 +31,9 @@ import {
   Briefcase,
   Loader2,
   UserPlus,
-  UserCircle
+  UserCircle,
+  FileCheck,
+  ArrowRight
 } from 'lucide-react'
 import {
   DropdownMenu,
@@ -41,6 +43,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select'
 import { AddParticipantModal } from './add-participant-modal'
 import { GenerateInviteLinkModal } from './generate-invite-link-modal'
 
@@ -155,6 +164,9 @@ export function DealMembersTab({ dealId, members: initialMembers, subscriptions 
   const [assignmentsError, setAssignmentsError] = useState<string | null>(null)
   const [removingId, setRemovingId] = useState<string | null>(null)
 
+  // Fee plan filter state
+  const [feePlanFilter, setFeePlanFilter] = useState<string>('all')
+
   // Create subscription map for quick lookup
   const subscriptionMap = new Map(
     subscriptions.map(s => [s.investor_id, s])
@@ -165,6 +177,22 @@ export function DealMembersTab({ dealId, members: initialMembers, subscriptions 
     ...m,
     subscription: m.investor_id ? subscriptionMap.get(m.investor_id) : null
   }))
+
+  // Extract unique fee plans from members for the filter dropdown
+  const uniqueFeePlans = enhancedMembers.reduce((acc, member) => {
+    const feePlan = member.assigned_fee_plan
+    if (feePlan && !acc.find((fp: { id: string; name: string }) => fp.id === feePlan.id)) {
+      acc.push({ id: feePlan.id, name: feePlan.name })
+    }
+    return acc
+  }, [] as { id: string; name: string }[])
+
+  // Apply fee plan filter to members
+  const filteredMembers = feePlanFilter === 'all'
+    ? enhancedMembers
+    : feePlanFilter === 'none'
+      ? enhancedMembers.filter(m => !m.assigned_fee_plan)
+      : enhancedMembers.filter(m => m.assigned_fee_plan?.id === feePlanFilter)
 
   // Update local state when server data changes
   useEffect(() => {
@@ -246,6 +274,45 @@ export function DealMembersTab({ dealId, members: initialMembers, subscriptions 
     spread_markup: 'Spread Markup',
     flat: 'Flat Fee',
     other: 'Other'
+  }
+
+  // Fee plan status styling
+  const feePlanStatusClasses: Record<string, string> = {
+    draft: 'bg-slate-500/20 text-slate-300',
+    sent: 'bg-blue-500/20 text-blue-300',
+    pending_signature: 'bg-amber-500/20 text-amber-300',
+    accepted: 'bg-emerald-500/20 text-emerald-300',
+    rejected: 'bg-red-500/20 text-red-300'
+  }
+
+  // Get referrer info from member's assigned_fee_plan
+  const getReferrerInfo = (member: any) => {
+    const feePlan = member.assigned_fee_plan
+    if (!feePlan) return null
+
+    // The referrer is the entity linked to the fee plan
+    if (feePlan.introducer) {
+      return {
+        type: 'Introducer',
+        name: feePlan.introducer.company_name || feePlan.introducer.name,
+        icon: Users
+      }
+    }
+    if (feePlan.partner) {
+      return {
+        type: 'Partner',
+        name: feePlan.partner.company_name || feePlan.partner.name,
+        icon: Building2
+      }
+    }
+    if (feePlan.commercial_partner) {
+      return {
+        type: 'Commercial Partner',
+        name: feePlan.commercial_partner.company_name || feePlan.commercial_partner.name,
+        icon: Briefcase
+      }
+    }
+    return null
   }
 
   const refreshMembers = async () => {
@@ -375,13 +442,37 @@ export function DealMembersTab({ dealId, members: initialMembers, subscriptions 
         <CardContent className="space-y-6">
           {/* Investors Section */}
           <div>
-            <h3 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
-              <UserCircle className="h-4 w-4" />
-              Investors ({enhancedMembers.length})
-            </h3>
-          {enhancedMembers.length === 0 ? (
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                <UserCircle className="h-4 w-4" />
+                Investors ({filteredMembers.length}{feePlanFilter !== 'all' ? ` of ${enhancedMembers.length}` : ''})
+              </h3>
+              {/* Fee Plan Filter Dropdown */}
+              {uniqueFeePlans.length > 0 && (
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">Filter by Fee Plan:</span>
+                  <Select value={feePlanFilter} onValueChange={setFeePlanFilter}>
+                    <SelectTrigger className="w-[200px] h-8 text-sm">
+                      <SelectValue placeholder="All Fee Plans" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Fee Plans</SelectItem>
+                      <SelectItem value="none">No Fee Plan (Direct)</SelectItem>
+                      {uniqueFeePlans.map((fp: { id: string; name: string }) => (
+                        <SelectItem key={fp.id} value={fp.id}>
+                          {fp.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+            </div>
+          {filteredMembers.length === 0 ? (
             <div className="text-center py-6 text-gray-400 border border-dashed border-white/10 rounded-lg">
-              No investors added yet. Click "Add Participant" to invite investors.
+              {feePlanFilter !== 'all'
+                ? 'No investors match the selected fee plan filter.'
+                : 'No investors added yet. Click "Add Participant" to invite investors.'}
             </div>
           ) : (
             <Table>
@@ -389,16 +480,20 @@ export function DealMembersTab({ dealId, members: initialMembers, subscriptions 
                 <TableRow>
                   <TableHead>Member</TableHead>
                   <TableHead>Role</TableHead>
+                  <TableHead>Referred By</TableHead>
+                  <TableHead>Fee Plan</TableHead>
                   <TableHead>Journey Progress</TableHead>
                   <TableHead>Current Stage</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {enhancedMembers.map((member) => {
+                {filteredMembers.map((member) => {
                   const profile = Array.isArray(member.profiles) ? member.profiles[0] : member.profiles
                   const investor = Array.isArray(member.investors) ? member.investors[0] : member.investors
                   const { stage } = getCurrentStage(member)
+                  const referrer = getReferrerInfo(member)
+                  const feePlan = member.assigned_fee_plan
 
                   return (
                     <TableRow key={member.user_id}>
@@ -430,6 +525,28 @@ export function DealMembersTab({ dealId, members: initialMembers, subscriptions 
                         <Badge className={roleColors[member.role] || 'bg-white/20 text-white'}>
                           {member.role?.replace(/_/g, ' ')}
                         </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {referrer ? (
+                          <div className="flex items-center gap-1.5 text-sm">
+                            <referrer.icon className="h-3.5 w-3.5 text-muted-foreground" />
+                            <span className="text-muted-foreground">{referrer.name}</span>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-muted-foreground/60">Direct</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {feePlan ? (
+                          <div className="flex flex-col gap-1">
+                            <span className="text-sm">{feePlan.name}</span>
+                            <Badge className={`text-[10px] w-fit ${feePlanStatusClasses[feePlan.status] || 'bg-slate-500/20 text-slate-300'}`}>
+                              {feePlan.status}
+                            </Badge>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-muted-foreground/60">—</span>
+                        )}
                       </TableCell>
                       <TableCell>
                         <JourneyProgressBar member={member} />

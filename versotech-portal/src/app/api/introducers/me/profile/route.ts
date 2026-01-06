@@ -11,11 +11,62 @@ import { z } from 'zod'
 // Schema for introducer self-service profile updates
 // Note: Commission rates, caps, and payment terms are managed by arrangers (read-only for introducers)
 const profileUpdateSchema = z.object({
+  // Entity type
+  type: z.enum(['individual', 'entity']).optional(),
+
   // Contact fields (self-editable)
   contact_name: z.string().min(1).max(255).optional(),
   email: z.string().email().max(255).optional(),
   notes: z.string().max(2000).optional().nullable(),
   logo_url: z.string().url().max(500).optional().nullable(),
+
+  // Address fields
+  address_line_1: z.string().max(255).optional().nullable(),
+  address_line_2: z.string().max(255).optional().nullable(),
+  city: z.string().max(100).optional().nullable(),
+  state_province: z.string().max(100).optional().nullable(),
+  postal_code: z.string().max(20).optional().nullable(),
+  country: z.string().max(2).optional().nullable(), // ISO 3166-1 alpha-2
+
+  // Phone numbers
+  phone: z.string().max(30).optional().nullable(),
+  phone_mobile: z.string().max(30).optional().nullable(),
+  phone_office: z.string().max(30).optional().nullable(),
+  website: z.string().url().max(255).optional().nullable(),
+
+  // Entity info (for type='entity')
+  country_of_incorporation: z.string().max(2).optional().nullable(),
+  registration_number: z.string().max(100).optional().nullable(),
+  tax_id: z.string().max(50).optional().nullable(),
+
+  // Individual KYC fields (for type='individual')
+  first_name: z.string().max(100).optional().nullable(),
+  middle_name: z.string().max(100).optional().nullable(),
+  last_name: z.string().max(100).optional().nullable(),
+  name_suffix: z.string().max(20).optional().nullable(),
+  date_of_birth: z.string().optional().nullable(),
+  country_of_birth: z.string().max(2).optional().nullable(),
+  nationality: z.string().max(2).optional().nullable(),
+
+  // US Tax compliance
+  is_us_citizen: z.boolean().optional(),
+  is_us_taxpayer: z.boolean().optional(),
+  us_taxpayer_id: z.string().max(20).optional().nullable(),
+  country_of_tax_residency: z.string().max(2).optional().nullable(),
+
+  // ID Document
+  id_type: z.enum(['passport', 'national_id', 'drivers_license', 'residence_permit']).optional().nullable(),
+  id_number: z.string().max(50).optional().nullable(),
+  id_issue_date: z.string().optional().nullable(),
+  id_expiry_date: z.string().optional().nullable(),
+  id_issuing_country: z.string().max(2).optional().nullable(),
+
+  // Residential Address (for individuals)
+  residential_street: z.string().max(255).optional().nullable(),
+  residential_city: z.string().max(100).optional().nullable(),
+  residential_state: z.string().max(100).optional().nullable(),
+  residential_postal_code: z.string().max(20).optional().nullable(),
+  residential_country: z.string().max(2).optional().nullable(),
 })
 
 /**

@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Label } from '@/components/ui/label'
 import {
@@ -21,10 +22,13 @@ import {
   Briefcase,
   FileSignature,
   FileText,
+  Edit,
 } from 'lucide-react'
 import { MembersManagementTab } from '@/components/members/members-management-tab'
 import { KYCDocumentsTab } from '@/components/profile/kyc-documents-tab'
 import { SignatureSpecimenTab } from '@/components/profile/signature-specimen-tab'
+import { EntityKYCEditDialog, EntityAddressEditDialog } from '@/components/shared'
+import { formatDate } from '@/lib/format'
 
 type Profile = {
   full_name: string | null
@@ -53,6 +57,41 @@ type InvestorInfo = {
   is_qualified_purchaser: boolean | null
   aml_risk_rating: string | null
   logo_url: string | null
+  // Individual KYC fields
+  first_name: string | null
+  middle_name: string | null
+  last_name: string | null
+  name_suffix: string | null
+  date_of_birth: string | null
+  country_of_birth: string | null
+  nationality: string | null
+  // Residential address
+  residential_street: string | null
+  residential_line_2: string | null
+  residential_city: string | null
+  residential_state: string | null
+  residential_postal_code: string | null
+  residential_country: string | null
+  // Contact
+  phone_mobile: string | null
+  phone_office: string | null
+  // US Tax compliance
+  is_us_citizen: boolean | null
+  is_us_taxpayer: boolean | null
+  us_taxpayer_id: string | null
+  country_of_tax_residency: string | null
+  tax_id_number: string | null
+  // ID Document
+  id_type: string | null
+  id_number: string | null
+  id_issue_date: string | null
+  id_expiry_date: string | null
+  id_issuing_country: string | null
+  // Address fields
+  address_line_1: string | null
+  address_line_2: string | null
+  state_province: string | null
+  postal_code: string | null
 }
 
 type InvestorUserInfo = {
@@ -100,6 +139,8 @@ export function InvestorProfileClient({
   investorUserInfo
 }: InvestorProfileClientProps) {
   const [activeTab, setActiveTab] = useState('overview')
+  const [showKycDialog, setShowKycDialog] = useState(false)
+  const [showAddressDialog, setShowAddressDialog] = useState(false)
 
   const statusBadge = STATUS_BADGES[investorInfo.status || 'pending'] || STATUS_BADGES.pending
   const StatusIcon = statusBadge.icon
@@ -253,11 +294,17 @@ export function InvestorProfileClient({
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Contact Info */}
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Phone className="h-5 w-5" />
-                  Contact Information
-                </CardTitle>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <Phone className="h-5 w-5" />
+                    Contact Information
+                  </CardTitle>
+                </div>
+                <Button variant="outline" size="sm" onClick={() => setShowAddressDialog(true)}>
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit
+                </Button>
               </CardHeader>
               <CardContent className="space-y-4">
                 {investorInfo.email && (
@@ -278,7 +325,16 @@ export function InvestorProfileClient({
                     </div>
                   </div>
                 )}
-                {!investorInfo.email && !investorInfo.phone && (
+                {investorInfo.phone_mobile && (
+                  <div className="space-y-2">
+                    <Label className="text-muted-foreground">Mobile</Label>
+                    <div className="font-medium flex items-center gap-2">
+                      <Phone className="h-4 w-4 text-muted-foreground" />
+                      {investorInfo.phone_mobile}
+                    </div>
+                  </div>
+                )}
+                {!investorInfo.email && !investorInfo.phone && !investorInfo.phone_mobile && (
                   <p className="text-muted-foreground text-sm">No contact information available</p>
                 )}
               </CardContent>
@@ -293,14 +349,17 @@ export function InvestorProfileClient({
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {investorInfo.registered_address ? (
+                {(investorInfo.address_line_1 || investorInfo.registered_address) ? (
                   <>
                     <div className="font-medium">
-                      {investorInfo.registered_address}
+                      {investorInfo.address_line_1 || investorInfo.registered_address}
                     </div>
-                    {(investorInfo.city || investorInfo.country) && (
+                    {investorInfo.address_line_2 && (
+                      <div className="text-muted-foreground">{investorInfo.address_line_2}</div>
+                    )}
+                    {(investorInfo.city || investorInfo.state_province || investorInfo.postal_code || investorInfo.country) && (
                       <div className="text-muted-foreground">
-                        {[investorInfo.city, investorInfo.country]
+                        {[investorInfo.city, investorInfo.state_province, investorInfo.postal_code, investorInfo.country]
                           .filter(Boolean)
                           .join(', ')}
                       </div>
@@ -312,6 +371,67 @@ export function InvestorProfileClient({
               </CardContent>
             </Card>
           </div>
+
+          {/* Personal KYC for Individual Investors */}
+          {investorInfo.type === 'individual' && (
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <Shield className="h-5 w-5" />
+                    Personal KYC Information
+                  </CardTitle>
+                  <CardDescription>
+                    Your personal identification and tax details
+                  </CardDescription>
+                </div>
+                <Button variant="outline" size="sm" onClick={() => setShowKycDialog(true)}>
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit
+                </Button>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label className="text-muted-foreground">Full Name</Label>
+                    <div className="font-medium">
+                      {[investorInfo.first_name, investorInfo.middle_name, investorInfo.last_name, investorInfo.name_suffix]
+                        .filter(Boolean).join(' ') || 'Not set'}
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-muted-foreground">Date of Birth</Label>
+                    <div className="font-medium">
+                      {investorInfo.date_of_birth ? formatDate(investorInfo.date_of_birth) : 'Not set'}
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-muted-foreground">Nationality</Label>
+                    <div className="font-medium">{investorInfo.nationality || 'Not set'}</div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-muted-foreground">US Person</Label>
+                    <div className="font-medium">
+                      {investorInfo.is_us_citizen || investorInfo.is_us_taxpayer ? 'Yes' : 'No'}
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-muted-foreground">ID Document</Label>
+                    <div className="font-medium capitalize">
+                      {investorInfo.id_type?.replace('_', ' ') || 'Not set'}
+                      {investorInfo.id_number && ` (${investorInfo.id_number})`}
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-muted-foreground">ID Expiry Date</Label>
+                    <div className="font-medium">
+                      {investorInfo.id_expiry_date ? formatDate(investorInfo.id_expiry_date) : 'Not set'}
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         {/* Compliance Tab */}
@@ -481,6 +601,67 @@ export function InvestorProfileClient({
           )}
         </TabsContent>
       </Tabs>
+
+      {/* KYC Edit Dialogs */}
+      {investorInfo.type === 'individual' && (
+        <EntityKYCEditDialog
+          open={showKycDialog}
+          onOpenChange={setShowKycDialog}
+          entityType="investor"
+          entityId={investorInfo.id}
+          entityName={investorInfo.display_name || investorInfo.legal_name}
+          initialData={{
+            first_name: investorInfo.first_name,
+            middle_name: investorInfo.middle_name,
+            last_name: investorInfo.last_name,
+            name_suffix: investorInfo.name_suffix,
+            date_of_birth: investorInfo.date_of_birth,
+            nationality: investorInfo.nationality,
+            country_of_birth: investorInfo.country_of_birth,
+            phone_mobile: investorInfo.phone_mobile,
+            phone_office: investorInfo.phone_office,
+            is_us_citizen: investorInfo.is_us_citizen ?? false,
+            is_us_taxpayer: investorInfo.is_us_taxpayer ?? false,
+            us_taxpayer_id: investorInfo.us_taxpayer_id,
+            country_of_tax_residency: investorInfo.country_of_tax_residency,
+            tax_id_number: investorInfo.tax_id_number,
+            id_type: investorInfo.id_type,
+            id_number: investorInfo.id_number,
+            id_issue_date: investorInfo.id_issue_date,
+            id_expiry_date: investorInfo.id_expiry_date,
+            id_issuing_country: investorInfo.id_issuing_country,
+            residential_street: investorInfo.residential_street,
+            residential_line_2: investorInfo.residential_line_2,
+            residential_city: investorInfo.residential_city,
+            residential_state: investorInfo.residential_state,
+            residential_postal_code: investorInfo.residential_postal_code,
+            residential_country: investorInfo.residential_country,
+          }}
+          apiEndpoint="/api/investors/me"
+          onSuccess={() => window.location.reload()}
+        />
+      )}
+
+      <EntityAddressEditDialog
+        open={showAddressDialog}
+        onOpenChange={setShowAddressDialog}
+        entityType="investor"
+        entityName={investorInfo.display_name || investorInfo.legal_name}
+        initialData={{
+          address_line_1: investorInfo.address_line_1 || investorInfo.registered_address,
+          address_line_2: investorInfo.address_line_2,
+          city: investorInfo.city,
+          state_province: investorInfo.state_province,
+          postal_code: investorInfo.postal_code,
+          country: investorInfo.country,
+          email: investorInfo.email,
+          phone: investorInfo.phone,
+          phone_mobile: investorInfo.phone_mobile,
+          phone_office: investorInfo.phone_office,
+        }}
+        apiEndpoint="/api/investors/me"
+        onSuccess={() => window.location.reload()}
+      />
     </div>
   )
 }

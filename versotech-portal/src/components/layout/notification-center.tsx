@@ -73,89 +73,97 @@ export function NotificationCenter({ className }: NotificationCenterProps) {
         }
 
         const userId = user.id
+        const personaType = activePersona.persona_type
 
-        // Fetch tasks
-        let taskQuery = supabase
-          .from('tasks')
-          .select('id, title, description, created_at, owner_user_id, owner_investor_id')
-          .in('status', ['pending', 'in_progress'])
-          .order('created_at', { ascending: false })
-          .limit(5)
+        // Passive personas (lawyer, introducer) only receive notifications - no tasks or messages
+        const isPassiveRecipient = personaType === 'lawyer' || personaType === 'introducer'
 
-        if (activePersona.persona_type === 'investor') {
-          taskQuery = taskQuery.or(`owner_user_id.eq.${userId},owner_investor_id.eq.${activePersona.entity_id}`)
-        } else {
-          taskQuery = taskQuery.eq('owner_user_id', userId)
-        }
+        // Fetch tasks (skip for passive personas - they don't have tasks page access)
+        if (!isPassiveRecipient) {
+          let taskQuery = supabase
+            .from('tasks')
+            .select('id, title, description, created_at, owner_user_id, owner_investor_id')
+            .in('status', ['pending', 'in_progress'])
+            .order('created_at', { ascending: false })
+            .limit(5)
 
-        const { data: tasks } = await taskQuery
-
-        if (tasks) {
-          tasks.forEach((task: any) => {
-            items.push({
-              id: `task-${task.id}`,
-              type: 'task',
-              title: task.title,
-              description: task.description,
-              href: '/versotech_main/tasks',
-              read: false,
-              created_at: task.created_at
-            })
-          })
-        }
-
-        // Fetch unread messages using conversation participants + conversation preview
-        const { data: participants } = await supabase
-          .from('conversation_participants')
-          .select('conversation_id, last_read_at')
-          .eq('user_id', userId)
-          .limit(50)
-
-        const conversationIds = (participants || [])
-          .map((row: any) => row.conversation_id)
-          .filter(Boolean)
-
-        if (conversationIds.length > 0) {
-          let conversationQuery = supabase
-            .from('conversations')
-            .select('id, subject, preview, last_message_at, created_at, visibility')
-            .in('id', conversationIds)
-            .order('last_message_at', { ascending: false, nullsFirst: false })
-            .limit(10)
-
-          if (activePersona.persona_type !== 'staff') {
-            conversationQuery = conversationQuery.in('visibility', ['investor', 'deal'])
+          if (personaType === 'investor') {
+            taskQuery = taskQuery.or(`owner_user_id.eq.${userId},owner_investor_id.eq.${activePersona.entity_id}`)
+          } else {
+            taskQuery = taskQuery.eq('owner_user_id', userId)
           }
 
-          const { data: conversations } = await conversationQuery
+          const { data: tasks } = await taskQuery
 
-          const lastReadByConversation = new Map<string, string | null>()
-          ;(participants || []).forEach((row: any) => {
-            if (row.conversation_id) {
-              lastReadByConversation.set(row.conversation_id, row.last_read_at ?? null)
-            }
-          })
-
-          const unreadConversations = (conversations || []).filter((conv: any) => {
-            const lastMessageAt = conv.last_message_at ?? conv.created_at
-            if (!lastMessageAt) return false
-            const lastReadAt = lastReadByConversation.get(conv.id)
-            if (!lastReadAt) return true
-            return new Date(lastMessageAt).getTime() > new Date(lastReadAt).getTime()
-          })
-
-          unreadConversations.slice(0, 5).forEach((conv: any) => {
-            const lastMessageAt = conv.last_message_at ?? conv.created_at
-            items.push({
-              id: `msg-${conv.id}`,
-              type: 'message',
-              title: conv.subject || 'New message',
-              description: conv.preview || 'You have a new message',
-              href: '/versotech_main/inbox?tab=messages',
-              read: false,
-              created_at: lastMessageAt
+          if (tasks) {
+            tasks.forEach((task: any) => {
+              items.push({
+                id: `task-${task.id}`,
+                type: 'task',
+                title: task.title,
+                description: task.description,
+                href: '/versotech_main/tasks',
+                read: false,
+                created_at: task.created_at
+              })
             })
-          })
+          }
+        }
+
+        // Fetch unread messages (skip for passive personas - they don't have inbox access)
+        if (!isPassiveRecipient) {
+          const { data: participants } = await supabase
+            .from('conversation_participants')
+            .select('conversation_id, last_read_at')
+            .eq('user_id', userId)
+            .limit(50)
+
+          const conversationIds = (participants || [])
+            .map((row: any) => row.conversation_id)
+            .filter(Boolean)
+
+          if (conversationIds.length > 0) {
+            let conversationQuery = supabase
+              .from('conversations')
+              .select('id, subject, preview, last_message_at, created_at, visibility')
+              .in('id', conversationIds)
+              .order('last_message_at', { ascending: false, nullsFirst: false })
+              .limit(10)
+
+            if (personaType !== 'staff') {
+              conversationQuery = conversationQuery.in('visibility', ['investor', 'deal'])
+            }
+
+            const { data: conversations } = await conversationQuery
+
+            const lastReadByConversation = new Map<string, string | null>()
+            ;(participants || []).forEach((row: any) => {
+              if (row.conversation_id) {
+                lastReadByConversation.set(row.conversation_id, row.last_read_at ?? null)
+              }
+            })
+
+            const unreadConversations = (conversations || []).filter((conv: any) => {
+              const lastMessageAt = conv.last_message_at ?? conv.created_at
+              if (!lastMessageAt) return false
+              const lastReadAt = lastReadByConversation.get(conv.id)
+              if (!lastReadAt) return true
+              return new Date(lastMessageAt).getTime() > new Date(lastReadAt).getTime()
+            })
+
+            unreadConversations.slice(0, 5).forEach((conv: any) => {
+              const lastMessageAt = conv.last_message_at ?? conv.created_at
+              items.push({
+                id: `msg-${conv.id}`,
+                type: 'message',
+                title: conv.subject || 'New message',
+                description: conv.preview || 'You have a new message',
+                href: '/versotech_main/inbox?tab=messages',
+                read: false,
+                created_at: lastMessageAt
+              })
+            })
+          }
         }
 
         // Fetch notifications for all personas (investor, lawyer, staff, etc.)

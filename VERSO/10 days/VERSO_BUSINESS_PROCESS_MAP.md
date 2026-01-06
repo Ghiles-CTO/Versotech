@@ -134,15 +134,15 @@ The platform operates on a **multi-persona system** where a single user can have
 
 ### Persona Hierarchy
 
-| Level | Persona | Primary Function | Can Also Be |
-|-------|---------|------------------|-------------|
-| 1 | **CEO/Staff** | Full platform administration | Investor |
-| 2 | **Arranger** | Deal management for assigned vehicles | Investor |
-| 3 | **Partner** | Refers investors, SHARES deals | Investor |
-| 4 | **Introducer** | Formal introduction agreements | Investor |
-| 5 | **Commercial Partner** | Wealth manager (executes for clients) | Investor |
-| 6 | **Lawyer** | Escrow & payment processing | - |
-| 7 | **Investor** | Invests in opportunities | - |
+| Level | Persona                | Primary Function                      | Can Also Be |
+| ----- | ---------------------- | ------------------------------------- | ----------- |
+| 1     | **CEO/Staff**          | Full platform administration          | Investor    |
+| 2     | **Arranger**           | Deal management for assigned vehicles | Investor    |
+| 3     | **Partner**            | Refers investors, SHARES deals        | Investor    |
+| 4     | **Introducer**         | Formal introduction agreements        | Investor    |
+| 5     | **Commercial Partner** | Wealth manager (executes for clients) | Investor    |
+| 6     | **Lawyer**             | Escrow & payment processing           | -           |
+| 7     | **Investor**           | Invests in opportunities              | -           |
 
 ---
 
@@ -232,13 +232,18 @@ Arranger Dashboard
 
 **Role:** Business development partner who CAN ALSO invest personally
 
+> **⚠️ VISIBILITY RULE (Per Fred - January 2026):** "The partner see the term sheet, the introducer doesn't see the term sheet."
+
 **Key Capabilities:**
 - **As Partner:**
-  - View dispatched opportunities
+  - ✅ **CAN see term sheets** (full deal terms visibility)
+  - View dispatched opportunities with full term sheet details
+  - Access data room documents (requires NDA, same as investors)
   - SHARE deals with investors (unique capability!)
   - Track investor progress through funnel
   - View commission/fee tracking
-  - Submit invoices for fees
+  - Accept/reject fee models directly in platform (no formal agreement)
+  - Submit invoices for fees (enabled at deal closing)
 - **As Investor:**
   - Full investor capabilities (subscribe, fund, etc.)
 
@@ -289,45 +294,65 @@ Partner Dashboard
 
 **Role:** Formal referral partner with legal agreement requirements
 
+> **⚠️ VISIBILITY RULE (Per Fred - January 2026):** "The partner see the term sheet, the introducer doesn't see the term sheet."
+
 **Key Capabilities:**
 - **As Introducer:**
-  - View dispatched opportunities
+  - ❌ **CANNOT see term sheets** (only sees their fee model)
+  - View dispatched fee models (NOT term sheets)
   - Track introduced investors
-  - Manage introduction agreements (approve, sign)
-  - View fee models and commissions
-  - Submit invoices
+  - Sign fee model agreements via VERSOSign
+  - View their own fee model and commissions
+  - Submit invoices for fees (enabled at deal closing)
 - **As Investor:**
   - Full investor capabilities
 
-**Key Difference from Partner:**
-- Introducers have **formal Introduction Agreements** that must be approved and signed
-- Partners can directly SHARE; Introducers work through formal agreements
-- Different fee structures and commission tracking
+**Key Differences from Partner:**
+| Aspect | Partner | Introducer |
+|--------|---------|------------|
+| **Term Sheet Visibility** | ✅ CAN see | ❌ CANNOT see |
+| **Data Room Access** | ✅ Yes (requires NDA) | ❌ No access |
+| **Fee Model Acceptance** | Direct accept/reject in platform | Must sign formal agreement |
+| **Deal Distribution** | Can SHARE directly to investors | Works through staff dispatch |
+| **Agreement Required** | No formal agreement | Fee model agreement required |
 
-**Introduction Agreement Workflow:**
+**Fee Model Agreement Workflow (Updated January 2026):**
 ```
-CEO creates Introducer Agreement
-          │
-          ▼
-Dispatch agreement to Introducer
-          │
-          ▼
-Introducer reviews (can add comments)
-          │
-          ├─── APPROVE ───┐
-          │               ▼
-          │        Sign digitally
-          │               │
-          │               ▼
-          │        CEO counter-signs
-          │               │
-          │               ▼
-          │        Agreement active
-          │
-          └─── REJECT ────┐
-                          ▼
-                   Negotiation
-                   (out of app)
+┌─────────────────────────────────────────────────────────────────┐
+│              INTRODUCER FEE MODEL WORKFLOW                       │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  1. CEO creates Fee Model for Deal                               │
+│     • Linked to published term sheet                             │
+│     • Fee values ≤ term sheet limits                             │
+│     • Linked to this specific introducer                         │
+│              │                                                   │
+│              ▼                                                   │
+│  2. Dispatch fee model to Introducer                             │
+│     • Status: 'sent' / 'pending_signature'                       │
+│     • Introducer sees ONLY fee model (not term sheet)            │
+│              │                                                   │
+│              ▼                                                   │
+│  3. Introducer reviews fee model                                 │
+│              │                                                   │
+│              ├─── SIGN (VERSOSign) ───┐                          │
+│              │                        ▼                          │
+│              │                 Signature recorded                │
+│              │                 Status: 'accepted'                │
+│              │                 accepted_at timestamp             │
+│              │                        │                          │
+│              │                        ▼                          │
+│              │        ★ NOW INVESTORS CAN BE DISPATCHED          │
+│              │          through this introducer                  │
+│              │                                                   │
+│              └─── REJECT ────────────┐                           │
+│                                      ▼                           │
+│                               Negotiation                        │
+│                               (off-platform)                     │
+│                                                                  │
+│  ★ KEY: Cannot dispatch investors until fee model accepted!      │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -474,78 +499,127 @@ Lawyer Dashboard
 
 ### Phase 1: Deal Setup (CEO)
 
+> **⚠️ CRITICAL (Per Fred - January 2026):** "In a data model, we really need to have the term sheet as a backbone of a deal."
+
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                    PHASE 1: DEAL SETUP                           │
+│                                                                  │
+│  ★ TERM SHEET IS THE BACKBONE OF EVERY DEAL                      │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                  │
 │  CEO creates new Deal                                            │
 │      │                                                           │
-│      ├── Select/create Vehicle (SPV, Fund)                       │
+│      ├── 1. Select/create Vehicle (SPV, Fund)                    │
 │      │                                                           │
-│      ├── Create Termsheet with terms:                            │
-│      │   • Minimum investment                                    │
-│      │   • Target amount                                         │
-│      │   • Funding deadline                                      │
-│      │   • Fee structure                                         │
+│      ├── 2. CREATE TERM SHEET (REQUIRED - Backbone)              │
+│      │      │                                                    │
+│      │      ├── Minimum investment                               │
+│      │      ├── Target amount                                    │
+│      │      ├── Funding deadline / Closing date                  │
+│      │      ├── Fee structure LIMITS:                            │
+│      │      │   • Subscription fee % (MAX)                       │
+│      │      │   • Management fee % (MAX)                         │
+│      │      │   • Performance fee % (MAX)                        │
+│      │      │                                                    │
+│      │      └── PUBLISH term sheet before fee models             │
 │      │                                                           │
-│      ├── Create Fee Plans for the deal                           │
-│      │   • Subscription fee %                                    │
-│      │   • Management fee %                                      │
-│      │   • Performance fee %                                     │
+│      ├── 3. CREATE FEE MODELS (Linked to Term Sheet)             │
+│      │      │                                                    │
+│      │      ├── ⚠️ NO GLOBAL TEMPLATES - Each linked to deal     │
+│      │      ├── Fee values MUST be ≤ term sheet limits           │
+│      │      ├── Each fee model linked to ONE entity:             │
+│      │      │   • Introducer OR Partner OR Commercial Partner    │
+│      │      │                                                    │
+│      │      └── Hierarchy: Deal → Term Sheet → Fee Model → Entity│
 │      │                                                           │
-│      ├── Assign Partners/Introducers to deal                     │
-│      │   • Create partner-specific fee models                    │
-│      │   • Create introducer-specific fee models                 │
-│      │                                                           │
-│      └── Upload data room documents                              │
+│      └── 4. Upload data room documents                           │
 │          • Due diligence materials                               │
 │          • Legal documents                                       │
 │          • Financials                                            │
 │                                                                  │
-│  Tables: deals, vehicles, term_sheets, fee_plans, fee_components,│
-│          deal_data_room_documents, deal_fee_structures           │
+│  ★ DATA MODEL HIERARCHY                                          │
+│  ─────────────────────────────────────────────────               │
+│    Deal                                                          │
+│     └── Term Sheet(s) [1:many, at least 1 required]              │
+│           └── Fee Model(s) [1:many per term sheet]               │
+│                 └── Linked Entity (Introducer/Partner/CP)        │
+│                       └── Connected to Investor at dispatch      │
+│                                                                  │
+│  Tables: deals, vehicles, deal_fee_structures (term sheets),     │
+│          fee_plans (with term_sheet_id FK), fee_components,      │
+│          deal_data_room_documents                                │
 │                                                                  │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
 ### Phase 2: Opportunity Dispatch
 
+> **⚠️ CRITICAL (Per Fred - January 2026):** Two-phase dispatch process:
+> 1. First dispatch FEE MODEL to Entity (Introducer/Partner) for acceptance
+> 2. THEN dispatch TERM SHEET to Investor (ONLY after fee model is accepted)
+
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                 PHASE 2: OPPORTUNITY DISPATCH                    │
+│                                                                  │
+│  ★ TWO-PHASE DISPATCH PROCESS                                    │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                  │
-│  CEO dispatches deal to:                                         │
+│  ══════════════════════════════════════════════════════════════  │
+│  PHASE 2A: FEE MODEL DISPATCH TO ENTITIES (Must happen FIRST)    │
+│  ══════════════════════════════════════════════════════════════  │
+│                                                                  │
+│  CEO dispatches fee model to:                                    │
+│      │                                                           │
+│      ├── To Partners (fee model)─────────────────────┐           │
+│      │   • Fee model sent for acceptance             │           │
+│      │   • Partner reviews fee terms                 │           │
+│      │   • Partner ACCEPTS or REJECTS in platform    │           │
+│      │   • NO formal agreement document needed       ▼           │
+│      │                            Partner accepts fee model      │
+│      │                            Status: 'accepted'             │
+│      │                                                           │
+│      ├── To Introducers (fee model + agreement)──────┐           │
+│      │   • Fee model sent for acceptance             │           │
+│      │   • Introducer signs fee model agreement doc  │           │
+│      │   • Formal VERSOSign signature required       │           │
+│      │   • Introducer CANNOT see term sheet!         ▼           │
+│      │                            Introducer signs agreement     │
+│      │                            Status: 'accepted'             │
+│      │                                                           │
+│      └── To Commercial Partners (fee model)──────────┐           │
+│          • Fee model/placement terms sent            │           │
+│          • Must accept before investor dispatch      ▼           │
+│                                   CP accepts fee model           │
+│                                   Status: 'accepted'             │
+│                                                                  │
+│  ══════════════════════════════════════════════════════════════  │
+│  PHASE 2B: TERM SHEET DISPATCH TO INVESTORS (Requires accepted   │
+│            fee model from referring entity)                      │
+│  ══════════════════════════════════════════════════════════════  │
+│                                                                  │
+│  CEO/Partner dispatches to investors:                            │
+│      │                                                           │
+│      ├── ⚠️ BLOCKED if referring entity's fee model not accepted │
+│      │   • System validates fee_plan.status = 'accepted'         │
+│      │   • Error shown if fee model pending/draft                │
 │      │                                                           │
 │      ├── Direct to Investors ────────────────────────┐           │
-│      │   • Select specific investors                 │           │
-│      │   • Bulk dispatch to investor groups          │           │
-│      │                                               ▼           │
+│      │   • Must select referring entity              │           │
+│      │   • Must select accepted fee model            │           │
+│      │   • assigned_fee_plan_id set on membership    ▼           │
 │      │                                    Investor receives      │
-│      │                                    notification           │
+│      │                                    term sheet dispatch    │
 │      │                                                           │
-│      ├── To Partners (with fee model) ───────────────┐           │
-│      │   • Partner can then SHARE to investors       │           │
-│      │   • Partner's fee model auto-applied          │           │
-│      │                                               ▼           │
-│      │                                    Partner can SHARE      │
-│      │                                    to their network       │
-│      │                                                           │
-│      ├── To Introducers (with agreement) ────────────┐           │
-│      │   • Introduction agreement dispatched         │           │
-│      │   • Introducer must approve & sign            │           │
-│      │                                               ▼           │
-│      │                                    Introducer sees        │
-│      │                                    opportunity + terms    │
-│      │                                                           │
-│      └── To Commercial Partners ─────────────────────┐           │
-│          • Placement agreement dispatched            │           │
-│          • Can subscribe on behalf of clients        ▼           │
-│                                           Commercial Partner     │
-│                                           notifies clients       │
+│      └── Partner SHARE to Investors ─────────────────┐           │
+│          • Partner's accepted fee model auto-applied │           │
+│          • Partner tracks investor progress          ▼           │
+│                                    Investor receives notification│
+│                                    via Partner's SHARE           │
 │                                                                  │
-│  Tables: deal_memberships, notifications, deal_activity_events   │
+│  Tables: fee_plans (status, accepted_at), deal_memberships       │
+│          (assigned_fee_plan_id), notifications, deal_activity    │
 │                                                                  │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -683,15 +757,39 @@ Lawyer Dashboard
 
 ### Phase 6: Certificate Issuance
 
+> **⚠️ CRITICAL UPDATE (Per Fred - January 2026):** "It should be linked to the closing both the issuance of the certificate and the request of the invoices."
+
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                PHASE 6: CERTIFICATE ISSUANCE                     │
+│                                                                  │
+│  ★ TRIGGERED BY: DEAL CLOSING DATE (not individual funding)     │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                  │
-│  Post-funding: Certificate generation                            │
+│  Deal reaches closing date (close_at field)                      │
 │      │                                                           │
 │      ▼                                                           │
-│  CEO generates Equity Certificate                                │
+│  ★ STEP 1: CEO APPROVAL TRIGGERED (Position Confirmation)        │
+│      │                                                           │
+│      ├── System creates approval request for CEO                 │
+│      ├── CEO reviews all funded subscriptions                    │
+│      ├── CEO confirms positions / closing                        │
+│      │                                                           │
+│      ▼                                                           │
+│  ★ STEP 2: AFTER CEO APPROVAL - Actions Enabled:                 │
+│      │                                                           │
+│      ├── 1. Certificate generation ENABLED for all funded subs   │
+│      │      • Only funded subscriptions get certificates         │
+│      │      • Certificates issued for the entire closing cohort  │
+│      │                                                           │
+│      ├── 2. Invoice requests ENABLED for partners/introducers    │
+│      │      • fee_plans.invoice_requests_enabled = true          │
+│      │      • fee_plans.invoice_requests_enabled_at = timestamp  │
+│      │      • Partners/Introducers can now submit invoices       │
+│      │                                                           │
+│      └── 3. Position finalization for funded investors           │
+│                                                                  │
+│  CEO generates Equity Certificates (bulk or individual)          │
 │      │                                                           │
 │      ├── Certificate data:                                       │
 │      │   • Investor name                                         │
@@ -710,26 +808,48 @@ Lawyer Dashboard
 │          ▼                                                       │
 │      Statement of Holding generated                              │
 │          │                                                       │
-│          ├── Comprehensive position summary                      │
-│          │                                                       │
 │          └── Sent to Investor                                    │
 │                                                                  │
-│  Tables: documents, workflow_runs, investor_notifications        │
+│  Tables: documents, workflow_runs, investor_notifications,       │
+│          deals (close_at), fee_plans (invoice_requests_enabled)  │
 │                                                                  │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
 ### Phase 7: Fee Payment
 
+> **⚠️ CRITICAL UPDATE (Per Fred - January 2026):** "It's at the closing that we should request the invoice from the introducer or from the partner. It's not when the subscription is fully funded."
+
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                   PHASE 7: FEE PAYMENT                           │
+│                                                                  │
+│  ★ INVOICE REQUESTS ENABLED AT: DEAL CLOSING DATE                │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                  │
-│  Fee calculations triggered post-funding                         │
+│  ⚠️ IMPORTANT: Fee payment workflow is triggered by CLOSING DATE │
+│     NOT by individual subscription funding!                      │
+│                                                                  │
+│  Pre-closing: Fee calculations accrue but invoices BLOCKED       │
+│      │                                                           │
+│      ├── Subscriptions funded → fee_events created (accrued)     │
+│      ├── Partners/Introducers can VIEW accrued fees              │
+│      └── But CANNOT submit invoices yet                          │
+│                                                                  │
+│  At Deal Closing (close_at date reached):                        │
+│      │                                                           │
+│      ├── CEO approval triggered (position confirmation)          │
+│      ├── CEO confirms closing                                    │
+│      │      │                                                    │
+│      │      ▼  (AFTER CEO APPROVAL)                              │
+│      ├── fee_plans.invoice_requests_enabled = true               │
+│      ├── System notifies Partners/Introducers                    │
+│      └── Invoice submission NOW ENABLED                          │
+│                                                                  │
+│  Post-closing Fee Payment Workflow:                              │
 │      │                                                           │
 │      ├── Partner Fees:                                           │
-│      │   ├── CEO notifies Partner to submit invoice              │
+│      │   ├── Partner sees "Submit Invoice" button (now enabled)  │
 │      │   ├── Partner submits invoice in platform                 │
 │      │   ├── CEO/Arranger requests payment to Lawyer             │
 │      │   ├── Lawyer processes payment from escrow                │
@@ -737,13 +857,14 @@ Lawyer Dashboard
 │      │                                                           │
 │      ├── Introducer Fees:                                        │
 │      │   ├── Same workflow as Partner                            │
-│      │   └── Based on Introduction Agreement terms               │
+│      │   └── Based on accepted Fee Model Agreement terms         │
 │      │                                                           │
 │      └── Commercial Partner Fees:                                │
-│          ├── Based on Placement Agreement                        │
+│          ├── Based on accepted Fee Model terms                   │
 │          └── May be per-client or aggregate                      │
 │                                                                  │
 │  Tables: fee_events, invoices, invoice_lines, payments,          │
+│          fee_plans (invoice_requests_enabled, enabled_at),       │
 │          partner_commissions, introducer_commissions             │
 │                                                                  │
 └─────────────────────────────────────────────────────────────────┘
@@ -934,6 +1055,39 @@ Lawyer Dashboard
 
 ## 7. Fee & Commission Structure
 
+> **⚠️ CRITICAL UPDATE (Per Fred - January 2026):**
+> - "We should never do [global fee plans] because it's a very big risk."
+> - "If the term sheet says 0% subscription fee then the upfront amount in a fee model with the introducer cannot be [more than that]."
+> - Invoice requests are enabled at **deal closing date**, NOT at funding.
+
+### 7.0 Term Sheet → Fee Model Hierarchy (NEW)
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│          TERM SHEET → FEE MODEL HIERARCHY                        │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  TERM SHEET (Investor-Facing)         FEE MODEL (Entity Agreement)│
+│  ──────────────────────────           ────────────────────────── │
+│                                                                  │
+│  • Sets MAXIMUM fee limits            • Must be ≤ term sheet    │
+│  • Subscription fee: 3% MAX     →     • Subscription: 2.5% ✅   │
+│  • Management fee: 2% MAX       →     • Management: 1.5% ✅     │
+│  • Performance: 20% MAX         →     • Performance: 15% ✅     │
+│                                                                  │
+│  ⚠️ VALIDATION RULE:                                             │
+│  Fee Model values CANNOT exceed Term Sheet limits                │
+│  System enforces this at creation and edit time                  │
+│                                                                  │
+│  ⚠️ NO GLOBAL TEMPLATES:                                         │
+│  Every fee model must be linked to:                              │
+│  1. A specific DEAL                                              │
+│  2. A published TERM SHEET                                       │
+│  3. A specific ENTITY (Introducer/Partner/CP)                    │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
 ### Fee Types Overview
 
 | Fee Type | Charged To | Paid By | Rate | Timing | Basis |
@@ -942,9 +1096,9 @@ Lawyer Dashboard
 | Management | Investor | Investor | 1-2%/year | Quarterly | Committed capital |
 | Performance | Investor | Investor | 20% | On exit | Profits above hurdle |
 | Spread | Deal | Investor | Variable | At investment | Buy/sell spread |
-| Partner BD | VERSO | VERSO | Variable | Post-funding | Subscription fees |
-| Introducer | VERSO | VERSO | Variable | Post-funding | Per agreement |
-| Commercial Partner | VERSO | VERSO | Variable | Post-funding | Per placement agreement |
+| Partner BD | VERSO | VERSO | Variable | **At deal closing** | Per fee model |
+| Introducer | VERSO | VERSO | Variable | **At deal closing** | Per fee model agreement |
+| Commercial Partner | VERSO | VERSO | Variable | **At deal closing** | Per fee model |
 
 ### Fee Flow Diagram
 
@@ -1000,36 +1154,42 @@ Partner Commission: $20,000 × 25% = $5,000
 ### Complete Deal-to-Certificate Flow
 
 ```
-┌─────────────────────────────────────────────────────────────────────────────────────────┐
-│                              COMPLETE DEAL-TO-CERTIFICATE FLOW                           │
-├─────────────────────────────────────────────────────────────────────────────────────────┤
-│                                                                                          │
-│  ┌─────────┐    ┌─────────┐    ┌─────────┐    ┌─────────┐    ┌─────────┐    ┌─────────┐ │
-│  │  DEAL   │    │ DISPATCH│    │ INTEREST│    │ SUB PACK│    │ FUNDING │    │  CERT   │ │
-│  │ SETUP   │───→│         │───→│  + NDA  │───→│ + SIGN  │───→│         │───→│ ISSUED  │ │
-│  └────┬────┘    └────┬────┘    └────┬────┘    └────┬────┘    └────┬────┘    └────┬────┘ │
-│       │              │              │              │              │              │       │
-│       │              │              │              │              │              │       │
-│  ┌────▼────┐    ┌────▼────┐    ┌────▼────┐    ┌────▼────┐    ┌────▼────┐    ┌────▼────┐ │
-│  │deals    │    │deal_    │    │investor_│    │subscrip-│    │bank_    │    │documents│ │
-│  │vehicles │    │member-  │    │deal_    │    │tions    │    │transact-│    │workflow_│ │
-│  │term_    │    │ships    │    │interest │    │signature│    │ions     │    │runs     │ │
-│  │sheets   │    │notifs   │    │signature│    │_requests│    │reconcil-│    │positions│ │
-│  │fee_plans│    │         │    │_requests│    │approvals│    │iation   │    │         │ │
-│  └─────────┘    └─────────┘    │data_room│    └─────────┘    │fee_     │    └─────────┘ │
-│                               │_access  │                    │events   │               │
-│                               └─────────┘                    └─────────┘               │
-│                                                                                          │
-│  PERSONAS INVOLVED:                                                                      │
-│  ────────────────────                                                                    │
-│  CEO ───────────────────────────────────────────────────────────────────────────────────│
-│  Arranger ────────────────────────────────────────────────────────────────────────────  │
-│  Partner ─────────────● SHARE ●────────────────────────────────────────────────────────│
-│  Introducer ──────────●──────────────────────────────────────────────────────────────  │
-│  Investor ────────────────────────●───────────●─────────────●───────────────●───────   │
-│  Lawyer ────────────────────────────────────────────────────●───────────────●───────   │
-│                                                                                          │
-└─────────────────────────────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────────────────────┐
+│                         COMPLETE DEAL-TO-CERTIFICATE FLOW                            │
+├──────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                      │
+│  ┌──────────┐   ┌──────────┐   ┌──────────┐   ┌──────────┐   ┌──────────┐   ┌──────────┐
+│  │   DEAL   │   │ DISPATCH │   │ INTEREST │   │ SUB PACK │   │ FUNDING  │   │   CERT   │
+│  │  SETUP   │──→│          │──→│  + NDA   │──→│  + SIGN  │──→│          │──→│  ISSUED  │
+│  └────┬─────┘   └────┬─────┘   └────┬─────┘   └────┬─────┘   └────┬─────┘   └────┬─────┘
+│       │              │              │              │              │              │
+│       ▼              ▼              ▼              ▼              ▼              ▼
+│  ┌──────────┐   ┌──────────┐   ┌──────────┐   ┌──────────┐   ┌──────────┐   ┌──────────┐
+│  │ deals    │   │ deal_    │   │ investor_│   │ subscrip-│   │ bank_    │   │ documents│
+│  │ vehicles │   │ member-  │   │ deal_    │   │ tions    │   │ transact-│   │ workflow_│
+│  │ term_    │   │ ships    │   │ interest │   │ signature│   │ ions     │   │ runs     │
+│  │ sheets   │   │ notifs   │   │ signature│   │ _requests│   │ reconcil-│   │ positions│
+│  │ fee_plans│   │          │   │ _requests│   │ approvals│   │ iation   │   │          │
+│  │          │   │          │   │ data_room│   │          │   │ fee_     │   │          │
+│  │          │   │          │   │ _access  │   │          │   │ events   │   │          │
+│  └──────────┘   └──────────┘   └──────────┘   └──────────┘   └──────────┘   └──────────┘
+│                                                                                      │
+├──────────────────────────────────────────────────────────────────────────────────────┤
+│  PERSONAS INVOLVED                                                                   │
+├──────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                      │
+│             SETUP     DISPATCH    INTEREST    SUB PACK    FUNDING     CERT          │
+│               │          │           │           │           │          │           │
+│  CEO         ●──────────●───────────●───────────●───────────●──────────●           │
+│  Arranger    ●──────────●───────────○───────────●───────────●──────────○           │
+│  Partner     ○──────────●─(SHARE)───○───────────○───────────○──────────○           │
+│  Introducer  ○──────────●───────────○───────────○───────────○──────────○           │
+│  Investor    ○──────────○───────────●───────────●───────────●──────────●           │
+│  Lawyer      ○──────────○───────────○───────────○───────────●──────────●           │
+│                                                                                      │
+│  ● = Active participant    ○ = Not involved    (SHARE) = Partner's unique action    │
+│                                                                                      │
+└──────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ### Multi-Persona State Machine
@@ -1253,8 +1413,116 @@ The Partner SHARE feature is one of the most important business processes - it a
 | Aspect | Partner | Introducer |
 |--------|---------|------------|
 | **Direct SHARE** | ✅ Can SHARE deals directly | ❌ Cannot SHARE directly |
-| **Agreement Required** | No formal agreement | Must have signed Introduction Agreement |
+| **Term Sheet Visibility** | ✅ CAN see term sheet | ❌ CANNOT see term sheet |
+| **Fee Model Acceptance** | Accept/reject in platform | Sign formal agreement |
+| **Agreement Required** | No formal agreement | Fee model agreement required |
 | **Workflow** | Self-service distribution | Formal approval process |
+
+---
+
+## 10.5 Fee Model Acceptance Workflow (NEW - January 2026)
+
+> **Per Fred:** "You have a new investment opportunity. You create a term sheet and you say, 'Okay, I'd like to speak to my introducer so that they see if that client could be interested.' To formalize that conversation, I need to dispatch a fee model to the introducer. The introducer has a possibility to accept it or not to accept it. As soon as he accepts it, it means that the fee model is definitely associated to the introducer for that particular investment opportunity and that particular term sheet."
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                    FEE MODEL ACCEPTANCE WORKFLOW                                  │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                   │
+│  ╔═══════════════════════════════════════════════════════════════════════════╗   │
+│  ║                       STEP 1: CREATE FEE MODEL                             ║   │
+│  ╚═══════════════════════════════════════════════════════════════════════════╝   │
+│                                                                                   │
+│  CEO/Staff creates fee model:                                                     │
+│  • Select DEAL (required - no global templates)                                   │
+│  • Select published TERM SHEET (required)                                         │
+│  • Select ENTITY: Introducer OR Partner OR Commercial Partner                     │
+│  • Configure fee components (must be ≤ term sheet limits):                        │
+│    - Subscription fee rate                                                        │
+│    - Management fee rate                                                          │
+│    - Performance fee rate                                                         │
+│  • Status: 'draft'                                                                │
+│                                                                                   │
+│  ╔═══════════════════════════════════════════════════════════════════════════╗   │
+│  ║                       STEP 2: DISPATCH FEE MODEL                           ║   │
+│  ╚═══════════════════════════════════════════════════════════════════════════╝   │
+│                                                                                   │
+│  Staff sends fee model to entity:                                                 │
+│  • Status changes to 'sent' or 'pending_signature'                                │
+│  • Entity receives notification                                                   │
+│                                                                                   │
+│           ┌─────────────────────────────────────────────────────────┐             │
+│           │            PARTNER PATH (Simplified)                    │             │
+│           │                                                         │             │
+│           │  Partner logs in → Views fee model                      │             │
+│           │  Partner CAN see term sheet details                     │             │
+│           │  Partner clicks "Accept" or "Reject"                    │             │
+│           │  • Accept → Status: 'accepted', accepted_at set         │             │
+│           │  • Reject → Negotiation required                        │             │
+│           │                                                         │             │
+│           └─────────────────────────────────────────────────────────┘             │
+│                                                                                   │
+│           ┌─────────────────────────────────────────────────────────┐             │
+│           │            INTRODUCER PATH (Formal Agreement)           │             │
+│           │                                                         │             │
+│           │  Introducer logs in → Views fee model                   │             │
+│           │  Introducer CANNOT see term sheet!                      │             │
+│           │  Introducer signs via VERSOSign:                        │             │
+│           │  • signature_data stored in fee_plans                   │             │
+│           │  • Status: 'accepted', accepted_at set                  │             │
+│           │  OR                                                     │             │
+│           │  Introducer rejects → Negotiation required              │             │
+│           │                                                         │             │
+│           └─────────────────────────────────────────────────────────┘             │
+│                                                                                   │
+│  ╔═══════════════════════════════════════════════════════════════════════════╗   │
+│  ║                       STEP 3: DISPATCH TO INVESTORS                        ║   │
+│  ╚═══════════════════════════════════════════════════════════════════════════╝   │
+│                                                                                   │
+│  ONLY after fee model is 'accepted':                                              │
+│  • Staff/Partner can dispatch term sheet to investors                             │
+│  • deal_memberships.assigned_fee_plan_id links investor to fee model              │
+│  • Investor journey begins                                                        │
+│                                                                                   │
+│  ⚠️ BLOCKED if fee model not accepted:                                            │
+│  • API validation: requires fee_plan.status = 'accepted'                          │
+│  • UI shows error: "Fee model must be accepted before dispatch"                   │
+│                                                                                   │
+│  ╔═══════════════════════════════════════════════════════════════════════════╗   │
+│  ║                       STEP 4: DEAL CLOSES                                  ║   │
+│  ╚═══════════════════════════════════════════════════════════════════════════╝   │
+│                                                                                   │
+│  When deal reaches closing date:                                                  │
+│  1. CEO approval triggered (position confirmation request)                        │
+│  2. CEO reviews and confirms positions/closing                                    │
+│  3. AFTER CEO APPROVAL:                                                           │
+│     • fee_plans.invoice_requests_enabled = true                                   │
+│     • Partners/Introducers can submit invoices for their fees                     │
+│     • Certificates issued for funded investors                                    │
+│                                                                                   │
+└─────────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Fee Model Status Flow
+
+```
+draft → sent → pending_signature → accepted
+                    │
+                    └── rejected (requires renegotiation)
+```
+
+### Database Fields for Fee Model Acceptance
+
+| Field | Type | Purpose |
+|-------|------|---------|
+| `fee_plans.status` | enum | 'draft', 'sent', 'pending_signature', 'accepted', 'rejected' |
+| `fee_plans.term_sheet_id` | uuid FK | Links to published term sheet (required) |
+| `fee_plans.accepted_at` | timestamp | When entity accepted |
+| `fee_plans.accepted_by` | uuid FK | User who accepted |
+| `fee_plans.signature_data` | jsonb | VERSOSign signature (for introducers) |
+| `fee_plans.invoice_requests_enabled` | boolean | Set true at deal closing |
+| `fee_plans.invoice_requests_enabled_at` | timestamp | When invoices were enabled |
+| `deal_memberships.assigned_fee_plan_id` | uuid FK | Links investor to specific fee model |
 
 ---
 
@@ -1833,12 +2101,38 @@ await auditLogger.log({
 
 ## Document Version
 
-- **Version**: 3.0 (with Verification Audit)
+- **Version**: 4.0 (Fee System Refactoring Update)
 - **Generated**: January 2026
-- **Updated**: January 2, 2026 (Verification Audit)
-- **Source Analysis**: User stories, codebase exploration, database schema analysis, 14-agent parallel audit
+- **Updated**: January 5, 2026 (Fred's Fee System Requirements)
+- **Source Analysis**: User stories, codebase exploration, database schema analysis, 14-agent parallel audit, Fred's meeting requirements (meeting2.md)
 - **Verification**: Exhaustive codebase search with file path evidence for each claim
-- **Coverage**: 7 personas, 113+ database tables, complete deal-to-certificate lifecycle, implementation gap analysis
+- **Coverage**: 7 personas, 113+ database tables, complete deal-to-certificate lifecycle, implementation gap analysis, **NEW: Term Sheet → Fee Model hierarchy**
+
+### Version 4.0 Changes (January 5, 2026) - Fred's Requirements
+
+| Change | Section | Description |
+|--------|---------|-------------|
+| **Term Sheet as Backbone** | §4 Phase 1, §7 | Term sheet is now required cornerstone of every deal |
+| **No Global Fee Plans** | §4 Phase 1, §7.0 | Every fee model must link to deal + term sheet + entity |
+| **Two-Phase Dispatch** | §4 Phase 2 | Fee model → Entity first, then Term sheet → Investor |
+| **Fee Value Validation** | §7.0 | Fee model values must be ≤ term sheet limits |
+| **Partner Visibility** | §3.3 | Partners CAN see term sheets |
+| **Introducer Visibility** | §3.4 | Introducers CANNOT see term sheets |
+| **Dispatch Blocking** | §4 Phase 2B, §10.5 | Cannot dispatch to investors until fee model accepted |
+| **Closing Date Triggers** | §6, §7, §10.5 | Certificates & invoices triggered at deal closing, NOT funding |
+| **CEO Approval at Closing** | §6, §7, §10.5 | CEO must approve position confirmation before certs/invoices |
+| **Fee Model Acceptance** | §10.5 (NEW) | Complete workflow for fee model acceptance |
+
+### Fred's Key Quotes (Source of Truth)
+
+1. **Term Sheet as backbone:** "In a data model, we really need to have the term sheet as a backbone of a deal."
+2. **No global fee plans:** "We should never do this because it's a very big risk... We should define every single time the information."
+3. **Fee model acceptance:** "The introducer has a possibility to accept it or not to accept it. As soon as he accepts it, it means that the fee model is definitely associated to the introducer for that particular investment opportunity."
+4. **Fee model values:** "If the term sheet says 0% subscription fee then the upfront amount in a fee model with the introducer cannot be [more than that]."
+5. **Dispatch blocking:** "Before you dispatch to any investor, the partner needs to agree on a fee model."
+6. **Visibility rules:** "The partner see the term sheet, the introducer doesn't see the term sheet."
+7. **Closing date triggers:** "It should be linked to the closing both the issuance of the certificate and the request of the invoices."
+8. **CEO approval at closing:** "So we should trigger a closing date confirmation by the CEO." (CEO must confirm positions before certificates and invoice requests are enabled)
 
 ### Verification Statistics
 
@@ -1849,11 +2143,26 @@ await auditLogger.log({
 | Claims corrected | 5 |
 | File paths provided as evidence | 30+ |
 | Codebase search methods used | Glob, Grep, Read |
+| New sections added (v4.0) | 3 |
+| Sections updated (v4.0) | 8 |
 
-### Key Corrections Made
+### Key Corrections Made (v3.0)
 
 1. **Workflow count**: 6 → 11 workflows in `src/lib/workflows.ts`
 2. **KYC document types**: 16 → 17 types (added `other`)
 3. **Cron jobs**: 6 → 10 jobs in `src/app/api/cron/`
 4. **RPC function claim**: `calculate_investor_performance_fee` DOES NOT EXIST (removed false claim)
 5. **DocuSign**: Clarified as external n8n workflow, not direct integration
+
+### Implementation Evidence (v4.0)
+
+| Requirement | File/Table | Status |
+|-------------|------------|--------|
+| `term_sheet_id` on fee_plans | `fee_plans.term_sheet_id` FK | ✅ Implemented |
+| Fee model acceptance fields | `accepted_at`, `accepted_by`, `signature_data` | ✅ Implemented |
+| Invoice request triggers | `invoice_requests_enabled`, `invoice_requests_enabled_at` | ✅ Implemented |
+| Investor fee plan assignment | `deal_memberships.assigned_fee_plan_id` | ✅ Implemented |
+| Fee value validation | `validateFeeComponentsAgainstTermSheet()` | ✅ Implemented |
+| Dispatch blocking | `/api/deals/[id]/dispatch/route.ts` validation | ✅ Implemented |
+| Partner term sheet visibility | `/api/partners/me/fee-models/route.ts` | ✅ Implemented |
+| Introducer term sheet hidden | `/api/introducers/me/fee-models/route.ts` | ✅ Implemented |

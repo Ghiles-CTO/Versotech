@@ -26,9 +26,22 @@ import {
   TrendingUp,
   Edit,
   UserPlus,
+  FileText,
+  Send,
+  MoreHorizontal,
 } from 'lucide-react'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import FeePlanEditModal from '@/components/fees/FeePlanEditModal'
 import { cn } from '@/lib/utils'
 import { formatCurrency, formatDate, formatBps } from '@/lib/format'
+import { CheckCircle2 } from 'lucide-react'
 import { useAddIntroducer } from '@/components/staff/introducers/add-introducer-context'
 import { EditIntroducerDialog } from '@/components/staff/introducers/edit-introducer-dialog'
 import { AddIntroductionDialog } from '@/components/staff/introducers/add-introduction-dialog'
@@ -59,6 +72,11 @@ export type IntroducersDashboardProps = {
     totalCommissionPaid: number
     pendingCommission: number
     lastIntroductionAt: string | null
+    feePlans?: {
+      total: number
+      accepted: number
+      pending: number
+    }
   }>
   recentIntroductions: Array<{
     id: string
@@ -86,6 +104,7 @@ const statusFilters = [
 ]
 
 export function IntroducersDashboard({ summary, introducers, recentIntroductions, deals = [], isDemo = false }: IntroducersDashboardProps) {
+  const router = useRouter()
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [editingIntroducer, setEditingIntroducer] = useState<IntroducersDashboardProps['introducers'][number] | null>(null)
@@ -93,6 +112,30 @@ export function IntroducersDashboard({ summary, introducers, recentIntroductions
   const [addIntroductionOpen, setAddIntroductionOpen] = useState(false)
   const [inviteDialogIntroducer, setInviteDialogIntroducer] = useState<IntroducersDashboardProps['introducers'][number] | null>(null)
   const { setOpen } = useAddIntroducer()
+
+  // Fee plan modal state
+  const [feePlanModalOpen, setFeePlanModalOpen] = useState(false)
+  const [selectedIntroducerForFeePlan, setSelectedIntroducerForFeePlan] = useState<IntroducersDashboardProps['introducers'][number] | null>(null)
+
+  // Handler for creating a fee plan for an introducer
+  const handleCreateFeePlan = (introducer: IntroducersDashboardProps['introducers'][number]) => {
+    setSelectedIntroducerForFeePlan(introducer)
+    setFeePlanModalOpen(true)
+  }
+
+  const handleFeePlanSuccess = () => {
+    setFeePlanModalOpen(false)
+    setSelectedIntroducerForFeePlan(null)
+    toast.success('Fee plan created successfully')
+    router.refresh()
+  }
+
+  // Handler for dispatching investor through an introducer
+  const handleDispatchInvestor = (introducer: IntroducersDashboardProps['introducers'][number]) => {
+    // Navigate to dispatch page with introducer pre-selected
+    // For now, show toast with info - will implement full dispatch modal in next phase
+    toast.info(`To dispatch an investor through ${introducer.legalName}, go to a deal's Members tab and use "Add Participant"`)
+  }
 
   const filteredIntroducers = useMemo(() => {
     return introducers.filter((introducer) => {
@@ -213,6 +256,8 @@ export function IntroducersDashboard({ summary, introducers, recentIntroductions
                 introducer={introducer}
                 onEdit={() => setEditingIntroducer(introducer)}
                 onInvite={() => setInviteDialogIntroducer(introducer)}
+                onCreateFeePlan={() => handleCreateFeePlan(introducer)}
+                onDispatchInvestor={() => handleDispatchInvestor(introducer)}
               />
             ))
           )}
@@ -271,6 +316,16 @@ export function IntroducersDashboard({ summary, introducers, recentIntroductions
           entityName={inviteDialogIntroducer.legalName}
         />
       )}
+
+      {/* Fee Plan Modal for creating fee plans with pre-selected introducer */}
+      <FeePlanEditModal
+        open={feePlanModalOpen}
+        onClose={() => {
+          setFeePlanModalOpen(false)
+          setSelectedIntroducerForFeePlan(null)
+        }}
+        onSuccess={handleFeePlanSuccess}
+      />
     </div>
   )
 }
@@ -308,10 +363,14 @@ function IntroducerRow({
   introducer,
   onEdit,
   onInvite,
+  onCreateFeePlan,
+  onDispatchInvestor,
 }: {
   introducer: IntroducersDashboardProps['introducers'][number]
   onEdit: () => void
   onInvite: () => void
+  onCreateFeePlan: () => void
+  onDispatchInvestor: () => void
 }) {
   const statusStyles: Record<string, string> = {
     active: 'bg-green-100 text-green-800',
@@ -333,22 +392,34 @@ function IntroducerRow({
                   {introducer.legalName}
                 </h3>
               </Link>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onEdit}
-                className="h-7 w-7 p-0"
-              >
-                <Edit className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onInvite}
-                className="h-7 w-7 p-0"
-              >
-                <UserPlus className="h-4 w-4" />
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                    <MoreHorizontal className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start">
+                  <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={onEdit}>
+                    <Edit className="mr-2 h-4 w-4" />
+                    Edit Introducer
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={onInvite}>
+                    <UserPlus className="mr-2 h-4 w-4" />
+                    Invite User
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={onCreateFeePlan}>
+                    <FileText className="mr-2 h-4 w-4" />
+                    Create Fee Plan
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={onDispatchInvestor}>
+                    <Send className="mr-2 h-4 w-4" />
+                    Dispatch Investor
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
             <div className="text-sm text-muted-foreground">
               {introducer.contactName || 'No contact'} • {introducer.email || 'No email provided'}
@@ -365,6 +436,22 @@ function IntroducerRow({
         <div className="flex flex-wrap items-center gap-6">
           <Stat label="Introductions" value={introducer.totalIntroductions} />
           <Stat label="Allocated" value={introducer.successfulAllocations} />
+          {/* Fee Plans count with status indicator */}
+          {introducer.feePlans && (
+            <div className="text-center">
+              <div className="flex items-center justify-center gap-1 font-semibold tabular-nums">
+                <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+                <span>{introducer.feePlans.accepted}/{introducer.feePlans.total}</span>
+                {introducer.feePlans.accepted === introducer.feePlans.total && introducer.feePlans.total > 0 && (
+                  <CheckCircle2 className="h-3.5 w-3.5 text-green-400" />
+                )}
+                {introducer.feePlans.pending > 0 && (
+                  <Clock className="h-3.5 w-3.5 text-yellow-400" />
+                )}
+              </div>
+              <div className="text-xs text-muted-foreground uppercase tracking-wide">Fee Plans</div>
+            </div>
+          )}
           <Stat label="Paid" value={formatCurrency(introducer.totalCommissionPaid)} />
           <Stat label="Pending" value={formatCurrency(introducer.pendingCommission)} className="text-orange-500" />
           <div className="flex flex-col items-start gap-2">

@@ -50,15 +50,41 @@ export async function GET(request: Request) {
 }
 
 const updateInvestorSchema = z.object({
+  // Personal Info (for individual investors)
+  first_name: z.string().max(100).optional().nullable(),
+  middle_name: z.string().max(100).optional().nullable(),
+  last_name: z.string().max(100).optional().nullable(),
+  name_suffix: z.string().max(20).optional().nullable(),
+  date_of_birth: z.string().optional().nullable(),
+  country_of_birth: z.string().optional().nullable(),
+  nationality: z.string().optional().nullable(),
+
   // Residential Address
   residential_street: z.string().optional().nullable(),
+  residential_line_2: z.string().optional().nullable(),
   residential_city: z.string().optional().nullable(),
   residential_state: z.string().optional().nullable(),
   residential_postal_code: z.string().optional().nullable(),
   residential_country: z.string().optional().nullable(),
+
   // Phone numbers
   phone_mobile: z.string().optional().nullable(),
   phone_office: z.string().optional().nullable(),
+
+  // US Tax compliance (FATCA)
+  is_us_citizen: z.boolean().optional(),
+  is_us_taxpayer: z.boolean().optional(),
+  us_taxpayer_id: z.string().max(20).optional().nullable(),
+  country_of_tax_residency: z.string().optional().nullable(),
+  tax_id_number: z.string().max(50).optional().nullable(),
+
+  // ID Document
+  id_type: z.enum(['passport', 'national_id', 'drivers_license', 'residence_permit']).optional().nullable(),
+  id_number: z.string().max(50).optional().nullable(),
+  id_issue_date: z.string().optional().nullable(),
+  id_expiry_date: z.string().optional().nullable(),
+  id_issuing_country: z.string().optional().nullable(),
+
   // Representative info (for entity-type investors)
   representative_name: z.string().optional().nullable(),
   representative_title: z.string().optional().nullable(),
@@ -104,13 +130,37 @@ export async function PATCH(request: Request) {
     // Build update object (only include non-undefined values)
     const updateData: Record<string, any> = {}
     const validFields = [
+      // Personal Info
+      'first_name',
+      'middle_name',
+      'last_name',
+      'name_suffix',
+      'date_of_birth',
+      'country_of_birth',
+      'nationality',
+      // Residential Address
       'residential_street',
+      'residential_line_2',
       'residential_city',
       'residential_state',
       'residential_postal_code',
       'residential_country',
+      // Phone
       'phone_mobile',
       'phone_office',
+      // US Tax compliance
+      'is_us_citizen',
+      'is_us_taxpayer',
+      'us_taxpayer_id',
+      'country_of_tax_residency',
+      'tax_id_number',
+      // ID Document
+      'id_type',
+      'id_number',
+      'id_issue_date',
+      'id_expiry_date',
+      'id_issuing_country',
+      // Representative
       'representative_name',
       'representative_title',
     ]

@@ -1,5 +1,13 @@
 /**
  * Fee Plan Edit Modal - Clean & Reliable
+ *
+ * IMPORTANT: Fee plans are commercial agreements with introducers/partners.
+ * They must be linked to:
+ * 1. A specific deal (no global templates)
+ * 2. A published term sheet (for fee limits)
+ * 3. An entity (introducer, partner, or commercial partner)
+ *
+ * Fee values must NOT exceed term sheet limits.
  */
 
 'use client';
@@ -14,8 +22,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, X, Loader2 } from 'lucide-react';
+import { Plus, X, Loader2, AlertTriangle } from 'lucide-react';
 import type { FeePlanWithComponents } from '@/lib/fees/types';
+import { TermSheetSelector, type TermSheet } from './TermSheetSelector';
+import { EntitySelector, type EntityType } from './EntitySelector';
+import { validateFeeComponentsAgainstTermSheet, bpsToPercent } from '@/lib/fees/term-sheet-sync';
 
 interface FeePlanEditModalProps {
   open: boolean;
@@ -23,6 +34,8 @@ interface FeePlanEditModalProps {
   onSuccess: () => void;
   feePlan?: FeePlanWithComponents | null;
   dealId?: string;
+  /** Pre-select a term sheet when creating a new fee plan */
+  initialTermSheetId?: string;
 }
 
 interface FeeComponentForm {
@@ -49,28 +62,40 @@ export default function FeePlanEditModal({
   onSuccess,
   feePlan,
   dealId,
+  initialTermSheetId,
 }: FeePlanEditModalProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [deals, setDeals] = useState<Array<{ id: string; name: string }>>([]);
 
   // Form state
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [selectedDealId, setSelectedDealId] = useState<string | undefined>(dealId);
-  const [isDefault, setIsDefault] = useState(false);
   const [isActive, setIsActive] = useState(true);
   const [components, setComponents] = useState<FeeComponentForm[]>([]);
+
+  // NEW: Term sheet and entity linking (required per business rules)
+  const [termSheetId, setTermSheetId] = useState<string | undefined>();
+  const [selectedTermSheet, setSelectedTermSheet] = useState<TermSheet | null>(null);
+  const [entityType, setEntityType] = useState<EntityType | undefined>();
+  const [entityId, setEntityId] = useState<string | undefined>();
 
   const resetForm = useCallback(() => {
     setName('');
     setDescription('');
     setSelectedDealId(dealId);
-    setIsDefault(false);
     setIsActive(true);
     setComponents([]);
     setError(null);
-  }, [dealId]);
+    setValidationErrors([]);
+    // Reset new fields - but keep initialTermSheetId if provided
+    setTermSheetId(initialTermSheetId);
+    setSelectedTermSheet(null);
+    setEntityType(undefined);
+    setEntityId(undefined);
+  }, [dealId, initialTermSheetId]);
 
   useEffect(() => {
     if (open) {
@@ -79,8 +104,27 @@ export default function FeePlanEditModal({
         setName(feePlan.name);
         setDescription(feePlan.description || '');
         setSelectedDealId(feePlan.deal_id || undefined);
-        setIsDefault(feePlan.is_default || false);
         setIsActive(feePlan.is_active);
+
+        // Load new fields if they exist (for editing existing fee plans)
+        const fp = feePlan as any; // Cast for new optional fields
+        setTermSheetId(fp.term_sheet_id || undefined);
+        // Note: selectedTermSheet will be loaded by TermSheetSelector when termSheetId is set
+
+        // Determine entity type and ID from the fee plan
+        if (fp.introducer_id) {
+          setEntityType('introducer');
+          setEntityId(fp.introducer_id);
+        } else if (fp.partner_id) {
+          setEntityType('partner');
+          setEntityId(fp.partner_id);
+        } else if (fp.commercial_partner_id) {
+          setEntityType('commercial_partner');
+          setEntityId(fp.commercial_partner_id);
+        } else {
+          setEntityType(undefined);
+          setEntityId(undefined);
+        }
 
         const formComponents: FeeComponentForm[] = (feePlan.components || []).map((comp: any) => ({
           id: comp.id,
@@ -105,6 +149,22 @@ export default function FeePlanEditModal({
       }
     }
   }, [open, feePlan, dealId, resetForm]);
+
+  // Validate fee components against term sheet limits whenever they change
+  useEffect(() => {
+    if (selectedTermSheet && components.length > 0) {
+      const errors = validateFeeComponentsAgainstTermSheet(components, selectedTermSheet);
+      setValidationErrors(errors);
+    } else {
+      setValidationErrors([]);
+    }
+  }, [components, selectedTermSheet]);
+
+  // Handle term sheet selection
+  const handleTermSheetChange = (id: string | undefined, ts: TermSheet | null) => {
+    setTermSheetId(id);
+    setSelectedTermSheet(ts);
+  };
 
   const loadDeals = async () => {
     try {
@@ -141,8 +201,30 @@ export default function FeePlanEditModal({
   };
 
   const handleSave = async () => {
+    // Validate required fields
     if (!name.trim()) {
       setError('Plan name is required');
+      return;
+    }
+
+    if (!selectedDealId) {
+      setError('A deal must be selected. Fee models cannot be global templates.');
+      return;
+    }
+
+    if (!termSheetId) {
+      setError('A published term sheet must be selected. Fee models must be derived from term sheets.');
+      return;
+    }
+
+    if (!entityType || !entityId) {
+      setError('An entity (introducer, partner, or commercial partner) must be selected.');
+      return;
+    }
+
+    // Check term sheet validation errors
+    if (validationErrors.length > 0) {
+      setError(`Fee values exceed term sheet limits: ${validationErrors.join('; ')}`);
       return;
     }
 
@@ -150,11 +232,19 @@ export default function FeePlanEditModal({
     setError(null);
 
     try {
+      // Build entity field based on type
+      const entityFields: Record<string, string | undefined> = {
+        introducer_id: entityType === 'introducer' ? entityId : undefined,
+        partner_id: entityType === 'partner' ? entityId : undefined,
+        commercial_partner_id: entityType === 'commercial_partner' ? entityId : undefined,
+      };
+
       const payload = {
         name: name.trim(),
         description: description.trim() || undefined,
-        deal_id: selectedDealId || undefined,
-        is_default: isDefault,
+        deal_id: selectedDealId,
+        term_sheet_id: termSheetId,
+        ...entityFields,
         is_active: isActive,
         components: components.map((c) => ({
           ...c,
@@ -267,23 +357,71 @@ export default function FeePlanEditModal({
               />
             </div>
 
+            {/* Deal Selector - REQUIRED (no more global templates) */}
             <div className="space-y-3">
-              <Label htmlFor="deal" className="text-white font-medium">Apply to Deal (Optional)</Label>
+              <Label htmlFor="deal" className="text-white font-medium">
+                Deal <span className="text-red-400">*</span>
+              </Label>
               <Select
                 value={selectedDealId || 'none'}
-                onValueChange={(val) => setSelectedDealId(val === 'none' ? undefined : val)}
+                onValueChange={(val) => {
+                  setSelectedDealId(val === 'none' ? undefined : val);
+                  // Reset term sheet and entity when deal changes
+                  setTermSheetId(undefined);
+                  setSelectedTermSheet(null);
+                  setEntityType(undefined);
+                  setEntityId(undefined);
+                }}
               >
                 <SelectTrigger id="deal" className="bg-black border-gray-700 text-white h-11">
-                  <SelectValue />
+                  <SelectValue placeholder="Select a deal" />
                 </SelectTrigger>
                 <SelectContent className="bg-black border-gray-700 text-white">
-                  <SelectItem value="none">Global Template</SelectItem>
+                  <SelectItem value="none" disabled>Select a deal...</SelectItem>
                   {deals.map((deal) => (
                     <SelectItem key={deal.id} value={deal.id}>{deal.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+              <p className="text-xs text-gray-500">
+                Fee models must be linked to a specific deal. Global templates are not allowed.
+              </p>
             </div>
+
+            {/* Term Sheet Selector - REQUIRED */}
+            <TermSheetSelector
+              dealId={selectedDealId}
+              value={termSheetId}
+              onChange={handleTermSheetChange}
+              required={true}
+            />
+
+            {/* Entity Selector - REQUIRED */}
+            <EntitySelector
+              dealId={selectedDealId}
+              entityType={entityType}
+              onEntityTypeChange={setEntityType}
+              entityId={entityId}
+              onEntityIdChange={setEntityId}
+              required={true}
+            />
+
+            {/* Validation Warnings */}
+            {validationErrors.length > 0 && (
+              <div className="bg-red-500/10 border border-red-500/30 rounded-md p-4">
+                <div className="flex items-start gap-2">
+                  <AlertTriangle className="h-5 w-5 text-red-400 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium text-red-400">Fee Limits Exceeded</p>
+                    <ul className="mt-2 space-y-1">
+                      {validationErrors.map((err, i) => (
+                        <li key={i} className="text-sm text-red-300">• {err}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="flex gap-8 pt-2">
               <div className="flex items-center gap-3">
@@ -293,15 +431,6 @@ export default function FeePlanEditModal({
                   onCheckedChange={(checked) => setIsActive(checked as boolean)}
                 />
                 <Label htmlFor="is_active" className="text-white cursor-pointer font-medium">Active</Label>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <Checkbox
-                  id="is_default"
-                  checked={isDefault}
-                  onCheckedChange={(checked) => setIsDefault(checked as boolean)}
-                />
-                <Label htmlFor="is_default" className="text-white cursor-pointer font-medium">Set as Default</Label>
               </div>
             </div>
           </div>
@@ -571,7 +700,7 @@ export default function FeePlanEditModal({
           </Button>
           <Button
             onClick={handleSave}
-            disabled={loading || !name.trim()}
+            disabled={loading || !name.trim() || !selectedDealId || !termSheetId || !entityType || !entityId || validationErrors.length > 0}
             className="bg-blue-600 hover:bg-blue-700 h-11"
           >
             {loading ? (

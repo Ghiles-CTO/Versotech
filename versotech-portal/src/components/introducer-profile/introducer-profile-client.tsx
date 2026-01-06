@@ -45,6 +45,9 @@ import { MembersManagementTab } from '@/components/members/members-management-ta
 import { IntroducerKYCDocumentsTab } from '@/components/profile/introducer-kyc-documents-tab'
 import { SignatureSpecimenTab } from '@/components/profile/signature-specimen-tab'
 
+// Import shared KYC dialog components
+import { EntityKYCEditDialog, EntityAddressEditDialog } from '@/components/shared'
+
 type IntroducerInfo = {
   id: string
   legal_name: string | null
@@ -58,6 +61,49 @@ type IntroducerInfo = {
   created_at: string | null
   logo_url: string | null
   kyc_status: string | null
+  // Entity type
+  type: 'individual' | 'entity' | 'sole_proprietor' | null
+  // Address fields
+  address_line_1: string | null
+  address_line_2: string | null
+  city: string | null
+  state_province: string | null
+  postal_code: string | null
+  country: string | null
+  // Phone/contact
+  phone: string | null
+  phone_mobile: string | null
+  phone_office: string | null
+  website: string | null
+  // Individual KYC fields
+  first_name: string | null
+  middle_name: string | null
+  last_name: string | null
+  name_suffix: string | null
+  date_of_birth: string | null
+  country_of_birth: string | null
+  nationality: string | null
+  // US Tax compliance
+  is_us_citizen: boolean | null
+  is_us_taxpayer: boolean | null
+  us_taxpayer_id: string | null
+  country_of_tax_residency: string | null
+  // ID Document
+  id_type: string | null
+  id_number: string | null
+  id_issue_date: string | null
+  id_expiry_date: string | null
+  id_issuing_country: string | null
+  // Residential Address
+  residential_street: string | null
+  residential_city: string | null
+  residential_state: string | null
+  residential_postal_code: string | null
+  residential_country: string | null
+  // Entity fields
+  country_of_incorporation: string | null
+  registration_number: string | null
+  tax_id: string | null
 }
 
 type IntroducerUserInfo = {
@@ -163,6 +209,10 @@ export function IntroducerProfileClient({
   const [isSaving, setIsSaving] = useState(false)
   const [isUploadingLogo, setIsUploadingLogo] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // KYC Edit Dialog state
+  const [showKycDialog, setShowKycDialog] = useState(false)
+  const [showAddressDialog, setShowAddressDialog] = useState(false)
 
   // Edit state
   const [editData, setEditData] = useState({
@@ -499,6 +549,114 @@ export function IntroducerProfileClient({
             </CardContent>
           </Card>
 
+          {/* Address & Contact Card */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <Globe className="h-5 w-5" />
+                  Address & Contact
+                </CardTitle>
+                <CardDescription>
+                  Registered address and contact information
+                </CardDescription>
+              </div>
+              <Button variant="outline" size="sm" onClick={() => setShowAddressDialog(true)}>
+                <Edit className="h-4 w-4 mr-2" />
+                Edit
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground">Address</p>
+                  <p className="text-sm font-medium">
+                    {[
+                      introducerInfo?.address_line_1,
+                      introducerInfo?.address_line_2,
+                      introducerInfo?.city,
+                      introducerInfo?.state_province,
+                      introducerInfo?.postal_code,
+                      introducerInfo?.country
+                    ].filter(Boolean).join(', ') || '-'}
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground">Phone</p>
+                  <p className="text-sm font-medium">{introducerInfo?.phone || introducerInfo?.phone_mobile || '-'}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground">Website</p>
+                  <p className="text-sm font-medium">{introducerInfo?.website || '-'}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Individual KYC Card (only for individual introducers) */}
+          {introducerInfo?.type === 'individual' && (
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <Shield className="h-5 w-5" />
+                    Personal KYC Information
+                  </CardTitle>
+                  <CardDescription>
+                    Your personal identification and tax details
+                  </CardDescription>
+                </div>
+                <Button variant="outline" size="sm" onClick={() => setShowKycDialog(true)}>
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit
+                </Button>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground">Full Name</p>
+                    <p className="text-sm font-medium">
+                      {[
+                        introducerInfo?.first_name,
+                        introducerInfo?.middle_name,
+                        introducerInfo?.last_name,
+                        introducerInfo?.name_suffix
+                      ].filter(Boolean).join(' ') || '-'}
+                    </p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground">Date of Birth</p>
+                    <p className="text-sm font-medium">
+                      {introducerInfo?.date_of_birth ? formatDate(introducerInfo.date_of_birth) : '-'}
+                    </p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground">Nationality</p>
+                    <p className="text-sm font-medium">{introducerInfo?.nationality || '-'}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground">US Person</p>
+                    <p className="text-sm font-medium">
+                      {introducerInfo?.is_us_citizen || introducerInfo?.is_us_taxpayer ? 'Yes' : 'No'}
+                    </p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground">ID Type</p>
+                    <p className="text-sm font-medium capitalize">
+                      {introducerInfo?.id_type?.replace('_', ' ') || '-'}
+                    </p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground">ID Expiry</p>
+                    <p className="text-sm font-medium">
+                      {introducerInfo?.id_expiry_date ? formatDate(introducerInfo.id_expiry_date) : '-'}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* User Account Card */}
           <Card>
             <CardHeader>
@@ -674,6 +832,64 @@ export function IntroducerProfileClient({
           )}
         </TabsContent>
       </Tabs>
+
+      {/* KYC Edit Dialogs */}
+      {introducerInfo?.type === 'individual' && (
+        <EntityKYCEditDialog
+          open={showKycDialog}
+          onOpenChange={setShowKycDialog}
+          entityType="introducer"
+          entityId={introducerInfo?.id || ''}
+          entityName={introducerInfo?.legal_name || introducerInfo?.contact_name || undefined}
+          initialData={{
+            first_name: introducerInfo?.first_name,
+            middle_name: introducerInfo?.middle_name,
+            last_name: introducerInfo?.last_name,
+            name_suffix: introducerInfo?.name_suffix,
+            date_of_birth: introducerInfo?.date_of_birth,
+            nationality: introducerInfo?.nationality,
+            country_of_birth: introducerInfo?.country_of_birth,
+            is_us_citizen: introducerInfo?.is_us_citizen,
+            is_us_taxpayer: introducerInfo?.is_us_taxpayer,
+            us_taxpayer_id: introducerInfo?.us_taxpayer_id,
+            country_of_tax_residency: introducerInfo?.country_of_tax_residency,
+            id_type: introducerInfo?.id_type as 'passport' | 'national_id' | 'drivers_license' | 'residence_permit' | undefined,
+            id_number: introducerInfo?.id_number,
+            id_issue_date: introducerInfo?.id_issue_date,
+            id_expiry_date: introducerInfo?.id_expiry_date,
+            id_issuing_country: introducerInfo?.id_issuing_country,
+            residential_street: introducerInfo?.residential_street,
+            residential_city: introducerInfo?.residential_city,
+            residential_state: introducerInfo?.residential_state,
+            residential_postal_code: introducerInfo?.residential_postal_code,
+            residential_country: introducerInfo?.residential_country,
+          }}
+          apiEndpoint="/api/introducers/me/profile"
+          onSuccess={() => window.location.reload()}
+        />
+      )}
+
+      <EntityAddressEditDialog
+        open={showAddressDialog}
+        onOpenChange={setShowAddressDialog}
+        entityType="introducer"
+        entityName={introducerInfo?.legal_name || introducerInfo?.contact_name || undefined}
+        initialData={{
+          address_line_1: introducerInfo?.address_line_1,
+          address_line_2: introducerInfo?.address_line_2,
+          city: introducerInfo?.city,
+          state_province: introducerInfo?.state_province,
+          postal_code: introducerInfo?.postal_code,
+          country: introducerInfo?.country,
+          email: introducerInfo?.email,
+          phone: introducerInfo?.phone,
+          phone_mobile: introducerInfo?.phone_mobile,
+          phone_office: introducerInfo?.phone_office,
+          website: introducerInfo?.website,
+        }}
+        apiEndpoint="/api/introducers/me/profile"
+        onSuccess={() => window.location.reload()}
+      />
     </div>
   )
 }
