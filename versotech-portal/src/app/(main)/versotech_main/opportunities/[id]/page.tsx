@@ -828,7 +828,7 @@ export default function OpportunityDetailPage() {
 
             // Check if any transaction details exist
             const hasTransactionDetails = termSheet.transaction_type || termSheet.structure || termSheet.issuer ||
-              termSheet.vehicle || termSheet.exclusive_arranger || termSheet.seller || termSheet.legal_counsel
+              termSheet.vehicle || termSheet.exclusive_arranger || termSheet.purchaser || termSheet.seller || termSheet.legal_counsel
 
             // Check if any timeline info exists
             const hasTimeline = termSheet.interest_confirmation_deadline || termSheet.validity_date ||
@@ -893,20 +893,20 @@ export default function OpportunityDetailPage() {
                     <div className="grid grid-cols-3 gap-4">
                       {termSheet.allocation_up_to && (
                         <div className="text-center p-4 rounded-lg bg-muted/50">
-                          <div className="text-xs text-muted-foreground mb-1">Allocation</div>
-                          <div className="text-lg font-semibold">{termSheet.allocation_up_to.toLocaleString()}</div>
+                          <div className="text-xs text-muted-foreground mb-1">Allocation ({opportunity.currency})</div>
+                          <div className="text-lg font-semibold">{formatCurrency(termSheet.allocation_up_to, opportunity.currency)}</div>
                         </div>
                       )}
                       {termSheet.minimum_ticket && (
                         <div className="text-center p-4 rounded-lg bg-muted/50">
                           <div className="text-xs text-muted-foreground mb-1">Min. Ticket</div>
-                          <div className="text-lg font-semibold">{termSheet.minimum_ticket.toLocaleString()}</div>
+                          <div className="text-lg font-semibold">{formatCurrency(termSheet.minimum_ticket, opportunity.currency)}</div>
                         </div>
                       )}
                       {termSheet.maximum_ticket && (
                         <div className="text-center p-4 rounded-lg bg-muted/50">
                           <div className="text-xs text-muted-foreground mb-1">Max. Ticket</div>
-                          <div className="text-lg font-semibold">{termSheet.maximum_ticket.toLocaleString()}</div>
+                          <div className="text-lg font-semibold">{formatCurrency(termSheet.maximum_ticket, opportunity.currency)}</div>
                         </div>
                       )}
                     </div>
@@ -979,6 +979,12 @@ export default function OpportunityDetailPage() {
                           <div>
                             <div className="text-xs text-muted-foreground">Arranger</div>
                             <div className="font-medium">{termSheet.exclusive_arranger}</div>
+                          </div>
+                        )}
+                        {termSheet.purchaser && (
+                          <div>
+                            <div className="text-xs text-muted-foreground">Purchaser</div>
+                            <div className="font-medium">{termSheet.purchaser}</div>
                           </div>
                         )}
                         {termSheet.seller && (
