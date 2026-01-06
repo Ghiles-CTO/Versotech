@@ -160,10 +160,13 @@ export async function POST(
       );
     }
 
-    // Link the agreement back to the fee plan
+    // Link the agreement back to the fee plan and update status
     const { error: updateError } = await supabase
       .from('fee_plans')
-      .update({ generated_placement_agreement_id: agreement.id })
+      .update({
+        generated_placement_agreement_id: agreement.id,
+        status: 'pending_signature'  // Agreement generated, awaiting signature
+      })
       .eq('id', feePlanId);
 
     if (updateError) {

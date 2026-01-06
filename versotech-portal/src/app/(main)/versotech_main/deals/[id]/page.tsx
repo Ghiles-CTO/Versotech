@@ -101,6 +101,7 @@ export default async function DealDetailPage({ params }: PageParams) {
       ),
       fee_plans (
         id,
+        deal_id,
         name,
         description,
         is_default,
@@ -113,6 +114,10 @@ export default async function DealDetailPage({ params }: PageParams) {
         accepted_at,
         generated_agreement_id,
         generated_placement_agreement_id,
+        agreement_duration_months,
+        non_circumvention_months,
+        governing_law,
+        vat_registration_number,
         fee_components (
           id,
           kind,
@@ -127,6 +132,9 @@ export default async function DealDetailPage({ params }: PageParams) {
           has_catchup,
           catchup_rate_bps,
           has_high_water_mark,
+          has_no_cap,
+          performance_cap_percent,
+          payment_days_after_event,
           tier_threshold_multiplier,
           base_calculation,
           notes
