@@ -7,9 +7,13 @@ const STAFF_ROLES = ['staff_admin', 'staff_ops', 'staff_rm', 'ceo']
 /**
  * POST /api/subscriptions/[id]/documents/[documentId]/mark-final
  *
- * Marks a draft document as final, making it ready for signature.
- * This allows staff to select which draft version they want to use
- * without having to re-upload the document.
+ * Toggles document status between draft and final.
+ *
+ * RULES:
+ * - Only ONE document can be 'final' per subscription at a time
+ * - When marking a document as final, all other documents become draft
+ * - Can toggle back from final → draft
+ * - Cannot change status of documents that are pending_signature or signed
  */
 export async function POST(
   request: Request,
@@ -58,20 +62,46 @@ export async function POST(
       )
     }
 
-    // Check if document is a draft
-    if (document.status !== 'draft') {
+    // Cannot change status of documents in signature workflow
+    if (document.status === 'pending_signature' || document.status === 'signed') {
       return NextResponse.json(
-        { error: `Cannot mark as final: document is already ${document.status}` },
+        { error: `Cannot change status: document is ${document.status === 'pending_signature' ? 'pending signatures' : 'already signed'}` },
         { status: 400 }
       )
     }
 
-    // Update document status to final
+    // Determine the new status (toggle)
+    // 'final' and 'published' are both treated as "ready" states that can toggle back to draft
+    const isCurrentlyReady = document.status === 'final' || document.status === 'published'
+    const newStatus = isCurrentlyReady ? 'draft' : 'final'
+    const newType = isCurrentlyReady
+      ? 'subscription_draft'
+      : (document.type === 'subscription_draft' ? 'subscription_pack' : document.type)
+
+    // If marking as final, first demote all other documents for this subscription to draft
+    if (newStatus === 'final') {
+      const { error: demoteError } = await serviceSupabase
+        .from('documents')
+        .update({
+          status: 'draft',
+          type: 'subscription_draft'
+        })
+        .eq('subscription_id', subscriptionId)
+        .in('status', ['final', 'published']) // Demote both 'final' and 'published' docs
+        .neq('id', documentId)
+
+      if (demoteError) {
+        console.error('Error demoting other documents:', demoteError)
+        // Continue anyway - this is not critical
+      }
+    }
+
+    // Update the target document
     const { data: updatedDoc, error: updateError } = await serviceSupabase
       .from('documents')
       .update({
-        status: 'final',
-        type: document.type === 'subscription_draft' ? 'subscription_pack' : document.type
+        status: newStatus,
+        type: newType
       })
       .eq('id', documentId)
       .select()
@@ -92,18 +122,19 @@ export async function POST(
       entity: AuditEntities.DOCUMENTS,
       entity_id: documentId,
       metadata: {
-        type: 'document_marked_final',
+        type: isCurrentlyReady ? 'document_reverted_to_draft' : 'document_marked_final',
         subscription_id: subscriptionId,
-        previous_status: 'draft',
-        new_status: 'final',
+        previous_status: document.status,
+        new_status: newStatus,
         document_name: document.name
       }
     })
 
     return NextResponse.json({
       success: true,
-      message: 'Document marked as final',
-      document: updatedDoc
+      message: isCurrentlyReady ? 'Document reverted to draft' : 'Document marked as final',
+      document: updatedDoc,
+      action: isCurrentlyReady ? 'reverted' : 'finalized'
     })
 
   } catch (error) {

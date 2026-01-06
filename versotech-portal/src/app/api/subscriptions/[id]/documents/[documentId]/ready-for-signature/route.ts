@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { z } from 'zod'
 import { getCeoSigner } from '@/lib/staff/ceo-signer'
+import { convertDocxToPdf } from '@/lib/gotenberg/convert'
 
 // Schema for multi-signatory support with optional arranger countersigning
 const requestSchema = z.object({
@@ -73,10 +74,132 @@ export async function POST(
     return NextResponse.json({ error: 'Document not found' }, { status: 404 })
   }
 
-  // Validate that document is a PDF (signature system only works with PDFs)
-  if (document.mime_type && !document.mime_type.includes('pdf')) {
+  // Check if document is DOCX - if so, convert to PDF first
+  const isDocx = document.mime_type?.includes('wordprocessingml') ||
+                 document.mime_type?.includes('msword') ||
+                 document.file_key?.toLowerCase().endsWith('.docx') ||
+                 document.file_key?.toLowerCase().endsWith('.doc')
+
+  let signableDocument = document
+  let signableDocumentId = documentId
+
+  if (isDocx) {
+    console.log('📄 [READY-FOR-SIGNATURE] DOCX detected, converting to PDF via Gotenberg')
+
+    // Download the DOCX from storage
+    const { data: docxData, error: downloadError } = await serviceSupabase.storage
+      .from('deal-documents')
+      .download(document.file_key)
+
+    if (downloadError || !docxData) {
+      console.error('❌ Failed to download DOCX for conversion:', downloadError)
+      return NextResponse.json({
+        error: 'Failed to download document for conversion',
+        details: downloadError?.message
+      }, { status: 500 })
+    }
+
+    // Convert to Buffer
+    const docxBuffer = Buffer.from(await docxData.arrayBuffer())
+    console.log('📥 Downloaded DOCX:', { size: docxBuffer.length })
+
+    // Convert to PDF via Gotenberg
+    // Ensure filename has .docx extension (Gotenberg requires it)
+    let docxFilename = document.name || 'document.docx'
+    if (!docxFilename.toLowerCase().endsWith('.docx') && !docxFilename.toLowerCase().endsWith('.doc')) {
+      docxFilename = `${docxFilename}.docx`
+    }
+    const conversionResult = await convertDocxToPdf(docxBuffer, docxFilename)
+
+    if (!conversionResult.success || !conversionResult.pdfBuffer) {
+      console.error('❌ Gotenberg conversion failed:', conversionResult.error)
+      return NextResponse.json({
+        error: 'Failed to convert DOCX to PDF',
+        details: conversionResult.error || 'Conversion service unavailable'
+      }, { status: 500 })
+    }
+
+    console.log('✅ DOCX converted to PDF:', {
+      input_size: docxBuffer.length,
+      output_size: conversionResult.pdfBuffer.length
+    })
+
+    // Upload the PDF to storage
+    const pdfFileName = document.file_key.replace(/\.(docx?|DOCX?)$/, '.pdf')
+    const pdfFileKey = pdfFileName.includes('/converted/')
+      ? pdfFileName
+      : pdfFileName.replace(/\/([^/]+)$/, '/converted/$1')
+
+    const { error: uploadError } = await serviceSupabase.storage
+      .from('deal-documents')
+      .upload(pdfFileKey, conversionResult.pdfBuffer, {
+        contentType: 'application/pdf',
+        upsert: true
+      })
+
+    if (uploadError) {
+      console.error('❌ Failed to upload converted PDF:', uploadError)
+      return NextResponse.json({
+        error: 'Failed to save converted PDF',
+        details: uploadError.message
+      }, { status: 500 })
+    }
+
+    console.log('📤 Uploaded converted PDF:', pdfFileKey)
+
+    // Create a new document record for the PDF
+    const pdfDocName = (document.name || 'Document').replace(/\.(docx?|DOCX?)$/i, '.pdf')
+    const { data: pdfDocument, error: pdfDocError } = await serviceSupabase
+      .from('documents')
+      .insert({
+        subscription_id: subscriptionId,
+        deal_id: document.deal_id,
+        vehicle_id: document.vehicle_id,
+        folder_id: document.folder_id,
+        type: 'subscription_pack',
+        name: pdfDocName,
+        file_key: pdfFileKey,
+        mime_type: 'application/pdf',
+        file_size_bytes: conversionResult.pdfBuffer.length,
+        status: 'final',
+        ready_for_signature: false,
+        current_version: 1,
+        created_by: user.id
+      })
+      .select()
+      .single()
+
+    if (pdfDocError || !pdfDocument) {
+      console.error('❌ Failed to create PDF document record:', pdfDocError)
+      return NextResponse.json({
+        error: 'Failed to create document record for converted PDF',
+        details: pdfDocError?.message
+      }, { status: 500 })
+    }
+
+    console.log('✅ Created PDF document record:', pdfDocument.id)
+
+    // Update the original DOCX document status to indicate it has been converted
+    await serviceSupabase
+      .from('documents')
+      .update({
+        status: 'draft',
+        metadata: { converted_to_pdf: pdfDocument.id, converted_at: new Date().toISOString() }
+      })
+      .eq('id', document.id)
+
+    // Use the new PDF document for signature
+    signableDocument = pdfDocument
+    signableDocumentId = pdfDocument.id
+
+    console.log('🔄 Proceeding with converted PDF for signature:', {
+      original_docx_id: document.id,
+      new_pdf_id: pdfDocument.id
+    })
+  } else if (document.mime_type && !document.mime_type.includes('pdf')) {
+    // Not DOCX and not PDF - unsupported format
     return NextResponse.json({
-      error: 'Only PDF files can be sent for signature. Please convert the DOCX to PDF first and re-upload.',
+      error: 'Unsupported file format. Only PDF and DOCX files can be sent for signature.',
       details: `Current file type: ${document.mime_type}`
     }, { status: 400 })
   }
@@ -106,7 +229,7 @@ export async function POST(
   const { data: existingRequests } = await serviceSupabase
     .from('signature_requests')
     .select('id, signer_role, status')
-    .eq('document_id', documentId)
+    .eq('document_id', signableDocumentId)
     .in('status', ['pending', 'signed'])
 
   if (existingRequests && existingRequests.length > 0) {
@@ -120,10 +243,10 @@ export async function POST(
     }, { status: 409 }) // 409 Conflict
   }
 
-  // Get signed URL for document
+  // Get signed URL for document (use the signable PDF)
   const { data: urlData } = await serviceSupabase.storage
     .from('deal-documents')
-    .createSignedUrl(document.file_key, 7 * 24 * 60 * 60) // 7 days
+    .createSignedUrl(signableDocument.file_key, 7 * 24 * 60 * 60) // 7 days
 
   if (!urlData?.signedUrl) {
     return NextResponse.json({ error: 'Failed to generate document URL' }, { status: 500 })
@@ -181,7 +304,7 @@ export async function POST(
         signer_role: 'investor',
         signature_position: position,
         subscription_id: subscriptionId,
-        document_id: documentId,
+        document_id: signableDocumentId,
         member_id: signatory.id !== 'investor_primary' ? signatory.id : undefined
       }
 
@@ -280,7 +403,7 @@ export async function POST(
       signer_role: signerRole,
       signature_position: 'party_b',
       subscription_id: subscriptionId,
-      document_id: documentId
+      document_id: signableDocumentId
     }
 
     const staffSigResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/signature/request`, {
@@ -296,14 +419,14 @@ export async function POST(
 
     const staffSigData = await staffSigResponse.json()
 
-    // Update document status
+    // Update document status (update the signable PDF document)
     await serviceSupabase
       .from('documents')
       .update({
         ready_for_signature: true,
         status: 'pending_signature'
       })
-      .eq('id', documentId)
+      .eq('id', signableDocumentId)
 
     const now = new Date().toISOString()
     await serviceSupabase
@@ -350,7 +473,7 @@ export async function POST(
     }
 
     console.log('✅ Multi-signatory signature requests created for subscription pack:', {
-      document_id: documentId,
+      document_id: signableDocumentId,
       investor_requests: investorSignatureRequests.length,
       countersigner_type: signerRole,
       countersigner_request: staffSigData.signature_request_id

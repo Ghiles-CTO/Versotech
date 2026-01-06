@@ -696,12 +696,15 @@ async function handleEntityApproval(
 
             // Fetch fee structure BEFORE creating subscription to copy fee fields
             // This ensures the subscription record has the correct fee percentages for fee event calculation
+            // NOTE: Use order().limit(1) instead of .maybeSingle() because deals can have multiple published fee structures
             const { data: feeStructureForSub } = await supabase
               .from('deal_fee_structures')
               .select('subscription_fee_percent, management_fee_percent, carried_interest_percent, price_per_share_text, payment_deadline_days')
               .eq('deal_id', submission.deal_id)
               .eq('status', 'published')
-              .maybeSingle()
+              .order('created_at', { ascending: false })
+              .limit(1)
+              .single()
 
             // Get latest valuation for fallback price_per_share
             const { data: latestValuation } = await supabase
@@ -841,12 +844,15 @@ async function handleEntityApproval(
                 .eq('id', submission.deal.vehicle_id)
                 .single()
 
+              // NOTE: Use order().limit(1) instead of .maybeSingle() because deals can have multiple published fee structures
               const { data: feeStructure } = await supabase
                 .from('deal_fee_structures')
                 .select('*')
                 .eq('deal_id', submission.deal_id)
                 .eq('status', 'published')
-                .maybeSingle()
+                .order('created_at', { ascending: false })
+                .limit(1)
+                .single()
 
               if (investorData && vehicleData && feeStructure && user) {
                 // Calculate subscription details

@@ -230,7 +230,11 @@ export async function GET(
     }
 
     // Determine which bucket based on document type
-    const bucket = document.type === 'subscription_draft' ? 'deal-documents' : (process.env.STORAGE_BUCKET_NAME || 'documents')
+    // Subscription-related documents are stored in deal-documents bucket
+    const dealDocumentTypes = ['subscription_draft', 'subscription_pack', 'subscription_final', 'deal_document']
+    const bucket = dealDocumentTypes.includes(document.type) || document.subscription_id
+      ? 'deal-documents'
+      : (process.env.STORAGE_BUCKET_NAME || 'documents')
 
     // Log document details for debugging
     console.log('Generating signed URL for document:', {

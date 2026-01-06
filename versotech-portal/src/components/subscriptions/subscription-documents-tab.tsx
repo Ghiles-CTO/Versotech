@@ -7,7 +7,8 @@ import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { FileText, Upload, Download, CheckCircle, Clock, AlertCircle, Loader2, Send, Eye, RefreshCw, BadgeCheck } from 'lucide-react'
+import { FileText, Upload, Download, CheckCircle, Clock, AlertCircle, Loader2, Send, Eye, RefreshCw, BadgeCheck, RotateCcw, FileType } from 'lucide-react'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { toast } from 'sonner'
 import { useDocumentViewer } from '@/hooks/useDocumentViewer'
 import { DocumentViewerFullscreen } from '@/components/documents/DocumentViewerFullscreen'
@@ -46,6 +47,7 @@ export function SubscriptionDocumentsTab({ subscriptionId }: SubscriptionDocumen
   const [selectedDocumentForSignature, setSelectedDocumentForSignature] = useState<Document | null>(null)
   const [regenerating, setRegenerating] = useState(false)
   const [markingFinalId, setMarkingFinalId] = useState<string | null>(null)
+  const [regenerateFormat, setRegenerateFormat] = useState<'docx' | 'pdf'>('docx')
 
   // Document viewer hook
   const {
@@ -237,7 +239,8 @@ export function SubscriptionDocumentsTab({ subscriptionId }: SubscriptionDocumen
     try {
       const response = await fetch(`/api/subscriptions/${subscriptionId}/regenerate`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ format: regenerateFormat })
       })
 
       if (!response.ok) {
@@ -246,7 +249,8 @@ export function SubscriptionDocumentsTab({ subscriptionId }: SubscriptionDocumen
       }
 
       const data = await response.json()
-      toast.success('Subscription pack regenerated successfully')
+      const format = data.format?.toUpperCase() || regenerateFormat.toUpperCase()
+      toast.success(`Subscription pack regenerated as ${format}`)
       console.log('Regeneration result:', data)
       fetchDocuments() // Refresh document list
     } catch (error) {
@@ -257,7 +261,7 @@ export function SubscriptionDocumentsTab({ subscriptionId }: SubscriptionDocumen
     }
   }
 
-  const handleMarkAsFinal = async (documentId: string) => {
+  const handleToggleFinalStatus = async (documentId: string, currentStatus: string) => {
     setMarkingFinalId(documentId)
     try {
       const response = await fetch(
@@ -270,14 +274,21 @@ export function SubscriptionDocumentsTab({ subscriptionId }: SubscriptionDocumen
 
       if (!response.ok) {
         const error = await response.json()
-        throw new Error(error.error || 'Failed to mark document as final')
+        throw new Error(error.error || 'Failed to update document status')
       }
 
-      toast.success('Document marked as final - ready for signature')
+      const data = await response.json()
+
+      if (data.action === 'finalized') {
+        toast.success('Document marked as final - ready for signature')
+      } else {
+        toast.success('Document reverted to draft')
+      }
+
       fetchDocuments() // Refresh document list
     } catch (error) {
-      console.error('Error marking document as final:', error)
-      toast.error(error instanceof Error ? error.message : 'Failed to mark document as final')
+      console.error('Error updating document status:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to update document status')
     } finally {
       setMarkingFinalId(null)
     }
@@ -314,24 +325,50 @@ export function SubscriptionDocumentsTab({ subscriptionId }: SubscriptionDocumen
               </CardDescription>
             </div>
             <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                className="gap-2"
-                onClick={handleRegenerate}
-                disabled={regenerating}
-              >
-                {regenerating ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Regenerating...
-                  </>
-                ) : (
-                  <>
-                    <RefreshCw className="h-4 w-4" />
-                    Regenerate Pack
-                  </>
-                )}
-              </Button>
+              {/* Format Selection + Regenerate */}
+              <div className="flex items-center gap-1">
+                <Select
+                  value={regenerateFormat}
+                  onValueChange={(value: 'docx' | 'pdf') => setRegenerateFormat(value)}
+                  disabled={regenerating}
+                >
+                  <SelectTrigger className="w-[100px] h-9 bg-white/5 border-white/10">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-black border-white/10">
+                    <SelectItem value="docx">
+                      <div className="flex items-center gap-2">
+                        <FileType className="h-3 w-3" />
+                        DOCX
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="pdf">
+                      <div className="flex items-center gap-2">
+                        <FileText className="h-3 w-3" />
+                        PDF
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button
+                  variant="outline"
+                  className="gap-2"
+                  onClick={handleRegenerate}
+                  disabled={regenerating}
+                >
+                  {regenerating ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Regenerating...
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw className="h-4 w-4" />
+                      Regenerate
+                    </>
+                  )}
+                </Button>
+              </div>
               <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
                 <DialogTrigger asChild>
                   <Button className="gap-2">
@@ -473,18 +510,26 @@ export function SubscriptionDocumentsTab({ subscriptionId }: SubscriptionDocumen
                         </>
                       )}
                     </Button>
-                    {document.status === 'draft' && (
+                    {/* Toggle Final/Draft button - show for draft, final, and published */}
+                    {(document.status === 'draft' || document.status === 'final' || document.status === 'published') && (
                       <Button
-                        variant="default"
+                        variant={(document.status === 'final' || document.status === 'published') ? 'outline' : 'default'}
                         size="sm"
-                        className="gap-2 bg-cyan-600 hover:bg-cyan-700"
-                        onClick={() => handleMarkAsFinal(document.id)}
+                        className={(document.status === 'final' || document.status === 'published')
+                          ? 'gap-2 border-amber-500/50 text-amber-400 hover:bg-amber-500/10'
+                          : 'gap-2 bg-cyan-600 hover:bg-cyan-700'}
+                        onClick={() => handleToggleFinalStatus(document.id, document.status)}
                         disabled={markingFinalId === document.id}
                       >
                         {markingFinalId === document.id ? (
                           <>
                             <Loader2 className="h-4 w-4 animate-spin" />
-                            Marking...
+                            {(document.status === 'final' || document.status === 'published') ? 'Reverting...' : 'Marking...'}
+                          </>
+                        ) : (document.status === 'final' || document.status === 'published') ? (
+                          <>
+                            <RotateCcw className="h-4 w-4" />
+                            Revert to Draft
                           </>
                         ) : (
                           <>
@@ -494,7 +539,8 @@ export function SubscriptionDocumentsTab({ subscriptionId }: SubscriptionDocumen
                         )}
                       </Button>
                     )}
-                    {(document.status === 'published' || document.status === 'final') && !document.ready_for_signature && (
+                    {/* Ready for Signature button - for final or published documents */}
+                    {(document.status === 'final' || document.status === 'published') && !document.ready_for_signature && (
                       <Button
                         variant="default"
                         size="sm"

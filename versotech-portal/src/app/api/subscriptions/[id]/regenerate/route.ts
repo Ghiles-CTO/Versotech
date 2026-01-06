@@ -2,18 +2,20 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { auditLogger, AuditActions, AuditEntities } from '@/lib/audit'
 import { NextResponse } from 'next/server'
 import { triggerWorkflow } from '@/lib/trigger-workflow'
+import { convertDocxToPdf } from '@/lib/gotenberg/convert'
 
 const STAFF_ROLES = ['staff_admin', 'staff_ops', 'staff_rm', 'ceo']
 
 /**
  * Generate subscription pack filename with standardized format:
- * {ENTITY_CODE} - SUBSCRIPTION PACK - {INVESTMENT_NAME} - {INVESTOR_NAME} - {DDMMYY}.docx
+ * {ENTITY_CODE} - SUBSCRIPTION PACK - {INVESTMENT_NAME} - {INVESTOR_NAME} - {DDMMYY}.{extension}
  */
 function generateSubscriptionPackFilename(
   entityCode: string,
   investmentName: string,
   investorName: string,
-  date: Date
+  date: Date,
+  format: 'docx' | 'pdf' = 'docx'
 ): string {
   const day = date.getUTCDate().toString().padStart(2, '0')
   const month = (date.getUTCMonth() + 1).toString().padStart(2, '0')
@@ -24,7 +26,7 @@ function generateSubscriptionPackFilename(
   const cleanInvestmentName = investmentName.trim().replace(/\s+/g, ' ')
   const cleanInvestorName = investorName.trim().replace(/\s+/g, ' ')
 
-  return `${cleanEntityCode} - SUBSCRIPTION PACK - ${cleanInvestmentName} - ${cleanInvestorName} - ${formattedDate}.docx`
+  return `${cleanEntityCode} - SUBSCRIPTION PACK - ${cleanInvestmentName} - ${cleanInvestorName} - ${formattedDate}.${format}`
 }
 
 /**
@@ -45,6 +47,18 @@ export async function POST(
     const { id: subscriptionId } = await params
     const supabase = await createClient()
     const serviceSupabase = createServiceClient()
+
+    // Parse request body for format selection
+    let outputFormat: 'docx' | 'pdf' = 'docx'
+    try {
+      const body = await request.json()
+      if (body.format === 'pdf' || body.format === 'docx') {
+        outputFormat = body.format
+      }
+    } catch {
+      // No body or invalid JSON - use default format
+    }
+    console.log('📄 [REGENERATE] Requested output format:', outputFormat)
 
     // Check authentication
     const { data: { user: authUser }, error: authError } = await supabase.auth.getUser()
@@ -175,13 +189,15 @@ export async function POST(
       counterpartyEntity = entityData
     }
 
-    // Fetch fee structure for the deal
+    // Fetch fee structure for the deal (get most recent published one)
     const { data: feeStructure } = await serviceSupabase
       .from('deal_fee_structures')
       .select('*')
       .eq('deal_id', subscription.deal_id)
       .eq('status', 'published')
-      .maybeSingle()
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single()
 
     if (!feeStructure) {
       return NextResponse.json(
@@ -380,34 +396,60 @@ export async function POST(
         const investmentName = vehicleData?.investment_name || 'INVESTMENT'
         const investorName = investorData?.display_name || investorData?.legal_name || 'INVESTOR'
 
-        // Check if response contains binary file data
-        let fileBuffer: Buffer
-        let fileName: string
-        let mimeType: string
+        // Check if response contains binary file data (N8N always returns DOCX)
+        let docxBuffer: Buffer
 
         if (n8nResponse.raw && typeof n8nResponse.raw === 'string') {
-          fileBuffer = Buffer.from(n8nResponse.raw, 'latin1')
-          fileName = generateSubscriptionPackFilename(entityCode, investmentName, investorName, new Date())
-          mimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+          docxBuffer = Buffer.from(n8nResponse.raw, 'latin1')
         } else if (n8nResponse.binary) {
-          fileBuffer = Buffer.from(n8nResponse.binary)
-          fileName = n8nResponse.filename || generateSubscriptionPackFilename(entityCode, investmentName, investorName, new Date())
-          mimeType = n8nResponse.mimeType || 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+          docxBuffer = Buffer.from(n8nResponse.binary)
         } else if (n8nResponse.data) {
-          fileBuffer = Buffer.from(n8nResponse.data, 'base64')
-          fileName = n8nResponse.filename || generateSubscriptionPackFilename(entityCode, investmentName, investorName, new Date())
-          mimeType = n8nResponse.mimeType || 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+          docxBuffer = Buffer.from(n8nResponse.data, 'base64')
         } else if (typeof n8nResponse === 'string') {
-          fileBuffer = Buffer.from(n8nResponse, 'latin1')
-          fileName = generateSubscriptionPackFilename(entityCode, investmentName, investorName, new Date())
-          mimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+          docxBuffer = Buffer.from(n8nResponse, 'latin1')
         } else {
           throw new Error('No binary data in n8n response')
         }
 
-        // Verify file signature
-        const signature = fileBuffer.slice(0, 4).toString('hex')
-        console.log('📄 Regenerated document signature:', signature, 'size:', fileBuffer.length)
+        // Verify DOCX signature
+        const signature = docxBuffer.slice(0, 4).toString('hex')
+        console.log('📄 Regenerated DOCX signature:', signature, 'size:', docxBuffer.length)
+
+        // Prepare final output based on requested format
+        let fileBuffer: Buffer
+        let fileName: string
+        let mimeType: string
+
+        if (outputFormat === 'pdf') {
+          // Convert DOCX to PDF using Gotenberg
+          console.log('🔄 Converting DOCX to PDF via Gotenberg...')
+          const docxFileName = generateSubscriptionPackFilename(entityCode, investmentName, investorName, new Date(), 'docx')
+          const conversionResult = await convertDocxToPdf(docxBuffer, docxFileName)
+
+          if (!conversionResult.success || !conversionResult.pdfBuffer) {
+            console.error('❌ Gotenberg conversion failed:', conversionResult.error)
+            return NextResponse.json({
+              error: 'Document generated but PDF conversion failed',
+              details: conversionResult.error || 'Conversion service unavailable'
+            }, { status: 500 })
+          }
+
+          console.log('✅ DOCX converted to PDF:', {
+            docx_size: docxBuffer.length,
+            pdf_size: conversionResult.pdfBuffer.length
+          })
+
+          fileBuffer = conversionResult.pdfBuffer
+          fileName = generateSubscriptionPackFilename(entityCode, investmentName, investorName, new Date(), 'pdf')
+          mimeType = 'application/pdf'
+        } else {
+          // Keep as DOCX
+          fileBuffer = docxBuffer
+          fileName = generateSubscriptionPackFilename(entityCode, investmentName, investorName, new Date(), 'docx')
+          mimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        }
+
+        console.log('📄 Final document:', { format: outputFormat, fileName, size: fileBuffer.length })
 
         // Upload to Supabase Storage with regenerated- prefix
         const fileKey = `subscriptions/${subscriptionId}/regenerated/${Date.now()}-${fileName}`
@@ -485,15 +527,17 @@ export async function POST(
             amount: amount,
             num_shares: numShares,
             price_per_share: pricePerShare,
-            document_id: docRecord?.id
+            document_id: docRecord?.id,
+            output_format: outputFormat
           }
         })
 
         return NextResponse.json({
           success: true,
-          message: 'Subscription pack regenerated successfully',
+          message: `Subscription pack regenerated successfully as ${outputFormat.toUpperCase()}`,
           document_id: docRecord?.id,
           file_key: fileKey,
+          format: outputFormat,
           workflow_run_id: result.workflow_run_id
         })
       } catch (docError) {

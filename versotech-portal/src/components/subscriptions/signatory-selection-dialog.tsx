@@ -10,13 +10,12 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { Checkbox } from '@/components/ui/checkbox'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { UserCheck, Users, Loader2, AlertCircle, Send, Mail, Briefcase, Building2 } from 'lucide-react'
+import { UserCheck, Users, Loader2, AlertCircle, Send, Mail, Briefcase, Building2, Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface Signatory {
@@ -53,12 +52,10 @@ export function SignatorySelectionDialog({
   onConfirm
 }: SignatorySelectionDialogProps) {
   const [signatories, setSignatories] = useState<Signatory[]>([])
-  const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
   const [sending, setSending] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [investorType, setInvestorType] = useState<string>('individual')
-  const [requiresMultiSignatory, setRequiresMultiSignatory] = useState(false)
   const [arranger, setArranger] = useState<Arranger | null>(null)
   const [countersignerType, setCountersignerType] = useState<'ceo' | 'arranger'>('ceo')
 
@@ -77,28 +74,21 @@ export function SignatorySelectionDialog({
         throw new Error('Failed to fetch signatories')
       }
       const data = await response.json()
-      setSignatories(data.signatories || [])
+
+      // Get all designated signatories (is_signatory = true or is_primary for individuals)
+      const allSignatories = data.signatories || []
+      const designatedSignatories = allSignatories.filter((s: Signatory) =>
+        s.is_signatory || s.is_primary
+      )
+
+      setSignatories(designatedSignatories)
       setInvestorType(data.investor_type || 'individual')
-      setRequiresMultiSignatory(data.requires_multi_signatory || false)
 
       // Check if deal has an arranger
       if (data.arranger) {
         setArranger(data.arranger)
       } else {
         setArranger(null)
-      }
-
-      // Pre-select all designated signatories, or primary if individual
-      if (data.requires_multi_signatory) {
-        // Select all designated signatories by default
-        const defaultSelected = (data.signatories || [])
-          .filter((s: Signatory) => s.is_signatory && !s.is_primary)
-          .map((s: Signatory) => s.id)
-        setSelectedIds(defaultSelected)
-      } else {
-        // For individual, select primary by default
-        const primary = (data.signatories || []).find((s: Signatory) => s.is_primary)
-        setSelectedIds(primary ? [primary.id] : [])
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error')
@@ -107,33 +97,18 @@ export function SignatorySelectionDialog({
     }
   }
 
-  const handleToggleSignatory = (id: string) => {
-    setSelectedIds(prev =>
-      prev.includes(id)
-        ? prev.filter(x => x !== id)
-        : [...prev, id]
-    )
-  }
-
-  const handleSelectAll = () => {
-    const allIds = signatories.map(s => s.id)
-    setSelectedIds(allIds)
-  }
-
-  const handleSelectNone = () => {
-    setSelectedIds([])
-  }
-
   const handleConfirm = async () => {
-    if (selectedIds.length === 0) {
-      setError('Please select at least one signatory')
+    if (signatories.length === 0) {
+      setError('No signatories found for this investor')
       return
     }
 
     setSending(true)
     try {
+      // Send to all designated signatories
+      const signatoryIds = signatories.map(s => s.id)
       await onConfirm(
-        selectedIds,
+        signatoryIds,
         countersignerType,
         countersignerType === 'arranger' && arranger ? arranger.id : undefined
       )
@@ -145,18 +120,16 @@ export function SignatorySelectionDialog({
     }
   }
 
-  const selectedSignatories = signatories.filter(s => selectedIds.includes(s.id))
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px] bg-black border border-white/10">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-foreground">
             <UserCheck className="h-5 w-5 text-emerald-500" />
-            Select Signatories
+            Confirm Signatories
           </DialogTitle>
           <DialogDescription>
-            Choose who should receive the signature request for "{documentName}"
+            The following signatories will receive signature requests for "{documentName}"
           </DialogDescription>
         </DialogHeader>
 
@@ -165,59 +138,37 @@ export function SignatorySelectionDialog({
             <div className="space-y-3">
               <Skeleton className="h-12 w-full" />
               <Skeleton className="h-12 w-full" />
-              <Skeleton className="h-12 w-full" />
             </div>
           ) : error ? (
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>{error}</AlertDescription>
             </Alert>
+          ) : signatories.length === 0 ? (
+            <Alert className="bg-amber-500/10 border-amber-500/30">
+              <AlertCircle className="h-4 w-4 text-amber-500" />
+              <AlertDescription className="text-amber-200">
+                No designated signatories found for this investor. Please add signatories to the investor entity first.
+              </AlertDescription>
+            </Alert>
           ) : (
             <>
-              {/* Quick Actions */}
-              {signatories.length > 2 && (
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-sm text-muted-foreground">
-                    {selectedIds.length} of {signatories.length} selected
-                  </span>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleSelectAll}
-                      className="text-xs"
-                    >
-                      Select All
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleSelectNone}
-                      className="text-xs"
-                    >
-                      Clear
-                    </Button>
-                  </div>
-                </div>
-              )}
+              {/* Signatory Count Badge */}
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="border-emerald-500/50 text-emerald-400 bg-emerald-500/10">
+                  <Users className="h-3 w-3 mr-1" />
+                  {signatories.length} {signatories.length === 1 ? 'Signatory' : 'Signatories'}
+                </Badge>
+              </div>
 
-              {/* Signatory List */}
-              <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2">
+              {/* Signatory List (Read-only) */}
+              <div className="space-y-2 max-h-[250px] overflow-y-auto pr-2">
                 {signatories.map((signatory) => (
-                  <label
+                  <div
                     key={signatory.id}
-                    className={cn(
-                      "flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors",
-                      selectedIds.includes(signatory.id)
-                        ? "border-emerald-500/50 bg-emerald-500/10"
-                        : "border-white/10 bg-white/5 hover:bg-white/10"
-                    )}
+                    className="flex items-start gap-3 p-3 rounded-lg border border-emerald-500/30 bg-emerald-500/10"
                   >
-                    <Checkbox
-                      checked={selectedIds.includes(signatory.id)}
-                      onCheckedChange={() => handleToggleSignatory(signatory.id)}
-                      className="mt-1"
-                    />
+                    <Check className="h-5 w-5 text-emerald-500 mt-0.5 flex-shrink-0" />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-medium text-foreground">
@@ -225,12 +176,12 @@ export function SignatorySelectionDialog({
                         </span>
                         {signatory.is_primary && (
                           <Badge variant="outline" className="text-xs border-blue-500/50 text-blue-400 bg-blue-500/10">
-                            Primary Contact
+                            Primary
                           </Badge>
                         )}
                         {signatory.is_signatory && !signatory.is_primary && (
                           <Badge variant="outline" className="text-xs border-emerald-500/50 text-emerald-400 bg-emerald-500/10">
-                            Authorized Signatory
+                            Signatory
                           </Badge>
                         )}
                       </div>
@@ -241,12 +192,12 @@ export function SignatorySelectionDialog({
                         </span>
                       </div>
                       {signatory.role_title && (
-                        <span className="text-xs text-muted-foreground capitalize">
+                        <span className="text-xs text-muted-foreground capitalize block mt-1">
                           {signatory.role_title}
                         </span>
                       )}
                     </div>
-                  </label>
+                  </div>
                 ))}
               </div>
 
@@ -300,22 +251,18 @@ export function SignatorySelectionDialog({
               )}
 
               {/* Info Note */}
-              {requiresMultiSignatory && (
-                <Alert className="bg-amber-500/10 border-amber-500/30">
-                  <Users className="h-4 w-4 text-amber-500" />
-                  <AlertDescription className="text-amber-200 text-sm">
-                    This entity requires multiple signatories. Each selected person will receive
-                    a separate signature request. The document will be marked complete only after
-                    all selected parties have signed.
+              {signatories.length > 1 && (
+                <Alert className="bg-blue-500/10 border-blue-500/30">
+                  <Users className="h-4 w-4 text-blue-500" />
+                  <AlertDescription className="text-blue-200 text-sm">
+                    Each signatory will receive a separate signature request. The document will be marked complete after all parties have signed.
                   </AlertDescription>
                 </Alert>
               )}
 
-              {selectedIds.length > 0 && !requiresMultiSignatory && investorType !== 'individual' && !arranger && (
-                <p className="text-xs text-muted-foreground">
-                  Staff countersignature will be added automatically.
-                </p>
-              )}
+              <p className="text-xs text-muted-foreground">
+                Staff countersignature will be added automatically.
+              </p>
             </>
           )}
         </div>
@@ -330,7 +277,7 @@ export function SignatorySelectionDialog({
           </Button>
           <Button
             onClick={handleConfirm}
-            disabled={loading || sending || selectedIds.length === 0}
+            disabled={loading || sending || signatories.length === 0}
             className="gap-2 bg-emerald-500 hover:bg-emerald-600"
           >
             {sending ? (
@@ -341,7 +288,7 @@ export function SignatorySelectionDialog({
             ) : (
               <>
                 <Send className="h-4 w-4" />
-                Send to {selectedIds.length} {selectedIds.length === 1 ? 'Signatory' : 'Signatories'}
+                Send for Signature
               </>
             )}
           </Button>

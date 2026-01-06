@@ -98,24 +98,8 @@ export async function GET(
   // Check if this is an entity-type investor
   const isEntityInvestor = investor?.type === 'entity' || investor?.type === 'institutional'
 
-  if (!isEntityInvestor) {
-    // For individual investors, return the investor as the only signatory
-    return NextResponse.json({
-      signatories: [{
-        id: 'investor_primary',
-        full_name: investor?.legal_name || investor?.display_name || 'Investor',
-        email: investor?.email || '',
-        role: 'primary',
-        is_signatory: true,
-        is_primary: true
-      }],
-      investor_type: investor?.type || 'individual',
-      requires_multi_signatory: false,
-      arranger
-    })
-  }
-
-  // For entity investors, fetch authorized signatories from investor_members
+  // Always check for investor_members with is_signatory, even for 'individual' type
+  // (handles cases where type is wrong or LLC/Corp is marked as individual)
   const { data: members, error: membersError } = await serviceSupabase
     .from('investor_members')
     .select('id, full_name, email, role, role_title, is_signatory')
@@ -129,38 +113,51 @@ export async function GET(
     return NextResponse.json({ error: 'Failed to fetch signatories' }, { status: 500 })
   }
 
-  // Filter to only authorized signatories, or all members if none are marked
+  // Filter to only authorized signatories
   const authorizedSignatories = members?.filter(m => m.is_signatory) || []
   const hasDesignatedSignatories = authorizedSignatories.length > 0
 
   // Build response with signatories
-  const signatories = (hasDesignatedSignatories ? authorizedSignatories : members || []).map(m => ({
-    id: m.id,
-    full_name: m.full_name,
-    email: m.email || '',
-    role: m.role,
-    role_title: m.role_title,
-    is_signatory: m.is_signatory,
-    is_primary: false
-  }))
+  let signatories: Array<{
+    id: string
+    full_name: string
+    email: string
+    role: string
+    role_title?: string
+    is_signatory: boolean
+    is_primary: boolean
+  }> = []
 
-  // Add investor primary email as fallback option
-  if (investor?.email) {
-    signatories.unshift({
-      id: 'investor_primary',
-      full_name: investor.legal_name || investor.display_name || 'Primary Contact',
-      email: investor.email,
-      role: 'primary',
-      role_title: 'Primary Contact',
-      is_signatory: true,
-      is_primary: true
-    })
+  if (hasDesignatedSignatories) {
+    // Use designated signatories from investor_members
+    signatories = authorizedSignatories.map(m => ({
+      id: m.id,
+      full_name: m.full_name,
+      email: m.email || '',
+      role: m.role,
+      role_title: m.role_title || undefined,
+      is_signatory: m.is_signatory,
+      is_primary: false
+    }))
+  } else if (!isEntityInvestor || (members?.length === 0)) {
+    // No members or individual investor - use investor primary email
+    if (investor?.email) {
+      signatories = [{
+        id: 'investor_primary',
+        full_name: investor.legal_name || investor.display_name || 'Investor',
+        email: investor.email,
+        role: 'primary',
+        role_title: 'Primary Contact',
+        is_signatory: true,
+        is_primary: true
+      }]
+    }
   }
 
   return NextResponse.json({
     signatories,
     investor_type: investor?.type,
-    requires_multi_signatory: isEntityInvestor && authorizedSignatories.length > 1,
+    requires_multi_signatory: hasDesignatedSignatories && authorizedSignatories.length > 1,
     has_designated_signatories: hasDesignatedSignatories,
     arranger
   })
