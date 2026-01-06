@@ -2,7 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { requireStaffAuth } from '@/lib/auth'
 import { NextResponse } from 'next/server'
 import { auditLogger, AuditActions, AuditEntities } from '@/lib/audit'
-import { triggerCertificateGeneration } from '@/lib/subscription/certificate-trigger'
+// NOTE: Certificate generation moved to deal-close-handler.ts (triggered at deal close, not on funding)
 
 export const dynamic = 'force-dynamic'
 
@@ -382,8 +382,10 @@ export async function POST(req: Request) {
               const fundedPercentage = (newFundedAmount / commitment) * 100
 
               // Update status based on funding level
+              // NOTE: Status changes to 'funded' here, NOT 'active'
+              // 'active' status + position + certificate are set at DEAL CLOSE (see deal-close-handler.ts)
               if (fundedPercentage >= 99.99) {
-                newStatus = 'active' // Fully funded
+                newStatus = 'funded' // Fully funded - awaiting deal close
               } else if (fundedPercentage > 0) {
                 newStatus = 'partially_funded'
               }
@@ -407,92 +409,10 @@ export async function POST(req: Request) {
 
             console.log(`✅ Updated subscription ${subscriptionId}: funded_amount=${newFundedAmount}, status=${newStatus}`)
 
-            // AUTO-CREATE POSITION when subscription becomes active
-            if (newStatus === 'active' && subscription.status !== 'active') {
-              // Fetch full subscription details to get all fields needed for position
-              const { data: fullSubscription } = await supabase
-                .from('subscriptions')
-                .select('investor_id, vehicle_id, num_shares, units, price_per_share, cost_per_share')
-                .eq('id', subscriptionId)
-                .single()
-
-              if (fullSubscription) {
-                // Calculate units: prefer num_shares, fallback to units, or calculate from funded_amount / price
-                let positionUnits = fullSubscription.num_shares || fullSubscription.units
-                if (!positionUnits && fullSubscription.price_per_share) {
-                  positionUnits = newFundedAmount / toNumber(fullSubscription.price_per_share)
-                } else if (!positionUnits && fullSubscription.cost_per_share) {
-                  positionUnits = newFundedAmount / toNumber(fullSubscription.cost_per_share)
-                }
-
-                // Get initial NAV (use price_per_share or cost_per_share as initial valuation)
-                const initialNav = fullSubscription.price_per_share || fullSubscription.cost_per_share
-
-                if (positionUnits && positionUnits > 0) {
-                  // NOTE: For maximum safety, database should have unique constraint on (investor_id, vehicle_id)
-                  // Migration: ALTER TABLE positions ADD CONSTRAINT positions_investor_vehicle_unique UNIQUE (investor_id, vehicle_id);
-
-                  // Try to create position with race condition protection
-                  const { data: newPosition, error: positionError } = await supabase
-                    .from('positions')
-                    .insert({
-                      investor_id: fullSubscription.investor_id,
-                      vehicle_id: fullSubscription.vehicle_id,
-                      units: positionUnits,
-                      cost_basis: newFundedAmount,
-                      last_nav: initialNav,
-                      as_of_date: new Date().toISOString()
-                    })
-                    .select('id')
-                    .single()
-
-                  if (positionError) {
-                    // Check if error is due to unique constraint violation (position already exists)
-                    if (positionError.code === '23505') {
-                      console.log(`ℹ️ Position already exists for subscription ${subscriptionId} (investor: ${fullSubscription.investor_id}, vehicle: ${fullSubscription.vehicle_id})`)
-                      // This is OK - another process created it first (race condition handled gracefully)
-                    } else {
-                      console.error(`❌ Failed to create position for subscription ${subscriptionId}:`, positionError)
-                      // Log but don't fail the whole transaction - subscription funding is more critical
-                    }
-                  } else if (newPosition) {
-                      console.log(`✅ Created position for subscription ${subscriptionId}: ${positionUnits} units @ $${initialNav}/unit`)
-
-                      // Audit log for position creation
-                      await auditLogger.log({
-                        actor_user_id: profile.id,
-                        action: AuditActions.CREATE,
-                        entity: 'positions' as any,
-                        entity_id: subscriptionId, // Link to subscription
-                        metadata: {
-                          subscription_id: subscriptionId,
-                          investor_id: fullSubscription.investor_id,
-                          vehicle_id: fullSubscription.vehicle_id,
-                          units: positionUnits,
-                          cost_basis: newFundedAmount,
-                          initial_nav: initialNav,
-                          triggered_by: 'subscription_funding'
-                        }
-                      })
-                    }
-                } else {
-                  console.warn(`⚠️ Could not determine units for subscription ${subscriptionId} - position not created`)
-                }
-
-                // Trigger certificate generation when subscription becomes active
-                await triggerCertificateGeneration({
-                  supabase,
-                  subscriptionId,
-                  investorId: fullSubscription.investor_id,
-                  vehicleId: fullSubscription.vehicle_id,
-                  commitment,
-                  fundedAmount: newFundedAmount,
-                  shares: fullSubscription.num_shares || fullSubscription.units,
-                  pricePerShare: fullSubscription.price_per_share,
-                  profile
-                })
-              }
-            }
+            // NOTE: Position creation and certificate generation are now handled at DEAL CLOSE
+            // See: src/lib/deals/deal-close-handler.ts
+            // This ensures certificates/positions are only created after the deal officially closes,
+            // not just when funding is received (per Fred's requirements 2024)
 
             // Audit log for subscription funding update
             await auditLogger.log({

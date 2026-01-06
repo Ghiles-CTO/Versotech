@@ -18,6 +18,9 @@ import { createInvestorNotification } from '@/lib/notifications'
 export interface DealCloseResult {
   success: boolean
   dealId: string
+  subscriptionsActivated: number
+  positionsCreated: number
+  commissionsCreated: number
   certificatesTriggered: number
   feePlansEnabled: number
   notificationsSent: number
@@ -44,6 +47,9 @@ export async function handleDealClose(
   const result: DealCloseResult = {
     success: false,
     dealId,
+    subscriptionsActivated: 0,
+    positionsCreated: 0,
+    commissionsCreated: 0,
     certificatesTriggered: 0,
     feePlansEnabled: 0,
     notificationsSent: 0,
@@ -54,7 +60,7 @@ export async function handleDealClose(
     // Verify deal exists and hasn't been processed yet
     const { data: deal, error: dealError } = await supabase
       .from('deals')
-      .select('id, name, company_name, status, close_at, closed_processed_at, vehicle_id')
+      .select('id, name, company_name, status, close_at, closed_processed_at, vehicle_id, arranger_entity_id')
       .eq('id', dealId)
       .single()
 
@@ -72,7 +78,7 @@ export async function handleDealClose(
 
     console.log(`[deal-close] Processing deal ${dealId} (${deal.name}) closing date: ${closingDate.toISOString()}`)
 
-    // Step 1: Generate certificates for all funded subscriptions
+    // Step 1: Activate funded subscriptions, create positions, and generate certificates
     // Get all funded subscriptions that haven't been activated yet
     const { data: subscriptions, error: subError } = await supabase
       .from('subscriptions')
@@ -83,7 +89,10 @@ export async function handleDealClose(
         commitment,
         funded_amount,
         shares,
+        num_shares,
+        units,
         price_per_share,
+        cost_per_share,
         status,
         activated_at,
         investor:investors(
@@ -93,13 +102,13 @@ export async function handleDealClose(
         )
       `)
       .eq('deal_id', dealId)
-      .eq('status', 'active') // Only funded/active subscriptions
-      .is('activated_at', null) // Not yet activated (no certificate yet)
+      .eq('status', 'funded') // Only funded subscriptions awaiting activation
+      .is('activated_at', null) // Not yet activated
 
     if (subError) {
       result.errors.push(`Failed to fetch subscriptions: ${subError.message}`)
     } else if (subscriptions && subscriptions.length > 0) {
-      console.log(`[deal-close] Found ${subscriptions.length} subscriptions needing certificates`)
+      console.log(`[deal-close] Found ${subscriptions.length} funded subscriptions to activate`)
 
       // Get a system profile for triggering (or use first available staff)
       const { data: systemProfile } = await supabase
@@ -119,21 +128,168 @@ export async function handleDealClose(
 
       for (const sub of subscriptions) {
         try {
+          // Step 1a: Update subscription status to 'active'
+          const { error: statusError } = await supabase
+            .from('subscriptions')
+            .update({
+              status: 'active',
+              activated_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', sub.id)
+
+          if (statusError) {
+            result.errors.push(`Failed to activate subscription ${sub.id}: ${statusError.message}`)
+            continue
+          }
+          result.subscriptionsActivated++
+          console.log(`[deal-close] Activated subscription ${sub.id}`)
+
+          // Step 1b: Create position for this subscription
+          const fundedAmount = Number(sub.funded_amount) || 0
+          let positionUnits = sub.num_shares || sub.units || sub.shares
+          if (!positionUnits && sub.price_per_share) {
+            positionUnits = fundedAmount / Number(sub.price_per_share)
+          } else if (!positionUnits && sub.cost_per_share) {
+            positionUnits = fundedAmount / Number(sub.cost_per_share)
+          }
+
+          const initialNav = sub.price_per_share || sub.cost_per_share
+
+          if (positionUnits && positionUnits > 0) {
+            // Check if position already exists
+            const { data: existingPosition } = await supabase
+              .from('positions')
+              .select('id')
+              .eq('investor_id', sub.investor_id)
+              .eq('vehicle_id', sub.vehicle_id || deal.vehicle_id)
+              .maybeSingle()
+
+            if (!existingPosition) {
+              const { error: positionError } = await supabase
+                .from('positions')
+                .insert({
+                  investor_id: sub.investor_id,
+                  vehicle_id: sub.vehicle_id || deal.vehicle_id,
+                  units: positionUnits,
+                  cost_basis: fundedAmount,
+                  last_nav: initialNav,
+                  as_of_date: new Date().toISOString(),
+                })
+
+              if (positionError) {
+                result.errors.push(`Failed to create position for subscription ${sub.id}: ${positionError.message}`)
+              } else {
+                result.positionsCreated++
+                console.log(`[deal-close] Created position for subscription ${sub.id}: ${positionUnits} units`)
+              }
+            } else {
+              console.log(`[deal-close] Position already exists for subscription ${sub.id}`)
+            }
+          }
+
+          // Step 1c: Create introducer commission if applicable
+          try {
+            const { data: dealMembership } = await supabase
+              .from('deal_memberships')
+              .select('referred_by_entity_id, referred_by_entity_type')
+              .eq('deal_id', dealId)
+              .eq('investor_id', sub.investor_id)
+              .maybeSingle()
+
+            if (dealMembership?.referred_by_entity_type === 'introducer' && dealMembership.referred_by_entity_id) {
+              const introducerId = dealMembership.referred_by_entity_id
+
+              // Check for existing commission
+              const { data: existingCommission } = await supabase
+                .from('introducer_commissions')
+                .select('id')
+                .eq('introducer_id', introducerId)
+                .eq('deal_id', dealId)
+                .eq('investor_id', sub.investor_id)
+                .maybeSingle()
+
+              if (!existingCommission) {
+                // Get introducer details and fee plan
+                const { data: introducer } = await supabase
+                  .from('introducers')
+                  .select('id, legal_name, default_commission_bps')
+                  .eq('id', introducerId)
+                  .single()
+
+                if (introducer) {
+                  let rateBps = 0
+                  let feePlanId: string | null = null
+
+                  const { data: feePlan } = await supabase
+                    .from('fee_plans')
+                    .select('id, fee_components(id, kind, rate_bps)')
+                    .eq('introducer_id', introducerId)
+                    .eq('is_active', true)
+                    .or(`deal_id.eq.${dealId},deal_id.is.null`)
+                    .limit(1)
+                    .maybeSingle()
+
+                  if (feePlan?.fee_components && (feePlan.fee_components as any[]).length > 0) {
+                    const components = feePlan.fee_components as any[]
+                    const comp = components.find(
+                      (c: any) => c.kind === 'introducer' || c.kind === 'referral' || c.kind === 'commission'
+                    )
+                    if (comp?.rate_bps) {
+                      rateBps = comp.rate_bps
+                      feePlanId = feePlan.id
+                    }
+                  }
+
+                  if (!rateBps && introducer.default_commission_bps) {
+                    rateBps = introducer.default_commission_bps
+                  }
+
+                  if (rateBps > 0) {
+                    const commissionAmount = (fundedAmount * rateBps) / 10000
+
+                    await supabase.from('introducer_commissions').insert({
+                      introducer_id: introducerId,
+                      deal_id: dealId,
+                      investor_id: sub.investor_id,
+                      arranger_id: deal.arranger_entity_id || null,
+                      fee_plan_id: feePlanId,
+                      basis_type: 'invested_amount',
+                      rate_bps: rateBps,
+                      base_amount: fundedAmount,
+                      accrual_amount: commissionAmount,
+                      currency: 'USD',
+                      status: 'accrued',
+                      created_at: new Date().toISOString(),
+                    })
+
+                    result.commissionsCreated++
+                    console.log(`[deal-close] Created commission for introducer ${introducer.legal_name}: ${commissionAmount}`)
+                  }
+                }
+              }
+            }
+          } catch (commError) {
+            const msg = commError instanceof Error ? commError.message : 'Unknown error'
+            result.errors.push(`Commission creation failed for subscription ${sub.id}: ${msg}`)
+          }
+
+          // Step 1d: Trigger certificate generation
           await triggerCertificateGeneration({
             supabase,
             subscriptionId: sub.id,
             investorId: sub.investor_id,
             vehicleId: sub.vehicle_id || deal.vehicle_id,
             commitment: sub.commitment || 0,
-            fundedAmount: sub.funded_amount || 0,
-            shares: sub.shares,
+            fundedAmount: fundedAmount,
+            shares: sub.num_shares || sub.units || sub.shares,
             pricePerShare: sub.price_per_share,
             profile: triggerProfile,
           })
           result.certificatesTriggered++
-        } catch (certError) {
-          const msg = certError instanceof Error ? certError.message : 'Unknown error'
-          result.errors.push(`Certificate trigger failed for subscription ${sub.id}: ${msg}`)
+        } catch (subError) {
+          const msg = subError instanceof Error ? subError.message : 'Unknown error'
+          result.errors.push(`Processing failed for subscription ${sub.id}: ${msg}`)
         }
       }
     }

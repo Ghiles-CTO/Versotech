@@ -2,7 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { requireStaffAuth } from '@/lib/auth'
 import { NextResponse } from 'next/server'
 import { auditLogger, AuditActions, AuditEntities } from '@/lib/audit'
-import { triggerCertificateGeneration } from '@/lib/subscription/certificate-trigger'
+// NOTE: Certificate generation moved to deal-close-handler.ts (triggered at deal close, not on funding)
 
 export const dynamic = 'force-dynamic'
 
@@ -369,8 +369,10 @@ export async function POST(req: Request) {
               const fundedPercentage = (newFundedAmount / commitment) * 100
 
               // Update status based on funding level
+              // NOTE: Status changes to 'funded' here, NOT 'active'
+              // 'active' status + position + certificate are set at DEAL CLOSE (see deal-close-handler.ts)
               if (fundedPercentage >= 99.99) {
-                newStatus = 'active' // Fully funded
+                newStatus = 'funded' // Fully funded - awaiting deal close
               } else if (fundedPercentage > 0) {
                 newStatus = 'partially_funded'
               }
@@ -394,91 +396,10 @@ export async function POST(req: Request) {
 
             console.log(`✅ Updated subscription ${subscriptionId}: funded_amount=${newFundedAmount}, status=${newStatus}`)
 
-            // AUTO-CREATE POSITION when subscription becomes active
-            if (newStatus === 'active' && subscription.status !== 'active') {
-              // Calculate units: prefer num_shares, fallback to units, or calculate from funded_amount / price
-              let positionUnits = subscription.num_shares || subscription.units
-              if (!positionUnits && subscription.price_per_share) {
-                positionUnits = newFundedAmount / toNumber(subscription.price_per_share)
-              } else if (!positionUnits && subscription.cost_per_share) {
-                positionUnits = newFundedAmount / toNumber(subscription.cost_per_share)
-              }
-
-              // Get initial NAV (use price_per_share or cost_per_share as initial valuation)
-              const initialNav = subscription.price_per_share || subscription.cost_per_share
-
-              if (positionUnits && positionUnits > 0) {
-                // Check if position already exists (prevent duplicate creation)
-                const { data: existingPosition } = await supabase
-                  .from('positions')
-                  .select('id')
-                  .eq('investor_id', subscription.investor_id)
-                  .eq('vehicle_id', subscription.vehicle_id)
-                  .single()
-
-                if (!existingPosition) {
-                  // Create new position
-                  const { error: positionError } = await supabase
-                    .from('positions')
-                    .insert({
-                      investor_id: subscription.investor_id,
-                      vehicle_id: subscription.vehicle_id,
-                      units: positionUnits,
-                      cost_basis: newFundedAmount,
-                      last_nav: initialNav,
-                      as_of_date: new Date().toISOString()
-                    })
-
-                  if (positionError) {
-                    console.error(`❌ Failed to create position for subscription ${subscriptionId}:`, positionError)
-                    // Log but don't fail the whole transaction - subscription funding is more critical
-                  } else {
-                    console.log(`✅ Created position for subscription ${subscriptionId}: ${positionUnits} units @ $${initialNav}/unit`)
-
-                    // Audit log for position creation
-                    await auditLogger.log({
-                      actor_user_id: profile.id,
-                      action: AuditActions.CREATE,
-                      entity: 'positions' as any,
-                      entity_id: subscriptionId, // Link to subscription
-                      metadata: {
-                        subscription_id: subscriptionId,
-                        investor_id: subscription.investor_id,
-                        vehicle_id: subscription.vehicle_id,
-                        units: positionUnits,
-                        cost_basis: newFundedAmount,
-                        initial_nav: initialNav,
-                        triggered_by: 'subscription_funding_manual_match'
-                      }
-                    })
-                  }
-                } else {
-                  console.log(`ℹ️ Position already exists for subscription ${subscriptionId} - skipping creation`)
-                }
-              } else {
-                console.warn(`⚠️ Could not determine units for subscription ${subscriptionId} - position not created`)
-              }
-
-              // AUTO-TRIGGER CERTIFICATE GENERATION when subscription becomes active
-              // Uses helper function that handles idempotency (activated_at check) and notifications
-              await triggerCertificateGeneration({
-                supabase,
-                subscriptionId,
-                investorId: subscription.investor_id,
-                vehicleId: subscription.vehicle_id,
-                commitment: toNumber(subscription.commitment),
-                fundedAmount: newFundedAmount,
-                shares: subscription.num_shares || subscription.units,
-                pricePerShare: subscription.price_per_share,
-                profile: {
-                  id: profile.id,
-                  email: profile.email,
-                  display_name: profile.displayName,
-                  role: profile.role,
-                  title: profile.title
-                }
-              })
-            }
+            // NOTE: Position creation and certificate generation are now handled at DEAL CLOSE
+            // See: src/lib/deals/deal-close-handler.ts
+            // This ensures certificates/positions are only created after the deal officially closes,
+            // not just when funding is received (per Fred's requirements 2024)
 
             // Audit log for subscription funding update
             await auditLogger.log({
