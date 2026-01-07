@@ -501,6 +501,7 @@ export async function middleware(request: NextRequest) {
 
     let personaTypes = new Set<string>()
     let isCEO = false
+    const isProfileCEO = effectiveProfile.role === 'ceo' || effectiveProfile.role === 'staff_admin'
 
     if (isUnifiedRoute || isAdminRoute) {
       const { data: personas, error: personaError } = await supabase.rpc('get_user_personas', {
@@ -512,13 +513,14 @@ export async function middleware(request: NextRequest) {
       } else if (Array.isArray(personas)) {
         personaTypes = new Set(personas.map((persona: any) => persona.persona_type))
         // isCEO grants access to CEO-only sections (/versotech_admin, sensitive reports, etc.)
-        // DESIGN DECISION: Both 'ceo' AND 'staff_admin' roles get CEO-level access.
+        // DESIGN DECISION: Both 'ceo' persona AND 'staff_admin' role get CEO-level access.
         // This is intentional - staff_admin users are system administrators who need
         // full platform access. If stricter separation is needed in the future,
         // create a separate 'isSystemAdmin' check or restrict staff_admin from this check.
         isCEO = personas.some(
-          (persona: any) => persona.persona_type === 'staff' &&
-            (persona.role_in_entity === 'ceo' || persona.role_in_entity === 'staff_admin')
+          (persona: any) =>
+            persona.persona_type === 'ceo' ||  // CEO persona type
+            (persona.persona_type === 'staff' && persona.role_in_entity === 'staff_admin')  // staff_admin also gets CEO access
         )
       }
 
@@ -544,6 +546,11 @@ export async function middleware(request: NextRequest) {
         if (effectiveProfile.role === 'ceo' || effectiveProfile.role === 'staff_admin') {
           isCEO = true
         }
+      }
+
+      if (isProfileCEO) {
+        isCEO = true
+        personaTypes.add('ceo')
       }
 
       if (personaTypes.size === 0) {

@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { Loader2, Plus, UserPlus } from 'lucide-react'
+import { toast } from 'sonner'
 import {
   Dialog,
   DialogContent,
@@ -21,8 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Plus, Loader2 } from 'lucide-react'
-import { toast } from 'sonner'
+import { Switch } from '@/components/ui/switch'
 
 type StaffMember = {
   id: string
@@ -36,6 +37,12 @@ export function AddInvestorModal() {
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [staffMembers, setStaffMembers] = useState<StaffMember[]>([])
+  const [inviteUser, setInviteUser] = useState(false)
+  const [inviteData, setInviteData] = useState({
+    email: '',
+    display_name: '',
+    title: '',
+  })
   const [formData, setFormData] = useState({
     legal_name: '',
     display_name: '',
@@ -75,6 +82,21 @@ export function AddInvestorModal() {
       return
     }
 
+    const inviteEmail = inviteData.email.trim().toLowerCase()
+    const inviteName = inviteData.display_name.trim()
+    const inviteTitle = inviteData.title.trim()
+
+    if (inviteUser) {
+      if (!inviteEmail || !inviteEmail.includes('@')) {
+        toast.error('Valid invite email is required')
+        return
+      }
+      if (inviteName.length < 2) {
+        toast.error('Invite display name is required')
+        return
+      }
+    }
+
     setLoading(true)
 
     try {
@@ -87,7 +109,7 @@ export function AddInvestorModal() {
       })
 
       console.log('[AddInvestor] Response status:', response.status)
-      
+
       const data = await response.json()
       console.log('[AddInvestor] Response data:', data)
 
@@ -95,7 +117,56 @@ export function AddInvestorModal() {
         throw new Error(data.error || 'Failed to create investor')
       }
 
-      toast.success('Investor created successfully')
+      const createdInvestorId = data?.investor?.id || data?.id
+
+      if (inviteUser && createdInvestorId) {
+        const inviteResponse = await fetch('/api/admin/entity-invite', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            entity_type: 'investor',
+            entity_id: createdInvestorId,
+            email: inviteEmail,
+            display_name: inviteName,
+            title: inviteTitle || null,
+            is_primary: true,
+          }),
+        })
+
+        if (!inviteResponse.ok) {
+          const inviteResult = await inviteResponse.json().catch(() => ({}))
+
+          if (inviteResponse.status === 401 || inviteResponse.status === 403) {
+            const fallbackResponse = await fetch(`/api/staff/investors/${createdInvestorId}/users`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email: inviteEmail }),
+            })
+
+            if (!fallbackResponse.ok) {
+              const fallbackResult = await fallbackResponse.json().catch(() => ({}))
+              toast.warning(
+                fallbackResult.error ||
+                inviteResult.error ||
+                'Investor created, but invitation failed to send'
+              )
+            } else {
+              toast.success('Investor created and invitation sent')
+            }
+          } else {
+            toast.warning(inviteResult.error || 'Investor created, but invitation failed to send')
+          }
+        } else {
+          const inviteResult = await inviteResponse.json().catch(() => ({}))
+          if (inviteResult.email_sent === false) {
+            toast.warning('Investor created, but invitation email failed to send')
+          } else {
+            toast.success(inviteResult.message || 'Investor created and invitation sent')
+          }
+        }
+      } else {
+        toast.success('Investor created successfully')
+      }
       
       // Reset form
       setFormData({
@@ -109,6 +180,8 @@ export function AddInvestorModal() {
         tax_residency: '',
         primary_rm: '',
       })
+      setInviteUser(false)
+      setInviteData({ email: '', display_name: '', title: '' })
       
       setOpen(false)
       
@@ -290,6 +363,61 @@ export function AddInvestorModal() {
             )}
           </div>
 
+          <div className="space-y-4 border-t border-zinc-800 pt-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-2">
+                  <UserPlus className="h-4 w-4 text-gray-400" />
+                  <Label className="text-sm text-white">Invite Portal User</Label>
+                </div>
+                <p className="text-xs text-gray-400">
+                  Send an invitation to join this investor's portal
+                </p>
+              </div>
+              <Switch checked={inviteUser} onCheckedChange={setInviteUser} />
+            </div>
+
+            {inviteUser && (
+              <div className="space-y-3 pl-4 border-l border-zinc-800">
+                <div className="space-y-2">
+                  <Label htmlFor="invite_email" className="text-white">
+                    Email Address <span className="text-red-400">*</span>
+                  </Label>
+                  <Input
+                    id="invite_email"
+                    type="email"
+                    value={inviteData.email}
+                    onChange={(e) => setInviteData({ ...inviteData, email: e.target.value })}
+                    placeholder="user@email.com"
+                    className="bg-zinc-900 border-zinc-700 text-white placeholder:text-gray-500"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="invite_display_name" className="text-white">
+                    Display Name <span className="text-red-400">*</span>
+                  </Label>
+                  <Input
+                    id="invite_display_name"
+                    value={inviteData.display_name}
+                    onChange={(e) => setInviteData({ ...inviteData, display_name: e.target.value })}
+                    placeholder="John Smith"
+                    className="bg-zinc-900 border-zinc-700 text-white placeholder:text-gray-500"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="invite_title" className="text-white">Title (Optional)</Label>
+                  <Input
+                    id="invite_title"
+                    value={inviteData.title}
+                    onChange={(e) => setInviteData({ ...inviteData, title: e.target.value })}
+                    placeholder="Managing Director"
+                    className="bg-zinc-900 border-zinc-700 text-white placeholder:text-gray-500"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+
           <DialogFooter>
             <Button
               type="button"
@@ -301,7 +429,7 @@ export function AddInvestorModal() {
             </Button>
             <Button type="submit" disabled={loading}>
               {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              Create Investor
+              {inviteUser ? 'Create Investor & Send Invite' : 'Create Investor'}
             </Button>
           </DialogFooter>
         </form>

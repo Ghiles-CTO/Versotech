@@ -309,11 +309,15 @@ export function AddAccountModal({
             }),
           })
 
+          const inviteResult = await inviteResponse.json().catch(() => ({}))
+
           if (!inviteResponse.ok) {
             console.warn('Failed to send invitation, but entity was created')
-            toast.warning(`${config.label} created, but invitation failed to send`)
+            toast.warning(inviteResult.error || `${config.label} created, but invitation failed to send`)
+          } else if (inviteResult.email_sent === false) {
+            toast.warning(`${config.label} created, but invitation email failed to send`)
           } else {
-            toast.success(`${config.label} created and invitation sent!`)
+            toast.success(inviteResult.message || `${config.label} created and invitation sent!`)
           }
         } else {
           toast.success(`${config.label} created successfully!`)

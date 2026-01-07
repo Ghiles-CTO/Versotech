@@ -69,8 +69,8 @@ const inviteEntityUserSchema = z.object({
   entity_id: z.string().uuid('Invalid entity ID'),
   email: z.string().email('Invalid email address'),
   display_name: z.string().min(2, 'Display name must be at least 2 characters'),
-  title: z.string().optional(),
-  role: z.string().optional(), // Will use entity-specific default if not provided
+  title: z.string().nullable().optional(), // Allow null from client
+  role: z.string().nullable().optional(), // Will use entity-specific default if not provided
   is_primary: z.boolean().default(false),
   is_signatory: z.boolean().optional().default(false),
   can_sign: z.boolean().optional().default(false),
@@ -283,7 +283,15 @@ export async function POST(request: NextRequest) {
 
     if (!emailResult.success) {
       console.error('Failed to send invitation email:', emailResult.error)
-      // Don't fail - invitation is created, user can still use the link
+      try {
+        await supabase.from('member_invitations').delete().eq('id', invitation.id)
+      } catch (cleanupError) {
+        console.error('Failed to cleanup invitation after email failure:', cleanupError)
+      }
+      return NextResponse.json(
+        { error: 'Invitation email failed to send. Please verify the email domain and try again.' },
+        { status: 502 }
+      )
     }
 
     // Log the action
@@ -308,11 +316,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       invitation_id: invitation.id,
-      message: emailResult.success
-        ? `Invitation sent to ${email}`
-        : `Invitation created for ${email} (email delivery pending)`,
+      message: `Invitation sent to ${email}`,
       is_new_user: true,
-      email_sent: emailResult.success,
+      email_sent: true,
       accept_url: acceptUrl // For debugging/testing
     })
   } catch (error) {
