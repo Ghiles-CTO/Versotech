@@ -61,14 +61,19 @@ const ALL_TABS: TabConfig[] = [
 /**
  * Get tabs visible to a persona type and role
  * - Staff Ops/RM: Messages, Approvals, Requests (they process all)
- * - Staff CEO/Admin: Messages, Approvals (they approve, not triage requests)
+ * - Staff CEO/Admin or CEO persona: Messages, Approvals (they approve, not triage requests)
  * - Everyone else: Messages only
  */
 function getTabsForPersona(personaType: string | undefined, roleInEntity: string | undefined): TabConfig[] {
+  // CEO persona type gets executive-level access (Messages + Approvals)
+  if (personaType === 'ceo') {
+    return ALL_TABS.filter(tab => tab.value !== 'requests')
+  }
+
   if (personaType === 'staff') {
-    // CEO doesn't triage operational requests - that's Ops/RM work
-    const isCEO = roleInEntity === 'ceo' || roleInEntity === 'staff_admin'
-    if (isCEO) {
+    // Staff with CEO/admin role also gets executive-level access
+    const isCEORole = roleInEntity === 'ceo' || roleInEntity === 'staff_admin'
+    if (isCEORole) {
       return ALL_TABS.filter(tab => tab.value !== 'requests')
     }
     // Ops and RM see everything
@@ -145,7 +150,7 @@ function InboxPageContent() {
   }
 
   // Determine page subtitle based on persona
-  const isStaffPersona = activePersona?.persona_type === 'staff'
+  const isStaffPersona = activePersona?.persona_type === 'staff' || activePersona?.persona_type === 'ceo'
   const isCEO = activePersona?.role_in_entity === 'ceo' || activePersona?.role_in_entity === 'staff_admin'
   const showApprovals = isStaffPersona
   const showRequests = isStaffPersona && !isCEO // Ops/RM only

@@ -38,7 +38,7 @@ export default async function MessagesPage() {
     p_user_id: user.id
   })
 
-  const isStaff = personas?.some((p: any) => p.persona_type === 'staff') || false
+  const isStaff = personas?.some((p: any) => p.persona_type === 'staff' || p.persona_type === 'ceo') || false
   const isArranger = personas?.some((p: any) => p.persona_type === 'arranger') || false
   const isIntroducer = personas?.some((p: any) => p.persona_type === 'introducer') || false
 

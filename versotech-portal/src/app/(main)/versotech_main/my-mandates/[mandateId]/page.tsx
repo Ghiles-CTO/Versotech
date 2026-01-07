@@ -38,7 +38,7 @@ export default async function MandateDetailPage({ params }: PageParams) {
   })
 
   const isStaff = personas?.some(
-    (p: any) => p.persona_type === 'staff'
+    (p: any) => p.persona_type === 'staff' || p.persona_type === 'ceo'
   ) || false
   const isArranger = personas?.some(
     (p: any) => p.persona_type === 'arranger'

@@ -8,9 +8,10 @@ import { createClient } from '@/lib/supabase/client'
 import { usePersona } from '@/contexts/persona-context'
 
 export default function MessagesContent() {
-  const { activePersona } = usePersona()
-  // Only staff can create new conversations (requires access to investor/staff directories)
-  const canCreateConversation = activePersona?.persona_type === 'staff'
+  const { activePersona, isCEO, isStaff } = usePersona()
+  // Staff/CEO can create new conversations (requires access to investor/staff directories)
+  // Use isCEO/isStaff which check ALL personas, not just active - so CEO with multiple personas retains this ability
+  const canCreateConversation = isCEO || isStaff
   const [conversations, setConversations] = useState<any[]>([])
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
