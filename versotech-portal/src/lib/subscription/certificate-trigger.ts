@@ -1,6 +1,9 @@
 /**
  * Certificate Trigger Utility
  * Triggers certificate generation when subscription becomes active
+ *
+ * COMPREHENSIVE PAYLOAD: Sends ALL data n8n needs to generate the certificate
+ * without requiring n8n to query the database.
  */
 
 import { triggerWorkflow } from '@/lib/trigger-workflow'
@@ -25,6 +28,38 @@ interface TriggerCertificateParams {
 }
 
 /**
+ * Format date as "Month Day, Year" (e.g., "December 16, 2025")
+ */
+function formatCertificateDate(date: Date): string {
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  })
+}
+
+/**
+ * Derive investor display name based on type
+ * - Entity: use legal_name
+ * - Individual: use "First Last" format
+ */
+function getInvestorDisplayName(investor: {
+  type: string | null
+  legal_name: string | null
+  first_name: string | null
+  last_name: string | null
+}): string {
+  if (investor.type === 'individual') {
+    const firstName = investor.first_name?.trim() || ''
+    const lastName = investor.last_name?.trim() || ''
+    if (firstName || lastName) {
+      return `${firstName} ${lastName}`.trim()
+    }
+  }
+  return investor.legal_name || 'Unknown Investor'
+}
+
+/**
  * Triggers certificate generation for a newly activated subscription
  * This is a fire-and-forget operation - failures are logged but don't block the caller
  *
@@ -42,10 +77,40 @@ export async function triggerCertificateGeneration({
   profile
 }: TriggerCertificateParams): Promise<void> {
   try {
-    // IDEMPOTENCY CHECK: First verify subscription exists and is not already activated
+    // IDEMPOTENCY CHECK: Fetch subscription with all related data needed for certificate
     const { data: subscription, error: fetchError } = await supabase
       .from('subscriptions')
-      .select('id, status, activated_at')
+      .select(`
+        id,
+        status,
+        activated_at,
+        subscription_number,
+        units,
+        num_shares,
+        deal_id,
+        investor:investors!subscriptions_investor_id_fkey (
+          id,
+          legal_name,
+          type,
+          first_name,
+          last_name
+        ),
+        vehicle:vehicles!subscriptions_vehicle_id_fkey (
+          id,
+          name,
+          series_number,
+          registration_number,
+          logo_url,
+          address
+        ),
+        deal:deals!subscriptions_deal_id_fkey (
+          id,
+          name,
+          company_name,
+          close_at,
+          vehicle_id
+        )
+      `)
       .eq('id', subscriptionId)
       .single()
 
@@ -66,32 +131,128 @@ export async function triggerCertificateGeneration({
       return
     }
 
-    // Set activated_at timestamp (atomic update)
+    // Get vehicle data - prefer subscription.vehicle, fall back to deal.vehicle
+    // Type assertions needed due to Supabase query type inference treating joins as arrays
+    type VehicleType = { id: string; name: string; series_number: string; registration_number: string; logo_url: string | null; address: string | null }
+    let vehicleData = subscription.vehicle as unknown as VehicleType | null
+    const dealData = subscription.deal as unknown as { id: string; name: string; company_name: string; close_at: string; vehicle_id: string } | null
+    if (!vehicleData && dealData?.vehicle_id) {
+      const { data: dealVehicle } = await supabase
+        .from('vehicles')
+        .select('id, name, series_number, registration_number, logo_url, address')
+        .eq('id', dealData.vehicle_id)
+        .single()
+      vehicleData = dealVehicle as VehicleType | null
+    }
+
+    if (!vehicleData) {
+      console.error(`❌ No vehicle found for subscription ${subscriptionId}`)
+      return
+    }
+
+    // Fetch deal fee structure for product description (the "structure" field)
+    let productDescription = ''
+    if (subscription.deal_id) {
+      const { data: feeStructure } = await supabase
+        .from('deal_fee_structures')
+        .select('structure')
+        .eq('deal_id', subscription.deal_id)
+        .eq('status', 'published')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single()
+
+      if (feeStructure?.structure) {
+        productDescription = feeStructure.structure
+      }
+    }
+
+    // Set activated_at timestamp (atomic update with race condition protection)
     const { error: updateError } = await supabase
       .from('subscriptions')
       .update({ activated_at: new Date().toISOString() })
       .eq('id', subscriptionId)
-      .is('activated_at', null)  // Only update if still null (race condition protection)
+      .is('activated_at', null)
 
     if (updateError) {
       console.error(`❌ Failed to set activated_at for subscription ${subscriptionId}:`, updateError)
       // Continue anyway - the workflow might still be useful
     }
 
-    // Trigger certificate generation workflow (async)
+    // Build investor display name based on type
+    // Type assertion needed due to Supabase query type inference
+    type InvestorType = { type: string | null; legal_name: string | null; first_name: string | null; last_name: string | null }
+    const investorData = subscription.investor as unknown as InvestorType | null
+    const investorName = investorData
+      ? getInvestorDisplayName(investorData)
+      : 'Unknown Investor'
+
+    // Get deal close date or use today
+    const closeDate = dealData?.close_at
+      ? new Date(dealData.close_at)
+      : new Date()
+
+    // Build comprehensive certificate payload
+    const certificatePayload = {
+      // === HEADER TABLE DATA ===
+      // Column 1: Vehicle Logo
+      vehicle_logo_url: vehicleData.logo_url || '',
+
+      // Column 2: Certificate Number (format: VC{series_number}SH{subscription_number})
+      series_number: vehicleData.series_number || '',
+      subscription_number: subscription.subscription_number || '',
+
+      // Column 3: Units/Certificates
+      units: subscription.units || subscription.num_shares || shares || 0,
+
+      // Column 4: Date (formatted as "Month Day, Year")
+      close_at: formatCertificateDate(closeDate),
+
+      // === ISSUER SECTION DATA ===
+      vehicle_name: vehicleData.name || '',
+      company_name: dealData?.company_name || dealData?.name || '',
+      vehicle_registration_number: vehicleData.registration_number || '',
+
+      // === CERTIFICATION TEXT DATA ===
+      investor_name: investorName,
+      num_shares: subscription.num_shares || shares || 0,
+      structure: productDescription, // e.g., "Shares of Series B Preferred Stock of X.AI"
+
+      // === SIGNATURE TABLE DATA ===
+      vehicle_address: vehicleData.address || '',
+
+      // Static signatory info (these are the two signatories on every certificate)
+      signatory_1_name: 'Mr Julien Machot',
+      signatory_1_title: 'Managing Partner',
+      signatory_1_signature_url: process.env.SIGNATORY_1_SIGNATURE_URL || '',
+
+      signatory_2_name: 'Mr Frederic Dupont',
+      signatory_2_title: 'General Counsel',
+      signatory_2_signature_url: process.env.SIGNATORY_2_SIGNATURE_URL || '',
+
+      // === METADATA (useful for n8n workflow) ===
+      subscription_id: subscriptionId,
+      investor_id: investorId,
+      vehicle_id: vehicleId,
+      deal_id: subscription.deal_id || '',
+      commitment_amount: commitment,
+      funded_amount: fundedAmount,
+      price_per_share: pricePerShare || null,
+      certificate_date: new Date().toISOString().split('T')[0],
+      include_watermark: false // Activated subscriptions get clean certificates
+    }
+
+    console.log('📜 Triggering Certificate Generation:', {
+      subscription_id: subscriptionId,
+      investor: investorName,
+      certificate_number: `VC${vehicleData.series_number}SH${subscription.subscription_number}`,
+      units: certificatePayload.units
+    })
+
+    // Trigger certificate generation workflow
     const result = await triggerWorkflow({
       workflowKey: 'generate-investment-certificate',
-      payload: {
-        subscription_id: subscriptionId,
-        investor_id: investorId,
-        vehicle_id: vehicleId,
-        commitment_amount: commitment,
-        funded_amount: fundedAmount,
-        shares: shares || null,
-        price_per_share: pricePerShare || null,
-        certificate_date: new Date().toISOString().split('T')[0],
-        include_watermark: true
-      },
+      payload: certificatePayload,
       entityType: 'subscription',
       entityId: subscriptionId,
       user: {
@@ -173,13 +334,13 @@ export async function triggerCertificateGeneration({
           console.error(`❌ Failed to fetch lawyer users:`, lawyerUsersError)
         } else if (lawyerUsers && lawyerUsers.length > 0) {
           // Get investor name for notification
-          const { data: investor } = await supabase
+          const { data: investorForNotif } = await supabase
             .from('investors')
             .select('display_name, legal_name')
             .eq('id', investorId)
             .single()
 
-          const investorName = investor?.display_name || investor?.legal_name || 'An investor'
+          const investorNameForNotif = investorForNotif?.display_name || investorForNotif?.legal_name || 'An investor'
 
           // Create notifications for lawyers
           const lawyerNotifications = lawyerUsers.map((lu: any) => ({
@@ -187,7 +348,7 @@ export async function triggerCertificateGeneration({
             investor_id: null,
             type: 'certificate_issued',
             title: 'Certificate Issued',
-            message: `Investment certificate issued for ${investorName}. The subscription is now fully active.`,
+            message: `Investment certificate issued for ${investorNameForNotif}. The subscription is now fully active.`,
             link: '/versotech_main/subscription-packs'
           }))
 

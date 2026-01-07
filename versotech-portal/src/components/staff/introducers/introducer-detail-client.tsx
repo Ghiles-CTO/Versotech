@@ -34,6 +34,8 @@ import {
   Users,
   Briefcase,
   ExternalLink,
+  Download,
+  FileDown,
 } from 'lucide-react'
 import {
   DropdownMenu,
@@ -100,14 +102,22 @@ type Commission = {
 type Agreement = {
   id: string
   status: string
+  reference_number: string | null
   default_commission_bps: number | null
   agreement_date: string | null
   effective_date: string | null
   expiry_date: string | null
   special_terms: string | null
   signed_date: string | null
+  pdf_url: string | null
+  deal_id: string | null
+  fee_plan_id: string | null
   created_at: string
   updated_at: string
+  deal?: {
+    id: string
+    name: string
+  } | null
 }
 
 type IntroducerMetrics = {
@@ -194,6 +204,37 @@ export function IntroducerDetailClient({
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false)
   const [createAgreementOpen, setCreateAgreementOpen] = useState(false)
   const [sendingAgreement, setSendingAgreement] = useState<string | null>(null)
+  const [downloadingPdf, setDownloadingPdf] = useState<string | null>(null)
+
+  // Handle PDF download from Supabase storage
+  const handleDownloadPdf = async (pdfUrl: string, referenceNumber: string | null) => {
+    setDownloadingPdf(pdfUrl)
+    try {
+      // Fetch the file directly from our API
+      const response = await fetch(`/api/storage/download?path=${encodeURIComponent(pdfUrl)}&bucket=deal-documents`)
+      if (!response.ok) {
+        throw new Error('Failed to download file')
+      }
+
+      // Convert response to blob and trigger download
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `${referenceNumber || 'agreement'}.pdf`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
+
+      toast.success('PDF downloaded successfully')
+    } catch (error) {
+      console.error('Error downloading PDF:', error)
+      toast.error('Failed to download PDF')
+    } finally {
+      setDownloadingPdf(null)
+    }
+  }
 
   // Fee Plans and Referred Investors state
   const [feePlans, setFeePlans] = useState<IntroducerFeePlan[]>([])
@@ -844,7 +885,10 @@ export function IntroducerDetailClient({
                           <div>
                             <div className="flex items-center gap-2">
                               <span className="font-medium text-foreground">
-                                {formatBps(agreement.default_commission_bps || 0)} Commission
+                                {agreement.reference_number || `Agreement ${agreement.id.slice(0, 8)}`}
+                              </span>
+                              <span className="text-sm text-muted-foreground">
+                                • {formatBps(agreement.default_commission_bps || 0)}
                               </span>
                               {isActive && (
                                 <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-medium">
@@ -852,14 +896,20 @@ export function IntroducerDetailClient({
                                 </span>
                               )}
                             </div>
-                            <div className="text-sm text-muted-foreground mt-0.5">
+                            <div className="text-sm text-muted-foreground mt-0.5 flex items-center gap-2">
+                              {agreement.deal && (
+                                <span className="flex items-center gap-1">
+                                  <Briefcase className="h-3 w-3" />
+                                  {agreement.deal.name}
+                                </span>
+                              )}
                               {agreement.effective_date && (
-                                <>Effective {formatDate(agreement.effective_date)}</>
+                                <span>• {formatDate(agreement.effective_date)}</span>
                               )}
                               {agreement.expiry_date && (
-                                <> • Expires {formatDate(agreement.expiry_date)}</>
+                                <span className="text-muted-foreground/70">→ {formatDate(agreement.expiry_date)}</span>
                               )}
-                              {!agreement.effective_date && !agreement.expiry_date && (
+                              {!agreement.deal && !agreement.effective_date && (
                                 <>Created {formatDate(agreement.created_at)}</>
                               )}
                             </div>
@@ -868,6 +918,27 @@ export function IntroducerDetailClient({
 
                         {/* Right side - Status and actions */}
                         <div className="flex items-center gap-3">
+                          {/* PDF Download Button */}
+                          {agreement.pdf_url && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-8 gap-1.5 text-blue-400 border-blue-500/30 hover:bg-blue-500/10 hover:border-blue-500/50"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleDownloadPdf(agreement.pdf_url!, agreement.reference_number)
+                              }}
+                              disabled={downloadingPdf === agreement.pdf_url}
+                            >
+                              {downloadingPdf === agreement.pdf_url ? (
+                                <div className="animate-spin rounded-full h-3 w-3 border-b border-blue-400" />
+                              ) : (
+                                <FileDown className="h-3.5 w-3.5" />
+                              )}
+                              <span className="hidden sm:inline">PDF</span>
+                            </Button>
+                          )}
+
                           <Badge className={`${statusStyle.bg} ${statusStyle.text} gap-1.5 font-medium`}>
                             {statusStyle.icon}
                             {formatAgreementStatus(agreement.status)}
@@ -893,6 +964,18 @@ export function IntroducerDetailClient({
                                 <Eye className="h-4 w-4 mr-2" />
                                 View Details
                               </DropdownMenuItem>
+                              {agreement.pdf_url && (
+                                <DropdownMenuItem
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    handleDownloadPdf(agreement.pdf_url!, agreement.reference_number)
+                                  }}
+                                  disabled={downloadingPdf === agreement.pdf_url}
+                                >
+                                  <Download className="h-4 w-4 mr-2" />
+                                  {downloadingPdf === agreement.pdf_url ? 'Downloading...' : 'Download PDF'}
+                                </DropdownMenuItem>
+                              )}
                               {isDraft && (
                                 <>
                                   <DropdownMenuItem

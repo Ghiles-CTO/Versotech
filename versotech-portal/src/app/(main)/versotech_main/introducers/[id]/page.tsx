@@ -52,14 +52,22 @@ type Commission = {
 type Agreement = {
   id: string
   status: string
+  reference_number: string | null
   default_commission_bps: number | null
   agreement_date: string | null
   effective_date: string | null
   expiry_date: string | null
   special_terms: string | null
   signed_date: string | null
+  pdf_url: string | null
+  deal_id: string | null
+  fee_plan_id: string | null
   created_at: string
   updated_at: string
+  deal?: {
+    id: string
+    name: string
+  } | null
 }
 
 /**
@@ -227,35 +235,48 @@ export default async function IntroducerDetailPage({
     }
   })
 
-  // Fetch agreements
+  // Fetch agreements with deal info and PDF URL
   const { data: agreementsData } = await serviceClient
     .from('introducer_agreements')
     .select(`
       id,
       status,
+      reference_number,
       default_commission_bps,
       agreement_date,
       effective_date,
       expiry_date,
       special_terms,
       signed_date,
+      pdf_url,
+      deal_id,
+      fee_plan_id,
       created_at,
-      updated_at
+      updated_at,
+      deal:deal_id (
+        id,
+        name
+      )
     `)
     .eq('introducer_id', id)
     .order('created_at', { ascending: false })
 
-  const agreements: Agreement[] = (agreementsData || []).map(a => ({
+  const agreements: Agreement[] = (agreementsData || []).map((a: any) => ({
     id: a.id,
     status: a.status || 'draft',
+    reference_number: a.reference_number,
     default_commission_bps: a.default_commission_bps,
     agreement_date: a.agreement_date,
     effective_date: a.effective_date,
     expiry_date: a.expiry_date,
     special_terms: a.special_terms,
     signed_date: a.signed_date,
+    pdf_url: a.pdf_url,
+    deal_id: a.deal_id,
+    fee_plan_id: a.fee_plan_id,
     created_at: a.created_at,
     updated_at: a.updated_at,
+    deal: a.deal,
   }))
 
   // Calculate metrics
