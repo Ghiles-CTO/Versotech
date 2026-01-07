@@ -29,6 +29,7 @@ type UIInvestor = {
   totalCommitment: number
   totalContributed: number
   vehicleCount: number
+  metricsAvailable: boolean
   lastActivity: string
   relationshipManager: string
   riskRating: string
@@ -147,6 +148,7 @@ export default function InvestorsContent() {
             totalCommitment: 0, // Would need separate RPC call
             totalContributed: 0,
             vehicleCount: 0,
+            metricsAvailable: false, // Metrics fetched separately
             lastActivity: inv.created_at || new Date().toISOString(),
             relationshipManager: rmProfile?.display_name || 'Unassigned',
             riskRating: inv.aml_risk_rating || inferRisk(inv.kyc_status),
@@ -270,7 +272,7 @@ export default function InvestorsContent() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <InvestorsDataTable columns={investorColumns} data={investors} />
+          <InvestorsDataTable columns={investorColumns} data={investors as InvestorRow[]} />
         </CardContent>
       </Card>
 

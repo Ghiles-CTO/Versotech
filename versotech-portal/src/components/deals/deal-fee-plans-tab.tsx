@@ -4,7 +4,8 @@ import { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Plus, DollarSign, Edit, FileText, Users, Building2, Briefcase, CheckCircle, Clock, XCircle, FileSignature, Loader2 } from 'lucide-react'
+import { Plus, DollarSign, Edit, FileText, Users, Building2, Briefcase, CheckCircle, Clock, XCircle, FileSignature, Loader2, FileDown, Eye, Download } from 'lucide-react'
+import { toast } from 'sonner'
 import FeePlanEditModal from '@/components/fees/FeePlanEditModal'
 import { useRouter } from 'next/navigation'
 
@@ -18,6 +19,66 @@ export function DealFeePlansTab({ dealId, feePlans }: DealFeePlansTabProps) {
   const [modalOpen, setModalOpen] = useState(false)
   const [selectedPlan, setSelectedPlan] = useState<any>(null)
   const [generatingAgreement, setGeneratingAgreement] = useState<string | null>(null)
+  const [downloadingPdf, setDownloadingPdf] = useState<string | null>(null)
+
+  // Handle PDF download from Supabase storage
+  const handleDownloadPdf = async (pdfUrl: string, referenceNumber: string | null) => {
+    setDownloadingPdf(pdfUrl)
+    try {
+      const response = await fetch(`/api/storage/download?path=${encodeURIComponent(pdfUrl)}&bucket=deal-documents`)
+      if (!response.ok) {
+        throw new Error('Failed to download file')
+      }
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `${referenceNumber || 'agreement'}.pdf`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
+      toast.success('PDF downloaded successfully')
+    } catch (error) {
+      console.error('Error downloading PDF:', error)
+      toast.error('Failed to download PDF')
+    } finally {
+      setDownloadingPdf(null)
+    }
+  }
+
+  // Handle PDF preview in new tab
+  const handlePreviewPdf = async (pdfUrl: string) => {
+    try {
+      const response = await fetch(`/api/storage/download?path=${encodeURIComponent(pdfUrl)}&bucket=deal-documents`)
+      if (!response.ok) {
+        throw new Error('Failed to load file')
+      }
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      window.open(url, '_blank')
+    } catch (error) {
+      console.error('Error previewing PDF:', error)
+      toast.error('Failed to preview PDF')
+    }
+  }
+
+  // Get PDF URL from agreement (introducer or placement)
+  const getAgreementPdfInfo = (plan: any): { pdfUrl: string | null; referenceNumber: string | null } => {
+    if (plan.introducer_agreement?.pdf_url) {
+      return {
+        pdfUrl: plan.introducer_agreement.pdf_url,
+        referenceNumber: plan.introducer_agreement.reference_number
+      }
+    }
+    if (plan.placement_agreement?.pdf_url) {
+      return {
+        pdfUrl: plan.placement_agreement.pdf_url,
+        referenceNumber: plan.placement_agreement.reference_number
+      }
+    }
+    return { pdfUrl: null, referenceNumber: null }
+  }
 
   const feeKindLabels: Record<string, string> = {
     subscription: 'Subscription Fee',
@@ -353,6 +414,57 @@ export function DealFeePlansTab({ dealId, feePlans }: DealFeePlansTabProps) {
                           </Button>
                         </div>
                       )}
+
+                      {/* Agreement Document Section */}
+                      {(() => {
+                        const { pdfUrl, referenceNumber } = getAgreementPdfInfo(plan)
+                        if (!pdfUrl) return null
+
+                        return (
+                          <div className="mt-4 pt-4 border-t border-white/10">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                <div className="p-2 rounded-lg bg-green-500/10">
+                                  <FileText className="h-5 w-5 text-green-400" />
+                                </div>
+                                <div>
+                                  <p className="text-sm font-medium text-foreground">
+                                    {plan.introducer_id ? 'Introducer Agreement' : 'Placement Agreement'}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {referenceNumber || 'Document ready'}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handlePreviewPdf(pdfUrl)}
+                                  className="text-blue-400 border-blue-400/30 hover:bg-blue-400/10"
+                                >
+                                  <Eye className="h-4 w-4 mr-1" />
+                                  Preview
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleDownloadPdf(pdfUrl, referenceNumber)}
+                                  disabled={downloadingPdf === pdfUrl}
+                                  className="text-green-400 border-green-400/30 hover:bg-green-400/10"
+                                >
+                                  {downloadingPdf === pdfUrl ? (
+                                    <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                                  ) : (
+                                    <Download className="h-4 w-4 mr-1" />
+                                  )}
+                                  Download
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        )
+                      })()}
                     </CardContent>
                   </Card>
                 )

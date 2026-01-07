@@ -167,6 +167,18 @@ export default async function DealDetailPage({ params }: PageParams) {
           legal_name,
           contact_name,
           contact_email
+        ),
+        introducer_agreement:generated_agreement_id (
+          id,
+          reference_number,
+          status,
+          pdf_url
+        ),
+        placement_agreement:generated_placement_agreement_id (
+          id,
+          reference_number,
+          status,
+          pdf_url
         )
       ),
       share_lots (
