@@ -1,8 +1,18 @@
-import { createClient, createServiceClient } from '@/lib/supabase/server'
-import { getAuthenticatedUser, isStaffUser } from '@/lib/api-auth'
 import { NextResponse } from 'next/server'
 import { revalidatePath } from 'next/cache'
+import { z } from 'zod'
+
+import { getAuthenticatedUser, isStaffUser } from '@/lib/api-auth'
 import { getAppUrl } from '@/lib/signature/token'
+import { sendInvitationEmail } from '@/lib/email/resend-service'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
+
+const addInvestorUserSchema = z.object({
+  email: z.string().email().optional(),
+  user_id: z.string().uuid().optional(),
+}).refine((data) => data.email || data.user_id, {
+  message: 'Either user_id or email is required'
+})
 
 /**
  * POST /api/staff/investors/[id]/users
@@ -32,7 +42,15 @@ export async function POST(
     const supabase = createServiceClient()
 
     const body = await request.json()
-    const { email, user_id } = body
+    const validation = addInvestorUserSchema.safeParse(body)
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: validation.error.issues[0].message },
+        { status: 400 }
+      )
+    }
+
+    const { email, user_id } = validation.data
 
     // Check if investor exists
     const { data: investor, error: investorError } = await supabase
@@ -45,8 +63,12 @@ export async function POST(
       return NextResponse.json({ error: 'Investor not found' }, { status: 404 })
     }
 
-    let targetUserId: string
+    let targetUserId: string | null = null
     let isNewInvite = false
+    let emailMessageId: string | undefined
+    let invitationId: string | undefined
+    let acceptUrl: string | undefined
+    let inviteEmail: string | undefined
 
     // If user_id is provided (existing user selected), use it directly
     if (user_id) {
@@ -66,12 +88,14 @@ export async function POST(
       }
 
       targetUserId = user_id
-    } else if (email && email.includes('@')) {
+    } else if (email) {
+      const normalizedEmail = email.trim().toLowerCase()
+      inviteEmail = normalizedEmail
       // Email provided - check if user exists or invite
       const { data: existingUser } = await supabase
         .from('profiles')
         .select('id, email, display_name, role')
-        .eq('email', email.toLowerCase())
+        .eq('email', normalizedEmail)
         .single()
 
       if (existingUser) {
@@ -93,52 +117,115 @@ export async function POST(
         targetUserId = existingUser.id
       } else {
         isNewInvite = true
-        // User doesn't exist - send invite via Supabase Auth
+        // User doesn't exist - create invitation and send via Resend
         try {
-          const { data: inviteData, error: inviteError } = await supabase.auth.admin.inviteUserByEmail(
-            email,
-            {
-              data: {
-                display_name: email.split('@')[0],
-                role: 'investor'
-              },
-              // IMPORTANT: Must redirect to /auth/callback for PKCE code exchange
-              // The callback will then redirect to dashboard based on user role
-              redirectTo: `${getAppUrl()}/auth/callback?portal=investor`
-            }
-          )
+          const inviteeName = normalizedEmail.split('@')[0]
+          const { data: inviterProfile } = await supabase
+            .from('profiles')
+            .select('display_name, email')
+            .eq('id', user.id)
+            .single()
 
-          if (inviteError || !inviteData.user) {
-            console.error('Invite user error:', inviteError)
+          const inviterName = inviterProfile?.display_name || inviterProfile?.email || 'A team member'
+
+          const { data: existingInvitation } = await supabase
+            .from('member_invitations')
+            .select('id, status')
+            .eq('entity_type', 'investor')
+            .eq('entity_id', id)
+            .eq('email', normalizedEmail)
+            .in('status', ['pending', 'pending_approval'])
+            .maybeSingle()
+
+          if (existingInvitation) {
             return NextResponse.json(
-              { error: 'Failed to send invitation email' },
+              { error: 'A pending invitation already exists for this email.' },
+              { status: 409 }
+            )
+          }
+
+          const { data: invitation, error: invitationError } = await supabase
+            .from('member_invitations')
+            .insert({
+              entity_type: 'investor',
+              entity_id: id,
+              entity_name: investor.legal_name || 'Investor',
+              email: normalizedEmail,
+              role: 'member',
+              is_signatory: false,
+              invited_by: user.id,
+              invited_by_name: inviterName,
+              status: 'pending',
+              expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+            })
+            .select()
+            .single()
+
+          if (invitationError || !invitation) {
+            console.error('Invitation creation error:', invitationError)
+            return NextResponse.json(
+              { error: 'Failed to create invitation' },
               { status: 500 }
             )
           }
 
-          targetUserId = inviteData.user.id
+          invitationId = invitation.id
+          acceptUrl = `${getAppUrl()}/invitation/accept?token=${invitation.invitation_token}`
 
-          // Create profile for the invited user (password_set = false until they set a password)
-          await supabase
-            .from('profiles')
-            .insert({
-              id: targetUserId,
-              email: email.toLowerCase(),
-              display_name: email.split('@')[0],
-              role: 'investor',
-              password_set: false
-            })
-            .single()
+          const emailResult = await sendInvitationEmail({
+            email: normalizedEmail,
+            inviteeName: inviteeName,
+            entityName: investor.legal_name || 'Investor',
+            entityType: 'investor',
+            role: 'member',
+            inviterName,
+            acceptUrl: acceptUrl,
+            expiresAt: invitation.expires_at
+          })
+
+          if (!emailResult.success) {
+            console.error('Failed to send invitation email via Resend:', emailResult.error)
+            try {
+              await supabase.from('member_invitations').delete().eq('id', invitation.id)
+            } catch (cleanupError) {
+              console.error('Failed to cleanup invitation after email failure:', cleanupError)
+            }
+            return NextResponse.json(
+              { error: 'Invitation email failed to send. Please verify the email domain and try again.' },
+              { status: 502 }
+            )
+          }
+          emailMessageId = emailResult.messageId
         } catch (inviteErr) {
-          console.error('Supabase invite error:', inviteErr)
+          console.error('Invitation error:', inviteErr)
           return NextResponse.json(
             { error: 'Failed to send invitation. User may already exist in auth system.' },
             { status: 500 }
           )
         }
       }
-    } else {
-      return NextResponse.json({ error: 'Either user_id or email is required' }, { status: 400 })
+    }
+
+    if (isNewInvite) {
+      revalidatePath(`/versotech/staff/investors/${id}`)
+
+      return NextResponse.json(
+        {
+          message: inviteEmail
+            ? `Invitation sent to ${inviteEmail}`
+            : 'Invitation sent',
+          invited: true,
+          email_sent: Boolean(emailMessageId),
+          email_message_id: emailMessageId,
+          invitation_id: invitationId,
+          accept_url: acceptUrl
+        },
+        { status: 201 }
+      )
+    }
+
+    if (!targetUserId) {
+      return NextResponse.json({ error: 'User resolution failed' }, { status: 500 })
     }
 
     // Create the investor_users link
@@ -163,11 +250,11 @@ export async function POST(
 
     return NextResponse.json(
       {
-        message: isNewInvite
-          ? 'Invitation sent and user linked to investor'
-          : 'User linked to investor successfully',
+        message: 'User linked to investor successfully',
         user_id: targetUserId,
-        invited: isNewInvite
+        invited: isNewInvite,
+        email_sent: isNewInvite ? Boolean(emailMessageId) : undefined,
+        email_message_id: emailMessageId
       },
       { status: 201 }
     )

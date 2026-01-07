@@ -2,6 +2,9 @@ import path from 'path'
 import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
+  typescript: {
+    ignoreBuildErrors: process.env.NEXT_IGNORE_TYPECHECK === '1',
+  },
   // Tell Turbopack that the monorepo root is one level up (must be absolute)
   turbopack: {
     root: path.resolve(__dirname, '..'),
