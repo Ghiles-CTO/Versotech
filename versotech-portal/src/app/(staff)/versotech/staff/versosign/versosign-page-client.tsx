@@ -67,9 +67,15 @@ export function VersoSignPageClient({
   const [error, setError] = useState<string | null>(null)
 
   // Extract token from signing URL
+  // Supports both old format (/sign/TOKEN) and new format (?token=TOKEN)
   const extractTokenFromUrl = (url: string): string | null => {
-    const match = url.match(/\/sign\/([^\/\?]+)/)
-    return match ? match[1] : null
+    // Try new format first: ?token=TOKEN or &token=TOKEN
+    const queryMatch = url.match(/[?&]token=([^&]+)/)
+    if (queryMatch) return queryMatch[1]
+
+    // Fall back to old format: /sign/TOKEN
+    const pathMatch = url.match(/\/sign\/([^\/\?]+)/)
+    return pathMatch ? pathMatch[1] : null
   }
 
   const handleSignDocument = async (task: SignatureTask) => {
@@ -558,6 +564,18 @@ Action Required: ${task.instructions?.action_required || 'Send signature link to
                               >
                                 {task.priority}
                               </Badge>
+                              {/* Show signer role if available */}
+                              {task.instructions?.signer_role && (
+                                <Badge variant="secondary" className="text-xs">
+                                  Signing as: {task.instructions.signer_role.toUpperCase()}
+                                </Badge>
+                              )}
+                              {/* Indicate if waiting for prior signature */}
+                              {task.instructions?.requires_prior_signature && (
+                                <Badge variant="outline" className="text-xs text-amber-600 border-amber-300">
+                                  Awaiting prior signature
+                                </Badge>
+                              )}
                             </div>
 
                             {task.description && (

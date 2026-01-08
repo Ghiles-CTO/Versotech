@@ -684,6 +684,30 @@ export async function submitSignature(
       }
     }
 
+    // PROGRESSIVE SIGNING ORDER ENFORCEMENT
+    // party_b cannot sign until party_a has signed
+    if (signatureRequest.signature_position === 'party_b') {
+      console.log('🔍 [SIGNATURE] Checking if party_a has signed first (progressive signing)...')
+
+      // Find the party_a signature request for the same document
+      const { data: partyARequest } = await supabase
+        .from('signature_requests')
+        .select('id, status, signer_name')
+        .eq('document_id', signatureRequest.document_id)
+        .eq('signature_position', 'party_a')
+        .single()
+
+      if (partyARequest && partyARequest.status !== 'signed') {
+        console.log('❌ [SIGNATURE] Progressive signing violation: party_a has not signed yet')
+        return {
+          success: false,
+          error: `Cannot sign yet. ${partyARequest.signer_name} (first signatory) must sign before you.`
+        }
+      }
+
+      console.log('✅ [SIGNATURE] Progressive signing check passed - party_a has signed')
+    }
+
     console.log('✅ [SIGNATURE] Validation passed - token valid and not yet signed')
 
     // PROGRESSIVE SIGNING: Acquire workflow-level lock to prevent race conditions

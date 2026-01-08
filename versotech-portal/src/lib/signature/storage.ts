@@ -60,10 +60,19 @@ export class SignatureStorageManager {
 
   /**
    * Download PDF from storage
+   *
+   * Handles files from both 'signatures' and 'deal-documents' buckets:
+   * - Paths starting with 'subscriptions/' are in 'deal-documents' (certificates)
+   * - All other paths are in 'signatures' bucket
    */
   async downloadPDF(path: string): Promise<Uint8Array> {
+    // Determine bucket based on path pattern
+    const bucket = path.startsWith('subscriptions/')
+      ? 'deal-documents'
+      : SIGNATURE_CONFIG.storage.bucket
+
     const { data, error } = await this.supabase.storage
-      .from(SIGNATURE_CONFIG.storage.bucket)
+      .from(bucket)
       .download(path)
 
     if (error) {
@@ -75,10 +84,20 @@ export class SignatureStorageManager {
 
   /**
    * Get signed URL for PDF
+   *
+   * Handles files from both 'signatures' and 'deal-documents' buckets:
+   * - Paths starting with 'subscriptions/' are in 'deal-documents' (certificates)
+   * - All other paths are in 'signatures' bucket
    */
   async getSignedUrl(path: string, expirySeconds: number = 3600): Promise<string> {
+    // Determine bucket based on path pattern
+    // Certificates are stored in deal-documents bucket under subscriptions/
+    const bucket = path.startsWith('subscriptions/')
+      ? 'deal-documents'
+      : SIGNATURE_CONFIG.storage.bucket
+
     const { data, error } = await this.supabase.storage
-      .from(SIGNATURE_CONFIG.storage.bucket)
+      .from(bucket)
       .createSignedUrl(path, expirySeconds)
 
     if (error) {

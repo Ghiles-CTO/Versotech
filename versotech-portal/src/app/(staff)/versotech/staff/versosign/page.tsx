@@ -10,7 +10,12 @@ export interface SignatureInstructions {
   action_url?: string
   signature_request_id?: string
   document_id?: string
+  document_type?: string
   signer_role?: string
+  signer_name?: string
+  signature_position?: 'party_a' | 'party_b'
+  signing_order?: number
+  requires_prior_signature?: 'party_a' | 'party_b'
   investor_name?: string
   investor_email?: string
   action_required?: string
