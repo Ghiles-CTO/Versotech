@@ -83,7 +83,6 @@ const emptyForm = {
   allocation_up_to: '',
   price_per_share_text: '',
   minimum_ticket: '',
-  maximum_ticket: '',
   subscription_fee_percent: '',
   management_fee_percent: '',
   management_fee_clause: '',
@@ -92,13 +91,7 @@ const emptyForm = {
   legal_counsel: '',
   interest_confirmation_deadline: '',
   validity_date: '',
-  capital_call_timeline: '',
-  completion_date_text: '',
-  in_principle_approval_text: '',
-  subscription_pack_note: '',
-  share_certificates_note: '',
-  subject_to_change_note: '',
-  term_sheet_attachment_key: ''
+  completion_date_text: ''
 }
 
 type FormState = typeof emptyForm
@@ -118,7 +111,6 @@ function mapTermSheetToForm(termSheet?: TermSheet): FormState {
     allocation_up_to: termSheet.allocation_up_to ?? '',
     price_per_share_text: termSheet.price_per_share_text ?? '',
     minimum_ticket: termSheet.minimum_ticket ?? '',
-    maximum_ticket: termSheet.maximum_ticket ?? '',
     subscription_fee_percent: termSheet.subscription_fee_percent ?? '',
     management_fee_percent: termSheet.management_fee_percent ?? '',
     management_fee_clause: termSheet.management_fee_clause ?? '',
@@ -129,13 +121,7 @@ function mapTermSheetToForm(termSheet?: TermSheet): FormState {
       ? termSheet.interest_confirmation_deadline.slice(0, 16)
       : '',
     validity_date: termSheet.validity_date ? termSheet.validity_date.slice(0, 16) : '',
-    capital_call_timeline: termSheet.capital_call_timeline ?? '',
-    completion_date_text: termSheet.completion_date_text ?? '',
-    in_principle_approval_text: termSheet.in_principle_approval_text ?? '',
-    subscription_pack_note: termSheet.subscription_pack_note ?? '',
-    share_certificates_note: termSheet.share_certificates_note ?? '',
-    subject_to_change_note: termSheet.subject_to_change_note ?? '',
-    term_sheet_attachment_key: termSheet.term_sheet_attachment_key ?? ''
+    completion_date_text: termSheet.completion_date_text ?? ''
   }
 }
 
@@ -159,7 +145,6 @@ function buildPayload(values: FormState) {
     allocation_up_to: toNumber(values.allocation_up_to),
     price_per_share_text: values.price_per_share_text || null,
     minimum_ticket: toNumber(values.minimum_ticket),
-    maximum_ticket: toNumber(values.maximum_ticket),
     subscription_fee_percent: toNumber(values.subscription_fee_percent),
     management_fee_percent: toNumber(values.management_fee_percent),
     management_fee_clause: values.management_fee_clause || null,
@@ -168,13 +153,7 @@ function buildPayload(values: FormState) {
     legal_counsel: values.legal_counsel || null,
     interest_confirmation_deadline: values.interest_confirmation_deadline || null,
     validity_date: values.validity_date || null,
-    capital_call_timeline: values.capital_call_timeline || null,
-    completion_date_text: values.completion_date_text || null,
-    in_principle_approval_text: values.in_principle_approval_text || null,
-    subscription_pack_note: values.subscription_pack_note || null,
-    share_certificates_note: values.share_certificates_note || null,
-    subject_to_change_note: values.subject_to_change_note || null,
-    term_sheet_attachment_key: values.term_sheet_attachment_key || null
+    completion_date_text: values.completion_date_text || null
   }
 }
 
@@ -516,6 +495,7 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
                     <CardDescription>
                       Published{' '}
                       {published.published_at ? format(new Date(published.published_at), 'dd MMM yyyy') : '—'}
+                      {published.term_sheet_date && <span className="ml-2">• Dated: {format(new Date(published.term_sheet_date), 'dd MMM yyyy')}</span>}
                       {published.vehicle && <span className="ml-2">• {published.vehicle}</span>}
                     </CardDescription>
                   </div>
@@ -588,6 +568,10 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
                 <div>
                   <span className="text-muted-foreground block text-xs">Transaction Type</span>
                   <span className="text-foreground font-medium">{published.transaction_type || '—'}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground block text-xs">Structure</span>
+                  <span className="text-foreground font-medium">{published.structure || '—'}</span>
                 </div>
                 <div>
                   <span className="text-muted-foreground block text-xs">Issuer</span>
@@ -664,6 +648,9 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
                       ? `${published.management_fee_percent}% p.a.`
                       : '—'}
                   </span>
+                  {published.management_fee_clause && (
+                    <span className="text-muted-foreground block text-xs mt-1 italic">{published.management_fee_clause}</span>
+                  )}
                 </div>
                 <div>
                   <span className="text-muted-foreground block text-xs">Carried Interest</span>
@@ -672,6 +659,9 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
                       ? `${published.carried_interest_percent}%`
                       : '—'}
                   </span>
+                  {published.performance_fee_clause && (
+                    <span className="text-muted-foreground block text-xs mt-1 italic">{published.performance_fee_clause}</span>
+                  )}
                 </div>
                 <div>
                   <span className="text-muted-foreground block text-xs">Legal Counsel</span>
@@ -720,6 +710,42 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
                     className="space-y-2 text-sm text-emerald-50/90 leading-relaxed"
                     dangerouslySetInnerHTML={{ __html: published.term_sheet_html }}
                   />
+                </div>
+              </>
+            )}
+
+            {/* Important Notes Section */}
+            {(published.in_principle_approval_text || published.subscription_pack_note || published.share_certificates_note || published.subject_to_change_note) && (
+              <>
+                <Separator className="bg-emerald-400/20" />
+                <div>
+                  <h4 className="text-xs font-semibold text-emerald-300 uppercase tracking-wide mb-3">Important Notes</h4>
+                  <div className="space-y-3 text-sm">
+                    {published.in_principle_approval_text && (
+                      <div>
+                        <span className="text-muted-foreground block text-xs">In Principle Approval</span>
+                        <span className="text-foreground">{published.in_principle_approval_text}</span>
+                      </div>
+                    )}
+                    {published.subscription_pack_note && (
+                      <div>
+                        <span className="text-muted-foreground block text-xs">Subscription Pack</span>
+                        <span className="text-foreground">{published.subscription_pack_note}</span>
+                      </div>
+                    )}
+                    {published.share_certificates_note && (
+                      <div>
+                        <span className="text-muted-foreground block text-xs">Share Certificates</span>
+                        <span className="text-foreground">{published.share_certificates_note}</span>
+                      </div>
+                    )}
+                    {published.subject_to_change_note && (
+                      <div className="p-2 rounded bg-amber-500/10 border border-amber-500/20">
+                        <span className="text-amber-200 block text-xs font-medium">Subject to Change</span>
+                        <span className="text-amber-100/90">{published.subject_to_change_note}</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </>
             )}
@@ -803,6 +829,7 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
                 </CardTitle>
                 <CardDescription>
                   Created {format(new Date(termSheet.created_at), 'dd MMM yyyy')}
+                  {termSheet.term_sheet_date && ` • Term Sheet Date: ${format(new Date(termSheet.term_sheet_date), 'dd MMM yyyy')}`}
                 </CardDescription>
               </div>
               <Badge className={statusClasses[termSheet.status] ?? statusClasses.draft}>
@@ -828,30 +855,139 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
                   </Button>
                 )}
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div>
-                  <span className="text-muted-foreground block">Transaction Type</span>
-                  <span className="text-foreground font-medium">{termSheet.transaction_type || '—'}</span>
+              {/* Transaction Details */}
+              <div className="space-y-2">
+                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Transaction Details</h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <div>
+                    <span className="text-muted-foreground block text-xs">Transaction Type</span>
+                    <span className="text-foreground font-medium">{termSheet.transaction_type || '—'}</span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground block text-xs">Structure</span>
+                    <span className="text-foreground font-medium">{termSheet.structure || '—'}</span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground block text-xs">Issuer</span>
+                    <span className="text-foreground font-medium">{termSheet.issuer || '—'}</span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground block text-xs">Vehicle</span>
+                    <span className="text-foreground font-medium">{termSheet.vehicle || '—'}</span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground block text-xs">Arranger</span>
+                    <span className="text-foreground font-medium">{termSheet.exclusive_arranger || '—'}</span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground block text-xs">Purchaser</span>
+                    <span className="text-foreground font-medium">{termSheet.purchaser || '—'}</span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground block text-xs">Seller</span>
+                    <span className="text-foreground font-medium">{termSheet.seller || '—'}</span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground block text-xs">Legal Counsel</span>
+                    <span className="text-foreground font-medium">{termSheet.legal_counsel || '—'}</span>
+                  </div>
                 </div>
-                <div>
-                  <span className="text-muted-foreground block">Allocation</span>
-                  <span className="text-foreground font-medium">
-                    {termSheet.allocation_up_to ? termSheet.allocation_up_to.toLocaleString() : '—'}
-                  </span>
+              </div>
+
+              <Separator />
+
+              {/* Investment Terms */}
+              <div className="space-y-2">
+                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Investment Terms</h4>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                  <div>
+                    <span className="text-muted-foreground block text-xs">Allocation</span>
+                    <span className="text-foreground font-medium">
+                      {termSheet.allocation_up_to ? termSheet.allocation_up_to.toLocaleString() : '—'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground block text-xs">Price Per Share</span>
+                    <span className="text-foreground font-medium">{termSheet.price_per_share_text || '—'}</span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground block text-xs">Min Ticket</span>
+                    <span className="text-foreground font-medium">
+                      {termSheet.minimum_ticket ? termSheet.minimum_ticket.toLocaleString() : '—'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground block text-xs">Max Ticket</span>
+                    <span className="text-foreground font-medium">
+                      {termSheet.maximum_ticket ? termSheet.maximum_ticket.toLocaleString() : '—'}
+                    </span>
+                  </div>
                 </div>
-                <div>
-                  <span className="text-muted-foreground block">Subscription Fee</span>
-                  <span className="text-foreground font-medium">
-                    {termSheet.subscription_fee_percent != null
-                      ? `${termSheet.subscription_fee_percent}%`
-                      : '—'}
-                  </span>
+              </div>
+
+              <Separator />
+
+              {/* Fee Structure */}
+              <div className="space-y-2">
+                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Fee Structure</h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <div>
+                    <span className="text-muted-foreground block text-xs">Subscription Fee</span>
+                    <span className="text-foreground font-medium">
+                      {termSheet.subscription_fee_percent != null
+                        ? `${termSheet.subscription_fee_percent}%`
+                        : '—'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground block text-xs">Management Fee</span>
+                    <span className="text-foreground font-medium">
+                      {termSheet.management_fee_percent != null
+                        ? `${termSheet.management_fee_percent}% p.a.`
+                        : '—'}
+                    </span>
+                    {termSheet.management_fee_clause && (
+                      <span className="text-muted-foreground block text-xs italic mt-1">{termSheet.management_fee_clause}</span>
+                    )}
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground block text-xs">Carried Interest</span>
+                    <span className="text-foreground font-medium">
+                      {termSheet.carried_interest_percent != null
+                        ? `${termSheet.carried_interest_percent}%`
+                        : '—'}
+                    </span>
+                    {termSheet.performance_fee_clause && (
+                      <span className="text-muted-foreground block text-xs italic mt-1">{termSheet.performance_fee_clause}</span>
+                    )}
+                  </div>
                 </div>
-                <div>
-                  <span className="text-muted-foreground block">Validity</span>
-                  <span className="text-foreground font-medium">
-                    {termSheet.validity_date ? format(new Date(termSheet.validity_date), 'dd MMM yyyy HH:mm') : '—'}
-                  </span>
+              </div>
+
+              <Separator />
+
+              {/* Timeline */}
+              <div className="space-y-2">
+                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Timeline</h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <div>
+                    <span className="text-muted-foreground block text-xs">Interest Deadline</span>
+                    <span className="text-foreground font-medium">
+                      {termSheet.interest_confirmation_deadline
+                        ? format(new Date(termSheet.interest_confirmation_deadline), 'dd MMM yyyy HH:mm')
+                        : '—'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground block text-xs">Validity</span>
+                    <span className="text-foreground font-medium">
+                      {termSheet.validity_date ? format(new Date(termSheet.validity_date), 'dd MMM yyyy HH:mm') : '—'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground block text-xs">Completion Date</span>
+                    <span className="text-foreground font-medium">{termSheet.completion_date_text || '—'}</span>
+                  </div>
                 </div>
               </div>
 
@@ -1159,7 +1295,7 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
 
             <Separator />
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="price_per_share_text">Price per Share</Label>
                 <Input
@@ -1175,15 +1311,6 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
                   type="number"
                   value={formValues.minimum_ticket}
                   onChange={event => setFormValues(prev => ({ ...prev, minimum_ticket: event.target.value }))}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="maximum_ticket">Maximum Ticket</Label>
-                <Input
-                  id="maximum_ticket"
-                  type="number"
-                  value={formValues.maximum_ticket}
-                  onChange={event => setFormValues(prev => ({ ...prev, maximum_ticket: event.target.value }))}
                 />
               </div>
             </div>
@@ -1224,35 +1351,33 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="management_fee_clause">Management Fee Clause</Label>
-                <Textarea
+                <p className="text-xs text-muted-foreground">
+                  Optional descriptive text (e.g., "Waived instead of 2.00% per annum")
+                </p>
+                <Input
                   id="management_fee_clause"
-                  rows={2}
-                  placeholder="e.g., 2% p.a. of Net Asset Value, payable quarterly in arrears"
+                  placeholder="e.g., Waived (instead of 2.00% per annum)"
                   value={formValues.management_fee_clause}
                   onChange={event => setFormValues(prev => ({ ...prev, management_fee_clause: event.target.value }))}
                 />
-                <p className="text-xs text-muted-foreground">
-                  Full description for term sheet template (replaces % in investor view)
-                </p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="performance_fee_clause">Performance Fee Clause</Label>
-                <Textarea
+                <p className="text-xs text-muted-foreground">
+                  Optional descriptive text (e.g., "Waived instead of 20% no hurdle")
+                </p>
+                <Input
                   id="performance_fee_clause"
-                  rows={2}
-                  placeholder="e.g., 20% of profits above hurdle rate, with high-water mark"
+                  placeholder="e.g., Waived (instead of 20.00% no hurdle rate)"
                   value={formValues.performance_fee_clause}
                   onChange={event => setFormValues(prev => ({ ...prev, performance_fee_clause: event.target.value }))}
                 />
-                <p className="text-xs text-muted-foreground">
-                  Full description for term sheet template (replaces % in investor view)
-                </p>
               </div>
             </div>
 
             <Separator />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="interest_confirmation_deadline">Interest Confirmation Deadline</Label>
                 <Input
@@ -1272,14 +1397,6 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="capital_call_timeline">Capital Call Timeline</Label>
-                <Input
-                  id="capital_call_timeline"
-                  value={formValues.capital_call_timeline}
-                  onChange={event => setFormValues(prev => ({ ...prev, capital_call_timeline: event.target.value }))}
-                />
-              </div>
-              <div className="space-y-2">
                 <Label htmlFor="completion_date_text">Completion Date</Label>
                 <Input
                   id="completion_date_text"
@@ -1287,59 +1404,6 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
                   onChange={event => setFormValues(prev => ({ ...prev, completion_date_text: event.target.value }))}
                 />
               </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="in_principle_approval_text">In Principle Approval</Label>
-                <Textarea
-                  id="in_principle_approval_text"
-                  rows={2}
-                  placeholder="e.g., The Arranger has obtained approval for the offering from the Issuer"
-                  value={formValues.in_principle_approval_text}
-                  onChange={event => setFormValues(prev => ({ ...prev, in_principle_approval_text: event.target.value }))}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="subscription_pack_note">Subscription Pack Note</Label>
-                <Textarea
-                  id="subscription_pack_note"
-                  rows={2}
-                  placeholder="e.g., The Issuer shall issue a Subscription Pack"
-                  value={formValues.subscription_pack_note}
-                  onChange={event => setFormValues(prev => ({ ...prev, subscription_pack_note: event.target.value }))}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="share_certificates_note">Share Certificates Note</Label>
-                <Textarea
-                  id="share_certificates_note"
-                  rows={2}
-                  placeholder="e.g., Issued post-completion"
-                  value={formValues.share_certificates_note}
-                  onChange={event => setFormValues(prev => ({ ...prev, share_certificates_note: event.target.value }))}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="subject_to_change_note">Subject to Change</Label>
-                <Textarea
-                  id="subject_to_change_note"
-                  rows={2}
-                  placeholder="e.g., The content remains indicative, subject to change"
-                  value={formValues.subject_to_change_note}
-                  onChange={event => setFormValues(prev => ({ ...prev, subject_to_change_note: event.target.value }))}
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="term_sheet_attachment_key">Attachment Storage Key</Label>
-              <Input
-                id="term_sheet_attachment_key"
-                placeholder="documents/term-sheets/deal-id/version.pdf"
-                value={formValues.term_sheet_attachment_key}
-                onChange={event => setFormValues(prev => ({ ...prev, term_sheet_attachment_key: event.target.value }))}
-              />
             </div>
           </div>
 
