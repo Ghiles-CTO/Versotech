@@ -75,7 +75,6 @@ interface FeeStructure {
   allocation_up_to: number | null
   price_per_share_text: string | null
   minimum_ticket: number | null
-  maximum_ticket: number | null
   term_sheet_date: string | null
   transaction_type: string | null
   opportunity_summary: string | null
@@ -92,12 +91,7 @@ interface FeeStructure {
   performance_fee_clause: string | null
   legal_counsel: string | null
   interest_confirmation_deadline: string | null
-  capital_call_timeline: string | null
   completion_date_text: string | null
-  in_principle_approval_text: string | null
-  subscription_pack_note: string | null
-  share_certificates_note: string | null
-  subject_to_change_note: string | null
   validity_date: string | null
   term_sheet_attachment_key: string | null
   effective_at?: string | null
@@ -285,10 +279,6 @@ export function DealDetailsModal({ deal, investorId, children }: DealDetailsModa
         value: formatCurrency(termSheet.minimum_ticket, deal.currency)
       },
       {
-        label: 'Maximum Ticket',
-        value: formatCurrency(termSheet.maximum_ticket, deal.currency)
-      },
-      {
         label: 'Subscription Fee',
         value: termSheet.subscription_fee_percent !== null
           ? `${(termSheet.subscription_fee_percent * 100).toFixed(2)}%`
@@ -313,24 +303,7 @@ export function DealDetailsModal({ deal, investorId, children }: DealDetailsModa
         label: 'Interest Confirmation Deadline',
         value: formatDate(termSheet.interest_confirmation_deadline)
       },
-      { label: 'Capital Call Timeline', value: termSheet.capital_call_timeline ?? '—' },
       { label: 'Completion Date', value: termSheet.completion_date_text ?? '—' },
-      {
-        label: 'In-Principle Approval',
-        value: termSheet.in_principle_approval_text ?? '—'
-      },
-      {
-        label: 'Subscription Pack',
-        value: termSheet.subscription_pack_note ?? 'Available on approval'
-      },
-      {
-        label: 'Share Certificates',
-        value: termSheet.share_certificates_note ?? 'Issued post-completion'
-      },
-      {
-        label: 'Subject to Change',
-        value: termSheet.subject_to_change_note ?? 'Terms subject to final approvals'
-      },
       { label: 'Validity', value: formatDate(termSheet.validity_date, 'Valid until notice') }
     ]
   }, [deal.company_name, deal.currency, deal.offer_unit_price, deal.vehicles?.name, termSheet])

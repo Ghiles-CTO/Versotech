@@ -601,7 +601,7 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
             {/* Investment Terms */}
             <div>
               <h4 className="text-xs font-semibold text-emerald-300 uppercase tracking-wide mb-3">Investment Terms</h4>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                 <div>
                   <span className="text-muted-foreground block text-xs">Allocation Up To</span>
                   <span className="text-foreground font-medium">
@@ -616,12 +616,6 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
                   <span className="text-muted-foreground block text-xs">Minimum Ticket</span>
                   <span className="text-foreground font-medium">
                     {published.minimum_ticket ? published.minimum_ticket.toLocaleString() : '—'}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-muted-foreground block text-xs">Maximum Ticket</span>
-                  <span className="text-foreground font-medium">
-                    {published.maximum_ticket ? published.maximum_ticket.toLocaleString() : '—'}
                   </span>
                 </div>
               </div>
@@ -685,10 +679,6 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
                   </span>
                 </div>
                 <div>
-                  <span className="text-muted-foreground block text-xs">Capital Call Timeline</span>
-                  <span className="text-foreground font-medium">{published.capital_call_timeline || '—'}</span>
-                </div>
-                <div>
                   <span className="text-muted-foreground block text-xs">Completion Date</span>
                   <span className="text-foreground font-medium">{published.completion_date_text || '—'}</span>
                 </div>
@@ -710,42 +700,6 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
                     className="space-y-2 text-sm text-emerald-50/90 leading-relaxed"
                     dangerouslySetInnerHTML={{ __html: published.term_sheet_html }}
                   />
-                </div>
-              </>
-            )}
-
-            {/* Important Notes Section */}
-            {(published.in_principle_approval_text || published.subscription_pack_note || published.share_certificates_note || published.subject_to_change_note) && (
-              <>
-                <Separator className="bg-emerald-400/20" />
-                <div>
-                  <h4 className="text-xs font-semibold text-emerald-300 uppercase tracking-wide mb-3">Important Notes</h4>
-                  <div className="space-y-3 text-sm">
-                    {published.in_principle_approval_text && (
-                      <div>
-                        <span className="text-muted-foreground block text-xs">In Principle Approval</span>
-                        <span className="text-foreground">{published.in_principle_approval_text}</span>
-                      </div>
-                    )}
-                    {published.subscription_pack_note && (
-                      <div>
-                        <span className="text-muted-foreground block text-xs">Subscription Pack</span>
-                        <span className="text-foreground">{published.subscription_pack_note}</span>
-                      </div>
-                    )}
-                    {published.share_certificates_note && (
-                      <div>
-                        <span className="text-muted-foreground block text-xs">Share Certificates</span>
-                        <span className="text-foreground">{published.share_certificates_note}</span>
-                      </div>
-                    )}
-                    {published.subject_to_change_note && (
-                      <div className="p-2 rounded bg-amber-500/10 border border-amber-500/20">
-                        <span className="text-amber-200 block text-xs font-medium">Subject to Change</span>
-                        <span className="text-amber-100/90">{published.subject_to_change_note}</span>
-                      </div>
-                    )}
-                  </div>
                 </div>
               </>
             )}
@@ -899,7 +853,7 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
               {/* Investment Terms */}
               <div className="space-y-2">
                 <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Investment Terms</h4>
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   <div>
                     <span className="text-muted-foreground block text-xs">Allocation</span>
                     <span className="text-foreground font-medium">
@@ -914,12 +868,6 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
                     <span className="text-muted-foreground block text-xs">Min Ticket</span>
                     <span className="text-foreground font-medium">
                       {termSheet.minimum_ticket ? termSheet.minimum_ticket.toLocaleString() : '—'}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground block text-xs">Max Ticket</span>
-                    <span className="text-foreground font-medium">
-                      {termSheet.maximum_ticket ? termSheet.maximum_ticket.toLocaleString() : '—'}
                     </span>
                   </div>
                 </div>
