@@ -32,6 +32,7 @@ export type InvestorRow = {
   totalCommitment: number
   totalContributed: number
   vehicleCount: number
+  metricsAvailable: boolean
   relationshipManager: string
   country: string
   riskRating: string
@@ -169,9 +170,19 @@ export const investorColumns: ColumnDef<InvestorRow>[] = [
       </Button>
     ),
     cell: ({ row }) => {
-      const amount = parseFloat(row.getValue('totalCommitment'))
-      const contributed = row.original.totalContributed
-      const percentage = amount > 0 ? Math.round((contributed / amount) * 100) : 0
+      const { metricsAvailable, totalCommitment, totalContributed } = row.original
+
+      if (!metricsAvailable) {
+        return (
+          <div className="text-right text-xs text-muted-foreground">
+            Pending
+          </div>
+        )
+      }
+
+      const percentage = totalCommitment > 0
+        ? Math.round((totalContributed / totalCommitment) * 100)
+        : 0
 
       return (
         <div className="text-right">
@@ -180,7 +191,7 @@ export const investorColumns: ColumnDef<InvestorRow>[] = [
               style: 'currency',
               currency: 'USD',
               minimumFractionDigits: 0,
-            }).format(amount)}
+            }).format(totalCommitment)}
           </div>
           <div className="text-xs text-muted-foreground">
             {percentage}% funded
@@ -206,7 +217,7 @@ export const investorColumns: ColumnDef<InvestorRow>[] = [
     ),
     cell: ({ row }) => (
       <div className="text-center font-medium">
-        {row.getValue('vehicleCount')}
+        {row.original.metricsAvailable ? row.getValue('vehicleCount') : '—'}
       </div>
     ),
   },

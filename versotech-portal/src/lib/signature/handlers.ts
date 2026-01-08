@@ -988,78 +988,181 @@ export async function handleIntroducerAgreementSignature(
 
     console.log('✅ [INTRODUCER AGREEMENT HANDLER] Status updated to pending_introducer_signature')
 
-    // Create signature request for introducer (party_b)
+    // Create signature requests for introducer signatories
     const introducer = agreement.introducer as any
-    if (introducer?.user_id) {
-      // Generate token for introducer's signature
+
+    // Get all introducer users who can sign (multi-signatory support)
+    const { data: introducerSignatories, error: signatoryError } = await supabase
+      .from('introducer_users')
+      .select(`
+        user_id,
+        role,
+        is_primary,
+        can_sign,
+        profiles:user_id (
+          email,
+          display_name
+        )
+      `)
+      .eq('introducer_id', agreement.introducer_id)
+      .eq('can_sign', true)
+      .order('is_primary', { ascending: false }) // Primary signer first
+
+    if (signatoryError) {
+      console.error('❌ [INTRODUCER AGREEMENT HANDLER] Failed to fetch introducer signatories:', signatoryError)
+    }
+
+    // Fall back to legacy user_id if no introducer_users found
+    const signatoriesToNotify = introducerSignatories && introducerSignatories.length > 0
+      ? introducerSignatories.map((s: any) => ({
+          user_id: s.user_id,
+          email: s.profiles?.email || introducer?.email || '',
+          name: s.profiles?.display_name || introducer?.legal_name || '',
+          is_primary: s.is_primary
+        }))
+      : introducer?.user_id
+        ? [{ user_id: introducer.user_id, email: introducer.email || '', name: introducer.legal_name || '', is_primary: true }]
+        : []
+
+    console.log(`📝 [INTRODUCER AGREEMENT HANDLER] Found ${signatoriesToNotify.length} signatory(ies) for introducer`)
+
+    if (signatoriesToNotify.length > 0) {
       const crypto = await import('crypto')
-      const signingToken = crypto.randomBytes(32).toString('hex')
       const expiryDate = new Date()
       expiryDate.setDate(expiryDate.getDate() + 14) // 14 days to sign
 
-      const { data: introducerSignatureRequest, error: sigReqError } = await supabase
-        .from('signature_requests')
-        .insert({
-          document_type: 'introducer_agreement',
-          introducer_agreement_id: agreementId,
-          introducer_id: agreement.introducer_id,
-          investor_id: null, // Not an investor signature
-          signer_user_id: introducer.user_id,
-          signer_email: introducer.email || '',
-          signer_name: introducer.legal_name || '',
-          signer_role: 'introducer',
-          signature_position: 'party_b',
-          status: 'pending',
-          signing_token: signingToken,
-          token_expires_at: expiryDate.toISOString(),
-          unsigned_pdf_path: signedPdfPath, // Signed PDF becomes unsigned for introducer
-        })
-        .select()
-        .single()
+      let firstSignatureRequestId: string | null = null
 
-      if (sigReqError) {
-        console.error('❌ [INTRODUCER AGREEMENT HANDLER] Failed to create introducer signature request:', sigReqError)
-        // CRITICAL: Roll back agreement status since signature request failed
-        const rollbackStatus = isArrangerSigner ? 'pending_arranger_signature' : 'approved'
-        await supabase
-          .from('introducer_agreements')
-          .update({
-            status: rollbackStatus,
-            updated_at: new Date().toISOString()
+      // Create signature request and task for each signatory
+      for (const signatory of signatoriesToNotify) {
+        // Generate unique token for each signatory
+        const signingToken = crypto.randomBytes(32).toString('hex')
+
+        const { data: introducerSignatureRequest, error: sigReqError } = await supabase
+          .from('signature_requests')
+          .insert({
+            document_type: 'introducer_agreement',
+            introducer_agreement_id: agreementId,
+            introducer_id: agreement.introducer_id,
+            investor_id: agreement.introducer_id, // Required field, use introducer_id
+            signer_user_id: signatory.user_id,
+            signer_email: signatory.email,
+            signer_name: signatory.name,
+            signer_role: 'introducer',
+            signature_position: 'party_b',
+            status: 'pending',
+            signing_token: signingToken,
+            token_expires_at: expiryDate.toISOString(),
+            unsigned_pdf_path: signedPdfPath, // CEO-signed PDF becomes unsigned for introducer
           })
-          .eq('id', agreementId)
-        console.log(`⚠️ [INTRODUCER AGREEMENT HANDLER] Rolled back agreement status to ${rollbackStatus} due to signature request failure`)
-        throw new Error(`Failed to create introducer signature request: ${sigReqError.message}`)
-      } else {
-        console.log('✅ [INTRODUCER AGREEMENT HANDLER] Created signature request for introducer:', introducerSignatureRequest.id)
+          .select()
+          .single()
 
-        // Update agreement with introducer signature request ID
-        await supabase
-          .from('introducer_agreements')
-          .update({ introducer_signature_request_id: introducerSignatureRequest.id })
-          .eq('id', agreementId)
+        if (sigReqError) {
+          console.error(`❌ [INTRODUCER AGREEMENT HANDLER] Failed to create signature request for ${signatory.email}:`, sigReqError)
+          continue // Continue with other signatories
+        }
 
-        // Create notification for introducer
+        console.log(`✅ [INTRODUCER AGREEMENT HANDLER] Created signature request for ${signatory.email}:`, introducerSignatureRequest.id)
+
+        // Track first signature request for agreement linking
+        if (!firstSignatureRequestId) {
+          firstSignatureRequestId = introducerSignatureRequest.id
+        }
+
+        // Create task for this signatory in their portal
+        const signingUrl = `/sign/${signingToken}`
+        const { error: taskError } = await supabase.from('tasks').insert({
+          owner_user_id: signatory.user_id,
+          kind: 'introducer_agreement_signature',
+          category: 'compliance',
+          title: `Sign Fee Agreement - ${introducer?.legal_name}`,
+          description: `Review and sign the introducer fee agreement. ${signatoriesToNotify.length > 1 ? `(${signatoriesToNotify.length} signatories required)` : ''}`,
+          status: 'pending',
+          priority: 'high',
+          related_entity_type: 'signature_request',
+          related_entity_id: introducerSignatureRequest.id,
+          related_deal_id: agreement.deal_id,
+          due_at: expiryDate.toISOString(),
+          instructions: {
+            type: 'signature',
+            action_url: signingUrl,
+            signature_request_id: introducerSignatureRequest.id,
+            document_type: 'introducer_agreement',
+            agreement_id: agreementId,
+            introducer_name: introducer?.legal_name,
+          },
+        })
+
+        if (taskError) {
+          console.error(`⚠️ [INTRODUCER AGREEMENT HANDLER] Failed to create task for ${signatory.email}:`, taskError)
+        } else {
+          console.log(`✅ [INTRODUCER AGREEMENT HANDLER] Task created for ${signatory.email}`)
+        }
+
+        // Create notification for this signatory
         const notificationMessage = isArrangerSigner
           ? `Your fee agreement has been signed by ${arrangerEntity?.legal_name || 'the Arranger'} and is ready for your signature.`
-          : 'Your fee agreement has been signed by the CEO and is ready for your signature.'
+          : 'Your fee agreement has been signed by VERSO and is ready for your signature.'
 
         await supabase.from('investor_notifications').insert({
-          user_id: introducer.user_id,
+          user_id: signatory.user_id,
           investor_id: null, // Introducer notification, not investor
-          title: 'Agreement Ready for Signature',
+          title: 'Fee Agreement Ready for Signature',
           message: notificationMessage,
-          link: `/versotech_main/introducer-agreements/${agreementId}`,
+          link: `/versotech_main/versosign`, // Direct to VERSOSign page
         })
 
-        console.log('✅ [INTRODUCER AGREEMENT HANDLER] Notification sent to introducer')
+        console.log(`✅ [INTRODUCER AGREEMENT HANDLER] Notification sent to ${signatory.email}`)
+      }
+
+      // Update agreement with first signature request ID
+      if (firstSignatureRequestId) {
+        await supabase
+          .from('introducer_agreements')
+          .update({ introducer_signature_request_id: firstSignatureRequestId })
+          .eq('id', agreementId)
+        console.log('✅ [INTRODUCER AGREEMENT HANDLER] Agreement updated with introducer signature request ID')
       }
     } else {
-      console.warn('⚠️ [INTRODUCER AGREEMENT HANDLER] Introducer has no user_id - cannot create signature request')
+      console.warn('⚠️ [INTRODUCER AGREEMENT HANDLER] No introducer signatories found - cannot create signature request')
+      // CRITICAL: Roll back agreement status since no signatories available
+      const rollbackStatus = isArrangerSigner ? 'pending_arranger_signature' : 'pending_ceo_signature'
+      await supabase
+        .from('introducer_agreements')
+        .update({
+          status: rollbackStatus,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', agreementId)
+      console.log(`⚠️ [INTRODUCER AGREEMENT HANDLER] Rolled back agreement status to ${rollbackStatus} - no signatories`)
+      throw new Error('No introducer signatories available to sign')
     }
   } else {
-    // Introducer signed (party_b) - agreement is now active
-    console.log('✍️ [INTRODUCER AGREEMENT HANDLER] Introducer (party_b) signed - activating agreement')
+    // Introducer signed (party_b) - check if ALL introducer signatures are complete
+    console.log('✍️ [INTRODUCER AGREEMENT HANDLER] Introducer (party_b) signed')
+
+    // Check if all introducer signatories have signed (multi-signatory support)
+    const { data: allIntroducerRequests, error: reqError } = await supabase
+      .from('signature_requests')
+      .select('id, status, signer_email')
+      .eq('introducer_agreement_id', agreementId)
+      .eq('signer_role', 'introducer')
+      .eq('signature_position', 'party_b')
+
+    const pendingSignatures = allIntroducerRequests?.filter((r: any) => r.status === 'pending') || []
+    const signedSignatures = allIntroducerRequests?.filter((r: any) => r.status === 'signed') || []
+
+    console.log(`📊 [INTRODUCER AGREEMENT HANDLER] Signature status: ${signedSignatures.length} signed, ${pendingSignatures.length} pending`)
+
+    if (pendingSignatures.length > 0) {
+      // Not all signatories have signed yet - don't activate
+      console.log('⏳ [INTRODUCER AGREEMENT HANDLER] Waiting for remaining signatories:', pendingSignatures.map((p: any) => p.signer_email).join(', '))
+      return
+    }
+
+    // All signatories have signed - activate agreement
+    console.log('✅ [INTRODUCER AGREEMENT HANDLER] All signatories have signed - activating agreement')
 
     const { error: updateError } = await supabase
       .from('introducer_agreements')
@@ -1080,6 +1183,47 @@ export async function handleIntroducerAgreementSignature(
     console.log('✅ [INTRODUCER AGREEMENT HANDLER] Agreement activated')
 
     const introducer = agreement.introducer as any
+
+    // Mark linked fee plan as accepted once introducer signs
+    if (agreement.fee_plan_id) {
+      const now = new Date().toISOString()
+      const { data: feePlan } = await supabase
+        .from('fee_plans')
+        .select('id, status')
+        .eq('id', agreement.fee_plan_id)
+        .maybeSingle()
+
+      if (feePlan && feePlan.status !== 'accepted') {
+        const { error: feePlanUpdateError } = await supabase
+          .from('fee_plans')
+          .update({
+            status: 'accepted',
+            accepted_at: now,
+            accepted_by: (agreement.introducer as any)?.user_id || null,
+            updated_at: now
+          })
+          .eq('id', agreement.fee_plan_id)
+
+        if (feePlanUpdateError) {
+          console.error('❌ [INTRODUCER AGREEMENT HANDLER] Failed to accept fee plan:', feePlanUpdateError)
+        } else {
+          await supabase.from('audit_logs').insert({
+            event_type: 'fee_plan',
+            action: 'accepted',
+            entity_type: 'fee_plans',
+            entity_id: agreement.fee_plan_id,
+            actor_id: (agreement.introducer as any)?.user_id || null,
+            action_details: {
+              description: 'Fee plan accepted via introducer agreement signature',
+              introducer_id: agreement.introducer_id,
+              agreement_id: agreementId
+            },
+            timestamp: now
+          })
+          console.log('✅ [INTRODUCER AGREEMENT HANDLER] Fee plan accepted')
+        }
+      }
+    }
 
     // Notify relevant parties based on signing flow
     if (hasArranger && arrangerEntity) {
@@ -1439,6 +1583,168 @@ export async function handleGenericSignature(
 }
 
 /**
+ * Certificate Post-Signature Handler
+ *
+ * Certificate signing workflow:
+ * 1. Lawyer signs first (party_a) - updates signed PDF path for CEO
+ * 2. CEO signs second (party_b) - checks if both signed, then publishes document
+ *
+ * Only after BOTH signatures is the document status changed to 'published'
+ * so the investor can see their certificate.
+ */
+export async function handleCertificateSignature(
+  params: PostSignatureHandlerParams
+): Promise<void> {
+  const { signatureRequest, signedPdfPath, signedPdfBytes, supabase } = params
+
+  console.log('📜 [CERTIFICATE HANDLER] Processing certificate signature:', {
+    signer_role: signatureRequest.signer_role,
+    signature_position: signatureRequest.signature_position,
+    document_id: signatureRequest.document_id,
+    subscription_id: signatureRequest.subscription_id
+  })
+
+  const documentId = signatureRequest.document_id
+  const subscriptionId = signatureRequest.subscription_id
+
+  if (!documentId) {
+    console.error('❌ [CERTIFICATE HANDLER] No document_id in signature request')
+    return
+  }
+
+  if (signatureRequest.signature_position === 'party_a') {
+    // === LAWYER SIGNED (party_a) ===
+    console.log('✅ [CERTIFICATE HANDLER] Lawyer signed certificate')
+
+    // Update the CEO's signature request to use the lawyer-signed PDF
+    const { error: updateError } = await supabase
+      .from('signature_requests')
+      .update({
+        unsigned_pdf_path: signedPdfPath,
+        unsigned_pdf_size: signedPdfBytes.length
+      })
+      .eq('document_id', documentId)
+      .eq('signature_position', 'party_b')
+      .eq('status', 'pending')
+
+    if (updateError) {
+      console.error('❌ [CERTIFICATE HANDLER] Failed to update CEO signature request:', updateError)
+    } else {
+      console.log('✅ [CERTIFICATE HANDLER] Updated CEO signature request with lawyer-signed PDF')
+    }
+
+    // Notify CEO that certificate is ready for their signature
+    const { data: ceoSigRequest } = await supabase
+      .from('signature_requests')
+      .select('signer_email, signer_name')
+      .eq('document_id', documentId)
+      .eq('signature_position', 'party_b')
+      .single()
+
+    if (ceoSigRequest) {
+      const { data: ceoProfile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('email', ceoSigRequest.signer_email)
+        .single()
+
+      if (ceoProfile) {
+        await supabase.from('investor_notifications').insert({
+          user_id: ceoProfile.id,
+          investor_id: null,
+          type: 'certificate_ready_for_signature',
+          title: 'Certificate Ready for Signature',
+          message: 'An equity certificate has been signed by the lawyer and is ready for your signature.',
+          link: '/versotech_main/versosign'
+        })
+        console.log('✅ [CERTIFICATE HANDLER] Notified CEO about pending signature')
+      }
+    }
+
+  } else if (signatureRequest.signature_position === 'party_b') {
+    // === CEO SIGNED (party_b) ===
+    console.log('✅ [CERTIFICATE HANDLER] CEO signed certificate')
+
+    // Check if lawyer has also signed
+    const { data: lawyerSig } = await supabase
+      .from('signature_requests')
+      .select('status')
+      .eq('document_id', documentId)
+      .eq('signature_position', 'party_a')
+      .single()
+
+    if (lawyerSig?.status === 'signed') {
+      // Both signatures complete - PUBLISH the document!
+      console.log('✅ [CERTIFICATE HANDLER] Both signatures complete - publishing certificate')
+
+      // Update document status to 'published' so investor can see it
+      const { error: docUpdateError } = await supabase
+        .from('documents')
+        .update({
+          status: 'published',
+          file_key: signedPdfPath,
+          is_published: true,
+          published_at: new Date().toISOString()
+        })
+        .eq('id', documentId)
+
+      if (docUpdateError) {
+        console.error('❌ [CERTIFICATE HANDLER] Failed to publish document:', docUpdateError)
+      } else {
+        console.log('✅ [CERTIFICATE HANDLER] Certificate published and visible to investor')
+      }
+
+      // Update subscription with final signed certificate path
+      if (subscriptionId) {
+        await supabase
+          .from('subscriptions')
+          .update({ certificate_pdf_path: signedPdfPath })
+          .eq('id', subscriptionId)
+      }
+
+      // Notify investor that their certificate is ready
+      if (signatureRequest.investor_id) {
+        const { data: investorUsers } = await supabase
+          .from('investor_users')
+          .select('user_id')
+          .eq('investor_id', signatureRequest.investor_id)
+
+        if (investorUsers && investorUsers.length > 0) {
+          const notifications = investorUsers.map((iu: { user_id: string }) => ({
+            user_id: iu.user_id,
+            investor_id: signatureRequest.investor_id,
+            type: 'certificate_issued',
+            title: 'Certificate Issued',
+            message: 'Your equity certificate has been signed and is now available in your portfolio.',
+            link: '/versotech_main/portfolio'
+          }))
+
+          await supabase.from('investor_notifications').insert(notifications)
+          console.log(`✅ [CERTIFICATE HANDLER] Notified ${notifications.length} investor user(s)`)
+        }
+      }
+
+      // Create audit log
+      await supabase.from('audit_logs').insert({
+        event_type: 'certificate',
+        action: 'certificate_published',
+        entity_type: 'document',
+        entity_id: documentId,
+        action_details: {
+          subscription_id: subscriptionId,
+          investor_id: signatureRequest.investor_id,
+          signed_by: ['lawyer', 'ceo'],
+          signed_pdf_path: signedPdfPath
+        },
+        timestamp: new Date().toISOString()
+      })
+    } else {
+      console.warn('⚠️ [CERTIFICATE HANDLER] CEO signed but lawyer signature not found/complete')
+    }
+  }
+}
+
+/**
  * Route signature requests to the appropriate handler based on document_type
  */
 export async function routeSignatureHandler(
@@ -1457,6 +1763,8 @@ export async function routeSignatureHandler(
       return handlePlacementAgreementSignature(params)
     case 'amendment':
       return handleAmendmentSignature(params)
+    case 'certificate':
+      return handleCertificateSignature(params)
     case 'other':
       return handleGenericSignature(params)
     default:

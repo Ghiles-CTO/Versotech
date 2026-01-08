@@ -99,6 +99,7 @@ export default async function InvestorDetailPage({
     current_nav: 0,
     vehicle_count: 0
   }
+  let metricsAvailable = false
 
   try {
     const { data: metricsData, error: metricsError } = await supabase
@@ -110,6 +111,7 @@ export default async function InvestorDetailPage({
       console.error('[Investor Detail] Capital metrics error:', metricsError)
     } else if (metricsData && metricsData.length > 0) {
       const metrics = metricsData[0]
+      metricsAvailable = true
       capitalMetrics = {
         total_commitment: Number(metrics.total_commitment) || 0,
         total_contributed: Number(metrics.total_contributed) || 0,
@@ -129,6 +131,7 @@ export default async function InvestorDetailPage({
     <InvestorDetailClient
       investor={investorData}
       capitalMetrics={capitalMetrics}
+      metricsAvailable={metricsAvailable}
     />
   )
 }

@@ -34,7 +34,9 @@ import {
   Globe,
   Percent,
   AlertTriangle,
+  FileDown,
 } from 'lucide-react'
+import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { formatDate } from '@/lib/format'
 import { createClient } from '@/lib/supabase/client'
@@ -54,6 +56,8 @@ type Agreement = {
   exclusivity_level: string | null
   status: string
   created_at: string
+  pdf_url: string | null
+  reference_number: string | null
 }
 
 type IntroducerInfo = {
@@ -153,6 +157,34 @@ export default function IntroducerAgreementsPage() {
   const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
+  const [downloadingPdf, setDownloadingPdf] = useState<string | null>(null)
+
+  // Handle PDF download
+  const handleDownloadPdf = async (e: React.MouseEvent, pdfUrl: string, referenceNumber: string | null) => {
+    e.stopPropagation() // Prevent row click navigation
+    setDownloadingPdf(pdfUrl)
+    try {
+      const response = await fetch(`/api/storage/download?path=${encodeURIComponent(pdfUrl)}&bucket=deal-documents`)
+      if (!response.ok) {
+        throw new Error('Failed to download file')
+      }
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `${referenceNumber || 'Fee_Agreement'}.pdf`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
+      toast.success('PDF downloaded successfully')
+    } catch (error) {
+      console.error('Error downloading PDF:', error)
+      toast.error('Failed to download PDF')
+    } finally {
+      setDownloadingPdf(null)
+    }
+  }
 
   useEffect(() => {
     async function fetchData() {
@@ -246,6 +278,8 @@ export default function IntroducerAgreementsPage() {
         exclusivity_level: agreement.exclusivity_level,
         status: agreement.status || 'draft',
         created_at: agreement.created_at,
+        pdf_url: agreement.pdf_url || null,
+        reference_number: agreement.reference_number || null,
       }))
 
       setAgreements(processed)
@@ -548,6 +582,7 @@ export default function IntroducerAgreementsPage() {
                     <TableHead>Effective</TableHead>
                     <TableHead>Expires</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead className="w-12">PDF</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -632,6 +667,26 @@ export default function IntroducerAgreementsPage() {
                         >
                           {(STATUS_STYLES[agreement.status] || STATUS_STYLES.draft).label}
                         </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {agreement.pdf_url ? (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => handleDownloadPdf(e, agreement.pdf_url!, agreement.reference_number)}
+                            disabled={downloadingPdf === agreement.pdf_url}
+                            className="h-8 w-8 p-0 text-blue-500 hover:text-blue-400 hover:bg-blue-500/10"
+                            title="Download PDF"
+                          >
+                            {downloadingPdf === agreement.pdf_url ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <FileDown className="h-4 w-4" />
+                            )}
+                          </Button>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">—</span>
+                        )}
                       </TableCell>
                     </TableRow>
                   ))}

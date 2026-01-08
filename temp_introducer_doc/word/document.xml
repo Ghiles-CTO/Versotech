@@ -1,0 +1,4380 @@
+<?xml version="1.0" encoding="ascii"?>
+<w:document xmlns:wpc="http://schemas.microsoft.com/office/word/2010/wordprocessingCanvas" xmlns:cx="http://schemas.microsoft.com/office/drawing/2014/chartex" xmlns:cx1="http://schemas.microsoft.com/office/drawing/2015/9/8/chartex" xmlns:cx2="http://schemas.microsoft.com/office/drawing/2015/10/21/chartex" xmlns:cx3="http://schemas.microsoft.com/office/drawing/2016/5/9/chartex" xmlns:cx4="http://schemas.microsoft.com/office/drawing/2016/5/10/chartex" xmlns:cx5="http://schemas.microsoft.com/office/drawing/2016/5/11/chartex" xmlns:cx6="http://schemas.microsoft.com/office/drawing/2016/5/12/chartex" xmlns:cx7="http://schemas.microsoft.com/office/drawing/2016/5/13/chartex" xmlns:cx8="http://schemas.microsoft.com/office/drawing/2016/5/14/chartex" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:aink="http://schemas.microsoft.com/office/drawing/2016/ink" xmlns:am3d="http://schemas.microsoft.com/office/drawing/2017/model3d" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:m="http://schemas.openxmlformats.org/officeDocument/2006/math" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:wp14="http://schemas.microsoft.com/office/word/2010/wordprocessingDrawing" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" xmlns:w10="urn:schemas-microsoft-com:office:word" xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:w14="http://schemas.microsoft.com/office/word/2010/wordml" xmlns:w15="http://schemas.microsoft.com/office/word/2012/wordml" xmlns:w16cex="http://schemas.microsoft.com/office/word/2018/wordml/cex" xmlns:w16cid="http://schemas.microsoft.com/office/word/2016/wordml/cid" xmlns:w16="http://schemas.microsoft.com/office/word/2018/wordml" xmlns:w16se="http://schemas.microsoft.com/office/word/2015/wordml/symex" xmlns:wpg="http://schemas.microsoft.com/office/word/2010/wordprocessingGroup" xmlns:wpi="http://schemas.microsoft.com/office/word/2010/wordprocessingInk" xmlns:wne="http://schemas.microsoft.com/office/word/2006/wordml" xmlns:wps="http://schemas.microsoft.com/office/word/2010/wordprocessingShape" mc:Ignorable="w14 w15 w16se w16cid w16 w16cex wp14">
+  <w:body>
+    <w:p w14:paraId="48F718BA" w14:textId="77777777" w:rsidR="002856B7" w:rsidRPr="000039A9" w:rsidRDefault="00B56BDF" w:rsidP="00B56BDF">
+      <w:pPr>
+        <w:pStyle w:val="Body"/>
+        <w:jc w:val="center"/>
+        <w:rPr>
+          <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+          <w:b/>
+          <w:bCs/>
+          <w:color w:val="0D0D0D"/>
+          <w:u w:color="0D0D0D"/>
+        </w:rPr>
+      </w:pPr>
+      <w:r w:rsidRPr="00182062">
+        <w:rPr>
+          <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+          <w:b/>
+          <w:bCs/>
+          <w:noProof/>
+          <w:color w:val="0D0D0D"/>
+          <w:sz w:val="32"/>
+        </w:rPr>
+        <w:drawing>
+          <wp:inline distT="0" distB="0" distL="0" distR="0" wp14:anchorId="0DFF3657" wp14:editId="12D45551">
+            <wp:extent cx="1767326" cy="552893"/>
+            <wp:effectExtent l="0" t="0" r="0" b="0"/>
+            <wp:docPr id="4" name="Picture 3"/>
+            <wp:cNvGraphicFramePr>
+              <a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" noChangeAspect="1"/>
+            </wp:cNvGraphicFramePr>
+            <a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+              <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">
+                <pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">
+                  <pic:nvPicPr>
+                    <pic:cNvPr id="4" name="Picture 3"/>
+                    <pic:cNvPicPr>
+                      <a:picLocks noChangeAspect="1"/>
+                    </pic:cNvPicPr>
+                  </pic:nvPicPr>
+                  <pic:blipFill rotWithShape="1">
+                    <a:blip r:embed="rId7" cstate="print">
+                      <a:grayscl/>
+                      <a:extLst>
+                        <a:ext uri="{28A0092B-C50C-407E-A947-70E740481C1C}">
+                          <a14:useLocalDpi xmlns:a14="http://schemas.microsoft.com/office/drawing/2010/main" val="0"/>
+                        </a:ext>
+                      </a:extLst>
+                    </a:blip>
+                    <a:srcRect t="22896" b="21448"/>
+                    <a:stretch/>
+                  </pic:blipFill>
+                  <pic:spPr>
+                    <a:xfrm>
+                      <a:off x="0" y="0"/>
+                      <a:ext cx="1779086" cy="556572"/>
+                    </a:xfrm>
+                    <a:prstGeom prst="rect">
+                      <a:avLst/>
+                    </a:prstGeom>
+                  </pic:spPr>
+                </pic:pic>
+              </a:graphicData>
+            </a:graphic>
+          </wp:inline>
+        </w:drawing>
+      </w:r>
+    </w:p>
+    <w:p w14:paraId="4A7C6353" w14:textId="77777777" w:rsidR="002856B7" w:rsidRDefault="002856B7" w:rsidP="00C8460C">
+      <w:pPr>
+        <w:pStyle w:val="Body"/>
+        <w:jc w:val="center"/>
+        <w:rPr>
+          <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+          <w:b/>
+          <w:bCs/>
+          <w:color w:val="0D0D0D"/>
+          <w:u w:color="0D0D0D"/>
+        </w:rPr>
+      </w:pPr>
+    </w:p>
+    <w:p w14:paraId="20FB3322" w14:textId="77777777" w:rsidR="002856B7" w:rsidRDefault="002856B7" w:rsidP="00C8460C">
+      <w:pPr>
+        <w:pStyle w:val="Body"/>
+        <w:rPr>
+          <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+          <w:b/>
+          <w:bCs/>
+          <w:color w:val="0D0D0D"/>
+          <w:u w:color="0D0D0D"/>
+        </w:rPr>
+      </w:pPr>
+    </w:p>
+    <w:p w14:paraId="5FE559DE" w14:textId="050D5839" w:rsidR="002856B7" w:rsidRDefault="002856B7" w:rsidP="00C8460C">
+      <w:pPr>
+        <w:pStyle w:val="Body"/>
+        <w:jc w:val="center"/>
+        <w:rPr>
+          <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+          <w:b/>
+          <w:bCs/>
+          <w:color w:val="0D0D0D"/>
+          <w:sz w:val="32"/>
+        </w:rPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+          <w:b/>
+          <w:bCs/>
+          <w:color w:val="0D0D0D"/>
+          <w:sz w:val="32"/>
+        </w:rPr>
+        <w:t xml:space="preserve">Fee Sharing </w:t>
+      </w:r>
+      <w:r w:rsidRPr="000039A9">
+        <w:rPr>
+          <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+          <w:b/>
+          <w:bCs/>
+          <w:color w:val="0D0D0D"/>
+          <w:sz w:val="32"/>
+        </w:rPr>
+        <w:t xml:space="preserve">&amp; Non-Circumvention Agreement </w:t>
+      </w:r>
+    </w:p>
+    <w:p w14:paraId="6BFE4877" w14:textId="48CAD0A5" w:rsidR="006662A8" w:rsidRDefault="00382C37" w:rsidP="00C8460C">
+      <w:pPr>
+        <w:pStyle w:val="Body"/>
+        <w:jc w:val="center"/>
+        <w:rPr>
+          <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+          <w:b/>
+          <w:bCs/>
+          <w:color w:val="0D0D0D"/>
+          <w:sz w:val="32"/>
+        </w:rPr>
+      </w:pPr>
+      <w:proofErr w:type="spellStart"/>
+      <w:r>
+        <w:rPr>
+          <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+          <w:b/>
+          <w:bCs/>
+          <w:color w:val="0D0D0D"/>
+          <w:sz w:val="32"/>
+        </w:rPr>
+        <w:t>Mr</w:t>
+      </w:r>
+      <w:proofErr w:type="spellEnd"/>
+      <w:r>
+        <w:rPr>
+          <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+          <w:b/>
+          <w:bCs/>
+          <w:color w:val="0D0D0D"/>
+          <w:sz w:val="32"/>
+        </w:rPr>
+        <w:t xml:space="preserve"> XYZ</w:t>
+      </w:r>
+    </w:p>
+    <w:p w14:paraId="491EECE0" w14:textId="77777777" w:rsidR="002856B7" w:rsidRDefault="002856B7" w:rsidP="00811848">
+      <w:pPr>
+        <w:pStyle w:val="Body"/>
+        <w:rPr>
+          <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+          <w:b/>
+          <w:bCs/>
+          <w:color w:val="0D0D0D"/>
+          <w:u w:color="0D0D0D"/>
+        </w:rPr>
+      </w:pPr>
+    </w:p>
+    <w:p w14:paraId="42722E55" w14:textId="77777777" w:rsidR="002856B7" w:rsidRDefault="002856B7" w:rsidP="00C8460C">
+      <w:pPr>
+        <w:pStyle w:val="Body"/>
+        <w:rPr>
+          <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+          <w:b/>
+          <w:bCs/>
+          <w:color w:val="0D0D0D"/>
+          <w:u w:color="0D0D0D"/>
+        </w:rPr>
+      </w:pPr>
+    </w:p>
+    <w:tbl>
+      <w:tblPr>
+        <w:tblStyle w:val="TableGrid"/>
+        <w:tblW w:w="0" w:type="auto"/>
+        <w:tblLook w:val="04A0" w:firstRow="1" w:lastRow="0" w:firstColumn="1" w:lastColumn="0" w:noHBand="0" w:noVBand="1"/>
+      </w:tblPr>
+      <w:tblGrid>
+        <w:gridCol w:w="1539"/>
+        <w:gridCol w:w="7811"/>
+      </w:tblGrid>
+      <w:tr w:rsidR="002856B7" w14:paraId="322B7B2F" w14:textId="77777777" w:rsidTr="00C8460C">
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:w="2065" w:type="dxa"/>
+            <w:shd w:val="clear" w:color="auto" w:fill="F2F2F2" w:themeFill="background1" w:themeFillShade="F2"/>
+          </w:tcPr>
+          <w:p w14:paraId="31684E5E" w14:textId="77777777" w:rsidR="002856B7" w:rsidRPr="000F5502" w:rsidRDefault="002856B7" w:rsidP="00C8460C">
+            <w:pPr>
+              <w:pStyle w:val="Body"/>
+              <w:pBdr>
+                <w:top w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:left w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:bottom w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:right w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:between w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:bar w:val="none" w:sz="0" w:color="auto"/>
+              </w:pBdr>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b/>
+                <w:bCs/>
+                <w:color w:val="0D0D0D"/>
+                <w:sz w:val="20"/>
+                <w:u w:color="0D0D0D"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r w:rsidRPr="000F5502">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b/>
+                <w:bCs/>
+                <w:color w:val="0D0D0D"/>
+                <w:sz w:val="20"/>
+                <w:u w:color="0D0D0D"/>
+              </w:rPr>
+              <w:t>Ref</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:w="7285" w:type="dxa"/>
+            <w:vAlign w:val="center"/>
+          </w:tcPr>
+          <w:p w14:paraId="09933DAD" w14:textId="77777777" w:rsidR="002856B7" w:rsidRPr="000039A9" w:rsidRDefault="002856B7" w:rsidP="00C8460C">
+            <w:pPr>
+              <w:pStyle w:val="Body"/>
+              <w:pBdr>
+                <w:top w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:left w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:bottom w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:right w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:between w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:bar w:val="none" w:sz="0" w:color="auto"/>
+              </w:pBdr>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:bCs/>
+                <w:color w:val="0D0D0D"/>
+                <w:u w:color="0D0D0D"/>
+              </w:rPr>
+            </w:pPr>
+          </w:p>
+          <w:p w14:paraId="70B1BAEF" w14:textId="4943EAAB" w:rsidR="002856B7" w:rsidRPr="000039A9" w:rsidRDefault="002856B7" w:rsidP="00C8460C">
+            <w:pPr>
+              <w:pStyle w:val="Body"/>
+              <w:pBdr>
+                <w:top w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:left w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:bottom w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:right w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:between w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:bar w:val="none" w:sz="0" w:color="auto"/>
+              </w:pBdr>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:bCs/>
+                <w:color w:val="0D0D0D"/>
+                <w:u w:color="0D0D0D"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:bCs/>
+                <w:color w:val="0D0D0D"/>
+                <w:u w:color="0D0D0D"/>
+              </w:rPr>
+              <w:t>20</w:t>
+            </w:r>
+            <w:r w:rsidR="00275200">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:bCs/>
+                <w:color w:val="0D0D0D"/>
+                <w:u w:color="0D0D0D"/>
+              </w:rPr>
+              <w:t>2</w:t>
+            </w:r>
+            <w:r w:rsidR="00C207F6">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:bCs/>
+                <w:color w:val="0D0D0D"/>
+                <w:u w:color="0D0D0D"/>
+              </w:rPr>
+              <w:t>10</w:t>
+            </w:r>
+            <w:r w:rsidR="00CD1960">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:bCs/>
+                <w:color w:val="0D0D0D"/>
+                <w:u w:color="0D0D0D"/>
+              </w:rPr>
+              <w:t>30</w:t>
+            </w:r>
+            <w:r w:rsidR="0061236F">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:bCs/>
+                <w:color w:val="0D0D0D"/>
+                <w:u w:color="0D0D0D"/>
+              </w:rPr>
+              <w:t>3</w:t>
+            </w:r>
+            <w:r w:rsidR="00C207F6">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:bCs/>
+                <w:color w:val="0D0D0D"/>
+                <w:u w:color="0D0D0D"/>
+              </w:rPr>
+              <w:t>001</w:t>
+            </w:r>
+          </w:p>
+          <w:p w14:paraId="6D5D5FA7" w14:textId="77777777" w:rsidR="002856B7" w:rsidRPr="000039A9" w:rsidRDefault="002856B7" w:rsidP="00C8460C">
+            <w:pPr>
+              <w:pStyle w:val="Body"/>
+              <w:pBdr>
+                <w:top w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:left w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:bottom w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:right w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:between w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:bar w:val="none" w:sz="0" w:color="auto"/>
+              </w:pBdr>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:bCs/>
+                <w:color w:val="0D0D0D"/>
+                <w:u w:color="0D0D0D"/>
+              </w:rPr>
+            </w:pPr>
+          </w:p>
+        </w:tc>
+      </w:tr>
+      <w:tr w:rsidR="002856B7" w14:paraId="35D1FA29" w14:textId="77777777" w:rsidTr="00C8460C">
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:w="2065" w:type="dxa"/>
+            <w:shd w:val="clear" w:color="auto" w:fill="F2F2F2" w:themeFill="background1" w:themeFillShade="F2"/>
+          </w:tcPr>
+          <w:p w14:paraId="49219B1B" w14:textId="77777777" w:rsidR="002856B7" w:rsidRPr="000F5502" w:rsidRDefault="002856B7" w:rsidP="00C8460C">
+            <w:pPr>
+              <w:pStyle w:val="Body"/>
+              <w:pBdr>
+                <w:top w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:left w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:bottom w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:right w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:between w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:bar w:val="none" w:sz="0" w:color="auto"/>
+              </w:pBdr>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b/>
+                <w:bCs/>
+                <w:color w:val="0D0D0D"/>
+                <w:sz w:val="20"/>
+                <w:u w:color="0D0D0D"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r w:rsidRPr="000F5502">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b/>
+                <w:bCs/>
+                <w:color w:val="0D0D0D"/>
+                <w:sz w:val="20"/>
+                <w:u w:color="0D0D0D"/>
+              </w:rPr>
+              <w:t>Date</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:w="7285" w:type="dxa"/>
+            <w:vAlign w:val="center"/>
+          </w:tcPr>
+          <w:p w14:paraId="29483D44" w14:textId="77777777" w:rsidR="002856B7" w:rsidRPr="000039A9" w:rsidRDefault="002856B7" w:rsidP="00C8460C">
+            <w:pPr>
+              <w:pStyle w:val="Body"/>
+              <w:pBdr>
+                <w:top w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:left w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:bottom w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:right w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:between w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:bar w:val="none" w:sz="0" w:color="auto"/>
+              </w:pBdr>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:bCs/>
+                <w:color w:val="0D0D0D"/>
+                <w:u w:color="0D0D0D"/>
+              </w:rPr>
+            </w:pPr>
+          </w:p>
+          <w:p w14:paraId="5363271A" w14:textId="2D547DFF" w:rsidR="002856B7" w:rsidRPr="000039A9" w:rsidRDefault="00CD1960" w:rsidP="00C8460C">
+            <w:pPr>
+              <w:pStyle w:val="Body"/>
+              <w:pBdr>
+                <w:top w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:left w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:bottom w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:right w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:between w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:bar w:val="none" w:sz="0" w:color="auto"/>
+              </w:pBdr>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:bCs/>
+                <w:color w:val="0D0D0D"/>
+                <w:u w:color="0D0D0D"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:bCs/>
+                <w:color w:val="0D0D0D"/>
+                <w:u w:color="0D0D0D"/>
+              </w:rPr>
+              <w:t xml:space="preserve">March </w:t>
+            </w:r>
+            <w:r w:rsidR="0061236F">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:bCs/>
+                <w:color w:val="0D0D0D"/>
+                <w:u w:color="0D0D0D"/>
+              </w:rPr>
+              <w:t>3</w:t>
+            </w:r>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:bCs/>
+                <w:color w:val="0D0D0D"/>
+                <w:u w:color="0D0D0D"/>
+              </w:rPr>
+              <w:t>, 2021</w:t>
+            </w:r>
+          </w:p>
+          <w:p w14:paraId="1DE002A3" w14:textId="77777777" w:rsidR="002856B7" w:rsidRPr="000039A9" w:rsidRDefault="002856B7" w:rsidP="00C8460C">
+            <w:pPr>
+              <w:pStyle w:val="Body"/>
+              <w:pBdr>
+                <w:top w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:left w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:bottom w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:right w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:between w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:bar w:val="none" w:sz="0" w:color="auto"/>
+              </w:pBdr>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:bCs/>
+                <w:color w:val="0D0D0D"/>
+                <w:u w:color="0D0D0D"/>
+              </w:rPr>
+            </w:pPr>
+          </w:p>
+        </w:tc>
+      </w:tr>
+      <w:tr w:rsidR="002856B7" w14:paraId="295B617C" w14:textId="77777777" w:rsidTr="00C8460C">
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:w="2065" w:type="dxa"/>
+            <w:shd w:val="clear" w:color="auto" w:fill="F2F2F2" w:themeFill="background1" w:themeFillShade="F2"/>
+          </w:tcPr>
+          <w:p w14:paraId="5376D3A8" w14:textId="77777777" w:rsidR="002856B7" w:rsidRPr="000F5502" w:rsidRDefault="002856B7" w:rsidP="00C8460C">
+            <w:pPr>
+              <w:pStyle w:val="Body"/>
+              <w:pBdr>
+                <w:top w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:left w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:bottom w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:right w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:between w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:bar w:val="none" w:sz="0" w:color="auto"/>
+              </w:pBdr>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b/>
+                <w:bCs/>
+                <w:color w:val="0D0D0D"/>
+                <w:sz w:val="20"/>
+                <w:u w:color="0D0D0D"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r w:rsidRPr="000F5502">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b/>
+                <w:bCs/>
+                <w:color w:val="0D0D0D"/>
+                <w:sz w:val="20"/>
+                <w:u w:color="0D0D0D"/>
+              </w:rPr>
+              <w:t>Introduction</w:t>
+            </w:r>
+          </w:p>
+          <w:p w14:paraId="10A2A8EE" w14:textId="77777777" w:rsidR="002856B7" w:rsidRPr="000F5502" w:rsidRDefault="002856B7" w:rsidP="00C8460C">
+            <w:pPr>
+              <w:pStyle w:val="Body"/>
+              <w:pBdr>
+                <w:top w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:left w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:bottom w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:right w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:between w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:bar w:val="none" w:sz="0" w:color="auto"/>
+              </w:pBdr>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b/>
+                <w:bCs/>
+                <w:color w:val="0D0D0D"/>
+                <w:sz w:val="20"/>
+                <w:u w:color="0D0D0D"/>
+              </w:rPr>
+            </w:pPr>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:w="7285" w:type="dxa"/>
+            <w:vAlign w:val="center"/>
+          </w:tcPr>
+          <w:p w14:paraId="4B375E38" w14:textId="77777777" w:rsidR="002856B7" w:rsidRDefault="002856B7" w:rsidP="00C8460C">
+            <w:pPr>
+              <w:widowControl w:val="0"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:color w:val="0D0D0D"/>
+                <w:u w:color="0D0D0D"/>
+              </w:rPr>
+            </w:pPr>
+          </w:p>
+          <w:p w14:paraId="2626672F" w14:textId="76598F3A" w:rsidR="002856B7" w:rsidRDefault="002856B7" w:rsidP="00C8460C">
+            <w:pPr>
+              <w:widowControl w:val="0"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r w:rsidRPr="000039A9">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:color w:val="0D0D0D"/>
+                <w:u w:color="0D0D0D"/>
+              </w:rPr>
+              <w:t>Th</w:t>
+            </w:r>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:color w:val="0D0D0D"/>
+                <w:u w:color="0D0D0D"/>
+              </w:rPr>
+              <w:t xml:space="preserve">e present fee </w:t>
+            </w:r>
+            <w:r w:rsidRPr="000039A9">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t>agreement is made between</w:t>
+            </w:r>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> the parties</w:t>
+            </w:r>
+            <w:r w:rsidR="00AE5694">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> (&#8220;Parties&#8221;)</w:t>
+            </w:r>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> below</w:t>
+            </w:r>
+            <w:r w:rsidR="00541BB3">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> in relation to</w:t>
+            </w:r>
+            <w:r w:rsidR="00275200">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> any equity financing in</w:t>
+            </w:r>
+            <w:r w:rsidR="00541BB3">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r w:rsidR="00275200" w:rsidRPr="00275200">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b/>
+                <w:bCs/>
+              </w:rPr>
+              <w:t>EAT</w:t>
+            </w:r>
+            <w:r w:rsidR="00275200">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r w:rsidR="00541BB3" w:rsidRPr="00AE5694">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b/>
+                <w:bCs/>
+              </w:rPr>
+              <w:t xml:space="preserve">JUST Inc </w:t>
+            </w:r>
+            <w:r w:rsidR="00275200" w:rsidRPr="00275200">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t>(the &#8220;Company&#8221;)</w:t>
+            </w:r>
+            <w:r w:rsidR="00275200">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b/>
+                <w:bCs/>
+              </w:rPr>
+              <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r w:rsidR="00275200" w:rsidRPr="00275200">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t>including but not limited to Secondaries Placements</w:t>
+            </w:r>
+            <w:r w:rsidR="00275200">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t>, within a V</w:t>
+            </w:r>
+            <w:r w:rsidR="009A60C5">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t xml:space="preserve">ERSO Capital&#8217;s </w:t>
+            </w:r>
+            <w:r w:rsidR="00275200">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t xml:space="preserve">controlled entity </w:t>
+            </w:r>
+            <w:r w:rsidR="009A60C5">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t xml:space="preserve">(including VERSO Capital, VERSO Fund, and VERSO Disruptive Founders) </w:t>
+            </w:r>
+            <w:r w:rsidR="00275200">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t>or in the market with V</w:t>
+            </w:r>
+            <w:r w:rsidR="00C207F6">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t>ERSO</w:t>
+            </w:r>
+            <w:r w:rsidR="00275200">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t>&#8217;s Clients</w:t>
+            </w:r>
+            <w:r w:rsidR="00541BB3">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> (</w:t>
+            </w:r>
+            <w:r w:rsidR="00275200">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t xml:space="preserve">the </w:t>
+            </w:r>
+            <w:r w:rsidR="00541BB3">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t>&#8220;Project&#8221;)</w:t>
+            </w:r>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t>:</w:t>
+            </w:r>
+            <w:r w:rsidRPr="000039A9">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> </w:t>
+            </w:r>
+          </w:p>
+          <w:p w14:paraId="376BAFA9" w14:textId="77777777" w:rsidR="00275200" w:rsidRDefault="00275200" w:rsidP="00C8460C">
+            <w:pPr>
+              <w:widowControl w:val="0"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b/>
+              </w:rPr>
+            </w:pPr>
+          </w:p>
+          <w:p w14:paraId="07017468" w14:textId="217B1400" w:rsidR="002856B7" w:rsidRDefault="00CD1960" w:rsidP="00CD624E">
+            <w:pPr>
+              <w:widowControl w:val="0"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b/>
+              </w:rPr>
+              <w:t>VERSO</w:t>
+            </w:r>
+            <w:r w:rsidR="002856B7">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b/>
+              </w:rPr>
+              <w:t xml:space="preserve"> Management </w:t>
+            </w:r>
+            <w:r w:rsidR="00C207F6">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b/>
+              </w:rPr>
+              <w:t>Limited</w:t>
+            </w:r>
+            <w:r w:rsidR="002856B7">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b/>
+              </w:rPr>
+              <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r w:rsidR="002856B7">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:bCs/>
+              </w:rPr>
+              <w:t>(&#8220;</w:t>
+            </w:r>
+            <w:r w:rsidR="00C207F6">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:bCs/>
+              </w:rPr>
+              <w:t>VERSO</w:t>
+            </w:r>
+            <w:r w:rsidR="002856B7">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:bCs/>
+              </w:rPr>
+              <w:t>&#8221;</w:t>
+            </w:r>
+            <w:r w:rsidR="00173E7A">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:bCs/>
+              </w:rPr>
+              <w:t xml:space="preserve"> or </w:t>
+            </w:r>
+            <w:r w:rsidR="00B43AE1">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:bCs/>
+              </w:rPr>
+              <w:t>&#8220;Advisor&#8221;</w:t>
+            </w:r>
+            <w:r w:rsidR="002856B7">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:bCs/>
+              </w:rPr>
+              <w:t>)</w:t>
+            </w:r>
+            <w:r w:rsidR="002856B7">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t xml:space="preserve">, </w:t>
+            </w:r>
+            <w:r w:rsidR="002856B7" w:rsidRPr="000039A9">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t>a</w:t>
+            </w:r>
+            <w:r w:rsidR="002856B7">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r w:rsidR="00C207F6">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t xml:space="preserve">registered, regulated asset management </w:t>
+            </w:r>
+            <w:r w:rsidR="002856B7">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t xml:space="preserve">company registered </w:t>
+            </w:r>
+            <w:r w:rsidR="002856B7" w:rsidRPr="000039A9">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t xml:space="preserve">under the laws of </w:t>
+            </w:r>
+            <w:r w:rsidR="002856B7">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t xml:space="preserve">the </w:t>
+            </w:r>
+            <w:r w:rsidR="00C207F6">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t>British Virgin Islands</w:t>
+            </w:r>
+            <w:r w:rsidR="002856B7" w:rsidRPr="000039A9">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> with registered office </w:t>
+            </w:r>
+            <w:r w:rsidR="002856B7">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t xml:space="preserve">at </w:t>
+            </w:r>
+            <w:r w:rsidR="00C207F6">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t xml:space="preserve">Maduro Building, c/o </w:t>
+            </w:r>
+            <w:proofErr w:type="spellStart"/>
+            <w:r w:rsidR="00C207F6">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t>Hauteville</w:t>
+            </w:r>
+            <w:proofErr w:type="spellEnd"/>
+            <w:r w:rsidR="00C207F6">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> Trust (BVI) Ltd, Main Road, Tortola VC1110 British Virgin Islands</w:t>
+            </w:r>
+            <w:r w:rsidR="002856B7" w:rsidRPr="000039A9">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t xml:space="preserve">, </w:t>
+            </w:r>
+            <w:r w:rsidR="00C207F6">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t xml:space="preserve">holder of the Category II license under the auspices of the Financial Services Commission, </w:t>
+            </w:r>
+            <w:r w:rsidR="00CD624E">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t xml:space="preserve">represented by </w:t>
+            </w:r>
+            <w:proofErr w:type="spellStart"/>
+            <w:r w:rsidR="00CD624E">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t>Mr</w:t>
+            </w:r>
+            <w:proofErr w:type="spellEnd"/>
+            <w:r w:rsidR="00CD624E">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> Julien MACHOT,</w:t>
+            </w:r>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> its Managing Partner,</w:t>
+            </w:r>
+          </w:p>
+          <w:p w14:paraId="5DDB70A1" w14:textId="77777777" w:rsidR="002856B7" w:rsidRDefault="002856B7" w:rsidP="00CD624E">
+            <w:pPr>
+              <w:widowControl w:val="0"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+            </w:pPr>
+          </w:p>
+          <w:p w14:paraId="467CA8D4" w14:textId="77777777" w:rsidR="002856B7" w:rsidRDefault="002856B7" w:rsidP="00CD624E">
+            <w:pPr>
+              <w:widowControl w:val="0"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r w:rsidRPr="000039A9">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t xml:space="preserve">and </w:t>
+            </w:r>
+          </w:p>
+          <w:p w14:paraId="3F870F02" w14:textId="77777777" w:rsidR="00A8188C" w:rsidRDefault="00A8188C" w:rsidP="00CD624E">
+            <w:pPr>
+              <w:widowControl w:val="0"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+            </w:pPr>
+          </w:p>
+          <w:p w14:paraId="3B579479" w14:textId="2A34DC56" w:rsidR="00A8188C" w:rsidRDefault="00382C37" w:rsidP="00CD624E">
+            <w:pPr>
+              <w:shd w:val="clear" w:color="auto" w:fill="FFFFFF"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+            </w:pPr>
+            <w:proofErr w:type="spellStart"/>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b/>
+              </w:rPr>
+              <w:t>Mr</w:t>
+            </w:r>
+            <w:proofErr w:type="spellEnd"/>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b/>
+              </w:rPr>
+              <w:t xml:space="preserve"> XYZ</w:t>
+            </w:r>
+            <w:r w:rsidR="00A8188C">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> (&#8220;Introducer&#8221;), </w:t>
+            </w:r>
+            <w:r w:rsidR="00CD1960">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t xml:space="preserve">with registered office address at </w:t>
+            </w:r>
+            <w:r w:rsidR="00B37275" w:rsidRPr="00B37275">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t xml:space="preserve">112 Route du </w:t>
+            </w:r>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t>XXXX</w:t>
+            </w:r>
+            <w:r w:rsidR="00B37275" w:rsidRPr="00B37275">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t>, 121</w:t>
+            </w:r>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t>39</w:t>
+            </w:r>
+            <w:r w:rsidR="00B37275" w:rsidRPr="00B37275">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t>2 Grand</w:t>
+            </w:r>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> City</w:t>
+            </w:r>
+            <w:r w:rsidR="00CD1960">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r w:rsidR="00A8188C">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t>as Introducer having presented Investors participating to the said Project</w:t>
+            </w:r>
+            <w:r w:rsidR="00C35FD0">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t>.</w:t>
+            </w:r>
+          </w:p>
+          <w:p w14:paraId="2983337F" w14:textId="393EB18C" w:rsidR="00275200" w:rsidRDefault="00275200" w:rsidP="00541BB3">
+            <w:pPr>
+              <w:widowControl w:val="0"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b/>
+                <w:bCs/>
+                <w:color w:val="0D0D0D"/>
+                <w:u w:color="0D0D0D"/>
+              </w:rPr>
+            </w:pPr>
+          </w:p>
+        </w:tc>
+      </w:tr>
+      <w:tr w:rsidR="001325CD" w14:paraId="78C0BD7A" w14:textId="77777777" w:rsidTr="00C8460C">
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:w="2065" w:type="dxa"/>
+            <w:shd w:val="clear" w:color="auto" w:fill="F2F2F2" w:themeFill="background1" w:themeFillShade="F2"/>
+          </w:tcPr>
+          <w:p w14:paraId="5BA1C2C9" w14:textId="093FC081" w:rsidR="001325CD" w:rsidRPr="000F5502" w:rsidRDefault="001325CD" w:rsidP="001325CD">
+            <w:pPr>
+              <w:pStyle w:val="Body"/>
+              <w:pBdr>
+                <w:top w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:left w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:bottom w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:right w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:between w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:bar w:val="none" w:sz="0" w:color="auto"/>
+              </w:pBdr>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b/>
+                <w:bCs/>
+                <w:color w:val="0D0D0D"/>
+                <w:sz w:val="20"/>
+                <w:u w:color="0D0D0D"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r w:rsidRPr="000F5502">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b/>
+                <w:bCs/>
+                <w:color w:val="0D0D0D"/>
+                <w:sz w:val="20"/>
+                <w:u w:color="0D0D0D"/>
+              </w:rPr>
+              <w:t>Non- Circumvention</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:w="7285" w:type="dxa"/>
+            <w:vAlign w:val="center"/>
+          </w:tcPr>
+          <w:p w14:paraId="6DC8B9E0" w14:textId="77777777" w:rsidR="001325CD" w:rsidRDefault="001325CD" w:rsidP="001325CD">
+            <w:pPr>
+              <w:pStyle w:val="Body"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+            </w:pPr>
+          </w:p>
+          <w:p w14:paraId="488FBC3D" w14:textId="4300CBB9" w:rsidR="001325CD" w:rsidRDefault="001325CD" w:rsidP="001325CD">
+            <w:pPr>
+              <w:pStyle w:val="Body"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r w:rsidRPr="000039A9">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t>For a</w:t>
+            </w:r>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t>n indefinite</w:t>
+            </w:r>
+            <w:r w:rsidRPr="000039A9">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> period of </w:t>
+            </w:r>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t xml:space="preserve">time, the Introducer </w:t>
+            </w:r>
+            <w:r w:rsidRPr="000039A9">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t>undertake</w:t>
+            </w:r>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t>s</w:t>
+            </w:r>
+            <w:r w:rsidRPr="000039A9">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> not to circumvent </w:t>
+            </w:r>
+            <w:r w:rsidR="00C207F6">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t>VERSO</w:t>
+            </w:r>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> on the Project herein presented b</w:t>
+            </w:r>
+            <w:r w:rsidRPr="000039A9">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t xml:space="preserve">y entering into </w:t>
+            </w:r>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t>any transactions related to the same Project.</w:t>
+            </w:r>
+          </w:p>
+          <w:p w14:paraId="4D353F5C" w14:textId="77777777" w:rsidR="001325CD" w:rsidRDefault="001325CD" w:rsidP="001325CD">
+            <w:pPr>
+              <w:pStyle w:val="Body"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+            </w:pPr>
+          </w:p>
+          <w:p w14:paraId="0ECC860A" w14:textId="77777777" w:rsidR="001325CD" w:rsidRPr="007215F0" w:rsidRDefault="001325CD" w:rsidP="001325CD">
+            <w:pPr>
+              <w:pStyle w:val="Body"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t>The parties u</w:t>
+            </w:r>
+            <w:r w:rsidRPr="000039A9">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t>ndertake not to make use of a third party to circumvent this clause</w:t>
+            </w:r>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> regarding the Project.</w:t>
+            </w:r>
+            <w:r w:rsidRPr="000039A9">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> </w:t>
+            </w:r>
+          </w:p>
+          <w:p w14:paraId="67BA7FAB" w14:textId="77777777" w:rsidR="001325CD" w:rsidRDefault="001325CD" w:rsidP="001325CD">
+            <w:pPr>
+              <w:widowControl w:val="0"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:color w:val="0D0D0D"/>
+                <w:u w:color="0D0D0D"/>
+              </w:rPr>
+            </w:pPr>
+          </w:p>
+        </w:tc>
+      </w:tr>
+      <w:tr w:rsidR="002856B7" w14:paraId="519B215C" w14:textId="77777777" w:rsidTr="00C8460C">
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:w="2065" w:type="dxa"/>
+            <w:shd w:val="clear" w:color="auto" w:fill="F2F2F2" w:themeFill="background1" w:themeFillShade="F2"/>
+          </w:tcPr>
+          <w:p w14:paraId="31B79D6D" w14:textId="77777777" w:rsidR="002856B7" w:rsidRPr="000F5502" w:rsidRDefault="002856B7" w:rsidP="00C8460C">
+            <w:pPr>
+              <w:pStyle w:val="Body"/>
+              <w:pBdr>
+                <w:top w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:left w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:bottom w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:right w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:between w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:bar w:val="none" w:sz="0" w:color="auto"/>
+              </w:pBdr>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b/>
+                <w:bCs/>
+                <w:color w:val="0D0D0D"/>
+                <w:sz w:val="20"/>
+                <w:u w:color="0D0D0D"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r w:rsidRPr="000F5502">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b/>
+                <w:bCs/>
+                <w:color w:val="0D0D0D"/>
+                <w:sz w:val="20"/>
+                <w:u w:color="0D0D0D"/>
+              </w:rPr>
+              <w:lastRenderedPageBreak/>
+              <w:t>Scope of Services</w:t>
+            </w:r>
+          </w:p>
+          <w:p w14:paraId="6C1F2E18" w14:textId="77777777" w:rsidR="002856B7" w:rsidRPr="000F5502" w:rsidRDefault="002856B7" w:rsidP="00C8460C">
+            <w:pPr>
+              <w:pStyle w:val="Body"/>
+              <w:pBdr>
+                <w:top w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:left w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:bottom w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:right w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:between w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:bar w:val="none" w:sz="0" w:color="auto"/>
+              </w:pBdr>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b/>
+                <w:bCs/>
+                <w:color w:val="0D0D0D"/>
+                <w:sz w:val="20"/>
+                <w:u w:color="0D0D0D"/>
+              </w:rPr>
+            </w:pPr>
+          </w:p>
+          <w:p w14:paraId="03384436" w14:textId="77777777" w:rsidR="002856B7" w:rsidRPr="000F5502" w:rsidRDefault="002856B7" w:rsidP="00C8460C">
+            <w:pPr>
+              <w:pStyle w:val="Body"/>
+              <w:pBdr>
+                <w:top w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:left w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:bottom w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:right w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:between w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:bar w:val="none" w:sz="0" w:color="auto"/>
+              </w:pBdr>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b/>
+                <w:bCs/>
+                <w:color w:val="0D0D0D"/>
+                <w:sz w:val="20"/>
+                <w:u w:color="0D0D0D"/>
+              </w:rPr>
+            </w:pPr>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:w="7285" w:type="dxa"/>
+            <w:vAlign w:val="center"/>
+          </w:tcPr>
+          <w:p w14:paraId="209D77E7" w14:textId="77777777" w:rsidR="002856B7" w:rsidRDefault="002856B7" w:rsidP="00C8460C">
+            <w:pPr>
+              <w:pStyle w:val="Heading2"/>
+              <w:tabs>
+                <w:tab w:val="left" w:pos="720"/>
+              </w:tabs>
+              <w:spacing w:before="0"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b w:val="0"/>
+                <w:bCs w:val="0"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="24"/>
+                <w:szCs w:val="24"/>
+                <w:u w:color="000000"/>
+              </w:rPr>
+            </w:pPr>
+          </w:p>
+          <w:p w14:paraId="540D99CF" w14:textId="320BF358" w:rsidR="002856B7" w:rsidRDefault="002856B7" w:rsidP="00C8460C">
+            <w:pPr>
+              <w:pStyle w:val="Heading2"/>
+              <w:tabs>
+                <w:tab w:val="left" w:pos="720"/>
+              </w:tabs>
+              <w:spacing w:before="0"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b w:val="0"/>
+                <w:bCs w:val="0"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="24"/>
+                <w:szCs w:val="24"/>
+                <w:u w:color="000000"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r w:rsidRPr="000039A9">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b w:val="0"/>
+                <w:bCs w:val="0"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="24"/>
+                <w:szCs w:val="24"/>
+                <w:u w:color="000000"/>
+              </w:rPr>
+              <w:t xml:space="preserve">This agreement confirms the nature </w:t>
+            </w:r>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b w:val="0"/>
+                <w:bCs w:val="0"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="24"/>
+                <w:szCs w:val="24"/>
+                <w:u w:color="000000"/>
+              </w:rPr>
+              <w:t xml:space="preserve">and scope </w:t>
+            </w:r>
+            <w:r w:rsidRPr="000039A9">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b w:val="0"/>
+                <w:bCs w:val="0"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="24"/>
+                <w:szCs w:val="24"/>
+                <w:u w:color="000000"/>
+              </w:rPr>
+              <w:t xml:space="preserve">of the services that </w:t>
+            </w:r>
+            <w:r w:rsidR="00C207F6">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b w:val="0"/>
+                <w:bCs w:val="0"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="24"/>
+                <w:szCs w:val="24"/>
+                <w:u w:color="000000"/>
+              </w:rPr>
+              <w:t>VERSO</w:t>
+            </w:r>
+            <w:r w:rsidR="00541BB3">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b w:val="0"/>
+                <w:bCs w:val="0"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="24"/>
+                <w:szCs w:val="24"/>
+                <w:u w:color="000000"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b w:val="0"/>
+                <w:bCs w:val="0"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="24"/>
+                <w:szCs w:val="24"/>
+                <w:u w:color="000000"/>
+              </w:rPr>
+              <w:t>has</w:t>
+            </w:r>
+            <w:r w:rsidRPr="000039A9">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b w:val="0"/>
+                <w:bCs w:val="0"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="24"/>
+                <w:szCs w:val="24"/>
+                <w:u w:color="000000"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> asked </w:t>
+            </w:r>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b w:val="0"/>
+                <w:bCs w:val="0"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="24"/>
+                <w:szCs w:val="24"/>
+                <w:u w:color="000000"/>
+              </w:rPr>
+              <w:t xml:space="preserve">the </w:t>
+            </w:r>
+            <w:r w:rsidR="00B43AE1">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b w:val="0"/>
+                <w:bCs w:val="0"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="24"/>
+                <w:szCs w:val="24"/>
+                <w:u w:color="000000"/>
+              </w:rPr>
+              <w:t>Introducer</w:t>
+            </w:r>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b w:val="0"/>
+                <w:bCs w:val="0"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="24"/>
+                <w:szCs w:val="24"/>
+                <w:u w:color="000000"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> to provide</w:t>
+            </w:r>
+            <w:r w:rsidRPr="000039A9">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b w:val="0"/>
+                <w:bCs w:val="0"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="24"/>
+                <w:szCs w:val="24"/>
+                <w:u w:color="000000"/>
+              </w:rPr>
+              <w:t>, the details and amount of the fee</w:t>
+            </w:r>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b w:val="0"/>
+                <w:bCs w:val="0"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="24"/>
+                <w:szCs w:val="24"/>
+                <w:u w:color="000000"/>
+              </w:rPr>
+              <w:t>s</w:t>
+            </w:r>
+            <w:r w:rsidRPr="000039A9">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b w:val="0"/>
+                <w:bCs w:val="0"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="24"/>
+                <w:szCs w:val="24"/>
+                <w:u w:color="000000"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> payable, method of payment and when the fee</w:t>
+            </w:r>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b w:val="0"/>
+                <w:bCs w:val="0"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="24"/>
+                <w:szCs w:val="24"/>
+                <w:u w:color="000000"/>
+              </w:rPr>
+              <w:t>s are</w:t>
+            </w:r>
+            <w:r w:rsidRPr="000039A9">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b w:val="0"/>
+                <w:bCs w:val="0"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="24"/>
+                <w:szCs w:val="24"/>
+                <w:u w:color="000000"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> due to be paid</w:t>
+            </w:r>
+            <w:r w:rsidRPr="00154E1F">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b w:val="0"/>
+                <w:bCs w:val="0"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="24"/>
+                <w:szCs w:val="24"/>
+                <w:u w:color="000000"/>
+              </w:rPr>
+              <w:t xml:space="preserve">. </w:t>
+            </w:r>
+          </w:p>
+          <w:p w14:paraId="28D27038" w14:textId="77777777" w:rsidR="002856B7" w:rsidRDefault="002856B7" w:rsidP="00C8460C">
+            <w:pPr>
+              <w:pStyle w:val="Heading2"/>
+              <w:tabs>
+                <w:tab w:val="left" w:pos="720"/>
+              </w:tabs>
+              <w:spacing w:before="0"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b w:val="0"/>
+                <w:bCs w:val="0"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="24"/>
+                <w:szCs w:val="24"/>
+                <w:u w:color="000000"/>
+              </w:rPr>
+            </w:pPr>
+          </w:p>
+          <w:p w14:paraId="6B3A0626" w14:textId="77777777" w:rsidR="00EA3F4F" w:rsidRDefault="002856B7" w:rsidP="00C8460C">
+            <w:pPr>
+              <w:pStyle w:val="Heading2"/>
+              <w:tabs>
+                <w:tab w:val="left" w:pos="720"/>
+              </w:tabs>
+              <w:spacing w:before="0"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b w:val="0"/>
+                <w:bCs w:val="0"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="24"/>
+                <w:szCs w:val="24"/>
+                <w:u w:color="000000"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b w:val="0"/>
+                <w:bCs w:val="0"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="24"/>
+                <w:szCs w:val="24"/>
+                <w:u w:color="000000"/>
+              </w:rPr>
+              <w:t>The</w:t>
+            </w:r>
+            <w:r w:rsidRPr="00154E1F">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b w:val="0"/>
+                <w:bCs w:val="0"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="24"/>
+                <w:szCs w:val="24"/>
+                <w:u w:color="000000"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> parties wish to enter into this Fee Sharing </w:t>
+            </w:r>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b w:val="0"/>
+                <w:bCs w:val="0"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="24"/>
+                <w:szCs w:val="24"/>
+                <w:u w:color="000000"/>
+              </w:rPr>
+              <w:t xml:space="preserve">Agreement for the referral by the Introducer of </w:t>
+            </w:r>
+            <w:r w:rsidR="00B43AE1">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b w:val="0"/>
+                <w:bCs w:val="0"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="24"/>
+                <w:szCs w:val="24"/>
+                <w:u w:color="000000"/>
+              </w:rPr>
+              <w:t xml:space="preserve">the </w:t>
+            </w:r>
+            <w:r w:rsidR="00A8188C">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b w:val="0"/>
+                <w:bCs w:val="0"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="24"/>
+                <w:szCs w:val="24"/>
+                <w:u w:color="000000"/>
+              </w:rPr>
+              <w:t xml:space="preserve">Investors to participate to the </w:t>
+            </w:r>
+            <w:r w:rsidR="00466175">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b w:val="0"/>
+                <w:bCs w:val="0"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="24"/>
+                <w:szCs w:val="24"/>
+                <w:u w:color="000000"/>
+              </w:rPr>
+              <w:t>Project</w:t>
+            </w:r>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b w:val="0"/>
+                <w:bCs w:val="0"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="24"/>
+                <w:szCs w:val="24"/>
+                <w:u w:color="000000"/>
+              </w:rPr>
+              <w:t>.</w:t>
+            </w:r>
+            <w:r w:rsidR="00AE5694">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b w:val="0"/>
+                <w:bCs w:val="0"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="24"/>
+                <w:szCs w:val="24"/>
+                <w:u w:color="000000"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> </w:t>
+            </w:r>
+          </w:p>
+          <w:p w14:paraId="35B11BF6" w14:textId="77777777" w:rsidR="00EA3F4F" w:rsidRDefault="00EA3F4F" w:rsidP="00C8460C">
+            <w:pPr>
+              <w:pStyle w:val="Heading2"/>
+              <w:tabs>
+                <w:tab w:val="left" w:pos="720"/>
+              </w:tabs>
+              <w:spacing w:before="0"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b w:val="0"/>
+                <w:bCs w:val="0"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="24"/>
+                <w:szCs w:val="24"/>
+                <w:u w:color="000000"/>
+              </w:rPr>
+            </w:pPr>
+          </w:p>
+          <w:p w14:paraId="60DBA056" w14:textId="2C0ACEED" w:rsidR="00541BB3" w:rsidRDefault="002856B7" w:rsidP="00C8460C">
+            <w:pPr>
+              <w:pStyle w:val="Heading2"/>
+              <w:tabs>
+                <w:tab w:val="left" w:pos="720"/>
+              </w:tabs>
+              <w:spacing w:before="0"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b w:val="0"/>
+                <w:bCs w:val="0"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="24"/>
+                <w:szCs w:val="24"/>
+                <w:u w:color="000000"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b w:val="0"/>
+                <w:bCs w:val="0"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="24"/>
+                <w:szCs w:val="24"/>
+                <w:u w:color="000000"/>
+              </w:rPr>
+              <w:t xml:space="preserve">The </w:t>
+            </w:r>
+            <w:r w:rsidRPr="00B7326E">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b w:val="0"/>
+                <w:bCs w:val="0"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="24"/>
+                <w:szCs w:val="24"/>
+                <w:u w:color="000000"/>
+              </w:rPr>
+              <w:t xml:space="preserve">parties confirm that the </w:t>
+            </w:r>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b w:val="0"/>
+                <w:bCs w:val="0"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="24"/>
+                <w:szCs w:val="24"/>
+                <w:u w:color="000000"/>
+              </w:rPr>
+              <w:t>Introducer</w:t>
+            </w:r>
+            <w:r w:rsidRPr="00B7326E">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b w:val="0"/>
+                <w:bCs w:val="0"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="24"/>
+                <w:szCs w:val="24"/>
+                <w:u w:color="000000"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> has introduced the </w:t>
+            </w:r>
+            <w:r w:rsidR="00A8188C">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b w:val="0"/>
+                <w:bCs w:val="0"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="24"/>
+                <w:szCs w:val="24"/>
+                <w:u w:color="000000"/>
+              </w:rPr>
+              <w:t>new Investors</w:t>
+            </w:r>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b w:val="0"/>
+                <w:bCs w:val="0"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="24"/>
+                <w:szCs w:val="24"/>
+                <w:u w:color="000000"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r w:rsidRPr="00B7326E">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b w:val="0"/>
+                <w:bCs w:val="0"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="24"/>
+                <w:szCs w:val="24"/>
+                <w:u w:color="000000"/>
+              </w:rPr>
+              <w:t xml:space="preserve">and is therefore </w:t>
+            </w:r>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b w:val="0"/>
+                <w:bCs w:val="0"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="24"/>
+                <w:szCs w:val="24"/>
+                <w:u w:color="000000"/>
+              </w:rPr>
+              <w:t xml:space="preserve">irrevocably </w:t>
+            </w:r>
+            <w:r w:rsidRPr="00B7326E">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b w:val="0"/>
+                <w:bCs w:val="0"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="24"/>
+                <w:szCs w:val="24"/>
+                <w:u w:color="000000"/>
+              </w:rPr>
+              <w:t>entitled to the Fee confirmed below</w:t>
+            </w:r>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b w:val="0"/>
+                <w:bCs w:val="0"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="24"/>
+                <w:szCs w:val="24"/>
+                <w:u w:color="000000"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> upon successful</w:t>
+            </w:r>
+            <w:r w:rsidR="00466175">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b w:val="0"/>
+                <w:bCs w:val="0"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="24"/>
+                <w:szCs w:val="24"/>
+                <w:u w:color="000000"/>
+              </w:rPr>
+              <w:t>, final</w:t>
+            </w:r>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b w:val="0"/>
+                <w:bCs w:val="0"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="24"/>
+                <w:szCs w:val="24"/>
+                <w:u w:color="000000"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> completion.</w:t>
+            </w:r>
+          </w:p>
+          <w:p w14:paraId="00FB5575" w14:textId="093211A5" w:rsidR="002856B7" w:rsidRPr="005F0259" w:rsidRDefault="002856B7" w:rsidP="00C8460C">
+            <w:pPr>
+              <w:pStyle w:val="Heading2"/>
+              <w:tabs>
+                <w:tab w:val="left" w:pos="720"/>
+              </w:tabs>
+              <w:spacing w:before="0"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b w:val="0"/>
+                <w:bCs w:val="0"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="24"/>
+                <w:szCs w:val="24"/>
+                <w:u w:color="000000"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b w:val="0"/>
+                <w:bCs w:val="0"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="24"/>
+                <w:szCs w:val="24"/>
+                <w:u w:color="000000"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> </w:t>
+            </w:r>
+          </w:p>
+          <w:p w14:paraId="31D56609" w14:textId="2F01C167" w:rsidR="002856B7" w:rsidRPr="00D62DA0" w:rsidRDefault="00A8188C" w:rsidP="00C8460C">
+            <w:pPr>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:color w:val="000000"/>
+                <w:u w:color="000000"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:color w:val="000000"/>
+                <w:u w:color="000000"/>
+              </w:rPr>
+              <w:t xml:space="preserve">The </w:t>
+            </w:r>
+            <w:r w:rsidR="00466175">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:color w:val="000000"/>
+                <w:u w:color="000000"/>
+              </w:rPr>
+              <w:t>Introducer</w:t>
+            </w:r>
+            <w:r w:rsidR="00B43AE1">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:color w:val="000000"/>
+                <w:u w:color="000000"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:color w:val="000000"/>
+                <w:u w:color="000000"/>
+              </w:rPr>
+              <w:t xml:space="preserve">may assist </w:t>
+            </w:r>
+            <w:r w:rsidR="00C207F6">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:color w:val="000000"/>
+                <w:u w:color="000000"/>
+              </w:rPr>
+              <w:t>VERSO</w:t>
+            </w:r>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:color w:val="000000"/>
+                <w:u w:color="000000"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> to </w:t>
+            </w:r>
+            <w:r w:rsidR="002856B7" w:rsidRPr="00D62DA0">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:color w:val="000000"/>
+                <w:u w:color="000000"/>
+              </w:rPr>
+              <w:t>address KY</w:t>
+            </w:r>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:color w:val="000000"/>
+                <w:u w:color="000000"/>
+              </w:rPr>
+              <w:t>C and compliance</w:t>
+            </w:r>
+            <w:r w:rsidR="002856B7" w:rsidRPr="00D62DA0">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:color w:val="000000"/>
+                <w:u w:color="000000"/>
+              </w:rPr>
+              <w:t>.</w:t>
+            </w:r>
+          </w:p>
+          <w:p w14:paraId="62B840CF" w14:textId="77777777" w:rsidR="002856B7" w:rsidRDefault="002856B7" w:rsidP="00C8460C">
+            <w:pPr>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b/>
+                <w:bCs/>
+                <w:color w:val="0D0D0D"/>
+                <w:u w:color="0D0D0D"/>
+              </w:rPr>
+            </w:pPr>
+          </w:p>
+        </w:tc>
+      </w:tr>
+      <w:tr w:rsidR="002856B7" w14:paraId="1F97FF97" w14:textId="77777777" w:rsidTr="00C8460C">
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:w="2065" w:type="dxa"/>
+            <w:shd w:val="clear" w:color="auto" w:fill="F2F2F2" w:themeFill="background1" w:themeFillShade="F2"/>
+          </w:tcPr>
+          <w:p w14:paraId="16838D73" w14:textId="77777777" w:rsidR="002856B7" w:rsidRPr="000F5502" w:rsidRDefault="002856B7" w:rsidP="00C8460C">
+            <w:pPr>
+              <w:pStyle w:val="Body"/>
+              <w:pBdr>
+                <w:top w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:left w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:bottom w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:right w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:between w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:bar w:val="none" w:sz="0" w:color="auto"/>
+              </w:pBdr>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b/>
+                <w:bCs/>
+                <w:color w:val="0D0D0D"/>
+                <w:sz w:val="20"/>
+                <w:u w:color="0D0D0D"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r w:rsidRPr="000F5502">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b/>
+                <w:bCs/>
+                <w:color w:val="0D0D0D"/>
+                <w:sz w:val="20"/>
+                <w:u w:color="0D0D0D"/>
+              </w:rPr>
+              <w:t>Payment Basis</w:t>
+            </w:r>
+          </w:p>
+          <w:p w14:paraId="4FD62F4C" w14:textId="77777777" w:rsidR="002856B7" w:rsidRPr="000F5502" w:rsidRDefault="002856B7" w:rsidP="00C8460C">
+            <w:pPr>
+              <w:pStyle w:val="Body"/>
+              <w:pBdr>
+                <w:top w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:left w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:bottom w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:right w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:between w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:bar w:val="none" w:sz="0" w:color="auto"/>
+              </w:pBdr>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b/>
+                <w:bCs/>
+                <w:color w:val="0D0D0D"/>
+                <w:sz w:val="20"/>
+                <w:u w:color="0D0D0D"/>
+              </w:rPr>
+            </w:pPr>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:w="7285" w:type="dxa"/>
+            <w:vAlign w:val="center"/>
+          </w:tcPr>
+          <w:p w14:paraId="66E14B20" w14:textId="77777777" w:rsidR="002856B7" w:rsidRDefault="002856B7" w:rsidP="00C35FD0">
+            <w:pPr>
+              <w:pStyle w:val="Heading2"/>
+              <w:tabs>
+                <w:tab w:val="left" w:pos="720"/>
+              </w:tabs>
+              <w:spacing w:before="0"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b w:val="0"/>
+                <w:bCs w:val="0"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="24"/>
+                <w:szCs w:val="24"/>
+                <w:u w:color="000000"/>
+              </w:rPr>
+            </w:pPr>
+          </w:p>
+          <w:p w14:paraId="5C30CF30" w14:textId="47A95055" w:rsidR="001242F7" w:rsidRDefault="002856B7" w:rsidP="00C35FD0">
+            <w:pPr>
+              <w:pStyle w:val="Heading2"/>
+              <w:tabs>
+                <w:tab w:val="left" w:pos="720"/>
+              </w:tabs>
+              <w:spacing w:before="0"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b w:val="0"/>
+                <w:bCs w:val="0"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="24"/>
+                <w:szCs w:val="24"/>
+                <w:u w:color="000000"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r w:rsidRPr="000039A9">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b w:val="0"/>
+                <w:bCs w:val="0"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="24"/>
+                <w:szCs w:val="24"/>
+                <w:u w:color="000000"/>
+              </w:rPr>
+              <w:t>In consideratio</w:t>
+            </w:r>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b w:val="0"/>
+                <w:bCs w:val="0"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="24"/>
+                <w:szCs w:val="24"/>
+                <w:u w:color="000000"/>
+              </w:rPr>
+              <w:t>n of the services set out above, the parties have irrevocably understood and agreed to the following fee structure (&#8220;</w:t>
+            </w:r>
+            <w:r w:rsidR="00B43AE1">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b w:val="0"/>
+                <w:bCs w:val="0"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="24"/>
+                <w:szCs w:val="24"/>
+                <w:u w:color="000000"/>
+              </w:rPr>
+              <w:t>Introduction</w:t>
+            </w:r>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b w:val="0"/>
+                <w:bCs w:val="0"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="24"/>
+                <w:szCs w:val="24"/>
+                <w:u w:color="000000"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> Fee&#8221;</w:t>
+            </w:r>
+            <w:r w:rsidR="00CD1960">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b w:val="0"/>
+                <w:bCs w:val="0"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="24"/>
+                <w:szCs w:val="24"/>
+                <w:u w:color="000000"/>
+              </w:rPr>
+              <w:t>)</w:t>
+            </w:r>
+            <w:r w:rsidR="00C4397C">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b w:val="0"/>
+                <w:bCs w:val="0"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="24"/>
+                <w:szCs w:val="24"/>
+                <w:u w:color="000000"/>
+              </w:rPr>
+              <w:t>.</w:t>
+            </w:r>
+          </w:p>
+          <w:p w14:paraId="23B330CF" w14:textId="77777777" w:rsidR="001325CD" w:rsidRDefault="001325CD" w:rsidP="00C35FD0">
+            <w:pPr>
+              <w:pStyle w:val="Body"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b/>
+                <w:bCs/>
+              </w:rPr>
+            </w:pPr>
+          </w:p>
+          <w:p w14:paraId="0316F865" w14:textId="457BB268" w:rsidR="00C35FD0" w:rsidRPr="001325CD" w:rsidRDefault="00C35FD0" w:rsidP="00C35FD0">
+            <w:pPr>
+              <w:pStyle w:val="Body"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b/>
+                <w:bCs/>
+              </w:rPr>
+            </w:pPr>
+            <w:r w:rsidRPr="00C35FD0">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b/>
+                <w:bCs/>
+              </w:rPr>
+              <w:t>Prospective Investor</w:t>
+            </w:r>
+            <w:r w:rsidR="00CD1960">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b/>
+                <w:bCs/>
+              </w:rPr>
+              <w:t>s</w:t>
+            </w:r>
+            <w:r w:rsidRPr="00C35FD0">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b/>
+                <w:bCs/>
+              </w:rPr>
+              <w:t>:</w:t>
+            </w:r>
+          </w:p>
+          <w:p w14:paraId="7FB01DD1" w14:textId="2E970D74" w:rsidR="00C35FD0" w:rsidRPr="00C35FD0" w:rsidRDefault="00CD1960" w:rsidP="00C35FD0">
+            <w:pPr>
+              <w:pStyle w:val="Body"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t>The introduced investors</w:t>
+            </w:r>
+            <w:r w:rsidR="00207C1D">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r w:rsidR="00C35FD0" w:rsidRPr="00C35FD0">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t xml:space="preserve">(&#8220;Investor&#8221;) </w:t>
+            </w:r>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t>shall solely be Qualified Investors or Institutional Clients</w:t>
+            </w:r>
+            <w:r w:rsidR="00C4397C">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t>.</w:t>
+            </w:r>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> No US FATCA client shall be authorized in VERSO. No PEP client shall be approved for investment unless presented to VERSO with corroborative documentation about their source of wealth.</w:t>
+            </w:r>
+          </w:p>
+          <w:p w14:paraId="7E735452" w14:textId="77777777" w:rsidR="001325CD" w:rsidRDefault="001325CD" w:rsidP="00C35FD0">
+            <w:pPr>
+              <w:pStyle w:val="Body"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b/>
+                <w:bCs/>
+              </w:rPr>
+            </w:pPr>
+          </w:p>
+          <w:p w14:paraId="4A565627" w14:textId="4E70BF5E" w:rsidR="00275200" w:rsidRPr="001325CD" w:rsidRDefault="00CD1960" w:rsidP="00C35FD0">
+            <w:pPr>
+              <w:pStyle w:val="Body"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b/>
+                <w:bCs/>
+              </w:rPr>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b/>
+                <w:bCs/>
+              </w:rPr>
+              <w:t xml:space="preserve">Introduction </w:t>
+            </w:r>
+            <w:r w:rsidR="00275200" w:rsidRPr="00275200">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b/>
+                <w:bCs/>
+              </w:rPr>
+              <w:t>Fee Determination:</w:t>
+            </w:r>
+          </w:p>
+          <w:p w14:paraId="77AAE3AB" w14:textId="77777777" w:rsidR="00CD1960" w:rsidRDefault="00275200" w:rsidP="00C35FD0">
+            <w:pPr>
+              <w:pStyle w:val="Body"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t>The</w:t>
+            </w:r>
+            <w:r w:rsidR="00CD1960">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> Introduction Fee should be calculated as a one-off 2.00% subscription fee applied on the total amount of capital to be subscribed by the introduced investors at the time of the investment and payable as per the terms herein by VERSO to the Introducer.</w:t>
+            </w:r>
+          </w:p>
+          <w:p w14:paraId="310BECA9" w14:textId="77777777" w:rsidR="00CD1960" w:rsidRDefault="00CD1960" w:rsidP="00C35FD0">
+            <w:pPr>
+              <w:pStyle w:val="Body"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+            </w:pPr>
+          </w:p>
+          <w:p w14:paraId="46B55565" w14:textId="0898D7C1" w:rsidR="00275200" w:rsidRPr="00CD1960" w:rsidRDefault="00CD1960" w:rsidP="00C35FD0">
+            <w:pPr>
+              <w:pStyle w:val="Body"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b/>
+                <w:bCs/>
+              </w:rPr>
+            </w:pPr>
+            <w:r w:rsidRPr="00CD1960">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b/>
+                <w:bCs/>
+              </w:rPr>
+              <w:t xml:space="preserve">Performance Fee Determination: </w:t>
+            </w:r>
+          </w:p>
+          <w:p w14:paraId="40076ACE" w14:textId="456CDFEE" w:rsidR="00612151" w:rsidRDefault="00CD1960" w:rsidP="00C35FD0">
+            <w:pPr>
+              <w:pStyle w:val="Body"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t>The Performance Fee should be calculated as a carried interest of 10.00% with no hurdle rate and no cap, to be applied on the gross performance calculated at the time of the redemption of the investment opportunity.</w:t>
+            </w:r>
+          </w:p>
+          <w:p w14:paraId="4AF178B7" w14:textId="77777777" w:rsidR="00CD1960" w:rsidRDefault="00CD1960" w:rsidP="00C35FD0">
+            <w:pPr>
+              <w:pStyle w:val="Body"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+            </w:pPr>
+          </w:p>
+          <w:p w14:paraId="28A9AD9F" w14:textId="344F81F1" w:rsidR="00612151" w:rsidRPr="00C207F6" w:rsidRDefault="00612151" w:rsidP="00C35FD0">
+            <w:pPr>
+              <w:pStyle w:val="Body"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b/>
+                <w:bCs/>
+              </w:rPr>
+            </w:pPr>
+            <w:r w:rsidRPr="00612151">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b/>
+                <w:bCs/>
+              </w:rPr>
+              <w:t>Numerical Example:</w:t>
+            </w:r>
+          </w:p>
+          <w:p w14:paraId="3A1869D9" w14:textId="01B527BE" w:rsidR="00612151" w:rsidRDefault="00612151" w:rsidP="00C35FD0">
+            <w:pPr>
+              <w:pStyle w:val="Body"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t xml:space="preserve">In the event an investor purchases </w:t>
+            </w:r>
+            <w:r w:rsidR="00207C1D">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t>10</w:t>
+            </w:r>
+            <w:r w:rsidR="009A60C5">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t>,0</w:t>
+            </w:r>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t xml:space="preserve">00 shares at USD </w:t>
+            </w:r>
+            <w:r w:rsidR="00207C1D">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t>2</w:t>
+            </w:r>
+            <w:r w:rsidR="00C207F6">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t>3</w:t>
+            </w:r>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t>.</w:t>
+            </w:r>
+            <w:r w:rsidR="00C207F6">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t>52</w:t>
+            </w:r>
+            <w:r w:rsidR="008C0E29">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t>, here the total purchase price (&#8220;PP&#8221;)</w:t>
+            </w:r>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t>, then the following would</w:t>
+            </w:r>
+            <w:r w:rsidR="009A60C5">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t>apply to determine the Introducer&#8217;s Introduction Fee</w:t>
+            </w:r>
+            <w:r w:rsidR="008C0E29">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> (&#8220;Fi&#8221;)</w:t>
+            </w:r>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t>:</w:t>
+            </w:r>
+          </w:p>
+          <w:p w14:paraId="0AC08EDB" w14:textId="77777777" w:rsidR="008C0E29" w:rsidRDefault="008C0E29" w:rsidP="00C35FD0">
+            <w:pPr>
+              <w:pStyle w:val="Body"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+            </w:pPr>
+          </w:p>
+          <w:p w14:paraId="49311FF5" w14:textId="46088C24" w:rsidR="00CD1960" w:rsidRPr="00CD1960" w:rsidRDefault="008C0E29" w:rsidP="00C35FD0">
+            <w:pPr>
+              <w:pStyle w:val="Body"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:lang w:val="it-IT"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r w:rsidRPr="00CD1960">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:lang w:val="it-IT"/>
+              </w:rPr>
+              <w:t>PP</w:t>
+            </w:r>
+            <w:r w:rsidR="00612151" w:rsidRPr="00CD1960">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:lang w:val="it-IT"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> = (</w:t>
+            </w:r>
+            <w:r w:rsidR="00207C1D" w:rsidRPr="00CD1960">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:lang w:val="it-IT"/>
+              </w:rPr>
+              <w:t>10</w:t>
+            </w:r>
+            <w:r w:rsidR="00F170B5" w:rsidRPr="00CD1960">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:lang w:val="it-IT"/>
+              </w:rPr>
+              <w:t>,0</w:t>
+            </w:r>
+            <w:r w:rsidR="00612151" w:rsidRPr="00CD1960">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:lang w:val="it-IT"/>
+              </w:rPr>
+              <w:t xml:space="preserve">00 x </w:t>
+            </w:r>
+            <w:r w:rsidR="00F170B5" w:rsidRPr="00CD1960">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:lang w:val="it-IT"/>
+              </w:rPr>
+              <w:t>2</w:t>
+            </w:r>
+            <w:r w:rsidR="00C207F6" w:rsidRPr="00CD1960">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:lang w:val="it-IT"/>
+              </w:rPr>
+              <w:t>3.52</w:t>
+            </w:r>
+            <w:r w:rsidR="00612151" w:rsidRPr="00CD1960">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:lang w:val="it-IT"/>
+              </w:rPr>
+              <w:t>)</w:t>
+            </w:r>
+          </w:p>
+          <w:p w14:paraId="6FD86C1B" w14:textId="2767A898" w:rsidR="00612151" w:rsidRPr="00CD1960" w:rsidRDefault="008C0E29" w:rsidP="00C35FD0">
+            <w:pPr>
+              <w:pStyle w:val="Body"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:lang w:val="it-IT"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r w:rsidRPr="00CD1960">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:lang w:val="it-IT"/>
+              </w:rPr>
+              <w:t>PP</w:t>
+            </w:r>
+            <w:r w:rsidR="00612151" w:rsidRPr="00CD1960">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:lang w:val="it-IT"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> = </w:t>
+            </w:r>
+            <w:r w:rsidRPr="00CD1960">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:lang w:val="it-IT"/>
+              </w:rPr>
+              <w:t>235,200</w:t>
+            </w:r>
+          </w:p>
+          <w:p w14:paraId="4EBB8F0F" w14:textId="77777777" w:rsidR="008C0E29" w:rsidRPr="00CD1960" w:rsidRDefault="008C0E29" w:rsidP="00C35FD0">
+            <w:pPr>
+              <w:pStyle w:val="Body"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:lang w:val="it-IT"/>
+              </w:rPr>
+            </w:pPr>
+          </w:p>
+          <w:p w14:paraId="331EED61" w14:textId="77777777" w:rsidR="007A1B74" w:rsidRDefault="007A1B74" w:rsidP="00C35FD0">
+            <w:pPr>
+              <w:pStyle w:val="Body"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:lang w:val="it-IT"/>
+              </w:rPr>
+            </w:pPr>
+          </w:p>
+          <w:p w14:paraId="63A6B71B" w14:textId="77777777" w:rsidR="007A1B74" w:rsidRDefault="007A1B74" w:rsidP="00C35FD0">
+            <w:pPr>
+              <w:pStyle w:val="Body"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:lang w:val="it-IT"/>
+              </w:rPr>
+            </w:pPr>
+          </w:p>
+          <w:p w14:paraId="09249165" w14:textId="50F50AA8" w:rsidR="00612151" w:rsidRPr="007A1B74" w:rsidRDefault="008C0E29" w:rsidP="00C35FD0">
+            <w:pPr>
+              <w:pStyle w:val="Body"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:lang w:val="it-IT"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r w:rsidRPr="007A1B74">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:lang w:val="it-IT"/>
+              </w:rPr>
+              <w:t>Fi = (</w:t>
+            </w:r>
+            <w:r w:rsidR="00D43294" w:rsidRPr="007A1B74">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:lang w:val="it-IT"/>
+              </w:rPr>
+              <w:t>235,200 x 0.02</w:t>
+            </w:r>
+            <w:r w:rsidRPr="007A1B74">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:lang w:val="it-IT"/>
+              </w:rPr>
+              <w:t>)</w:t>
+            </w:r>
+          </w:p>
+          <w:p w14:paraId="63976ECD" w14:textId="5D29BEB8" w:rsidR="008C0E29" w:rsidRPr="007A1B74" w:rsidRDefault="008C0E29" w:rsidP="00C35FD0">
+            <w:pPr>
+              <w:pStyle w:val="Body"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:lang w:val="it-IT"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r w:rsidRPr="007A1B74">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:lang w:val="it-IT"/>
+              </w:rPr>
+              <w:t xml:space="preserve">Fi = </w:t>
+            </w:r>
+            <w:r w:rsidR="00D43294" w:rsidRPr="007A1B74">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:lang w:val="it-IT"/>
+              </w:rPr>
+              <w:t>4</w:t>
+            </w:r>
+            <w:r w:rsidRPr="007A1B74">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:lang w:val="it-IT"/>
+              </w:rPr>
+              <w:t>,</w:t>
+            </w:r>
+            <w:r w:rsidR="00D43294" w:rsidRPr="007A1B74">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:lang w:val="it-IT"/>
+              </w:rPr>
+              <w:t>704</w:t>
+            </w:r>
+          </w:p>
+          <w:p w14:paraId="244F278A" w14:textId="77777777" w:rsidR="008C0E29" w:rsidRPr="007A1B74" w:rsidRDefault="008C0E29" w:rsidP="00C35FD0">
+            <w:pPr>
+              <w:pStyle w:val="Body"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:lang w:val="it-IT"/>
+              </w:rPr>
+            </w:pPr>
+          </w:p>
+          <w:p w14:paraId="30CC4914" w14:textId="7C653CB2" w:rsidR="00612151" w:rsidRDefault="00612151" w:rsidP="00C35FD0">
+            <w:pPr>
+              <w:pStyle w:val="Body"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t xml:space="preserve">The Introduction Fee </w:t>
+            </w:r>
+            <w:r w:rsidR="008C0E29">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t xml:space="preserve">payable to the Introducer </w:t>
+            </w:r>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t xml:space="preserve">would be equal to USD </w:t>
+            </w:r>
+            <w:r w:rsidR="00D43294">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t>4</w:t>
+            </w:r>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t>.</w:t>
+            </w:r>
+            <w:r w:rsidR="00D43294">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t>704</w:t>
+            </w:r>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> only.</w:t>
+            </w:r>
+          </w:p>
+          <w:p w14:paraId="20DDD174" w14:textId="786E226C" w:rsidR="00612151" w:rsidRDefault="00612151" w:rsidP="00C35FD0">
+            <w:pPr>
+              <w:pStyle w:val="Body"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+            </w:pPr>
+          </w:p>
+          <w:p w14:paraId="342B7150" w14:textId="7196B663" w:rsidR="00D43294" w:rsidRDefault="00D43294" w:rsidP="00C35FD0">
+            <w:pPr>
+              <w:pStyle w:val="Body"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t xml:space="preserve">In case the same investment returns a </w:t>
+            </w:r>
+            <w:r w:rsidR="0061236F">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t>price per share at redemption</w:t>
+            </w:r>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> (&#8220;</w:t>
+            </w:r>
+            <w:r w:rsidR="0061236F">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t>RP</w:t>
+            </w:r>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t>&#8221;) of USD 50.00 per share, then the following Performance Fee (&#8220;</w:t>
+            </w:r>
+            <w:proofErr w:type="spellStart"/>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t>Fp</w:t>
+            </w:r>
+            <w:proofErr w:type="spellEnd"/>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t>&#8221;) shall apply:</w:t>
+            </w:r>
+          </w:p>
+          <w:p w14:paraId="74322AF2" w14:textId="62710D0A" w:rsidR="00D43294" w:rsidRDefault="00D43294" w:rsidP="00C35FD0">
+            <w:pPr>
+              <w:pStyle w:val="Body"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+            </w:pPr>
+          </w:p>
+          <w:p w14:paraId="260E2E7F" w14:textId="52B2926F" w:rsidR="00D43294" w:rsidRDefault="0061236F" w:rsidP="00C35FD0">
+            <w:pPr>
+              <w:pStyle w:val="Body"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t>R</w:t>
+            </w:r>
+            <w:r w:rsidR="00D43294">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t xml:space="preserve">P = (10,000 x 50.00) </w:t>
+            </w:r>
+          </w:p>
+          <w:p w14:paraId="702829EF" w14:textId="09F5CAFD" w:rsidR="00D43294" w:rsidRDefault="0061236F" w:rsidP="00C35FD0">
+            <w:pPr>
+              <w:pStyle w:val="Body"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t>R</w:t>
+            </w:r>
+            <w:r w:rsidR="00D43294">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t>P = 500,000</w:t>
+            </w:r>
+          </w:p>
+          <w:p w14:paraId="5AAA15FC" w14:textId="77777777" w:rsidR="00D43294" w:rsidRDefault="00D43294" w:rsidP="00C35FD0">
+            <w:pPr>
+              <w:pStyle w:val="Body"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+            </w:pPr>
+          </w:p>
+          <w:p w14:paraId="6229F00C" w14:textId="34A1451B" w:rsidR="00D43294" w:rsidRPr="00D43294" w:rsidRDefault="00D43294" w:rsidP="00C35FD0">
+            <w:pPr>
+              <w:pStyle w:val="Body"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:lang w:val="en-GB"/>
+              </w:rPr>
+            </w:pPr>
+            <w:proofErr w:type="spellStart"/>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t>Fp</w:t>
+            </w:r>
+            <w:proofErr w:type="spellEnd"/>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> = [ </w:t>
+            </w:r>
+            <w:r w:rsidRPr="00D43294">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:lang w:val="en-GB"/>
+              </w:rPr>
+              <w:t xml:space="preserve">(10,000 x </w:t>
+            </w:r>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:lang w:val="en-GB"/>
+              </w:rPr>
+              <w:t>50</w:t>
+            </w:r>
+            <w:r w:rsidRPr="00D43294">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:lang w:val="en-GB"/>
+              </w:rPr>
+              <w:t>.</w:t>
+            </w:r>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:lang w:val="en-GB"/>
+              </w:rPr>
+              <w:t>00</w:t>
+            </w:r>
+            <w:r w:rsidRPr="00D43294">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:lang w:val="en-GB"/>
+              </w:rPr>
+              <w:t>) - (10,000 x 23.52</w:t>
+            </w:r>
+            <w:proofErr w:type="gramStart"/>
+            <w:r w:rsidRPr="00D43294">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:lang w:val="en-GB"/>
+              </w:rPr>
+              <w:t>) ]</w:t>
+            </w:r>
+            <w:proofErr w:type="gramEnd"/>
+            <w:r w:rsidRPr="00D43294">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:lang w:val="en-GB"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> x 0.10</w:t>
+            </w:r>
+          </w:p>
+          <w:p w14:paraId="7C3839BC" w14:textId="60D06162" w:rsidR="00D43294" w:rsidRDefault="00D43294" w:rsidP="00C35FD0">
+            <w:pPr>
+              <w:pStyle w:val="Body"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+            </w:pPr>
+            <w:proofErr w:type="spellStart"/>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t>Fp</w:t>
+            </w:r>
+            <w:proofErr w:type="spellEnd"/>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> = 264,800 x 0.10</w:t>
+            </w:r>
+          </w:p>
+          <w:p w14:paraId="3534C432" w14:textId="32B59B62" w:rsidR="00D43294" w:rsidRDefault="00D43294" w:rsidP="00C35FD0">
+            <w:pPr>
+              <w:pStyle w:val="Body"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+            </w:pPr>
+            <w:proofErr w:type="spellStart"/>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t>Fp</w:t>
+            </w:r>
+            <w:proofErr w:type="spellEnd"/>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> = 26,480</w:t>
+            </w:r>
+          </w:p>
+          <w:p w14:paraId="04DBB400" w14:textId="7B952662" w:rsidR="00D43294" w:rsidRDefault="00D43294" w:rsidP="00C35FD0">
+            <w:pPr>
+              <w:pStyle w:val="Body"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+            </w:pPr>
+          </w:p>
+          <w:p w14:paraId="23EE7B42" w14:textId="5B59289E" w:rsidR="00D43294" w:rsidRDefault="00D43294" w:rsidP="00C35FD0">
+            <w:pPr>
+              <w:pStyle w:val="Body"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t>The Performance Fee payable to the Introducer would be equal to USD 26,480 only.</w:t>
+            </w:r>
+          </w:p>
+          <w:p w14:paraId="3656069F" w14:textId="77777777" w:rsidR="00D43294" w:rsidRDefault="00D43294" w:rsidP="00C35FD0">
+            <w:pPr>
+              <w:pStyle w:val="Body"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+            </w:pPr>
+          </w:p>
+          <w:p w14:paraId="683A549E" w14:textId="77777777" w:rsidR="00275200" w:rsidRPr="00275200" w:rsidRDefault="00275200" w:rsidP="00C35FD0">
+            <w:pPr>
+              <w:pStyle w:val="Body"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+            </w:pPr>
+          </w:p>
+          <w:p w14:paraId="652835FB" w14:textId="2F24CA9A" w:rsidR="00275200" w:rsidRPr="00275200" w:rsidRDefault="00275200" w:rsidP="001325CD">
+            <w:pPr>
+              <w:pStyle w:val="Body"/>
+              <w:jc w:val="center"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t>****</w:t>
+            </w:r>
+            <w:r w:rsidR="00612151">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t>*</w:t>
+            </w:r>
+          </w:p>
+          <w:p w14:paraId="1D2656BB" w14:textId="77777777" w:rsidR="005C3C37" w:rsidRDefault="005C3C37" w:rsidP="00C35FD0">
+            <w:pPr>
+              <w:pStyle w:val="Heading2"/>
+              <w:tabs>
+                <w:tab w:val="left" w:pos="720"/>
+              </w:tabs>
+              <w:spacing w:before="0"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b w:val="0"/>
+                <w:bCs w:val="0"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="24"/>
+                <w:szCs w:val="24"/>
+                <w:u w:color="000000"/>
+              </w:rPr>
+            </w:pPr>
+          </w:p>
+          <w:p w14:paraId="177F9BE7" w14:textId="04187AD4" w:rsidR="008B7160" w:rsidRDefault="008B7160" w:rsidP="00C35FD0">
+            <w:pPr>
+              <w:pStyle w:val="Body"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:color w:val="0D0D0D"/>
+                <w:u w:color="0D0D0D"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:color w:val="0D0D0D"/>
+                <w:u w:color="0D0D0D"/>
+              </w:rPr>
+              <w:t>All fees above must include VAT (if applicable).</w:t>
+            </w:r>
+          </w:p>
+          <w:p w14:paraId="077864F9" w14:textId="77777777" w:rsidR="008B7160" w:rsidRDefault="008B7160" w:rsidP="00C35FD0">
+            <w:pPr>
+              <w:pStyle w:val="Body"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:color w:val="0D0D0D"/>
+                <w:u w:color="0D0D0D"/>
+              </w:rPr>
+            </w:pPr>
+          </w:p>
+          <w:p w14:paraId="3AE75137" w14:textId="61C6DD2B" w:rsidR="00275200" w:rsidRDefault="00AE5694" w:rsidP="00C35FD0">
+            <w:pPr>
+              <w:pStyle w:val="Body"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:color w:val="0D0D0D"/>
+                <w:u w:color="0D0D0D"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r w:rsidRPr="00AE5694">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:color w:val="0D0D0D"/>
+                <w:u w:color="0D0D0D"/>
+              </w:rPr>
+              <w:t xml:space="preserve">The introduction fee is payable by </w:t>
+            </w:r>
+            <w:r w:rsidR="008C0E29">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:color w:val="0D0D0D"/>
+                <w:u w:color="0D0D0D"/>
+              </w:rPr>
+              <w:t>VERSO</w:t>
+            </w:r>
+            <w:r w:rsidRPr="00AE5694">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:color w:val="0D0D0D"/>
+                <w:u w:color="0D0D0D"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:color w:val="0D0D0D"/>
+                <w:u w:color="0D0D0D"/>
+              </w:rPr>
+              <w:t xml:space="preserve">no later than </w:t>
+            </w:r>
+            <w:r w:rsidR="008C0E29">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:color w:val="0D0D0D"/>
+                <w:u w:color="0D0D0D"/>
+              </w:rPr>
+              <w:t>3</w:t>
+            </w:r>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:color w:val="0D0D0D"/>
+                <w:u w:color="0D0D0D"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> business days post completion of the Project.</w:t>
+            </w:r>
+            <w:r w:rsidR="008C0E29">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:color w:val="0D0D0D"/>
+                <w:u w:color="0D0D0D"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> Completion is determined by the date of issuance of the Share Certificates and the Statement of Holding to the Investor by VERSO (&#8220;Completion&#8221;).</w:t>
+            </w:r>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:color w:val="0D0D0D"/>
+                <w:u w:color="0D0D0D"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> </w:t>
+            </w:r>
+          </w:p>
+          <w:p w14:paraId="06275AEF" w14:textId="77777777" w:rsidR="00275200" w:rsidRDefault="00275200" w:rsidP="00C35FD0">
+            <w:pPr>
+              <w:pStyle w:val="Body"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:color w:val="0D0D0D"/>
+                <w:u w:color="0D0D0D"/>
+              </w:rPr>
+            </w:pPr>
+          </w:p>
+          <w:p w14:paraId="3D4E2A4A" w14:textId="06781AB5" w:rsidR="00AE5694" w:rsidRDefault="008C0E29" w:rsidP="00C35FD0">
+            <w:pPr>
+              <w:pStyle w:val="Body"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:color w:val="0D0D0D"/>
+                <w:u w:color="0D0D0D"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:color w:val="0D0D0D"/>
+                <w:u w:color="0D0D0D"/>
+              </w:rPr>
+              <w:t>VERSO</w:t>
+            </w:r>
+            <w:r w:rsidR="00AE5694">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:color w:val="0D0D0D"/>
+                <w:u w:color="0D0D0D"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> should provide a SWIFT copy to the Introducer upon making the necessary arrangement for the payment of the introduction fee.</w:t>
+            </w:r>
+          </w:p>
+          <w:p w14:paraId="48A5350C" w14:textId="04F0D60B" w:rsidR="00D43294" w:rsidRDefault="00D43294" w:rsidP="00C35FD0">
+            <w:pPr>
+              <w:pStyle w:val="Body"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:color w:val="0D0D0D"/>
+                <w:u w:color="0D0D0D"/>
+              </w:rPr>
+            </w:pPr>
+          </w:p>
+          <w:p w14:paraId="26501ED1" w14:textId="74148979" w:rsidR="00D43294" w:rsidRPr="00AE5694" w:rsidRDefault="00D43294" w:rsidP="00C35FD0">
+            <w:pPr>
+              <w:pStyle w:val="Body"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:color w:val="0D0D0D"/>
+                <w:u w:color="0D0D0D"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:color w:val="0D0D0D"/>
+                <w:u w:color="0D0D0D"/>
+              </w:rPr>
+              <w:t xml:space="preserve">The performance fee is payable by VERSO no later than 10 business days post redemption (&#8220;Redemption&#8221;) or exit, defined by default as the end of any regulatory lock-up period (typically 6 to 9 months post IPO, on NASDAQ or NYSE, United States). </w:t>
+            </w:r>
+          </w:p>
+          <w:p w14:paraId="5FE998CE" w14:textId="059842FA" w:rsidR="00AE5694" w:rsidRDefault="00AE5694" w:rsidP="00C35FD0">
+            <w:pPr>
+              <w:pStyle w:val="Body"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b/>
+                <w:bCs/>
+                <w:color w:val="0D0D0D"/>
+                <w:u w:color="0D0D0D"/>
+              </w:rPr>
+            </w:pPr>
+          </w:p>
+        </w:tc>
+      </w:tr>
+      <w:tr w:rsidR="002856B7" w14:paraId="1D86E893" w14:textId="77777777" w:rsidTr="00C8460C">
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:w="2065" w:type="dxa"/>
+            <w:shd w:val="clear" w:color="auto" w:fill="F2F2F2" w:themeFill="background1" w:themeFillShade="F2"/>
+          </w:tcPr>
+          <w:p w14:paraId="2534F4C9" w14:textId="77777777" w:rsidR="002856B7" w:rsidRPr="000F5502" w:rsidRDefault="002856B7" w:rsidP="00C8460C">
+            <w:pPr>
+              <w:pStyle w:val="Body"/>
+              <w:pBdr>
+                <w:top w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:left w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:bottom w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:right w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:between w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:bar w:val="none" w:sz="0" w:color="auto"/>
+              </w:pBdr>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b/>
+                <w:bCs/>
+                <w:color w:val="0D0D0D"/>
+                <w:sz w:val="20"/>
+                <w:u w:color="0D0D0D"/>
+              </w:rPr>
+            </w:pPr>
+          </w:p>
+          <w:p w14:paraId="7B9F8DF2" w14:textId="5AA13B02" w:rsidR="002856B7" w:rsidRPr="000F5502" w:rsidRDefault="00673C8B" w:rsidP="00C8460C">
+            <w:pPr>
+              <w:pStyle w:val="Body"/>
+              <w:pBdr>
+                <w:top w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:left w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:bottom w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:right w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:between w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:bar w:val="none" w:sz="0" w:color="auto"/>
+              </w:pBdr>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b/>
+                <w:bCs/>
+                <w:color w:val="0D0D0D"/>
+                <w:sz w:val="20"/>
+                <w:u w:color="0D0D0D"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b/>
+                <w:bCs/>
+                <w:color w:val="0D0D0D"/>
+                <w:sz w:val="20"/>
+                <w:u w:color="0D0D0D"/>
+              </w:rPr>
+              <w:t>Execution</w:t>
+            </w:r>
+          </w:p>
+          <w:p w14:paraId="33156F55" w14:textId="77777777" w:rsidR="002856B7" w:rsidRPr="000F5502" w:rsidRDefault="002856B7" w:rsidP="00C8460C">
+            <w:pPr>
+              <w:pStyle w:val="Body"/>
+              <w:pBdr>
+                <w:top w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:left w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:bottom w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:right w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:between w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:bar w:val="none" w:sz="0" w:color="auto"/>
+              </w:pBdr>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b/>
+                <w:bCs/>
+                <w:color w:val="0D0D0D"/>
+                <w:sz w:val="20"/>
+                <w:u w:color="0D0D0D"/>
+              </w:rPr>
+            </w:pPr>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:w="7285" w:type="dxa"/>
+            <w:vAlign w:val="center"/>
+          </w:tcPr>
+          <w:p w14:paraId="585CD171" w14:textId="77777777" w:rsidR="002856B7" w:rsidRDefault="002856B7" w:rsidP="00C8460C">
+            <w:pPr>
+              <w:pStyle w:val="Body"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+            </w:pPr>
+          </w:p>
+          <w:p w14:paraId="28691B03" w14:textId="6EB52DFF" w:rsidR="00AE5694" w:rsidRDefault="002856B7" w:rsidP="00AE5694">
+            <w:pPr>
+              <w:pStyle w:val="Body"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r w:rsidRPr="000039A9">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t xml:space="preserve">This agreement is governed by the laws </w:t>
+            </w:r>
+            <w:r w:rsidR="008C0E29">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t>of the British Virgin Islands</w:t>
+            </w:r>
+            <w:r w:rsidRPr="000039A9">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t>.</w:t>
+            </w:r>
+            <w:r w:rsidR="00AE5694">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> </w:t>
+            </w:r>
+          </w:p>
+          <w:p w14:paraId="300C804C" w14:textId="77777777" w:rsidR="00CD624E" w:rsidRDefault="00CD624E" w:rsidP="00AE5694">
+            <w:pPr>
+              <w:pStyle w:val="Body"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+            </w:pPr>
+          </w:p>
+          <w:p w14:paraId="1FFDCA6F" w14:textId="5A84B09A" w:rsidR="00AE5694" w:rsidRDefault="002856B7" w:rsidP="00AE5694">
+            <w:pPr>
+              <w:pStyle w:val="Body"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r w:rsidRPr="00D62DA0">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t xml:space="preserve">This agreement shall take effect on </w:t>
+            </w:r>
+            <w:r w:rsidR="00D43294">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b/>
+                <w:bCs/>
+              </w:rPr>
+              <w:t>March</w:t>
+            </w:r>
+            <w:r w:rsidRPr="00AE5694">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b/>
+                <w:bCs/>
+              </w:rPr>
+              <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r w:rsidR="00D43294">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b/>
+                <w:bCs/>
+              </w:rPr>
+              <w:t>2</w:t>
+            </w:r>
+            <w:r w:rsidRPr="00AE5694">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b/>
+                <w:bCs/>
+              </w:rPr>
+              <w:t>, 20</w:t>
+            </w:r>
+            <w:r w:rsidR="001325CD">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b/>
+                <w:bCs/>
+              </w:rPr>
+              <w:t>2</w:t>
+            </w:r>
+            <w:r w:rsidR="008C0E29">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b/>
+                <w:bCs/>
+              </w:rPr>
+              <w:t>1</w:t>
+            </w:r>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t xml:space="preserve">. </w:t>
+            </w:r>
+          </w:p>
+          <w:p w14:paraId="004FF3C4" w14:textId="77777777" w:rsidR="00D43294" w:rsidRDefault="00D43294" w:rsidP="00AE5694">
+            <w:pPr>
+              <w:pStyle w:val="Body"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+            </w:pPr>
+          </w:p>
+          <w:p w14:paraId="46ED308D" w14:textId="67A000EA" w:rsidR="002856B7" w:rsidRPr="00AE5694" w:rsidRDefault="002856B7" w:rsidP="00AE5694">
+            <w:pPr>
+              <w:pStyle w:val="Body"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t>T</w:t>
+            </w:r>
+            <w:r w:rsidRPr="00D62DA0">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t>his agree</w:t>
+            </w:r>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t xml:space="preserve">ment is valid for a period of </w:t>
+            </w:r>
+            <w:r w:rsidR="0097248C">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t>36</w:t>
+            </w:r>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> months o</w:t>
+            </w:r>
+            <w:r w:rsidRPr="00D62DA0">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t xml:space="preserve">nly </w:t>
+            </w:r>
+            <w:r w:rsidR="001242F7">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t>or for as long as the Project is still not complete</w:t>
+            </w:r>
+            <w:r w:rsidR="00AE5694">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r w:rsidRPr="00D62DA0">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Cambria" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t>and shall be automatically terminated thereafter.</w:t>
+            </w:r>
+          </w:p>
+          <w:p w14:paraId="764A4B37" w14:textId="7E2A9E7A" w:rsidR="00AE5694" w:rsidRDefault="00AE5694" w:rsidP="00C8460C">
+            <w:pPr>
+              <w:pStyle w:val="Body"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Trebuchet MS" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:lang w:val="pt-PT"/>
+              </w:rPr>
+            </w:pPr>
+          </w:p>
+          <w:p w14:paraId="440EAB73" w14:textId="01D441CF" w:rsidR="007A1B74" w:rsidRDefault="007A1B74" w:rsidP="00C8460C">
+            <w:pPr>
+              <w:pStyle w:val="Body"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Trebuchet MS" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:lang w:val="pt-PT"/>
+              </w:rPr>
+            </w:pPr>
+          </w:p>
+          <w:p w14:paraId="46ED4C4F" w14:textId="77777777" w:rsidR="007A1B74" w:rsidRDefault="007A1B74" w:rsidP="00C8460C">
+            <w:pPr>
+              <w:pStyle w:val="Body"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Trebuchet MS" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:lang w:val="pt-PT"/>
+              </w:rPr>
+            </w:pPr>
+          </w:p>
+          <w:p w14:paraId="640FA9A4" w14:textId="2382546A" w:rsidR="002856B7" w:rsidRPr="000039A9" w:rsidRDefault="00AE5694" w:rsidP="00C8460C">
+            <w:pPr>
+              <w:pStyle w:val="Body"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Trebuchet MS" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:lang w:val="pt-PT"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Trebuchet MS" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:lang w:val="pt-PT"/>
+              </w:rPr>
+              <w:t>Signed by the parties</w:t>
+            </w:r>
+            <w:r w:rsidR="008B7160">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Trebuchet MS" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:lang w:val="pt-PT"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> on this</w:t>
+            </w:r>
+            <w:r w:rsidR="00275200">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Trebuchet MS" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:lang w:val="pt-PT"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> day</w:t>
+            </w:r>
+            <w:r w:rsidR="008B7160">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Trebuchet MS" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:lang w:val="pt-PT"/>
+              </w:rPr>
+              <w:t>,</w:t>
+            </w:r>
+          </w:p>
+          <w:p w14:paraId="3D86BDF3" w14:textId="77777777" w:rsidR="002856B7" w:rsidRDefault="002856B7" w:rsidP="00C8460C">
+            <w:pPr>
+              <w:pStyle w:val="Heading2"/>
+              <w:pBdr>
+                <w:top w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:left w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:bottom w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:right w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:between w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:bar w:val="none" w:sz="0" w:color="auto"/>
+              </w:pBdr>
+              <w:tabs>
+                <w:tab w:val="left" w:pos="720"/>
+              </w:tabs>
+              <w:spacing w:before="0"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b w:val="0"/>
+                <w:bCs w:val="0"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="24"/>
+                <w:szCs w:val="24"/>
+                <w:u w:color="000000"/>
+              </w:rPr>
+            </w:pPr>
+          </w:p>
+          <w:p w14:paraId="7531DA4E" w14:textId="320E450A" w:rsidR="002856B7" w:rsidRDefault="002856B7" w:rsidP="00C8460C">
+            <w:pPr>
+              <w:pStyle w:val="Body"/>
+            </w:pPr>
+          </w:p>
+          <w:tbl>
+            <w:tblPr>
+              <w:tblStyle w:val="TableGrid"/>
+              <w:tblW w:w="8019" w:type="dxa"/>
+              <w:tblBorders>
+                <w:top w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:left w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:bottom w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:right w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:insideH w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:insideV w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+              </w:tblBorders>
+              <w:tblLook w:val="04A0" w:firstRow="1" w:lastRow="0" w:firstColumn="1" w:lastColumn="0" w:noHBand="0" w:noVBand="1"/>
+            </w:tblPr>
+            <w:tblGrid>
+              <w:gridCol w:w="4009"/>
+              <w:gridCol w:w="4010"/>
+            </w:tblGrid>
+            <w:tr w:rsidR="00612151" w14:paraId="4D322F77" w14:textId="77777777" w:rsidTr="007A1B74">
+              <w:trPr>
+                <w:trHeight w:val="3435"/>
+              </w:trPr>
+              <w:tc>
+                <w:tcPr>
+                  <w:tcW w:w="4009" w:type="dxa"/>
+                </w:tcPr>
+                <w:p w14:paraId="77CF7A19" w14:textId="77777777" w:rsidR="00612151" w:rsidRDefault="00612151" w:rsidP="00612151">
+                  <w:pPr>
+                    <w:pStyle w:val="Heading2"/>
+                    <w:pBdr>
+                      <w:top w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:left w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:bottom w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:right w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:between w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:bar w:val="none" w:sz="0" w:color="auto"/>
+                    </w:pBdr>
+                    <w:tabs>
+                      <w:tab w:val="left" w:pos="720"/>
+                    </w:tabs>
+                    <w:spacing w:before="0"/>
+                    <w:jc w:val="both"/>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                      <w:b w:val="0"/>
+                      <w:bCs w:val="0"/>
+                      <w:color w:val="000000"/>
+                      <w:sz w:val="24"/>
+                      <w:szCs w:val="24"/>
+                      <w:u w:color="000000"/>
+                    </w:rPr>
+                  </w:pPr>
+                </w:p>
+                <w:p w14:paraId="2B2922C5" w14:textId="77777777" w:rsidR="00612151" w:rsidRPr="00612151" w:rsidRDefault="00612151" w:rsidP="00612151">
+                  <w:pPr>
+                    <w:pStyle w:val="Body"/>
+                  </w:pPr>
+                </w:p>
+                <w:p w14:paraId="7308C10C" w14:textId="77777777" w:rsidR="00612151" w:rsidRDefault="00612151" w:rsidP="00612151">
+                  <w:pPr>
+                    <w:pStyle w:val="Heading2"/>
+                    <w:pBdr>
+                      <w:top w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:left w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:bottom w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:right w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:between w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:bar w:val="none" w:sz="0" w:color="auto"/>
+                    </w:pBdr>
+                    <w:tabs>
+                      <w:tab w:val="left" w:pos="720"/>
+                    </w:tabs>
+                    <w:spacing w:before="0"/>
+                    <w:jc w:val="both"/>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                      <w:b w:val="0"/>
+                      <w:bCs w:val="0"/>
+                      <w:color w:val="000000"/>
+                      <w:sz w:val="24"/>
+                      <w:szCs w:val="24"/>
+                      <w:u w:color="000000"/>
+                    </w:rPr>
+                  </w:pPr>
+                </w:p>
+                <w:p w14:paraId="2CBD9989" w14:textId="6BC5D78C" w:rsidR="00612151" w:rsidRPr="005D0718" w:rsidRDefault="00612151" w:rsidP="00612151">
+                  <w:pPr>
+                    <w:pStyle w:val="Heading2"/>
+                    <w:pBdr>
+                      <w:top w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:left w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:bottom w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:right w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:between w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:bar w:val="none" w:sz="0" w:color="auto"/>
+                    </w:pBdr>
+                    <w:tabs>
+                      <w:tab w:val="left" w:pos="720"/>
+                    </w:tabs>
+                    <w:spacing w:before="0"/>
+                    <w:jc w:val="both"/>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                      <w:b w:val="0"/>
+                      <w:bCs w:val="0"/>
+                      <w:color w:val="000000"/>
+                      <w:sz w:val="24"/>
+                      <w:szCs w:val="24"/>
+                      <w:u w:color="000000"/>
+                    </w:rPr>
+                  </w:pPr>
+                  <w:r>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                      <w:b w:val="0"/>
+                      <w:bCs w:val="0"/>
+                      <w:color w:val="000000"/>
+                      <w:sz w:val="24"/>
+                      <w:szCs w:val="24"/>
+                      <w:u w:color="000000"/>
+                    </w:rPr>
+                    <w:t>__________________</w:t>
+                  </w:r>
+                  <w:r>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                      <w:b w:val="0"/>
+                      <w:bCs w:val="0"/>
+                      <w:color w:val="000000"/>
+                      <w:sz w:val="24"/>
+                      <w:szCs w:val="24"/>
+                      <w:u w:color="000000"/>
+                    </w:rPr>
+                    <w:tab/>
+                  </w:r>
+                  <w:r>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                      <w:b w:val="0"/>
+                      <w:bCs w:val="0"/>
+                      <w:color w:val="000000"/>
+                      <w:sz w:val="24"/>
+                      <w:szCs w:val="24"/>
+                      <w:u w:color="000000"/>
+                    </w:rPr>
+                    <w:tab/>
+                  </w:r>
+                  <w:r w:rsidRPr="005D0718">
+                    <w:rPr>
+                      <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                      <w:b w:val="0"/>
+                      <w:bCs w:val="0"/>
+                      <w:color w:val="000000"/>
+                      <w:sz w:val="24"/>
+                      <w:szCs w:val="24"/>
+                      <w:u w:color="000000"/>
+                    </w:rPr>
+                    <w:tab/>
+                  </w:r>
+                </w:p>
+                <w:p w14:paraId="00B7D81E" w14:textId="285C130A" w:rsidR="00612151" w:rsidRPr="00C07B80" w:rsidRDefault="00382C37" w:rsidP="00612151">
+                  <w:pPr>
+                    <w:pStyle w:val="Heading2"/>
+                    <w:pBdr>
+                      <w:top w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:left w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:bottom w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:right w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:between w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:bar w:val="none" w:sz="0" w:color="auto"/>
+                    </w:pBdr>
+                    <w:tabs>
+                      <w:tab w:val="left" w:pos="720"/>
+                    </w:tabs>
+                    <w:spacing w:before="0"/>
+                    <w:jc w:val="both"/>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                      <w:color w:val="000000"/>
+                      <w:sz w:val="24"/>
+                      <w:szCs w:val="24"/>
+                      <w:u w:color="000000"/>
+                    </w:rPr>
+                  </w:pPr>
+                  <w:r>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                      <w:color w:val="000000"/>
+                      <w:sz w:val="24"/>
+                      <w:szCs w:val="24"/>
+                      <w:u w:color="000000"/>
+                    </w:rPr>
+                    <w:t>XYZ</w:t>
+                  </w:r>
+                  <w:r w:rsidR="00612151">
+                    <w:rPr>
+                      <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                      <w:b w:val="0"/>
+                      <w:bCs w:val="0"/>
+                      <w:color w:val="000000"/>
+                      <w:sz w:val="24"/>
+                      <w:szCs w:val="24"/>
+                      <w:u w:color="000000"/>
+                    </w:rPr>
+                    <w:tab/>
+                    <w:t xml:space="preserve">                      </w:t>
+                  </w:r>
+                </w:p>
+                <w:p w14:paraId="47254F1B" w14:textId="27EAA4FB" w:rsidR="00612151" w:rsidRDefault="00612151" w:rsidP="00612151">
+                  <w:pPr>
+                    <w:pStyle w:val="Body"/>
+                    <w:pBdr>
+                      <w:top w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:left w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:bottom w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:right w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:between w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:bar w:val="none" w:sz="0" w:color="auto"/>
+                    </w:pBdr>
+                  </w:pPr>
+                  <w:proofErr w:type="spellStart"/>
+                  <w:r>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                    </w:rPr>
+                    <w:t>Authorised</w:t>
+                  </w:r>
+                  <w:proofErr w:type="spellEnd"/>
+                  <w:r>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                    </w:rPr>
+                    <w:t xml:space="preserve"> Signatory</w:t>
+                  </w:r>
+                </w:p>
+              </w:tc>
+              <w:tc>
+                <w:tcPr>
+                  <w:tcW w:w="4010" w:type="dxa"/>
+                </w:tcPr>
+                <w:p w14:paraId="683B49C3" w14:textId="6427BCC6" w:rsidR="00612151" w:rsidRPr="004F1EDC" w:rsidRDefault="00612151" w:rsidP="00612151">
+                  <w:pPr>
+                    <w:pStyle w:val="Heading2"/>
+                    <w:pBdr>
+                      <w:top w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:left w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:bottom w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:right w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:between w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:bar w:val="none" w:sz="0" w:color="auto"/>
+                    </w:pBdr>
+                    <w:tabs>
+                      <w:tab w:val="left" w:pos="720"/>
+                    </w:tabs>
+                    <w:spacing w:before="0"/>
+                    <w:jc w:val="both"/>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                      <w:b w:val="0"/>
+                      <w:bCs w:val="0"/>
+                      <w:color w:val="000000"/>
+                      <w:sz w:val="24"/>
+                      <w:szCs w:val="24"/>
+                      <w:u w:color="000000"/>
+                      <w:lang w:val="de-DE"/>
+                    </w:rPr>
+                  </w:pPr>
+                </w:p>
+                <w:p w14:paraId="6381F6A2" w14:textId="77777777" w:rsidR="00612151" w:rsidRPr="004F1EDC" w:rsidRDefault="00612151" w:rsidP="00612151">
+                  <w:pPr>
+                    <w:pStyle w:val="Body"/>
+                    <w:rPr>
+                      <w:lang w:val="de-DE"/>
+                    </w:rPr>
+                  </w:pPr>
+                </w:p>
+                <w:p w14:paraId="4AF43B3A" w14:textId="77777777" w:rsidR="00612151" w:rsidRPr="004F1EDC" w:rsidRDefault="00612151" w:rsidP="00612151">
+                  <w:pPr>
+                    <w:pStyle w:val="Heading2"/>
+                    <w:pBdr>
+                      <w:top w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:left w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:bottom w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:right w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:between w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:bar w:val="none" w:sz="0" w:color="auto"/>
+                    </w:pBdr>
+                    <w:tabs>
+                      <w:tab w:val="left" w:pos="720"/>
+                    </w:tabs>
+                    <w:spacing w:before="0"/>
+                    <w:jc w:val="both"/>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                      <w:b w:val="0"/>
+                      <w:bCs w:val="0"/>
+                      <w:color w:val="000000"/>
+                      <w:sz w:val="24"/>
+                      <w:szCs w:val="24"/>
+                      <w:u w:color="000000"/>
+                      <w:lang w:val="de-DE"/>
+                    </w:rPr>
+                  </w:pPr>
+                </w:p>
+                <w:p w14:paraId="56E31493" w14:textId="45899A60" w:rsidR="00612151" w:rsidRPr="00CD1960" w:rsidRDefault="00612151" w:rsidP="00612151">
+                  <w:pPr>
+                    <w:pStyle w:val="Heading2"/>
+                    <w:pBdr>
+                      <w:top w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:left w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:bottom w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:right w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:between w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:bar w:val="none" w:sz="0" w:color="auto"/>
+                    </w:pBdr>
+                    <w:tabs>
+                      <w:tab w:val="left" w:pos="720"/>
+                    </w:tabs>
+                    <w:spacing w:before="0"/>
+                    <w:jc w:val="both"/>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                      <w:b w:val="0"/>
+                      <w:bCs w:val="0"/>
+                      <w:color w:val="000000"/>
+                      <w:sz w:val="24"/>
+                      <w:szCs w:val="24"/>
+                      <w:u w:color="000000"/>
+                      <w:lang w:val="de-DE"/>
+                    </w:rPr>
+                  </w:pPr>
+                  <w:r w:rsidRPr="00CD1960">
+                    <w:rPr>
+                      <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                      <w:b w:val="0"/>
+                      <w:bCs w:val="0"/>
+                      <w:color w:val="000000"/>
+                      <w:sz w:val="24"/>
+                      <w:szCs w:val="24"/>
+                      <w:u w:color="000000"/>
+                      <w:lang w:val="de-DE"/>
+                    </w:rPr>
+                    <w:t>________________</w:t>
+                  </w:r>
+                  <w:r w:rsidRPr="00CD1960">
+                    <w:rPr>
+                      <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                      <w:b w:val="0"/>
+                      <w:bCs w:val="0"/>
+                      <w:color w:val="000000"/>
+                      <w:sz w:val="24"/>
+                      <w:szCs w:val="24"/>
+                      <w:u w:color="000000"/>
+                      <w:lang w:val="de-DE"/>
+                    </w:rPr>
+                    <w:tab/>
+                  </w:r>
+                  <w:r w:rsidRPr="00CD1960">
+                    <w:rPr>
+                      <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                      <w:b w:val="0"/>
+                      <w:bCs w:val="0"/>
+                      <w:color w:val="000000"/>
+                      <w:sz w:val="24"/>
+                      <w:szCs w:val="24"/>
+                      <w:u w:color="000000"/>
+                      <w:lang w:val="de-DE"/>
+                    </w:rPr>
+                    <w:tab/>
+                  </w:r>
+                  <w:r w:rsidRPr="00CD1960">
+                    <w:rPr>
+                      <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                      <w:b w:val="0"/>
+                      <w:bCs w:val="0"/>
+                      <w:color w:val="000000"/>
+                      <w:sz w:val="24"/>
+                      <w:szCs w:val="24"/>
+                      <w:u w:color="000000"/>
+                      <w:lang w:val="de-DE"/>
+                    </w:rPr>
+                    <w:tab/>
+                  </w:r>
+                </w:p>
+                <w:p w14:paraId="4C7A542E" w14:textId="77777777" w:rsidR="007A1B74" w:rsidRDefault="007A1B74" w:rsidP="00612151">
+                  <w:pPr>
+                    <w:pStyle w:val="Heading2"/>
+                    <w:pBdr>
+                      <w:top w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:left w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:bottom w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:right w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:between w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:bar w:val="none" w:sz="0" w:color="auto"/>
+                    </w:pBdr>
+                    <w:tabs>
+                      <w:tab w:val="left" w:pos="720"/>
+                    </w:tabs>
+                    <w:spacing w:before="0"/>
+                    <w:jc w:val="both"/>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                      <w:color w:val="000000"/>
+                      <w:sz w:val="24"/>
+                      <w:szCs w:val="24"/>
+                      <w:u w:color="000000"/>
+                      <w:lang w:val="de-DE"/>
+                    </w:rPr>
+                  </w:pPr>
+                </w:p>
+                <w:p w14:paraId="4F3991D4" w14:textId="04E47C1F" w:rsidR="00612151" w:rsidRPr="00CD1960" w:rsidRDefault="00612151" w:rsidP="00612151">
+                  <w:pPr>
+                    <w:pStyle w:val="Heading2"/>
+                    <w:pBdr>
+                      <w:top w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:left w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:bottom w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:right w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:between w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:bar w:val="none" w:sz="0" w:color="auto"/>
+                    </w:pBdr>
+                    <w:tabs>
+                      <w:tab w:val="left" w:pos="720"/>
+                    </w:tabs>
+                    <w:spacing w:before="0"/>
+                    <w:jc w:val="both"/>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                      <w:b w:val="0"/>
+                      <w:bCs w:val="0"/>
+                      <w:color w:val="000000"/>
+                      <w:sz w:val="24"/>
+                      <w:szCs w:val="24"/>
+                      <w:u w:color="000000"/>
+                      <w:lang w:val="de-DE"/>
+                    </w:rPr>
+                  </w:pPr>
+                  <w:r w:rsidRPr="00CD1960">
+                    <w:rPr>
+                      <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                      <w:color w:val="000000"/>
+                      <w:sz w:val="24"/>
+                      <w:szCs w:val="24"/>
+                      <w:u w:color="000000"/>
+                      <w:lang w:val="de-DE"/>
+                    </w:rPr>
+                    <w:t xml:space="preserve">Verso Management </w:t>
+                  </w:r>
+                  <w:r w:rsidR="008C0E29" w:rsidRPr="00CD1960">
+                    <w:rPr>
+                      <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                      <w:color w:val="000000"/>
+                      <w:sz w:val="24"/>
+                      <w:szCs w:val="24"/>
+                      <w:u w:color="000000"/>
+                      <w:lang w:val="de-DE"/>
+                    </w:rPr>
+                    <w:t>Ltd</w:t>
+                  </w:r>
+                </w:p>
+                <w:p w14:paraId="1E7924DB" w14:textId="5A4BDA54" w:rsidR="008C0E29" w:rsidRPr="00CD1960" w:rsidRDefault="008C0E29" w:rsidP="00612151">
+                  <w:pPr>
+                    <w:pStyle w:val="Heading2"/>
+                    <w:pBdr>
+                      <w:top w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:left w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:bottom w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:right w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:between w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:bar w:val="none" w:sz="0" w:color="auto"/>
+                    </w:pBdr>
+                    <w:tabs>
+                      <w:tab w:val="left" w:pos="720"/>
+                    </w:tabs>
+                    <w:spacing w:before="0"/>
+                    <w:jc w:val="both"/>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Arial" w:eastAsia="Arial Unicode MS" w:hAnsi="Arial" w:cs="Arial"/>
+                      <w:b w:val="0"/>
+                      <w:bCs w:val="0"/>
+                      <w:color w:val="000000"/>
+                      <w:sz w:val="24"/>
+                      <w:szCs w:val="24"/>
+                      <w:u w:color="000000"/>
+                      <w:lang w:val="de-DE"/>
+                    </w:rPr>
+                  </w:pPr>
+                  <w:r w:rsidRPr="00CD1960">
+                    <w:rPr>
+                      <w:rFonts w:ascii="Arial" w:eastAsia="Arial Unicode MS" w:hAnsi="Arial" w:cs="Arial"/>
+                      <w:b w:val="0"/>
+                      <w:bCs w:val="0"/>
+                      <w:color w:val="000000"/>
+                      <w:sz w:val="24"/>
+                      <w:szCs w:val="24"/>
+                      <w:u w:color="000000"/>
+                      <w:lang w:val="de-DE"/>
+                    </w:rPr>
+                    <w:t>c/o Julien Machot</w:t>
+                  </w:r>
+                </w:p>
+                <w:p w14:paraId="1932799D" w14:textId="4BA89C18" w:rsidR="00612151" w:rsidRDefault="00612151" w:rsidP="00612151">
+                  <w:pPr>
+                    <w:pStyle w:val="Heading2"/>
+                    <w:pBdr>
+                      <w:top w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:left w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:bottom w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:right w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:between w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:bar w:val="none" w:sz="0" w:color="auto"/>
+                    </w:pBdr>
+                    <w:tabs>
+                      <w:tab w:val="left" w:pos="720"/>
+                    </w:tabs>
+                    <w:spacing w:before="0"/>
+                    <w:jc w:val="both"/>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Arial" w:eastAsia="Arial Unicode MS" w:hAnsi="Arial" w:cs="Arial"/>
+                      <w:b w:val="0"/>
+                      <w:bCs w:val="0"/>
+                      <w:color w:val="000000"/>
+                      <w:sz w:val="24"/>
+                      <w:szCs w:val="24"/>
+                      <w:u w:color="000000"/>
+                    </w:rPr>
+                  </w:pPr>
+                  <w:proofErr w:type="spellStart"/>
+                  <w:r w:rsidRPr="00612151">
+                    <w:rPr>
+                      <w:rFonts w:ascii="Arial" w:eastAsia="Arial Unicode MS" w:hAnsi="Arial" w:cs="Arial"/>
+                      <w:b w:val="0"/>
+                      <w:bCs w:val="0"/>
+                      <w:color w:val="000000"/>
+                      <w:sz w:val="24"/>
+                      <w:szCs w:val="24"/>
+                      <w:u w:color="000000"/>
+                    </w:rPr>
+                    <w:t>Authorised</w:t>
+                  </w:r>
+                  <w:proofErr w:type="spellEnd"/>
+                  <w:r w:rsidRPr="00612151">
+                    <w:rPr>
+                      <w:rFonts w:ascii="Arial" w:eastAsia="Arial Unicode MS" w:hAnsi="Arial" w:cs="Arial"/>
+                      <w:b w:val="0"/>
+                      <w:bCs w:val="0"/>
+                      <w:color w:val="000000"/>
+                      <w:sz w:val="24"/>
+                      <w:szCs w:val="24"/>
+                      <w:u w:color="000000"/>
+                    </w:rPr>
+                    <w:t xml:space="preserve"> Signatory </w:t>
+                  </w:r>
+                </w:p>
+                <w:p w14:paraId="719D8602" w14:textId="2E5BF77E" w:rsidR="00612151" w:rsidRPr="00612151" w:rsidRDefault="00612151" w:rsidP="00612151">
+                  <w:pPr>
+                    <w:pStyle w:val="Heading2"/>
+                    <w:pBdr>
+                      <w:top w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:left w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:bottom w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:right w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:between w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:bar w:val="none" w:sz="0" w:color="auto"/>
+                    </w:pBdr>
+                    <w:tabs>
+                      <w:tab w:val="left" w:pos="720"/>
+                    </w:tabs>
+                    <w:spacing w:before="0"/>
+                    <w:jc w:val="both"/>
+                    <w:rPr>
+                      <w:rFonts w:ascii="Arial" w:eastAsia="Arial Unicode MS" w:hAnsi="Arial" w:cs="Arial"/>
+                      <w:b w:val="0"/>
+                      <w:bCs w:val="0"/>
+                      <w:color w:val="000000"/>
+                      <w:sz w:val="24"/>
+                      <w:szCs w:val="24"/>
+                      <w:u w:color="000000"/>
+                    </w:rPr>
+                  </w:pPr>
+                  <w:r w:rsidRPr="00612151">
+                    <w:rPr>
+                      <w:rFonts w:ascii="Arial" w:eastAsia="Arial Unicode MS" w:hAnsi="Arial" w:cs="Arial"/>
+                      <w:b w:val="0"/>
+                      <w:bCs w:val="0"/>
+                      <w:color w:val="000000"/>
+                      <w:sz w:val="24"/>
+                      <w:szCs w:val="24"/>
+                      <w:u w:color="000000"/>
+                    </w:rPr>
+                    <w:t xml:space="preserve">   </w:t>
+                  </w:r>
+                </w:p>
+                <w:p w14:paraId="4C985F3E" w14:textId="77777777" w:rsidR="00612151" w:rsidRDefault="00612151" w:rsidP="00C8460C">
+                  <w:pPr>
+                    <w:pStyle w:val="Body"/>
+                    <w:pBdr>
+                      <w:top w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:left w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:bottom w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:right w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:between w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:bar w:val="none" w:sz="0" w:color="auto"/>
+                    </w:pBdr>
+                  </w:pPr>
+                </w:p>
+                <w:p w14:paraId="3F9BA4FD" w14:textId="77777777" w:rsidR="00D43294" w:rsidRDefault="00D43294" w:rsidP="00C8460C">
+                  <w:pPr>
+                    <w:pStyle w:val="Body"/>
+                    <w:pBdr>
+                      <w:top w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:left w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:bottom w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:right w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:between w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:bar w:val="none" w:sz="0" w:color="auto"/>
+                    </w:pBdr>
+                  </w:pPr>
+                </w:p>
+                <w:p w14:paraId="6586C46E" w14:textId="77777777" w:rsidR="00D43294" w:rsidRDefault="00D43294" w:rsidP="00C8460C">
+                  <w:pPr>
+                    <w:pStyle w:val="Body"/>
+                    <w:pBdr>
+                      <w:top w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:left w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:bottom w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:right w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:between w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:bar w:val="none" w:sz="0" w:color="auto"/>
+                    </w:pBdr>
+                  </w:pPr>
+                </w:p>
+                <w:p w14:paraId="7D58A801" w14:textId="0BFC34EB" w:rsidR="007A1B74" w:rsidRDefault="007A1B74" w:rsidP="00C8460C">
+                  <w:pPr>
+                    <w:pStyle w:val="Body"/>
+                    <w:pBdr>
+                      <w:top w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:left w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:bottom w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:right w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:between w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                      <w:bar w:val="none" w:sz="0" w:color="auto"/>
+                    </w:pBdr>
+                  </w:pPr>
+                </w:p>
+              </w:tc>
+            </w:tr>
+          </w:tbl>
+          <w:p w14:paraId="640B3897" w14:textId="0E2DA07C" w:rsidR="00AE5694" w:rsidRPr="00612151" w:rsidRDefault="00AE5694" w:rsidP="00612151">
+            <w:pPr>
+              <w:pStyle w:val="Heading2"/>
+              <w:pBdr>
+                <w:top w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:left w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:bottom w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:right w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:between w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+                <w:bar w:val="none" w:sz="0" w:color="auto"/>
+              </w:pBdr>
+              <w:tabs>
+                <w:tab w:val="left" w:pos="720"/>
+              </w:tabs>
+              <w:spacing w:before="0"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:b w:val="0"/>
+                <w:bCs w:val="0"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="24"/>
+                <w:szCs w:val="24"/>
+                <w:u w:color="000000"/>
+              </w:rPr>
+            </w:pPr>
+          </w:p>
+        </w:tc>
+      </w:tr>
+    </w:tbl>
+    <w:p w14:paraId="3A2A418B" w14:textId="3AB32452" w:rsidR="005C3C37" w:rsidRDefault="005C3C37" w:rsidP="0097248C">
+      <w:pPr>
+        <w:pStyle w:val="Body"/>
+        <w:rPr>
+          <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+          <w:b/>
+          <w:bCs/>
+          <w:color w:val="0D0D0D"/>
+          <w:u w:color="0D0D0D"/>
+        </w:rPr>
+      </w:pPr>
+    </w:p>
+    <w:sectPr w:rsidR="005C3C37" w:rsidSect="000039A9">
+      <w:headerReference w:type="default" r:id="rId8"/>
+      <w:footerReference w:type="default" r:id="rId9"/>
+      <w:pgSz w:w="12240" w:h="15840"/>
+      <w:pgMar w:top="1530" w:right="1440" w:bottom="900" w:left="1440" w:header="708" w:footer="708" w:gutter="0"/>
+      <w:cols w:space="720"/>
+    </w:sectPr>
+  </w:body>
+</w:document>

@@ -23,7 +23,8 @@ import {
 import { format } from 'date-fns'
 import { SignatureCanvasWidget } from '@/components/signature/signature-canvas-widget'
 import { InlinePdfViewer } from '@/components/signature/inline-pdf-viewer'
-import type { SignatureTask, SignatureGroup, ExpiredSignature } from './page'
+import type { SignatureGroup, ExpiredSignature } from './page'
+import type { SignatureTask } from './page'
 
 interface SignatureRequestPublicView {
   signing_token: string
@@ -90,6 +91,15 @@ export function VersoSignPageClient({
       // Fetch signature request details
       const response = await fetch(`/api/signature/${token}`)
       if (!response.ok) {
+        // Handle specific error cases
+        if (response.status === 410) {
+          throw new Error('This signature request has expired. Please check the "Expired" tab or resend the signature request.')
+        } else if (response.status === 400) {
+          const errorData = await response.json().catch(() => ({}))
+          throw new Error(errorData.error || 'This signature request is no longer valid.')
+        } else if (response.status === 404) {
+          throw new Error('Signature request not found. It may have been deleted or never created.')
+        }
         throw new Error('Failed to fetch signature request')
       }
 
@@ -442,12 +452,51 @@ Action Required: ${task.instructions?.action_required || 'Send signature link to
               <CardContent>
                 {/* Handle expired signatures tab */}
                 {group.category === 'expired' ? (
-                  (group.expiredSignatures?.length || 0) === 0 ? (
+                  ((group.expiredSignatures?.length || 0) === 0 && (group.tasks?.length || 0) === 0) ? (
                     <div className="text-center py-8 text-muted-foreground">
                       No expired signatures
                     </div>
                   ) : (
                     <div className="space-y-4">
+                      {/* Show expired tasks (tasks with expired signature requests) */}
+                      {group.tasks?.map(task => (
+                        <div
+                          key={task.id}
+                          className="border border-red-200 rounded-lg p-4 bg-red-50/50 dark:bg-red-950/20 dark:border-red-900"
+                        >
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                <AlertCircle className="h-4 w-4 text-red-600" />
+                                <h4 className="font-semibold text-foreground">{task.title}</h4>
+                                <Badge variant="destructive">Expired</Badge>
+                              </div>
+                              <p className="text-sm text-muted-foreground mb-3">
+                                {task.description || 'The signature request for this task has expired.'}
+                              </p>
+                              <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+                                {task.instructions?.investor_name && (
+                                  <span className="flex items-center gap-1">
+                                    <Users className="h-3 w-3" />
+                                    {task.instructions.investor_name}
+                                  </span>
+                                )}
+                                {task.instructions?.investor_email && (
+                                  <span className="flex items-center gap-1">
+                                    <Mail className="h-3 w-3" />
+                                    {task.instructions.investor_email}
+                                  </span>
+                                )}
+                                <span className="flex items-center gap-1">
+                                  <Calendar className="h-3 w-3" />
+                                  Created {format(new Date(task.created_at), 'MMM d, yyyy')}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                      {/* Show expired signature requests */}
                       {group.expiredSignatures?.map(sig => (
                         <div
                           key={sig.id}

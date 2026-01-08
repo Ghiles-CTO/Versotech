@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { z } from 'zod'
 import { getAppUrl } from '@/lib/signature/token'
+import { sendInvitationEmail } from '@/lib/email/resend-service'
 
 // Input validation schema
 const inviteStaffSchema = z.object({
@@ -41,21 +42,24 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const validatedData = inviteStaffSchema.parse(body)
 
+    const normalizedEmail = validatedData.email.trim().toLowerCase()
+
     // Check if email already exists in profiles
     const { data: existingProfile } = await supabase
       .from('profiles')
       .select('id')
-      .eq('email', validatedData.email)
+      .eq('email', normalizedEmail)
       .single()
 
     if (existingProfile) {
       return NextResponse.json({ error: 'Email already registered' }, { status: 400 })
     }
 
-    // Send invitation via Supabase Auth
-    const { data: authData, error: authError} = await supabase.auth.admin.inviteUserByEmail(
-      validatedData.email,
-      {
+    // Generate invite link via Supabase Auth (email sent via Resend)
+    const { data: authData, error: authError } = await supabase.auth.admin.generateLink({
+      type: 'invite',
+      email: normalizedEmail,
+      options: {
         data: {
           display_name: validatedData.display_name,
           role: validatedData.role,
@@ -65,15 +69,13 @@ export async function POST(request: NextRequest) {
         // The callback will then redirect to staff portal based on user role
         redirectTo: `${getAppUrl()}/auth/callback?portal=staff`
       }
-    )
+    })
 
-    if (authError) {
+    const inviteLink = authData?.properties?.action_link
+
+    if (authError || !authData?.user || !inviteLink) {
       console.error('Auth invitation error:', authError)
       return NextResponse.json({ error: 'Failed to invite user' }, { status: 500 })
-    }
-
-    if (!authData.user) {
-      return NextResponse.json({ error: 'Failed to create user' }, { status: 500 })
     }
 
     // Create profile (password_set = false until they set a password)
@@ -83,7 +85,7 @@ export async function POST(request: NextRequest) {
       .from('profiles')
       .upsert({
         id: authData.user.id,
-        email: validatedData.email,
+        email: normalizedEmail,
         role: validatedData.role,
         display_name: validatedData.display_name,
         title: validatedData.title,
@@ -126,6 +128,29 @@ export async function POST(request: NextRequest) {
         )
     }
 
+    const { data: inviterProfile } = await supabase
+      .from('profiles')
+      .select('display_name, email')
+      .eq('id', user.id)
+      .single()
+
+    const inviterName = inviterProfile?.display_name || inviterProfile?.email || 'VERSO Holdings'
+
+    const emailResult = await sendInvitationEmail({
+      email: normalizedEmail,
+      inviteeName: validatedData.display_name,
+      entityName: 'VERSO Holdings',
+      entityType: 'staff',
+      role: validatedData.role,
+      inviterName,
+      acceptUrl: inviteLink,
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+    })
+
+    if (!emailResult.success) {
+      console.error('Failed to send staff invitation email:', emailResult.error)
+    }
+
     // Log the action in audit_logs
     await supabase
       .from('audit_logs')
@@ -136,7 +161,7 @@ export async function POST(request: NextRequest) {
         entity_type: 'profiles',
         entity_id: authData.user.id,
         action_details: {
-          email: validatedData.email,
+          email: normalizedEmail,
           role: validatedData.role,
           display_name: validatedData.display_name,
           is_super_admin: validatedData.is_super_admin,
@@ -149,7 +174,7 @@ export async function POST(request: NextRequest) {
       message: 'Staff member invited successfully',
       data: {
         user_id: authData.user.id,
-        email: validatedData.email,
+        email: normalizedEmail,
         role: validatedData.role,
       },
     })

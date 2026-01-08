@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -59,9 +60,17 @@ type CapitalMetrics = {
 interface InvestorDetailClientProps {
   investor: InvestorDetail
   capitalMetrics: CapitalMetrics
+  metricsAvailable?: boolean
 }
 
-export function InvestorDetailClient({ investor, capitalMetrics }: InvestorDetailClientProps) {
+export function InvestorDetailClient({ investor, capitalMetrics, metricsAvailable }: InvestorDetailClientProps) {
+  const [tabsReady, setTabsReady] = useState(false)
+  const hasMetrics = metricsAvailable !== false
+
+  useEffect(() => {
+    setTabsReady(true)
+  }, [])
+
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
@@ -113,14 +122,20 @@ export function InvestorDetailClient({ investor, capitalMetrics }: InvestorDetai
             <CardTitle className="text-sm font-medium text-muted-foreground">Total Commitment</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-foreground">
-              {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(capitalMetrics.total_commitment)}
+            <div className={hasMetrics ? "text-2xl font-bold text-foreground" : "text-2xl font-semibold text-muted-foreground"}>
+              {hasMetrics
+                ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(capitalMetrics.total_commitment)
+                : 'Pending'}
             </div>
             <div className="text-sm text-muted-foreground mt-1">
-              {capitalMetrics.vehicle_count > 0 ? (
-                <>Across {capitalMetrics.vehicle_count} vehicle{capitalMetrics.vehicle_count !== 1 ? 's' : ''}</>
+              {hasMetrics ? (
+                capitalMetrics.vehicle_count > 0 ? (
+                  <>Across {capitalMetrics.vehicle_count} vehicle{capitalMetrics.vehicle_count !== 1 ? 's' : ''}</>
+                ) : (
+                  <>No subscriptions yet</>
+                )
               ) : (
-                <>No subscriptions yet</>
+                <>Metrics pending</>
               )}
             </div>
           </CardContent>
@@ -131,11 +146,15 @@ export function InvestorDetailClient({ investor, capitalMetrics }: InvestorDetai
             <CardTitle className="text-sm font-medium text-muted-foreground">Contributed / Unfunded</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-400">
-              {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(capitalMetrics.total_contributed)}
+            <div className={hasMetrics ? "text-2xl font-bold text-green-400" : "text-2xl font-semibold text-muted-foreground"}>
+              {hasMetrics
+                ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(capitalMetrics.total_contributed)
+                : 'Pending'}
             </div>
             <div className="text-sm text-muted-foreground mt-1">
-              Unfunded: {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(capitalMetrics.unfunded_commitment)}
+              {hasMetrics
+                ? <>Unfunded: {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(capitalMetrics.unfunded_commitment)}</>
+                : <>Metrics pending</>}
             </div>
           </CardContent>
         </Card>
@@ -145,17 +164,22 @@ export function InvestorDetailClient({ investor, capitalMetrics }: InvestorDetai
             <CardTitle className="text-sm font-medium text-muted-foreground">Current NAV</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-400">
-              {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(capitalMetrics.current_nav)}
+            <div className={hasMetrics ? "text-2xl font-bold text-blue-400" : "text-2xl font-semibold text-muted-foreground"}>
+              {hasMetrics
+                ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(capitalMetrics.current_nav)
+                : 'Pending'}
             </div>
             <div className="text-sm text-muted-foreground mt-1">
-              Distributed: {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(capitalMetrics.total_distributed)}
+              {hasMetrics
+                ? <>Distributed: {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(capitalMetrics.total_distributed)}</>
+                : <>Metrics pending</>}
             </div>
           </CardContent>
         </Card>
       </div>
 
       {/* Tabbed Content */}
+      {tabsReady ? (
       <Tabs defaultValue="overview" className="space-y-6" id={`investor-tabs-${investor.id}`}>
         <TabsList className="grid w-full grid-cols-6 lg:w-auto lg:inline-grid">
           <TabsTrigger value="overview" className="gap-2">
@@ -315,6 +339,12 @@ export function InvestorDetailClient({ investor, capitalMetrics }: InvestorDetai
           <ActivityTimelineWrapper investorId={investor.id} />
         </TabsContent>
       </Tabs>
+      ) : (
+        <div className="space-y-4">
+          <div className="h-10 rounded-md bg-muted/50" />
+          <div className="h-64 rounded-lg border border-dashed border-muted-foreground/30 bg-muted/20" />
+        </div>
+      )}
     </div>
   )
 }

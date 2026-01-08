@@ -15,6 +15,7 @@ type ExportInvestorsButtonProps = {
     totalCommitment: number
     totalContributed: number
     vehicleCount: number
+    metricsAvailable?: boolean
     relationshipManager: string
     country: string
     lastActivity: string
@@ -48,9 +49,9 @@ export function ExportInvestorsButton({ investors }: ExportInvestorsButtonProps)
         inv.email,
         inv.kycStatus,
         inv.onboardingStatus,
-        inv.totalCommitment,
-        inv.totalContributed,
-        inv.vehicleCount,
+        inv.metricsAvailable === false ? 'Pending' : inv.totalCommitment,
+        inv.metricsAvailable === false ? 'Pending' : inv.totalContributed,
+        inv.metricsAvailable === false ? 'Pending' : inv.vehicleCount,
         inv.relationshipManager,
         inv.country,
         new Date(inv.lastActivity).toLocaleDateString()
@@ -89,4 +90,3 @@ export function ExportInvestorsButton({ investors }: ExportInvestorsButtonProps)
     </Button>
   )
 }
-

@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "10 days/day5/FEE_SYSTEM_ANALYSIS_AND_REFACTORING_PLAN.md",
+                "file": "10 days/day 7/PRE meeting.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "FEE_SYSTEM_ANALYSIS_AND_REFACTORING_PLAN"
+              "title": "PRE meeting"
             }
           },
           {
@@ -199,10 +199,16 @@
   },
   "active": "3e117a3b32dcf196",
   "lastOpenFiles": [
+    "10 days/day 7/VERSO_MONEY_FLOW_WALKTHROUGH.md",
+    "10 days/day 7/PRE meeting.md",
     "10 days/day5/FEE_SYSTEM_AND_DISPATCH_GUIDE.md",
+    "10 days/day5/meeting2.md",
     "10 days/day5/DISPATCHING_NDA_CLOSING_IMPLEMENTATION.md",
     "10 days/day5/FEE_SYSTEM_ANALYSIS_AND_REFACTORING_PLAN.md",
-    "10 days/day5/meeting2.md",
+    "10 days/day6/meeting3.md",
+    "10 days/day 7",
+    "10 days/day6",
+    "Untitled",
     "10 days/Untitled.md",
     "10 days/day5",
     "10 days/VERSO_BUSINESS_PROCESS_MAP.md",
@@ -223,9 +229,6 @@
     "COMMERCIAL_PARTNER_AUDIT.md",
     "INTRODUCER_AUDIT.md",
     "INTRODUCER_REALITY_CHECK.md",
-    "INTRODUCER_COMPLETE_AUDIT.md",
-    "LAWYER_AUDIT.md",
-    "Welcome.md",
     "10 days/day1"
   ]
 }

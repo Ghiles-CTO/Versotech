@@ -46,6 +46,11 @@ export async function POST(request: Request, { params }: RouteParams) {
       return NextResponse.json({ error: 'Not a member of this deal' }, { status: 403 })
     }
 
+    // Enforce persona restrictions: introducers and lawyers never get data room access
+    if (membership.role === 'introducer' || membership.role === 'lawyer') {
+      return NextResponse.json({ error: 'Data room access not available for this role' }, { status: 403 })
+    }
+
     // If already has access, return current status
     if (membership.data_room_granted_at) {
       const { data: accessRecord } = await serviceSupabase
@@ -179,6 +184,18 @@ export async function GET(request: Request, { params }: RouteParams) {
     }
 
     const investorId = investorLinks[0].investor_id
+
+    // Enforce persona restrictions before returning access
+    const { data: membership } = await serviceSupabase
+      .from('deal_memberships')
+      .select('role')
+      .eq('deal_id', dealId)
+      .eq('user_id', user.id)
+      .maybeSingle()
+
+    if (membership?.role === 'introducer' || membership?.role === 'lawyer') {
+      return NextResponse.json({ error: 'Data room access not available for this role' }, { status: 403 })
+    }
 
     // Get access record (use maybeSingle as access might not exist)
     const { data: accessRecord } = await serviceSupabase

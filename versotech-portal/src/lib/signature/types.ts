@@ -2,8 +2,8 @@
  * Type definitions for the signature system
  */
 
-export type DocumentType = 'nda' | 'subscription' | 'amendment' | 'introducer_agreement' | 'placement_agreement' | 'other'
-export type SignerRole = 'investor' | 'admin' | 'arranger' | 'introducer' | 'commercial_partner'
+export type DocumentType = 'nda' | 'subscription' | 'amendment' | 'introducer_agreement' | 'placement_agreement' | 'certificate' | 'other'
+export type SignerRole = 'investor' | 'admin' | 'arranger' | 'introducer' | 'commercial_partner' | 'lawyer' | 'ceo'
 export type SignaturePosition = 'party_a' | 'party_b'
 export type SignatureStatus = 'pending' | 'signed' | 'expired' | 'cancelled'
 

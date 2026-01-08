@@ -41,6 +41,8 @@ export interface SignatureTask {
     investor_name?: string
     issue?: string
   } | null
+  // Computed flag: true if the linked signature request has expired
+  _expired?: boolean
 }
 
 export interface ExpiredSignature {
@@ -75,12 +77,49 @@ export default async function StaffSignaturesPage() {
   const supabase = await createClient()
 
   // Fetch all signature-related tasks for this staff member
-  const { data: tasks } = await supabase
+  const { data: allTasks } = await supabase
     .from('tasks')
     .select('*')
     .eq('owner_user_id', user.id)
     .in('kind', ['countersignature', 'subscription_pack_signature', 'other'])
     .order('due_at', { ascending: true, nullsFirst: false })
+
+  // Filter out pending/in_progress tasks where the linked signature request has expired
+  // This prevents showing "Sign Document" for expired signature requests
+  let tasks = allTasks || []
+
+  if (tasks.length > 0) {
+    // Get signature request IDs for pending tasks
+    const pendingTasksWithSignatureRef = tasks.filter(
+      t => (t.status === 'pending' || t.status === 'in_progress') &&
+           t.related_entity_type === 'signature_request' &&
+           t.related_entity_id
+    )
+
+    if (pendingTasksWithSignatureRef.length > 0) {
+      const signatureRequestIds = pendingTasksWithSignatureRef.map(t => t.related_entity_id)
+
+      // Check which signature requests are expired
+      const { data: expiredSigRequests } = await supabase
+        .from('signature_requests')
+        .select('id')
+        .in('id', signatureRequestIds)
+        .eq('status', 'expired')
+
+      const expiredIds = new Set((expiredSigRequests || []).map(s => s.id))
+
+      // Filter out tasks with expired signature requests from actionable view
+      // Move them to a separate "expired tasks" category
+      tasks = tasks.map(t => {
+        if (expiredIds.has(t.related_entity_id) &&
+            (t.status === 'pending' || t.status === 'in_progress')) {
+          // Mark as expired for UI purposes (don't mutate DB here)
+          return { ...t, _expired: true }
+        }
+        return t
+      })
+    }
+  }
 
   // Fetch expired signature requests
   const { data: expiredSignatures } = await supabase
@@ -96,7 +135,7 @@ export default async function StaffSignaturesPage() {
 
   // Sort by priority (high → medium → low), then by due_at
   const priorityOrder: Record<string, number> = { high: 0, medium: 1, low: 2 }
-  const allTasks = ((tasks as SignatureTask[]) || []).sort((a, b) => {
+  const sortedTasks = ((tasks as SignatureTask[]) || []).sort((a, b) => {
     const pA = priorityOrder[a.priority] ?? 99
     const pB = priorityOrder[b.priority] ?? 99
     if (pA !== pB) return pA - pB
@@ -106,13 +145,18 @@ export default async function StaffSignaturesPage() {
     return new Date(a.due_at).getTime() - new Date(b.due_at).getTime()
   })
 
+  // Separate expired tasks from actionable tasks
+  const actionableTasks = sortedTasks.filter(t => !t._expired)
+  const expiredTasks = sortedTasks.filter(t => t._expired)
+
   // Group tasks by type
   const signatureGroups: SignatureGroup[] = [
     {
       category: 'countersignatures',
       title: 'Pending Countersignatures',
       description: 'Subscription agreements awaiting your countersignature',
-      tasks: allTasks.filter(t =>
+      // Only show non-expired tasks in actionable view
+      tasks: actionableTasks.filter(t =>
         t.kind === 'countersignature' &&
         (t.status === 'pending' || t.status === 'in_progress')
       )
@@ -121,7 +165,7 @@ export default async function StaffSignaturesPage() {
       category: 'follow_ups',
       title: 'Manual Follow-ups Required',
       description: 'Investors without platform accounts - manual intervention needed',
-      tasks: allTasks.filter(t =>
+      tasks: actionableTasks.filter(t =>
         t.metadata?.issue === 'investor_no_user_account' &&
         t.status === 'pending'
       )
@@ -130,7 +174,7 @@ export default async function StaffSignaturesPage() {
       category: 'other',
       title: 'Completed Signatures',
       description: 'Recently completed signature tasks',
-      tasks: allTasks.filter(t =>
+      tasks: sortedTasks.filter(t =>
         (t.kind === 'countersignature' || t.kind === 'subscription_pack_signature') &&
         t.status === 'completed'
       ).slice(0, 10) // Show last 10 completed
@@ -139,26 +183,27 @@ export default async function StaffSignaturesPage() {
       category: 'expired',
       title: 'Expired Signatures',
       description: 'Signature requests that have expired - may need to be resent',
-      tasks: [],
+      // Include both expired signature requests AND tasks with expired signatures
+      tasks: expiredTasks,
       expiredSignatures: (expiredSignatures as unknown as ExpiredSignature[]) || []
     }
   ]
 
-  // Get stats for dashboard
+  // Get stats for dashboard (only count actionable tasks)
   const stats = {
-    pending: allTasks.filter(t => t.status === 'pending').length,
-    in_progress: allTasks.filter(t => t.status === 'in_progress').length,
-    completed_today: allTasks.filter(t =>
+    pending: actionableTasks.filter(t => t.status === 'pending').length,
+    in_progress: actionableTasks.filter(t => t.status === 'in_progress').length,
+    completed_today: sortedTasks.filter(t =>
       t.status === 'completed' &&
       t.completed_at &&
       new Date(t.completed_at).toDateString() === new Date().toDateString()
     ).length,
-    overdue: allTasks.filter(t =>
+    overdue: actionableTasks.filter(t =>
       t.status === 'pending' &&
       t.due_at &&
       new Date(t.due_at) < new Date()
     ).length,
-    expired: (expiredSignatures || []).length
+    expired: (expiredSignatures || []).length + expiredTasks.length
   }
 
   return (

@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>VERSO Capital - Fee Sharing & Non-Circumvention Agreement</title>
+    <!-- League Spartan font for VERSO logo -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@700;800;900&display=swap" rel="stylesheet">
+    <style>
+        /* Page setup for PDF generation */
+        @page {
+            size: A4;
+            margin: 2cm 2cm 2.5cm 2cm;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            /* Body padding for PDF converters that don't respect @page margins */
+            padding: 0;
+            margin: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 11pt;
+            line-height: 1.4;
+            color: #0D0D0D;
+            /* Padding for PDF generators - ensures content doesn't touch edges */
+            padding: 20mm 20mm 25mm 20mm;
+        }
+
+        /* VERSO Logo */
+        .logo-container {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .logo-container img {
+            max-width: 140px;
+            height: auto;
+        }
+
+        .logo-text {
+            font-family: 'League Spartan', sans-serif;
+            font-size: 32pt;
+            font-weight: 800;
+            letter-spacing: 10px;
+            color: #000;
+            text-transform: uppercase;
+        }
+
+        /* Main Title */
+        .main-title {
+            text-align: center;
+            font-size: 16pt;
+            font-weight: bold;
+            margin: 15px 0 5px 0;
+        }
+
+        .introducer-title {
+            text-align: center;
+            font-size: 16pt;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        /* Main Content Table */
+        table.main-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid #000;
+            margin-bottom: 15px;
+        }
+
+        table.main-table td {
+            border: 1px solid #000;
+            padding: 10px 12px;
+            vertical-align: top;
+            font-size: 10pt;
+            line-height: 1.5;
+        }
+
+        table.main-table td.label-cell {
+            width: 18%;
+            background-color: #F2F2F2;
+            font-weight: bold;
+            font-size: 10pt;
+            vertical-align: top;
+        }
+
+        table.main-table td.content-cell {
+            width: 82%;
+            text-align: justify;
+        }
+
+        /* Paragraphs inside table */
+        table.main-table p {
+            margin: 8px 0;
+            text-align: justify;
+        }
+
+        table.main-table p:first-child {
+            margin-top: 0;
+        }
+
+        table.main-table p:last-child {
+            margin-bottom: 0;
+        }
+
+        /* Bold spans */
+        .bold {
+            font-weight: bold;
+        }
+
+        /* Sub-sections in Payment Basis */
+        .sub-header {
+            font-weight: bold;
+            text-decoration: underline;
+            margin-top: 12px;
+            margin-bottom: 6px;
+        }
+
+        /* Formula/calculation styling */
+        .formula {
+            font-family: Arial, sans-serif;
+            margin: 4px 0 4px 20px;
+        }
+
+        /* Divider */
+        .divider {
+            text-align: center;
+            font-size: 14pt;
+            letter-spacing: 4px;
+            margin: 15px 0;
+        }
+
+        /* Signature Table */
+        table.signature-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 30px;
+        }
+
+        table.signature-table td {
+            width: 50%;
+            padding: 10px 20px;
+            vertical-align: top;
+            text-align: center;
+        }
+
+        .signature-line {
+            border-bottom: 1px solid #000;
+            min-height: 60px;
+            margin-bottom: 8px;
+        }
+
+        .signature-name {
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+
+        .signature-title {
+            font-size: 9pt;
+        }
+
+        /* ============================================
+           PAGE BREAK & PDF GENERATION OPTIMIZATIONS
+           Applied always (not just @media print)
+           ============================================ */
+
+        /* Table can break across pages, but rows should stay together */
+        table.main-table {
+            page-break-inside: auto;
+            border-collapse: collapse;
+        }
+
+        /* Each table row should NOT be split across pages */
+        table.main-table tr {
+            page-break-inside: avoid;
+            page-break-after: auto;
+        }
+
+        /* Table cells should not be split */
+        table.main-table td {
+            page-break-inside: avoid;
+        }
+
+        /* For long content cells (like Payment Basis), allow breaking */
+        table.main-table td.content-cell {
+            page-break-inside: auto;
+        }
+
+        /* Paragraphs inside cells should stay together when possible */
+        table.main-table p {
+            page-break-inside: avoid;
+            orphans: 3;
+            widows: 3;
+        }
+
+        /* Sub-headers should not be separated from following content */
+        .sub-header {
+            page-break-after: avoid;
+        }
+
+        /* Formula blocks should stay together */
+        .formula {
+            page-break-inside: avoid;
+        }
+
+        /* Signature section should stay on same page */
+        table.signature-table {
+            page-break-inside: avoid;
+            page-break-before: auto;
+        }
+
+        /* Logo and title should stay on first page */
+        .logo-container, .main-title, .introducer-title {
+            page-break-after: avoid;
+        }
+
+        /* Print-specific adjustments */
+        @media print {
+            body {
+                padding: 0; /* @page margins take over in print */
+            }
+
+            table.main-table tr {
+                page-break-inside: avoid !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- VERSO Logo -->
+<div class="logo-container">
+    <div class="logo-text">VERSO</div>
+</div>
+
+<!-- Main Title -->
+<div class="main-title">Fee Sharing & Non-Circumvention Agreement</div>
+<div class="introducer-title">{{ $json.introducer_name }}</div>
+
+<!-- Main Content Table -->
+<table class="main-table">
+    <!-- Row 1: Ref -->
+    <tr>
+        <td class="label-cell">Ref</td>
+        <td class="content-cell">
+            {{ $json.reference_number }}
+        </td>
+    </tr>
+
+    <!-- Row 2: Date -->
+    <tr>
+        <td class="label-cell">Date</td>
+        <td class="content-cell">
+            {{ $json.agreement_date }}
+        </td>
+    </tr>
+
+    <!-- Row 3: Introduction -->
+    <tr>
+        <td class="label-cell">Introduction</td>
+        <td class="content-cell">
+            <p>The present fee agreement is made between the parties ("Parties") below in relation to any equity financing in <span class="bold">{{ $json.company_name }}</span> (the "Company") including but not limited to Secondaries Placements, within a VERSO Capital's controlled entity (including VERSO Capital, VERSO Fund, and VERSO Disruptive Founders) or in the market with VERSO's Clients (the "Project"):</p>
+
+            <p><span class="bold">VERSO Management Limited</span> ("VERSO" or "Advisor"), a registered, regulated asset management company registered under the laws of the British Virgin Islands with registered office at Maduro Building, c/o Hauteville Trust (BVI) Ltd, Main Road, Tortola VC1110 British Virgin Islands, holder of the Category II license under the auspices of the Financial Services Commission, represented by <span class="bold">{{ $json.verso_representative_name }}</span>, its {{ $json.verso_representative_title }},</p>
+
+            <p>and</p>
+
+            <p><span class="bold">{{ $json.introducer_name }}</span> ("Introducer"), with registered office address at <span class="bold">{{ $json.introducer_address }}</span> as Introducer having presented Investors participating to the said Project.</p>
+        </td>
+    </tr>
+
+    <!-- Row 4: Non-Circumvention -->
+    <tr>
+        <td class="label-cell">Non-Circumvention</td>
+        <td class="content-cell">
+            <p>For {{ $json.non_circumvention_period }}, the Introducer undertakes not to circumvent VERSO on the Project herein presented by entering into any transactions related to the same Project.</p>
+
+            <p>The parties undertake not to make use of a third party to circumvent this clause regarding the Project.</p>
+        </td>
+    </tr>
+
+    <!-- Row 5: Scope of Services -->
+    <tr>
+        <td class="label-cell">Scope of Services</td>
+        <td class="content-cell">
+            <p>This agreement confirms the nature and scope of the services that VERSO has asked the Introducer to provide, the details and amount of the fees payable, method of payment and when the fees are due to be paid.</p>
+
+            <p>The parties wish to enter into this Fee Sharing Agreement for the referral by the Introducer of the Investors to participate to the Project.</p>
+
+            <p>The parties confirm that the Introducer has introduced the new Investors and is therefore irrevocably entitled to the Fee confirmed below upon successful, final completion.</p>
+
+            <p>The Introducer may assist VERSO to address KYC and compliance.</p>
+        </td>
+    </tr>
+
+    <!-- Row 6: Payment Basis - Fee Structure -->
+    <tr>
+        <td class="label-cell">Payment Basis</td>
+        <td class="content-cell">
+            <p>In consideration of the services set out above, the parties have irrevocably understood and agreed to the following fee structure ("Introduction Fee").</p>
+
+            <p class="sub-header">Prospective Investors:</p>
+            <p>The introduced investors ("Investor") shall solely be Qualified Investors or Institutional Clients. No US FATCA client shall be authorized in VERSO. No PEP client shall be approved for investment unless presented to VERSO with corroborative documentation about their source of wealth.</p>
+
+            <p class="sub-header">Introduction Fee Determination:</p>
+            <p>The Introduction Fee should be calculated as a one-off <span class="bold">{{ $json.subscription_fee_percent }}%</span> subscription fee applied on the total amount of capital to be subscribed by the introduced investors at the time of the investment and payable as per the terms herein by VERSO to the Introducer.</p>
+
+            <p class="sub-header">Performance Fee Determination:</p>
+            <p>The Performance Fee should be calculated as a carried interest of <span class="bold">{{ $json.performance_fee_percent }}%</span> {{ $json.hurdle_rate_text }}{{ $json.performance_cap_text }}, to be applied on the gross performance calculated at the time of the redemption of the investment opportunity.</p>
+        </td>
+    </tr>
+
+    <!-- Row 6b: Payment Basis - Numerical Example (Introduction Fee) -->
+    <tr>
+        <td class="label-cell" style="border-top: none;"></td>
+        <td class="content-cell" style="border-top: none;">
+            <p class="sub-header">Numerical Example:</p>
+            <p>In the event an investor purchases <span class="bold">{{ $json.example_shares }}</span> shares at USD <span class="bold">{{ $json.example_price_per_share }}</span>, here the total purchase price ("PP"), then the following would apply to determine the Introducer's Introduction Fee ("Fi"):</p>
+
+            <p class="formula">PP = ({{ $json.example_shares }} x {{ $json.example_price_per_share }})</p>
+            <p class="formula">PP = {{ $json.example_purchase_price }}</p>
+            <p class="formula">Fi = ({{ $json.example_purchase_price }} x {{ $json.subscription_fee_decimal }})</p>
+            <p class="formula">Fi = {{ $json.example_introduction_fee }}</p>
+
+            <p>The Introduction Fee payable to the Introducer would be equal to <span class="bold">USD {{ $json.example_introduction_fee }}</span> only.</p>
+        </td>
+    </tr>
+
+    <!-- Row 6c: Payment Basis - Numerical Example (Performance Fee) -->
+    <tr>
+        <td class="label-cell" style="border-top: none;"></td>
+        <td class="content-cell" style="border-top: none;">
+            <p>In case the same investment returns a price per share at redemption ("RP") of USD {{ $json.example_redemption_price }} per share, then the following Performance Fee ("Fp") shall apply:</p>
+
+            <p class="formula">RP = ({{ $json.example_shares }} x {{ $json.example_redemption_price }})</p>
+            <p class="formula">RP = {{ $json.example_redemption_total }}</p>
+            <p class="formula">Fp = [({{ $json.example_shares }} x {{ $json.example_redemption_price }}) - ({{ $json.example_shares }} x {{ $json.example_price_per_share }})] x {{ $json.performance_fee_decimal }}</p>
+            <p class="formula">Fp = {{ $json.example_profit }} x {{ $json.performance_fee_decimal }}</p>
+            <p class="formula">Fp = {{ $json.example_performance_fee }}</p>
+
+            <p>The Performance Fee payable to the Introducer would be equal to <span class="bold">USD {{ $json.example_performance_fee }}</span> only.</p>
+        </td>
+    </tr>
+
+    <!-- Row 6d: Payment Basis - Payment Terms -->
+    <tr>
+        <td class="label-cell" style="border-top: none;"></td>
+        <td class="content-cell" style="border-top: none;">
+            <div class="divider">*****</div>
+
+            <p>All fees above must include VAT (if applicable).{{ $json.vat_registration_text }}</p>
+
+            <p>The introduction fee is payable by VERSO no later than <span class="bold">{{ $json.subscription_fee_payment_days }} business days</span> post completion of the Project. Completion is determined by the date of issuance of the Share Certificates and the Statement of Holding to the Investor by VERSO ("Completion"). VERSO should provide a SWIFT copy to the Introducer upon making the necessary arrangement for the payment of the introduction fee.</p>
+
+            <p>The performance fee is payable by VERSO no later than <span class="bold">{{ $json.performance_fee_payment_days }} business days</span> post redemption ("Redemption") or exit, defined by default as the end of any regulatory lock-up period (typically 6 to 9 months post IPO, on NASDAQ or NYSE, United States).</p>
+        </td>
+    </tr>
+
+    <!-- Row 7: Execution -->
+    <tr>
+        <td class="label-cell">Execution</td>
+        <td class="content-cell">
+            <p>This agreement is governed by the laws of <span class="bold">{{ $json.governing_law }}</span>.</p>
+
+            <p>This agreement shall take effect on <span class="bold">{{ $json.effective_date }}</span>. This agreement is valid for a period of <span class="bold">{{ $json.agreement_duration_months }} months</span> only or for as long as the Project is still not complete and shall be automatically terminated thereafter.</p>
+        </td>
+    </tr>
+</table>
+
+<!-- Signature Section -->
+<p style="margin-top: 25px; margin-bottom: 15px;"><span class="bold">Signed by the parties on this day,</span></p>
+
+<table class="signature-table">
+    <tr>
+        <td>
+            <div class="signature-line"></div>
+            <div class="signature-name">{{ $json.introducer_signatory_name }}</div>
+            <div class="signature-title">Authorised Signatory</div>
+        </td>
+        <td>
+            <div class="signature-line"></div>
+            <div class="signature-name">Verso Management Ltd</div>
+            <div class="signature-title">c/o {{ $json.verso_representative_name }}<br>Authorised Signatory</div>
+        </td>
+    </tr>
+</table>
+
+</body>
+</html>

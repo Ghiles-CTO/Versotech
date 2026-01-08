@@ -40,18 +40,20 @@ export async function GET(
       return NextResponse.json({ error: 'Introducer not found' }, { status: 404 })
     }
 
-    // Fetch fee plans for this introducer with deal and term sheet info
+    // Fetch fee plans for this introducer with deal, term sheet, fee components, and agreement info
     const { data: feePlans, error: feePlansError } = await serviceClient
       .from('fee_plans')
       .select(`
         id,
         name,
+        description,
         status,
         is_active,
         accepted_at,
         accepted_by,
         created_at,
         updated_at,
+        generated_agreement_id,
         deal:deal_id (
           id,
           name,
@@ -60,7 +62,26 @@ export async function GET(
         term_sheet:term_sheet_id (
           id,
           version,
-          status
+          status,
+          term_sheet_date,
+          subscription_fee_percent,
+          management_fee_percent,
+          carried_interest_percent
+        ),
+        fee_components (
+          id,
+          kind,
+          calc_method,
+          rate_bps,
+          flat_amount,
+          frequency
+        ),
+        introducer_agreement:generated_agreement_id (
+          id,
+          reference_number,
+          status,
+          pdf_url,
+          signed_date
         )
       `)
       .eq('introducer_id', introducerId)

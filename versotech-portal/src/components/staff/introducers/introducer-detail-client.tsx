@@ -36,6 +36,10 @@ import {
   ExternalLink,
   Download,
   FileDown,
+  ChevronDown,
+  ChevronUp,
+  Loader2,
+  Info,
 } from 'lucide-react'
 import {
   DropdownMenu,
@@ -128,15 +132,26 @@ type IntroducerMetrics = {
   pendingCommission: number
 }
 
+type FeeComponent = {
+  id: string
+  kind: string
+  calc_method: string | null
+  rate_bps: number | null
+  flat_amount: number | null
+  frequency: string | null
+}
+
 type IntroducerFeePlan = {
   id: string
   name: string
+  description: string | null
   status: 'draft' | 'sent' | 'pending_signature' | 'accepted' | 'rejected'
   is_active: boolean
   accepted_at: string | null
   accepted_by: string | null
   created_at: string
   updated_at: string
+  generated_agreement_id: string | null
   deal: {
     id: string
     name: string
@@ -146,6 +161,18 @@ type IntroducerFeePlan = {
     id: string
     version: number
     status: string
+    term_sheet_date: string | null
+    subscription_fee_percent: number | null
+    management_fee_percent: number | null
+    carried_interest_percent: number | null
+  } | null
+  fee_components: FeeComponent[]
+  introducer_agreement: {
+    id: string
+    reference_number: string | null
+    status: string
+    pdf_url: string | null
+    signed_date: string | null
   } | null
   investor_count: number
 }
@@ -239,8 +266,19 @@ export function IntroducerDetailClient({
   // Fee Plans and Referred Investors state
   const [feePlans, setFeePlans] = useState<IntroducerFeePlan[]>([])
   const [feePlansLoading, setFeePlansLoading] = useState(false)
+  const [expandedFeePlan, setExpandedFeePlan] = useState<string | null>(null)
   const [referredInvestors, setReferredInvestors] = useState<ReferredInvestor[]>([])
   const [referredInvestorsLoading, setReferredInvestorsLoading] = useState(false)
+
+  // Fee component kind labels
+  const feeKindLabels: Record<string, string> = {
+    subscription: 'Subscription Fee',
+    management: 'Management Fee',
+    performance: 'Performance Fee',
+    spread_markup: 'Spread Markup',
+    flat: 'Flat Fee',
+    other: 'Other'
+  }
 
   // Fetch fee plans for this introducer
   const fetchFeePlans = useCallback(async () => {
@@ -687,13 +725,13 @@ export function IntroducerDetailClient({
             <CardHeader>
               <CardTitle>Fee Plans</CardTitle>
               <CardDescription>
-                All fee plans linked to {introducer.legal_name} across deals
+                All fee plans linked to {introducer.legal_name} across deals. Click to expand details.
               </CardDescription>
             </CardHeader>
             <CardContent>
               {feePlansLoading ? (
                 <div className="flex items-center justify-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                 </div>
               ) : feePlans.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 text-center">
@@ -706,44 +744,223 @@ export function IntroducerDetailClient({
                   </p>
                 </div>
               ) : (
-                <div className="space-y-3">
-                  {feePlans.map((feePlan) => (
-                    <div
-                      key={feePlan.id}
-                      className="group flex items-center justify-between p-4 rounded-xl border border-white/10 hover:border-white/20 hover:bg-white/5 transition-all cursor-pointer"
-                      onClick={() => router.push(`/versotech_main/deals/${feePlan.deal?.id}?tab=fee-plans`)}
-                    >
-                      <div className="flex items-center gap-4">
-                        <div className={`p-2.5 rounded-lg ${feePlan.status === 'accepted' ? 'bg-green-500/20' : 'bg-slate-500/20'}`}>
-                          <FileCheck className={`h-5 w-5 ${feePlan.status === 'accepted' ? 'text-green-400' : 'text-slate-400'}`} />
-                        </div>
-                        <div>
-                          <div className="font-medium text-foreground">{feePlan.name}</div>
-                          <div className="text-sm text-muted-foreground flex items-center gap-2 mt-0.5">
-                            <Briefcase className="h-3 w-3" />
-                            {feePlan.deal?.name || 'Unknown Deal'}
-                            {feePlan.term_sheet && (
-                              <span className="text-xs text-muted-foreground/70">
-                                • Term Sheet v{feePlan.term_sheet.version}
-                              </span>
+                <div className="space-y-4">
+                  {feePlans.map((feePlan) => {
+                    const isExpanded = expandedFeePlan === feePlan.id
+                    const hasAgreement = feePlan.introducer_agreement?.pdf_url
+
+                    return (
+                      <div
+                        key={feePlan.id}
+                        className={`rounded-xl border transition-all ${
+                          isExpanded
+                            ? 'border-blue-500/30 bg-blue-500/5'
+                            : 'border-white/10 hover:border-white/20'
+                        }`}
+                      >
+                        {/* Header - Clickable */}
+                        <div
+                          className="flex items-center justify-between p-4 cursor-pointer"
+                          onClick={() => setExpandedFeePlan(isExpanded ? null : feePlan.id)}
+                        >
+                          <div className="flex items-center gap-4">
+                            <div className={`p-2.5 rounded-lg ${feePlan.status === 'accepted' ? 'bg-green-500/20' : 'bg-slate-500/20'}`}>
+                              <FileCheck className={`h-5 w-5 ${feePlan.status === 'accepted' ? 'text-green-400' : 'text-slate-400'}`} />
+                            </div>
+                            <div>
+                              <div className="font-medium text-foreground">{feePlan.name}</div>
+                              <div className="text-sm text-muted-foreground flex items-center gap-2 mt-0.5">
+                                <Briefcase className="h-3 w-3" />
+                                {feePlan.deal?.name || 'Unknown Deal'}
+                                {feePlan.term_sheet && (
+                                  <span className="text-xs text-muted-foreground/70">
+                                    • Term Sheet v{feePlan.term_sheet.version}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            {feePlan.investor_count > 0 && (
+                              <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                                <Users className="h-4 w-4" />
+                                {feePlan.investor_count}
+                              </div>
+                            )}
+                            {hasAgreement && (
+                              <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs">
+                                PDF
+                              </Badge>
+                            )}
+                            <Badge className={feePlanStatusStyles[feePlan.status] || 'bg-gray-500/20 text-gray-400'}>
+                              {feePlan.status}
+                            </Badge>
+                            {isExpanded ? (
+                              <ChevronUp className="h-5 w-5 text-muted-foreground" />
+                            ) : (
+                              <ChevronDown className="h-5 w-5 text-muted-foreground" />
                             )}
                           </div>
                         </div>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        {feePlan.investor_count > 0 && (
-                          <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                            <Users className="h-4 w-4" />
-                            {feePlan.investor_count}
+
+                        {/* Expanded Content */}
+                        {isExpanded && (
+                          <div className="px-4 pb-4 pt-0 border-t border-white/10 mt-0">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
+                              {/* Left Column - Fee Components */}
+                              <div>
+                                <h4 className="text-sm font-medium text-foreground mb-3">Fee Components</h4>
+                                {feePlan.fee_components && feePlan.fee_components.length > 0 ? (
+                                  <div className="space-y-2">
+                                    {feePlan.fee_components.map((component) => (
+                                      <div
+                                        key={component.id}
+                                        className="flex items-center justify-between py-2 px-3 rounded bg-white/5"
+                                      >
+                                        <span className="text-sm text-foreground">
+                                          {feeKindLabels[component.kind] || component.kind}
+                                        </span>
+                                        <Badge variant="outline" className="border-white/20 text-muted-foreground">
+                                          {component.rate_bps ? `${component.rate_bps / 100}%` :
+                                           component.flat_amount ? `$${component.flat_amount.toLocaleString()}` : '—'}
+                                        </Badge>
+                                      </div>
+                                    ))}
+                                  </div>
+                                ) : feePlan.term_sheet ? (
+                                  <div className="space-y-2">
+                                    {feePlan.term_sheet.subscription_fee_percent && (
+                                      <div className="flex items-center justify-between py-2 px-3 rounded bg-white/5">
+                                        <span className="text-sm text-foreground">Subscription Fee</span>
+                                        <Badge variant="outline" className="border-white/20 text-muted-foreground">
+                                          {feePlan.term_sheet.subscription_fee_percent}%
+                                        </Badge>
+                                      </div>
+                                    )}
+                                    {feePlan.term_sheet.management_fee_percent && (
+                                      <div className="flex items-center justify-between py-2 px-3 rounded bg-white/5">
+                                        <span className="text-sm text-foreground">Management Fee</span>
+                                        <Badge variant="outline" className="border-white/20 text-muted-foreground">
+                                          {feePlan.term_sheet.management_fee_percent}%
+                                        </Badge>
+                                      </div>
+                                    )}
+                                    {feePlan.term_sheet.carried_interest_percent && (
+                                      <div className="flex items-center justify-between py-2 px-3 rounded bg-white/5">
+                                        <span className="text-sm text-foreground">Carried Interest</span>
+                                        <Badge variant="outline" className="border-white/20 text-muted-foreground">
+                                          {feePlan.term_sheet.carried_interest_percent}%
+                                        </Badge>
+                                      </div>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <p className="text-sm text-muted-foreground">No fee components defined</p>
+                                )}
+                              </div>
+
+                              {/* Right Column - Agreement & Actions */}
+                              <div>
+                                <h4 className="text-sm font-medium text-foreground mb-3">Agreement</h4>
+                                {feePlan.introducer_agreement ? (
+                                  <div className="space-y-3">
+                                    <div className="flex items-center gap-3 p-3 rounded-lg bg-white/5">
+                                      <div className="p-2 rounded-lg bg-green-500/10">
+                                        <FileSignature className="h-5 w-5 text-green-400" />
+                                      </div>
+                                      <div className="flex-1">
+                                        <p className="text-sm font-medium text-foreground">
+                                          {feePlan.introducer_agreement.reference_number || 'Agreement'}
+                                        </p>
+                                        <p className="text-xs text-muted-foreground">
+                                          Status: {feePlan.introducer_agreement.status}
+                                        </p>
+                                      </div>
+                                    </div>
+                                    {feePlan.introducer_agreement.pdf_url && (
+                                      <div className="flex gap-2">
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          className="flex-1 text-blue-400 border-blue-400/30 hover:bg-blue-400/10"
+                                          onClick={(e) => {
+                                            e.stopPropagation()
+                                            // Preview in new tab
+                                            fetch(`/api/storage/download?path=${encodeURIComponent(feePlan.introducer_agreement!.pdf_url!)}&bucket=deal-documents`)
+                                              .then(res => res.blob())
+                                              .then(blob => {
+                                                const url = window.URL.createObjectURL(blob)
+                                                window.open(url, '_blank')
+                                              })
+                                          }}
+                                        >
+                                          <Eye className="h-4 w-4 mr-1" />
+                                          Preview
+                                        </Button>
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          className="flex-1 text-green-400 border-green-400/30 hover:bg-green-400/10"
+                                          onClick={(e) => {
+                                            e.stopPropagation()
+                                            handleDownloadPdf(
+                                              feePlan.introducer_agreement!.pdf_url!,
+                                              feePlan.introducer_agreement!.reference_number
+                                            )
+                                          }}
+                                          disabled={downloadingPdf === feePlan.introducer_agreement.pdf_url}
+                                        >
+                                          {downloadingPdf === feePlan.introducer_agreement.pdf_url ? (
+                                            <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                                          ) : (
+                                            <Download className="h-4 w-4 mr-1" />
+                                          )}
+                                          Download
+                                        </Button>
+                                      </div>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <div className="flex items-center gap-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                                    <AlertCircle className="h-4 w-4 text-amber-400" />
+                                    <p className="text-sm text-amber-400">No agreement generated yet</p>
+                                  </div>
+                                )}
+
+                                {/* Additional info */}
+                                <div className="mt-4 space-y-2">
+                                  {feePlan.accepted_at && (
+                                    <div className="flex items-center gap-2 text-sm text-green-400">
+                                      <CheckCircle2 className="h-4 w-4" />
+                                      Accepted {formatDate(feePlan.accepted_at)}
+                                    </div>
+                                  )}
+                                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                    <Calendar className="h-4 w-4" />
+                                    Created {formatDate(feePlan.created_at)}
+                                  </div>
+                                </div>
+
+                                {/* Link to deal */}
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="mt-4 w-full"
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    router.push(`/versotech_main/deals/${feePlan.deal?.id}?tab=fee-plans`)
+                                  }}
+                                >
+                                  <ExternalLink className="h-4 w-4 mr-2" />
+                                  View in Deal
+                                </Button>
+                              </div>
+                            </div>
                           </div>
                         )}
-                        <Badge className={feePlanStatusStyles[feePlan.status] || 'bg-gray-500/20 text-gray-400'}>
-                          {feePlan.status}
-                        </Badge>
-                        <ExternalLink className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                       </div>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
               )}
             </CardContent>
@@ -762,7 +979,7 @@ export function IntroducerDetailClient({
             <CardContent>
               {referredInvestorsLoading ? (
                 <div className="flex items-center justify-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                 </div>
               ) : referredInvestors.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 text-center">
@@ -770,9 +987,21 @@ export function IntroducerDetailClient({
                     <Users className="h-10 w-10 text-purple-400/60" />
                   </div>
                   <p className="text-muted-foreground mb-1">No referred investors yet</p>
-                  <p className="text-sm text-muted-foreground/70">
+                  <p className="text-sm text-muted-foreground/70 mb-4">
                     Investors dispatched through this introducer will appear here
                   </p>
+                  <div className="max-w-md p-4 rounded-lg bg-blue-500/10 border border-blue-500/20 text-left">
+                    <div className="flex items-start gap-3">
+                      <Info className="h-5 w-5 text-blue-400 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <p className="text-sm font-medium text-blue-400 mb-1">How to link investors</p>
+                        <p className="text-xs text-muted-foreground">
+                          When dispatching investors from a Deal's Members tab, select this introducer as the
+                          referrer and assign a fee plan. The investor will then appear here with commission tracking.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               ) : (
                 <div className="space-y-3">

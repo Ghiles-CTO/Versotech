@@ -32,13 +32,18 @@ export async function GET(
     // Check if user is a member of this deal (via deal_memberships)
     const { data: membership } = await serviceSupabase
       .from('deal_memberships')
-      .select('user_id')
+      .select('user_id, role')
       .eq('deal_id', dealId)
       .eq('user_id', user.id)
       .single()
 
     if (!membership) {
       return NextResponse.json({ error: 'Access denied to this deal' }, { status: 403 })
+    }
+
+    // Enforce persona restrictions: introducers and lawyers cannot access term sheets
+    if (membership.role === 'introducer' || membership.role === 'lawyer') {
+      return NextResponse.json({ error: 'Access denied to term sheet' }, { status: 403 })
     }
   }
 

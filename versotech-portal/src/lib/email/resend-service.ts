@@ -56,6 +56,7 @@ export async function sendEmail(options: EmailOptions): Promise<EmailResult> {
       }
     }
 
+    const fromAddress = options.from || DEFAULT_FROM
     const response = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
@@ -63,7 +64,7 @@ export async function sendEmail(options: EmailOptions): Promise<EmailResult> {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: options.from || DEFAULT_FROM,
+        from: fromAddress,
         to: options.to,
         subject: options.subject,
         html: options.html,
@@ -80,6 +81,14 @@ export async function sendEmail(options: EmailOptions): Promise<EmailResult> {
     }
 
     const data = await response.json()
+    if (process.env.NODE_ENV !== 'production') {
+      console.info('[resend] Email sent', {
+        id: data.id,
+        from: fromAddress,
+        to: options.to,
+        subject: options.subject
+      })
+    }
     return {
       success: true,
       messageId: data.id,

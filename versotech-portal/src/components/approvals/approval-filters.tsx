@@ -31,6 +31,7 @@ export function ApprovalFilters({ onFilterChange, currentFilters }: ApprovalFilt
     { value: 'member_invitation', label: 'Member Invitations' },
     { value: 'deal_interest', label: 'Deal Interests' },
     { value: 'deal_subscription', label: 'Subscriptions' },
+    { value: 'deal_close', label: 'Deal Close' },
     { value: 'allocation', label: 'Allocations' },
     { value: 'kyc_change', label: 'KYC Changes' },
     { value: 'withdrawal', label: 'Withdrawals' },

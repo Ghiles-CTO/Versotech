@@ -38,6 +38,8 @@ import {
   FileText,
   Loader2,
   ExternalLink,
+  FileDown,
+  Download,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { formatDate } from '@/lib/format'
@@ -79,8 +81,13 @@ type Agreement = {
   created_at: string
   updated_at: string
   introducer: Introducer
-  ceo_signature: SignatureRequest
-  introducer_signature: SignatureRequest
+  ceo_signature_request: SignatureRequest
+  introducer_signature_request: SignatureRequest
+  // New fields for PDF visibility
+  pdf_url: string | null
+  reference_number: string | null
+  performance_fee_bps: number | null
+  hurdle_rate_bps: number | null
 }
 
 interface AgreementDetailClientProps {
@@ -123,6 +130,35 @@ export function AgreementDetailClient({
   const router = useRouter()
   const [loading, setLoading] = useState<string | null>(null)
   const [rejectReason, setRejectReason] = useState('')
+  const [downloadingPdf, setDownloadingPdf] = useState(false)
+
+  // Handle PDF download
+  const handleDownloadPdf = async () => {
+    if (!agreement.pdf_url) return
+
+    setDownloadingPdf(true)
+    try {
+      const response = await fetch(`/api/storage/download?path=${encodeURIComponent(agreement.pdf_url)}&bucket=deal-documents`)
+      if (!response.ok) {
+        throw new Error('Failed to download file')
+      }
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `${agreement.reference_number || 'Fee_Agreement'}.pdf`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
+      toast.success('PDF downloaded successfully')
+    } catch (error) {
+      console.error('Error downloading PDF:', error)
+      toast.error('Failed to download PDF')
+    } finally {
+      setDownloadingPdf(false)
+    }
+  }
 
   const statusStyle = STATUS_STYLES[agreement.status] || STATUS_STYLES.draft
   const StatusIcon = statusStyle.icon
@@ -220,6 +256,11 @@ export function AgreementDetailClient({
             </div>
             <p className="text-muted-foreground mt-1">
               Agreement with {agreement.introducer?.legal_name}
+              {agreement.reference_number && (
+                <span className="ml-2 text-xs font-mono text-muted-foreground/70">
+                  ({agreement.reference_number})
+                </span>
+              )}
             </p>
           </div>
         </div>
@@ -320,6 +361,23 @@ export function AgreementDetailClient({
                 <PenLine className="h-4 w-4 mr-2" />
                 Sign Agreement
               </Link>
+            </Button>
+          )}
+
+          {/* PDF Download - always visible when pdf_url exists */}
+          {agreement.pdf_url && (
+            <Button
+              variant="outline"
+              onClick={handleDownloadPdf}
+              disabled={downloadingPdf}
+              className="border-blue-500/30 text-blue-500 hover:bg-blue-500/10"
+            >
+              {downloadingPdf ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <FileDown className="h-4 w-4 mr-2" />
+              )}
+              Download PDF
             </Button>
           )}
         </div>
@@ -435,8 +493,8 @@ export function AgreementDetailClient({
             status={agreement.status}
             createdAt={agreement.created_at}
             signedDate={agreement.signed_date}
-            ceoSignature={agreement.ceo_signature}
-            introducerSignature={agreement.introducer_signature}
+            ceoSignature={agreement.ceo_signature_request}
+            introducerSignature={agreement.introducer_signature_request}
           />
         </div>
 

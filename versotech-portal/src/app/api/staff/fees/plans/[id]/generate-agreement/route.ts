@@ -394,11 +394,14 @@ export async function POST(
             console.warn('⚠️ File does not appear to be a valid PDF (signature:', signature, ')');
           }
 
-          // Generate filename: IA-YYMMDD-XXX_IntroducerName.pdf
+          // Generate filename: Fee_Agreement_{company}_{introducer}_{reference}.pdf
+          const safeCompanyName = (deal?.company_name || deal?.name || 'Company')
+            .replace(/[^a-zA-Z0-9]/g, '_')
+            .substring(0, 30);
           const safeIntroducerName = (introducer?.legal_name || 'Unknown')
             .replace(/[^a-zA-Z0-9]/g, '_')
-            .substring(0, 50);
-          const fileName = `${referenceNumber}_${safeIntroducerName}.pdf`;
+            .substring(0, 30);
+          const fileName = `Fee_Agreement_${safeCompanyName}_${safeIntroducerName}_${referenceNumber}.pdf`;
 
           // Upload to Supabase Storage
           const fileKey = `introducer-agreements/${feePlan.deal_id}/${agreement.id}/${fileName}`;
@@ -431,6 +434,103 @@ export async function POST(
               console.error('❌ Failed to update introducer agreement with PDF URL:', pdfUpdateError);
             } else {
               console.log('✅ Introducer agreement updated with PDF URL');
+
+              // === CREATE CEO SIGNATURE TASK IN VERSOSIGN ===
+              // Automatically queue the agreement for CEO signature
+              console.log('📝 Creating CEO signature request and task...');
+
+              try {
+                // Find CEO/staff_admin users to assign the signature task
+                const { data: ceoUsers, error: ceoError } = await supabase
+                  .from('profiles')
+                  .select('id, email, display_name')
+                  .eq('role', 'staff_admin')
+                  .limit(1);
+
+                if (ceoError || !ceoUsers || ceoUsers.length === 0) {
+                  console.warn('⚠️ No CEO/staff_admin users found for signature task');
+                } else {
+                  const ceoUser = ceoUsers[0];
+                  console.log('👔 Found CEO user:', ceoUser.email);
+
+                  // Generate signing token
+                  const crypto = await import('crypto');
+                  const signingToken = crypto.randomUUID();
+                  const expiresAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000); // 14 days
+
+                  // Create signature request for CEO
+                  const { data: signatureRequest, error: sigReqError } = await supabase
+                    .from('signature_requests')
+                    .insert({
+                      // investor_id is nullable - don't set it for introducer agreements
+                      introducer_id: feePlan.introducer_id,
+                      introducer_agreement_id: agreement.id,
+                      deal_id: feePlan.deal_id,
+                      signer_email: ceoUser.email,
+                      signer_name: ceoUser.display_name || 'CEO',
+                      document_type: 'introducer_agreement',
+                      signer_role: 'admin',
+                      signature_position: 'party_a',
+                      signing_token: signingToken,
+                      token_expires_at: expiresAt.toISOString(),
+                      unsigned_pdf_path: fileKey,
+                      status: 'pending',
+                      created_by: user.id,
+                    })
+                    .select('id')
+                    .single();
+
+                  if (sigReqError || !signatureRequest) {
+                    console.error('❌ Failed to create CEO signature request:', sigReqError);
+                  } else {
+                    console.log('✅ CEO signature request created:', signatureRequest.id);
+
+                    // Update agreement with CEO signature request ID and status
+                    await supabase
+                      .from('introducer_agreements')
+                      .update({
+                        ceo_signature_request_id: signatureRequest.id,
+                        status: 'pending_ceo_signature',
+                        updated_at: new Date().toISOString(),
+                      })
+                      .eq('id', agreement.id);
+
+                    // Create task for CEO in VERSOSign
+                    const signingUrl = `/sign/${signingToken}`;
+                    const { error: taskError } = await supabase.from('tasks').insert({
+                      owner_user_id: ceoUser.id,
+                      kind: 'countersignature',
+                      category: 'compliance',
+                      title: `Sign Fee Agreement - ${introducer?.legal_name}`,
+                      description: `Review and sign the introducer fee agreement for ${introducer?.legal_name} (${deal?.company_name || deal?.name})`,
+                      status: 'pending',
+                      priority: 'high',
+                      related_entity_type: 'signature_request',
+                      related_entity_id: signatureRequest.id,
+                      related_deal_id: feePlan.deal_id,
+                      due_at: expiresAt.toISOString(),
+                      instructions: {
+                        type: 'signature',
+                        action_url: signingUrl,
+                        signature_request_id: signatureRequest.id,
+                        document_type: 'introducer_agreement',
+                        introducer_name: introducer?.legal_name,
+                        agreement_id: agreement.id,
+                        reference_number: referenceNumber,
+                      },
+                    });
+
+                    if (taskError) {
+                      console.error('⚠️ Failed to create CEO task:', taskError);
+                    } else {
+                      console.log('✅ CEO task created in VERSOSign');
+                    }
+                  }
+                }
+              } catch (sigError) {
+                console.error('❌ Error creating CEO signature task:', sigError);
+                // Don't fail - the agreement and PDF exist, task can be created manually
+              }
             }
           }
         } else {

@@ -1,0 +1,2902 @@
+<?xml version="1.0" encoding="ascii"?>
+<w:document xmlns:wpc="http://schemas.microsoft.com/office/word/2010/wordprocessingCanvas" xmlns:cx="http://schemas.microsoft.com/office/drawing/2014/chartex" xmlns:cx1="http://schemas.microsoft.com/office/drawing/2015/9/8/chartex" xmlns:cx2="http://schemas.microsoft.com/office/drawing/2015/10/21/chartex" xmlns:cx3="http://schemas.microsoft.com/office/drawing/2016/5/9/chartex" xmlns:cx4="http://schemas.microsoft.com/office/drawing/2016/5/10/chartex" xmlns:cx5="http://schemas.microsoft.com/office/drawing/2016/5/11/chartex" xmlns:cx6="http://schemas.microsoft.com/office/drawing/2016/5/12/chartex" xmlns:cx7="http://schemas.microsoft.com/office/drawing/2016/5/13/chartex" xmlns:cx8="http://schemas.microsoft.com/office/drawing/2016/5/14/chartex" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:aink="http://schemas.microsoft.com/office/drawing/2016/ink" xmlns:am3d="http://schemas.microsoft.com/office/drawing/2017/model3d" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:oel="http://schemas.microsoft.com/office/2019/extlst" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:m="http://schemas.openxmlformats.org/officeDocument/2006/math" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:wp14="http://schemas.microsoft.com/office/word/2010/wordprocessingDrawing" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" xmlns:w10="urn:schemas-microsoft-com:office:word" xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:w14="http://schemas.microsoft.com/office/word/2010/wordml" xmlns:w15="http://schemas.microsoft.com/office/word/2012/wordml" xmlns:w16cex="http://schemas.microsoft.com/office/word/2018/wordml/cex" xmlns:w16cid="http://schemas.microsoft.com/office/word/2016/wordml/cid" xmlns:w16="http://schemas.microsoft.com/office/word/2018/wordml" xmlns:w16du="http://schemas.microsoft.com/office/word/2023/wordml/word16du" xmlns:w16sdtdh="http://schemas.microsoft.com/office/word/2020/wordml/sdtdatahash" xmlns:w16sdtfl="http://schemas.microsoft.com/office/word/2024/wordml/sdtformatlock" xmlns:w16se="http://schemas.microsoft.com/office/word/2015/wordml/symex" xmlns:wpg="http://schemas.microsoft.com/office/word/2010/wordprocessingGroup" xmlns:wpi="http://schemas.microsoft.com/office/word/2010/wordprocessingInk" xmlns:wne="http://schemas.microsoft.com/office/word/2006/wordml" xmlns:wps="http://schemas.microsoft.com/office/word/2010/wordprocessingShape" mc:Ignorable="w14 w15 w16se w16cid w16 w16cex w16sdtdh w16sdtfl w16du wp14">
+  <w:body>
+    <w:p w14:paraId="764DC973" w14:textId="77777777" w:rsidR="001D6709" w:rsidRDefault="00000000">
+      <w:pPr>
+        <w:pBdr>
+          <w:top w:val="nil"/>
+          <w:left w:val="nil"/>
+          <w:right w:val="nil"/>
+          <w:between w:val="nil"/>
+        </w:pBdr>
+        <w:spacing w:before="0" w:after="0" w:line="240" w:lineRule="auto"/>
+        <w:jc w:val="center"/>
+        <w:rPr>
+          <w:rFonts w:ascii="Arial" w:eastAsia="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+          <w:b/>
+          <w:color w:val="0D0D0D"/>
+          <w:sz w:val="32"/>
+          <w:szCs w:val="32"/>
+        </w:rPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:noProof/>
+        </w:rPr>
+        <w:drawing>
+          <wp:anchor distT="0" distB="0" distL="114300" distR="114300" simplePos="0" relativeHeight="251658240" behindDoc="0" locked="0" layoutInCell="1" hidden="0" allowOverlap="1" wp14:anchorId="15EB7EFA" wp14:editId="0672F7B8">
+            <wp:simplePos x="0" y="0"/>
+            <wp:positionH relativeFrom="column">
+              <wp:posOffset>5323840</wp:posOffset>
+            </wp:positionH>
+            <wp:positionV relativeFrom="paragraph">
+              <wp:posOffset>41563</wp:posOffset>
+            </wp:positionV>
+            <wp:extent cx="874395" cy="751840"/>
+            <wp:effectExtent l="0" t="0" r="0" b="0"/>
+            <wp:wrapSquare wrapText="bothSides" distT="0" distB="0" distL="114300" distR="114300"/>
+            <wp:docPr id="1357814704" name="image1.jpg" descr="A black letter x
+
+AI-generated content may be incorrect."/>
+            <wp:cNvGraphicFramePr/>
+            <a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+              <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">
+                <pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">
+                  <pic:nvPicPr>
+                    <pic:cNvPr id="0" name="image1.jpg" descr="A black letter x
+
+AI-generated content may be incorrect."/>
+                    <pic:cNvPicPr preferRelativeResize="0"/>
+                  </pic:nvPicPr>
+                  <pic:blipFill>
+                    <a:blip r:embed="rId7"/>
+                    <a:srcRect/>
+                    <a:stretch>
+                      <a:fillRect/>
+                    </a:stretch>
+                  </pic:blipFill>
+                  <pic:spPr>
+                    <a:xfrm>
+                      <a:off x="0" y="0"/>
+                      <a:ext cx="874395" cy="751840"/>
+                    </a:xfrm>
+                    <a:prstGeom prst="rect">
+                      <a:avLst/>
+                    </a:prstGeom>
+                    <a:ln/>
+                  </pic:spPr>
+                </pic:pic>
+              </a:graphicData>
+            </a:graphic>
+          </wp:anchor>
+        </w:drawing>
+      </w:r>
+    </w:p>
+    <w:p w14:paraId="213629C1" w14:textId="53782009" w:rsidR="001D6709" w:rsidRDefault="00000000">
+      <w:pPr>
+        <w:pBdr>
+          <w:top w:val="nil"/>
+          <w:left w:val="nil"/>
+          <w:right w:val="nil"/>
+          <w:between w:val="nil"/>
+        </w:pBdr>
+        <w:spacing w:before="0" w:after="0" w:line="240" w:lineRule="auto"/>
+        <w:rPr>
+          <w:rFonts w:ascii="Arial" w:eastAsia="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+          <w:b/>
+          <w:color w:val="0D0D0D"/>
+          <w:sz w:val="32"/>
+          <w:szCs w:val="32"/>
+        </w:rPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:rFonts w:ascii="Arial" w:eastAsia="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+          <w:b/>
+          <w:noProof/>
+          <w:color w:val="0D0D0D"/>
+          <w:sz w:val="32"/>
+          <w:szCs w:val="32"/>
+        </w:rPr>
+        <w:drawing>
+          <wp:inline distT="114300" distB="114300" distL="114300" distR="114300" wp14:anchorId="0395F87B" wp14:editId="2B6A47B9">
+            <wp:extent cx="1685925" cy="517505"/>
+            <wp:effectExtent l="0" t="0" r="0" b="0"/>
+            <wp:docPr id="1357814705" name="image2.jpg"/>
+            <wp:cNvGraphicFramePr/>
+            <a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+              <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">
+                <pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">
+                  <pic:nvPicPr>
+                    <pic:cNvPr id="0" name="image2.jpg"/>
+                    <pic:cNvPicPr preferRelativeResize="0"/>
+                  </pic:nvPicPr>
+                  <pic:blipFill>
+                    <a:blip r:embed="rId8"/>
+                    <a:srcRect t="34177" b="35215"/>
+                    <a:stretch>
+                      <a:fillRect/>
+                    </a:stretch>
+                  </pic:blipFill>
+                  <pic:spPr>
+                    <a:xfrm>
+                      <a:off x="0" y="0"/>
+                      <a:ext cx="1685925" cy="517505"/>
+                    </a:xfrm>
+                    <a:prstGeom prst="rect">
+                      <a:avLst/>
+                    </a:prstGeom>
+                    <a:ln/>
+                  </pic:spPr>
+                </pic:pic>
+              </a:graphicData>
+            </a:graphic>
+          </wp:inline>
+        </w:drawing>
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:rFonts w:ascii="Arial" w:eastAsia="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+          <w:b/>
+          <w:color w:val="0D0D0D"/>
+          <w:sz w:val="32"/>
+          <w:szCs w:val="32"/>
+        </w:rPr>
+        <w:t xml:space="preserve">           </w:t>
+      </w:r>
+      <w:r w:rsidR="002C2E0C">
+        <w:rPr>
+          <w:rFonts w:ascii="Arial" w:eastAsia="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+          <w:b/>
+          <w:color w:val="0D0D0D"/>
+          <w:sz w:val="32"/>
+          <w:szCs w:val="32"/>
+          <w:highlight w:val="yellow"/>
+        </w:rPr>
+        <w:t>[</w:t>
+      </w:r>
+      <w:proofErr w:type="spellStart"/>
+      <w:r w:rsidR="002C2E0C">
+        <w:rPr>
+          <w:rFonts w:ascii="Arial" w:eastAsia="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+          <w:b/>
+          <w:color w:val="0D0D0D"/>
+          <w:sz w:val="32"/>
+          <w:szCs w:val="32"/>
+          <w:highlight w:val="yellow"/>
+        </w:rPr>
+        <w:t>V</w:t>
+      </w:r>
+      <w:r w:rsidR="002C2E0C" w:rsidRPr="002C2E0C">
+        <w:rPr>
+          <w:rFonts w:ascii="Arial" w:eastAsia="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+          <w:b/>
+          <w:color w:val="0D0D0D"/>
+          <w:sz w:val="32"/>
+          <w:szCs w:val="32"/>
+          <w:highlight w:val="yellow"/>
+        </w:rPr>
+        <w:t>ehicle.logo</w:t>
+      </w:r>
+      <w:proofErr w:type="spellEnd"/>
+      <w:r w:rsidR="002C2E0C" w:rsidRPr="002C2E0C">
+        <w:rPr>
+          <w:rFonts w:ascii="Arial" w:eastAsia="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+          <w:b/>
+          <w:color w:val="0D0D0D"/>
+          <w:sz w:val="32"/>
+          <w:szCs w:val="32"/>
+          <w:highlight w:val="yellow"/>
+        </w:rPr>
+        <w:t>]</w:t>
+      </w:r>
+    </w:p>
+    <w:p w14:paraId="35EC9706" w14:textId="77777777" w:rsidR="001D6709" w:rsidRDefault="001D6709">
+      <w:pPr>
+        <w:pBdr>
+          <w:top w:val="nil"/>
+          <w:left w:val="nil"/>
+          <w:right w:val="nil"/>
+          <w:between w:val="nil"/>
+        </w:pBdr>
+        <w:spacing w:before="0" w:after="0" w:line="240" w:lineRule="auto"/>
+        <w:jc w:val="center"/>
+        <w:rPr>
+          <w:rFonts w:ascii="Arial" w:eastAsia="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+          <w:b/>
+          <w:color w:val="0D0D0D"/>
+          <w:sz w:val="32"/>
+          <w:szCs w:val="32"/>
+        </w:rPr>
+      </w:pPr>
+    </w:p>
+    <w:p w14:paraId="506A86B6" w14:textId="77777777" w:rsidR="001D6709" w:rsidRDefault="001D6709">
+      <w:pPr>
+        <w:pBdr>
+          <w:top w:val="nil"/>
+          <w:left w:val="nil"/>
+          <w:right w:val="nil"/>
+          <w:between w:val="nil"/>
+        </w:pBdr>
+        <w:spacing w:before="0" w:after="0" w:line="240" w:lineRule="auto"/>
+        <w:rPr>
+          <w:rFonts w:ascii="Arial" w:eastAsia="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+          <w:b/>
+          <w:color w:val="0D0D0D"/>
+          <w:sz w:val="32"/>
+          <w:szCs w:val="32"/>
+        </w:rPr>
+      </w:pPr>
+    </w:p>
+    <w:p w14:paraId="21BEE38A" w14:textId="77777777" w:rsidR="001D6709" w:rsidRDefault="00000000">
+      <w:pPr>
+        <w:pBdr>
+          <w:top w:val="nil"/>
+          <w:left w:val="nil"/>
+          <w:right w:val="nil"/>
+          <w:between w:val="nil"/>
+        </w:pBdr>
+        <w:spacing w:before="0" w:after="0" w:line="240" w:lineRule="auto"/>
+        <w:jc w:val="center"/>
+        <w:rPr>
+          <w:rFonts w:ascii="Arial" w:eastAsia="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+          <w:b/>
+          <w:color w:val="0D0D0D"/>
+          <w:sz w:val="32"/>
+          <w:szCs w:val="32"/>
+        </w:rPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:rFonts w:ascii="Arial" w:eastAsia="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+          <w:b/>
+          <w:color w:val="0D0D0D"/>
+          <w:sz w:val="32"/>
+          <w:szCs w:val="32"/>
+        </w:rPr>
+        <w:t>Indicative Term Sheet</w:t>
+      </w:r>
+    </w:p>
+    <w:p w14:paraId="332BDC6E" w14:textId="3DF566C4" w:rsidR="001D6709" w:rsidRDefault="002A4004">
+      <w:pPr>
+        <w:pBdr>
+          <w:top w:val="nil"/>
+          <w:left w:val="nil"/>
+          <w:right w:val="nil"/>
+          <w:between w:val="nil"/>
+        </w:pBdr>
+        <w:spacing w:before="0" w:after="0" w:line="240" w:lineRule="auto"/>
+        <w:jc w:val="center"/>
+        <w:rPr>
+          <w:rFonts w:ascii="Arial" w:eastAsia="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+          <w:b/>
+          <w:color w:val="0D0D0D"/>
+          <w:sz w:val="32"/>
+          <w:szCs w:val="32"/>
+        </w:rPr>
+      </w:pPr>
+      <w:r w:rsidRPr="00587E0B">
+        <w:rPr>
+          <w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+          <w:b/>
+          <w:color w:val="000000"/>
+          <w:sz w:val="32"/>
+          <w:szCs w:val="20"/>
+          <w:highlight w:val="yellow"/>
+        </w:rPr>
+        <w:t>[TermSheet.title]</w:t>
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+          <w:color w:val="000000"/>
+          <w:sz w:val="21"/>
+          <w:szCs w:val="21"/>
+        </w:rPr>
+        <w:t xml:space="preserve"> </w:t>
+      </w:r>
+      <w:r w:rsidR="00000000" w:rsidRPr="002A4004">
+        <w:rPr>
+          <w:rFonts w:ascii="Arial" w:eastAsia="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+          <w:b/>
+          <w:color w:val="0D0D0D"/>
+          <w:sz w:val="32"/>
+          <w:szCs w:val="32"/>
+          <w:highlight w:val="cyan"/>
+        </w:rPr>
+        <w:t>XAI Secondary Investment 2025</w:t>
+      </w:r>
+    </w:p>
+    <w:p w14:paraId="34B443C0" w14:textId="77777777" w:rsidR="001D6709" w:rsidRDefault="001D6709">
+      <w:pPr>
+        <w:pBdr>
+          <w:top w:val="nil"/>
+          <w:left w:val="nil"/>
+          <w:right w:val="nil"/>
+          <w:between w:val="nil"/>
+        </w:pBdr>
+        <w:spacing w:before="0" w:after="0" w:line="240" w:lineRule="auto"/>
+        <w:jc w:val="center"/>
+        <w:rPr>
+          <w:rFonts w:ascii="Arial" w:eastAsia="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+          <w:b/>
+          <w:color w:val="0D0D0D"/>
+          <w:sz w:val="32"/>
+          <w:szCs w:val="32"/>
+        </w:rPr>
+      </w:pPr>
+    </w:p>
+    <w:p w14:paraId="0297E3C9" w14:textId="77777777" w:rsidR="001D6709" w:rsidRDefault="001D6709">
+      <w:pPr>
+        <w:pBdr>
+          <w:top w:val="nil"/>
+          <w:left w:val="nil"/>
+          <w:right w:val="nil"/>
+          <w:between w:val="nil"/>
+        </w:pBdr>
+        <w:spacing w:before="0" w:after="0" w:line="240" w:lineRule="auto"/>
+        <w:jc w:val="center"/>
+        <w:rPr>
+          <w:rFonts w:ascii="Arial" w:eastAsia="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+          <w:b/>
+          <w:color w:val="0D0D0D"/>
+          <w:sz w:val="32"/>
+          <w:szCs w:val="32"/>
+        </w:rPr>
+      </w:pPr>
+    </w:p>
+    <w:tbl>
+      <w:tblPr>
+        <w:tblStyle w:val="a3"/>
+        <w:tblW w:w="9669" w:type="dxa"/>
+        <w:jc w:val="center"/>
+        <w:tblBorders>
+          <w:top w:val="single" w:sz="4" w:space="0" w:color="000000"/>
+          <w:left w:val="single" w:sz="4" w:space="0" w:color="000000"/>
+          <w:bottom w:val="single" w:sz="4" w:space="0" w:color="000000"/>
+          <w:right w:val="single" w:sz="4" w:space="0" w:color="000000"/>
+          <w:insideH w:val="single" w:sz="4" w:space="0" w:color="000000"/>
+          <w:insideV w:val="single" w:sz="4" w:space="0" w:color="000000"/>
+        </w:tblBorders>
+        <w:tblLayout w:type="fixed"/>
+        <w:tblLook w:val="0400" w:firstRow="0" w:lastRow="0" w:firstColumn="0" w:lastColumn="0" w:noHBand="0" w:noVBand="1"/>
+      </w:tblPr>
+      <w:tblGrid>
+        <w:gridCol w:w="2405"/>
+        <w:gridCol w:w="7264"/>
+      </w:tblGrid>
+      <w:tr w:rsidR="001D6709" w14:paraId="326D78A9" w14:textId="77777777">
+        <w:trPr>
+          <w:trHeight w:val="369"/>
+          <w:jc w:val="center"/>
+        </w:trPr>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:w="2405" w:type="dxa"/>
+            <w:shd w:val="clear" w:color="auto" w:fill="FFFFFF"/>
+            <w:vAlign w:val="center"/>
+          </w:tcPr>
+          <w:p w14:paraId="180A50FE" w14:textId="77777777" w:rsidR="001D6709" w:rsidRDefault="00000000">
+            <w:pPr>
+              <w:spacing w:before="0"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:b/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:b/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+              <w:t>Date</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:w="7264" w:type="dxa"/>
+            <w:shd w:val="clear" w:color="auto" w:fill="FFFFFF"/>
+            <w:vAlign w:val="center"/>
+          </w:tcPr>
+          <w:p w14:paraId="5ED1D1E0" w14:textId="4E299BA7" w:rsidR="001D6709" w:rsidRDefault="002A4004">
+            <w:pPr>
+              <w:spacing w:before="0"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r w:rsidRPr="00E062C1">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:hAnsi="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="yellow"/>
+              </w:rPr>
+              <w:t>[TermSheet.date]</w:t>
+            </w:r>
+            <w:r w:rsidRPr="00E062C1">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r w:rsidR="00000000" w:rsidRPr="002A4004">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="cyan"/>
+              </w:rPr>
+              <w:t>June 12, 2025</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+      </w:tr>
+      <w:tr w:rsidR="001D6709" w14:paraId="1CA3947A" w14:textId="77777777">
+        <w:trPr>
+          <w:trHeight w:val="369"/>
+          <w:jc w:val="center"/>
+        </w:trPr>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:w="2405" w:type="dxa"/>
+            <w:shd w:val="clear" w:color="auto" w:fill="FFFFFF"/>
+            <w:vAlign w:val="center"/>
+          </w:tcPr>
+          <w:p w14:paraId="2CBAAFA8" w14:textId="77777777" w:rsidR="001D6709" w:rsidRDefault="00000000">
+            <w:pPr>
+              <w:spacing w:before="0"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:b/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:b/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+              <w:t>To</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:w="7264" w:type="dxa"/>
+            <w:shd w:val="clear" w:color="auto" w:fill="FFFFFF"/>
+            <w:vAlign w:val="center"/>
+          </w:tcPr>
+          <w:p w14:paraId="10F185B8" w14:textId="1CDC83C9" w:rsidR="001D6709" w:rsidRDefault="002A4004">
+            <w:pPr>
+              <w:spacing w:before="0"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r w:rsidRPr="00E062C1">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:hAnsi="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="yellow"/>
+              </w:rPr>
+              <w:t>[TermSheet.toDescription]</w:t>
+            </w:r>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r w:rsidR="00000000" w:rsidRPr="002A4004">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="cyan"/>
+              </w:rPr>
+              <w:t>Qualified, Professional and Institutional Investors only</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+      </w:tr>
+      <w:tr w:rsidR="001D6709" w14:paraId="46D9587F" w14:textId="77777777">
+        <w:trPr>
+          <w:trHeight w:val="369"/>
+          <w:jc w:val="center"/>
+        </w:trPr>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:w="2405" w:type="dxa"/>
+            <w:shd w:val="clear" w:color="auto" w:fill="FFFFFF"/>
+            <w:vAlign w:val="center"/>
+          </w:tcPr>
+          <w:p w14:paraId="4A83BB60" w14:textId="77777777" w:rsidR="001D6709" w:rsidRDefault="00000000">
+            <w:pPr>
+              <w:spacing w:before="0"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:b/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:b/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+              <w:t>Transaction Type</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:w="7264" w:type="dxa"/>
+            <w:shd w:val="clear" w:color="auto" w:fill="FFFFFF"/>
+            <w:vAlign w:val="center"/>
+          </w:tcPr>
+          <w:p w14:paraId="3AB82E69" w14:textId="1CD6E1CD" w:rsidR="001D6709" w:rsidRDefault="002A4004">
+            <w:pPr>
+              <w:spacing w:before="0"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r w:rsidRPr="00E062C1">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:hAnsi="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="yellow"/>
+              </w:rPr>
+              <w:t>[TermSh</w:t>
+            </w:r>
+            <w:r w:rsidRPr="002A4004">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:hAnsi="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="yellow"/>
+              </w:rPr>
+              <w:t>eet</w:t>
+            </w:r>
+            <w:r w:rsidRPr="002A4004">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:hAnsi="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="yellow"/>
+              </w:rPr>
+              <w:t>.transaction</w:t>
+            </w:r>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:hAnsi="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="yellow"/>
+              </w:rPr>
+              <w:t>description</w:t>
+            </w:r>
+            <w:r w:rsidRPr="002A4004">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="yellow"/>
+              </w:rPr>
+              <w:t>]</w:t>
+            </w:r>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r w:rsidR="00000000" w:rsidRPr="009F10BD">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="cyan"/>
+              </w:rPr>
+              <w:t>XAI Secondary Investment</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+      </w:tr>
+      <w:tr w:rsidR="001D6709" w14:paraId="1344E963" w14:textId="77777777">
+        <w:trPr>
+          <w:trHeight w:val="369"/>
+          <w:jc w:val="center"/>
+        </w:trPr>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:w="2405" w:type="dxa"/>
+            <w:shd w:val="clear" w:color="auto" w:fill="FFFFFF"/>
+            <w:vAlign w:val="center"/>
+          </w:tcPr>
+          <w:p w14:paraId="1B24DEA0" w14:textId="77777777" w:rsidR="001D6709" w:rsidRDefault="00000000">
+            <w:pPr>
+              <w:spacing w:before="0"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:b/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:b/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+              <w:t>Opportunity</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:w="7264" w:type="dxa"/>
+            <w:shd w:val="clear" w:color="auto" w:fill="FFFFFF"/>
+            <w:vAlign w:val="center"/>
+          </w:tcPr>
+          <w:p w14:paraId="707D5579" w14:textId="7B4FF814" w:rsidR="001D6709" w:rsidRDefault="002A4004">
+            <w:pPr>
+              <w:spacing w:before="0"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r w:rsidRPr="002A4004">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:hAnsi="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="yellow"/>
+              </w:rPr>
+              <w:t>[Vehicle.series</w:t>
+            </w:r>
+            <w:r w:rsidRPr="002A4004">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:hAnsi="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="yellow"/>
+              </w:rPr>
+              <w:t>opportunityDescription</w:t>
+            </w:r>
+            <w:r w:rsidRPr="00E062C1">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:hAnsi="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="yellow"/>
+              </w:rPr>
+              <w:t>]</w:t>
+            </w:r>
+            <w:r w:rsidRPr="00E062C1">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:hAnsi="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r w:rsidR="00000000" w:rsidRPr="002A4004">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="cyan"/>
+              </w:rPr>
+              <w:t>In order to secure Preferred Shares (&#8220;Shares&#8221;) of XAI Corp (&#8220;Company&#8221; or &#8220;XAI&#8221;), the Issuer has invited its Limited Partners and Institutional Relations to consider the present investment opportunity directly in a first layer with a Fund invested on the Company&#8217;s captable. Note this Opportunity is provided by the Issuer as an alternative solution due to the scarcity of XAI shares in both primary and secondary markets. VERSO Management Ltd, a regulated Category 2 and Category 3 license holder, shall act as exclusive Arranger for this transaction.</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+      </w:tr>
+      <w:tr w:rsidR="001D6709" w14:paraId="2783F78B" w14:textId="77777777">
+        <w:trPr>
+          <w:trHeight w:val="369"/>
+          <w:jc w:val="center"/>
+        </w:trPr>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:w="2405" w:type="dxa"/>
+            <w:shd w:val="clear" w:color="auto" w:fill="FFFFFF"/>
+            <w:vAlign w:val="center"/>
+          </w:tcPr>
+          <w:p w14:paraId="55BA3A21" w14:textId="77777777" w:rsidR="001D6709" w:rsidRDefault="00000000">
+            <w:pPr>
+              <w:spacing w:before="0"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:b/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:b/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+              <w:t>Issuer</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:w="7264" w:type="dxa"/>
+            <w:shd w:val="clear" w:color="auto" w:fill="FFFFFF"/>
+            <w:vAlign w:val="center"/>
+          </w:tcPr>
+          <w:p w14:paraId="6454E28C" w14:textId="4BC0496D" w:rsidR="001D6709" w:rsidRDefault="002A4004">
+            <w:pPr>
+              <w:spacing w:before="0"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r w:rsidRPr="00E062C1">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:hAnsi="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="yellow"/>
+              </w:rPr>
+              <w:t>[Vehicle.description]</w:t>
+            </w:r>
+            <w:r w:rsidRPr="00E062C1">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r w:rsidR="00000000" w:rsidRPr="002A4004">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="cyan"/>
+              </w:rPr>
+              <w:t>VERSO Capital 2 SCSP (&#8220;Issuer&#8221;), United States incl. OTC / ISIN issuances</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+      </w:tr>
+      <w:tr w:rsidR="001D6709" w14:paraId="54F2B506" w14:textId="77777777">
+        <w:trPr>
+          <w:trHeight w:val="369"/>
+          <w:jc w:val="center"/>
+        </w:trPr>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:w="2405" w:type="dxa"/>
+            <w:shd w:val="clear" w:color="auto" w:fill="FFFFFF"/>
+            <w:vAlign w:val="center"/>
+          </w:tcPr>
+          <w:p w14:paraId="0CBC4B71" w14:textId="77777777" w:rsidR="001D6709" w:rsidRDefault="00000000">
+            <w:pPr>
+              <w:spacing w:before="0"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:b/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:b/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+              <w:t>Vehicles</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:w="7264" w:type="dxa"/>
+            <w:shd w:val="clear" w:color="auto" w:fill="FFFFFF"/>
+            <w:vAlign w:val="center"/>
+          </w:tcPr>
+          <w:p w14:paraId="2EA6ED84" w14:textId="366817A4" w:rsidR="001D6709" w:rsidRDefault="002A4004">
+            <w:pPr>
+              <w:spacing w:before="0"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r w:rsidRPr="00E062C1">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:hAnsi="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="yellow"/>
+              </w:rPr>
+              <w:t>[Vehicle.</w:t>
+            </w:r>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:hAnsi="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="yellow"/>
+              </w:rPr>
+              <w:t>seriesDescription</w:t>
+            </w:r>
+            <w:r w:rsidRPr="00E062C1">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:hAnsi="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="yellow"/>
+              </w:rPr>
+              <w:t>]</w:t>
+            </w:r>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:hAnsi="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r w:rsidR="00000000" w:rsidRPr="002A4004">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="cyan"/>
+              </w:rPr>
+              <w:t>VERSO Capital 2 SCSP Series 209 (&#8220;VC209&#8221;)</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+      </w:tr>
+      <w:tr w:rsidR="001D6709" w14:paraId="1C3659F4" w14:textId="77777777">
+        <w:trPr>
+          <w:trHeight w:val="369"/>
+          <w:jc w:val="center"/>
+        </w:trPr>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:w="2405" w:type="dxa"/>
+            <w:shd w:val="clear" w:color="auto" w:fill="FFFFFF"/>
+            <w:vAlign w:val="center"/>
+          </w:tcPr>
+          <w:p w14:paraId="7E17795F" w14:textId="77777777" w:rsidR="001D6709" w:rsidRDefault="00000000">
+            <w:pPr>
+              <w:spacing w:before="0"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:b/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:b/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+              <w:t>Exclusive Arranger</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:w="7264" w:type="dxa"/>
+            <w:shd w:val="clear" w:color="auto" w:fill="FFFFFF"/>
+            <w:vAlign w:val="center"/>
+          </w:tcPr>
+          <w:p w14:paraId="65983BAD" w14:textId="0E9CB9A8" w:rsidR="001D6709" w:rsidRDefault="002A4004">
+            <w:pPr>
+              <w:spacing w:before="0"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r w:rsidRPr="00E062C1">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:hAnsi="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="yellow"/>
+              </w:rPr>
+              <w:t>[Vehicle.</w:t>
+            </w:r>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:hAnsi="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="yellow"/>
+              </w:rPr>
+              <w:t>arranger</w:t>
+            </w:r>
+            <w:r w:rsidRPr="00E062C1">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:hAnsi="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="yellow"/>
+              </w:rPr>
+              <w:t>]</w:t>
+            </w:r>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:hAnsi="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r w:rsidR="00000000" w:rsidRPr="002A4004">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="cyan"/>
+              </w:rPr>
+              <w:t>VERSO Management Limited, regulated by BVI FSC (&#8220;Arranger&#8221;)</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+      </w:tr>
+      <w:tr w:rsidR="001D6709" w14:paraId="79856A40" w14:textId="77777777">
+        <w:trPr>
+          <w:trHeight w:val="369"/>
+          <w:jc w:val="center"/>
+        </w:trPr>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:w="2405" w:type="dxa"/>
+            <w:shd w:val="clear" w:color="auto" w:fill="FFFFFF"/>
+            <w:vAlign w:val="center"/>
+          </w:tcPr>
+          <w:p w14:paraId="6C25B403" w14:textId="77777777" w:rsidR="001D6709" w:rsidRDefault="00000000">
+            <w:pPr>
+              <w:spacing w:before="0"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:b/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:b/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+              <w:t xml:space="preserve">Purchaser </w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:w="7264" w:type="dxa"/>
+            <w:shd w:val="clear" w:color="auto" w:fill="FFFFFF"/>
+            <w:vAlign w:val="center"/>
+          </w:tcPr>
+          <w:p w14:paraId="7D77D724" w14:textId="08129F20" w:rsidR="001D6709" w:rsidRDefault="002A4004">
+            <w:pPr>
+              <w:spacing w:before="0"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r w:rsidRPr="00E062C1">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:hAnsi="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="yellow"/>
+              </w:rPr>
+              <w:t>[V</w:t>
+            </w:r>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:hAnsi="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="yellow"/>
+              </w:rPr>
+              <w:t>ehicle</w:t>
+            </w:r>
+            <w:r w:rsidRPr="00E062C1">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:hAnsi="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="yellow"/>
+              </w:rPr>
+              <w:t>.purchaser]</w:t>
+            </w:r>
+            <w:r w:rsidRPr="00E062C1">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:hAnsi="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r w:rsidR="00000000" w:rsidRPr="002A4004">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="cyan"/>
+              </w:rPr>
+              <w:t>Qualified Limited Partners and Institutional Clients (&#8220;Purchaser&#8221;)</w:t>
+            </w:r>
+            <w:r w:rsidR="00000000">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> </w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+      </w:tr>
+      <w:tr w:rsidR="001D6709" w14:paraId="41FE2B28" w14:textId="77777777">
+        <w:trPr>
+          <w:trHeight w:val="369"/>
+          <w:jc w:val="center"/>
+        </w:trPr>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:w="2405" w:type="dxa"/>
+            <w:shd w:val="clear" w:color="auto" w:fill="FFFFFF"/>
+            <w:vAlign w:val="center"/>
+          </w:tcPr>
+          <w:p w14:paraId="0E4A01EE" w14:textId="77777777" w:rsidR="001D6709" w:rsidRDefault="00000000">
+            <w:pPr>
+              <w:spacing w:before="0"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:b/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:b/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+              <w:t>Seller</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:w="7264" w:type="dxa"/>
+            <w:shd w:val="clear" w:color="auto" w:fill="FFFFFF"/>
+            <w:vAlign w:val="center"/>
+          </w:tcPr>
+          <w:p w14:paraId="4838B17F" w14:textId="3C1D6AA2" w:rsidR="001D6709" w:rsidRDefault="002A4004">
+            <w:pPr>
+              <w:spacing w:before="0"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r w:rsidRPr="00E062C1">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:hAnsi="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="yellow"/>
+              </w:rPr>
+              <w:t>[V</w:t>
+            </w:r>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:hAnsi="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="yellow"/>
+              </w:rPr>
+              <w:t>ehicle</w:t>
+            </w:r>
+            <w:r w:rsidRPr="00E062C1">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:hAnsi="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="yellow"/>
+              </w:rPr>
+              <w:t>.</w:t>
+            </w:r>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:hAnsi="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="yellow"/>
+              </w:rPr>
+              <w:t>seriessellerDescription</w:t>
+            </w:r>
+            <w:r w:rsidRPr="00E062C1">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:hAnsi="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="yellow"/>
+              </w:rPr>
+              <w:t>]</w:t>
+            </w:r>
+            <w:r w:rsidRPr="00E062C1">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:hAnsi="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r w:rsidR="00000000" w:rsidRPr="002A4004">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="cyan"/>
+              </w:rPr>
+              <w:t>Fund on Captable, Delaware, United States (&#8220;Seller&#8221;)</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+      </w:tr>
+      <w:tr w:rsidR="001D6709" w14:paraId="7CB17C23" w14:textId="77777777">
+        <w:trPr>
+          <w:trHeight w:val="369"/>
+          <w:jc w:val="center"/>
+        </w:trPr>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:w="2405" w:type="dxa"/>
+            <w:shd w:val="clear" w:color="auto" w:fill="FFFFFF"/>
+            <w:vAlign w:val="center"/>
+          </w:tcPr>
+          <w:p w14:paraId="4ECA6516" w14:textId="77777777" w:rsidR="001D6709" w:rsidRDefault="00000000">
+            <w:pPr>
+              <w:spacing w:before="0"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:b/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:b/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+              <w:t>Structure</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:w="7264" w:type="dxa"/>
+            <w:shd w:val="clear" w:color="auto" w:fill="FFFFFF"/>
+            <w:vAlign w:val="center"/>
+          </w:tcPr>
+          <w:p w14:paraId="4594E8BD" w14:textId="7185408F" w:rsidR="001D6709" w:rsidRDefault="002A4004">
+            <w:pPr>
+              <w:spacing w:before="0"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r w:rsidRPr="00E062C1">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:hAnsi="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="yellow"/>
+              </w:rPr>
+              <w:t>[</w:t>
+            </w:r>
+            <w:r w:rsidR="007136D7">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:hAnsi="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="yellow"/>
+              </w:rPr>
+              <w:t>TermSheet.</w:t>
+            </w:r>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:hAnsi="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="yellow"/>
+              </w:rPr>
+              <w:t>structure</w:t>
+            </w:r>
+            <w:r w:rsidRPr="00E062C1">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:hAnsi="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="yellow"/>
+              </w:rPr>
+              <w:t>]</w:t>
+            </w:r>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:hAnsi="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r w:rsidR="00000000" w:rsidRPr="002A4004">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="cyan"/>
+              </w:rPr>
+              <w:t>VCL to invest in Captable Fund, multiple tranches for funding approved</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+      </w:tr>
+      <w:tr w:rsidR="001D6709" w14:paraId="3E9076C8" w14:textId="77777777">
+        <w:trPr>
+          <w:trHeight w:val="369"/>
+          <w:jc w:val="center"/>
+        </w:trPr>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:w="2405" w:type="dxa"/>
+            <w:shd w:val="clear" w:color="auto" w:fill="FFFFFF"/>
+            <w:vAlign w:val="center"/>
+          </w:tcPr>
+          <w:p w14:paraId="3FF456FB" w14:textId="77777777" w:rsidR="001D6709" w:rsidRDefault="00000000">
+            <w:pPr>
+              <w:spacing w:before="0"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:b/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:b/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+              <w:t>Allocation</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:w="7264" w:type="dxa"/>
+            <w:shd w:val="clear" w:color="auto" w:fill="FFFFFF"/>
+            <w:vAlign w:val="center"/>
+          </w:tcPr>
+          <w:p w14:paraId="1BB9B639" w14:textId="643112F6" w:rsidR="001D6709" w:rsidRDefault="00000000">
+            <w:pPr>
+              <w:spacing w:before="0"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+              <w:t xml:space="preserve">Up to </w:t>
+            </w:r>
+            <w:r w:rsidR="002A4004" w:rsidRPr="00E062C1">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="yellow"/>
+              </w:rPr>
+              <w:t>[TermSheet.</w:t>
+            </w:r>
+            <w:r w:rsidR="002A4004">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="yellow"/>
+              </w:rPr>
+              <w:t>c</w:t>
+            </w:r>
+            <w:r w:rsidR="002A4004" w:rsidRPr="00E062C1">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="yellow"/>
+              </w:rPr>
+              <w:t>urrency]</w:t>
+            </w:r>
+            <w:r w:rsidR="002A4004">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r w:rsidRPr="002A4004">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="cyan"/>
+              </w:rPr>
+              <w:t>USD</w:t>
+            </w:r>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r w:rsidR="003A4DE8" w:rsidRPr="00E062C1">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:hAnsi="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="yellow"/>
+              </w:rPr>
+              <w:t xml:space="preserve">[TermSheet.totalIssuance] </w:t>
+            </w:r>
+            <w:r w:rsidRPr="003A4DE8">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="cyan"/>
+              </w:rPr>
+              <w:t>70,000,000</w:t>
+            </w:r>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> only</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+      </w:tr>
+      <w:tr w:rsidR="001D6709" w14:paraId="1893F881" w14:textId="77777777">
+        <w:trPr>
+          <w:trHeight w:val="369"/>
+          <w:jc w:val="center"/>
+        </w:trPr>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:w="2405" w:type="dxa"/>
+            <w:shd w:val="clear" w:color="auto" w:fill="FFFFFF"/>
+            <w:vAlign w:val="center"/>
+          </w:tcPr>
+          <w:p w14:paraId="4729BAD6" w14:textId="77777777" w:rsidR="001D6709" w:rsidRDefault="00000000">
+            <w:pPr>
+              <w:spacing w:before="0"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:b/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:b/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+              <w:t>Price per Share</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:w="7264" w:type="dxa"/>
+            <w:shd w:val="clear" w:color="auto" w:fill="FFFFFF"/>
+            <w:vAlign w:val="center"/>
+          </w:tcPr>
+          <w:p w14:paraId="26F177F7" w14:textId="2D2AC000" w:rsidR="001D6709" w:rsidRDefault="003A4DE8">
+            <w:pPr>
+              <w:spacing w:before="0"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r w:rsidRPr="003A4DE8">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:hAnsi="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="yellow"/>
+              </w:rPr>
+              <w:t>[</w:t>
+            </w:r>
+            <w:r w:rsidRPr="003A4DE8">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:hAnsi="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="yellow"/>
+              </w:rPr>
+              <w:t>TermSheet.unitPriceCurrency</w:t>
+            </w:r>
+            <w:r w:rsidRPr="003A4DE8">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:hAnsi="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="yellow"/>
+              </w:rPr>
+              <w:t>]</w:t>
+            </w:r>
+            <w:r w:rsidRPr="003A4DE8">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:hAnsi="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r w:rsidR="00000000" w:rsidRPr="003A4DE8">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="cyan"/>
+              </w:rPr>
+              <w:t>USD</w:t>
+            </w:r>
+            <w:r w:rsidR="00000000">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r w:rsidRPr="003A4DE8">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:hAnsi="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="yellow"/>
+              </w:rPr>
+              <w:t>[TermSheet.unitPrice]</w:t>
+            </w:r>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:hAnsi="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r w:rsidR="00000000" w:rsidRPr="003A4DE8">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="cyan"/>
+              </w:rPr>
+              <w:t>40.00</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+      </w:tr>
+      <w:tr w:rsidR="001D6709" w14:paraId="1903AFBF" w14:textId="77777777">
+        <w:trPr>
+          <w:trHeight w:val="369"/>
+          <w:jc w:val="center"/>
+        </w:trPr>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:w="2405" w:type="dxa"/>
+            <w:shd w:val="clear" w:color="auto" w:fill="FFFFFF"/>
+            <w:vAlign w:val="center"/>
+          </w:tcPr>
+          <w:p w14:paraId="7FB1220F" w14:textId="77777777" w:rsidR="001D6709" w:rsidRDefault="00000000">
+            <w:pPr>
+              <w:spacing w:before="0"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:b/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:b/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+              <w:t xml:space="preserve">Minimum Ticket </w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:w="7264" w:type="dxa"/>
+            <w:shd w:val="clear" w:color="auto" w:fill="FFFFFF"/>
+            <w:vAlign w:val="center"/>
+          </w:tcPr>
+          <w:p w14:paraId="4974984D" w14:textId="2D90C448" w:rsidR="001D6709" w:rsidRDefault="003A4DE8">
+            <w:pPr>
+              <w:spacing w:before="0"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r w:rsidRPr="00E062C1">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="yellow"/>
+              </w:rPr>
+              <w:t>[TermSheet.</w:t>
+            </w:r>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="yellow"/>
+              </w:rPr>
+              <w:t>c</w:t>
+            </w:r>
+            <w:r w:rsidRPr="00E062C1">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="yellow"/>
+              </w:rPr>
+              <w:t>urrency]</w:t>
+            </w:r>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r w:rsidR="00000000" w:rsidRPr="003A4DE8">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="cyan"/>
+              </w:rPr>
+              <w:t>USD</w:t>
+            </w:r>
+            <w:r w:rsidR="00000000">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r w:rsidRPr="003A4DE8">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="yellow"/>
+              </w:rPr>
+              <w:t>[</w:t>
+            </w:r>
+            <w:r w:rsidRPr="00E062C1">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:hAnsi="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="yellow"/>
+              </w:rPr>
+              <w:t>TermSheet.minimumTicketSize]</w:t>
+            </w:r>
+            <w:r w:rsidRPr="00E062C1">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:hAnsi="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r w:rsidR="00000000" w:rsidRPr="003A4DE8">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="cyan"/>
+              </w:rPr>
+              <w:t>2,500,000</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+      </w:tr>
+      <w:tr w:rsidR="001D6709" w14:paraId="3EB51C99" w14:textId="77777777">
+        <w:trPr>
+          <w:trHeight w:val="369"/>
+          <w:jc w:val="center"/>
+        </w:trPr>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:w="2405" w:type="dxa"/>
+            <w:shd w:val="clear" w:color="auto" w:fill="FFFFFF"/>
+            <w:vAlign w:val="center"/>
+          </w:tcPr>
+          <w:p w14:paraId="3D79E9D6" w14:textId="77777777" w:rsidR="001D6709" w:rsidRDefault="00000000">
+            <w:pPr>
+              <w:pBdr>
+                <w:top w:val="nil"/>
+                <w:left w:val="nil"/>
+                <w:bottom w:val="nil"/>
+                <w:right w:val="nil"/>
+                <w:between w:val="nil"/>
+              </w:pBdr>
+              <w:spacing w:before="0"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:b/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:b/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+              <w:t>Management Fee</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:w="7264" w:type="dxa"/>
+            <w:shd w:val="clear" w:color="auto" w:fill="FFFFFF"/>
+            <w:vAlign w:val="center"/>
+          </w:tcPr>
+          <w:p w14:paraId="090C7A1B" w14:textId="5816FB68" w:rsidR="001D6709" w:rsidRDefault="003A4DE8">
+            <w:pPr>
+              <w:spacing w:before="0"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r w:rsidRPr="00E062C1">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="yellow"/>
+              </w:rPr>
+              <w:t>[TermSheet.</w:t>
+            </w:r>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="yellow"/>
+              </w:rPr>
+              <w:t>managementfee</w:t>
+            </w:r>
+            <w:r w:rsidRPr="00E062C1">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="yellow"/>
+              </w:rPr>
+              <w:t>]</w:t>
+            </w:r>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r w:rsidR="00000000" w:rsidRPr="003A4DE8">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:b/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="cyan"/>
+              </w:rPr>
+              <w:t>Waived</w:t>
+            </w:r>
+            <w:r w:rsidR="00000000" w:rsidRPr="003A4DE8">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="cyan"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> (instead of 2.00% per annum)</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+      </w:tr>
+      <w:tr w:rsidR="001D6709" w14:paraId="2265E8A5" w14:textId="77777777">
+        <w:trPr>
+          <w:trHeight w:val="369"/>
+          <w:jc w:val="center"/>
+        </w:trPr>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:w="2405" w:type="dxa"/>
+            <w:shd w:val="clear" w:color="auto" w:fill="FFFFFF"/>
+            <w:vAlign w:val="center"/>
+          </w:tcPr>
+          <w:p w14:paraId="4516FBAA" w14:textId="77777777" w:rsidR="001D6709" w:rsidRDefault="00000000">
+            <w:pPr>
+              <w:pBdr>
+                <w:top w:val="nil"/>
+                <w:left w:val="nil"/>
+                <w:bottom w:val="nil"/>
+                <w:right w:val="nil"/>
+                <w:between w:val="nil"/>
+              </w:pBdr>
+              <w:spacing w:before="0"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:b/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:b/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+              <w:t>Carried Interest</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:w="7264" w:type="dxa"/>
+            <w:shd w:val="clear" w:color="auto" w:fill="FFFFFF"/>
+            <w:vAlign w:val="center"/>
+          </w:tcPr>
+          <w:p w14:paraId="1DC179AF" w14:textId="290C23E1" w:rsidR="001D6709" w:rsidRDefault="003A4DE8">
+            <w:pPr>
+              <w:spacing w:before="0"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r w:rsidRPr="00E062C1">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="yellow"/>
+              </w:rPr>
+              <w:t>[TermSheet.</w:t>
+            </w:r>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="yellow"/>
+              </w:rPr>
+              <w:t>performance</w:t>
+            </w:r>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="yellow"/>
+              </w:rPr>
+              <w:t>fee</w:t>
+            </w:r>
+            <w:r w:rsidRPr="00E062C1">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="yellow"/>
+              </w:rPr>
+              <w:t>]</w:t>
+            </w:r>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r w:rsidR="00000000" w:rsidRPr="003A4DE8">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:b/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="cyan"/>
+              </w:rPr>
+              <w:t>Waived</w:t>
+            </w:r>
+            <w:r w:rsidR="00000000" w:rsidRPr="003A4DE8">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="cyan"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> (instead of 20.00% no hurdle rate, no applicable cap)</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+      </w:tr>
+      <w:tr w:rsidR="001D6709" w14:paraId="29B75FB3" w14:textId="77777777">
+        <w:trPr>
+          <w:trHeight w:val="369"/>
+          <w:jc w:val="center"/>
+        </w:trPr>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:w="2405" w:type="dxa"/>
+            <w:shd w:val="clear" w:color="auto" w:fill="FFFFFF"/>
+            <w:vAlign w:val="center"/>
+          </w:tcPr>
+          <w:p w14:paraId="3A9AD304" w14:textId="77777777" w:rsidR="001D6709" w:rsidRDefault="00000000">
+            <w:pPr>
+              <w:pBdr>
+                <w:top w:val="nil"/>
+                <w:left w:val="nil"/>
+                <w:bottom w:val="nil"/>
+                <w:right w:val="nil"/>
+                <w:between w:val="nil"/>
+              </w:pBdr>
+              <w:spacing w:before="0"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:b/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:b/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+              <w:t>Legal Counsel</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:w="7264" w:type="dxa"/>
+            <w:shd w:val="clear" w:color="auto" w:fill="FFFFFF"/>
+            <w:vAlign w:val="center"/>
+          </w:tcPr>
+          <w:p w14:paraId="609E0875" w14:textId="4B768EA7" w:rsidR="001D6709" w:rsidRDefault="003A4DE8">
+            <w:pPr>
+              <w:spacing w:before="0"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:hAnsi="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="yellow"/>
+              </w:rPr>
+              <w:t>[Vehicle.series</w:t>
+            </w:r>
+            <w:r w:rsidRPr="00E062C1">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:hAnsi="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="yellow"/>
+              </w:rPr>
+              <w:t>.lawFirmDescription]</w:t>
+            </w:r>
+            <w:r w:rsidRPr="00E062C1">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r w:rsidR="00000000" w:rsidRPr="003A4DE8">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="cyan"/>
+              </w:rPr>
+              <w:t>Dupont Partners Law Firm, Luxembourg (&#8220;Lead Counsel&#8221;)</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+      </w:tr>
+      <w:tr w:rsidR="001D6709" w14:paraId="6B53B941" w14:textId="77777777">
+        <w:trPr>
+          <w:trHeight w:val="369"/>
+          <w:jc w:val="center"/>
+        </w:trPr>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:w="2405" w:type="dxa"/>
+            <w:shd w:val="clear" w:color="auto" w:fill="FFFFFF"/>
+            <w:vAlign w:val="center"/>
+          </w:tcPr>
+          <w:p w14:paraId="7ADF1EC8" w14:textId="77777777" w:rsidR="001D6709" w:rsidRDefault="00000000">
+            <w:pPr>
+              <w:pBdr>
+                <w:top w:val="nil"/>
+                <w:left w:val="nil"/>
+                <w:bottom w:val="nil"/>
+                <w:right w:val="nil"/>
+                <w:between w:val="nil"/>
+              </w:pBdr>
+              <w:spacing w:before="0"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:b/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:b/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+              <w:t xml:space="preserve">Interest Confirmation </w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:w="7264" w:type="dxa"/>
+            <w:shd w:val="clear" w:color="auto" w:fill="FFFFFF"/>
+            <w:vAlign w:val="center"/>
+          </w:tcPr>
+          <w:p w14:paraId="5CACC6CE" w14:textId="1ACF3C42" w:rsidR="001D6709" w:rsidRDefault="0007663B">
+            <w:pPr>
+              <w:spacing w:before="0"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r w:rsidRPr="009F10BD">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:hAnsi="Quattrocento Sans"/>
+                <w:bCs/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+              <w:t>[</w:t>
+            </w:r>
+            <w:r w:rsidRPr="009F10BD">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:hAnsi="Quattrocento Sans"/>
+                <w:bCs/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="yellow"/>
+              </w:rPr>
+              <w:t>TermSheet.</w:t>
+            </w:r>
+            <w:r w:rsidRPr="009F10BD">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:hAnsi="Quattrocento Sans"/>
+                <w:bCs/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="yellow"/>
+              </w:rPr>
+              <w:t>interest</w:t>
+            </w:r>
+            <w:r w:rsidRPr="009F10BD">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:hAnsi="Quattrocento Sans"/>
+                <w:bCs/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="yellow"/>
+              </w:rPr>
+              <w:t>Deadline]</w:t>
+            </w:r>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r w:rsidR="00000000" w:rsidRPr="0007663B">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="cyan"/>
+              </w:rPr>
+              <w:t>By June 13, 2025</w:t>
+            </w:r>
+            <w:r w:rsidR="00000000">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> COB for firm commitments only</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+      </w:tr>
+      <w:tr w:rsidR="001D6709" w14:paraId="77911701" w14:textId="77777777">
+        <w:trPr>
+          <w:trHeight w:val="369"/>
+          <w:jc w:val="center"/>
+        </w:trPr>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:w="2405" w:type="dxa"/>
+            <w:shd w:val="clear" w:color="auto" w:fill="FFFFFF"/>
+            <w:vAlign w:val="center"/>
+          </w:tcPr>
+          <w:p w14:paraId="05F6EC73" w14:textId="77777777" w:rsidR="001D6709" w:rsidRDefault="00000000">
+            <w:pPr>
+              <w:spacing w:before="0"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:b/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:b/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+              <w:t>Capital Call</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:w="7264" w:type="dxa"/>
+            <w:shd w:val="clear" w:color="auto" w:fill="FFFFFF"/>
+            <w:vAlign w:val="center"/>
+          </w:tcPr>
+          <w:p w14:paraId="6CD9B8BD" w14:textId="77777777" w:rsidR="001D6709" w:rsidRDefault="00000000">
+            <w:pPr>
+              <w:spacing w:before="0"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+              <w:t>No later than 3 days prior to confirmed Completion Date by Company with effective funds on Escrow Account (T-3)</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+      </w:tr>
+      <w:tr w:rsidR="001D6709" w14:paraId="383767D6" w14:textId="77777777">
+        <w:trPr>
+          <w:trHeight w:val="369"/>
+          <w:jc w:val="center"/>
+        </w:trPr>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:w="2405" w:type="dxa"/>
+            <w:shd w:val="clear" w:color="auto" w:fill="FFFFFF"/>
+            <w:vAlign w:val="center"/>
+          </w:tcPr>
+          <w:p w14:paraId="142C7462" w14:textId="77777777" w:rsidR="001D6709" w:rsidRDefault="00000000">
+            <w:pPr>
+              <w:spacing w:before="0"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:b/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:b/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+              <w:t>Completion Date</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:w="7264" w:type="dxa"/>
+            <w:shd w:val="clear" w:color="auto" w:fill="FFFFFF"/>
+            <w:vAlign w:val="center"/>
+          </w:tcPr>
+          <w:p w14:paraId="08798030" w14:textId="4F5F440E" w:rsidR="001D6709" w:rsidRDefault="00000000">
+            <w:pPr>
+              <w:spacing w:before="0"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+              <w:t>By</w:t>
+            </w:r>
+            <w:r w:rsidR="0007663B">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r w:rsidR="0007663B" w:rsidRPr="009F10BD">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:hAnsi="Quattrocento Sans"/>
+                <w:bCs/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+              <w:t>[</w:t>
+            </w:r>
+            <w:r w:rsidR="0007663B" w:rsidRPr="009F10BD">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:hAnsi="Quattrocento Sans"/>
+                <w:bCs/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="yellow"/>
+              </w:rPr>
+              <w:t>TermSheet.fundingDeadline]</w:t>
+            </w:r>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r w:rsidRPr="0007663B">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="cyan"/>
+              </w:rPr>
+              <w:t>June 13, 2025</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+      </w:tr>
+      <w:tr w:rsidR="001D6709" w14:paraId="5B973C14" w14:textId="77777777">
+        <w:trPr>
+          <w:trHeight w:val="369"/>
+          <w:jc w:val="center"/>
+        </w:trPr>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:w="2405" w:type="dxa"/>
+            <w:shd w:val="clear" w:color="auto" w:fill="FFFFFF"/>
+            <w:vAlign w:val="center"/>
+          </w:tcPr>
+          <w:p w14:paraId="409751A3" w14:textId="77777777" w:rsidR="001D6709" w:rsidRDefault="00000000">
+            <w:pPr>
+              <w:spacing w:before="0"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:b/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:b/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+              <w:t>In-Principle Approval</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:w="7264" w:type="dxa"/>
+            <w:shd w:val="clear" w:color="auto" w:fill="FFFFFF"/>
+            <w:vAlign w:val="center"/>
+          </w:tcPr>
+          <w:p w14:paraId="0823AC57" w14:textId="77777777" w:rsidR="001D6709" w:rsidRDefault="00000000">
+            <w:pPr>
+              <w:spacing w:before="0"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+              <w:t>The Arranger has obtained approval for the present offering from the Issuer</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+      </w:tr>
+      <w:tr w:rsidR="001D6709" w14:paraId="50F5491F" w14:textId="77777777">
+        <w:trPr>
+          <w:trHeight w:val="369"/>
+          <w:jc w:val="center"/>
+        </w:trPr>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:w="2405" w:type="dxa"/>
+            <w:shd w:val="clear" w:color="auto" w:fill="FFFFFF"/>
+            <w:vAlign w:val="center"/>
+          </w:tcPr>
+          <w:p w14:paraId="53E8A720" w14:textId="77777777" w:rsidR="001D6709" w:rsidRDefault="00000000">
+            <w:pPr>
+              <w:spacing w:before="0"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:b/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:b/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+              <w:t>Subscription Pack</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:w="7264" w:type="dxa"/>
+            <w:shd w:val="clear" w:color="auto" w:fill="FFFFFF"/>
+            <w:vAlign w:val="center"/>
+          </w:tcPr>
+          <w:p w14:paraId="1F606AFE" w14:textId="77777777" w:rsidR="001D6709" w:rsidRDefault="00000000">
+            <w:pPr>
+              <w:spacing w:before="0"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+              <w:t>The Issuer shall issue a Subscription Pack to be executed by the Purchaser</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+      </w:tr>
+      <w:tr w:rsidR="001D6709" w14:paraId="1B1FB1A1" w14:textId="77777777">
+        <w:trPr>
+          <w:trHeight w:val="369"/>
+          <w:jc w:val="center"/>
+        </w:trPr>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:w="2405" w:type="dxa"/>
+            <w:shd w:val="clear" w:color="auto" w:fill="FFFFFF"/>
+            <w:vAlign w:val="center"/>
+          </w:tcPr>
+          <w:p w14:paraId="6D03029A" w14:textId="77777777" w:rsidR="001D6709" w:rsidRDefault="00000000">
+            <w:pPr>
+              <w:spacing w:before="0"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:b/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:b/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+              <w:t>Share Certificates</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:w="7264" w:type="dxa"/>
+            <w:shd w:val="clear" w:color="auto" w:fill="FFFFFF"/>
+            <w:vAlign w:val="center"/>
+          </w:tcPr>
+          <w:p w14:paraId="2787ADB5" w14:textId="77777777" w:rsidR="001D6709" w:rsidRDefault="00000000">
+            <w:pPr>
+              <w:spacing w:before="0"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+              <w:t>The Issuer shall provide the Purchasers Share Certificates and Statement of Holdings upon Completion</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+      </w:tr>
+      <w:tr w:rsidR="001D6709" w14:paraId="42713F5A" w14:textId="77777777">
+        <w:trPr>
+          <w:trHeight w:val="369"/>
+          <w:jc w:val="center"/>
+        </w:trPr>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:w="2405" w:type="dxa"/>
+            <w:shd w:val="clear" w:color="auto" w:fill="FFFFFF"/>
+            <w:vAlign w:val="center"/>
+          </w:tcPr>
+          <w:p w14:paraId="29EE1BCC" w14:textId="77777777" w:rsidR="001D6709" w:rsidRDefault="00000000">
+            <w:pPr>
+              <w:spacing w:before="0"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:b/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:b/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+              <w:t>Subject to Change</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:w="7264" w:type="dxa"/>
+            <w:shd w:val="clear" w:color="auto" w:fill="FFFFFF"/>
+            <w:vAlign w:val="center"/>
+          </w:tcPr>
+          <w:p w14:paraId="2EAD1E54" w14:textId="77777777" w:rsidR="001D6709" w:rsidRDefault="00000000">
+            <w:pPr>
+              <w:spacing w:before="0"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+              <w:t>The content&#160;of the present term sheet remains indicative, subject to change</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+      </w:tr>
+      <w:tr w:rsidR="001D6709" w14:paraId="2A57D521" w14:textId="77777777">
+        <w:trPr>
+          <w:trHeight w:val="369"/>
+          <w:jc w:val="center"/>
+        </w:trPr>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:w="2405" w:type="dxa"/>
+            <w:shd w:val="clear" w:color="auto" w:fill="FFFFFF"/>
+            <w:vAlign w:val="center"/>
+          </w:tcPr>
+          <w:p w14:paraId="0D983A70" w14:textId="1EC83B2A" w:rsidR="009F10BD" w:rsidRPr="007136D7" w:rsidRDefault="00000000" w:rsidP="007136D7">
+            <w:pPr>
+              <w:spacing w:before="0"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:b/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:b/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+              <w:t>Validity Date</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:w="7264" w:type="dxa"/>
+            <w:shd w:val="clear" w:color="auto" w:fill="FFFFFF"/>
+            <w:vAlign w:val="center"/>
+          </w:tcPr>
+          <w:p w14:paraId="24068CE4" w14:textId="02928F61" w:rsidR="001D6709" w:rsidRDefault="00000000">
+            <w:pPr>
+              <w:spacing w:before="0"/>
+              <w:jc w:val="both"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+              <w:t xml:space="preserve">This indicative term sheet expires on </w:t>
+            </w:r>
+            <w:r w:rsidR="003A4DE8">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:hAnsi="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="yellow"/>
+              </w:rPr>
+              <w:t>[</w:t>
+            </w:r>
+            <w:proofErr w:type="spellStart"/>
+            <w:r w:rsidR="003A4DE8" w:rsidRPr="00E062C1">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:hAnsi="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="yellow"/>
+              </w:rPr>
+              <w:t>TermSheet.validity</w:t>
+            </w:r>
+            <w:proofErr w:type="spellEnd"/>
+            <w:r w:rsidR="003A4DE8" w:rsidRPr="00E062C1">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="yellow"/>
+              </w:rPr>
+              <w:t>]</w:t>
+            </w:r>
+            <w:r w:rsidR="003A4DE8" w:rsidRPr="00E062C1">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r w:rsidRPr="003A4DE8">
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+                <w:highlight w:val="cyan"/>
+              </w:rPr>
+              <w:t>June 13, 2025</w:t>
+            </w:r>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Quattrocento Sans" w:eastAsia="Quattrocento Sans" w:hAnsi="Quattrocento Sans" w:cs="Quattrocento Sans"/>
+                <w:color w:val="000000"/>
+                <w:sz w:val="21"/>
+                <w:szCs w:val="21"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> 5:00PM Luxembourg</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+      </w:tr>
+    </w:tbl>
+    <w:p w14:paraId="069825B7" w14:textId="77777777" w:rsidR="001D6709" w:rsidRDefault="001D6709" w:rsidP="007136D7">
+      <w:pPr>
+        <w:pBdr>
+          <w:top w:val="nil"/>
+          <w:left w:val="nil"/>
+          <w:right w:val="nil"/>
+          <w:between w:val="nil"/>
+        </w:pBdr>
+        <w:spacing w:before="0" w:after="0" w:line="240" w:lineRule="auto"/>
+        <w:rPr>
+          <w:rFonts w:ascii="Arial" w:eastAsia="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+          <w:b/>
+          <w:color w:val="0D0D0D"/>
+          <w:sz w:val="32"/>
+          <w:szCs w:val="32"/>
+        </w:rPr>
+      </w:pPr>
+    </w:p>
+    <w:sectPr w:rsidR="001D6709">
+      <w:footerReference w:type="default" r:id="rId9"/>
+      <w:footerReference w:type="first" r:id="rId10"/>
+      <w:pgSz w:w="11907" w:h="16839"/>
+      <w:pgMar w:top="567" w:right="1008" w:bottom="993" w:left="1008" w:header="720" w:footer="143" w:gutter="0"/>
+      <w:pgNumType w:start="1"/>
+      <w:cols w:space="720"/>
+      <w:titlePg/>
+    </w:sectPr>
+  </w:body>
+</w:document>

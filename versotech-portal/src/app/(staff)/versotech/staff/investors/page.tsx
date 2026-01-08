@@ -84,6 +84,7 @@ type UIInvestor = {
   totalCommitment: number
   totalContributed: number
   vehicleCount: number
+  metricsAvailable: boolean
   lastActivity: string
   relationshipManager: string
   riskRating: string
@@ -102,6 +103,7 @@ const FALLBACK_INVESTORS: UIInvestor[] = [
     totalCommitment: 2_500_000,
     totalContributed: 1_800_000,
     vehicleCount: 3,
+    metricsAvailable: true,
     lastActivity: '2024-01-15',
     relationshipManager: 'Sarah Chen',
     riskRating: 'low',
@@ -109,7 +111,7 @@ const FALLBACK_INVESTORS: UIInvestor[] = [
     users: []
   },
   {
-    id: '2', 
+    id: '2',
     name: 'John Smith',
     type: 'individual',
     email: 'john.smith@email.com',
@@ -118,6 +120,7 @@ const FALLBACK_INVESTORS: UIInvestor[] = [
     totalCommitment: 500_000,
     totalContributed: 250_000,
     vehicleCount: 1,
+    metricsAvailable: true,
     lastActivity: '2024-01-14',
     relationshipManager: 'Michael Rodriguez',
     riskRating: 'medium',
@@ -134,6 +137,7 @@ const FALLBACK_INVESTORS: UIInvestor[] = [
     totalCommitment: 5_000_000,
     totalContributed: 4_200_000,
     vehicleCount: 5,
+    metricsAvailable: true,
     lastActivity: '2024-01-16',
     relationshipManager: 'Sarah Chen',
     riskRating: 'low',
@@ -315,6 +319,7 @@ export default async function InvestorsPage({
       totalCommitment: metrics?.total_commitment || 0,
       totalContributed: metrics?.total_contributed || 0,
       vehicleCount: metrics?.vehicle_count || 0,
+      metricsAvailable: !!metrics,
       lastActivity:
         lastActivityMap.get(inv.id) ||
         inv.created_at ||

@@ -91,7 +91,7 @@ export function SubscriptionDetailClient({
               Subscription #{subscription.subscription_number}
             </h1>
             <p className="text-sm text-gray-400 mt-1">
-              {subscription.investor.legal_name} · {subscription.vehicle.name}
+              {subscription.investor?.legal_name || 'Unknown Investor'} · {subscription.vehicle?.name || 'No Vehicle'}
             </p>
           </div>
         </div>
@@ -111,7 +111,7 @@ export function SubscriptionDetailClient({
         <Badge className={getStatusColor(subscription.status)}>
           {subscription.status.toUpperCase()}
         </Badge>
-        {subscription.investor.kyc_status && (
+        {subscription.investor?.kyc_status && (
           <Badge variant="outline" className="border-gray-700 text-gray-300">
             KYC: {subscription.investor.kyc_status}
           </Badge>
@@ -282,53 +282,59 @@ export function SubscriptionDetailClient({
                 <CardTitle className="text-white">Investor Information</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex items-start gap-3">
-                  <User className="h-4 w-4 text-gray-400 mt-1" />
-                  <div className="flex-1">
-                    <div className="text-sm text-gray-400">Legal Name</div>
-                    <Link
-                      href={`/versotech_main/investors/${subscription.investor.id}`}
-                      className="text-sm font-semibold text-white hover:underline"
-                    >
-                      {subscription.investor.legal_name}
-                    </Link>
-                  </div>
-                </div>
-
-                <Separator className="bg-gray-800" />
-
-                <div className="flex items-start gap-3">
-                  <Building2 className="h-4 w-4 text-gray-400 mt-1" />
-                  <div className="flex-1">
-                    <div className="text-sm text-gray-400">Type</div>
-                    <div className="text-sm font-medium text-white capitalize">
-                      {subscription.investor.type}
-                    </div>
-                  </div>
-                </div>
-
-                {subscription.investor.country && (
-                  <div className="flex items-start gap-3">
-                    <Building2 className="h-4 w-4 text-gray-400 mt-1" />
-                    <div className="flex-1">
-                      <div className="text-sm text-gray-400">Country</div>
-                      <div className="text-sm font-medium text-white">
-                        {subscription.investor.country}
+                {subscription.investor ? (
+                  <>
+                    <div className="flex items-start gap-3">
+                      <User className="h-4 w-4 text-gray-400 mt-1" />
+                      <div className="flex-1">
+                        <div className="text-sm text-gray-400">Legal Name</div>
+                        <Link
+                          href={`/versotech_main/investors/${subscription.investor.id}`}
+                          className="text-sm font-semibold text-white hover:underline"
+                        >
+                          {subscription.investor.legal_name}
+                        </Link>
                       </div>
                     </div>
-                  </div>
-                )}
 
-                {subscription.investor.email && (
-                  <div className="flex items-start gap-3">
-                    <User className="h-4 w-4 text-gray-400 mt-1" />
-                    <div className="flex-1">
-                      <div className="text-sm text-gray-400">Email</div>
-                      <div className="text-sm font-medium text-white">
-                        {subscription.investor.email}
+                    <Separator className="bg-gray-800" />
+
+                    <div className="flex items-start gap-3">
+                      <Building2 className="h-4 w-4 text-gray-400 mt-1" />
+                      <div className="flex-1">
+                        <div className="text-sm text-gray-400">Type</div>
+                        <div className="text-sm font-medium text-white capitalize">
+                          {subscription.investor.type}
+                        </div>
                       </div>
                     </div>
-                  </div>
+
+                    {subscription.investor.country && (
+                      <div className="flex items-start gap-3">
+                        <Building2 className="h-4 w-4 text-gray-400 mt-1" />
+                        <div className="flex-1">
+                          <div className="text-sm text-gray-400">Country</div>
+                          <div className="text-sm font-medium text-white">
+                            {subscription.investor.country}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {subscription.investor.email && (
+                      <div className="flex items-start gap-3">
+                        <User className="h-4 w-4 text-gray-400 mt-1" />
+                        <div className="flex-1">
+                          <div className="text-sm text-gray-400">Email</div>
+                          <div className="text-sm font-medium text-white">
+                            {subscription.investor.email}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="text-sm text-gray-400">No investor linked</div>
                 )}
               </CardContent>
             </Card>
@@ -339,60 +345,70 @@ export function SubscriptionDetailClient({
                 <CardTitle className="text-white">Vehicle Information</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex items-start gap-3">
-                  <Building2 className="h-4 w-4 text-gray-400 mt-1" />
-                  <div className="flex-1">
-                    <div className="text-sm text-gray-400">Vehicle Name</div>
-                    <div className="text-sm font-semibold text-white">
-                      {subscription.vehicle.name}
-                    </div>
-                  </div>
-                </div>
-
-                <Separator className="bg-gray-800" />
-
-                {subscription.vehicle.entity_code && (
-                  <div className="flex items-start gap-3">
-                    <FileText className="h-4 w-4 text-gray-400 mt-1" />
-                    <div className="flex-1">
-                      <div className="text-sm text-gray-400">Entity Code</div>
-                      <div className="text-sm font-medium text-white">
-                        {subscription.vehicle.entity_code}
+                {subscription.vehicle ? (
+                  <>
+                    <div className="flex items-start gap-3">
+                      <Building2 className="h-4 w-4 text-gray-400 mt-1" />
+                      <div className="flex-1">
+                        <div className="text-sm text-gray-400">Vehicle Name</div>
+                        <div className="text-sm font-semibold text-white">
+                          {subscription.vehicle.name}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                )}
 
-                <div className="flex items-start gap-3">
-                  <Building2 className="h-4 w-4 text-gray-400 mt-1" />
-                  <div className="flex-1">
-                    <div className="text-sm text-gray-400">Type</div>
-                    <div className="text-sm font-medium text-white capitalize">
-                      {subscription.vehicle.type.replace('_', ' ')}
-                    </div>
-                  </div>
-                </div>
+                    <Separator className="bg-gray-800" />
 
-                <div className="flex items-start gap-3">
-                  <DollarSign className="h-4 w-4 text-gray-400 mt-1" />
-                  <div className="flex-1">
-                    <div className="text-sm text-gray-400">Currency</div>
-                    <div className="text-sm font-medium text-white">
-                      {subscription.vehicle.currency}
-                    </div>
-                  </div>
-                </div>
-
-                {subscription.vehicle.domicile && (
-                  <div className="flex items-start gap-3">
-                    <Building2 className="h-4 w-4 text-gray-400 mt-1" />
-                    <div className="flex-1">
-                      <div className="text-sm text-gray-400">Domicile</div>
-                      <div className="text-sm font-medium text-white">
-                        {subscription.vehicle.domicile}
+                    {subscription.vehicle.entity_code && (
+                      <div className="flex items-start gap-3">
+                        <FileText className="h-4 w-4 text-gray-400 mt-1" />
+                        <div className="flex-1">
+                          <div className="text-sm text-gray-400">Entity Code</div>
+                          <div className="text-sm font-medium text-white">
+                            {subscription.vehicle.entity_code}
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </div>
+                    )}
+
+                    {subscription.vehicle.type && (
+                      <div className="flex items-start gap-3">
+                        <Building2 className="h-4 w-4 text-gray-400 mt-1" />
+                        <div className="flex-1">
+                          <div className="text-sm text-gray-400">Type</div>
+                          <div className="text-sm font-medium text-white capitalize">
+                            {subscription.vehicle.type.replace('_', ' ')}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {subscription.vehicle.currency && (
+                      <div className="flex items-start gap-3">
+                        <DollarSign className="h-4 w-4 text-gray-400 mt-1" />
+                        <div className="flex-1">
+                          <div className="text-sm text-gray-400">Currency</div>
+                          <div className="text-sm font-medium text-white">
+                            {subscription.vehicle.currency}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {subscription.vehicle.domicile && (
+                      <div className="flex items-start gap-3">
+                        <Building2 className="h-4 w-4 text-gray-400 mt-1" />
+                        <div className="flex-1">
+                          <div className="text-sm text-gray-400">Domicile</div>
+                          <div className="text-sm font-medium text-white">
+                            {subscription.vehicle.domicile}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="text-sm text-gray-400">No vehicle linked</div>
                 )}
               </CardContent>
             </Card>

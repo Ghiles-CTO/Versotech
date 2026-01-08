@@ -7,7 +7,9 @@
  */
 
 import { triggerWorkflow } from '@/lib/trigger-workflow'
+import { convertHtmlToPdf } from '@/lib/gotenberg/convert'
 import { SupabaseClient } from '@supabase/supabase-js'
+import crypto from 'crypto'
 
 interface TriggerCertificateParams {
   supabase: SupabaseClient
@@ -264,10 +266,274 @@ export async function triggerCertificateGeneration({
       }
     })
 
-    if (result.success) {
-      console.log(`✅ Certificate generation triggered for subscription ${subscriptionId}`)
-    } else {
+    if (!result.success) {
       console.warn(`⚠️ Certificate workflow not configured: ${result.error}`)
+    } else {
+      console.log(`✅ Certificate generation triggered for subscription ${subscriptionId}`)
+
+      // === HANDLE PDF RESPONSE FROM N8N ===
+      // Same pattern as introducer agreement (generate-agreement/route.ts)
+      if (result.n8n_response) {
+        try {
+          const n8nResponse = result.n8n_response
+          console.log('📦 n8n certificate response keys:', Object.keys(n8nResponse))
+
+          // Extract PDF buffer from various response formats
+          let pdfBuffer: Buffer | null = null
+
+          if (n8nResponse.binary && Buffer.isBuffer(n8nResponse.binary)) {
+            // Direct buffer from trigger-workflow.ts binary handling (Content-Type: application/pdf)
+            pdfBuffer = n8nResponse.binary
+            console.log('📄 Found PDF in binary format (direct buffer)')
+          } else if (n8nResponse.data) {
+            // n8n "data" field - could be Buffer, base64 string, or raw binary string
+            if (Buffer.isBuffer(n8nResponse.data)) {
+              // Direct Buffer
+              pdfBuffer = n8nResponse.data
+              console.log('📄 Found PDF in data (Buffer) format')
+            } else if (typeof n8nResponse.data === 'string') {
+              // String - check if it's raw PDF or base64
+              if (n8nResponse.data.startsWith('%PDF')) {
+                // Raw PDF binary as string (latin1 encoding)
+                pdfBuffer = Buffer.from(n8nResponse.data, 'latin1')
+                console.log('📄 Found PDF in data (raw binary string) format')
+              } else {
+                // Assume base64-encoded
+                pdfBuffer = Buffer.from(n8nResponse.data, 'base64')
+                console.log('📄 Found PDF in data (base64) format')
+              }
+            }
+          } else if (n8nResponse.raw && typeof n8nResponse.raw === 'string') {
+            // Latin1-encoded string (when Content-Type not set correctly)
+            pdfBuffer = Buffer.from(n8nResponse.raw, 'latin1')
+            console.log('📄 Found PDF in raw (latin1) format')
+          } else if (typeof n8nResponse === 'string') {
+            // Direct string response
+            pdfBuffer = Buffer.from(n8nResponse, 'latin1')
+            console.log('📄 Found PDF as direct string')
+          } else if (n8nResponse.html && typeof n8nResponse.html === 'string') {
+            // n8n returned HTML instead of PDF - convert locally using Gotenberg
+            console.log('📄 n8n returned HTML, converting to PDF via portal Gotenberg...')
+            const conversionResult = await convertHtmlToPdf(n8nResponse.html, 'certificate.html')
+            if (conversionResult.success && conversionResult.pdfBuffer) {
+              pdfBuffer = conversionResult.pdfBuffer
+              console.log('✅ HTML converted to PDF via portal Gotenberg')
+            } else {
+              console.error('❌ Portal Gotenberg conversion failed:', conversionResult.error)
+            }
+          }
+
+          if (pdfBuffer && pdfBuffer.length > 0) {
+            // Verify PDF signature (PDF files start with %PDF)
+            const signature = pdfBuffer.slice(0, 4).toString()
+            console.log('📄 File signature:', signature, 'size:', pdfBuffer.length, 'bytes')
+
+            if (signature !== '%PDF') {
+              console.warn('⚠️ File does not appear to be a valid PDF (signature:', signature, ')')
+            }
+
+            // === NAMING PATTERN: VCXXXSHXXX - LASTNAME FIRSTNAME or ENTITY NAME ===
+            // Format investor name based on type
+            let formattedInvestorName: string
+            if (investorData?.type === 'individual') {
+              // For individuals: LASTNAME FIRSTNAME (uppercase)
+              const lastName = (investorData.last_name || '').trim().toUpperCase()
+              const firstName = (investorData.first_name || '').trim().toUpperCase()
+              formattedInvestorName = `${lastName} ${firstName}`.trim() || 'UNKNOWN'
+            } else {
+              // For entities: ENTITY NAME (uppercase)
+              formattedInvestorName = (investorData?.legal_name || 'UNKNOWN').toUpperCase()
+            }
+            // Sanitize for filename
+            const safeInvestorName = formattedInvestorName
+              .replace(/[^a-zA-Z0-9 ]/g, '')
+              .substring(0, 50)
+            const certificateNumber = `VC${vehicleData.series_number}SH${subscription.subscription_number}`
+            const fileName = `${certificateNumber} - ${safeInvestorName}.pdf`
+
+            // === STORAGE: subscriptions/{id}/certificates/{filename}.pdf ===
+            const fileKey = `subscriptions/${subscriptionId}/certificates/${fileName}`
+            const { error: uploadError } = await supabase.storage
+              .from('deal-documents')
+              .upload(fileKey, pdfBuffer, {
+                contentType: 'application/pdf',
+                upsert: true
+              })
+
+            if (uploadError) {
+              console.error('❌ Failed to upload certificate PDF:', uploadError)
+            } else {
+              console.log('✅ Certificate PDF uploaded:', fileKey)
+
+              // === CREATE DOCUMENT RECORD ===
+              // Find Subscription Documents folder for this vehicle
+              let subscriptionFolderId: string | null = null
+              if (vehicleId) {
+                const { data: subFolder } = await supabase
+                  .from('document_folders')
+                  .select('id')
+                  .eq('vehicle_id', vehicleId)
+                  .eq('name', 'Subscription Documents')
+                  .single()
+                subscriptionFolderId = subFolder?.id || null
+              }
+
+              // Create document record with status 'pending_signature'
+              const { data: document, error: docError } = await supabase
+                .from('documents')
+                .insert({
+                  subscription_id: subscriptionId,
+                  deal_id: subscription.deal_id,
+                  vehicle_id: vehicleId,
+                  folder_id: subscriptionFolderId,
+                  type: 'certificate',
+                  name: fileName,
+                  file_key: fileKey,
+                  mime_type: 'application/pdf',
+                  file_size_bytes: pdfBuffer.length,
+                  status: 'pending_signature', // Hidden from investor until signed
+                  current_version: 1,
+                  ready_for_signature: true,
+                  created_by: profile.id
+                })
+                .select('id')
+                .single()
+
+              if (docError) {
+                console.error('❌ Failed to create document record:', docError)
+              } else {
+                console.log('✅ Document record created:', document.id)
+
+                // Update subscription with certificate path and document ID
+                await supabase
+                  .from('subscriptions')
+                  .update({ certificate_pdf_path: fileKey })
+                  .eq('id', subscriptionId)
+
+                // === CREATE SIGNATURE WORKFLOW ===
+                // Get assigned lawyer for this deal
+                let lawyerSigner: { user_id: string; email: string; name: string } | null = null
+                if (subscription.deal_id) {
+                  const { data: lawyerAssignment } = await supabase
+                    .from('deal_lawyer_assignments')
+                    .select(`
+                      lawyer:lawyers!deal_lawyer_assignments_lawyer_id_fkey (
+                        id,
+                        legal_name,
+                        email,
+                        user_id
+                      )
+                    `)
+                    .eq('deal_id', subscription.deal_id)
+                    .limit(1)
+                    .single()
+
+                  if (lawyerAssignment?.lawyer) {
+                    // Supabase join returns array type but .single() gives us object - cast through unknown
+                    const lawyer = lawyerAssignment.lawyer as unknown as { id: string; legal_name: string; email: string; user_id: string }
+                    lawyerSigner = {
+                      user_id: lawyer.user_id,
+                      email: lawyer.email,
+                      name: lawyer.legal_name
+                    }
+                  }
+                }
+
+                // Get CEO signer
+                const { data: ceoProfile } = await supabase
+                  .from('profiles')
+                  .select('id, email, display_name')
+                  .eq('role', 'ceo')
+                  .limit(1)
+                  .single()
+
+                const ceoSigner = ceoProfile ? {
+                  user_id: ceoProfile.id,
+                  email: ceoProfile.email || '',
+                  name: ceoProfile.display_name || 'CEO'
+                } : null
+
+                // Create signature requests for both signers
+                const tokenExpiry = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days
+
+                // Lawyer signature (party_a) - signs first
+                if (lawyerSigner) {
+                  const lawyerToken = crypto.randomBytes(32).toString('hex')
+                  const { error: lawyerSigError } = await supabase
+                    .from('signature_requests')
+                    .insert({
+                      investor_id: investorId,
+                      document_id: document.id,
+                      subscription_id: subscriptionId,
+                      deal_id: subscription.deal_id,
+                      document_type: 'certificate',
+                      signer_email: lawyerSigner.email,
+                      signer_name: lawyerSigner.name,
+                      signer_role: 'lawyer',
+                      signature_position: 'party_a',
+                      signing_token: lawyerToken,
+                      token_expires_at: tokenExpiry.toISOString(),
+                      unsigned_pdf_path: fileKey,
+                      unsigned_pdf_size: pdfBuffer.length,
+                      status: 'pending',
+                      created_by: profile.id
+                    })
+
+                  if (lawyerSigError) {
+                    console.error('❌ Failed to create lawyer signature request:', lawyerSigError)
+                  } else {
+                    console.log('✅ Lawyer signature request created for certificate')
+                  }
+                } else {
+                  console.warn('⚠️ No lawyer assigned to deal - skipping lawyer signature')
+                }
+
+                // CEO signature (party_b) - signs after lawyer
+                if (ceoSigner) {
+                  const ceoToken = crypto.randomBytes(32).toString('hex')
+                  const { error: ceoSigError } = await supabase
+                    .from('signature_requests')
+                    .insert({
+                      investor_id: investorId,
+                      document_id: document.id,
+                      subscription_id: subscriptionId,
+                      deal_id: subscription.deal_id,
+                      document_type: 'certificate',
+                      signer_email: ceoSigner.email,
+                      signer_name: ceoSigner.name,
+                      signer_role: 'ceo',
+                      signature_position: 'party_b',
+                      signing_token: ceoToken,
+                      token_expires_at: tokenExpiry.toISOString(),
+                      unsigned_pdf_path: fileKey,
+                      unsigned_pdf_size: pdfBuffer.length,
+                      status: 'pending',
+                      created_by: profile.id
+                    })
+
+                  if (ceoSigError) {
+                    console.error('❌ Failed to create CEO signature request:', ceoSigError)
+                  } else {
+                    console.log('✅ CEO signature request created for certificate')
+                  }
+                } else {
+                  console.warn('⚠️ No CEO found - skipping CEO signature')
+                }
+
+                console.log(`📜 Certificate workflow initiated: ${fileName}`)
+                console.log(`   - Document ID: ${document.id}`)
+                console.log(`   - Status: pending_signature (hidden from investor)`)
+                console.log(`   - Awaiting: Lawyer (party_a) → CEO (party_b) signatures`)
+              }
+            }
+          } else {
+            console.warn('⚠️ No binary PDF data found in n8n response')
+          }
+        } catch (pdfError) {
+          console.error('❌ Error processing certificate PDF from n8n:', pdfError)
+          // Don't fail - the subscription is activated, PDF can be regenerated
+        }
+      }
     }
 
     // Create notification for ALL investor users (not just first one)

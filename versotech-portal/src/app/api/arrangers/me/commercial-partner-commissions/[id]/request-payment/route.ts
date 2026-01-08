@@ -86,34 +86,45 @@ export async function POST(
       currency: commission.currency || 'USD',
     }).format(commission.accrual_amount)
 
+    // Require at least one lawyer assignment before requesting payment
+    if (!commission.deal_id) {
+      return NextResponse.json(
+        { error: 'Deal assignment required before requesting payment' },
+        { status: 400 }
+      )
+    }
+
+    const { data: lawyerAssignments } = await serviceSupabase
+      .from('deal_lawyer_assignments')
+      .select('lawyer_id')
+      .eq('deal_id', commission.deal_id)
+
+    if (!lawyerAssignments || lawyerAssignments.length === 0) {
+      return NextResponse.json(
+        { error: 'Assign a lawyer to this deal before requesting payment' },
+        { status: 400 }
+      )
+    }
+
     const notificationsToCreate: any[] = []
 
-    // 1. Notify assigned lawyers (if deal has lawyer assignments)
-    if (commission.deal_id) {
-      const { data: lawyerAssignments } = await serviceSupabase
-        .from('deal_lawyer_assignments')
-        .select('lawyer_id')
-        .eq('deal_id', commission.deal_id)
+    // 1. Notify assigned lawyers
+    const lawyerIds = lawyerAssignments.map(a => a.lawyer_id)
+    const { data: lawyerUsers } = await serviceSupabase
+      .from('lawyer_users')
+      .select('user_id, lawyer_id')
+      .in('lawyer_id', lawyerIds)
 
-      if (lawyerAssignments && lawyerAssignments.length > 0) {
-        const lawyerIds = lawyerAssignments.map(a => a.lawyer_id)
-        const { data: lawyerUsers } = await serviceSupabase
-          .from('lawyer_users')
-          .select('user_id, lawyer_id')
-          .in('lawyer_id', lawyerIds)
-
-        if (lawyerUsers) {
-          for (const lu of lawyerUsers) {
-            notificationsToCreate.push({
-              user_id: lu.user_id,
-              investor_id: null,
-              title: 'Payment Request - Commercial Partner Commission',
-              message: `Payment of ${formattedAmount} requested for ${cp?.name || cp?.legal_name || 'Commercial Partner'}${deal ? ` (${deal.name})` : ''}.`,
-              link: `/versotech_main/lawyer-reconciliation`,
-              type: 'action_required',
-            })
-          }
-        }
+    if (lawyerUsers) {
+      for (const lu of lawyerUsers) {
+        notificationsToCreate.push({
+          user_id: lu.user_id,
+          investor_id: null,
+          title: 'Payment Request - Commercial Partner Commission',
+          message: `Payment of ${formattedAmount} requested for ${cp?.name || cp?.legal_name || 'Commercial Partner'}${deal ? ` (${deal.name})` : ''}.`,
+          link: `/versotech_main/lawyer-reconciliation`,
+          type: 'action_required',
+        })
       }
     }
 

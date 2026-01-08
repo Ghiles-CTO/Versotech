@@ -61,6 +61,7 @@ const statusColors = {
 const entityTypeLabels: Record<string, string> = {
   deal_interest: 'Deal Interest',
   deal_subscription: 'Subscription',
+  deal_close: 'Deal Close',
   allocation: 'Allocation',
   withdrawal: 'Withdrawal',
   kyc_change: 'KYC Change',

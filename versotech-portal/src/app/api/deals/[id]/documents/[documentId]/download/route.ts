@@ -52,6 +52,19 @@ export async function GET(
     const isStaff = profile?.role?.startsWith('staff_') || profile?.role === 'ceo'
 
     if (!isStaff) {
+      const { data: membership } = await supabase
+        .from('deal_memberships')
+        .select('role')
+        .eq('deal_id', dealId)
+        .eq('user_id', user.id)
+        .maybeSingle()
+
+      if (membership?.role === 'introducer' || membership?.role === 'lawyer') {
+        return NextResponse.json({
+          error: 'Data room access not available for this role'
+        }, { status: 403 })
+      }
+
       // Check if document is visible to investors
       if (!document.visible_to_investors) {
         return NextResponse.json({

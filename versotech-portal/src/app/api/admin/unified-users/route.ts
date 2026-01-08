@@ -44,14 +44,15 @@ export async function GET(): Promise<NextResponse<UnifiedUsersResponse>> {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Check if user is staff
+    // Check if user is staff or CEO
     const { data: profile } = await supabase
       .from('profiles')
       .select('role')
       .eq('id', user.id)
       .single()
 
-    if (!profile?.role?.startsWith('staff')) {
+    const isStaffOrCeo = profile?.role?.startsWith('staff_') || profile?.role === 'ceo'
+    if (!isStaffOrCeo) {
       return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 })
     }
 

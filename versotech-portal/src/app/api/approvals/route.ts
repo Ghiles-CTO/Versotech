@@ -89,6 +89,16 @@ export async function POST(request: NextRequest) {
         entityExists = !!subscription
         entityName = (subscription?.investors as any)?.[0]?.legal_name || 'Unknown'
         break
+
+      case 'deal_close':
+        const { data: deal } = await supabase
+          .from('deals')
+          .select('id, name')
+          .eq('id', entity_id)
+          .single()
+        entityExists = !!deal
+        entityName = deal?.name || 'Deal'
+        break
         
       case 'allocation':
         const { data: allocation } = await supabase

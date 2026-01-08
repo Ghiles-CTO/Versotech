@@ -2,6 +2,7 @@
 export type ApprovalEntityType =
   | 'deal_interest'
   | 'deal_subscription'
+  | 'deal_close'
   | 'allocation'
   | 'withdrawal'
   | 'kyc_change'

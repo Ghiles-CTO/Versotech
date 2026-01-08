@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { z } from 'zod'
 import { getAppUrl } from '@/lib/signature/token'
-import { sendEmail } from '@/lib/email/resend-service'
+import { sendInvitationEmail } from '@/lib/email/resend-service'
 
 // Entity type to junction table mapping
 const JUNCTION_TABLES: Record<string, string> = {
@@ -71,6 +71,7 @@ const batchInviteSchema = z.object({
 })
 
 interface InviteResult {
+  invitation_id?: string
   email: string
   success: boolean
   user_id?: string
@@ -264,65 +265,67 @@ export async function POST(request: NextRequest) {
             is_new_user: false,
           })
         } else {
-          // Invite new user via Supabase Auth
-          const { data: authData, error: authError } = await supabase.auth.admin.inviteUserByEmail(
-            invite.email,
-            {
-              data: {
-                display_name: invite.display_name,
-                role: 'multi_persona',
-                title: invite.title,
-              },
-              redirectTo: `${appUrl}/auth/callback?portal=main`
-            }
-          )
+          // CUSTOM INVITATION FLOW - uses member_invitations + Resend email
+          const { data: inviterProfile } = await supabase
+            .from('profiles').select('display_name, email').eq('id', user.id).single()
+          const inviterName = inviterProfile?.display_name || inviterProfile?.email || 'VERSO Holdings'
 
-          if (authError || !authData.user) {
-            results.push({
-              email: invite.email,
-              success: false,
-              error: authError?.message || 'Failed to invite user',
-            })
+          // Check for existing pending invitation
+          const { data: existingInv } = await supabase
+            .from('member_invitations')
+            .select('id')
+            .eq('entity_type', entity_type)
+            .eq('entity_id', targetEntityId)
+            .eq('email', invite.email.toLowerCase())
+            .eq('status', 'pending')
+            .maybeSingle()
+
+          if (existingInv) {
+            results.push({ email: invite.email, success: false, error: 'Pending invitation already exists' })
             continue
           }
 
-          // Create profile
-          await supabase.from('profiles').upsert({
-            id: authData.user.id,
-            email: invite.email,
-            role: 'multi_persona',
-            display_name: invite.display_name,
-            title: invite.title,
-            password_set: false,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          })
+          // Create invitation record
+          const { data: invitation, error: invErr } = await supabase
+            .from('member_invitations')
+            .insert({
+              entity_type,
+              entity_id: targetEntityId,
+              entity_name: invite.display_name,
+              email: invite.email.toLowerCase(),
+              role: role,
+              is_signatory: false,
+              invited_by: user.id,
+              invited_by_name: inviterName,
+              status: 'pending',
+              expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+            })
+            .select()
+            .single()
 
-          // Create junction record
-          const junctionTable = JUNCTION_TABLES[entity_type]
-          const entityIdColumn = ENTITY_ID_COLUMNS[entity_type]
-
-          const junctionData: Record<string, unknown> = {
-            user_id: authData.user.id,
-            [entityIdColumn]: targetEntityId,
-            role: role,
-            is_primary: invite.is_primary,
-            created_at: new Date().toISOString(),
+          if (invErr || !invitation) {
+            console.error('Invitation error:', invErr)
+            results.push({ email: invite.email, success: false, error: 'Failed to create invitation' })
+            continue
           }
 
-          await supabase.from(junctionTable).insert(junctionData)
-
-          // Send welcome email
-          await sendEmail({
-            to: invite.email,
-            subject: 'Welcome to VERSO Holdings - Your Account is Ready',
-            html: generateWelcomeEmail(invite.display_name, entity_type, appUrl),
+          // Send custom email via Resend
+          const acceptUrl = `${appUrl}/invitation/accept?token=${invitation.invitation_token}`
+          await sendInvitationEmail({
+            email: invite.email,
+            inviteeName: invite.display_name,
+            entityName: invite.display_name,
+            entityType: entity_type,
+            role: role,
+            inviterName: inviterName,
+            acceptUrl: acceptUrl,
+            expiresAt: invitation.expires_at
           })
 
           results.push({
             email: invite.email,
             success: true,
-            user_id: authData.user.id,
+            invitation_id: invitation.id,
             entity_id: targetEntityId,
             is_new_user: true,
           })
@@ -371,56 +374,4 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
-
-function generateWelcomeEmail(displayName: string, entityType: string, appUrl: string): string {
-  const entityLabel = entityType.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())
-
-  return `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <style>
-        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-        .header { background: #1a1a2e; color: white; padding: 30px; text-align: center; }
-        .content { background: #f4f4f4; padding: 30px; }
-        .button { background: #6366f1; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; display: inline-block; margin: 20px 0; font-weight: 600; }
-        .features { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; }
-        .features ul { margin: 10px 0; padding-left: 20px; }
-        .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
-      </style>
-    </head>
-    <body>
-      <div class="container">
-        <div class="header">
-          <h1>Welcome to VERSO Holdings</h1>
-        </div>
-        <div class="content">
-          <h2>Hi ${displayName},</h2>
-          <p>You've been invited to join the VERSO Holdings platform as a <strong>${entityLabel}</strong>.</p>
-
-          <div class="features">
-            <h3>What you can do:</h3>
-            <ul>
-              <li>Access exclusive investment opportunities</li>
-              <li>Review and sign documents digitally</li>
-              <li>Track your portfolio performance</li>
-              <li>Communicate securely with our team</li>
-            </ul>
-          </div>
-
-          <p>Check your email for a separate message with your login credentials, or click below to access the platform:</p>
-
-          <a href="${appUrl}/login" class="button">Access VERSO Platform</a>
-
-          <p>If you have any questions, please don't hesitate to contact us.</p>
-        </div>
-        <div class="footer">
-          <p>&copy; ${new Date().getFullYear()} VERSO Holdings. All rights reserved.</p>
-          <p>This is an automated message, please do not reply.</p>
-        </div>
-      </div>
-    </body>
-    </html>
-  `
-}
+

@@ -6,6 +6,7 @@ import { triggerWorkflow } from '@/lib/trigger-workflow'
 import { createSignatureRequest } from '@/lib/signature/client'
 import { getCeoSigner } from '@/lib/staff/ceo-signer'
 import { sendInvitationEmail } from '@/lib/email/resend-service'
+import { handleDealClose, handleTermsheetClose } from '@/lib/deals/deal-close-handler'
 
 /**
  * Generate subscription pack filename with standardized format:
@@ -388,6 +389,67 @@ async function handleEntityApproval(
           return { success: false, error: 'Failed to approve deal' }
         }
         break
+
+      case 'deal_close': {
+        const { data: deal, error: closeDealError } = await supabase
+          .from('deals')
+          .select('id, name, close_at')
+          .eq('id', entityId)
+          .single()
+
+        if (closeDealError || !deal) {
+          console.error('Error loading deal for close approval:', closeDealError)
+          return { success: false, error: 'Failed to load deal for closing' }
+        }
+
+        if (!deal.close_at) {
+          return { success: false, error: 'Deal has no closing date set' }
+        }
+
+        const closingDate = new Date(deal.close_at)
+        const closeResult = await handleDealClose(supabase, entityId, closingDate)
+
+        if (!closeResult.success) {
+          const message = closeResult.errors.length > 0
+            ? closeResult.errors.join('; ')
+            : 'Failed to process deal close'
+          return { success: false, error: message }
+        }
+
+        return {
+          success: true,
+          notificationData: {
+            type: 'deal_close_processed',
+            deal_id: entityId,
+            deal_name: deal.name
+          }
+        }
+      }
+
+      case 'termsheet_close': {
+        // entity_id is the termsheet ID (deal_fee_structures.id)
+        // This processes only subscriptions linked to this specific termsheet
+        const termsheetCloseResult = await handleTermsheetClose(supabase, entityId)
+
+        if (!termsheetCloseResult.success) {
+          const message = termsheetCloseResult.errors.length > 0
+            ? termsheetCloseResult.errors.join('; ')
+            : 'Failed to process termsheet close'
+          return { success: false, error: message }
+        }
+
+        return {
+          success: true,
+          notificationData: {
+            type: 'termsheet_close_processed',
+            termsheet_id: entityId,
+            deal_id: termsheetCloseResult.dealId,
+            subscriptions_activated: termsheetCloseResult.subscriptionsActivated,
+            certificates_triggered: termsheetCloseResult.certificatesTriggered,
+            commissions_created: termsheetCloseResult.commissionsCreated
+          }
+        }
+      }
 
       case 'deal_interest':
       case 'deal_interest_nda':
@@ -1537,6 +1599,17 @@ async function handleEntityRejection(
           rejection_reason: reason
         })
         .eq('id', entityId)
+    }
+
+    if (entityType === 'deal_close') {
+      // No side effects on rejection; deal remains open until re-approved.
+      return
+    }
+
+    if (entityType === 'termsheet_close') {
+      // No side effects on rejection; termsheet remains unprocessed until re-approved.
+      // A new approval can be created by the cron job or manually.
+      return
     }
 
     if (entityType === 'sale_request') {
