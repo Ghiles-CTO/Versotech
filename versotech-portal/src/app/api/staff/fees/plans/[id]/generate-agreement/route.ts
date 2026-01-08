@@ -7,6 +7,14 @@
  *
  * After creating the record, triggers n8n workflow to generate the PDF document.
  *
+ * NEW TEMPLATE STRUCTURE (3-party):
+ * - Vehicle/Issuer + General Partner details
+ * - Arranger entity details
+ * - Introducer details
+ * - Schedule I: Dynamic subscriber table (pre-rendered HTML)
+ * - Conditional performance fee section
+ * - Conditional signature blocks (entity vs individual)
+ *
  * Maps ALL fields from DOC 3:
  * - Subscription fee rate (introduction fee)
  * - Performance fee rate (carried interest)
@@ -21,6 +29,23 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { triggerWorkflow } from '@/lib/trigger-workflow';
+
+// Helper functions for formatting
+function formatCurrency(amount: number | null | undefined): string {
+  if (amount === null || amount === undefined) return 'USD 0.00';
+  return `USD ${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+function formatNumber(num: number | null | undefined): string {
+  if (num === null || num === undefined) return '0';
+  return num.toLocaleString('en-US');
+}
+
+function formatAddress(entity: { address?: string | null; city?: string | null; country?: string | null } | null): string {
+  if (!entity) return '';
+  const parts = [entity.address, entity.city, entity.country].filter(Boolean);
+  return parts.join(', ');
+}
 
 export async function POST(
   request: NextRequest,
@@ -47,6 +72,7 @@ export async function POST(
 
     // Fetch the fee plan with all needed data including deal's arranger
     // Include COMPLETE introducer data for document generation
+    // Include introducer type for conditional signature blocks
     const { data: feePlan, error: planError } = await supabase
       .from('fee_plans')
       .select(`
@@ -63,14 +89,16 @@ export async function POST(
           state_province,
           postal_code,
           country,
-          default_commission_bps
+          default_commission_bps,
+          type
         ),
         deal:deal_id (
           id,
           name,
           company_name,
           offer_unit_price,
-          arranger_entity_id
+          arranger_entity_id,
+          vehicle_id
         )
       `)
       .eq('id', feePlanId)
@@ -133,18 +161,121 @@ export async function POST(
         ).toISOString().split('T')[0]
       : null;
 
-    // Generate reference number (format: IA-YYMMDD-SEQ)
+    // Generate reference number (NEW format: YYYYMMDDSEQ)
     const today = new Date();
-    const dateStr = today.toISOString().slice(2, 10).replace(/-/g, '');
+    const dateStr = today.toISOString().slice(0, 10).replace(/-/g, ''); // 20260108
     const { count: todayCount } = await supabase
       .from('introducer_agreements')
       .select('*', { count: 'exact', head: true })
       .gte('created_at', today.toISOString().split('T')[0]);
     const seq = String((todayCount || 0) + 1).padStart(3, '0');
-    const referenceNumber = `IA-${dateStr}-${seq}`;
+    const referenceNumber = `${dateStr}${seq}`; // e.g., 20260108001
 
     // Get arranger_id from deal
     const arrangerId = feePlan.deal?.arranger_entity_id || null;
+    const vehicleId = feePlan.deal?.vehicle_id || null;
+
+    // === FETCH VEHICLE DATA (for 3-party structure) ===
+    let vehicle: {
+      name: string | null;
+      domicile: string | null;
+      address: string | null;
+      registration_number: string | null;
+      legal_jurisdiction: string | null;
+      issuer_gp_name: string | null;
+      issuer_gp_description: string | null;
+      issuer_gp_address: string | null;
+      issuer_gp_rcc_number: string | null;
+    } | null = null;
+
+    if (vehicleId) {
+      const { data: vehicleData } = await supabase
+        .from('vehicles')
+        .select(`
+          name,
+          domicile,
+          address,
+          registration_number,
+          legal_jurisdiction,
+          issuer_gp_name,
+          issuer_gp_description,
+          issuer_gp_address,
+          issuer_gp_rcc_number
+        `)
+        .eq('id', vehicleId)
+        .single();
+      vehicle = vehicleData;
+    }
+
+    // === FETCH ARRANGER DATA ===
+    let arranger: {
+      legal_name: string | null;
+      address: string | null;
+      registration_number: string | null;
+      city: string | null;
+      country: string | null;
+    } | null = null;
+
+    if (arrangerId) {
+      const { data: arrangerData } = await supabase
+        .from('arranger_entities')
+        .select('legal_name, address, registration_number, city, country')
+        .eq('id', arrangerId)
+        .single();
+      arranger = arrangerData;
+    }
+
+    // === FETCH SCHEDULE I DATA (subscriptions from this introducer for this deal) ===
+    const { data: subscribers } = await supabase
+      .from('subscriptions')
+      .select(`
+        commitment,
+        num_shares,
+        bd_fee_percent,
+        bd_fee_amount,
+        investor:investor_id (
+          legal_name
+        )
+      `)
+      .eq('introducer_id', feePlan.introducer_id)
+      .eq('deal_id', feePlan.deal_id)
+      .in('status', ['signed', 'funded', 'active']);
+
+    // Pre-render Schedule I HTML table
+    const scheduleRows = (subscribers || []).map((s: any) => `
+      <tr>
+        <td>${s.investor?.legal_name || 'Unknown Investor'}</td>
+        <td>${formatCurrency(s.commitment)}</td>
+        <td>${s.bd_fee_percent ? s.bd_fee_percent + '%' : ''}</td>
+        <td>${formatNumber(s.num_shares)}</td>
+        <td>${formatCurrency(s.bd_fee_amount)}</td>
+      </tr>
+    `).join('');
+
+    // Calculate totals
+    const totalCapital = (subscribers || []).reduce((sum: number, s: any) => sum + (s.commitment || 0), 0);
+    const totalFee = (subscribers || []).reduce((sum: number, s: any) => sum + (s.bd_fee_amount || 0), 0);
+
+    // Add totals row
+    const scheduleTotalRow = `
+      <tr class="totals-row">
+        <td><strong>TOTALS</strong></td>
+        <td><strong>${formatCurrency(totalCapital)}</strong></td>
+        <td></td>
+        <td></td>
+        <td><strong>${formatCurrency(totalFee)}</strong></td>
+      </tr>
+    `;
+
+    // If no subscribers, show placeholder
+    const scheduleTableHtml = (subscribers || []).length > 0
+      ? scheduleRows + scheduleTotalRow
+      : '<tr><td colspan="5" style="text-align:center; font-style:italic;">No subscriptions completed yet</td></tr>';
+
+    // Introducer type for conditional signature blocks
+    const introducerType = (feePlan.introducer as any)?.type || 'entity';
+    const isEntity = introducerType === 'entity';
+    const isIndividual = introducerType === 'individual';
 
     // Create the introducer agreement with ALL fields
     const { data: agreement, error: agreementError } = await supabase
@@ -271,6 +402,57 @@ export async function POST(
     const exampleProfit = exampleRedemptionTotal - examplePurchasePrice;
     const examplePerformanceFee = exampleProfit * (performanceFeeBps / 10000);
 
+    // === PRE-RENDER CONDITIONAL SECTIONS ===
+    // Performance fee section HTML (only if performance fee > 0)
+    const hasPerformanceFee = performanceFeeBps > 0;
+    const performanceFeeHtml = hasPerformanceFee ? `
+      <p class="sub-header">Performance Fee Determination:</p>
+      <p>The Performance Fee should be calculated as a carried interest of <span class="bold">${performanceFeePercent}%</span> ${hurdleRateText}${performanceCapText}, to be applied on the gross performance calculated at the time of the redemption of the investment opportunity.</p>
+    ` : '';
+
+    // Performance fee example HTML (only if performance fee > 0)
+    const performanceFeeExampleHtml = hasPerformanceFee ? `
+      <p>In case the same investment returns a price per share at redemption ("RP") of USD ${exampleRedemptionPrice.toFixed(2)} per share, then the following Performance Fee ("Fp") shall apply:</p>
+      <p class="formula">RP = (${exampleShares.toLocaleString()} x ${exampleRedemptionPrice.toFixed(2)})</p>
+      <p class="formula">RP = ${exampleRedemptionTotal.toLocaleString()}</p>
+      <p class="formula">Fp = [(${exampleShares.toLocaleString()} x ${exampleRedemptionPrice.toFixed(2)}) - (${exampleShares.toLocaleString()} x ${examplePricePerShare.toFixed(2)})] x ${performanceFeeDecimal}</p>
+      <p class="formula">Fp = ${exampleProfit.toLocaleString()} x ${performanceFeeDecimal}</p>
+      <p class="formula">Fp = ${examplePerformanceFee.toLocaleString()}</p>
+      <p>The Performance Fee payable to the Introducer would be equal to <span class="bold">USD ${examplePerformanceFee.toLocaleString()}</span> only.</p>
+    ` : '';
+
+    // Performance fee payment terms HTML (only if performance fee > 0)
+    const performanceFeePaymentHtml = hasPerformanceFee ? `
+      <p>The performance fee is payable by the Arranger no later than <span class="bold">${performancePaymentDays} business days</span> post redemption ("Redemption") or exit, defined by default as the end of any regulatory lock-up period (typically 6 to 9 months post IPO, on NASDAQ or NYSE, United States).</p>
+    ` : '';
+
+    // Entity signature HTML (2 signature blocks for entities)
+    const entitySignatureHtml = isEntity ? `
+      <tr>
+        <td>
+          <div class="signature-line"></div>
+          <div class="signature-name">${introducer?.legal_name || 'Introducer Entity'}</div>
+          <div class="signature-title">Authorised Signatory 1</div>
+        </td>
+        <td>
+          <div class="signature-line"></div>
+          <div class="signature-name">${introducer?.legal_name || 'Introducer Entity'}</div>
+          <div class="signature-title">Authorised Signatory 2</div>
+        </td>
+      </tr>
+    ` : '';
+
+    // Individual signature HTML (1 signature block for individuals)
+    const individualSignatureHtml = isIndividual ? `
+      <tr>
+        <td colspan="2" style="text-align:center;">
+          <div class="signature-line" style="max-width:300px; margin:0 auto;"></div>
+          <div class="signature-name">${introducer?.contact_name || introducer?.legal_name || 'Introducer'}</div>
+          <div class="signature-title">Introducer</div>
+        </td>
+      </tr>
+    ` : '';
+
     // Trigger n8n workflow with all data needed for HTML template
     const workflowResult = await triggerWorkflow({
       workflowKey: 'generate-introducer-agreement',
@@ -284,17 +466,34 @@ export async function POST(
         agreement_date: formatDate(agreement.effective_date),
         effective_date: formatDate(agreement.effective_date),
 
-        // Introducer info
+        // === VEHICLE/ISSUER FIELDS (Party 1) ===
+        vehicle_name: vehicle?.name || '',
+        vehicle_description: 'a Luxembourg special limited partnership (société en commandite spéciale)',
+        vehicle_address: vehicle?.address || '',
+        vehicle_registration_country: vehicle?.domicile || 'Luxembourg',
+        vehicle_registration_number: vehicle?.registration_number || '',
+        vehicle_gp_name: vehicle?.issuer_gp_name || '',
+        vehicle_gp_description: vehicle?.issuer_gp_description || 'a private limited liability company (société à responsabilité limitée)',
+        vehicle_gp_address: vehicle?.issuer_gp_address || vehicle?.address || '',
+        vehicle_gp_registration_number: vehicle?.issuer_gp_rcc_number || '',
+
+        // === ARRANGER FIELDS (Party 2) ===
+        arranger_name: arranger?.legal_name || 'VERSO Management Ltd',
+        arranger_address: arranger ? formatAddress(arranger) : 'Trident Chambers, Wickhams Cay, Road Town, Tortola, British Virgin Islands',
+        arranger_registration_number: arranger?.registration_number || '1901463',
+
+        // === INTRODUCER FIELDS (Party 3) ===
         introducer_name: introducer?.legal_name || '',
         introducer_address: introducerAddress,
         introducer_signatory_name: introducer?.contact_name || '',
         introducer_email: introducer?.email || '',
+        introducer_type: introducerType,
 
         // Company/Deal
         company_name: deal?.company_name || deal?.name || '',
         deal_id: feePlan.deal_id,
 
-        // VERSO info (hardcoded)
+        // VERSO info (for signature)
         verso_representative_name: 'Julien MACHOT',
         verso_representative_title: 'Managing Partner',
 
@@ -327,6 +526,24 @@ export async function POST(
         example_redemption_total: exampleRedemptionTotal.toLocaleString(),
         example_profit: exampleProfit.toLocaleString(),
         example_performance_fee: examplePerformanceFee.toLocaleString(),
+
+        // === SCHEDULE I (pre-rendered HTML) ===
+        schedule_table_html: scheduleTableHtml,
+        schedule_total_capital: formatCurrency(totalCapital),
+        schedule_total_fee: formatCurrency(totalFee),
+        schedule_subscriber_count: (subscribers || []).length,
+
+        // === CONDITIONAL FLAGS ===
+        has_performance_fee: hasPerformanceFee,
+        is_entity: isEntity,
+        is_individual: isIndividual,
+
+        // === PRE-RENDERED CONDITIONAL HTML ===
+        performance_fee_html: performanceFeeHtml,
+        performance_fee_example_html: performanceFeeExampleHtml,
+        performance_fee_payment_html: performanceFeePaymentHtml,
+        entity_signature_html: entitySignatureHtml,
+        individual_signature_html: individualSignatureHtml,
 
         // Raw values for n8n (in case it needs to do its own calculations)
         raw_subscription_fee_bps: subscriptionFeeBps,

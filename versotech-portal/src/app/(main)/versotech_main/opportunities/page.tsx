@@ -106,7 +106,6 @@ interface FeeStructure {
   allocation_up_to: number | null
   price_per_share_text: string | null
   minimum_ticket: number | null
-  maximum_ticket: number | null
   term_sheet_date: string | null
   transaction_type: string | null
   opportunity_summary: string | null
@@ -121,12 +120,7 @@ interface FeeStructure {
   carried_interest_percent: number | null
   legal_counsel: string | null
   interest_confirmation_deadline: string | null
-  capital_call_timeline: string | null
   completion_date_text: string | null
-  in_principle_approval_text: string | null
-  subscription_pack_note: string | null
-  share_certificates_note: string | null
-  subject_to_change_note: string | null
   validity_date: string | null
   term_sheet_attachment_key: string | null
 }
@@ -254,11 +248,11 @@ export default async function OpportunitiesPage() {
     return (
       <div className="p-6">
         <div className="text-center py-16">
-          <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
+          <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-foreground mb-2">
             No opportunities available
           </h3>
-          <p className="text-gray-500">
+          <p className="text-muted-foreground">
             You haven&apos;t been dispatched to any investment opportunities yet.
             <br />
             Please contact your relationship manager for access.
@@ -439,7 +433,6 @@ export default async function OpportunitiesPage() {
         allocation_up_to,
         price_per_share_text,
         minimum_ticket,
-        maximum_ticket,
         term_sheet_date,
         transaction_type,
         opportunity_summary,
@@ -454,12 +447,7 @@ export default async function OpportunitiesPage() {
         carried_interest_percent,
         legal_counsel,
         interest_confirmation_deadline,
-        capital_call_timeline,
         completion_date_text,
-        in_principle_approval_text,
-        subscription_pack_note,
-        share_certificates_note,
-        subject_to_change_note,
         validity_date,
         term_sheet_attachment_key
       `)

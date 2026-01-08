@@ -84,7 +84,6 @@ interface FeeStructure {
   allocation_up_to: number | null
   price_per_share_text: string | null
   minimum_ticket: number | null
-  maximum_ticket: number | null
   // Fee Structure
   subscription_fee_percent: number | null
   management_fee_percent: number | null
@@ -95,14 +94,9 @@ interface FeeStructure {
   term_sheet_date: string | null
   interest_confirmation_deadline: string | null
   validity_date: string | null
-  capital_call_timeline: string | null
   completion_date_text: string | null
-  // Legal & Notes
+  // Legal
   legal_counsel: string | null
-  in_principle_approval_text: string | null
-  subscription_pack_note: string | null
-  share_certificates_note: string | null
-  subject_to_change_note: string | null
   // Attachment
   term_sheet_attachment_key: string | null
 }
@@ -228,6 +222,11 @@ interface Opportunity {
       } | null
     } | null
   } | null
+  subscription_submission?: {
+    id: string
+    status: string
+    submitted_at: string | null
+  } | null
   fee_structures: FeeStructure[]
   faqs: FAQ[]
   signatories: Signatory[]
@@ -332,13 +331,16 @@ export default function OpportunityDetailPage() {
   const handleExpressInterest = async () => {
     try {
       setActionLoading(true)
-      const response = await fetch(`/api/investors/me/opportunities/${dealId}`, {
+      const response = await fetch(`/api/deals/${dealId}/interests`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'express_interest' })
+        body: JSON.stringify({})
       })
 
-      if (!response.ok) throw new Error('Failed to express interest')
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}))
+        throw new Error(err.error || 'Failed to submit interest')
+      }
 
       // Refresh data
       const refreshResponse = await fetch(`/api/investors/me/opportunities/${dealId}`)
@@ -389,22 +391,26 @@ export default function OpportunityDetailPage() {
     try {
       setActionLoading(true)
 
-      // Create subscription via direct subscribe endpoint
-      const response = await fetch(`/api/investors/me/opportunities/${dealId}/subscribe`, {
+      // Submit subscription for review (creates CEO approval)
+      const response = await fetch(`/api/deals/${dealId}/subscriptions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          commitment_amount: parseFloat(subscribeAmount),
-          vehicle_id: opportunity.vehicle?.id
+          payload: {
+            amount: parseFloat(subscribeAmount),
+            currency: opportunity.currency,
+            bank_confirmation: false
+          },
+          subscription_type: 'personal'
         })
       })
 
       if (!response.ok) {
         const err = await response.json()
-        throw new Error(err.error || 'Failed to subscribe')
+        throw new Error(err.error || 'Failed to submit subscription')
       }
 
-      const result = await response.json()
+      await response.json()
 
       // Refresh data
       const refreshResponse = await fetch(`/api/investors/me/opportunities/${dealId}`)
@@ -413,13 +419,10 @@ export default function OpportunityDetailPage() {
       setShowSubscribeDialog(false)
       setSubscribeAmount('')
 
-      // Show success message with bundled document info
-      if (result.message) {
-        alert(result.message)
-      }
+      alert('Subscription submitted for review. The VERSO team will follow up shortly.')
     } catch (err: any) {
       console.error('Error subscribing:', err)
-      alert(err.message || 'Failed to subscribe')
+      alert(err.message || 'Failed to submit subscription')
     } finally {
       setActionLoading(false)
     }
@@ -608,7 +611,7 @@ export default function OpportunityDetailPage() {
                       <TrendingUp className="w-5 h-5" />
                       <div className="text-left">
                         <div className="font-semibold">Subscribe to Investment</div>
-                        <div className="text-xs opacity-90 font-normal">Direct path • NDA + Subscription</div>
+                        <div className="text-xs opacity-90 font-normal">Submit for review • NDA + Subscription</div>
                       </div>
                     </div>
                   </Button>
@@ -707,6 +710,25 @@ export default function OpportunityDetailPage() {
                 subscription={opportunity.subscription}
                 dealCurrency={opportunity.currency}
               />
+            ) : opportunity.subscription_submission ? (
+              <Card className="border-2 border-dashed border-amber-200 bg-amber-50">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-base flex items-center gap-2 text-amber-900">
+                      <Clock className="h-5 w-5 text-amber-600" />
+                      Subscription Under Review
+                    </CardTitle>
+                    <Badge className="bg-amber-200 text-amber-900 border-0">
+                      Pending Review
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent className="text-sm text-amber-800">
+                  {opportunity.subscription_submission.submitted_at
+                    ? `Submitted on ${formatDate(opportunity.subscription_submission.submitted_at)}.`
+                    : 'Submitted and awaiting CEO approval.'}
+                </CardContent>
+              </Card>
             ) : (
               <InterestStatusCard
                 currentStage={opportunity.journey.current_stage}
@@ -832,11 +854,7 @@ export default function OpportunityDetailPage() {
 
             // Check if any timeline info exists
             const hasTimeline = termSheet.interest_confirmation_deadline || termSheet.validity_date ||
-              termSheet.capital_call_timeline || termSheet.completion_date_text
-
-            // Check if any notes exist
-            const hasNotes = termSheet.in_principle_approval_text || termSheet.subscription_pack_note ||
-              termSheet.share_certificates_note || termSheet.subject_to_change_note
+              termSheet.completion_date_text
 
             // Check if any fees exist
             const hasFees = termSheet.subscription_fee_percent !== null ||
@@ -889,8 +907,8 @@ export default function OpportunityDetailPage() {
                   )}
 
                   {/* Key Terms Grid */}
-                  {(termSheet.allocation_up_to || termSheet.minimum_ticket || termSheet.maximum_ticket) && (
-                    <div className="grid grid-cols-3 gap-4">
+                  {(termSheet.allocation_up_to || termSheet.minimum_ticket) && (
+                    <div className="grid grid-cols-2 gap-4">
                       {termSheet.allocation_up_to && (
                         <div className="text-center p-4 rounded-lg bg-muted/50">
                           <div className="text-xs text-muted-foreground mb-1">Allocation ({opportunity.currency})</div>
@@ -901,12 +919,6 @@ export default function OpportunityDetailPage() {
                         <div className="text-center p-4 rounded-lg bg-muted/50">
                           <div className="text-xs text-muted-foreground mb-1">Min. Ticket</div>
                           <div className="text-lg font-semibold">{formatCurrency(termSheet.minimum_ticket, opportunity.currency)}</div>
-                        </div>
-                      )}
-                      {termSheet.maximum_ticket && (
-                        <div className="text-center p-4 rounded-lg bg-muted/50">
-                          <div className="text-xs text-muted-foreground mb-1">Max. Ticket</div>
-                          <div className="text-lg font-semibold">{formatCurrency(termSheet.maximum_ticket, opportunity.currency)}</div>
                         </div>
                       )}
                     </div>
@@ -1007,7 +1019,7 @@ export default function OpportunityDetailPage() {
                   {hasTimeline && (
                     <div>
                       <h4 className="text-sm font-semibold text-muted-foreground mb-3">Timeline</h4>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                         {termSheet.interest_confirmation_deadline && (
                           <div className="p-3 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800">
                             <div className="text-xs font-medium text-amber-600 dark:text-amber-400">Interest Deadline</div>
@@ -1020,32 +1032,11 @@ export default function OpportunityDetailPage() {
                             <div className="font-medium mt-1">{formatDate(termSheet.validity_date)}</div>
                           </div>
                         )}
-                        {termSheet.capital_call_timeline && (
-                          <div className="p-3 rounded-lg bg-muted/50">
-                            <div className="text-xs text-muted-foreground">Capital Call</div>
-                            <div className="font-medium mt-1">{termSheet.capital_call_timeline}</div>
-                          </div>
-                        )}
                         {termSheet.completion_date_text && (
                           <div className="p-3 rounded-lg bg-muted/50">
                             <div className="text-xs text-muted-foreground">Completion</div>
                             <div className="font-medium mt-1">{termSheet.completion_date_text}</div>
                           </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Notes */}
-                  {hasNotes && (
-                    <div className="border-t pt-6">
-                      <h4 className="text-sm font-semibold text-muted-foreground mb-3">Important Notes</h4>
-                      <div className="space-y-3 text-sm text-muted-foreground">
-                        {termSheet.in_principle_approval_text && <p>{termSheet.in_principle_approval_text}</p>}
-                        {termSheet.subscription_pack_note && <p>{termSheet.subscription_pack_note}</p>}
-                        {termSheet.share_certificates_note && <p>{termSheet.share_certificates_note}</p>}
-                        {termSheet.subject_to_change_note && (
-                          <p className="text-amber-600 dark:text-amber-400 font-medium">{termSheet.subject_to_change_note}</p>
                         )}
                       </div>
                     </div>
@@ -1258,8 +1249,8 @@ export default function OpportunityDetailPage() {
           <DialogHeader>
             <DialogTitle>Subscribe to Investment Opportunity</DialogTitle>
             <DialogDescription>
-              Enter your commitment amount to subscribe to {opportunity.name}. You&apos;ll receive the NDA
-              and subscription documents to sign together.
+              Enter your commitment amount to submit a subscription request for {opportunity.name}. Once reviewed,
+              you&apos;ll receive the NDA and subscription documents to sign.
             </DialogDescription>
           </DialogHeader>
           <div className="py-4 space-y-4">
@@ -1291,7 +1282,7 @@ export default function OpportunityDetailPage() {
                       Both NDA and Subscription Pack will be sent to all authorized signatories.
                     </p>
                     <p className="text-amber-600 dark:text-amber-400 mt-2 text-xs">
-                      Note: This direct subscription path does not include data room access.
+                      Note: This request does not include data room access.
                     </p>
                   </div>
                 </div>

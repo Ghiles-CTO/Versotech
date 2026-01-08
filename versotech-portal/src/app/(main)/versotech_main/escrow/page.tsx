@@ -210,6 +210,19 @@ export default function EscrowPage() {
           return
         }
 
+        // SECURITY: Block partners from accessing escrow/wire info
+        // Partners should not see sensitive bank routing information
+        const { data: partnerUser } = await supabase
+          .from('partner_users')
+          .select('partner_id')
+          .eq('user_id', user.id)
+          .maybeSingle()
+
+        if (partnerUser) {
+          setError('Access restricted. Partners cannot access escrow information.')
+          return
+        }
+
         // Check if user is a lawyer
         const { data: lawyerUser, error: lawyerUserError } = await supabase
           .from('lawyer_users')

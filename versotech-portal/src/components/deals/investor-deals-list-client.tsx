@@ -201,7 +201,6 @@ interface FeeStructure {
   allocation_up_to: number | null
   price_per_share_text: string | null
   minimum_ticket: number | null
-  maximum_ticket: number | null
   term_sheet_date: string | null
   transaction_type: string | null
   opportunity_summary: string | null
@@ -216,12 +215,7 @@ interface FeeStructure {
   carried_interest_percent: number | null
   legal_counsel: string | null
   interest_confirmation_deadline: string | null
-  capital_call_timeline: string | null
   completion_date_text: string | null
-  in_principle_approval_text: string | null
-  subscription_pack_note: string | null
-  share_certificates_note: string | null
-  subject_to_change_note: string | null
   validity_date: string | null
   term_sheet_attachment_key: string | null
 }
@@ -1400,7 +1394,7 @@ export function InvestorDealsListClient({
                 </CardHeader>
 
                 <CardContent className="space-y-6">
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                     <div>
                       <p className="text-xs uppercase tracking-wide text-muted-foreground">Allocation</p>
                       <p className="text-lg font-semibold text-foreground">
@@ -1418,16 +1412,6 @@ export function InvestorDealsListClient({
                           ? formatCurrency(feeStructure.minimum_ticket, deal.currency)
                           : deal.minimum_investment
                             ? formatCurrency(deal.minimum_investment, deal.currency)
-                            : '(Pending)'}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-xs uppercase tracking-wide text-muted-foreground">Maximum ticket</p>
-                      <p className="text-lg font-semibold text-foreground">
-                        {feeStructure?.maximum_ticket
-                          ? formatCurrency(feeStructure.maximum_ticket, deal.currency)
-                          : deal.maximum_investment
-                            ? formatCurrency(deal.maximum_investment, deal.currency)
                             : '(Pending)'}
                       </p>
                     </div>
