@@ -92,23 +92,23 @@ export function PortfolioAllocationChart({ data }: PortfolioAllocationChartProps
 
   if (isEmpty) {
     return (
-      <Card className="border border-gray-100 shadow-sm bg-white overflow-hidden">
-        <CardHeader className="pb-3 border-b border-gray-50">
-          <CardTitle className="text-sm font-semibold tracking-wide uppercase text-gray-500 flex items-center gap-2">
-            <div className="p-1.5 rounded-md bg-gray-100">
-              <Wallet className="h-4 w-4 text-gray-400" />
+      <Card className="border border-gray-100 dark:border-zinc-800 shadow-sm bg-white dark:bg-zinc-900 overflow-hidden">
+        <CardHeader className="pb-3 border-b border-gray-50 dark:border-zinc-800">
+          <CardTitle className="text-sm font-semibold tracking-wide uppercase text-gray-500 dark:text-gray-400 flex items-center gap-2">
+            <div className="p-1.5 rounded-md bg-gray-100 dark:bg-zinc-800">
+              <Wallet className="h-4 w-4 text-gray-400 dark:text-gray-500" />
             </div>
             Portfolio Allocation
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-6">
-          <div className="flex items-center justify-center h-[280px] text-gray-400">
+          <div className="flex items-center justify-center h-[280px] text-gray-400 dark:text-gray-500">
             <div className="text-center">
-              <div className="w-24 h-24 mx-auto mb-4 rounded-full border-4 border-dashed border-gray-200 flex items-center justify-center">
-                <Wallet className="h-10 w-10 text-gray-300" />
+              <div className="w-24 h-24 mx-auto mb-4 rounded-full border-4 border-dashed border-gray-200 dark:border-zinc-700 flex items-center justify-center">
+                <Wallet className="h-10 w-10 text-gray-300 dark:text-gray-600" />
               </div>
-              <p className="text-sm font-medium text-gray-500">No allocation data</p>
-              <p className="text-xs text-gray-400 mt-1">Portfolio data will appear here</p>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">No allocation data</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Portfolio data will appear here</p>
             </div>
           </div>
         </CardContent>
@@ -117,17 +117,17 @@ export function PortfolioAllocationChart({ data }: PortfolioAllocationChartProps
   }
 
   return (
-    <Card className="border border-gray-100 shadow-sm bg-white overflow-hidden">
+    <Card className="border border-gray-100 dark:border-zinc-800 shadow-sm bg-white dark:bg-zinc-900 overflow-hidden">
       {/* Header */}
-      <CardHeader className="pb-3 border-b border-gray-50">
+      <CardHeader className="pb-3 border-b border-gray-50 dark:border-zinc-800">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-sm font-semibold tracking-wide uppercase text-gray-500 flex items-center gap-2">
-            <div className="p-1.5 rounded-md bg-gradient-to-br from-blue-50 to-indigo-50">
-              <Wallet className="h-4 w-4 text-blue-600" />
+          <CardTitle className="text-sm font-semibold tracking-wide uppercase text-gray-500 dark:text-gray-400 flex items-center gap-2">
+            <div className="p-1.5 rounded-md bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30">
+              <Wallet className="h-4 w-4 text-blue-600 dark:text-blue-400" />
             </div>
             Portfolio Allocation
           </CardTitle>
-          <span className="text-xs text-gray-400 font-medium">
+          <span className="text-xs text-gray-400 dark:text-gray-500 font-medium">
             {data.length} {data.length === 1 ? 'Vehicle' : 'Vehicles'}
           </span>
         </div>
@@ -173,10 +173,10 @@ export function PortfolioAllocationChart({ data }: PortfolioAllocationChartProps
             {/* Center Content */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
               <div className="text-center">
-                <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-0.5">Total</p>
-                <p className="text-2xl font-bold text-gray-900 tracking-tight">
+                <p className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-0.5">Total</p>
+                <p className="text-2xl font-bold text-foreground tracking-tight">
                   ${formattedTotal.value}
-                  <span className="text-lg text-gray-500">{formattedTotal.suffix}</span>
+                  <span className="text-lg text-gray-500 dark:text-gray-400">{formattedTotal.suffix}</span>
                 </p>
               </div>
             </div>
@@ -194,8 +194,8 @@ export function PortfolioAllocationChart({ data }: PortfolioAllocationChartProps
                     key={item.name}
                     className={`group relative p-3 rounded-lg transition-all duration-200 cursor-pointer
                       ${isActive
-                        ? 'bg-gray-50 shadow-sm ring-1 ring-gray-200'
-                        : 'hover:bg-gray-50/70'
+                        ? 'bg-gray-50 dark:bg-zinc-800 shadow-sm ring-1 ring-gray-200 dark:ring-zinc-700'
+                        : 'hover:bg-gray-50/70 dark:hover:bg-zinc-800/50'
                       }`}
                     onMouseEnter={() => setActiveIndex(index)}
                     onMouseLeave={() => setActiveIndex(null)}
@@ -206,12 +206,12 @@ export function PortfolioAllocationChart({ data }: PortfolioAllocationChartProps
                           className={`w-3 h-3 rounded-sm flex-shrink-0 transition-transform duration-200 ${isActive ? 'scale-125' : ''}`}
                           style={{ backgroundColor: color.main }}
                         />
-                        <span className={`text-sm font-medium truncate transition-colors duration-200 ${isActive ? 'text-gray-900' : 'text-gray-700'}`}>
+                        <span className={`text-sm font-medium truncate transition-colors duration-200 ${isActive ? 'text-foreground' : 'text-foreground/80'}`}>
                           {item.name}
                         </span>
                       </div>
                       <div className="flex items-center gap-3 flex-shrink-0">
-                        <span className={`text-sm font-semibold tabular-nums transition-colors duration-200 ${isActive ? 'text-gray-900' : 'text-gray-800'}`}>
+                        <span className={`text-sm font-semibold tabular-nums transition-colors duration-200 ${isActive ? 'text-foreground' : 'text-foreground/90'}`}>
                           {formatCurrency(item.value)}
                         </span>
                         <span
@@ -227,7 +227,7 @@ export function PortfolioAllocationChart({ data }: PortfolioAllocationChartProps
                     </div>
 
                     {/* Progress Bar */}
-                    <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                    <div className="h-1.5 bg-gray-100 dark:bg-zinc-800 rounded-full overflow-hidden">
                       <div
                         className="h-full rounded-full transition-all duration-500 ease-out"
                         style={{
@@ -243,13 +243,13 @@ export function PortfolioAllocationChart({ data }: PortfolioAllocationChartProps
             </div>
 
             {/* Summary Footer */}
-            <div className="mt-4 pt-3 border-t border-gray-100">
+            <div className="mt-4 pt-3 border-t border-gray-100 dark:border-zinc-800">
               <div className="flex items-center justify-between text-xs">
-                <span className="text-gray-500 flex items-center gap-1.5">
+                <span className="text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
                   <TrendingUp className="h-3.5 w-3.5" />
                   Diversified across {data.length} vehicles
                 </span>
-                <span className="text-gray-400">
+                <span className="text-gray-400 dark:text-gray-500">
                   Updated today
                 </span>
               </div>

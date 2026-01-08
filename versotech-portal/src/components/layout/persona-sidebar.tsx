@@ -65,6 +65,7 @@ const PERSONA_NAV_ITEMS: Record<string, NavItem[]> = {
     { name: 'Documents', href: '/versotech_main/documents', icon: FileText, description: 'Document center' },
     { name: 'VersoSign', href: '/versotech_main/versosign', icon: FileSignature, description: 'E-signatures' },
     { name: 'Introducers', href: '/versotech_main/introducers', icon: HandHeart, description: 'Partners' },
+    { name: 'Introducer Agreements', href: '/versotech_main/introducer-agreements', icon: FileText, description: 'Fee agreements' },
     { name: 'Arrangers', href: '/versotech_main/arrangers', icon: Briefcase, description: 'Regulated entities' },
     { name: 'Users', href: '/versotech_main/users', icon: Users, description: 'All user types' },
     { name: 'Calendar', href: '/versotech_main/calendar', icon: Calendar, description: 'Schedule' },
@@ -89,6 +90,7 @@ const PERSONA_NAV_ITEMS: Record<string, NavItem[]> = {
     { name: 'Documents', href: '/versotech_main/documents', icon: FileText, description: 'Document center' },
     { name: 'VersoSign', href: '/versotech_main/versosign', icon: FileSignature, description: 'E-signatures' },
     { name: 'Introducers', href: '/versotech_main/introducers', icon: HandHeart, description: 'Partners' },
+    { name: 'Introducer Agreements', href: '/versotech_main/introducer-agreements', icon: FileText, description: 'Fee agreements' },
     { name: 'Arrangers', href: '/versotech_main/arrangers', icon: Briefcase, description: 'Regulated entities' },
     { name: 'Users', href: '/versotech_main/users', icon: Users, description: 'All user types' },
     { name: 'Calendar', href: '/versotech_main/calendar', icon: Calendar, description: 'Schedule' },
@@ -250,7 +252,7 @@ export function PersonaSidebar() {
       "flex flex-col h-screen transition-all duration-300 border-r relative z-50",
       collapsed ? "w-[80px]" : "w-[280px]",
       isDark
-        ? "bg-[#0a0a0a] border-white/5 text-gray-400"
+        ? "bg-zinc-950 border-white/5 text-zinc-400"
         : "bg-white border-gray-100 text-gray-600"
     )}>
       {/* Header */}
@@ -296,7 +298,7 @@ export function PersonaSidebar() {
           className={cn(
             "absolute -right-3 top-8 h-6 w-6 rounded-full border shadow-sm z-50 hidden md:flex items-center justify-center transition-colors",
             isDark
-              ? "bg-[#0F1115] border-white/10 text-gray-400 hover:text-white hover:bg-white/5"
+              ? "bg-zinc-900 border-white/10 text-zinc-400 hover:text-white hover:bg-white/5"
               : "bg-white border-gray-200 text-gray-500 hover:text-gray-900 hover:bg-gray-50"
           )}
         >
@@ -376,7 +378,7 @@ export function PersonaSidebar() {
                 <div className={cn(
                   "absolute left-full top-1/2 -translate-y-1/2 ml-2 px-3 py-1.5 rounded-md text-xs font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 shadow-xl border",
                   isDark
-                    ? "bg-[#1A1D24] border-white/10 text-white"
+                    ? "bg-zinc-800 border-white/10 text-white"
                     : "bg-white border-gray-100 text-gray-900"
                 )}>
                   {item.name}

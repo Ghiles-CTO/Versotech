@@ -125,18 +125,18 @@ interface SubscriptionSubmission {
 }
 
 const statusBadgeClasses: Record<string, string> = {
-  draft: 'bg-slate-200 text-slate-700',
-  open: 'bg-emerald-100 text-emerald-700',
-  allocation_pending: 'bg-amber-100 text-amber-700',
-  closed: 'bg-blue-100 text-blue-700',
-  cancelled: 'bg-rose-100 text-rose-700'
+  draft: 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300',
+  open: 'bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300',
+  allocation_pending: 'bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300',
+  closed: 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300',
+  cancelled: 'bg-rose-100 dark:bg-rose-900/50 text-rose-700 dark:text-rose-300'
 }
 
 const interestStatusCopy: Record<DealInterest['status'], { label: string; tone: string }> = {
-  pending_review: { label: 'Pending team review', tone: 'bg-amber-100 text-amber-700' },
-  approved: { label: 'NDA active', tone: 'bg-emerald-100 text-emerald-700' },
-  rejected: { label: 'Declined', tone: 'bg-rose-100 text-rose-700' },
-  withdrawn: { label: 'Withdrawn', tone: 'bg-slate-100 text-slate-600' }
+  pending_review: { label: 'Pending team review', tone: 'bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300' },
+  approved: { label: 'NDA active', tone: 'bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300' },
+  rejected: { label: 'Declined', tone: 'bg-rose-100 dark:bg-rose-900/50 text-rose-700 dark:text-rose-300' },
+  withdrawn: { label: 'Withdrawn', tone: 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300' }
 }
 
 function normalizeCurrency(currency?: string | null) {
@@ -354,22 +354,22 @@ export function DealDetailsModal({ deal, investorId, children }: DealDetailsModa
                   alt={`${deal.company_name ?? deal.name} logo`}
                   width={48}
                   height={48}
-                  className="rounded-lg object-contain bg-white border border-gray-200 p-2"
+                  className="rounded-lg object-contain bg-background border border-border p-2"
                 />
               ) : (
-                <div className="h-12 w-12 rounded-lg bg-gray-100 flex items-center justify-center text-gray-500 font-semibold">
+                <div className="h-12 w-12 rounded-lg bg-muted flex items-center justify-center text-muted-foreground font-semibold">
                   {deal.name.charAt(0)}
                 </div>
               )}
               <div>
                 <div className="flex items-center gap-3">
-                  <span className="text-xl font-semibold text-gray-900">{deal.name}</span>
+                  <span className="text-xl font-semibold text-foreground">{deal.name}</span>
                   <Badge className={dealStatusBadge}>
                     {deal.status.replace(/_/g, ' ').toUpperCase()}
                   </Badge>
                 </div>
-                <p className="text-sm text-gray-500 flex items-center gap-2 mt-1">
-                  <Building2 className="h-4 w-4 text-gray-400" />
+                <p className="text-sm text-muted-foreground flex items-center gap-2 mt-1">
+                  <Building2 className="h-4 w-4 text-muted-foreground" />
                   {deal.company_name ?? 'Issuer pending'} • {deal.deal_type.replace(/_/g, ' ')}
                 </p>
               </div>
@@ -379,7 +379,7 @@ export function DealDetailsModal({ deal, investorId, children }: DealDetailsModa
                 href={deal.company_website}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-sm text-blue-600 hover:text-blue-700 inline-flex items-center gap-1"
+                className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 inline-flex items-center gap-1"
               >
                 Visit company site
                 <ArrowUpRight className="h-4 w-4" />
@@ -387,7 +387,7 @@ export function DealDetailsModal({ deal, investorId, children }: DealDetailsModa
             )}
           </DialogTitle>
           <div className="space-y-1">
-            <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600">
+            <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
               {deal.stage && (
                 <span className="inline-flex items-center gap-1">
                   <Sparkles className="h-4 w-4 text-purple-500" />
@@ -413,7 +413,7 @@ export function DealDetailsModal({ deal, investorId, children }: DealDetailsModa
                 </span>
               )}
             </div>
-            <div className="flex flex-wrap gap-3 text-xs text-gray-500">
+            <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
               {deal.open_at && (
                 <span>
                   Opens {formatDate(deal.open_at)}
@@ -438,14 +438,14 @@ export function DealDetailsModal({ deal, investorId, children }: DealDetailsModa
             </CardHeader>
             <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
-                <p className="text-xs uppercase tracking-wide text-gray-500">Interest</p>
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">Interest</p>
                 {hasInterest && interestMeta ? (
                   <Badge className={interestMeta.tone}>{interestMeta.label}</Badge>
                 ) : (
-                  <span className="text-sm text-gray-600">No signal submitted yet</span>
+                  <span className="text-sm text-muted-foreground">No signal submitted yet</span>
                 )}
                 {deal.interest?.indicative_amount && (
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-muted-foreground">
                     Indicative amount:{' '}
                     <span className="font-medium">
                       {formatCurrency(
@@ -457,28 +457,28 @@ export function DealDetailsModal({ deal, investorId, children }: DealDetailsModa
                 )}
               </div>
               <div className="space-y-2">
-                <p className="text-xs uppercase tracking-wide text-gray-500">NDA</p>
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">NDA</p>
                 {ndaActive ? (
                   <>
-                    <Badge className="bg-emerald-100 text-emerald-700">Data room access granted</Badge>
+                    <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">Data room access granted</Badge>
                     {deal.data_room_access?.expires_at && (
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-muted-foreground">
                         Expires {formatDate(deal.data_room_access.expires_at)}
                       </p>
                     )}
                   </>
                 ) : (
-                  <span className="text-sm text-gray-600">Pending NDA approval</span>
+                  <span className="text-sm text-muted-foreground">Pending NDA approval</span>
                 )}
               </div>
               <div className="space-y-2">
-                <p className="text-xs uppercase tracking-wide text-gray-500">Subscription</p>
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">Subscription</p>
                 {subscriptionStatus ? (
-                  <Badge className="bg-indigo-100 text-indigo-700 capitalize">
+                  <Badge className="bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 capitalize">
                     {subscriptionStatus.replace(/_/g, ' ')}
                   </Badge>
                 ) : (
-                  <span className="text-sm text-gray-600">Not submitted yet</span>
+                  <span className="text-sm text-muted-foreground">Not submitted yet</span>
                 )}
               </div>
             </CardContent>
@@ -489,10 +489,10 @@ export function DealDetailsModal({ deal, investorId, children }: DealDetailsModa
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <CardTitle className="text-base flex items-center gap-2">
-                    <FileText className="h-5 w-5 text-gray-500" />
+                    <FileText className="h-5 w-5 text-muted-foreground" />
                     Term sheet overview
                   </CardTitle>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-muted-foreground">
                     Key economics and milestones maintained by the VERSO team.
                   </p>
                 </div>
@@ -515,29 +515,29 @@ export function DealDetailsModal({ deal, investorId, children }: DealDetailsModa
             </CardHeader>
             <CardContent>
               {termSheet ? (
-                <div className="overflow-hidden rounded-lg border border-gray-200">
+                <div className="overflow-hidden rounded-lg border border-border">
                   <dl className="grid grid-cols-1 md:grid-cols-2">
                     {termSheetRows.map(({ label, value }) => (
                       <div
                         key={label}
-                        className="px-4 py-3 border-b border-gray-200 md:border-r last:border-r-0 md:last:border-b-0"
+                        className="px-4 py-3 border-b border-border md:border-r last:border-r-0 md:last:border-b-0"
                       >
-                        <dt className="text-xs uppercase tracking-wide text-gray-500">{label}</dt>
-                        <dd className="text-sm font-medium text-gray-900 mt-1">{value}</dd>
+                        <dt className="text-xs uppercase tracking-wide text-muted-foreground">{label}</dt>
+                        <dd className="text-sm font-medium text-foreground mt-1">{value}</dd>
                       </div>
                     ))}
                   </dl>
                 </div>
               ) : (
-                <div className="text-sm text-gray-500">
+                <div className="text-sm text-muted-foreground">
                   Term sheet details will appear here once published.
                 </div>
               )}
               {(termSheet as any)?.term_sheet_html && (
                 <div className="mt-6 space-y-2">
-                  <h4 className="text-sm font-semibold text-gray-800">Opportunity Summary</h4>
+                  <h4 className="text-sm font-semibold text-foreground/90">Opportunity Summary</h4>
                   <div
-                    className="text-sm text-gray-700 leading-relaxed"
+                    className="text-sm text-foreground/80 leading-relaxed"
                     dangerouslySetInnerHTML={{ __html: (termSheet as any).term_sheet_html }}
                   />
                 </div>
@@ -553,14 +553,14 @@ export function DealDetailsModal({ deal, investorId, children }: DealDetailsModa
               <CardTitle className="text-base">Next steps</CardTitle>
             </CardHeader>
             <CardContent className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-              <div className="text-sm text-gray-600 space-y-1">
+              <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
                 <p>Have a question for the team or want to confirm details?</p>
                 <p>Use the shortcuts below to continue the workflow.</p>
               </div>
               <div className="flex flex-wrap items-center gap-3">
                 <Link
                   href={`/versotech_main/messages?deal=${deal.id}`}
-                  className="inline-flex items-center gap-2 rounded-md border border-gray-200 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                  className="inline-flex items-center gap-2 rounded-md border border-gray-200 dark:border-zinc-700 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-zinc-800"
                 >
                   <MessageSquare className="h-4 w-4" />
                   Ask a question
@@ -585,8 +585,8 @@ export function DealDetailsModal({ deal, investorId, children }: DealDetailsModa
             </CardContent>
           </Card>
 
-          <div className="border border-gray-200 rounded-lg p-4 text-xs text-gray-500 space-y-2">
-            <p className="font-medium text-gray-600">Notes</p>
+          <div className="border border-gray-200 dark:border-zinc-700 rounded-lg p-4 text-xs text-gray-500 dark:text-gray-400 space-y-2">
+            <p className="font-medium text-gray-600 dark:text-gray-300">Notes</p>
             <ul className="list-disc pl-4 space-y-1">
               <li>Indicative terms remain subject to final approvals and due diligence.</li>
               <li>
@@ -601,9 +601,9 @@ export function DealDetailsModal({ deal, investorId, children }: DealDetailsModa
 
         <Separator className="my-4" />
 
-        <div className="text-xs text-gray-400">
+        <div className="text-xs text-gray-400 dark:text-gray-500">
           Need help? Email{' '}
-          <a href="mailto:investors@versotech.com" className="underline">
+          <a href="mailto:investors@versotech.com" className="underline hover:text-gray-600 dark:hover:text-gray-300">
             investors@versotech.com
           </a>{' '}
           and reference deal ID {deal.id}.

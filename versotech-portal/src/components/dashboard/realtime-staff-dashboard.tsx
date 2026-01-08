@@ -267,24 +267,24 @@ export function RealtimeStaffDashboard({
   return (
     <div className={cn("space-y-4", className)}>
       {/* Connection Status Bar */}
-      <Card className="bg-black/95 border-white/10">
+      <Card className="bg-white/95 dark:bg-black/95 border-gray-200 dark:border-white/10">
         <CardContent className="p-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2">
                 {isConnected ? (
                   <>
-                    <Wifi className="h-4 w-4 text-emerald-400" />
-                    <span className="text-xs text-emerald-200">Real-time connected</span>
+                    <Wifi className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                    <span className="text-xs text-emerald-700 dark:text-emerald-200">Real-time connected</span>
                   </>
                 ) : (
                   <>
-                    <WifiOff className="h-4 w-4 text-amber-400" />
-                    <span className="text-xs text-amber-200">Connecting...</span>
+                    <WifiOff className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                    <span className="text-xs text-amber-700 dark:text-amber-200">Connecting...</span>
                   </>
                 )}
               </div>
-              <Badge variant="outline" className="text-[10px] border-white/10 text-slate-400">
+              <Badge variant="outline" className="text-[10px] border-gray-300 dark:border-white/10 text-gray-500 dark:text-slate-400">
                 Last updated: {new Date(metrics.lastUpdated).toLocaleTimeString()}
               </Badge>
             </div>
@@ -292,7 +292,7 @@ export function RealtimeStaffDashboard({
             <Button
               variant="outline"
               size="sm"
-              className="h-7 px-2 text-xs border-white/10 text-slate-200 hover:bg-white/10"
+              className="h-7 px-2 text-xs border-gray-300 dark:border-white/10 text-gray-700 dark:text-slate-200 hover:bg-gray-100 dark:hover:bg-white/10"
               onClick={handleManualRefresh}
               disabled={isRefreshing}
             >
@@ -306,16 +306,16 @@ export function RealtimeStaffDashboard({
       {/* Live Metrics Display */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
-          { label: 'Active LPs', value: metrics.activeLps, color: 'text-sky-400' },
-          { label: 'Pending KYC', value: metrics.pendingKyc, color: 'text-amber-400' },
-          { label: 'Active Deals', value: metrics.activeDeals, color: 'text-purple-400' },
-          { label: 'Compliance', value: `${metrics.complianceRate}%`, color: 'text-emerald-400' }
+          { label: 'Active LPs', value: metrics.activeLps, color: 'text-sky-600 dark:text-sky-400' },
+          { label: 'Pending KYC', value: metrics.pendingKyc, color: 'text-amber-600 dark:text-amber-400' },
+          { label: 'Active Deals', value: metrics.activeDeals, color: 'text-purple-600 dark:text-purple-400' },
+          { label: 'Compliance', value: `${metrics.complianceRate}%`, color: 'text-emerald-600 dark:text-emerald-400' }
         ].map((metric) => (
           <div
             key={metric.label}
-            className="p-3 rounded-lg border border-white/10 bg-black/50 backdrop-blur"
+            className="p-3 rounded-lg border border-gray-200 dark:border-white/10 bg-white/50 dark:bg-black/50 backdrop-blur"
           >
-            <div className="text-xs text-slate-500 mb-1">{metric.label}</div>
+            <div className="text-xs text-gray-500 dark:text-slate-500 mb-1">{metric.label}</div>
             <div className={cn("text-2xl font-bold", metric.color)}>
               {metric.value}
             </div>
@@ -325,10 +325,10 @@ export function RealtimeStaffDashboard({
 
       {/* Recent Real-time Updates */}
       {realtimeUpdates.length > 0 && (
-        <Card className="bg-black/95 border-white/10">
+        <Card className="bg-white/95 dark:bg-black/95 border-gray-200 dark:border-white/10">
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm text-white flex items-center gap-2">
-              <Activity className="h-4 w-4 text-sky-400 animate-pulse" />
+            <CardTitle className="text-sm text-gray-900 dark:text-white flex items-center gap-2">
+              <Activity className="h-4 w-4 text-sky-600 dark:text-sky-400 animate-pulse" />
               Live Activity Feed
             </CardTitle>
           </CardHeader>
@@ -336,15 +336,15 @@ export function RealtimeStaffDashboard({
             {realtimeUpdates.slice(0, 5).map((update, idx) => (
               <div
                 key={`${update.table}-${update.timestamp}-${idx}`}
-                className="flex items-center gap-3 p-2 rounded-md bg-white/5 text-xs"
+                className="flex items-center gap-3 p-2 rounded-md bg-gray-100 dark:bg-white/5 text-xs"
               >
-                <div className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                <div className="h-2 w-2 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse" />
                 <div className="flex-1">
-                  <span className="text-slate-300 capitalize">{update.table}</span>
-                  <span className="text-slate-500 mx-1">•</span>
-                  <span className="text-slate-400">{update.type}</span>
+                  <span className="text-gray-700 dark:text-slate-300 capitalize">{update.table}</span>
+                  <span className="text-gray-400 dark:text-slate-500 mx-1">•</span>
+                  <span className="text-gray-500 dark:text-slate-400">{update.type}</span>
                 </div>
-                <span className="text-slate-600 text-[10px]">
+                <span className="text-gray-400 dark:text-slate-600 text-[10px]">
                   {new Date(update.timestamp).toLocaleTimeString()}
                 </span>
               </div>

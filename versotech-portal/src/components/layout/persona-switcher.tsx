@@ -26,6 +26,7 @@ import {
 import Image from 'next/image'
 
 const PERSONA_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
+  ceo: Building2,
   staff: Building2,
   investor: User,
   arranger: Briefcase,
@@ -36,6 +37,7 @@ const PERSONA_ICONS: Record<string, React.ComponentType<{ className?: string }>>
 }
 
 const PERSONA_LABELS: Record<string, string> = {
+  ceo: 'CEO',
   staff: 'Staff',
   investor: 'Investor',
   arranger: 'Arranger',
@@ -154,7 +156,7 @@ export function PersonaSwitcher({ className }: PersonaSwitcherProps) {
         className={cn(
           "w-64",
           isDark
-            ? "bg-[#1A1D24] border-white/10 text-white"
+            ? "bg-zinc-800 border-white/10 text-white"
             : "bg-white border-gray-200"
         )}
       >

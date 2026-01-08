@@ -173,7 +173,7 @@ export function AddMemberModal({ dealId, onMemberAdded }: AddMemberModalProps) {
               disabled={!!selectedInvestor}
             />
             <p className="text-xs text-muted-foreground">
-              Enter email for external participants (lawyers, advisors, etc.)
+              Enter email for external participants (advisors, bankers, etc.)
             </p>
           </div>
 
@@ -189,7 +189,6 @@ export function AddMemberModal({ dealId, onMemberAdded }: AddMemberModalProps) {
                 <SelectItem value="co_investor">Co-Investor</SelectItem>
                 <SelectItem value="spouse">Spouse</SelectItem>
                 <SelectItem value="advisor">Advisor</SelectItem>
-                <SelectItem value="lawyer">Lawyer</SelectItem>
                 <SelectItem value="banker">Banker</SelectItem>
                 <SelectItem value="introducer">Introducer</SelectItem>
                 <SelectItem value="viewer">Viewer</SelectItem>

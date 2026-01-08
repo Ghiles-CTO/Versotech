@@ -91,16 +91,16 @@ const DashboardHeader = React.memo(({
 }: {
     formattedDate: string
 }) => (
-    <header className="flex items-end justify-between pb-6 border-b border-white/5">
+    <header className="flex items-end justify-between pb-6 border-b border-gray-200 dark:border-white/5">
         <div className="space-y-1">
              <div className="flex items-center gap-3 mb-2">
-                <Badge variant="outline" className="rounded-full border-emerald-500/30 bg-emerald-500/5 text-emerald-400 px-3 py-0.5 text-[10px] uppercase tracking-widest font-medium">
+                <Badge variant="outline" className="rounded-full border-emerald-600/30 dark:border-emerald-500/30 bg-emerald-500/10 dark:bg-emerald-500/5 text-emerald-700 dark:text-emerald-400 px-3 py-0.5 text-[10px] uppercase tracking-widest font-medium">
                     Financial Operations
                 </Badge>
-                <span className="h-1 w-1 rounded-full bg-zinc-700"></span>
-                <span className="text-xs text-zinc-200 font-mono tracking-wider">{formattedDate}</span>
+                <span className="h-1 w-1 rounded-full bg-gray-300 dark:bg-zinc-700"></span>
+                <span className="text-xs text-gray-600 dark:text-zinc-200 font-mono tracking-wider">{formattedDate}</span>
              </div>
-             <h1 className="text-3xl font-light text-white tracking-tight">Executive Dashboard</h1>
+             <h1 className="text-3xl font-light text-gray-900 dark:text-white tracking-tight">Executive Dashboard</h1>
         </div>
     </header>
 ))
@@ -111,7 +111,7 @@ const KPICard = React.memo(({ kpi, glassCardStyle, labelStyle, valueStyle }: { k
     return (
         <div className={glassCardStyle + " p-6 rounded-xl relative overflow-hidden group"}>
             <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity duration-500 pointer-events-none">
-                <Icon className="w-16 h-16 text-white transform rotate-12 translate-x-4 -translate-y-4" />
+                <Icon className="w-16 h-16 text-gray-900 dark:text-white transform rotate-12 translate-x-4 -translate-y-4" />
             </div>
             <div className="relative z-10">
                 <div className="flex items-center justify-between mb-4">
@@ -120,11 +120,11 @@ const KPICard = React.memo(({ kpi, glassCardStyle, labelStyle, valueStyle }: { k
                 </div>
                 <div className="flex items-baseline gap-2">
                     <span className={valueStyle}>{typeof kpi.value === 'number' ? kpi.value.toLocaleString() : kpi.value}</span>
-                    <span className="text-sm text-zinc-200 font-light">{kpi.subValue}</span>
+                    <span className="text-sm text-gray-500 dark:text-zinc-200 font-light">{kpi.subValue}</span>
                 </div>
-                <div className="mt-4 flex items-center gap-2 text-xs text-zinc-200">
-                    {kpi.trend === 'up' ? <ArrowUpRight className="w-3 h-3 text-emerald-400" /> : <MoreHorizontal className="w-3 h-3 text-zinc-300" />}
-                    <span className={kpi.trend === 'up' ? "text-emerald-400" : "text-zinc-200"}>{kpi.change}</span>
+                <div className="mt-4 flex items-center gap-2 text-xs text-gray-500 dark:text-zinc-200">
+                    {kpi.trend === 'up' ? <ArrowUpRight className="w-3 h-3 text-emerald-600 dark:text-emerald-400" /> : <MoreHorizontal className="w-3 h-3 text-gray-400 dark:text-zinc-300" />}
+                    <span className={kpi.trend === 'up' ? "text-emerald-600 dark:text-emerald-400" : "text-gray-500 dark:text-zinc-200"}>{kpi.change}</span>
                 </div>
             </div>
         </div>
@@ -137,14 +137,14 @@ const FeesChart = React.memo(({ data, glassCardStyle }: { data: any[], glassCard
         <CardHeader className="pb-2 pt-6 px-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <CardTitle className="text-lg font-light text-white tracking-wide flex items-center gap-2">
+                    <CardTitle className="text-lg font-light text-gray-900 dark:text-white tracking-wide flex items-center gap-2">
                         Revenue & Fees
                     </CardTitle>
-                    <CardDescription className="text-zinc-200 text-xs uppercase tracking-wider mt-1">
+                    <CardDescription className="text-gray-500 dark:text-zinc-200 text-xs uppercase tracking-wider mt-1">
                         Transaction Volume (LTM)
                     </CardDescription>
                 </div>
-                <Badge variant="secondary" className="bg-emerald-900/20 text-emerald-400 border-emerald-900/50 font-mono text-[10px]">LIVE</Badge>
+                <Badge variant="secondary" className="bg-emerald-100 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900/50 font-mono text-[10px]">LIVE</Badge>
             </div>
         </CardHeader>
         <CardContent className="pl-2 pr-6 pb-6 pt-4">
@@ -212,17 +212,17 @@ const SubscriptionsChart = React.memo(({ data, glassCardStyle }: { data: any[], 
         <CardHeader className="pb-2 pt-6 px-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <CardTitle className="text-lg font-light text-white tracking-wide flex items-center gap-2">
+                    <CardTitle className="text-lg font-light text-gray-900 dark:text-white tracking-wide flex items-center gap-2">
                         Capital Commitments
                     </CardTitle>
-                    <CardDescription className="text-zinc-200 text-xs uppercase tracking-wider mt-1">
+                    <CardDescription className="text-gray-500 dark:text-zinc-200 text-xs uppercase tracking-wider mt-1">
                         Subscription Flows (LTM)
                     </CardDescription>
                 </div>
                 <div className="flex items-center gap-4">
                     <div className="flex items-center gap-2">
                         <span className="w-2 h-2 rounded-full bg-sky-500"></span>
-                        <span className="text-xs text-zinc-200">Committed</span>
+                        <span className="text-xs text-gray-600 dark:text-zinc-200">Committed</span>
                     </div>
                 </div>
             </div>
@@ -332,20 +332,20 @@ const LedgerItem = React.memo(({ activity }: { activity: any }) => {
     const isFee = activity.activityType === 'fee'
 
     return (
-        <div className="group relative bg-zinc-900/30 border border-white/5 rounded-lg p-4 hover:bg-zinc-800/50 transition-colors duration-200">
-            <div className="absolute left-0 top-4 bottom-4 w-[2px] bg-zinc-800 group-hover:bg-emerald-500/50 transition-colors rounded-r-full"></div>
+        <div className="group relative bg-gray-100 dark:bg-zinc-900/30 border border-gray-200 dark:border-white/5 rounded-lg p-4 hover:bg-gray-200 dark:hover:bg-zinc-800/50 transition-colors duration-200">
+            <div className="absolute left-0 top-4 bottom-4 w-[2px] bg-gray-300 dark:bg-zinc-800 group-hover:bg-emerald-500/50 transition-colors rounded-r-full"></div>
             <div className="flex items-start justify-between gap-4 pl-3">
                 <div className="flex gap-3">
                     <div className={cn(
                         "p-2 rounded-md h-fit mt-0.5 transition-colors",
-                        isFee ? "bg-emerald-950/30 text-emerald-400" : "bg-zinc-800/50 text-zinc-200"
+                        isFee ? "bg-emerald-100 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400" : "bg-gray-200 dark:bg-zinc-800/50 text-gray-600 dark:text-zinc-200"
                     )}>
                         <Icon className="w-4 h-4" />
                     </div>
                     <div>
-                        <p className="text-sm font-medium text-zinc-200 leading-tight">{activity.title}</p>
-                        <p className="text-xs text-zinc-200 mt-1 leading-relaxed max-w-[200px]">{activity.description}</p>
-                        <p className="text-[10px] text-zinc-300 font-mono mt-2 uppercase tracking-wider">
+                        <p className="text-sm font-medium text-gray-700 dark:text-zinc-200 leading-tight">{activity.title}</p>
+                        <p className="text-xs text-gray-500 dark:text-zinc-200 mt-1 leading-relaxed max-w-[200px]">{activity.description}</p>
+                        <p className="text-[10px] text-gray-400 dark:text-zinc-300 font-mono mt-2 uppercase tracking-wider">
                             {format(parseISO(activity.createdAt), 'HH:mm')} • {activity.status || 'Processed'}
                         </p>
                     </div>
@@ -354,11 +354,11 @@ const LedgerItem = React.memo(({ activity }: { activity: any }) => {
                     <div className="text-right">
                         <span className={cn(
                             "text-sm font-mono font-medium block",
-                            isFee ? "text-emerald-400" : "text-zinc-300"
+                            isFee ? "text-emerald-600 dark:text-emerald-400" : "text-gray-600 dark:text-zinc-300"
                         )}>
                             {isFee ? '+' : ''}${activity.amount.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                         </span>
-                        <span className="text-[10px] text-zinc-300 uppercase">USD</span>
+                        <span className="text-[10px] text-gray-400 dark:text-zinc-300 uppercase">USD</span>
                     </div>
                 )}
             </div>
@@ -419,7 +419,7 @@ export function EnhancedStaffDashboard({
             change: '+2.4%',
             trend: 'up',
             icon: Users,
-            accent: 'text-zinc-200'
+            accent: 'text-gray-600 dark:text-zinc-200'
         },
         {
             label: 'Pending KYC',
@@ -428,7 +428,7 @@ export function EnhancedStaffDashboard({
             change: initialData.kpis.highPriorityKyc && initialData.kpis.highPriorityKyc > 0 ? `${initialData.kpis.highPriorityKyc} High Priority` : 'Standard',
             trend: 'neutral',
             icon: Shield,
-            accent: 'text-amber-200'
+            accent: 'text-amber-600 dark:text-amber-200'
         },
         {
             label: 'Process Executions',
@@ -437,7 +437,7 @@ export function EnhancedStaffDashboard({
             change: 'MTD',
             trend: 'up',
             icon: Workflow,
-            accent: 'text-sky-200'
+            accent: 'text-sky-600 dark:text-sky-200'
         },
         {
             label: 'Compliance Index',
@@ -446,17 +446,17 @@ export function EnhancedStaffDashboard({
             change: 'Target: 100%',
             trend: 'neutral',
             icon: CheckCircle,
-            accent: 'text-emerald-200'
+            accent: 'text-emerald-600 dark:text-emerald-200'
         }
     ], [initialData.kpis])
 
-    // Styles
-    const glassCard = "bg-zinc-900/40 backdrop-blur-md border border-white/5 hover:border-white/10 transition-all duration-300 shadow-xl hover:shadow-2xl hover:shadow-black/50"
-    const kpiValueStyle = "text-3xl xl:text-4xl font-light tracking-tight text-white"
-    const kpiLabelStyle = "text-xs font-medium uppercase tracking-widest text-zinc-200 mb-1 group-hover:text-zinc-100 transition-colors"
+    // Styles - Theme-responsive
+    const glassCard = "bg-white/80 dark:bg-zinc-900/40 backdrop-blur-md border border-gray-200 dark:border-white/5 hover:border-gray-300 dark:hover:border-white/10 transition-all duration-300 shadow-lg dark:shadow-xl hover:shadow-xl dark:hover:shadow-2xl dark:hover:shadow-black/50"
+    const kpiValueStyle = "text-3xl xl:text-4xl font-light tracking-tight text-gray-900 dark:text-white"
+    const kpiLabelStyle = "text-xs font-medium uppercase tracking-widest text-gray-600 dark:text-zinc-200 mb-1 group-hover:text-gray-900 dark:group-hover:text-zinc-100 transition-colors"
 
     return (
-        <div className={cn("bg-[#050505] text-zinc-200 min-h-screen flex flex-col font-sans selection:bg-emerald-500/30", className)}>
+        <div className={cn("bg-gray-50 dark:bg-zinc-950 text-gray-700 dark:text-zinc-200 min-h-screen flex flex-col font-sans selection:bg-emerald-500/30", className)}>
             <div className="flex-1 p-8 xl:p-10 max-w-[1800px] mx-auto w-full space-y-10">
                 
                 <DashboardHeader formattedDate={formattedDate} />
@@ -489,14 +489,14 @@ export function EnhancedStaffDashboard({
                     {/* Activity Feed */}
                     <div className="space-y-6">
                         <div className="flex items-center justify-between px-1">
-                            <h2 className="text-sm font-medium text-zinc-200 uppercase tracking-widest">Ledger</h2>
-                            <CalendarRange className="w-4 h-4 text-zinc-300" />
+                            <h2 className="text-sm font-medium text-gray-700 dark:text-zinc-200 uppercase tracking-widest">Ledger</h2>
+                            <CalendarRange className="w-4 h-4 text-gray-400 dark:text-zinc-300" />
                         </div>
 
                         <div className="space-y-3">
                              {initialData.recentActivity.length === 0 ? (
-                                <div className="p-8 border border-dashed border-white/10 rounded-lg text-center">
-                                    <p className="text-sm text-zinc-200">No recent transactions recorded.</p>
+                                <div className="p-8 border border-dashed border-gray-300 dark:border-white/10 rounded-lg text-center">
+                                    <p className="text-sm text-gray-500 dark:text-zinc-200">No recent transactions recorded.</p>
                                 </div>
                             ) : (
                                 initialData.recentActivity.map((activity) => (
@@ -508,9 +508,9 @@ export function EnhancedStaffDashboard({
                 </div>
 
                 {/* Action Center */}
-                <div className="pt-6 border-t border-white/5">
+                <div className="pt-6 border-t border-gray-200 dark:border-white/5">
                     <StaffActionCenter
-                        className="bg-zinc-900/20 border-white/5"
+                        className="bg-gray-100 dark:bg-zinc-900/20 border-gray-200 dark:border-white/5"
                         onWorkflowTrigger={handleWorkflowTrigger}
                     />
                 </div>

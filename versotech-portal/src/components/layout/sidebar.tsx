@@ -267,6 +267,7 @@ export function Sidebar({ brand, userProfile }: SidebarProps) {
   const { counts, loading: notificationsLoading } = useNotifications(userProfile.role, userProfile.id)
 
   const baseNavItems = brand === 'versoholdings' ? investorNavItems : staffNavItems
+  // isDark kept for conditional logic that can't use CSS dark: prefix
   const isDark = brand === 'versotech'
 
   // Filter nav items based on required permissions
@@ -296,9 +297,8 @@ export function Sidebar({ brand, userProfile }: SidebarProps) {
     <div className={cn(
       "flex flex-col h-screen transition-all duration-300 border-r relative z-50",
       collapsed ? "w-[80px]" : "w-[280px]",
-      isDark
-        ? "bg-[#0a0a0a] border-white/5 text-gray-400"
-        : "bg-white border-gray-100 text-gray-600"
+      // Theme-responsive colors using dark: prefix
+      "bg-white dark:bg-zinc-950 border-gray-100 dark:border-white/5 text-gray-600 dark:text-zinc-400"
     )}>
       {/* Header */}
       <div className="p-6 flex items-center justify-between h-20">
@@ -311,10 +311,7 @@ export function Sidebar({ brand, userProfile }: SidebarProps) {
                 src={brand === 'versotech' ? '/versotech-logo.jpg' : '/versoholdings-logo.jpg'}
                 alt="Logo"
                 fill
-                className={cn(
-                  "object-contain object-left",
-                  isDark && "invert" // Invert for dark mode staff portal
-                )}
+                className="object-contain object-left dark:invert"
                 priority
               />
             </div>
@@ -323,10 +320,7 @@ export function Sidebar({ brand, userProfile }: SidebarProps) {
 
         {collapsed && (
           <div className="mx-auto">
-            <div className={cn(
-              "relative h-8 w-8 rounded-lg overflow-hidden",
-              isDark ? "bg-white/5 ring-1 ring-white/10" : "bg-gray-50 ring-1 ring-gray-100"
-            )}>
+            <div className="relative h-8 w-8 rounded-lg overflow-hidden bg-gray-50 dark:bg-white/5 ring-1 ring-gray-100 dark:ring-white/10">
               <Image
                 src={brand === 'versotech' ? '/versotech-logo.jpg' : '/versoholdings-logo.jpg'}
                 alt="Logo"
@@ -342,12 +336,7 @@ export function Sidebar({ brand, userProfile }: SidebarProps) {
           variant="ghost"
           size="icon"
           onClick={() => setCollapsed(!collapsed)}
-          className={cn(
-            "absolute -right-3 top-8 h-6 w-6 rounded-full border shadow-sm z-50 hidden md:flex items-center justify-center transition-colors",
-            isDark
-              ? "bg-[#0F1115] border-white/10 text-gray-400 hover:text-white hover:bg-white/5"
-              : "bg-white border-gray-200 text-gray-500 hover:text-gray-900 hover:bg-gray-50"
-          )}
+          className="absolute -right-3 top-8 h-6 w-6 rounded-full border shadow-sm z-50 hidden md:flex items-center justify-center transition-colors bg-white dark:bg-zinc-900 border-gray-200 dark:border-white/10 text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-white/5"
         >
           {collapsed ? <ChevronRight className="h-3 w-3" /> : <ChevronLeft className="h-3 w-3" />}
         </Button>
@@ -357,23 +346,13 @@ export function Sidebar({ brand, userProfile }: SidebarProps) {
       {!collapsed && (
         <div className="px-4 mb-4 animate-in fade-in slide-in-from-top-2 duration-300">
           <div className="relative group">
-            <Search className={cn(
-              "absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 transition-colors",
-              isDark
-                ? "text-gray-500 group-focus-within:text-white"
-                : "text-gray-400 group-focus-within:text-gray-900"
-            )} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 transition-colors text-gray-400 dark:text-gray-500 group-focus-within:text-gray-900 dark:group-focus-within:text-white" />
             <input
               type="text"
               placeholder="Search..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className={cn(
-                "w-full pl-9 pr-4 py-2 rounded-lg text-sm transition-all outline-none",
-                isDark
-                  ? "bg-white/5 border border-white/5 text-white placeholder:text-gray-600 focus:bg-white/10 focus:border-white/10"
-                  : "bg-gray-50 border border-gray-100 text-gray-900 placeholder:text-gray-400 focus:bg-white focus:border-gray-200 focus:ring-2 focus:ring-blue-500/10"
-              )}
+              className="w-full pl-9 pr-4 py-2 rounded-lg text-sm transition-all outline-none bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:bg-white dark:focus:bg-white/10 focus:border-gray-200 dark:focus:border-white/10 focus:ring-2 focus:ring-blue-500/10 dark:focus:ring-0"
             />
           </div>
         </div>
@@ -396,30 +375,21 @@ export function Sidebar({ brand, userProfile }: SidebarProps) {
               <div className={cn(
                 "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200",
                 isActive
-                  ? isDark
-                    ? "bg-gradient-to-r from-blue-600/20 to-blue-600/5 text-blue-400"
-                    : "bg-blue-50 text-blue-700"
-                  : isDark
-                    ? "text-gray-400 hover:text-white hover:bg-white/5"
-                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                  ? "bg-blue-50 dark:bg-gradient-to-r dark:from-blue-600/20 dark:to-blue-600/5 text-blue-700 dark:text-blue-400"
+                  : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-white/5"
               )}>
                 <Icon className={cn(
                   "h-5 w-5 transition-colors",
                   isActive
-                    ? isDark ? "text-blue-400" : "text-blue-600"
-                    : isDark ? "text-gray-500 group-hover:text-white" : "text-gray-400 group-hover:text-gray-600"
+                    ? "text-blue-600 dark:text-blue-400"
+                    : "text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-white"
                 )} />
 
                 {!collapsed && (
                   <>
                     <span className="flex-1 text-sm font-medium">{item.name}</span>
                     {badgeCount && Number(badgeCount) > 0 && (
-                      <span className={cn(
-                        "px-2 py-0.5 rounded-full text-[10px] font-bold",
-                        isDark
-                          ? "bg-blue-500/20 text-blue-400"
-                          : "bg-blue-100 text-blue-700"
-                      )}>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400">
                         {Number(badgeCount) > 99 ? '99+' : badgeCount}
                       </span>
                     )}
@@ -428,21 +398,13 @@ export function Sidebar({ brand, userProfile }: SidebarProps) {
 
                 {/* Active Indicator Bar */}
                 {isActive && (
-                  <div className={cn(
-                    "absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 rounded-r-full",
-                    isDark ? "bg-blue-500" : "bg-blue-600"
-                  )} />
+                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 rounded-r-full bg-blue-600 dark:bg-blue-500" />
                 )}
               </div>
 
               {/* Tooltip for collapsed state */}
               {collapsed && (
-                <div className={cn(
-                  "absolute left-full top-1/2 -translate-y-1/2 ml-2 px-3 py-1.5 rounded-md text-xs font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 shadow-xl border",
-                  isDark
-                    ? "bg-[#1A1D24] border-white/10 text-white"
-                    : "bg-white border-gray-100 text-gray-900"
-                )}>
+                <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-3 py-1.5 rounded-md text-xs font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 shadow-xl border bg-white dark:bg-zinc-800 border-gray-100 dark:border-white/10 text-gray-900 dark:text-white">
                   {item.name}
                   {badgeCount && Number(badgeCount) > 0 && (
                     <span className="ml-2 opacity-75">({badgeCount})</span>
@@ -455,38 +417,19 @@ export function Sidebar({ brand, userProfile }: SidebarProps) {
       </div>
 
       {/* User Profile / Settings Section */}
-      <div className={cn(
-        "p-4 border-t mt-auto",
-        isDark ? "border-white/5" : "border-gray-100"
-      )}>
+      <div className="p-4 border-t mt-auto border-gray-100 dark:border-white/5">
         <Link href={`/${brand}${brand === 'versotech' ? '/staff' : ''}/profile`}>
-          <div className={cn(
-            "flex items-center gap-3 p-2 rounded-xl transition-all cursor-pointer group",
-            isDark
-              ? "hover:bg-white/5"
-              : "hover:bg-gray-50"
-          )}>
-            <div className={cn(
-              "h-9 w-9 rounded-full flex items-center justify-center text-sm font-bold shadow-sm ring-2",
-              isDark
-                ? "bg-gradient-to-br from-blue-500 to-blue-600 text-white ring-black"
-                : "bg-white text-blue-600 ring-white border border-gray-100"
-            )}>
+          <div className="flex items-center gap-3 p-2 rounded-xl transition-all cursor-pointer group hover:bg-gray-50 dark:hover:bg-white/5">
+            <div className="h-9 w-9 rounded-full flex items-center justify-center text-sm font-bold shadow-sm ring-2 bg-white dark:bg-gradient-to-br dark:from-blue-500 dark:to-blue-600 text-blue-600 dark:text-white ring-white dark:ring-black border border-gray-100 dark:border-transparent">
               {userProfile.displayName?.[0]?.toUpperCase() || 'U'}
             </div>
 
             {!collapsed && (
               <div className="flex-1 min-w-0 text-left">
-                <p className={cn(
-                  "text-sm font-semibold truncate",
-                  isDark ? "text-white" : "text-gray-900"
-                )}>
+                <p className="text-sm font-semibold truncate text-gray-900 dark:text-white">
                   {userProfile.displayName || 'User'}
                 </p>
-                <p className={cn(
-                  "text-xs truncate flex items-center gap-1",
-                  isDark ? "text-gray-500 group-hover:text-gray-400" : "text-gray-500 group-hover:text-gray-600"
-                )}>
+                <p className="text-xs truncate flex items-center gap-1 text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-400">
                   View Profile
                 </p>
               </div>
@@ -497,12 +440,7 @@ export function Sidebar({ brand, userProfile }: SidebarProps) {
                 variant="ghost"
                 size="icon"
                 onClick={handleSignOut}
-                className={cn(
-                  "h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity",
-                  isDark
-                    ? "text-gray-500 hover:text-red-400 hover:bg-white/5"
-                    : "text-gray-400 hover:text-red-600 hover:bg-red-50"
-                )}
+                className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-white/5"
               >
                 <LogOut className="h-4 w-4" />
               </Button>

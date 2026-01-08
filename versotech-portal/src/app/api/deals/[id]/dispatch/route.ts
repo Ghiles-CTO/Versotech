@@ -10,13 +10,11 @@ const dispatchSchema = z.object({
   user_ids: z.array(z.string().uuid()).min(1, 'At least one user must be selected'),
   role: z.enum([
     'investor',
-    'partner',
+    'co_investor',
     'partner_investor',
     'introducer_investor',
     'commercial_partner_investor',
-    'commercial_partner_proxy',
-    'lawyer',
-    'arranger'
+    'commercial_partner_proxy'
   ]).default('investor'),
   // Fee plan fields - required when dispatching investors through an entity
   referred_by_entity_id: z.string().uuid().optional(),
@@ -60,12 +58,12 @@ export async function POST(request: Request, { params }: RouteParams) {
       p_user_id: user.id
     })
 
-    const hasStaffAccess = personas?.some(
-      (p: { persona_type: string }) => p.persona_type === 'staff'
+    const hasCeoAccess = personas?.some(
+      (p: { persona_type: string }) => p.persona_type === 'ceo'
     ) || false
 
-    if (!hasStaffAccess) {
-      return NextResponse.json({ error: 'Forbidden: Staff access required' }, { status: 403 })
+    if (!hasCeoAccess) {
+      return NextResponse.json({ error: 'Forbidden: CEO access required' }, { status: 403 })
     }
 
     // Parse and validate request body
@@ -411,12 +409,12 @@ export async function GET(request: Request, { params }: RouteParams) {
       p_user_id: user.id
     })
 
-    const hasStaffAccess = personas?.some(
-      (p: { persona_type: string }) => p.persona_type === 'staff'
+    const hasCeoAccess = personas?.some(
+      (p: { persona_type: string }) => p.persona_type === 'ceo'
     ) || false
 
-    if (!hasStaffAccess) {
-      return NextResponse.json({ error: 'Forbidden: Staff access required' }, { status: 403 })
+    if (!hasCeoAccess) {
+      return NextResponse.json({ error: 'Forbidden: CEO access required' }, { status: 403 })
     }
 
     // Get current memberships
@@ -440,7 +438,7 @@ export async function GET(request: Request, { params }: RouteParams) {
     const { data: availableUsers } = await serviceSupabase
       .from('profiles')
       .select('id, display_name, email, role')
-      .in('role', ['investor', 'partner', 'introducer', 'commercial_partner', 'lawyer'])
+      .in('role', ['investor', 'partner', 'introducer', 'commercial_partner', 'lawyer', 'multi_persona'])
       .not('id', 'in', existingUserIds.length > 0 ? `(${existingUserIds.join(',')})` : '()')
       .order('display_name')
 

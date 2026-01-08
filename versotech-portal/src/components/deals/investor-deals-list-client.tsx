@@ -104,39 +104,39 @@ const referralStageMeta: Record<ReferralStage, {
 }> = {
   dispatched: {
     label: 'Dispatched',
-    bgColor: 'bg-slate-50',
-    textColor: 'text-slate-600',
-    borderColor: 'border-slate-200'
+    bgColor: 'bg-slate-50 dark:bg-slate-900/50',
+    textColor: 'text-slate-600 dark:text-slate-300',
+    borderColor: 'border-slate-200 dark:border-slate-700'
   },
   interested: {
     label: 'Interested',
-    bgColor: 'bg-amber-50',
-    textColor: 'text-amber-700',
-    borderColor: 'border-amber-200'
+    bgColor: 'bg-amber-50 dark:bg-amber-900/30',
+    textColor: 'text-amber-700 dark:text-amber-300',
+    borderColor: 'border-amber-200 dark:border-amber-700'
   },
   passed: {
     label: 'Passed',
-    bgColor: 'bg-rose-50',
-    textColor: 'text-rose-600',
-    borderColor: 'border-rose-200'
+    bgColor: 'bg-rose-50 dark:bg-rose-900/30',
+    textColor: 'text-rose-600 dark:text-rose-300',
+    borderColor: 'border-rose-200 dark:border-rose-700'
   },
   approved: {
     label: 'Approved',
-    bgColor: 'bg-indigo-50',
-    textColor: 'text-indigo-700',
-    borderColor: 'border-indigo-200'
+    bgColor: 'bg-indigo-50 dark:bg-indigo-900/30',
+    textColor: 'text-indigo-700 dark:text-indigo-300',
+    borderColor: 'border-indigo-200 dark:border-indigo-700'
   },
   signed: {
     label: 'Signed',
-    bgColor: 'bg-purple-50',
-    textColor: 'text-purple-700',
-    borderColor: 'border-purple-200'
+    bgColor: 'bg-purple-50 dark:bg-purple-900/30',
+    textColor: 'text-purple-700 dark:text-purple-300',
+    borderColor: 'border-purple-200 dark:border-purple-700'
   },
   funded: {
     label: 'Funded',
-    bgColor: 'bg-emerald-50',
-    textColor: 'text-emerald-700',
-    borderColor: 'border-emerald-200'
+    bgColor: 'bg-emerald-50 dark:bg-emerald-900/30',
+    textColor: 'text-emerald-700 dark:text-emerald-300',
+    borderColor: 'border-emerald-200 dark:border-emerald-700'
   }
 }
 
@@ -298,11 +298,11 @@ const dealTypeLabels: Record<string, string> = {
 }
 
 const statusBadges: Record<string, string> = {
-  draft: 'bg-slate-100 text-slate-700',
-  open: 'bg-emerald-100 text-emerald-700',
-  allocation_pending: 'bg-amber-100 text-amber-700',
-  closed: 'bg-blue-100 text-blue-700',
-  cancelled: 'bg-rose-100 text-rose-700'
+  draft: 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300',
+  open: 'bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300',
+  allocation_pending: 'bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300',
+  closed: 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300',
+  cancelled: 'bg-rose-100 dark:bg-rose-900/50 text-rose-700 dark:text-rose-300'
 }
 
 const INVESTOR_ELIGIBLE_ROLES = new Set([
@@ -322,10 +322,10 @@ const interestStatusMeta: Record<
   DealInterest['status'],
   { label: string; tone: string }
 > = {
-  pending_review: { label: 'Pending review', tone: 'bg-amber-100 text-amber-700' },
-  approved: { label: 'NDA active', tone: 'bg-emerald-100 text-emerald-700' },
-  rejected: { label: 'Declined', tone: 'bg-rose-100 text-rose-700' },
-  withdrawn: { label: 'Withdrawn', tone: 'bg-slate-100 text-slate-700' }
+  pending_review: { label: 'Pending review', tone: 'bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300' },
+  approved: { label: 'NDA active', tone: 'bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300' },
+  rejected: { label: 'Declined', tone: 'bg-rose-100 dark:bg-rose-900/50 text-rose-700 dark:text-rose-300' },
+  withdrawn: { label: 'Withdrawn', tone: 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300' }
 }
 
 // Subscription stages 6-9 metadata (before Active/Stage 10)
@@ -343,108 +343,108 @@ const subscriptionStageMeta: Record<string, {
     label: 'Pending Review',
     stage: 6,
     icon: Clock,
-    bgColor: 'bg-amber-50',
-    textColor: 'text-amber-700',
-    borderColor: 'border-amber-200'
+    bgColor: 'bg-amber-50 dark:bg-amber-900/30',
+    textColor: 'text-amber-700 dark:text-amber-300',
+    borderColor: 'border-amber-200 dark:border-amber-700'
   },
   // Keep 'pending' as alias for backwards compatibility
   pending: {
     label: 'Pending Review',
     stage: 6,
     icon: Clock,
-    bgColor: 'bg-amber-50',
-    textColor: 'text-amber-700',
-    borderColor: 'border-amber-200'
+    bgColor: 'bg-amber-50 dark:bg-amber-900/30',
+    textColor: 'text-amber-700 dark:text-amber-300',
+    borderColor: 'border-amber-200 dark:border-amber-700'
   },
   approved: {
     label: 'Approved',
     stage: 7,
     icon: MailCheck,
-    bgColor: 'bg-indigo-50',
-    textColor: 'text-indigo-700',
-    borderColor: 'border-indigo-200'
+    bgColor: 'bg-indigo-50 dark:bg-indigo-900/30',
+    textColor: 'text-indigo-700 dark:text-indigo-300',
+    borderColor: 'border-indigo-200 dark:border-indigo-700'
   },
   committed: {
     label: 'Committed',
     stage: 8,
     icon: FileSignature,
-    bgColor: 'bg-purple-50',
-    textColor: 'text-purple-700',
-    borderColor: 'border-purple-200'
+    bgColor: 'bg-purple-50 dark:bg-purple-900/30',
+    textColor: 'text-purple-700 dark:text-purple-300',
+    borderColor: 'border-purple-200 dark:border-purple-700'
   },
   partially_funded: {
     label: 'Partially Funded',
     stage: 9,
     icon: DollarSign,
-    bgColor: 'bg-teal-50',
-    textColor: 'text-teal-700',
-    borderColor: 'border-teal-200'
+    bgColor: 'bg-teal-50 dark:bg-teal-900/30',
+    textColor: 'text-teal-700 dark:text-teal-300',
+    borderColor: 'border-teal-200 dark:border-teal-700'
   },
   funded: {
     label: 'Funded',
     stage: 9,
     icon: DollarSign,
-    bgColor: 'bg-emerald-50',
-    textColor: 'text-emerald-700',
-    borderColor: 'border-emerald-200'
+    bgColor: 'bg-emerald-50 dark:bg-emerald-900/30',
+    textColor: 'text-emerald-700 dark:text-emerald-300',
+    borderColor: 'border-emerald-200 dark:border-emerald-700'
   },
   // Legacy/alternative status names (for compatibility)
   pack_generated: {
     label: 'Pack Generated',
     stage: 6,
     icon: Package,
-    bgColor: 'bg-blue-50',
-    textColor: 'text-blue-700',
-    borderColor: 'border-blue-200'
+    bgColor: 'bg-blue-50 dark:bg-blue-900/30',
+    textColor: 'text-blue-700 dark:text-blue-300',
+    borderColor: 'border-blue-200 dark:border-blue-700'
   },
   pack_sent: {
     label: 'Pack Sent',
     stage: 7,
     icon: MailCheck,
-    bgColor: 'bg-indigo-50',
-    textColor: 'text-indigo-700',
-    borderColor: 'border-indigo-200'
+    bgColor: 'bg-indigo-50 dark:bg-indigo-900/30',
+    textColor: 'text-indigo-700 dark:text-indigo-300',
+    borderColor: 'border-indigo-200 dark:border-indigo-700'
   },
   signed: {
     label: 'Signed',
     stage: 8,
     icon: FileSignature,
-    bgColor: 'bg-purple-50',
-    textColor: 'text-purple-700',
-    borderColor: 'border-purple-200'
+    bgColor: 'bg-purple-50 dark:bg-purple-900/30',
+    textColor: 'text-purple-700 dark:text-purple-300',
+    borderColor: 'border-purple-200 dark:border-purple-700'
   },
   submitted: {
     label: 'Submitted',
     stage: 6,
     icon: Clock,
-    bgColor: 'bg-amber-50',
-    textColor: 'text-amber-700',
-    borderColor: 'border-amber-200'
+    bgColor: 'bg-amber-50 dark:bg-amber-900/30',
+    textColor: 'text-amber-700 dark:text-amber-300',
+    borderColor: 'border-amber-200 dark:border-amber-700'
   },
   in_review: {
     label: 'In Review',
     stage: 6,
     icon: Clock,
-    bgColor: 'bg-amber-50',
-    textColor: 'text-amber-700',
-    borderColor: 'border-amber-200'
+    bgColor: 'bg-amber-50 dark:bg-amber-900/30',
+    textColor: 'text-amber-700 dark:text-amber-300',
+    borderColor: 'border-amber-200 dark:border-amber-700'
   },
   // DB enum statuses: rejected, cancelled
   rejected: {
     label: 'Rejected',
     stage: 0,
     icon: AlertCircle,
-    bgColor: 'bg-rose-50',
-    textColor: 'text-rose-700',
-    borderColor: 'border-rose-200'
+    bgColor: 'bg-rose-50 dark:bg-rose-900/30',
+    textColor: 'text-rose-700 dark:text-rose-300',
+    borderColor: 'border-rose-200 dark:border-rose-700'
   },
   cancelled: {
     label: 'Cancelled',
     stage: 0,
     icon: AlertCircle,
-    bgColor: 'bg-slate-50',
-    textColor: 'text-slate-700',
-    borderColor: 'border-slate-200'
+    bgColor: 'bg-slate-50 dark:bg-slate-800/50',
+    textColor: 'text-slate-700 dark:text-slate-300',
+    borderColor: 'border-slate-200 dark:border-slate-700'
   }
 }
 
@@ -796,13 +796,13 @@ export function InvestorDealsListClient({
   if (!mounted) {
     return (
       <div className="p-6 space-y-8">
-        <div className="h-24 bg-gray-100 animate-pulse rounded-lg" />
+        <div className="h-24 bg-gray-100 dark:bg-zinc-800 animate-pulse rounded-lg" />
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-32 bg-gray-100 animate-pulse rounded-lg" />
+            <div key={i} className="h-32 bg-gray-100 dark:bg-zinc-800 animate-pulse rounded-lg" />
           ))}
         </div>
-        <div className="h-48 bg-gray-100 animate-pulse rounded-lg" />
+        <div className="h-48 bg-gray-100 dark:bg-zinc-800 animate-pulse rounded-lg" />
       </div>
     )
   }
@@ -811,8 +811,8 @@ export function InvestorDealsListClient({
     <div className="p-6 space-y-8">
       <header className="flex flex-col gap-4">
         <div>
-          <h1 className="text-3xl font-semibold text-gray-900">Investment Opportunities</h1>
-          <p className="text-gray-600">
+          <h1 className="text-3xl font-semibold text-foreground">Investment Opportunities</h1>
+          <p className="text-muted-foreground">
             Track active allocations, NDAs, and subscriptions throughout the deal pipeline.
           </p>
         </div>
@@ -831,53 +831,53 @@ export function InvestorDealsListClient({
               </div>
             )}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <Card className="border-blue-100 bg-gradient-to-br from-blue-50/50 to-white">
+              <Card className="border-blue-100 dark:border-blue-900/50 bg-gradient-to-br from-blue-50/50 to-white dark:from-blue-950/30 dark:to-card">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm text-muted-foreground">Total Referrals</CardTitle>
-                  <CardDescription className="flex items-center gap-2 text-sm text-gray-500">
+                  <CardDescription className="flex items-center gap-2 text-sm text-muted-foreground">
                     <UserPlus className="h-4 w-4 text-blue-500" />
                     Investors you&apos;ve shared with
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="text-2xl font-semibold text-gray-900">
+                <CardContent className="text-2xl font-semibold text-foreground">
                   {partnerSummary.totalReferrals}
                 </CardContent>
               </Card>
-              <Card className="border-emerald-100 bg-gradient-to-br from-emerald-50/50 to-white">
+              <Card className="border-emerald-100 dark:border-emerald-900/50 bg-gradient-to-br from-emerald-50/50 to-white dark:from-emerald-950/30 dark:to-card">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm text-muted-foreground">Converted</CardTitle>
-                  <CardDescription className="flex items-center gap-2 text-sm text-gray-500">
+                  <CardDescription className="flex items-center gap-2 text-sm text-muted-foreground">
                     <BadgeCheck className="h-4 w-4 text-emerald-500" />
                     Funded investments
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="text-2xl font-semibold text-gray-900">
+                <CardContent className="text-2xl font-semibold text-foreground">
                   {partnerSummary.converted}
                 </CardContent>
               </Card>
-              <Card className="border-amber-100 bg-gradient-to-br from-amber-50/50 to-white">
+              <Card className="border-amber-100 dark:border-amber-900/50 bg-gradient-to-br from-amber-50/50 to-white dark:from-amber-950/30 dark:to-card">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm text-muted-foreground">Pipeline Value</CardTitle>
-                  <CardDescription className="flex items-center gap-2 text-sm text-gray-500">
+                  <CardDescription className="flex items-center gap-2 text-sm text-muted-foreground">
                     <TrendingUp className="h-4 w-4 text-amber-500" />
                     In-progress commitments
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="text-2xl font-semibold text-gray-900">
+                <CardContent className="text-2xl font-semibold text-foreground">
                   {partnerSummary.pipelineValue > 0
                     ? formatCurrency(partnerSummary.pipelineValue, partnerSummary.currency)
                     : '—'}
                 </CardContent>
               </Card>
-              <Card className="border-purple-100 bg-gradient-to-br from-purple-50/50 to-white">
+              <Card className="border-purple-100 dark:border-purple-900/50 bg-gradient-to-br from-purple-50/50 to-white dark:from-purple-950/30 dark:to-card">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm text-muted-foreground">Pending Commissions</CardTitle>
-                  <CardDescription className="flex items-center gap-2 text-sm text-gray-500">
+                  <CardDescription className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Wallet className="h-4 w-4 text-purple-500" />
                     Accrued, awaiting invoice
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="text-2xl font-semibold text-gray-900">
+                <CardContent className="text-2xl font-semibold text-foreground">
                   {partnerSummary.pendingCommissions > 0
                     ? formatCurrency(partnerSummary.pendingCommissions, partnerSummary.currency)
                     : '—'}
@@ -904,48 +904,48 @@ export function InvestorDealsListClient({
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm text-muted-foreground">Open deals</CardTitle>
-                  <CardDescription className="flex items-center gap-2 text-sm text-gray-500">
+                  <CardDescription className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Activity className="h-4 w-4 text-emerald-500" />
                     Ready for exploration
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="text-2xl font-semibold text-gray-900">
+                <CardContent className="text-2xl font-semibold text-foreground">
                   {summary.openDeals} / {summary.totalDeals}
                 </CardContent>
               </Card>
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm text-muted-foreground">Pending interests</CardTitle>
-                  <CardDescription className="flex items-center gap-2 text-sm text-gray-500">
+                  <CardDescription className="flex items-center gap-2 text-sm text-muted-foreground">
                     <LineChart className="h-4 w-4 text-amber-500" />
                     Awaiting team review
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="text-2xl font-semibold text-gray-900">
+                <CardContent className="text-2xl font-semibold text-foreground">
                   {summary.pendingInterests}
                 </CardContent>
               </Card>
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm text-muted-foreground">Active NDAs</CardTitle>
-                  <CardDescription className="flex items-center gap-2 text-sm text-gray-500">
+                  <CardDescription className="flex items-center gap-2 text-sm text-muted-foreground">
                     <ShieldCheck className="h-4 w-4 text-sky-500" />
                     Data room unlocked
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="text-2xl font-semibold text-gray-900">
+                <CardContent className="text-2xl font-semibold text-foreground">
                   {summary.activeNdas}
                 </CardContent>
               </Card>
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm text-muted-foreground">Subscriptions in review</CardTitle>
-                  <CardDescription className="flex items-center gap-2 text-sm text-gray-500">
+                  <CardDescription className="flex items-center gap-2 text-sm text-muted-foreground">
                     <MailCheck className="h-4 w-4 text-indigo-500" />
                     Awaiting confirmation
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="text-2xl font-semibold text-gray-900">
+                <CardContent className="text-2xl font-semibold text-foreground">
                   {summary.submittedSubscriptions}
                 </CardContent>
               </Card>
@@ -961,24 +961,24 @@ export function InvestorDealsListClient({
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm text-muted-foreground">Open deals</CardTitle>
-                <CardDescription className="flex items-center gap-2 text-sm text-gray-500">
+                <CardDescription className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Activity className="h-4 w-4 text-emerald-500" />
                   Ready for exploration
                 </CardDescription>
               </CardHeader>
-              <CardContent className="text-2xl font-semibold text-gray-900">
+              <CardContent className="text-2xl font-semibold text-foreground">
                 {summary.openDeals} / {summary.totalDeals}
               </CardContent>
             </Card>
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm text-muted-foreground">Your Role</CardTitle>
-                <CardDescription className="flex items-center gap-2 text-sm text-gray-500">
-                  <Users className="h-4 w-4 text-gray-500" />
+                <CardDescription className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Users className="h-4 w-4 text-muted-foreground" />
                   Tracking access
                 </CardDescription>
               </CardHeader>
-              <CardContent className="text-lg font-medium text-gray-600">
+              <CardContent className="text-lg font-medium text-muted-foreground">
                 View-only access
               </CardContent>
             </Card>
@@ -1086,8 +1086,8 @@ export function InvestorDealsListClient({
 
           {/* Advanced Filters */}
           {showAdvancedFilters && (
-            <div className="pt-4 border-t space-y-3">
-              <h3 className="text-sm font-medium text-gray-700">Advanced Filters</h3>
+            <div className="pt-4 border-t border-border space-y-3">
+              <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">Advanced Filters</h3>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                 {/* Interest Status */}
                 <Select value={interestStatusFilter} onValueChange={setInterestStatusFilter}>
@@ -1153,12 +1153,12 @@ export function InvestorDealsListClient({
           )}
 
           {/* Results Count */}
-          <div className="flex items-center justify-between pt-2 text-sm text-gray-600">
+          <div className="flex items-center justify-between pt-2 text-sm text-muted-foreground">
             <span>
               Showing {filteredDeals.length} of {dealsData.length} deals
             </span>
             {activeFiltersCount > 0 && (
-              <span className="text-blue-600">
+              <span className="text-blue-600 dark:text-blue-400">
                 {activeFiltersCount} filter{activeFiltersCount !== 1 ? 's' : ''} active
               </span>
             )}
@@ -1171,11 +1171,11 @@ export function InvestorDealsListClient({
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+              <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
                 <Clock className="h-5 w-5 text-amber-500" />
                 My Subscriptions
               </h2>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-muted-foreground">
                 Track your in-progress subscriptions (Stages 6-9)
               </p>
             </div>
@@ -1209,15 +1209,15 @@ export function InvestorDealsListClient({
                             className="rounded-lg object-contain bg-white border border-gray-200 p-1"
                           />
                         ) : (
-                          <div className="h-10 w-10 rounded-lg bg-white flex items-center justify-center text-gray-400 text-lg font-semibold border border-gray-200">
+                          <div className="h-10 w-10 rounded-lg bg-background flex items-center justify-center text-muted-foreground text-lg font-semibold border border-border">
                             {deal.name.charAt(0)}
                           </div>
                         )}
                         <div>
-                          <CardTitle className="text-base text-gray-900">
+                          <CardTitle className="text-base text-foreground">
                             {deal.name}
                           </CardTitle>
-                          <CardDescription className="text-xs text-gray-600">
+                          <CardDescription className="text-xs text-muted-foreground">
                             {deal.company_name ?? 'Issuer TBA'}
                           </CardDescription>
                         </div>
@@ -1231,7 +1231,7 @@ export function InvestorDealsListClient({
                   <CardContent className="pt-0 space-y-3">
                     {/* Progress indicator */}
                     <div className="flex items-center gap-2">
-                      <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                      <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
                         <div
                           className={cn(
                             'h-full rounded-full transition-all',
@@ -1242,13 +1242,13 @@ export function InvestorDealsListClient({
                           )}
                         />
                       </div>
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs text-muted-foreground">
                         Stage {stageMeta.stage}/10
                       </span>
                     </div>
 
                     {/* Submission date */}
-                    <div className="flex items-center justify-between text-xs text-gray-600">
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
                       <span>Submitted</span>
                       <span>{new Date(subscription.submitted_at).toLocaleDateString()}</span>
                     </div>
@@ -1272,9 +1272,9 @@ export function InvestorDealsListClient({
 
           {/* Divider */}
           <div className="flex items-center gap-4 pt-4">
-            <div className="flex-1 h-px bg-gray-200" />
-            <span className="text-sm text-gray-500">Open Opportunities</span>
-            <div className="flex-1 h-px bg-gray-200" />
+            <div className="flex-1 h-px bg-border" />
+            <span className="text-sm text-muted-foreground">Open Opportunities</span>
+            <div className="flex-1 h-px bg-border" />
           </div>
         </div>
       )}
@@ -1284,17 +1284,17 @@ export function InvestorDealsListClient({
         <div className="text-center py-16">
           {dealsData.length === 0 ? (
             <>
-              <Users className="h-14 w-14 text-gray-300 mx-auto mb-4" />
-              <h2 className="text-xl font-semibold text-gray-900 mb-2">No deals available yet</h2>
-              <p className="text-gray-500">
+              <Users className="h-14 w-14 text-muted-foreground/50 mx-auto mb-4" />
+              <h2 className="text-xl font-semibold text-foreground mb-2">No deals available yet</h2>
+              <p className="text-muted-foreground">
                 The team hasn&apos;t invited you to any opportunities. We&apos;ll notify you as soon as a deal opens up.
               </p>
             </>
           ) : (
             <>
-              <AlertCircle className="h-14 w-14 text-gray-300 mx-auto mb-4" />
-              <h2 className="text-xl font-semibold text-gray-900 mb-2">No deals match your filters</h2>
-              <p className="text-gray-500 mb-4">
+              <AlertCircle className="h-14 w-14 text-muted-foreground/50 mx-auto mb-4" />
+              <h2 className="text-xl font-semibold text-foreground mb-2">No deals match your filters</h2>
+              <p className="text-muted-foreground mb-4">
                 Try adjusting your search or filter criteria
               </p>
               <Button onClick={resetFilters} variant="outline">
@@ -1333,7 +1333,7 @@ export function InvestorDealsListClient({
               (Date.now() - new Date(dispatchedAt).getTime()) < 7 * 24 * 60 * 60 * 1000
 
             return (
-              <Card key={deal.id} className="overflow-hidden border border-gray-200 shadow-sm">
+              <Card key={deal.id} className="overflow-hidden border border-border shadow-sm">
                 <CardHeader className="space-y-3">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex items-start gap-3">
@@ -1343,15 +1343,15 @@ export function InvestorDealsListClient({
                           alt={`${deal.company_name ?? deal.name} logo`}
                           width={56}
                           height={56}
-                          className="rounded-lg object-contain bg-white border border-gray-200 p-2"
+                          className="rounded-lg object-contain bg-background border border-border p-2"
                         />
                       ) : (
-                        <div className="h-14 w-14 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400 text-xl font-semibold">
+                        <div className="h-14 w-14 rounded-lg bg-muted flex items-center justify-center text-muted-foreground text-xl font-semibold">
                           {deal.name.charAt(0)}
                         </div>
                       )}
                       <div>
-                        <CardTitle className="text-xl text-gray-900 flex items-center gap-2">
+                        <CardTitle className="text-xl text-foreground flex items-center gap-2">
                           {deal.name}
                           <Badge className={cn('text-xs', statusBadges[effectiveStatus] ?? statusBadges.draft)}>
                             {effectiveStatus.replace(/_/g, ' ').toUpperCase()}
@@ -1362,11 +1362,11 @@ export function InvestorDealsListClient({
                             </Badge>
                           )}
                         </CardTitle>
-                        <CardDescription className="text-sm text-gray-600 flex items-center gap-2">
-                          <Building2 className="h-4 w-4 text-gray-400" />
+                        <CardDescription className="text-sm text-muted-foreground flex items-center gap-2">
+                          <Building2 className="h-4 w-4 text-muted-foreground" />
                           {deal.company_name ?? 'Issuer TBA'} • {statusLabel}
                         </CardDescription>
-                        <div className="flex flex-wrap items-center gap-2 mt-2 text-xs text-gray-500">
+                        <div className="flex flex-wrap items-center gap-2 mt-2 text-xs text-muted-foreground">
                           {deal.stage && <span>Stage: {deal.stage}</span>}
                           {deal.sector && <span>Sector: {deal.sector}</span>}
                           {deal.location && <span>Location: {deal.location}</span>}
@@ -1374,10 +1374,10 @@ export function InvestorDealsListClient({
                       </div>
                     </div>
                     <div className="text-right space-y-1">
-                      <p className="text-xs uppercase tracking-wide text-gray-500">Timeline</p>
-                      <p className="text-sm font-medium text-gray-900">{deadlineCopy}</p>
+                      <p className="text-xs uppercase tracking-wide text-muted-foreground">Timeline</p>
+                      <p className="text-sm font-medium text-foreground">{deadlineCopy}</p>
                       {ndaAccess?.expires_at && (
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-muted-foreground">
                           NDA access until {new Date(ndaAccess.expires_at).toLocaleDateString()}
                         </p>
                       )}
@@ -1402,8 +1402,8 @@ export function InvestorDealsListClient({
                 <CardContent className="space-y-6">
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div>
-                      <p className="text-xs uppercase tracking-wide text-gray-500">Allocation</p>
-                      <p className="text-lg font-semibold text-gray-900">
+                      <p className="text-xs uppercase tracking-wide text-muted-foreground">Allocation</p>
+                      <p className="text-lg font-semibold text-foreground">
                         {feeStructure?.allocation_up_to
                           ? formatCurrency(feeStructure.allocation_up_to, deal.currency)
                           : deal.target_amount
@@ -1412,8 +1412,8 @@ export function InvestorDealsListClient({
                       </p>
                     </div>
                     <div>
-                      <p className="text-xs uppercase tracking-wide text-gray-500">Minimum ticket</p>
-                      <p className="text-lg font-semibold text-gray-900">
+                      <p className="text-xs uppercase tracking-wide text-muted-foreground">Minimum ticket</p>
+                      <p className="text-lg font-semibold text-foreground">
                         {feeStructure?.minimum_ticket
                           ? formatCurrency(feeStructure.minimum_ticket, deal.currency)
                           : deal.minimum_investment
@@ -1422,8 +1422,8 @@ export function InvestorDealsListClient({
                       </p>
                     </div>
                     <div>
-                      <p className="text-xs uppercase tracking-wide text-gray-500">Maximum ticket</p>
-                      <p className="text-lg font-semibold text-gray-900">
+                      <p className="text-xs uppercase tracking-wide text-muted-foreground">Maximum ticket</p>
+                      <p className="text-lg font-semibold text-foreground">
                         {feeStructure?.maximum_ticket
                           ? formatCurrency(feeStructure.maximum_ticket, deal.currency)
                           : deal.maximum_investment
@@ -1432,8 +1432,8 @@ export function InvestorDealsListClient({
                       </p>
                     </div>
                     <div>
-                      <p className="text-xs uppercase tracking-wide text-gray-500">Unit price</p>
-                      <p className="text-lg font-semibold text-gray-900">
+                      <p className="text-xs uppercase tracking-wide text-muted-foreground">Unit price</p>
+                      <p className="text-lg font-semibold text-foreground">
                         {feeStructure?.price_per_share_text
                           ? feeStructure.price_per_share_text
                           : deal.offer_unit_price
@@ -1468,14 +1468,14 @@ export function InvestorDealsListClient({
 
                     if (dealReferrals.length === 0) {
                       return (
-                        <div className="rounded-lg border border-blue-100 bg-blue-50/50 px-4 py-3">
+                        <div className="rounded-lg border border-blue-100 dark:border-blue-900/50 bg-blue-50/50 dark:bg-blue-950/30 px-4 py-3">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
-                              <UserPlus className="h-4 w-4 text-blue-500" />
-                              <span className="text-sm text-blue-700">No referrals yet</span>
+                              <UserPlus className="h-4 w-4 text-blue-500 dark:text-blue-400" />
+                              <span className="text-sm text-blue-700 dark:text-blue-300">No referrals yet</span>
                             </div>
                             {commissionRate && (
-                              <span className="text-xs text-blue-600">
+                              <span className="text-xs text-blue-600 dark:text-blue-400">
                                 Fee: {commissionRate} of invested
                               </span>
                             )}
@@ -1485,16 +1485,16 @@ export function InvestorDealsListClient({
                     }
 
                     return (
-                      <div className="rounded-lg border border-blue-100 bg-blue-50/50 px-4 py-3 space-y-3">
+                      <div className="rounded-lg border border-blue-100 dark:border-blue-900/50 bg-blue-50/50 dark:bg-blue-950/30 px-4 py-3 space-y-3">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <UserPlus className="h-4 w-4 text-blue-500" />
-                            <span className="text-sm font-medium text-blue-900">
+                            <UserPlus className="h-4 w-4 text-blue-500 dark:text-blue-400" />
+                            <span className="text-sm font-medium text-blue-900 dark:text-blue-100">
                               Your Referrals ({dealReferrals.length})
                             </span>
                           </div>
                           {commissionRate && (
-                            <span className="text-xs text-blue-600">
+                            <span className="text-xs text-blue-600 dark:text-blue-400">
                               Fee: {commissionRate} of invested
                             </span>
                           )}
@@ -1511,7 +1511,7 @@ export function InvestorDealsListClient({
                                 key={referral.investor_id}
                                 className="flex items-center justify-between text-sm"
                               >
-                                <span className="text-gray-700 truncate max-w-[200px]">
+                                <span className="text-gray-700 dark:text-gray-300 truncate max-w-[200px]">
                                   {referral.investor_name}
                                 </span>
                                 <Badge
@@ -1530,7 +1530,7 @@ export function InvestorDealsListClient({
                             )
                           })}
                           {dealReferrals.length > 5 && (
-                            <p className="text-xs text-blue-600">
+                            <p className="text-xs text-blue-600 dark:text-blue-400">
                               +{dealReferrals.length - 5} more referrals
                             </p>
                           )}
@@ -1538,9 +1538,9 @@ export function InvestorDealsListClient({
 
                         {/* Estimated commission summary */}
                         {estCommission > 0 && (
-                          <div className="pt-2 border-t border-blue-200 flex items-center justify-between">
-                            <span className="text-xs text-blue-600">Est. Commission:</span>
-                            <span className="text-sm font-semibold text-blue-900">
+                          <div className="pt-2 border-t border-blue-200 dark:border-blue-800 flex items-center justify-between">
+                            <span className="text-xs text-blue-600 dark:text-blue-400">Est. Commission:</span>
+                            <span className="text-sm font-semibold text-blue-900 dark:text-blue-100">
                               {formatCurrency(estCommission, dealCommissions[0]?.currency || deal.currency)}
                             </span>
                           </div>
@@ -1555,11 +1555,11 @@ export function InvestorDealsListClient({
                   {isInvestorView && (
                     <div className="grid grid-cols-1 gap-4">
                       <div>
-                        <p className="text-xs uppercase tracking-wide text-gray-500">Your pipeline</p>
+                        <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Your pipeline</p>
                         <div className="flex flex-wrap items-center gap-2">
                           {interest ? (
                             interest.is_post_close ? (
-                              <Badge className="w-fit bg-purple-100 text-purple-700">
+                              <Badge className="w-fit bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300">
                                 Future interest signal
                               </Badge>
                             ) : (
@@ -1568,25 +1568,25 @@ export function InvestorDealsListClient({
                               </Badge>
                             )
                           ) : (
-                            <span className="text-sm text-gray-600">No signal yet</span>
+                            <span className="text-sm text-gray-600 dark:text-gray-400">No signal yet</span>
                           )}
                           {subscription && (
-                            <Badge variant="outline" className="text-indigo-600 border-indigo-300">
+                            <Badge variant="outline" className="text-indigo-600 dark:text-indigo-400 border-indigo-300 dark:border-indigo-700">
                               Subscription {subscription.status.replace(/_/g, ' ')}
                             </Badge>
                           )}
                           {isTrackingOnly && (
-                            <Badge variant="outline" className="border-amber-200 text-amber-700">
+                            <Badge variant="outline" className="border-amber-200 dark:border-amber-700 text-amber-700 dark:text-amber-300">
                               Tracking only
                             </Badge>
                           )}
                           {hasDataRoomAccess && (
-                            <Badge variant="outline" className="text-sky-600 border-sky-300">
+                            <Badge variant="outline" className="text-sky-600 dark:text-sky-400 border-sky-300 dark:border-sky-700">
                               Data room unlocked
                             </Badge>
                           )}
                           {feeStructure?.interest_confirmation_deadline && (
-                            <span className="text-xs text-gray-600">
+                            <span className="text-xs text-gray-600 dark:text-gray-400">
                               Interest deadline: {new Date(feeStructure.interest_confirmation_deadline).toLocaleDateString()}
                             </span>
                           )}
@@ -1599,16 +1599,16 @@ export function InvestorDealsListClient({
                   {/* GENERIC VIEW: Basic tracking info */}
                   {/* ============================================================ */}
                   {personaMode === 'GENERIC' && (
-                    <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
+                    <div className="rounded-lg border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800/50 px-4 py-3">
                       <div className="flex items-center gap-2">
-                        <Users className="h-4 w-4 text-gray-500" />
-                        <span className="text-sm text-gray-600">View-only access</span>
+                        <Users className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                        <span className="text-sm text-gray-600 dark:text-gray-400">View-only access</span>
                       </div>
                     </div>
                   )}
 
                   {isInvestorView && interest && indicativeAmount ? (
-                    <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+                    <div className="rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30 px-4 py-3 text-sm text-amber-700 dark:text-amber-300">
                       You indicated interest for approximately{' '}
                       <span className="font-semibold">
                         {formatCurrency(indicativeAmount, indicativeCurrency)}
@@ -1618,8 +1618,8 @@ export function InvestorDealsListClient({
                   ) : null}
 
                   <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-                    <div className="flex items-center gap-3 text-sm text-gray-600">
-                      <CalendarClock className="h-4 w-4 text-gray-400" />
+                    <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
+                      <CalendarClock className="h-4 w-4 text-gray-400 dark:text-gray-500" />
                       {deal.open_at
                         ? `Opened ${new Date(deal.open_at).toLocaleDateString()}`
                         : 'Opening window announced soon'}

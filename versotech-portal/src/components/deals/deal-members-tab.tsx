@@ -51,7 +51,6 @@ import {
   SelectValue
 } from '@/components/ui/select'
 import { AddParticipantModal } from './add-participant-modal'
-import { GenerateInviteLinkModal } from './generate-invite-link-modal'
 
 // Partner assignment types
 interface PartnerAssignment {
@@ -172,8 +171,9 @@ export function DealMembersTab({ dealId, members: initialMembers, subscriptions 
     subscriptions.map(s => [s.investor_id, s])
   )
 
+  const visibleMembers = members.filter(member => !['lawyer', 'arranger'].includes(member.role))
   // Enhance members with subscription data
-  const enhancedMembers = members.map(m => ({
+  const enhancedMembers = visibleMembers.map(m => ({
     ...m,
     subscription: m.investor_id ? subscriptionMap.get(m.investor_id) : null
   }))
@@ -356,7 +356,6 @@ export function DealMembersTab({ dealId, members: initialMembers, subscriptions 
     introducer_investor: 'bg-orange-500/20 text-orange-200',
     commercial_partner_investor: 'bg-teal-500/20 text-teal-200',
     advisor: 'bg-purple-500/20 text-purple-200',
-    lawyer: 'bg-amber-500/20 text-amber-200',
     banker: 'bg-cyan-500/20 text-cyan-200',
     introducer: 'bg-pink-500/20 text-pink-200',
     verso_staff: 'bg-white/20 text-white',
@@ -428,7 +427,6 @@ export function DealMembersTab({ dealId, members: initialMembers, subscriptions 
               </CardDescription>
             </div>
             <div className="flex items-center gap-2">
-              <GenerateInviteLinkModal dealId={dealId} />
               <AddParticipantModal
                 dealId={dealId}
                 onParticipantAdded={() => {

@@ -70,7 +70,8 @@ export async function AppLayout({ children, brand }: AppLayoutProps) {
 
   return (
     <ThemeProvider defaultTheme={theme}>
-      <div className={`flex h-screen min-h-screen overflow-hidden ${isStaff ? 'staff-dark bg-[#0a0a0a]' : 'bg-gradient-to-br from-gray-50 via-blue-50/30 to-indigo-50/20'}`}>
+      {/* Theme-responsive layout: uses CSS variables and dark: prefix for theme switching */}
+      <div className="flex h-screen min-h-screen overflow-hidden bg-gradient-to-br from-gray-50 via-blue-50/30 to-indigo-50/20 dark:from-zinc-950 dark:via-zinc-950 dark:to-zinc-950 dark:bg-zinc-950">
         {/* Global Keyboard Shortcuts (Cmd+K, Cmd+Shift+S) */}
         <GlobalKeyboardShortcuts brand={brand} role={profile.role} />
 
@@ -79,17 +80,17 @@ export async function AppLayout({ children, brand }: AppLayoutProps) {
 
         {/* Main Content */}
         <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Header */}
-          <header className={`${isStaff ? 'bg-[#0a0a0a] border-b border-white/10' : 'bg-white/80 backdrop-blur-sm border-b border-gray-200'} px-6 py-4 flex items-center justify-between`}>
+          {/* Header - theme responsive */}
+          <header className="bg-white/80 dark:bg-zinc-950 backdrop-blur-sm border-b border-gray-200 dark:border-white/10 px-6 py-4 flex items-center justify-between">
             <BrandHeader brand={brand} />
             <div className="flex items-center space-x-4">
               <UserMenu profile={profile} brand={brand} />
             </div>
           </header>
 
-          {/* Content Area */}
-          <main className={`flex-1 overflow-y-auto scrollbar-hide ${isStaff ? 'bg-[#0a0a0a]' : 'bg-transparent backdrop-blur-sm'}`}>
-            <div className={`min-h-full ${isStaff ? '' : 'bg-white/60 backdrop-blur-sm'}`}>
+          {/* Content Area - theme responsive */}
+          <main className="flex-1 overflow-y-auto scrollbar-hide bg-transparent dark:bg-zinc-950 backdrop-blur-sm">
+            <div className="min-h-full bg-white/60 dark:bg-transparent backdrop-blur-sm dark:backdrop-blur-none">
               {/* KYC Alert for Investors */}
               {!isStaff && kycStatus !== 'completed' && (
                 <div className="px-6 pt-6">

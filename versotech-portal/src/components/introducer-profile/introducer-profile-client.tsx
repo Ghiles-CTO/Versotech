@@ -50,7 +50,7 @@ import { GenericEntityMembersTab } from '@/components/profile/generic-entity-mem
 import { NoticeContactsTab } from '@/components/profile/notice-contacts-tab'
 
 // Import shared KYC dialog components
-import { EntityKYCEditDialog, EntityAddressEditDialog } from '@/components/shared'
+import { EntityKYCEditDialog, EntityAddressEditDialog, IndividualKycDisplay } from '@/components/shared'
 
 type IntroducerInfo = {
   id: string
@@ -142,9 +142,9 @@ interface IntroducerProfileClientProps {
 }
 
 const STATUS_STYLES: Record<string, string> = {
-  active: 'bg-green-100 text-green-800 border-green-200',
-  inactive: 'bg-gray-100 text-gray-800 border-gray-200',
-  suspended: 'bg-red-100 text-red-800 border-red-200',
+  active: 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-700',
+  inactive: 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-800/50 dark:text-gray-300 dark:border-gray-700',
+  suspended: 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-700',
 }
 
 // Editable field component
@@ -607,68 +607,39 @@ export function IntroducerProfileClient({
             </CardContent>
           </Card>
 
-          {/* Individual KYC Card (only for individual introducers) */}
+          {/* Individual KYC Card (only for individual introducers) - Full Display */}
           {introducerInfo?.type === 'individual' && (
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <div>
-                  <CardTitle className="flex items-center gap-2">
-                    <Shield className="h-5 w-5" />
-                    Personal KYC Information
-                  </CardTitle>
-                  <CardDescription>
-                    Your personal identification and tax details
-                  </CardDescription>
-                </div>
-                <Button variant="outline" size="sm" onClick={() => setShowKycDialog(true)}>
-                  <Edit className="h-4 w-4 mr-2" />
-                  Edit
-                </Button>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-1">
-                    <p className="text-xs text-muted-foreground">Full Name</p>
-                    <p className="text-sm font-medium">
-                      {[
-                        introducerInfo?.first_name,
-                        introducerInfo?.middle_name,
-                        introducerInfo?.last_name,
-                        introducerInfo?.name_suffix
-                      ].filter(Boolean).join(' ') || '-'}
-                    </p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-xs text-muted-foreground">Date of Birth</p>
-                    <p className="text-sm font-medium">
-                      {introducerInfo?.date_of_birth ? formatDate(introducerInfo.date_of_birth) : '-'}
-                    </p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-xs text-muted-foreground">Nationality</p>
-                    <p className="text-sm font-medium">{introducerInfo?.nationality || '-'}</p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-xs text-muted-foreground">US Person</p>
-                    <p className="text-sm font-medium">
-                      {introducerInfo?.is_us_citizen || introducerInfo?.is_us_taxpayer ? 'Yes' : 'No'}
-                    </p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-xs text-muted-foreground">ID Type</p>
-                    <p className="text-sm font-medium capitalize">
-                      {introducerInfo?.id_type?.replace('_', ' ') || '-'}
-                    </p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-xs text-muted-foreground">ID Expiry</p>
-                    <p className="text-sm font-medium">
-                      {introducerInfo?.id_expiry_date ? formatDate(introducerInfo.id_expiry_date) : '-'}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <IndividualKycDisplay
+              data={{
+                first_name: introducerInfo?.first_name,
+                middle_name: introducerInfo?.middle_name,
+                last_name: introducerInfo?.last_name,
+                name_suffix: introducerInfo?.name_suffix,
+                date_of_birth: introducerInfo?.date_of_birth,
+                country_of_birth: introducerInfo?.country_of_birth,
+                nationality: introducerInfo?.nationality,
+                email: introducerInfo?.email,
+                phone_mobile: introducerInfo?.phone_mobile,
+                phone_office: introducerInfo?.phone_office,
+                residential_street: introducerInfo?.residential_street,
+                residential_city: introducerInfo?.residential_city,
+                residential_state: introducerInfo?.residential_state,
+                residential_postal_code: introducerInfo?.residential_postal_code,
+                residential_country: introducerInfo?.residential_country,
+                is_us_citizen: introducerInfo?.is_us_citizen,
+                is_us_taxpayer: introducerInfo?.is_us_taxpayer,
+                us_taxpayer_id: introducerInfo?.us_taxpayer_id,
+                country_of_tax_residency: introducerInfo?.country_of_tax_residency,
+                tax_id_number: introducerInfo?.tax_id,
+                id_type: introducerInfo?.id_type,
+                id_number: introducerInfo?.id_number,
+                id_issue_date: introducerInfo?.id_issue_date,
+                id_expiry_date: introducerInfo?.id_expiry_date,
+                id_issuing_country: introducerInfo?.id_issuing_country,
+              }}
+              onEdit={() => setShowKycDialog(true)}
+              title="Personal KYC Information"
+            />
           )}
 
           {/* User Account Card */}
