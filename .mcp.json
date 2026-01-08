@@ -10,8 +10,17 @@
         "--project-ref=ipguxdssecfexudnvtia"
       ],
       "env": {
-        "SUPABASE_ACCESS_TOKEN": "sbp_f05a05722f153cd46a25f0d8752dab8c4922013a"
+        "SUPABASE_ACCESS_TOKEN": "sbp_20bd5d2289cf105338f2452c367375765d3d947a"
       }
+    },
+    "executeautomation-playwright-server": {
+      "command": "cmd",
+      "args": [
+        "/c",
+        "npx",
+        "-y",
+        "@executeautomation/playwright-mcp-server"
+      ]
     }
   }
 }
