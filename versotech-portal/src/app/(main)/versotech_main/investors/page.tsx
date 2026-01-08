@@ -73,6 +73,7 @@ type UIInvestor = {
   totalCommitment: number
   totalContributed: number
   vehicleCount: number
+  metricsAvailable: boolean
   lastActivity: string
   relationshipManager: string
   riskRating: string
@@ -233,19 +234,25 @@ export default async function InvestorsPage({
   // Fetch metrics and activity
   const metricsMap = new Map<string, InvestorMetrics>()
   const lastActivityMap = new Map<string, string>()
+  let metricsFetchFailed = false
 
   if (investorIds.length > 0) {
     // Fetch capital metrics
     try {
-      const { data: metricsData } = await serviceSupabase.rpc('get_investor_capital_summary', {
+      const { data: metricsData, error: metricsError } = await serviceSupabase.rpc('get_investor_capital_summary', {
         p_investor_ids: investorIds
       })
+      if (metricsError) {
+        metricsFetchFailed = true
+        console.warn('[Investors] Capital summary RPC unavailable:', metricsError.message)
+      }
       if (metricsData) {
         (metricsData as InvestorMetrics[]).forEach((metric) => {
           metricsMap.set(metric.investor_id, metric)
         })
       }
     } catch (e) {
+      metricsFetchFailed = true
       console.warn('[Investors] Capital summary RPC unavailable')
     }
 
@@ -279,6 +286,7 @@ export default async function InvestorsPage({
 
     const primaryContact = users[0]
     const metrics = metricsMap.get(inv.id)
+    const metricsAvailable = !metricsFetchFailed && !!metrics
 
     return {
       id: inv.id,
@@ -286,10 +294,11 @@ export default async function InvestorsPage({
       type: inv.type || 'individual',
       email: primaryContact?.email || 'No primary contact',
       kycStatus: formatKycStatus(inv.kyc_status),
-      onboardingStatus: inv.onboarding_status || (metrics?.total_commitment ? 'completed' : 'pending'),
+      onboardingStatus: inv.onboarding_status || (metricsAvailable && metrics?.total_commitment ? 'completed' : 'pending'),
       totalCommitment: metrics?.total_commitment || 0,
       totalContributed: metrics?.total_contributed || 0,
       vehicleCount: metrics?.vehicle_count || 0,
+      metricsAvailable,
       lastActivity:
         lastActivityMap.get(inv.id) ||
         inv.created_at ||

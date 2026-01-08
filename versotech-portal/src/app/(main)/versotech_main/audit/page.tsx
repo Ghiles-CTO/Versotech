@@ -52,7 +52,7 @@ export default async function AuditPage({
   })
 
   const hasStaffAccess = personas?.some(
-    (p: any) => p.persona_type === 'staff'
+    (p: any) => p.persona_type === 'staff' || p.persona_type === 'ceo'
   ) || false
 
   if (!hasStaffAccess) {

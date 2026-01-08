@@ -41,7 +41,7 @@ export default async function DocumentsPage() {
     p_user_id: user.id
   })
 
-  const isStaff = personas?.some((p: any) => p.persona_type === 'staff') || false
+  const isStaff = personas?.some((p: any) => p.persona_type === 'staff' || p.persona_type === 'ceo') || false
 
   // Staff get full document management access
   if (isStaff) {

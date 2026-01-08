@@ -77,7 +77,7 @@ export default async function VersoSignPage() {
     p_user_id: user.id
   })
 
-  const isStaff = personas?.some((p: any) => p.persona_type === 'staff') || false
+  const isStaff = personas?.some((p: any) => p.persona_type === 'staff' || p.persona_type === 'ceo') || false
   const isLawyer = personas?.some((p: any) => p.persona_type === 'lawyer') || false
   const isIntroducer = personas?.some((p: any) => p.persona_type === 'introducer') || false
   const isArranger = personas?.some((p: any) => p.persona_type === 'arranger') || false
@@ -340,6 +340,38 @@ export default async function VersoSignPage() {
     addTasksWithDedup(userTasks || [])
   }
 
+  // Filter out pending/in_progress tasks where the linked signature request has expired
+  // This prevents showing "Sign Document" for expired signature requests
+  if (tasks.length > 0) {
+    const pendingTasksWithSignatureRef = tasks.filter(
+      t => (t.status === 'pending' || t.status === 'in_progress') &&
+           t.related_entity_type === 'signature_request' &&
+           t.related_entity_id
+    )
+
+    if (pendingTasksWithSignatureRef.length > 0) {
+      const signatureRequestIds = pendingTasksWithSignatureRef.map(t => t.related_entity_id)
+
+      // Check which signature requests are expired
+      const { data: expiredSigRequests } = await serviceSupabase
+        .from('signature_requests')
+        .select('id')
+        .in('id', signatureRequestIds)
+        .eq('status', 'expired')
+
+      const expiredIds = new Set((expiredSigRequests || []).map(s => s.id))
+
+      // Mark tasks with expired signature requests
+      tasks = tasks.map(t => {
+        if (expiredIds.has(t.related_entity_id) &&
+            (t.status === 'pending' || t.status === 'in_progress')) {
+          return { ...t, _expired: true }
+        }
+        return t
+      })
+    }
+  }
+
   // Fetch expired signature requests (staff/CEO only)
   let expiredSignatures: ExpiredSignature[] = []
   if (isStaff) {
@@ -379,7 +411,7 @@ export default async function VersoSignPage() {
 
   // Sort by priority (high → medium → low), then by due_at
   const priorityOrder: Record<string, number> = { high: 0, medium: 1, low: 2 }
-  const allTasks = ((tasks as SignatureTask[]) || []).sort((a, b) => {
+  const sortedTasks = ((tasks as SignatureTask[]) || []).sort((a, b) => {
     const pA = priorityOrder[a.priority] ?? 99
     const pB = priorityOrder[b.priority] ?? 99
     if (pA !== pB) return pA - pB
@@ -389,13 +421,18 @@ export default async function VersoSignPage() {
     return new Date(a.due_at).getTime() - new Date(b.due_at).getTime()
   })
 
+  // Separate expired tasks from actionable tasks
+  const actionableTasks = sortedTasks.filter(t => !(t as any)._expired)
+  const expiredTasks = sortedTasks.filter(t => (t as any)._expired)
+
   // Group tasks by type
   const signatureGroups: SignatureGroup[] = [
     {
       category: 'countersignatures',
       title: 'Pending Countersignatures',
       description: 'Subscription agreements awaiting your countersignature',
-      tasks: allTasks.filter(t =>
+      // Only show non-expired tasks in actionable view
+      tasks: actionableTasks.filter(t =>
         t.kind === 'countersignature' &&
         (t.status === 'pending' || t.status === 'in_progress')
       )
@@ -404,7 +441,7 @@ export default async function VersoSignPage() {
       category: 'follow_ups',
       title: 'Manual Follow-ups Required',
       description: 'Investors without platform accounts - manual intervention needed',
-      tasks: allTasks.filter(t =>
+      tasks: actionableTasks.filter(t =>
         t.metadata?.issue === 'investor_no_user_account' &&
         t.status === 'pending'
       )
@@ -413,7 +450,7 @@ export default async function VersoSignPage() {
       category: 'other',
       title: 'Completed Signatures',
       description: 'Recently completed signature tasks',
-      tasks: allTasks.filter(t =>
+      tasks: sortedTasks.filter(t =>
         (t.kind === 'countersignature' || t.kind === 'subscription_pack_signature') &&
         t.status === 'completed'
       ).slice(0, 10) // Show last 10 completed
@@ -422,26 +459,27 @@ export default async function VersoSignPage() {
       category: 'expired',
       title: 'Expired Signatures',
       description: 'Signature requests that have expired - may need to be resent',
-      tasks: [],
+      // Include both expired signature requests AND tasks with expired signatures
+      tasks: expiredTasks,
       expiredSignatures: expiredSignatures
     }
   ]
 
-  // Get stats for dashboard
+  // Get stats for dashboard (only count actionable tasks)
   const stats = {
-    pending: allTasks.filter(t => t.status === 'pending').length,
-    in_progress: allTasks.filter(t => t.status === 'in_progress').length,
-    completed_today: allTasks.filter(t =>
+    pending: actionableTasks.filter(t => t.status === 'pending').length,
+    in_progress: actionableTasks.filter(t => t.status === 'in_progress').length,
+    completed_today: sortedTasks.filter(t =>
       t.status === 'completed' &&
       t.completed_at &&
       new Date(t.completed_at).toDateString() === new Date().toDateString()
     ).length,
-    overdue: allTasks.filter(t =>
+    overdue: actionableTasks.filter(t =>
       t.status === 'pending' &&
       t.due_at &&
       new Date(t.due_at) < new Date()
     ).length,
-    expired: expiredSignatures.length
+    expired: expiredSignatures.length + expiredTasks.length
   }
 
   return (
