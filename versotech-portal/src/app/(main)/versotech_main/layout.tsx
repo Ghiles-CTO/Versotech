@@ -37,9 +37,13 @@ export default async function UnifiedPortalLayout({ children }: LayoutProps) {
   if (userPersonas.length === 0) {
     const staffRoles = ['staff_admin', 'staff_ops', 'staff_rm', 'ceo']
     if (staffRoles.includes(profile.role)) {
-      // Create synthetic staff persona for internal team members
+      // staff_admin and ceo get 'ceo' persona for full access (all pages)
+      // staff_ops and staff_rm get 'staff' persona for limited access
+      const personaType = (profile.role === 'ceo' || profile.role === 'staff_admin') ? 'ceo' : 'staff'
+
+      // Create synthetic persona for internal team members
       userPersonas = [{
-        persona_type: 'staff',
+        persona_type: personaType,
         entity_id: 'internal',
         entity_name: 'VERSO Staff',
         entity_logo_url: null,
@@ -48,7 +52,7 @@ export default async function UnifiedPortalLayout({ children }: LayoutProps) {
         can_sign: profile.role === 'ceo' || profile.role === 'staff_admin',
         can_execute_for_clients: false,
       }]
-      console.log('[UnifiedPortalLayout] Created synthetic staff persona for:', profile.email, profile.role)
+      console.log('[UnifiedPortalLayout] Created synthetic persona for:', profile.email, profile.role, '→', personaType)
     } else {
       // Non-staff user with no personas - redirect to login
       console.warn('[UnifiedPortalLayout] User has no personas:', profile.email)
