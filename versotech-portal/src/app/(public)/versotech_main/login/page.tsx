@@ -71,18 +71,32 @@ function UnifiedLoginContent() {
     setMessage(null)
 
     try {
+      console.log('[login] Attempting sign in for:', email)
       const result = await signIn(email, password, 'investor')
+      console.log('[login] SignIn result:', JSON.stringify(result, null, 2))
+
       if (result?.success) {
         // Check for redirect param (e.g., from invite link), otherwise go to dashboard
         const redirectParam = searchParams.get('redirect')
         const redirectUrl = redirectParam && redirectParam.startsWith('/')
           ? decodeURIComponent(redirectParam)
           : '/versotech_main/dashboard'
+
+        console.log('[login] Redirecting to:', redirectUrl)
+
         // CRITICAL: Use window.location.href for reliable redirect on all browsers/mobile
         // router.replace() can fail silently on some browsers (especially mobile Safari)
         window.location.href = redirectUrl
+
+        // Keep loading state while redirecting to prevent button flicker
+        return
+      } else {
+        // Sign in returned but success was false/undefined
+        console.error('[login] SignIn returned without success:', result)
+        setMessage({ type: 'error', text: result?.error || 'Sign in failed. Please try again.' })
       }
     } catch (error) {
+      console.error('[login] SignIn error:', error)
       if (error instanceof AuthError) setMessage({ type: 'error', text: error.message })
       else setMessage({ type: 'error', text: 'Authentication failed. Please try again.' })
     } finally {

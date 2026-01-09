@@ -47,11 +47,17 @@ export interface SignInApiResponse {
 }
 
 const syncBrowserSession = async (session?: { access_token: string; refresh_token: string }) => {
-  if (!session) return true
+  console.log('[auth] syncBrowserSession called, session provided:', !!session)
+
+  if (!session) {
+    console.log('[auth] No session to sync, returning true')
+    return true
+  }
 
   const supabase = createClient()
 
-  const { error } = await supabase.auth.setSession({
+  console.log('[auth] Calling supabase.auth.setSession...')
+  const { data, error } = await supabase.auth.setSession({
     access_token: session.access_token,
     refresh_token: session.refresh_token
   })
@@ -61,6 +67,7 @@ const syncBrowserSession = async (session?: { access_token: string; refresh_toke
     return false
   }
 
+  console.log('[auth] Session synced successfully, user:', data?.user?.email)
   return true
 }
 
