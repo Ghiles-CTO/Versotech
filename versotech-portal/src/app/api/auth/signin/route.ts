@@ -245,7 +245,8 @@ export async function POST(request: NextRequest) {
       }, { status: 403 })
     }
 
-    return NextResponse.json({
+    // Create response with session data
+    const response = NextResponse.json({
       success: true,
       redirect: redirectPath,
       session: {
@@ -260,6 +261,31 @@ export async function POST(request: NextRequest) {
         displayName: resolvedProfile.display_name
       }
     })
+
+    // CRITICAL: Set auth cookies on the response so middleware can find the session
+    // Without this, the browser client stores session in localStorage but middleware reads cookies
+    const projectRef = process.env.NEXT_PUBLIC_SUPABASE_URL?.match(/https:\/\/([^.]+)/)?.[1]
+    if (projectRef) {
+      const cookieName = `sb-${projectRef}-auth-token`
+      const cookieValue = JSON.stringify({
+        access_token: data.session.access_token,
+        refresh_token: data.session.refresh_token,
+        expires_at: data.session.expires_at,
+        expires_in: data.session.expires_in,
+        token_type: data.session.token_type,
+        user: data.session.user
+      })
+
+      response.cookies.set(cookieName, cookieValue, {
+        path: '/',
+        httpOnly: false, // Browser needs to read this for session sync
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 24 * 7 // 7 days
+      })
+    }
+
+    return response
   } catch (error) {
     console.error('Signin error:', error)
     return NextResponse.json({
