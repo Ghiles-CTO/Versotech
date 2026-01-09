@@ -172,7 +172,7 @@ export async function POST(request: NextRequest) {
             entityData.legal_name = invite.display_name
             entityData.display_name = invite.display_name
             entityData.status = 'pending_kyc'
-            entityData.investor_type = 'individual'
+            entityData.type = 'individual'
           } else if (entity_type === 'partner') {
             entityData.legal_name = invite.display_name
             entityData.display_name = invite.display_name
