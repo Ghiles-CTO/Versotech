@@ -63,6 +63,7 @@ import { formatDate } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 import Image from 'next/image'
+import { PasswordChangeForm } from '@/components/profile/password-change-form'
 
 /**
  * CEO Entity info (Verso Capital)
@@ -119,9 +120,9 @@ interface CeoProfileClientProps {
 }
 
 const STATUS_STYLES: Record<string, string> = {
-  active: 'bg-green-100 text-green-800 border-green-200',
-  inactive: 'bg-gray-100 text-gray-800 border-gray-200',
-  suspended: 'bg-red-100 text-red-800 border-red-200',
+  active: 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800',
+  inactive: 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-800/50 dark:text-gray-300 dark:border-gray-700',
+  suspended: 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800',
 }
 
 const ROLE_OPTIONS = [
@@ -890,7 +891,7 @@ export function CeoProfileClient({
                   <Label>Signing Authority</Label>
                   <p className="text-foreground py-2">
                     {currentMember?.canSign ? (
-                      <span className="flex items-center gap-2 text-green-600">
+                      <span className="flex items-center gap-2 text-green-600 dark:text-green-400">
                         <PenTool className="h-4 w-4" />
                         Authorized Signatory
                       </span>
@@ -902,6 +903,11 @@ export function CeoProfileClient({
               </div>
             </CardContent>
           </Card>
+
+          {/* Password Change Section */}
+          <div className="mt-6">
+            <PasswordChangeForm />
+          </div>
         </TabsContent>
 
         {/* Entity Details Tab - EDITABLE */}
@@ -1131,7 +1137,7 @@ export function CeoProfileClient({
                             <p className="font-medium flex items-center gap-2">
                               {member.displayName}
                               {member.isPrimary && (
-                                <Crown className="h-3.5 w-3.5 text-amber-500" />
+                                <Crown className="h-3.5 w-3.5 text-amber-500 dark:text-amber-400" />
                               )}
                             </p>
                             <p className="text-sm text-muted-foreground">
@@ -1159,7 +1165,7 @@ export function CeoProfileClient({
                             </Badge>
                           )}
                           {member.canSign && (
-                            <Badge variant="outline" className="bg-blue-500/10 text-blue-600 border-blue-500/30 text-xs">
+                            <Badge variant="outline" className="bg-blue-500/10 text-blue-600 border-blue-500/30 dark:bg-blue-500/20 dark:text-blue-400 dark:border-blue-500/40 text-xs">
                               <PenTool className="w-3 h-3 mr-1" />
                               Signer
                             </Badge>

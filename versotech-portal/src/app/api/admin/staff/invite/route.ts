@@ -3,6 +3,7 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { z } from 'zod'
 import { getAppUrl } from '@/lib/signature/token'
 import { sendInvitationEmail } from '@/lib/email/resend-service'
+import { isSuperAdmin } from '@/lib/api-auth'
 
 // Input validation schema
 const inviteStaffSchema = z.object({
@@ -26,15 +27,10 @@ export async function POST(request: NextRequest) {
     // Use service client for admin operations (bypasses RLS)
     const supabase = createServiceClient()
 
-    // Check if user has super_admin permission
-    const { data: permission } = await supabase
-      .from('staff_permissions')
-      .select('permission')
-      .eq('user_id', user.id)
-      .eq('permission', 'super_admin')
-      .single()
+    // Check if user has super_admin permission OR is CEO
+    const hasAccess = await isSuperAdmin(supabase, user.id)
 
-    if (!permission) {
+    if (!hasAccess) {
       return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
     }
 

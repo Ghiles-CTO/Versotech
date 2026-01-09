@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { getCurrentUser } from '@/lib/auth'
+import { isSuperAdmin } from '@/lib/api-auth'
 
 export async function GET(req: NextRequest) {
   try {
@@ -11,15 +12,10 @@ export async function GET(req: NextRequest) {
 
     const supabase = createServiceClient()
 
-    // Check if user is super admin
-    const { data: permission } = await supabase
-      .from('staff_permissions')
-      .select('permission')
-      .eq('user_id', user.id)
-      .eq('permission', 'super_admin')
-      .single()
+    // Check if user is super admin OR CEO
+    const hasAccess = await isSuperAdmin(supabase, user.id)
 
-    if (!permission) {
+    if (!hasAccess) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 

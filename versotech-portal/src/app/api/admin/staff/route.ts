@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { hasPermission } from '@/lib/api-auth'
 
 export async function GET(request: NextRequest) {
   try {
@@ -14,16 +15,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Check permissions
-    const { data: permission } = await supabase
-      .from('staff_permissions')
-      .select('permission')
-      .eq('user_id', user.id)
-      .in('permission', ['super_admin', 'manage_staff'])
-      .limit(1)
-      .single()
+    // Check permissions (CEO bypasses this check via hasPermission)
+    const canAccess = await hasPermission(supabase, user.id, ['super_admin', 'manage_staff'])
 
-    if (!permission) {
+    if (!canAccess) {
       return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
     }
 

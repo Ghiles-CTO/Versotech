@@ -25,6 +25,65 @@ export async function getUserRole(supabase: any, user: any): Promise<string | nu
 }
 
 /**
+ * Check if user has a specific permission OR is CEO (CEO bypasses all permission checks)
+ *
+ * This centralizes permission checking so that:
+ * 1. CEO users automatically have ALL permissions without needing staff_permissions entries
+ * 2. Regular staff users need explicit permissions in staff_permissions table
+ *
+ * @param supabase - Supabase client (can be regular or service client)
+ * @param userId - The user's ID
+ * @param requiredPermissions - Array of permissions (user needs ANY of these, not all)
+ * @returns true if user has permission or is CEO
+ */
+export async function hasPermission(
+  supabase: any,
+  userId: string,
+  requiredPermissions: string[]
+): Promise<boolean> {
+  // First, check if user is CEO - CEO bypasses all permission checks
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', userId)
+    .single()
+
+  if (profile?.role === 'ceo') {
+    return true // CEO has all permissions
+  }
+
+  // Also check if user has CEO persona (for multi_persona users)
+  const { data: ceoUser } = await supabase
+    .from('ceo_users')
+    .select('user_id')
+    .eq('user_id', userId)
+    .maybeSingle()
+
+  if (ceoUser) {
+    return true // User is in ceo_users table, has all permissions
+  }
+
+  // For non-CEO users, check staff_permissions table
+  const { data: permission } = await supabase
+    .from('staff_permissions')
+    .select('permission')
+    .eq('user_id', userId)
+    .in('permission', requiredPermissions)
+    .limit(1)
+    .maybeSingle()
+
+  return !!permission
+}
+
+/**
+ * Check if user has super_admin permission OR is CEO
+ * Convenience function for the most common permission check
+ */
+export async function isSuperAdmin(supabase: any, userId: string): Promise<boolean> {
+  return hasPermission(supabase, userId, ['super_admin'])
+}
+
+/**
  * Check if user is staff using both profile role AND persona system
  *
  * Users can have staff access through:

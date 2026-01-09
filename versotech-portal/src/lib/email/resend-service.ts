@@ -19,8 +19,8 @@ interface EmailResult {
 }
 
 // Use Resend's shared domain for testing until client verifies versoholdings.com
-// Change to 'VERSO Holdings <noreply@versoholdings.com>' after domain verification
-const DEFAULT_FROM = process.env.EMAIL_FROM || 'VERSO Holdings <onboarding@resend.dev>'
+// Change to 'VERSO <noreply@versoholdings.com>' after domain verification
+const DEFAULT_FROM = process.env.EMAIL_FROM || 'VERSO <onboarding@resend.dev>'
 const RESEND_API_KEY = process.env.RESEND_API_KEY
 
 // Validate API key at module load time in production
@@ -129,11 +129,11 @@ export async function sendStaffInvitation(params: {
     <body>
       <div class="container">
         <div class="header">
-          <h1>Welcome to VERSO Tech</h1>
+          <h1>Welcome to VERSO</h1>
         </div>
         <div class="content">
           <h2>Hi ${params.displayName},</h2>
-          <p>You've been invited to join VERSO Tech as a <strong>${params.title}</strong>.</p>
+          <p>You've been invited to join VERSO as a <strong>${params.title}</strong>.</p>
 
           <div class="credentials">
             <h3>Your Login Credentials</h3>
@@ -143,12 +143,12 @@ export async function sendStaffInvitation(params: {
 
           <p><strong>Important:</strong> Please change your password immediately after your first login for security purposes.</p>
 
-          <a href="${params.loginUrl}" class="button">Login to VERSO Tech</a>
+          <a href="${params.loginUrl}" class="button">Login to VERSO</a>
 
           <p>If you have any questions, please contact your administrator.</p>
         </div>
         <div class="footer">
-          <p>&copy; ${new Date().getFullYear()} VERSO Holdings. All rights reserved.</p>
+          <p>&copy; ${new Date().getFullYear()} VERSO. All rights reserved.</p>
           <p>This is an automated message, please do not reply.</p>
         </div>
       </div>
@@ -158,7 +158,7 @@ export async function sendStaffInvitation(params: {
 
   return sendEmail({
     to: params.email,
-    subject: 'Welcome to VERSO Tech - Your Account Details',
+    subject: 'Welcome to VERSO - Your Account Details',
     html,
   })
 }
@@ -287,7 +287,7 @@ export async function sendPasswordResetEmail(params: {
     </div>
 
     <div class="footer">
-      &copy; ${new Date().getFullYear()} VERSO Holdings. All rights reserved.
+      &copy; ${new Date().getFullYear()} VERSO. All rights reserved.
     </div>
   </div>
 </body>
@@ -347,7 +347,7 @@ export async function sendSecurityAlertEmail(params: {
           <p><strong>Action taken:</strong> ${new Date().toLocaleString()}</p>
         </div>
         <div class="footer">
-          <p>&copy; ${new Date().getFullYear()} VERSO Holdings. All rights reserved.</p>
+          <p>&copy; ${new Date().getFullYear()} VERSO. All rights reserved.</p>
           <p>This is an automated security alert, please do not reply.</p>
         </div>
       </div>
@@ -357,14 +357,15 @@ export async function sendSecurityAlertEmail(params: {
 
   return sendEmail({
     to: params.email,
-    subject: `Security Alert: ${alertTitles[params.alertType]} - VERSO Tech`,
+    subject: `Security Alert: ${alertTitles[params.alertType]} - VERSO`,
     html,
   })
 }
 
 /**
- * Send invitation email to join an entity
+ * Send invitation email to join the platform
  * Uses clean, minimal design matching VERSO brand
+ * Note: Does not include invitee name for privacy - just a simple invite to join
  */
 export async function sendInvitationEmail(params: {
   email: string
@@ -376,32 +377,20 @@ export async function sendInvitationEmail(params: {
   acceptUrl: string
   expiresAt: string
 }): Promise<EmailResult> {
-  const displayName = params.inviteeName || params.email.split('@')[0]
   const isInvestor = params.entityType === 'investor'
 
-  // Investor-specific content (using &mdash; for em dash to avoid encoding issues)
+  // Investor-specific content - simple and clean
   const investorContent = `
-    <p><strong>Welcome to VERSO Holdings</strong> &mdash; your gateway to exclusive investment opportunities.</p>
-    <p>You have been invited by <strong>${params.inviterName}</strong> to join <strong>${params.entityName}</strong> on the VERSO Holdings Investor Portal.</p>
+    <p>You have been invited to join the <strong>VERSO Investment Platform</strong>.</p>
     <p>This secure platform provides you with comprehensive access to your investment portfolio, performance analytics, and exclusive deal opportunities.</p>
-    <p>Through your personalized dashboard, you&apos;ll be able to:</p>
-    <ul style="margin: 20px 0; padding-left: 20px;">
-      <li>Monitor your portfolio performance in real-time</li>
-      <li>Access quarterly statements and K-1 documents</li>
-      <li>Review and participate in new investment opportunities</li>
-      <li>Communicate directly with your relationship manager</li>
-      <li>Complete required compliance documentation</li>
-    </ul>
-    <p>Click the button below to set up your account and access your investor portal.</p>
+    <p>Click the button below to set up your account and access the platform.</p>
   `
 
-  // Non-investor (staff, lawyer, arranger, etc.) content
+  // Non-investor (staff, lawyer, arranger, etc.) content - simple and clean
   const professionalContent = `
-    <p><strong>Welcome to VERSOTECH</strong> &mdash; the future of investment banking.</p>
-    <p>You have been invited by <strong>${params.inviterName}</strong> to join <strong>${params.entityName}</strong> on the VERSOTECH platform.</p>
-    <p>VERSOTECH is an AI-powered investment banking platform designed to revolutionize how we work. As a member, you will have access to cutting-edge tools that enhance productivity and streamline complex workflows.</p>
-    <p>Our platform integrates advanced automation, intelligent document processing, and real-time analytics to support your daily operations. From deal management to investor relations, VERSOTECH empowers you to deliver exceptional results.</p>
-    <p>Click the button below to set up your account and begin exploring the platform.</p>
+    <p>You have been invited to join the <strong>VERSO Platform</strong>.</p>
+    <p>This platform provides access to deal management, document processing, and collaboration tools.</p>
+    <p>Click the button below to set up your account and get started.</p>
   `
 
   const html = `
@@ -446,22 +435,12 @@ export async function sendInvitationEmail(params: {
       text-transform: uppercase;
       margin: 0;
     }
-    .greeting {
-      font-size: 16px;
-      margin-bottom: 30px;
-    }
     .content {
       font-size: 15px;
       color: #333333;
     }
     .content p {
       margin-bottom: 20px;
-    }
-    .content ul {
-      color: #333333;
-    }
-    .content li {
-      margin-bottom: 8px;
     }
     .button-container {
       text-align: center;
@@ -495,18 +474,16 @@ export async function sendInvitationEmail(params: {
       <div class="logo">VERSO</div>
     </div>
 
-    <div class="greeting">Dear ${displayName},</div>
-
     <div class="content">
       ${isInvestor ? investorContent : professionalContent}
     </div>
 
     <div class="button-container">
-      <a href="${params.acceptUrl}" class="button">${isInvestor ? 'Access Investor Portal' : 'Access VERSOTECH'}</a>
+      <a href="${params.acceptUrl}" class="button">Accept Invitation</a>
     </div>
 
     <div class="footer">
-      &copy; ${new Date().getFullYear()} VERSO Holdings. All rights reserved.
+      &copy; ${new Date().getFullYear()} VERSO. All rights reserved.
     </div>
   </div>
 </body>
@@ -515,9 +492,7 @@ export async function sendInvitationEmail(params: {
 
   return sendEmail({
     to: params.email,
-    subject: isInvestor
-      ? `Welcome to VERSO Holdings - ${params.entityName}`
-      : `Welcome to VERSOTECH - ${params.entityName}`,
+    subject: 'You have been invited to join VERSO',
     html,
   })
 }
@@ -584,11 +559,11 @@ export async function sendSignatureRequestEmail(params: {
           </p>
 
           <p style="font-size: 13px; color: #666; margin-top: 20px;">
-            If you have any questions, please contact VERSO Holdings support.
+            If you have any questions, please contact VERSO support.
           </p>
         </div>
         <div class="footer">
-          <p>&copy; ${new Date().getFullYear()} VERSO Holdings. All rights reserved.</p>
+          <p>&copy; ${new Date().getFullYear()} VERSO. All rights reserved.</p>
           <p>This is an automated message, please do not reply.</p>
         </div>
       </div>
@@ -598,7 +573,7 @@ export async function sendSignatureRequestEmail(params: {
 
   return sendEmail({
     to: params.email,
-    subject: `${documentLabel} Ready for Your Signature - VERSO Holdings`,
+    subject: `${documentLabel} Ready for Your Signature - VERSO`,
     html,
   })
 }
