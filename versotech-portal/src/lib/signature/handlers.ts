@@ -183,9 +183,76 @@ export async function handleNDASignature(
 
   // 3. AUTOMATIC DATA ROOM ACCESS GRANT
   // Now that NDA is fully executed, grant investor access to deal's data room
-  console.log('\n🔓 [NDA HANDLER] Step 3: Granting automatic data room access')
+  // IMPORTANT: For entity investors with multiple signatories, we must wait for ALL to sign
+  console.log('\n🔓 [NDA HANDLER] Step 3: Checking multi-signatory status before data room access')
+
   try {
-    // deal info already fetched earlier for vehicle_id association
+    // Check if ALL NDA signature requests for this investor+deal are signed
+    // This is critical for entity investors with multiple signatories
+    // IMPORTANT: Only count ACTIVE requests (pending/signed), exclude cancelled/expired
+    // to prevent stale requests from blocking data room access forever
+    const { data: allNdaSignatures, error: sigCheckError } = await supabase
+      .from('signature_requests')
+      .select('id, status, signer_role, signer_name, member_id')
+      .eq('deal_id', dealInterest.deal_id)
+      .eq('investor_id', dealInterest.investor_id)
+      .eq('document_type', 'nda')
+      .eq('signer_role', 'investor') // Only check investor signatures, not admin
+      .in('status', ['pending', 'signed']) // Exclude cancelled/expired stale requests
+
+    if (sigCheckError) {
+      console.error('❌ [NDA HANDLER] Failed to check signatory status:', sigCheckError)
+      throw sigCheckError
+    }
+
+    const totalSignatories = allNdaSignatures?.length || 0
+    const signedCount = allNdaSignatures?.filter((s: { status: string }) => s.status === 'signed').length || 0
+    const allSignatoriesSigned = totalSignatories > 0 && signedCount === totalSignatories
+
+    console.log('📊 [NDA HANDLER] Multi-signatory status check:', {
+      total_signatories: totalSignatories,
+      signed_count: signedCount,
+      all_signed: allSignatoriesSigned,
+      current_signatory: signatureRequest.signer_name,
+      current_signer_role: signatureRequest.signer_role
+    })
+
+    // CRITICAL: Only grant data room access when ALL investor signatures are complete
+    // This applies to both single and multi-signatory cases:
+    // - If admin signs first → don't grant access (investor hasn't signed)
+    // - If investor signs but more signatories pending → don't grant access
+    // - Only when all investor signatures are 'signed' → grant access
+    if (!allSignatoriesSigned) {
+      // Not all investor signatories have signed yet
+      console.log(`⏳ [NDA HANDLER] Waiting for investor signatures: ${signedCount}/${totalSignatories} signed`)
+
+      // Log partial completion (useful for multi-signatory tracking)
+      if (signatureRequest.signer_role === 'investor') {
+        await supabase.from('audit_logs').insert({
+          event_type: 'deal',
+          action: 'nda_signatory_signed',
+          entity_type: 'deal_interest_nda',
+          entity_id: dealInterest.deal_id,
+          details: {
+            investor_id: dealInterest.investor_id,
+            signed_count: signedCount,
+            total_signatories: totalSignatories,
+            signatory_name: signatureRequest.signer_name,
+            member_id: signatureRequest.member_id || null,
+            message: totalSignatories > 1
+              ? `NDA signed by ${signatureRequest.signer_name}. Waiting for ${totalSignatories - signedCount} more signatory(ies).`
+              : `NDA signed by ${signatureRequest.signer_name}. Processing...`
+          },
+          created_at: new Date().toISOString()
+        })
+      }
+
+      console.log('📝 [NDA HANDLER] Data room access will be granted when all investor signatories sign.')
+      return // Exit - don't grant data room access yet
+    }
+
+    // All investor signatories have signed - proceed with data room grant
+    console.log('✅ [NDA HANDLER] All investor signatories have signed. Proceeding with data room access grant.')
 
     // Check if access already exists
     console.log('🔍 [NDA HANDLER] Checking for existing data room access')

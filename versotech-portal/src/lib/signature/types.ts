@@ -11,6 +11,7 @@ export interface SignatureRequestRecord {
   id: string
   workflow_run_id?: string // Optional - only for n8n generated documents
   investor_id: string
+  member_id?: string // For entity investors: specific investor_member who must sign
   signer_email: string
   signer_name: string
   document_type: DocumentType
@@ -44,6 +45,7 @@ export interface SignatureRequestRecord {
 export interface CreateSignatureRequestParams {
   workflow_run_id?: string // Optional - only for n8n generated documents
   investor_id: string
+  member_id?: string // For entity investors: specific investor_member who must sign
   signer_email: string
   signer_name: string
   document_type: DocumentType
