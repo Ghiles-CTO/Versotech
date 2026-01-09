@@ -52,6 +52,8 @@ import { useState, useEffect, useCallback } from 'react'
 import { KYCDocumentsTab } from '@/components/shared/kyc-documents-tab'
 import { BankDetailsTab } from '@/components/shared/bank-details-tab'
 import { ActivityTimelineTab } from '@/components/shared/activity-timeline-tab'
+import { IndividualKycDisplay, EntityKYCEditDialog } from '@/components/shared'
+import { StaffEntityMembersTab } from '@/components/staff/shared/staff-entity-members-tab'
 import { EditIntroducerDialog } from '@/components/staff/introducers/edit-introducer-dialog'
 import { CreateAgreementDialog } from '@/components/staff/introducers/create-agreement-dialog'
 import { InviteUserDialog } from '@/components/users/invite-user-dialog'
@@ -65,7 +67,8 @@ type IntroducerDetail = {
   legal_name: string
   contact_name: string | null
   email: string | null
-  phone: string | null
+  phone_mobile: string | null
+  phone_office: string | null
   default_commission_bps: number | null
   commission_cap_amount: number | null
   payment_terms: string | null
@@ -74,6 +77,34 @@ type IntroducerDetail = {
   notes: string | null
   created_at: string | null
   updated_at: string | null
+  // Entity type (individual vs entity)
+  type?: string | null
+  // Individual KYC fields
+  first_name?: string | null
+  middle_name?: string | null
+  last_name?: string | null
+  name_suffix?: string | null
+  date_of_birth?: string | null
+  country_of_birth?: string | null
+  nationality?: string | null
+  // US Tax compliance
+  is_us_citizen?: boolean | null
+  is_us_taxpayer?: boolean | null
+  us_taxpayer_id?: string | null
+  country_of_tax_residency?: string | null
+  // ID Document
+  id_type?: string | null
+  id_number?: string | null
+  id_issue_date?: string | null
+  id_expiry_date?: string | null
+  id_issuing_country?: string | null
+  // Residential Address
+  residential_street?: string | null
+  residential_line_2?: string | null
+  residential_city?: string | null
+  residential_state?: string | null
+  residential_postal_code?: string | null
+  residential_country?: string | null
 }
 
 type Introduction = {
@@ -108,10 +139,8 @@ type Agreement = {
   status: string
   reference_number: string | null
   default_commission_bps: number | null
-  agreement_date: string | null
   effective_date: string | null
   expiry_date: string | null
-  special_terms: string | null
   signed_date: string | null
   pdf_url: string | null
   deal_id: string | null
@@ -230,6 +259,7 @@ export function IntroducerDetailClient({
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false)
   const [createAgreementOpen, setCreateAgreementOpen] = useState(false)
+  const [kycDialogOpen, setKycDialogOpen] = useState(false)
   const [sendingAgreement, setSendingAgreement] = useState<string | null>(null)
   const [downloadingPdf, setDownloadingPdf] = useState<string | null>(null)
 
@@ -248,7 +278,9 @@ export function IntroducerDetailClient({
       const url = window.URL.createObjectURL(blob)
       const link = document.createElement('a')
       link.href = url
-      link.download = `${referenceNumber || 'agreement'}.pdf`
+      // Extract actual filename from storage path, or fall back to reference number
+      const actualFilename = pdfUrl.split('/').pop() || `${referenceNumber || 'agreement'}.pdf`
+      link.download = actualFilename
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
@@ -260,6 +292,25 @@ export function IntroducerDetailClient({
       toast.error('Failed to download PDF')
     } finally {
       setDownloadingPdf(null)
+    }
+  }
+
+  // Preview PDF in new tab
+  const handlePreviewPdf = async (pdfUrl: string) => {
+    try {
+      // Fetch the file directly from our API
+      const response = await fetch(`/api/storage/download?path=${encodeURIComponent(pdfUrl)}&bucket=deal-documents`)
+      if (!response.ok) {
+        throw new Error('Failed to load file')
+      }
+
+      // Convert response to blob and open in new tab
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      window.open(url, '_blank')
+    } catch (error) {
+      console.error('Error previewing PDF:', error)
+      toast.error('Failed to preview PDF')
     }
   }
 
@@ -579,10 +630,14 @@ export function IntroducerDetailClient({
 
       {/* Tabbed Content */}
       <Tabs defaultValue="overview" className="space-y-6" id={`introducer-tabs-${introducer.id}`}>
-        <TabsList className="grid w-full grid-cols-9 lg:w-auto lg:inline-grid">
+        <TabsList className="grid w-full grid-cols-10 lg:w-auto lg:inline-grid">
           <TabsTrigger value="overview" className="gap-2">
             <Building2 className="h-4 w-4" />
             <span className="hidden sm:inline">Overview</span>
+          </TabsTrigger>
+          <TabsTrigger value="members" className="gap-2">
+            <User className="h-4 w-4" />
+            <span className="hidden sm:inline">Members</span>
           </TabsTrigger>
           <TabsTrigger value="fee-plans" className="gap-2">
             <FileCheck className="h-4 w-4" />
@@ -647,12 +702,21 @@ export function IntroducerDetailClient({
                     </div>
                   </div>
                 )}
-                {introducer.phone && (
+                {introducer.phone_mobile && (
                   <div className="flex items-center gap-3">
                     <Phone className="h-4 w-4 text-muted-foreground" />
                     <div>
-                      <div className="text-sm text-muted-foreground">Phone</div>
-                      <div className="text-sm font-medium">{introducer.phone}</div>
+                      <div className="text-sm text-muted-foreground">Mobile</div>
+                      <div className="text-sm font-medium">{introducer.phone_mobile}</div>
+                    </div>
+                  </div>
+                )}
+                {introducer.phone_office && (
+                  <div className="flex items-center gap-3">
+                    <Phone className="h-4 w-4 text-muted-foreground" />
+                    <div>
+                      <div className="text-sm text-muted-foreground">Office</div>
+                      <div className="text-sm font-medium">{introducer.phone_office}</div>
                     </div>
                   </div>
                 )}
@@ -665,44 +729,48 @@ export function IntroducerDetailClient({
                     </div>
                   </div>
                 )}
-                {!introducer.contact_name && !introducer.email && !introducer.phone && (
+                {!introducer.contact_name && !introducer.email && !introducer.phone_mobile && !introducer.phone_office && (
                   <p className="text-sm text-muted-foreground">No contact information available</p>
                 )}
               </CardContent>
             </Card>
-
-            {/* Commission Terms */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Commission Terms</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <Percent className="h-4 w-4 text-muted-foreground" />
-                  <div>
-                    <div className="text-sm text-muted-foreground">Default Commission Rate</div>
-                    <div className="text-sm font-medium">{formatBps(introducer.default_commission_bps || 0)}</div>
-                  </div>
-                </div>
-                {introducer.commission_cap_amount && (
-                  <div className="flex items-center gap-3">
-                    <DollarSign className="h-4 w-4 text-muted-foreground" />
-                    <div>
-                      <div className="text-sm text-muted-foreground">Commission Cap</div>
-                      <div className="text-sm font-medium">{formatCurrency(introducer.commission_cap_amount)}</div>
-                    </div>
-                  </div>
-                )}
-                <div className="flex items-center gap-3">
-                  <Clock className="h-4 w-4 text-muted-foreground" />
-                  <div>
-                    <div className="text-sm text-muted-foreground">Payment Terms</div>
-                    <div className="text-sm font-medium">{formatPaymentTerms(introducer.payment_terms)}</div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
           </div>
+
+          {/* Individual KYC Information (for individual introducers) */}
+          {introducer.type === 'individual' && (
+            <IndividualKycDisplay
+              data={{
+                first_name: introducer.first_name,
+                middle_name: introducer.middle_name,
+                last_name: introducer.last_name,
+                name_suffix: introducer.name_suffix,
+                date_of_birth: introducer.date_of_birth,
+                country_of_birth: introducer.country_of_birth,
+                nationality: introducer.nationality,
+                email: introducer.email,
+                phone_mobile: introducer.phone_mobile,
+                phone_office: introducer.phone_office,
+                residential_street: introducer.residential_street,
+                residential_line_2: introducer.residential_line_2,
+                residential_city: introducer.residential_city,
+                residential_state: introducer.residential_state,
+                residential_postal_code: introducer.residential_postal_code,
+                residential_country: introducer.residential_country,
+                is_us_citizen: introducer.is_us_citizen,
+                is_us_taxpayer: introducer.is_us_taxpayer,
+                us_taxpayer_id: introducer.us_taxpayer_id,
+                country_of_tax_residency: introducer.country_of_tax_residency,
+                id_type: introducer.id_type,
+                id_number: introducer.id_number,
+                id_issue_date: introducer.id_issue_date,
+                id_expiry_date: introducer.id_expiry_date,
+                id_issuing_country: introducer.id_issuing_country,
+              }}
+              showEditButton={true}
+              onEdit={() => setKycDialogOpen(true)}
+              title="Personal KYC Information"
+            />
+          )}
 
           {/* Notes Card */}
           {introducer.notes && (
@@ -717,6 +785,15 @@ export function IntroducerDetailClient({
               </CardContent>
             </Card>
           )}
+        </TabsContent>
+
+        {/* Members Tab */}
+        <TabsContent value="members">
+          <StaffEntityMembersTab
+            entityType="introducer"
+            entityId={introducer.id}
+            entityName={introducer.legal_name}
+          />
         </TabsContent>
 
         {/* Fee Plans Tab */}
@@ -1173,27 +1250,28 @@ export function IntroducerDetailClient({
                             {formatAgreementStatus(agreement.status)}
                           </Badge>
 
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                              >
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-48">
-                              <DropdownMenuItem
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  router.push(`/versotech_main/introducer-agreements/${agreement.id}`)
-                                }}
-                              >
-                                <Eye className="h-4 w-4 mr-2" />
-                                View Details
-                              </DropdownMenuItem>
-                              {agreement.pdf_url && (
+                          {/* Three-dots menu: Only Preview and Download for documents */}
+                          {agreement.pdf_url && (
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                                >
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="w-48">
+                                <DropdownMenuItem
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    handlePreviewPdf(agreement.pdf_url!)
+                                  }}
+                                >
+                                  <Eye className="h-4 w-4 mr-2" />
+                                  Preview
+                                </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onClick={(e) => {
                                     e.stopPropagation()
@@ -1202,51 +1280,11 @@ export function IntroducerDetailClient({
                                   disabled={downloadingPdf === agreement.pdf_url}
                                 >
                                   <Download className="h-4 w-4 mr-2" />
-                                  {downloadingPdf === agreement.pdf_url ? 'Downloading...' : 'Download PDF'}
+                                  {downloadingPdf === agreement.pdf_url ? 'Downloading...' : 'Download'}
                                 </DropdownMenuItem>
-                              )}
-                              {isDraft && (
-                                <>
-                                  <DropdownMenuItem
-                                    onClick={(e) => {
-                                      e.stopPropagation()
-                                      router.push(`/versotech_main/introducer-agreements/${agreement.id}?edit=true`)
-                                    }}
-                                  >
-                                    <Edit className="h-4 w-4 mr-2" />
-                                    Edit Agreement
-                                  </DropdownMenuItem>
-                                  <DropdownMenuSeparator />
-                                  <DropdownMenuItem
-                                    onClick={(e) => {
-                                      e.stopPropagation()
-                                      handleSendAgreement(agreement.id)
-                                    }}
-                                    disabled={sendingAgreement === agreement.id}
-                                    className="text-amber-400 focus:text-amber-400"
-                                  >
-                                    <Send className="h-4 w-4 mr-2" />
-                                    {sendingAgreement === agreement.id ? 'Sending...' : 'Send for Approval'}
-                                  </DropdownMenuItem>
-                                </>
-                              )}
-                              {canSign && (
-                                <>
-                                  <DropdownMenuSeparator />
-                                  <DropdownMenuItem
-                                    onClick={(e) => {
-                                      e.stopPropagation()
-                                      router.push(`/versotech_main/versosign?agreement=${agreement.id}`)
-                                    }}
-                                    className="text-purple-400 focus:text-purple-400"
-                                  >
-                                    <PenLine className="h-4 w-4 mr-2" />
-                                    Sign Agreement
-                                  </DropdownMenuItem>
-                                </>
-                              )}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          )}
                         </div>
                       </div>
                     )
@@ -1395,6 +1433,45 @@ export function IntroducerDetailClient({
         introducerName={introducer.legal_name}
         defaultCommissionBps={introducer.default_commission_bps || 100}
       />
+
+      {introducer.type === 'individual' && (
+        <EntityKYCEditDialog
+          open={kycDialogOpen}
+          onOpenChange={setKycDialogOpen}
+          entityType="introducer"
+          entityId={introducer.id}
+          entityName={introducer.legal_name}
+          apiEndpoint={`/api/admin/introducers/${introducer.id}`}
+          initialData={{
+            first_name: introducer.first_name ?? undefined,
+            middle_name: introducer.middle_name ?? undefined,
+            last_name: introducer.last_name ?? undefined,
+            name_suffix: introducer.name_suffix ?? undefined,
+            date_of_birth: introducer.date_of_birth ?? undefined,
+            country_of_birth: introducer.country_of_birth ?? undefined,
+            nationality: introducer.nationality ?? undefined,
+            email: introducer.email ?? undefined,
+            phone_mobile: introducer.phone_mobile ?? undefined,
+            phone_office: introducer.phone_office ?? undefined,
+            residential_street: introducer.residential_street ?? undefined,
+            residential_line_2: introducer.residential_line_2 ?? undefined,
+            residential_city: introducer.residential_city ?? undefined,
+            residential_state: introducer.residential_state ?? undefined,
+            residential_postal_code: introducer.residential_postal_code ?? undefined,
+            residential_country: introducer.residential_country ?? undefined,
+            is_us_citizen: introducer.is_us_citizen ?? undefined,
+            is_us_taxpayer: introducer.is_us_taxpayer ?? undefined,
+            us_taxpayer_id: introducer.us_taxpayer_id ?? undefined,
+            country_of_tax_residency: introducer.country_of_tax_residency ?? undefined,
+            id_type: introducer.id_type ?? undefined,
+            id_number: introducer.id_number ?? undefined,
+            id_issue_date: introducer.id_issue_date ?? undefined,
+            id_expiry_date: introducer.id_expiry_date ?? undefined,
+            id_issuing_country: introducer.id_issuing_country ?? undefined,
+          }}
+          onSuccess={() => router.refresh()}
+        />
+      )}
     </div>
   )
 }
