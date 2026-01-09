@@ -11,7 +11,8 @@ type IntroducerDetail = {
   legal_name: string
   contact_name: string | null
   email: string | null
-  phone: string | null
+  phone_mobile: string | null
+  phone_office: string | null
   default_commission_bps: number | null
   commission_cap_amount: number | null
   payment_terms: string | null
