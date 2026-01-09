@@ -1,5 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { checkStaffAccess } from '@/lib/auth'
 import { AddInvestorModal } from '@/components/investors/add-investor-modal'
 import { InvestorFilters } from '@/components/investors/investor-filters'
 import { ExportInvestorsButton } from '@/components/investors/export-investors-button'
@@ -124,15 +125,9 @@ export default async function InvestorsPage({
     )
   }
 
-  // Check if user has staff/CEO persona for full access
+  // Check if user has staff/CEO access (via profile role or database personas)
+  const hasStaffAccess = await checkStaffAccess(user.id)
   const serviceSupabase = createServiceClient()
-  const { data: personas } = await serviceSupabase.rpc('get_user_personas', {
-    p_user_id: user.id
-  })
-
-  const hasStaffAccess = personas?.some(
-    (p: any) => p.persona_type === 'staff' || p.persona_type === 'ceo'
-  ) || false
 
   if (!hasStaffAccess) {
     return (

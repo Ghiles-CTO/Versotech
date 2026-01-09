@@ -3,6 +3,7 @@ import { StaffDocumentsClient } from '@/components/documents/staff-documents-cli
 import { CategorizedDocumentsClient } from '@/components/documents/categorized-documents-client'
 import { loadInvestorDocuments } from '@/lib/documents/investor-documents'
 import { AlertCircle, FileText } from 'lucide-react'
+import { checkStaffAccess } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
 
@@ -34,14 +35,9 @@ export default async function DocumentsPage() {
     )
   }
 
-  const serviceSupabase = createServiceClient()
-
   // Check user personas for access level
-  const { data: personas } = await serviceSupabase.rpc('get_user_personas', {
-    p_user_id: user.id
-  })
-
-  const isStaff = personas?.some((p: any) => p.persona_type === 'staff' || p.persona_type === 'ceo') || false
+  const isStaff = await checkStaffAccess(user.id)
+  const serviceSupabase = createServiceClient()
 
   // Staff get full document management access
   if (isStaff) {

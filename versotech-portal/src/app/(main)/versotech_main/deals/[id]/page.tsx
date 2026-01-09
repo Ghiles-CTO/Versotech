@@ -1,6 +1,7 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { notFound, redirect } from 'next/navigation'
 import { DealDetailClient } from '@/components/deals/deal-detail-client'
+import { checkStaffAccess } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
 
@@ -25,16 +26,9 @@ export default async function DealDetailPage({ params }: PageParams) {
     redirect('/versotech_main/login')
   }
 
-  const serviceSupabase = createServiceClient()
-
   // Check staff access via personas
-  const { data: personas } = await serviceSupabase.rpc('get_user_personas', {
-    p_user_id: user.id
-  })
-
-  const hasStaffAccess = personas?.some(
-    (p: any) => p.persona_type === 'staff' || p.persona_type === 'ceo'
-  ) || false
+  const hasStaffAccess = await checkStaffAccess(user.id)
+  const serviceSupabase = createServiceClient()
 
   if (!hasStaffAccess) {
     redirect('/versotech_main/deals')

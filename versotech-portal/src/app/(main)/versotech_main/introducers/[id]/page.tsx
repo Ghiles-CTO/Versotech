@@ -2,6 +2,7 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { notFound, redirect } from 'next/navigation'
 import { IntroducerDetailClient } from '@/components/staff/introducers/introducer-detail-client'
 import { AlertCircle } from 'lucide-react'
+import { checkStaffAccess } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -11,7 +12,8 @@ type IntroducerDetail = {
   legal_name: string
   contact_name: string | null
   email: string | null
-  phone: string | null
+  phone_mobile: string | null
+  phone_office: string | null
   default_commission_bps: number | null
   commission_cap_amount: number | null
   payment_terms: string | null
@@ -54,10 +56,8 @@ type Agreement = {
   status: string
   reference_number: string | null
   default_commission_bps: number | null
-  agreement_date: string | null
   effective_date: string | null
   expiry_date: string | null
-  special_terms: string | null
   signed_date: string | null
   pdf_url: string | null
   deal_id: string | null
@@ -91,14 +91,8 @@ export default async function IntroducerDetailPage({
   }
 
   // Check if user has staff persona for access
+  const hasStaffAccess = await checkStaffAccess(user.id)
   const serviceClient = createServiceClient()
-  const { data: personas } = await serviceClient.rpc('get_user_personas', {
-    p_user_id: user.id
-  })
-
-  const hasStaffAccess = personas?.some(
-    (p: any) => p.persona_type === 'staff' || p.persona_type === 'ceo'
-  ) || false
 
   if (!hasStaffAccess) {
     return (
@@ -243,10 +237,8 @@ export default async function IntroducerDetailPage({
       status,
       reference_number,
       default_commission_bps,
-      agreement_date,
       effective_date,
       expiry_date,
-      special_terms,
       signed_date,
       pdf_url,
       deal_id,
@@ -266,10 +258,8 @@ export default async function IntroducerDetailPage({
     status: a.status || 'draft',
     reference_number: a.reference_number,
     default_commission_bps: a.default_commission_bps,
-    agreement_date: a.agreement_date,
     effective_date: a.effective_date,
     expiry_date: a.expiry_date,
-    special_terms: a.special_terms,
     signed_date: a.signed_date,
     pdf_url: a.pdf_url,
     deal_id: a.deal_id,

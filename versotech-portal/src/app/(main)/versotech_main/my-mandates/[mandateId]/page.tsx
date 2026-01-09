@@ -2,6 +2,7 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { notFound, redirect } from 'next/navigation'
 import { MandateDetailClient } from '@/components/mandates/mandate-detail-client'
 import { AlertCircle } from 'lucide-react'
+import { checkStaffAccess } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
 
@@ -30,16 +31,14 @@ export default async function MandateDetailPage({ params }: PageParams) {
     redirect('/versotech_main/login')
   }
 
+  // Check user personas - arranger OR staff can view mandates
+  const isStaff = await checkStaffAccess(user.id)
   const serviceSupabase = createServiceClient()
 
-  // Check user personas - arranger OR staff can view mandates
   const { data: personas } = await serviceSupabase.rpc('get_user_personas', {
     p_user_id: user.id
   })
 
-  const isStaff = personas?.some(
-    (p: any) => p.persona_type === 'staff' || p.persona_type === 'ceo'
-  ) || false
   const isArranger = personas?.some(
     (p: any) => p.persona_type === 'arranger'
   ) || false

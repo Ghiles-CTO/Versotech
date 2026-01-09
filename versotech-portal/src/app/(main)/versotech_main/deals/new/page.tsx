@@ -2,6 +2,7 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { CreateDealForm } from '@/components/deals/create-deal-form'
 import { AlertCircle } from 'lucide-react'
+import { checkStaffAccess } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -22,14 +23,8 @@ export default async function CreateDealPage() {
   }
 
   // Check if user has staff persona for access
+  const hasStaffAccess = await checkStaffAccess(user.id)
   const serviceClient = createServiceClient()
-  const { data: personas } = await serviceClient.rpc('get_user_personas', {
-    p_user_id: user.id
-  })
-
-  const hasStaffAccess = personas?.some(
-    (p: any) => p.persona_type === 'staff' || p.persona_type === 'ceo'
-  ) || false
 
   if (!hasStaffAccess) {
     return (

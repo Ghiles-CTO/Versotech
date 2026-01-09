@@ -172,7 +172,9 @@ export default function IntroducerAgreementsPage() {
       const url = window.URL.createObjectURL(blob)
       const link = document.createElement('a')
       link.href = url
-      link.download = `${referenceNumber || 'Fee_Agreement'}.pdf`
+      // Extract actual filename from the storage path, or fall back to reference number
+      const actualFilename = pdfUrl.split('/').pop() || `${referenceNumber || 'Fee_Agreement'}.pdf`
+      link.download = actualFilename
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)

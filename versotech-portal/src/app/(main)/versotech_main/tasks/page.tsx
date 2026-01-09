@@ -2,6 +2,7 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { TasksPageClient } from '@/app/(investor)/versoholdings/tasks/tasks-page-client'
 import { AlertCircle } from 'lucide-react'
 import type { Task, TasksByVehicle, Vehicle } from '@/app/(investor)/versoholdings/tasks/page'
+import { checkStaffAccess } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -33,16 +34,13 @@ export default async function TasksPage() {
     )
   }
 
+  // Check user personas
+  const hasStaffAccess = await checkStaffAccess(user.id)
   const serviceSupabase = createServiceClient()
 
-  // Check user personas
   const { data: personas } = await serviceSupabase.rpc('get_user_personas', {
     p_user_id: user.id
   })
-
-  const hasStaffAccess = personas?.some(
-    (p: any) => p.persona_type === 'staff' || p.persona_type === 'ceo'
-  ) || false
 
   const hasInvestorAccess = personas?.some(
     (p: any) => p.persona_type === 'investor'

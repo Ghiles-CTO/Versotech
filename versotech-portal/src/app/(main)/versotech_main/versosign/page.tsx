@@ -4,6 +4,7 @@ import { AlertCircle } from 'lucide-react'
 import type { SignatureGroup, SignatureTask, ExpiredSignature } from '@/app/(staff)/versotech/staff/versosign/page'
 import { IntroducerAgreementSigningSection } from './introducer-agreement-signing-section'
 import { PlacementAgreementSigningSection } from './placement-agreement-signing-section'
+import { checkStaffAccess } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
 
@@ -70,14 +71,13 @@ export default async function VersoSignPage() {
     )
   }
 
+  // Check user personas for access level
+  const isStaff = await checkStaffAccess(user.id)
   const serviceSupabase = createServiceClient()
 
-  // Check user personas for access level
   const { data: personas } = await serviceSupabase.rpc('get_user_personas', {
     p_user_id: user.id
   })
-
-  const isStaff = personas?.some((p: any) => p.persona_type === 'staff' || p.persona_type === 'ceo') || false
   const isLawyer = personas?.some((p: any) => p.persona_type === 'lawyer') || false
   const isIntroducer = personas?.some((p: any) => p.persona_type === 'introducer') || false
   const isArranger = personas?.some((p: any) => p.persona_type === 'arranger') || false

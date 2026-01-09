@@ -1,6 +1,7 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { DealsListClient } from '@/components/deals/deals-list-client'
 import { AlertCircle } from 'lucide-react'
+import { checkStaffAccess } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
 
@@ -47,14 +48,8 @@ export default async function DealsPage() {
   }
 
   // Check if user has staff/CEO persona for full access
+  const hasStaffAccess = await checkStaffAccess(user.id)
   const serviceSupabase = createServiceClient()
-  const { data: personas } = await serviceSupabase.rpc('get_user_personas', {
-    p_user_id: user.id
-  })
-
-  const hasStaffAccess = personas?.some(
-    (p: any) => p.persona_type === 'staff' || p.persona_type === 'ceo'
-  ) || false
 
   let dealsData: Deal[] = []
 

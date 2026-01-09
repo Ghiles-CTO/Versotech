@@ -205,3 +205,58 @@ export async function requireStaffAuth() {
 
   return user
 }
+
+/**
+ * Check if a user has staff-level access for page authorization.
+ *
+ * IMPORTANT: Staff users (staff_admin, ceo, staff_ops, staff_rm) don't have
+ * traditional database persona entries. Their "personas" are created synthetically
+ * in the layout. This function checks BOTH:
+ * 1. Profile role (for staff users without persona entries)
+ * 2. Database personas (for users with explicit staff/ceo persona entries)
+ *
+ * @param userId - The user's ID
+ * @returns true if user has staff access (via role OR persona)
+ */
+export async function checkStaffAccess(userId: string): Promise<boolean> {
+  const supabase = await createServerSupabaseClient()
+
+  // Check profile role first (handles synthetic staff personas)
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', userId)
+    .single()
+
+  if (!profileError && profile && STAFF_ROLES.includes(profile.role as ProfileRole)) {
+    return true
+  }
+
+  // Fallback: check database personas (for edge cases)
+  const { data: personas } = await supabase.rpc('get_user_personas', {
+    p_user_id: userId
+  })
+
+  return personas?.some(
+    (p: { persona_type: string }) => p.persona_type === 'staff' || p.persona_type === 'ceo'
+  ) || false
+}
+
+/**
+ * Check if a user has CEO-level access (full admin access).
+ * CEO access is granted to users with 'ceo' or 'staff_admin' profile roles.
+ */
+export async function checkCeoAccess(userId: string): Promise<boolean> {
+  const supabase = await createServerSupabaseClient()
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', userId)
+    .single()
+
+  return profile?.role === 'ceo' || profile?.role === 'staff_admin'
+}
+
+// Export STAFF_ROLES for use in pages
+export { STAFF_ROLES }

@@ -1,6 +1,7 @@
-import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { createClient } from '@/lib/supabase/server'
 import { FeesPageClient } from './fees-page-client'
 import { AlertCircle } from 'lucide-react'
+import { checkStaffAccess } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
 
@@ -32,14 +33,7 @@ export default async function FeesPage() {
   }
 
   // Check if user has staff/CEO persona for full access
-  const serviceSupabase = createServiceClient()
-  const { data: personas } = await serviceSupabase.rpc('get_user_personas', {
-    p_user_id: user.id
-  })
-
-  const hasStaffAccess = personas?.some(
-    (p: any) => p.persona_type === 'staff' || p.persona_type === 'ceo'
-  ) || false
+  const hasStaffAccess = await checkStaffAccess(user.id)
 
   if (!hasStaffAccess) {
     return (

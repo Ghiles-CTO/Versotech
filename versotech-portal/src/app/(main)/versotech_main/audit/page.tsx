@@ -10,6 +10,7 @@ import {
 import { AuditLogFilters } from '@/components/audit/audit-log-filters'
 import { AuditLogTable } from '@/components/audit/audit-log-table'
 import { ComplianceAlerts } from '@/components/audit/compliance-alerts'
+import { checkStaffAccess } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -46,14 +47,8 @@ export default async function AuditPage({
   }
 
   // Check if user has staff/CEO persona for full access
+  const hasStaffAccess = await checkStaffAccess(user.id)
   const serviceSupabase = createServiceClient()
-  const { data: personas } = await serviceSupabase.rpc('get_user_personas', {
-    p_user_id: user.id
-  })
-
-  const hasStaffAccess = personas?.some(
-    (p: any) => p.persona_type === 'staff' || p.persona_type === 'ceo'
-  ) || false
 
   if (!hasStaffAccess) {
     return (

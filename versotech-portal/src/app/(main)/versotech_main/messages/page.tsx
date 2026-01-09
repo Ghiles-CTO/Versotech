@@ -2,6 +2,7 @@ import { MessagingClient } from '@/components/messaging/staff/messaging-client'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { normalizeConversation } from '@/lib/messaging/supabase'
 import { AlertCircle } from 'lucide-react'
+import { checkStaffAccess } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
 
@@ -33,12 +34,12 @@ export default async function MessagesPage() {
   }
 
   // Check user personas for access control
+  const isStaff = await checkStaffAccess(user.id)
   const serviceSupabase = createServiceClient()
+
   const { data: personas } = await serviceSupabase.rpc('get_user_personas', {
     p_user_id: user.id
   })
-
-  const isStaff = personas?.some((p: any) => p.persona_type === 'staff' || p.persona_type === 'ceo') || false
   const isArranger = personas?.some((p: any) => p.persona_type === 'arranger') || false
   const isIntroducer = personas?.some((p: any) => p.persona_type === 'introducer') || false
 
