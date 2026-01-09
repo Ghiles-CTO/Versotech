@@ -245,8 +245,11 @@ export async function POST(request: NextRequest) {
       }, { status: 403 })
     }
 
-    // Create response with session data
-    const response = NextResponse.json({
+    // Session cookies are automatically set by Supabase's setAll() callback
+    // when signInWithPassword() succeeds. Do NOT manually set cookies here
+    // as it will override Supabase's correctly-formatted cookies with
+    // an incompatible format that the middleware can't parse.
+    return NextResponse.json({
       success: true,
       redirect: redirectPath,
       session: {
@@ -261,48 +264,6 @@ export async function POST(request: NextRequest) {
         displayName: resolvedProfile.display_name
       }
     })
-
-    // CRITICAL: Set auth cookies on the response so middleware can find the session
-    // @supabase/ssr uses base64 encoding and chunking for large sessions
-    const projectRef = process.env.NEXT_PUBLIC_SUPABASE_URL?.match(/https:\/\/([^.]+)/)?.[1]
-    if (projectRef) {
-      const cookieName = `sb-${projectRef}-auth-token`
-      const sessionData = {
-        access_token: data.session.access_token,
-        refresh_token: data.session.refresh_token,
-        expires_at: data.session.expires_at,
-        expires_in: data.session.expires_in,
-        token_type: data.session.token_type,
-        user: data.session.user
-      }
-
-      // Base64 encode the session (matching @supabase/ssr format)
-      const encoded = Buffer.from(JSON.stringify(sessionData)).toString('base64')
-
-      // Chunk size ~3500 bytes to stay under 4KB cookie limit with overhead
-      const CHUNK_SIZE = 3500
-      const cookieOptions = {
-        path: '/',
-        httpOnly: false,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax' as const,
-        maxAge: 60 * 60 * 24 * 7 // 7 days
-      }
-
-      if (encoded.length <= CHUNK_SIZE) {
-        // Small enough for single cookie
-        response.cookies.set(cookieName, encoded, cookieOptions)
-      } else {
-        // Chunk into multiple cookies
-        const chunks = Math.ceil(encoded.length / CHUNK_SIZE)
-        for (let i = 0; i < chunks; i++) {
-          const chunk = encoded.slice(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE)
-          response.cookies.set(`${cookieName}.${i}`, chunk, cookieOptions)
-        }
-      }
-    }
-
-    return response
   } catch (error) {
     console.error('Signin error:', error)
     return NextResponse.json({
