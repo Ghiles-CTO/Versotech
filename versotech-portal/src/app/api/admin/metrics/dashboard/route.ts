@@ -40,20 +40,22 @@ export async function GET() {
       workflowTrendResult,
       complianceForecastResult,
     ] = await Promise.all([
-      // Subscriptions for AUM and Revenue metrics
+      // Subscriptions for AUM and Revenue metrics (limit to prevent billing spikes)
       supabase
         .from('subscriptions')
         .select('id, commitment, funded_amount, current_nav, spread_fee_amount, subscription_fee_amount, management_fee_amount, status, subscription_date')
-        .in('status', ['active', 'committed', 'funded']),
+        .in('status', ['active', 'committed', 'funded'])
+        .limit(50000),
 
-      // Investor stats
+      // Investor stats (limit to prevent billing spikes)
       supabase
         .from('investors')
         .select('id, status, created_at, kyc_status, type, country', { count: 'exact' })
-        .eq('status', 'active'),
+        .eq('status', 'active')
+        .limit(50000),
 
-      // Deal pipeline
-      supabase.from('deals').select('id, status, target_amount, raised_amount'),
+      // Deal pipeline (limit to prevent billing spikes)
+      supabase.from('deals').select('id, status, target_amount, raised_amount').limit(5000),
 
       // Pending items
       Promise.all([
@@ -65,11 +67,12 @@ export async function GET() {
           .eq('kyc_status', 'pending'),
       ]),
 
-      // Fee events for revenue by month chart
+      // Fee events for revenue by month chart (limit to prevent billing spikes)
       supabase
         .from('fee_events')
         .select('id, fee_type, computed_amount, created_at')
-        .gte('created_at', new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString()),
+        .gte('created_at', new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString())
+        .limit(10000),
 
       // Subscription pipeline
       Promise.all([
@@ -85,8 +88,8 @@ export async function GET() {
           .gt('funded_amount', 0),
       ]),
 
-      // Investor distribution
-      supabase.from('investors').select('type, kyc_status, country').eq('status', 'active'),
+      // Investor distribution (limit to prevent billing spikes)
+      supabase.from('investors').select('type, kyc_status, country').eq('status', 'active').limit(50000),
 
       // Compliance alerts
       supabase
@@ -400,12 +403,13 @@ async function fetchSecurityMetrics(supabase: any) {
   const day24h = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString()
   const day7d = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString()
 
-  // Failed logins from audit_logs
+  // Failed logins from audit_logs (limit to prevent billing spikes during attacks)
   const { data: loginAttempts } = await supabase
     .from('audit_logs')
     .select('created_at')
     .eq('action', 'failed_login_attempt')
     .gte('created_at', day7d)
+    .limit(10000)
 
   const failed24h = loginAttempts?.filter(
     (l: any) => new Date(l.created_at) >= new Date(day24h)
@@ -447,12 +451,13 @@ async function fetchStaffActivity(supabase: any) {
 
   const staffIds = staffProfiles.map((p: any) => p.id)
 
-  // Get audit log counts grouped by staff
+  // Get audit log counts grouped by staff (limit to prevent billing spikes)
   const { data: activityLogs } = await supabase
     .from('audit_logs')
     .select('actor_id, action, created_at')
     .in('actor_id', staffIds)
     .gte('created_at', day7d)
+    .limit(50000)
 
   // Aggregate by staff
   const activityMap: Record<string, { count: number; lastAction: string | null }> = {}
@@ -492,6 +497,7 @@ async function fetchApprovalQueueHealth(supabase: any) {
     .from('approvals')
     .select('created_at')
     .eq('status', 'pending')
+    .limit(10000)
 
   let under_1_day = 0
   let days_1_to_3 = 0
@@ -528,6 +534,7 @@ async function fetchWorkflowTrend(supabase: any) {
     .select('status, created_at')
     .gte('created_at', day30)
     .order('created_at', { ascending: true })
+    .limit(50000)
 
   // Group by date
   const byDate: Record<string, { total: number; completed: number; failed: number }> = {}

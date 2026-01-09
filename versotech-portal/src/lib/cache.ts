@@ -51,7 +51,10 @@ class SimpleCache {
 export const cache = new SimpleCache()
 
 // Clean up expired cache entries every 5 minutes
-if (typeof window !== 'undefined') {
+// Use singleton flag to prevent multiple intervals in HMR scenarios
+let cleanupIntervalStarted = false
+if (typeof window !== 'undefined' && !cleanupIntervalStarted) {
+  cleanupIntervalStarted = true
   setInterval(() => {
     cache.cleanup()
   }, 5 * 60 * 1000)

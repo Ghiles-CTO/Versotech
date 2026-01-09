@@ -45,6 +45,7 @@ export async function GET(req: NextRequest) {
             'id, legal_name, email, type, status, kyc_status, kyc_expiry_date, country, created_at'
           )
           .order('created_at', { ascending: false })
+          .limit(50000) // Prevent billing spikes on large datasets
 
         if (kycStatus && kycStatus !== 'all') {
           query = query.eq('kyc_status', kycStatus)
@@ -72,6 +73,7 @@ export async function GET(req: NextRequest) {
           `
           )
           .order('subscription_date', { ascending: false })
+          .limit(50000) // Prevent billing spikes on large datasets
 
         if (from) {
           query = query.gte('subscription_date', from)
@@ -102,6 +104,7 @@ export async function GET(req: NextRequest) {
             'id, name, status, target_amount, minimum_investment, target_close_date, created_at'
           )
           .order('created_at', { ascending: false })
+          .limit(5000) // Prevent billing spikes on large datasets
 
         data = deals || []
         filename = 'deals-export'
@@ -124,6 +127,7 @@ export async function GET(req: NextRequest) {
           `
           )
           .order('created_at', { ascending: false })
+          .limit(50000) // Prevent billing spikes on large datasets
 
         if (from) {
           query = query.gte('created_at', from)
