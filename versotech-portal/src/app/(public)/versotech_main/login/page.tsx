@@ -29,6 +29,9 @@ import Image from 'next/image'
  * - Google OAuth (security risk, bypass invite flow)
  * - Self-signup (must be invited by admin)
  */
+// Version indicator for debugging - remove after fixing login issue
+const LOGIN_VERSION = 'v2.1-debug'
+
 function UnifiedLoginContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -37,6 +40,11 @@ function UnifiedLoginContent() {
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [message, setMessage] = useState<{ type: 'error' | 'success' | 'info', text: string } | null>(null)
+
+  // Log version on mount
+  useEffect(() => {
+    console.log(`[login] Login page loaded - ${LOGIN_VERSION}`)
+  }, [])
 
   useEffect(() => {
     const error = searchParams.get('error')
@@ -224,6 +232,8 @@ function UnifiedLoginContent() {
               <span>Bank-Level 256-bit Encryption</span>
            </div>
            <p className="text-[10px] text-zinc-700 font-mono">VERSO PLATFORM // UNIFIED ACCESS</p>
+           {/* Debug version - remove after fixing login issue */}
+           <p className="text-[8px] text-zinc-800 font-mono">{LOGIN_VERSION}</p>
         </div>
 
       </div>
