@@ -137,9 +137,9 @@ function AcceptInvitationContent() {
       setAccepted(true)
       setAcceptResult(data)
 
-      // Redirect after 3 seconds
+      // Redirect after 3 seconds - use window.location.href for reliable navigation
       setTimeout(() => {
-        router.push(data.redirect_url || '/versotech_main/dashboard')
+        window.location.href = data.redirect_url || '/versotech_main/dashboard'
       }, 3000)
     } catch (err) {
       setError('Failed to accept invitation')
@@ -199,14 +199,14 @@ function AcceptInvitationContent() {
             redirect_url: data.redirect_url
           })
 
-          // Redirect after 3 seconds
+          // Redirect after 3 seconds - use window.location.href for reliable navigation
           setTimeout(() => {
-            router.push(data.redirect_url || '/versotech_main/dashboard')
+            window.location.href = data.redirect_url || '/versotech_main/dashboard'
           }, 3000)
         }
       } catch (signInErr) {
         // Account created but sign-in failed - redirect to login
-        router.push(`/versotech_main/login?message=account_created&redirect=${encodeURIComponent(`/invitation/accept?token=${token}`)}`)
+        window.location.href = `/versotech_main/login?message=account_created&redirect=${encodeURIComponent(`/invitation/accept?token=${token}`)}`
       }
     } catch (err) {
       setError('Failed to create account. Please try again.')

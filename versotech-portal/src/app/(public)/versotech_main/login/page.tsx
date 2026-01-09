@@ -78,11 +78,9 @@ function UnifiedLoginContent() {
         const redirectUrl = redirectParam && redirectParam.startsWith('/')
           ? decodeURIComponent(redirectParam)
           : '/versotech_main/dashboard'
-        if ((result.user as any)?.demo) {
-          window.location.href = redirectUrl
-        } else {
-          router.replace(redirectUrl)
-        }
+        // CRITICAL: Use window.location.href for reliable redirect on all browsers/mobile
+        // router.replace() can fail silently on some browsers (especially mobile Safari)
+        window.location.href = redirectUrl
       }
     } catch (error) {
       if (error instanceof AuthError) setMessage({ type: 'error', text: error.message })

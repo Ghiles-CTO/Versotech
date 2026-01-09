@@ -36,7 +36,6 @@ export async function middleware(request: NextRequest) {
       pathname.startsWith('/_next/image') ||
       pathname.startsWith('/favicon.ico') ||
       pathname.startsWith('/api/') ||
-      pathname.startsWith('/invite/') || // Deal invite links - handles auth internally
       pathname === '/auth/callback' ||
       pathname.match(/\.(svg|png|jpg|jpeg|gif|webp)$/)
     ) {
@@ -278,15 +277,16 @@ export async function middleware(request: NextRequest) {
         const response = NextResponse.redirect(cleanUrl)
 
         // Delete Supabase auth cookies using correct names (project-specific)
-        response.cookies.delete('sb-ipguxdssecfexudnvtia-auth-token')
-        response.cookies.delete('sb-ipguxdssecfexudnvtia-auth-token-code-verifier')
+        // NEW production database: kagzryotbbnusdcyvqei
+        response.cookies.delete('sb-kagzryotbbnusdcyvqei-auth-token')
+        response.cookies.delete('sb-kagzryotbbnusdcyvqei-auth-token-code-verifier')
 
         // Also set to empty as fallback
-        response.cookies.set('sb-ipguxdssecfexudnvtia-auth-token', '', {
+        response.cookies.set('sb-kagzryotbbnusdcyvqei-auth-token', '', {
           maxAge: 0,
           path: '/'
         })
-        response.cookies.set('sb-ipguxdssecfexudnvtia-auth-token-code-verifier', '', {
+        response.cookies.set('sb-kagzryotbbnusdcyvqei-auth-token-code-verifier', '', {
           maxAge: 0,
           path: '/'
         })
@@ -389,10 +389,11 @@ export async function middleware(request: NextRequest) {
         const response = NextResponse.redirect(
           new URL('/versotech_main/login?error=session_expired', request.url)
         )
-        response.cookies.delete('sb-ipguxdssecfexudnvtia-auth-token')
-        response.cookies.delete('sb-ipguxdssecfexudnvtia-auth-token-code-verifier')
-        response.cookies.set('sb-ipguxdssecfexudnvtia-auth-token', '', { maxAge: 0, path: '/' })
-        response.cookies.set('sb-ipguxdssecfexudnvtia-auth-token-code-verifier', '', { maxAge: 0, path: '/' })
+        // NEW production database: kagzryotbbnusdcyvqei
+        response.cookies.delete('sb-kagzryotbbnusdcyvqei-auth-token')
+        response.cookies.delete('sb-kagzryotbbnusdcyvqei-auth-token-code-verifier')
+        response.cookies.set('sb-kagzryotbbnusdcyvqei-auth-token', '', { maxAge: 0, path: '/' })
+        response.cookies.set('sb-kagzryotbbnusdcyvqei-auth-token-code-verifier', '', { maxAge: 0, path: '/' })
         return response
       }
     }
@@ -404,10 +405,11 @@ export async function middleware(request: NextRequest) {
         })
 
         if (isLoginRoute) {
-          response.cookies.delete('sb-ipguxdssecfexudnvtia-auth-token')
-          response.cookies.delete('sb-ipguxdssecfexudnvtia-auth-token-code-verifier')
-          response.cookies.set('sb-ipguxdssecfexudnvtia-auth-token', '', { maxAge: 0, path: '/' })
-          response.cookies.set('sb-ipguxdssecfexudnvtia-auth-token-code-verifier', '', { maxAge: 0, path: '/' })
+          // NEW production database: kagzryotbbnusdcyvqei
+          response.cookies.delete('sb-kagzryotbbnusdcyvqei-auth-token')
+          response.cookies.delete('sb-kagzryotbbnusdcyvqei-auth-token-code-verifier')
+          response.cookies.set('sb-kagzryotbbnusdcyvqei-auth-token', '', { maxAge: 0, path: '/' })
+          response.cookies.set('sb-kagzryotbbnusdcyvqei-auth-token-code-verifier', '', { maxAge: 0, path: '/' })
         }
 
         return response
@@ -420,10 +422,11 @@ export async function middleware(request: NextRequest) {
 
       const response = NextResponse.redirect(redirectUrl)
 
-      response.cookies.delete('sb-ipguxdssecfexudnvtia-auth-token')
-      response.cookies.delete('sb-ipguxdssecfexudnvtia-auth-token-code-verifier')
-      response.cookies.set('sb-ipguxdssecfexudnvtia-auth-token', '', { maxAge: 0, path: '/' })
-      response.cookies.set('sb-ipguxdssecfexudnvtia-auth-token-code-verifier', '', { maxAge: 0, path: '/' })
+      // NEW production database: kagzryotbbnusdcyvqei
+      response.cookies.delete('sb-kagzryotbbnusdcyvqei-auth-token')
+      response.cookies.delete('sb-kagzryotbbnusdcyvqei-auth-token-code-verifier')
+      response.cookies.set('sb-kagzryotbbnusdcyvqei-auth-token', '', { maxAge: 0, path: '/' })
+      response.cookies.set('sb-kagzryotbbnusdcyvqei-auth-token-code-verifier', '', { maxAge: 0, path: '/' })
 
       return response
     }

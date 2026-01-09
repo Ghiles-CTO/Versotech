@@ -262,15 +262,22 @@ export async function POST(
       // Staff: Update profile with staff role and create permissions
       const metadata = (invitation.metadata as Record<string, any>) || {}
 
+      // Build update object - only include is_super_admin if explicitly set in metadata
+      const profileUpdate: Record<string, any> = {
+        role: invitation.role, // staff_admin, staff_ops, staff_rm, ceo
+        title: metadata.title || invitation.role,
+        updated_at: new Date().toISOString()
+      }
+
+      // Only set is_super_admin if explicitly provided in metadata
+      if (typeof metadata.is_super_admin === 'boolean') {
+        profileUpdate.is_super_admin = metadata.is_super_admin
+      }
+
       // Update profile with staff role and metadata
       const { error: profileUpdateError } = await serviceSupabase
         .from('profiles')
-        .update({
-          role: invitation.role, // staff_admin, staff_ops, staff_rm, ceo
-          title: metadata.title || invitation.role,
-          is_super_admin: metadata.is_super_admin || false,
-          updated_at: new Date().toISOString()
-        })
+        .update(profileUpdate)
         .eq('id', user.id)
 
       if (profileUpdateError) {
