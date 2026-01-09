@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createServerClient } from '@supabase/ssr'
 
 type StaffRole = 'staff_admin' | 'staff_ops' | 'staff_rm' | 'ceo'
 
@@ -88,6 +88,10 @@ const resolveDefaultRole = (
 }
 
 export async function POST(request: NextRequest) {
+  // Create a response that we'll set cookies on
+  // This is required because cookies().set() doesn't reliably work in Route Handlers
+  let response = NextResponse.json({ success: false })
+
   try {
     const body = await request.json()
     const email = typeof body.email === 'string' ? body.email : ''
@@ -100,7 +104,25 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
 
-    const supabase = await createClient()
+    // Create Supabase client that sets cookies DIRECTLY on the response
+    // This pattern is required for Route Handlers (unlike Server Components)
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return request.cookies.getAll()
+          },
+          setAll(cookiesToSet) {
+            // Set cookies on the response object
+            cookiesToSet.forEach(({ name, value, options }) => {
+              response.cookies.set(name, value, options)
+            })
+          },
+        },
+      }
+    )
 
     // Clear any existing session first to prevent conflicts
     // This is critical for fixing "Invalid Refresh Token" errors on re-login
@@ -245,11 +267,9 @@ export async function POST(request: NextRequest) {
       }, { status: 403 })
     }
 
-    // Session cookies are automatically set by Supabase's setAll() callback
-    // when signInWithPassword() succeeds. Do NOT manually set cookies here
-    // as it will override Supabase's correctly-formatted cookies with
-    // an incompatible format that the middleware can't parse.
-    return NextResponse.json({
+    // Create the success response with all the data
+    // Cookies have already been set on `response` by Supabase's setAll() callback
+    const successData = {
       success: true,
       redirect: redirectPath,
       session: {
@@ -263,7 +283,17 @@ export async function POST(request: NextRequest) {
         role: resolvedProfile.role,
         displayName: resolvedProfile.display_name
       }
+    }
+
+    // Create new response with success data but PRESERVE the cookies from setAll
+    const successResponse = NextResponse.json(successData)
+
+    // Copy all cookies from the response that setAll populated
+    response.cookies.getAll().forEach(cookie => {
+      successResponse.cookies.set(cookie.name, cookie.value)
     })
+
+    return successResponse
   } catch (error) {
     console.error('Signin error:', error)
     return NextResponse.json({
