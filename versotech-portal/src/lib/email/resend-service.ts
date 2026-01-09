@@ -378,20 +378,45 @@ export async function sendInvitationEmail(params: {
   expiresAt: string
 }): Promise<EmailResult> {
   const isInvestor = params.entityType === 'investor'
+  const isStaff = params.entityType === 'staff' || ['staff_admin', 'staff_ops', 'staff_rm', 'ceo'].includes(params.role)
 
-  // Investor-specific content - simple and clean
+  // Role display names
+  const roleDisplayNames: Record<string, string> = {
+    staff_admin: 'Staff Administrator',
+    staff_ops: 'Operations Staff',
+    staff_rm: 'Relationship Manager',
+    ceo: 'Chief Executive Officer',
+    member: 'Member',
+    admin: 'Administrator',
+    owner: 'Owner',
+    signatory: 'Authorized Signatory',
+  }
+
+  const displayRole = roleDisplayNames[params.role] || params.role
+
+  // Investor-specific content
   const investorContent = `
-    <p>You have been invited to join the <strong>VERSO Investment Platform</strong>.</p>
+    <p>You have been invited to join <strong>${params.entityName}</strong> on the VERSO Investment Platform.</p>
     <p>This secure platform provides you with comprehensive access to your investment portfolio, performance analytics, and exclusive deal opportunities.</p>
     <p>Click the button below to set up your account and access the platform.</p>
   `
 
-  // Non-investor (staff, lawyer, arranger, etc.) content - simple and clean
+  // Staff-specific content
+  const staffContent = `
+    <p>You have been invited to join <strong>VERSO</strong> as a <strong>${displayRole}</strong>.</p>
+    <p>As a member of the VERSO team, you'll have access to investor management, deal operations, and administrative tools.</p>
+    <p>Click the button below to set up your password and access your dashboard.</p>
+  `
+
+  // Other professionals (lawyer, arranger, partner, etc.)
   const professionalContent = `
-    <p>You have been invited to join the <strong>VERSO Platform</strong>.</p>
-    <p>This platform provides access to deal management, document processing, and collaboration tools.</p>
+    <p>You have been invited to join <strong>${params.entityName}</strong> on the VERSO Platform.</p>
+    <p>This platform provides access to deal management, document processing, and collaboration tools for your organization.</p>
     <p>Click the button below to set up your account and get started.</p>
   `
+
+  // Select the appropriate content
+  const emailContent = isInvestor ? investorContent : (isStaff ? staffContent : professionalContent)
 
   const html = `
 <!DOCTYPE html>
@@ -475,7 +500,7 @@ export async function sendInvitationEmail(params: {
     </div>
 
     <div class="content">
-      ${isInvestor ? investorContent : professionalContent}
+      ${emailContent}
     </div>
 
     <div class="button-container">
@@ -490,9 +515,16 @@ export async function sendInvitationEmail(params: {
 </html>
   `
 
+  // Subject line varies by type
+  const subject = isStaff
+    ? `Welcome to VERSO - You've been invited as ${displayRole}`
+    : isInvestor
+      ? `You've been invited to join ${params.entityName} on VERSO`
+      : `You've been invited to join ${params.entityName} on VERSO`
+
   return sendEmail({
     to: params.email,
-    subject: 'You have been invited to join VERSO',
+    subject,
     html,
   })
 }
