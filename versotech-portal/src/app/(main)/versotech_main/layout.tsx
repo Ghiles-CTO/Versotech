@@ -30,12 +30,30 @@ export default async function UnifiedPortalLayout({ children }: LayoutProps) {
     console.error('[UnifiedPortalLayout] Error fetching personas:', personasError)
   }
 
-  const userPersonas: Persona[] = (personas || []) as Persona[]
+  let userPersonas: Persona[] = (personas || []) as Persona[]
 
-  // If user has no personas, redirect to unified login with error
+  // Staff roles don't have traditional persona entries - create synthetic persona
+  // This matches the fallback logic in middleware.ts
   if (userPersonas.length === 0) {
-    console.warn('[UnifiedPortalLayout] User has no personas:', profile.email)
-    redirect('/versotech_main/login?error=no_personas')
+    const staffRoles = ['staff_admin', 'staff_ops', 'staff_rm', 'ceo']
+    if (staffRoles.includes(profile.role)) {
+      // Create synthetic staff persona for internal team members
+      userPersonas = [{
+        persona_type: 'staff',
+        entity_id: 'internal',
+        entity_name: 'VERSO Staff',
+        entity_logo_url: null,
+        role_in_entity: profile.role,
+        is_primary: true,
+        can_sign: profile.role === 'ceo' || profile.role === 'staff_admin',
+        can_execute_for_clients: false,
+      }]
+      console.log('[UnifiedPortalLayout] Created synthetic staff persona for:', profile.email, profile.role)
+    } else {
+      // Non-staff user with no personas - redirect to login
+      console.warn('[UnifiedPortalLayout] User has no personas:', profile.email)
+      redirect('/versotech_main/login?error=no_personas')
+    }
   }
 
   return (
