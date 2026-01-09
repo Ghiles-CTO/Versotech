@@ -14,6 +14,14 @@ const inviteStaffSchema = z.object({
   is_super_admin: z.boolean().optional().default(false),
 })
 
+// Role display names for email
+const ROLE_DISPLAY_NAMES: Record<string, string> = {
+  staff_admin: 'Staff Administrator',
+  staff_ops: 'Operations Staff',
+  staff_rm: 'Relationship Manager',
+  ceo: 'Chief Executive Officer',
+}
+
 export async function POST(request: NextRequest) {
   try {
     // Use regular client for authentication (reads cookies)
@@ -45,106 +53,89 @@ export async function POST(request: NextRequest) {
       .from('profiles')
       .select('id')
       .eq('email', normalizedEmail)
-      .single()
+      .maybeSingle()
 
     if (existingProfile) {
       return NextResponse.json({ error: 'Email already registered' }, { status: 400 })
     }
 
-    // Generate invite link via Supabase Auth (email sent via Resend)
-    const { data: authData, error: authError } = await supabase.auth.admin.generateLink({
-      type: 'invite',
-      email: normalizedEmail,
-      options: {
-        data: {
-          display_name: validatedData.display_name,
-          role: validatedData.role,
-          title: validatedData.title,
-        },
-        // IMPORTANT: Must redirect to /auth/callback for PKCE code exchange
-        // The callback will then redirect to staff portal based on user role
-        redirectTo: `${getAppUrl()}/auth/callback?portal=staff`
-      }
-    })
+    // Check for existing pending invitation
+    const { data: existingInvitation } = await supabase
+      .from('member_invitations')
+      .select('id, status')
+      .eq('entity_type', 'staff')
+      .eq('email', normalizedEmail)
+      .in('status', ['pending', 'pending_approval'])
+      .maybeSingle()
 
-    const inviteLink = authData?.properties?.action_link
-
-    if (authError || !authData?.user || !inviteLink) {
-      console.error('Auth invitation error:', authError)
-      return NextResponse.json({ error: 'Failed to invite user' }, { status: 500 })
+    if (existingInvitation) {
+      return NextResponse.json({
+        error: 'A pending invitation already exists for this email'
+      }, { status: 400 })
     }
 
-    // Create profile (password_set = false until they set a password)
-    // Note: Supabase might create the user in auth.users, but we still need to ensure the profile exists in our public.profiles table
-    // The trigger might handle this, but to be safe and ensure all fields are set correctly immediately:
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .upsert({
-        id: authData.user.id,
-        email: normalizedEmail,
-        role: validatedData.role,
-        display_name: validatedData.display_name,
-        title: validatedData.title,
-        password_set: false,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      })
-
-    if (profileError) {
-      console.error('Profile creation error:', profileError)
-      // We don't delete the auth user here because the invite was already sent, 
-      // but we should log this critical error.
-      return NextResponse.json({ error: 'User invited but profile creation failed' }, { status: 500 })
-    }
-
-    // Grant default permissions based on role
-    const defaultPermissions: Record<string, string[]> = {
-      staff_admin: ['manage_investors', 'manage_deals', 'trigger_workflows', 'view_financials'],
-      staff_ops: ['manage_investors', 'trigger_workflows'],
-      staff_rm: ['manage_investors', 'view_financials'],
-      ceo: ['manage_investors', 'manage_deals', 'trigger_workflows', 'view_financials', 'super_admin'],
-    }
-
-    const permissions = [...defaultPermissions[validatedData.role]]
-
-    // Add super_admin permission if requested
-    if (validatedData.is_super_admin) {
-      permissions.push('super_admin')
-    }
-
-    if (permissions.length > 0) {
-      await supabase
-        .from('staff_permissions')
-        .insert(
-          permissions.map(permission => ({
-            user_id: authData.user.id,
-            permission,
-            granted_by: user.id,
-          }))
-        )
-    }
-
+    // Get inviter info
     const { data: inviterProfile } = await supabase
       .from('profiles')
       .select('display_name, email')
       .eq('id', user.id)
       .single()
 
-    const inviterName = inviterProfile?.display_name || inviterProfile?.email || 'VERSO Holdings'
+    const inviterName = inviterProfile?.display_name || inviterProfile?.email || 'VERSO'
 
+    // Create member_invitation record
+    // Staff invitations are auto-approved (CEO is doing the inviting)
+    const { data: invitation, error: invitationError } = await supabase
+      .from('member_invitations')
+      .insert({
+        entity_type: 'staff',
+        entity_id: null, // Staff don't have a specific entity - they're internal team
+        entity_name: 'VERSO',
+        email: normalizedEmail,
+        role: validatedData.role,
+        is_signatory: false,
+        invited_by: user.id,
+        invited_by_name: inviterName,
+        status: 'pending', // Auto-approved since CEO/admin is inviting
+        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        // Store extra data in metadata for staff-specific info
+        metadata: {
+          display_name: validatedData.display_name,
+          title: validatedData.title || ROLE_DISPLAY_NAMES[validatedData.role],
+          is_super_admin: validatedData.is_super_admin,
+          permissions: getDefaultPermissions(validatedData.role, validatedData.is_super_admin)
+        }
+      })
+      .select()
+      .single()
+
+    if (invitationError || !invitation) {
+      console.error('Invitation creation error:', invitationError)
+      return NextResponse.json({ error: 'Failed to create invitation' }, { status: 500 })
+    }
+
+    // Build accept URL using invitation token
+    const acceptUrl = `${getAppUrl()}/invitation/accept?token=${invitation.invitation_token}`
+
+    // Send invitation email
     const emailResult = await sendInvitationEmail({
       email: normalizedEmail,
       inviteeName: validatedData.display_name,
-      entityName: 'VERSO Holdings',
+      entityName: 'VERSO',
       entityType: 'staff',
       role: validatedData.role,
       inviterName,
-      acceptUrl: inviteLink,
-      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+      acceptUrl,
+      expiresAt: invitation.expires_at
     })
 
     if (!emailResult.success) {
       console.error('Failed to send staff invitation email:', emailResult.error)
+      // Delete the invitation since email failed
+      await supabase.from('member_invitations').delete().eq('id', invitation.id)
+      return NextResponse.json({
+        error: 'Failed to send invitation email. Please try again.'
+      }, { status: 500 })
     }
 
     // Log the action in audit_logs
@@ -154,9 +145,10 @@ export async function POST(request: NextRequest) {
         event_type: 'authorization',
         actor_id: user.id,
         action: 'staff_invited',
-        entity_type: 'profiles',
-        entity_id: authData.user.id,
+        entity_type: 'staff',
+        entity_id: invitation.id,
         action_details: {
+          invitation_id: invitation.id,
           email: normalizedEmail,
           role: validatedData.role,
           display_name: validatedData.display_name,
@@ -169,9 +161,10 @@ export async function POST(request: NextRequest) {
       success: true,
       message: 'Staff member invited successfully',
       data: {
-        user_id: authData.user.id,
+        invitation_id: invitation.id,
         email: normalizedEmail,
         role: validatedData.role,
+        accept_url: acceptUrl,
       },
     })
   } catch (error) {
@@ -181,4 +174,22 @@ export async function POST(request: NextRequest) {
     }
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
+}
+
+// Helper to get default permissions for a role
+function getDefaultPermissions(role: string, isSuperAdmin?: boolean): string[] {
+  const defaultPermissions: Record<string, string[]> = {
+    staff_admin: ['manage_investors', 'manage_deals', 'trigger_workflows', 'view_financials'],
+    staff_ops: ['manage_investors', 'trigger_workflows'],
+    staff_rm: ['manage_investors', 'view_financials'],
+    ceo: ['manage_investors', 'manage_deals', 'trigger_workflows', 'view_financials', 'super_admin'],
+  }
+
+  const permissions = [...(defaultPermissions[role] || [])]
+
+  if (isSuperAdmin && !permissions.includes('super_admin')) {
+    permissions.push('super_admin')
+  }
+
+  return permissions
 }

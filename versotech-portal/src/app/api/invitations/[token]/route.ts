@@ -8,7 +8,9 @@ const ENTITY_TABLES: Record<string, string> = {
   introducer: 'introducers',
   commercial_partner: 'commercial_partners',
   lawyer: 'lawyers',
-  arranger: 'arranger_entities'
+  arranger: 'arranger_entities',
+  ceo: 'ceo_entity',
+  staff: '' // Staff don't have an entity table - they're internal team
 }
 
 // User-entity junction table mapping
@@ -18,17 +20,23 @@ const USER_TABLES: Record<string, string> = {
   introducer: 'introducer_users',
   commercial_partner: 'commercial_partner_users',
   lawyer: 'lawyer_users',
-  arranger: 'arranger_users'
+  arranger: 'arranger_users',
+  ceo: 'ceo_users',
+  staff: '' // Staff don't have a junction table - they're in profiles with role
 }
 
 // Entity ID column names in user tables
+// Note: CEO uses singleton pattern - no entity_id column
+// Note: Staff don't have a junction table
 const ENTITY_ID_COLUMNS: Record<string, string> = {
   partner: 'partner_id',
   investor: 'investor_id',
   introducer: 'introducer_id',
   commercial_partner: 'commercial_partner_id',
   lawyer: 'lawyer_id',
-  arranger: 'arranger_id'
+  arranger: 'arranger_id',
+  ceo: '', // CEO uses singleton pattern
+  staff: '' // Staff don't have entity_id - they're internal team
 }
 
 /**
@@ -197,12 +205,38 @@ export async function POST(
     const userTable = USER_TABLES[invitation.entity_type]
     const entityIdColumn = ENTITY_ID_COLUMNS[invitation.entity_type]
 
-    const { data: existingMembership } = await serviceSupabase
-      .from(userTable)
-      .select('user_id')
-      .eq('user_id', user.id)
-      .eq(entityIdColumn, invitation.entity_id)
-      .maybeSingle()
+    let existingMembership = null
+
+    if (invitation.entity_type === 'staff') {
+      // Staff: Check if user already has a staff role
+      const { data } = await serviceSupabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .maybeSingle()
+
+      // Consider existing if they already have a staff role
+      if (data?.role && ['staff_admin', 'staff_ops', 'staff_rm', 'ceo'].includes(data.role)) {
+        existingMembership = data
+      }
+    } else if (invitation.entity_type === 'ceo') {
+      // CEO uses singleton pattern - just check by user_id
+      const { data } = await serviceSupabase
+        .from(userTable)
+        .select('user_id')
+        .eq('user_id', user.id)
+        .maybeSingle()
+      existingMembership = data
+    } else {
+      // Standard entity types check by user_id and entity_id
+      const { data } = await serviceSupabase
+        .from(userTable)
+        .select('user_id')
+        .eq('user_id', user.id)
+        .eq(entityIdColumn, invitation.entity_id)
+        .maybeSingle()
+      existingMembership = data
+    }
 
     if (existingMembership) {
       // Update invitation status
@@ -218,52 +252,107 @@ export async function POST(
       return NextResponse.json({
         success: true,
         message: 'You are already a member of this entity',
-        already_member: true
+        already_member: true,
+        redirect_url: '/versotech_main/dashboard'
       })
     }
 
-    // Create the user-entity link
-    // Since this invitation was CEO-approved before the email was sent,
-    // the new member is automatically CEO-approved
-    const insertData: Record<string, any> = {
-      user_id: user.id,
-      [entityIdColumn]: invitation.entity_id,
-      role: invitation.role,
-      is_primary: false,
-      created_by: invitation.invited_by,
-      // CEO pre-approved this member via the invitation approval workflow
-      ceo_approval_status: 'approved',
-      ceo_approved_at: new Date().toISOString()
-    }
+    // Handle staff entity type separately
+    if (invitation.entity_type === 'staff') {
+      // Staff: Update profile with staff role and create permissions
+      const metadata = (invitation.metadata as Record<string, any>) || {}
 
-    // Add signatory fields if applicable
-    if (invitation.is_signatory) {
-      insertData.can_sign = true
-    }
-
-    const { error: insertError } = await serviceSupabase
-      .from(userTable)
-      .insert(insertData)
-
-    if (insertError) {
-      console.error('Error creating membership:', insertError)
-      return NextResponse.json({ error: 'Failed to accept invitation' }, { status: 500 })
-    }
-
-    // Update profile role if needed (for persona switching)
-    // Check if user already has multiple personas
-    const { data: existingProfile } = await serviceSupabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
-
-    // If user is just 'investor', upgrade to 'multi_persona'
-    if (existingProfile?.role === 'investor') {
-      await serviceSupabase
+      // Update profile with staff role and metadata
+      const { error: profileUpdateError } = await serviceSupabase
         .from('profiles')
-        .update({ role: 'multi_persona' })
+        .update({
+          role: invitation.role, // staff_admin, staff_ops, staff_rm, ceo
+          title: metadata.title || invitation.role,
+          is_super_admin: metadata.is_super_admin || false,
+          updated_at: new Date().toISOString()
+        })
         .eq('id', user.id)
+
+      if (profileUpdateError) {
+        console.error('Error updating staff profile:', profileUpdateError)
+        return NextResponse.json({ error: 'Failed to update profile' }, { status: 500 })
+      }
+
+      // Create staff permissions from metadata
+      const permissions = (metadata.permissions as string[]) || []
+      if (permissions.length > 0) {
+        const permissionRecords = permissions.map((permission: string) => ({
+          user_id: user.id,
+          permission: permission,
+          granted_by: invitation.invited_by,
+          granted_at: new Date().toISOString()
+        }))
+
+        const { error: permError } = await serviceSupabase
+          .from('staff_permissions')
+          .insert(permissionRecords)
+
+        if (permError) {
+          console.error('Error creating staff permissions:', permError)
+          // Continue - staff can still be granted permissions manually
+        }
+      }
+    } else {
+      // Non-staff entity types - create junction table records
+      let insertData: Record<string, any>
+
+      if (invitation.entity_type === 'ceo') {
+        // CEO uses singleton pattern - no entity_id column
+        insertData = {
+          user_id: user.id,
+          role: invitation.role,
+          is_primary: false,
+          can_sign: invitation.is_signatory || false,
+          title: invitation.role === 'admin' ? 'Administrator' : invitation.role
+        }
+      } else {
+        // Standard entity types with entity_id and CEO approval
+        insertData = {
+          user_id: user.id,
+          [entityIdColumn]: invitation.entity_id,
+          role: invitation.role,
+          is_primary: false,
+          created_by: invitation.invited_by,
+          // CEO pre-approved this member via the invitation approval workflow
+          ceo_approval_status: 'approved',
+          ceo_approved_at: new Date().toISOString()
+        }
+
+        // Add signatory fields if applicable
+        if (invitation.is_signatory) {
+          insertData.can_sign = true
+        }
+      }
+
+      const { error: insertError } = await serviceSupabase
+        .from(userTable)
+        .insert(insertData)
+
+      if (insertError) {
+        console.error('Error creating membership:', insertError)
+        return NextResponse.json({ error: 'Failed to accept invitation' }, { status: 500 })
+      }
+
+      // Update profile role if needed (for persona switching)
+      // Check if user already has multiple personas
+      const { data: existingProfile } = await serviceSupabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single()
+
+      // If user is just 'investor', upgrade to 'multi_persona'
+      if (existingProfile?.role === 'investor') {
+        await serviceSupabase
+          .from('profiles')
+          .update({ role: 'multi_persona' })
+          .eq('id', user.id)
+      }
     }
 
     // Update invitation status
@@ -283,7 +372,9 @@ export async function POST(
       introducer: '/versotech_main/introducer-profile',
       commercial_partner: '/versotech_main/commercial-partner-profile',
       lawyer: '/versotech_main/lawyer-profile',
-      arranger: '/versotech_main/arranger-profile'
+      arranger: '/versotech_main/arranger-profile',
+      ceo: '/versotech_main/ceo-profile',
+      staff: '/versotech_main/dashboard' // Staff go to main dashboard
     }
 
     return NextResponse.json({

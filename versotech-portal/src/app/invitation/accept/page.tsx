@@ -51,7 +51,9 @@ const ENTITY_TYPE_LABELS: Record<string, string> = {
   introducer: 'Introducer',
   commercial_partner: 'Commercial Partner',
   lawyer: 'Law Firm',
-  arranger: 'Arranger'
+  arranger: 'Arranger',
+  ceo: 'CEO Office',
+  staff: 'VERSO Staff'
 }
 
 function AcceptInvitationContent() {
