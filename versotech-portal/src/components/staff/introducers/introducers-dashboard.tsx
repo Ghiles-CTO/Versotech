@@ -157,7 +157,7 @@ export function IntroducersDashboard({ summary, introducers, recentIntroductions
             Manage introducer relationships, commissions, and performance tracking
           </p>
         </div>
-{showAddButtons && (
+        {showAddButtons && (
           <div className="flex items-center gap-3">
             <Button variant="outline" onClick={() => setAddIntroductionOpen(true)}>
               <UserPlus className="h-4 w-4 mr-2" />
