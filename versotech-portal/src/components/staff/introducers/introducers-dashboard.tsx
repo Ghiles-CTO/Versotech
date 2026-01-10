@@ -94,6 +94,7 @@ export type IntroducersDashboardProps = {
   }>
   deals?: Array<{ id: string; name: string }>
   isDemo?: boolean
+  showAddButtons?: boolean
 }
 
 const statusFilters = [
@@ -103,7 +104,7 @@ const statusFilters = [
   { label: 'Suspended', value: 'suspended' },
 ]
 
-export function IntroducersDashboard({ summary, introducers, recentIntroductions, deals = [], isDemo = false }: IntroducersDashboardProps) {
+export function IntroducersDashboard({ summary, introducers, recentIntroductions, deals = [], isDemo = false, showAddButtons = true }: IntroducersDashboardProps) {
   const router = useRouter()
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
@@ -156,16 +157,18 @@ export function IntroducersDashboard({ summary, introducers, recentIntroductions
             Manage introducer relationships, commissions, and performance tracking
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <Button variant="outline" onClick={() => setAddIntroductionOpen(true)}>
-            <UserPlus className="h-4 w-4 mr-2" />
-            Record Introduction
-          </Button>
-          <Button onClick={() => setOpen(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Add Introducer
-          </Button>
-        </div>
+{showAddButtons && (
+          <div className="flex items-center gap-3">
+            <Button variant="outline" onClick={() => setAddIntroductionOpen(true)}>
+              <UserPlus className="h-4 w-4 mr-2" />
+              Record Introduction
+            </Button>
+            <Button onClick={() => setOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Introducer
+            </Button>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">

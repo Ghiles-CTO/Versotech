@@ -1,6 +1,5 @@
 import { IntroducersDashboard, type IntroducersDashboardProps } from '@/components/staff/introducers/introducers-dashboard'
 import { AddIntroducerProvider } from '@/components/staff/introducers/add-introducer-context'
-import { AddIntroducerDialog } from '@/components/staff/introducers/add-introducer-dialog'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { AlertCircle } from 'lucide-react'
 import { checkStaffAccess } from '@/lib/auth'
@@ -276,8 +275,8 @@ export default async function IntroducersPage() {
           recentIntroductions={recentIntroductions}
           deals={deals}
           isDemo={false}
+          showAddButtons={false}
         />
-        <AddIntroducerDialog />
       </AddIntroducerProvider>
     </div>
   )
