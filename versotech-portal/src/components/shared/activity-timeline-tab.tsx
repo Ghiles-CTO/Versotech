@@ -65,7 +65,8 @@ const entityTypeMap: Record<EntityType, string[]> = {
 }
 
 // Format action to human-readable text
-function formatAction(action: string): string {
+function formatAction(action: string | null | undefined): string {
+  if (!action) return ''
   return action
     .replace(/_/g, ' ')
     .replace(/([a-z])([A-Z])/g, '$1 $2')
