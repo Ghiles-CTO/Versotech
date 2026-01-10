@@ -668,13 +668,14 @@ export const subscriptionColumns: ColumnDef<SubscriptionRow>[] = [
       </Button>
     ),
     cell: ({ row }) => {
-      const opportunityName = row.original.opportunity_name
-      if (!opportunityName) return <span className="text-muted-foreground text-sm">-</span>
+      // Investment name from vehicle (always populated)
+      const investmentName = (row.original.vehicle as any)?.investment_name
+      if (!investmentName) return <span className="text-muted-foreground text-sm">-</span>
 
       return (
         <div className="max-w-[200px]">
-          <div className="text-sm font-medium truncate" title={opportunityName}>
-            {opportunityName}
+          <div className="text-sm font-medium truncate" title={investmentName}>
+            {investmentName}
           </div>
         </div>
       )

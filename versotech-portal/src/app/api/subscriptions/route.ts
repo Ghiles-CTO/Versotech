@@ -39,7 +39,8 @@ export async function GET(request: NextRequest) {
             type,
             currency,
             status,
-            entity_code
+            entity_code,
+            investment_name
           ),
           introducer:introducers (
             id,
