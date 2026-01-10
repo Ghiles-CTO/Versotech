@@ -5,8 +5,14 @@ import { getAuthenticatedUser, isStaffUser } from '@/lib/api-auth'
 /**
  * GET /api/partners/[id]/referred-investors
  *
- * Returns all investors dispatched through this partner.
+ * Returns all investors referred through this partner.
  * Includes deal info, fee plan info, and subscription status.
+ *
+ * Queries both:
+ * 1. deal_memberships (new architecture) - investors dispatched via this partner
+ * 2. partner_commissions (legacy) - investors linked through commission records
+ *
+ * Results are merged with deduplication to avoid showing same investor+deal twice.
  */
 export async function GET(
   request: NextRequest,
@@ -80,48 +86,64 @@ export async function GET(
       .order('invited_at', { ascending: false })
 
     if (membershipsError) {
-      console.error('[Partner Referred Investors] Error:', membershipsError)
-      return NextResponse.json(
-        { error: 'Failed to fetch referred investors' },
-        { status: 500 }
-      )
+      console.error('[Partner Referred Investors] Memberships error:', membershipsError)
+      // Continue with legacy query even if memberships fail
     }
 
-    // Get subscription info for these memberships (if available)
-    const memberDealPairs = (memberships || [])
-      .filter(m => m.investor_id && m.deal_id)
-      .map(m => ({ investor_id: m.investor_id, deal_id: m.deal_id }))
+    // Track investor+deal pairs found in deal_memberships to avoid duplicates
+    const foundPairs = new Set(
+      (memberships || []).map(m => `${m.investor_id}-${m.deal_id}`)
+    )
 
-    let subscriptionsMap: Record<string, { status: string; amount: number | null; funded_at: string | null }> = {}
+    // LEGACY FALLBACK: Query partner_commissions for historical referrals
+    const { data: legacyCommissions, error: legacyError } = await serviceClient
+      .from('partner_commissions')
+      .select(`
+        id,
+        partner_id,
+        investor_id,
+        deal_id,
+        accrual_amount,
+        status,
+        created_at,
+        investors!partner_commissions_investor_id_fkey (
+          id,
+          legal_name,
+          type
+        ),
+        deals!partner_commissions_deal_id_fkey (
+          id,
+          name,
+          status
+        )
+      `)
+      .eq('partner_id', partnerId)
+      .order('created_at', { ascending: false })
 
-    if (memberDealPairs.length > 0) {
-      // Fetch subscriptions for these investor/deal pairs
-      const { data: subscriptions } = await serviceClient
-        .from('subscriptions')
-        .select('investor_id, deal_id, status, total_amount, funded_date')
+    if (legacyError) {
+      console.error('[Partner Referred Investors] Legacy commissions error:', legacyError)
+    }
 
-      if (subscriptions) {
-        subscriptionsMap = subscriptions.reduce((acc, sub) => {
-          const key = `${sub.investor_id}-${sub.deal_id}`
-          acc[key] = {
-            status: sub.status,
-            amount: sub.total_amount,
-            funded_at: sub.funded_date
-          }
-          return acc
-        }, {} as Record<string, { status: string; amount: number | null; funded_at: string | null }>)
+    // Filter legacy commissions to exclude those already in deal_memberships
+    // Also deduplicate by investor_id+deal_id within legacy data
+    const seenLegacyPairs = new Set<string>()
+    const uniqueLegacyCommissions = (legacyCommissions || []).filter(c => {
+      const key = `${c.investor_id}-${c.deal_id}`
+      if (foundPairs.has(key) || seenLegacyPairs.has(key)) {
+        return false
       }
-    }
+      seenLegacyPairs.add(key)
+      return true
+    })
 
-    // Enrich memberships with subscription data
-    const referredInvestors = (memberships || []).map(m => {
-      const subscriptionKey = `${m.investor_id}-${m.deal_id}`
-      const subscription = subscriptionsMap[subscriptionKey]
-
+    // Build referred investors from deal_memberships (new architecture)
+    const referredFromMemberships = (memberships || []).map(m => {
       return {
-        id: m.id,
+        id: `dm-${m.deal_id}-${m.user_id}`,
+        source: 'deal_membership' as const,
         investor_id: m.investor_id,
         user_id: m.user_id,
+        deal_id: m.deal_id,
         role: m.role,
         invited_at: m.invited_at,
         accepted_at: m.accepted_at,
@@ -129,9 +151,35 @@ export async function GET(
         investor: m.investors,
         deal: m.deal,
         fee_plan: m.fee_plan,
-        subscription: subscription || null
+        subscription: null as { status: string; amount: number | null; funded_at: string | null } | null
       }
     })
+
+    // Build referred investors from legacy partner_commissions
+    const referredFromCommissions = uniqueLegacyCommissions.map(c => {
+      return {
+        id: `pc-${c.id}`,
+        source: 'partner_commission' as const,
+        investor_id: c.investor_id,
+        user_id: null as string | null,
+        deal_id: c.deal_id,
+        role: 'partner_investor' as const,
+        invited_at: c.created_at,
+        accepted_at: c.created_at,
+        profile: null,
+        investor: c.investors,
+        deal: c.deals,
+        fee_plan: null,
+        subscription: {
+          status: c.status,
+          amount: c.accrual_amount ? Number(c.accrual_amount) : null,
+          funded_at: null
+        }
+      }
+    })
+
+    // Merge both sources
+    const referredInvestors = [...referredFromMemberships, ...referredFromCommissions]
 
     return NextResponse.json({
       referred_investors: referredInvestors,

@@ -5,8 +5,14 @@ import { getAuthenticatedUser, isStaffUser } from '@/lib/api-auth'
 /**
  * GET /api/introducers/[id]/referred-investors
  *
- * Returns all investors dispatched through this introducer.
+ * Returns all investors referred through this introducer.
  * Includes deal info, fee plan info, and subscription status.
+ *
+ * Queries both:
+ * 1. deal_memberships (new architecture) - investors dispatched via this introducer
+ * 2. subscriptions (legacy) - subscriptions where introducer_id matches
+ *
+ * Results are merged with deduplication to avoid showing same investor+deal twice.
  */
 export async function GET(
   request: NextRequest,
@@ -42,10 +48,10 @@ export async function GET(
 
     // Fetch deal memberships where this introducer is the referrer
     // We need to join with fee_plans to get the introducer link
+    // Note: Using full FK constraint names for disambiguation (required when multiple FKs point to same table)
     const { data: memberships, error: membershipsError } = await serviceClient
       .from('deal_memberships')
       .select(`
-        id,
         deal_id,
         user_id,
         investor_id,
@@ -55,22 +61,22 @@ export async function GET(
         referred_by_entity_id,
         referred_by_entity_type,
         assigned_fee_plan_id,
-        profiles:user_id (
+        profiles!deal_memberships_user_id_fkey (
           id,
           display_name,
           email
         ),
-        investors:investor_id (
+        investors!deal_memberships_investor_id_fkey (
           id,
           legal_name,
           type
         ),
-        deal:deal_id (
+        deals!deal_memberships_deal_id_fkey (
           id,
           name,
           status
         ),
-        fee_plan:assigned_fee_plan_id (
+        fee_plans!deal_memberships_assigned_fee_plan_id_fkey (
           id,
           name,
           status
@@ -81,58 +87,97 @@ export async function GET(
       .order('invited_at', { ascending: false })
 
     if (membershipsError) {
-      console.error('[Introducer Referred Investors] Error:', membershipsError)
-      return NextResponse.json(
-        { error: 'Failed to fetch referred investors' },
-        { status: 500 }
-      )
+      console.error('[Introducer Referred Investors] Memberships error:', membershipsError)
+      // Continue with legacy query even if memberships fail
     }
 
-    // Get subscription info for these memberships (if available)
-    const memberDealPairs = (memberships || [])
-      .filter(m => m.investor_id && m.deal_id)
-      .map(m => ({ investor_id: m.investor_id, deal_id: m.deal_id }))
+    // Track investor+deal pairs found in deal_memberships to avoid duplicates
+    const foundPairs = new Set(
+      (memberships || []).map(m => `${m.investor_id}-${m.deal_id}`)
+    )
 
-    let subscriptionsMap: Record<string, { status: string; amount: number | null; funded_at: string | null }> = {}
+    // LEGACY FALLBACK: Query subscriptions where this introducer is linked
+    // This captures historical referrals before deal_memberships existed
+    const { data: legacySubscriptions, error: legacyError } = await serviceClient
+      .from('subscriptions')
+      .select(`
+        id,
+        investor_id,
+        deal_id,
+        vehicle_id,
+        status,
+        commitment,
+        funded_amount,
+        funded_at,
+        created_at,
+        investors!subscriptions_investor_id_fkey (
+          id,
+          legal_name,
+          type
+        ),
+        deals!subscriptions_deal_id_fkey (
+          id,
+          name,
+          status
+        )
+      `)
+      .eq('introducer_id', introducerId)
+      .order('created_at', { ascending: false })
 
-    if (memberDealPairs.length > 0) {
-      // Fetch subscriptions for these investor/deal pairs
-      const { data: subscriptions } = await serviceClient
-        .from('subscriptions')
-        .select('investor_id, deal_id, status, total_amount, funded_date')
-
-      if (subscriptions) {
-        subscriptionsMap = subscriptions.reduce((acc, sub) => {
-          const key = `${sub.investor_id}-${sub.deal_id}`
-          acc[key] = {
-            status: sub.status,
-            amount: sub.total_amount,
-            funded_at: sub.funded_date
-          }
-          return acc
-        }, {} as Record<string, { status: string; amount: number | null; funded_at: string | null }>)
-      }
+    if (legacyError) {
+      console.error('[Introducer Referred Investors] Legacy subscriptions error:', legacyError)
     }
 
-    // Enrich memberships with subscription data
-    const referredInvestors = (memberships || []).map(m => {
-      const subscriptionKey = `${m.investor_id}-${m.deal_id}`
-      const subscription = subscriptionsMap[subscriptionKey]
+    // Filter legacy subscriptions to exclude those already in deal_memberships
+    const uniqueLegacySubscriptions = (legacySubscriptions || []).filter(s => {
+      const key = `${s.investor_id}-${s.deal_id}`
+      return !foundPairs.has(key)
+    })
 
+    // Build referred investors from deal_memberships (new architecture)
+    const referredFromMemberships = (memberships || []).map(m => {
       return {
-        id: m.id,
+        id: `dm-${m.deal_id}-${m.user_id}`,
+        source: 'deal_membership' as const,
         investor_id: m.investor_id,
         user_id: m.user_id,
+        deal_id: m.deal_id,
         role: m.role,
         invited_at: m.invited_at,
         accepted_at: m.accepted_at,
         profile: m.profiles,
         investor: m.investors,
-        deal: m.deal,
-        fee_plan: m.fee_plan,
-        subscription: subscription || null
+        deal: m.deals,
+        fee_plan: m.fee_plans,
+        subscription: null as { status: string; amount: number | null; funded_at: string | null } | null
       }
     })
+
+    // Build referred investors from legacy subscriptions
+    const referredFromSubscriptions = uniqueLegacySubscriptions.map(s => {
+      return {
+        id: `sub-${s.id}`,
+        source: 'subscription' as const,
+        investor_id: s.investor_id,
+        user_id: null as string | null,
+        deal_id: s.deal_id,
+        role: 'investor' as const,
+        invited_at: s.created_at,
+        accepted_at: s.created_at,
+        profile: null,
+        investor: s.investors,
+        deal: s.deals,
+        fee_plan: null,
+        subscription: {
+          status: s.status,
+          amount: s.commitment ? Number(s.commitment) : null,
+          funded_at: s.funded_at
+        }
+      }
+    })
+
+    // Merge both sources
+    const referredInvestors = [...referredFromMemberships, ...referredFromSubscriptions]
 
     return NextResponse.json({
       referred_investors: referredInvestors,

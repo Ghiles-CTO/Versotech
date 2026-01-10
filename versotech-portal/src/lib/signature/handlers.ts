@@ -187,44 +187,101 @@ export async function handleNDASignature(
   console.log('\n🔓 [NDA HANDLER] Step 3: Checking multi-signatory status before data room access')
 
   try {
-    // Check if ALL NDA signature requests for this investor+deal are signed
-    // This is critical for entity investors with multiple signatories
-    // IMPORTANT: Only count ACTIVE requests (pending/signed), exclude cancelled/expired
-    // to prevent stale requests from blocking data room access forever
+    // Check if ALL NDA signature requests for this investor+deal are signed.
+    // We evaluate the latest request per document and role to avoid stale/duplicate
+    // requests unlocking the data room too early.
     const { data: allNdaSignatures, error: sigCheckError } = await supabase
       .from('signature_requests')
-      .select('id, status, signer_role, signer_name, member_id')
+      .select('id, status, signer_role, signer_name, signer_email, member_id, created_at, workflow_run_id, google_drive_file_id, google_drive_url, document_id')
       .eq('deal_id', dealInterest.deal_id)
       .eq('investor_id', dealInterest.investor_id)
       .eq('document_type', 'nda')
-      .eq('signer_role', 'investor') // Only check investor signatures, not admin
-      .in('status', ['pending', 'signed']) // Exclude cancelled/expired stale requests
+      .in('signer_role', ['investor', 'admin'])
+      .order('created_at', { ascending: false })
 
     if (sigCheckError) {
       console.error('❌ [NDA HANDLER] Failed to check signatory status:', sigCheckError)
       throw sigCheckError
     }
 
-    const totalSignatories = allNdaSignatures?.length || 0
-    const signedCount = allNdaSignatures?.filter((s: { status: string }) => s.status === 'signed').length || 0
-    const allSignatoriesSigned = totalSignatories > 0 && signedCount === totalSignatories
+    if (!allNdaSignatures || allNdaSignatures.length === 0) {
+      console.warn('⚠️ [NDA HANDLER] No NDA signature requests found. Skipping access grant.')
+      return
+    }
 
-    console.log('📊 [NDA HANDLER] Multi-signatory status check:', {
-      total_signatories: totalSignatories,
-      signed_count: signedCount,
-      all_signed: allSignatoriesSigned,
+    const inactiveStatuses = new Set(['cancelled', 'expired'])
+    const activeSignatures = allNdaSignatures.filter((sig: { status: string }) => !inactiveStatuses.has(sig.status))
+
+    if (activeSignatures.length === 0) {
+      console.warn('⚠️ [NDA HANDLER] No active NDA signature requests found. Skipping access grant.')
+      return
+    }
+
+    // Group by document and keep the latest request per role.
+    const latestByDocument = new Map<string, Map<string, {
+      id: string
+      status: string
+      signer_name: string
+      signer_email: string | null
+      member_id: string | null
+      created_at: string | null
+    }>>()
+
+    for (const sig of activeSignatures) {
+      const documentKey =
+        sig.workflow_run_id ||
+        sig.google_drive_file_id ||
+        sig.google_drive_url ||
+        sig.document_id ||
+        sig.id
+
+      const docMap = latestByDocument.get(documentKey) || new Map()
+      const roleKey = sig.signer_role
+      const existing = docMap.get(roleKey)
+
+      if (!existing) {
+        docMap.set(roleKey, sig)
+      } else if (sig.created_at && existing.created_at && new Date(sig.created_at) > new Date(existing.created_at)) {
+        docMap.set(roleKey, sig)
+      }
+
+      latestByDocument.set(documentKey, docMap)
+    }
+
+    const requiredRoles = ['investor', 'admin']
+    const totalDocuments = latestByDocument.size
+    let completedDocuments = 0
+
+    for (const docMap of latestByDocument.values()) {
+      const hasAllRoles = requiredRoles.every(role => docMap.has(role))
+      if (!hasAllRoles) {
+        continue
+      }
+
+      const allRolesSigned = requiredRoles.every(role => docMap.get(role)?.status === 'signed')
+      if (allRolesSigned) {
+        completedDocuments += 1
+      }
+    }
+
+    const allDocumentsSigned = totalDocuments > 0 && completedDocuments === totalDocuments
+
+    console.log('📊 [NDA HANDLER] NDA completion status check:', {
+      total_documents: totalDocuments,
+      completed_documents: completedDocuments,
+      all_signed: allDocumentsSigned,
       current_signatory: signatureRequest.signer_name,
       current_signer_role: signatureRequest.signer_role
     })
 
-    // CRITICAL: Only grant data room access when ALL investor signatures are complete
+    // CRITICAL: Only grant data room access when ALL investor + admin signatures are complete
     // This applies to both single and multi-signatory cases:
     // - If admin signs first → don't grant access (investor hasn't signed)
-    // - If investor signs but more signatories pending → don't grant access
-    // - Only when all investor signatures are 'signed' → grant access
-    if (!allSignatoriesSigned) {
-      // Not all investor signatories have signed yet
-      console.log(`⏳ [NDA HANDLER] Waiting for investor signatures: ${signedCount}/${totalSignatories} signed`)
+    // - If investor signs but admin still pending → don't grant access
+    // - Only when all investor + admin signatures are 'signed' → grant access
+    if (!allDocumentsSigned) {
+      // Not all NDA documents are fully countersigned yet
+      console.log(`⏳ [NDA HANDLER] Waiting for NDA countersignatures: ${completedDocuments}/${totalDocuments} documents completed`)
 
       // Log partial completion (useful for multi-signatory tracking)
       if (signatureRequest.signer_role === 'investor') {
@@ -235,24 +292,24 @@ export async function handleNDASignature(
           entity_id: dealInterest.deal_id,
           details: {
             investor_id: dealInterest.investor_id,
-            signed_count: signedCount,
-            total_signatories: totalSignatories,
+            completed_documents: completedDocuments,
+            total_documents: totalDocuments,
             signatory_name: signatureRequest.signer_name,
             member_id: signatureRequest.member_id || null,
-            message: totalSignatories > 1
-              ? `NDA signed by ${signatureRequest.signer_name}. Waiting for ${totalSignatories - signedCount} more signatory(ies).`
-              : `NDA signed by ${signatureRequest.signer_name}. Processing...`
+            message: totalDocuments > 1
+              ? `NDA signed by ${signatureRequest.signer_name}. Waiting for ${totalDocuments - completedDocuments} document(s) to finish countersigning.`
+              : `NDA signed by ${signatureRequest.signer_name}. Waiting for countersignature.`
           },
           created_at: new Date().toISOString()
         })
       }
 
-      console.log('📝 [NDA HANDLER] Data room access will be granted when all investor signatories sign.')
+      console.log('📝 [NDA HANDLER] Data room access will be granted when all NDA signatures (investor + admin) are complete.')
       return // Exit - don't grant data room access yet
     }
 
-    // All investor signatories have signed - proceed with data room grant
-    console.log('✅ [NDA HANDLER] All investor signatories have signed. Proceeding with data room access grant.')
+    // All NDA documents are fully signed - proceed with data room grant
+    console.log('✅ [NDA HANDLER] All NDA documents are fully signed. Proceeding with data room access grant.')
 
     // Check if access already exists
     console.log('🔍 [NDA HANDLER] Checking for existing data room access')
