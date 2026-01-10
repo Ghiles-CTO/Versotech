@@ -362,7 +362,6 @@ export default async function InvestorsPage({
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-blue-400">{stats.entities}</div>
-            <div className="text-sm text-muted-foreground mt-1">Corporate investors</div>
           </CardContent>
         </Card>
 
@@ -372,7 +371,6 @@ export default async function InvestorsPage({
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-purple-400">{stats.individuals}</div>
-            <div className="text-sm text-muted-foreground mt-1">Natural persons</div>
           </CardContent>
         </Card>
       </div>
