@@ -25,13 +25,15 @@ export function ProfileImageUpload({
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const getInitials = (name: string) => {
+  const getInitials = (name: string | null | undefined) => {
+    if (!name) return 'U'
     return name
       .split(' ')
       .map(part => part[0])
+      .filter(Boolean)
       .join('')
       .toUpperCase()
-      .slice(0, 2)
+      .slice(0, 2) || 'U'
   }
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {

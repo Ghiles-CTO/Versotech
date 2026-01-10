@@ -99,12 +99,13 @@ export const investorColumns: ColumnDef<InvestorRow>[] = [
     ),
     cell: ({ row }) => {
       const investor = row.original
-      const initials = investor.name
+      const initials = (investor.name || 'U')
         .split(' ')
         .map(word => word[0])
+        .filter(Boolean)
         .join('')
         .substring(0, 2)
-        .toUpperCase()
+        .toUpperCase() || 'U'
 
       return (
         <div className="flex items-center gap-3">
@@ -114,7 +115,7 @@ export const investorColumns: ColumnDef<InvestorRow>[] = [
             </AvatarFallback>
           </Avatar>
           <div className="flex flex-col">
-            <span className="font-semibold">{investor.name}</span>
+            <span className="font-semibold">{investor.name || 'Unnamed Investor'}</span>
             <span className="text-xs text-muted-foreground">{investor.email}</span>
           </div>
         </div>

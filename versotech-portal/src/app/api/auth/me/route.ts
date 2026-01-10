@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
         id: user.id,
         email: user.email,
         role: profile.role,
-        displayName: profile.display_name,
+        displayName: profile.display_name || user.email?.split('@')[0] || 'User',
         createdAt: profile.created_at
       }
     })
