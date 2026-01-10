@@ -40,6 +40,14 @@ export async function GET(request: NextRequest) {
             currency,
             status,
             entity_code
+          ),
+          introducer:introducers (
+            id,
+            legal_name
+          ),
+          deal:deals (
+            id,
+            name
           )
         `,
         { count: 'exact' }

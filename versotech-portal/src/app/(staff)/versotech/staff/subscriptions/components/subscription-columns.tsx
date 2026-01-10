@@ -67,6 +67,14 @@ export type SubscriptionRow = {
     status: string
     entity_code: string | null
   }
+  introducer?: {
+    id: string
+    legal_name: string
+  } | null
+  deal?: {
+    id: string
+    name: string
+  } | null
 }
 
 function getStatusColor(status: string) {
@@ -660,16 +668,20 @@ export const subscriptionColumns: ColumnDef<SubscriptionRow>[] = [
       </Button>
     ),
     cell: ({ row }) => {
-      const opportunityName = row.getValue('opportunity_name') as string | null
-
-      if (!opportunityName) {
-        return <span className="text-muted-foreground text-sm">-</span>
-      }
+      // Fallback chain: opportunity_name -> deal.name -> vehicle.name
+      const opportunityName = row.original.opportunity_name
+      const dealName = row.original.deal?.name
+      const vehicleName = row.original.vehicle?.name
+      const displayName = opportunityName || dealName || vehicleName || '-'
+      const isFromDeal = !opportunityName && dealName
 
       return (
         <div className="max-w-[200px]">
-          <div className="text-sm font-medium truncate" title={opportunityName}>
-            {opportunityName}
+          <div
+            className={`text-sm font-medium truncate ${isFromDeal ? 'text-muted-foreground' : ''}`}
+            title={displayName}
+          >
+            {displayName}
           </div>
         </div>
       )
@@ -718,11 +730,11 @@ export const subscriptionColumns: ColumnDef<SubscriptionRow>[] = [
     id: 'introducer',
     header: () => <div>Introducer</div>,
     cell: ({ row }) => {
-      const introducerId = row.original.introducer_id
-      if (!introducerId) return <span className="text-muted-foreground text-sm">-</span>
+      const introducer = row.original.introducer
+      if (!introducer) return <span className="text-muted-foreground text-sm">-</span>
       return (
-        <div className="text-xs font-mono text-muted-foreground max-w-[100px] truncate" title={introducerId}>
-          {introducerId.substring(0, 8)}...
+        <div className="text-sm font-medium max-w-[150px] truncate" title={introducer.legal_name}>
+          {introducer.legal_name}
         </div>
       )
     },
