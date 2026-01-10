@@ -78,13 +78,13 @@ const entityTypeLabels: Record<string, string> = {
 const statusConfig = [
   { id: 'LIVE', name: 'LIVE', color: '#10B981' },
   { id: 'CLOSED', name: 'CLOSED', color: '#EF4444' },
-  { id: 'TBD', name: 'TBD', color: '#F59E0B' }
+  { id: 'PENDING', name: 'PENDING', color: '#F59E0B' }
 ]
 
 const getStatusColor = (status: string | null) => {
   if (status === 'LIVE') return 'bg-emerald-500/20 border-emerald-400/40 text-emerald-100'
   if (status === 'CLOSED') return 'bg-red-500/20 border-red-400/40 text-red-100'
-  if (status === 'TBD') return 'bg-amber-500/20 border-amber-400/40 text-amber-100'
+  if (status === 'PENDING') return 'bg-amber-500/20 border-amber-400/40 text-amber-100'
   return 'bg-white/10 border-white/10 text-foreground'
 }
 

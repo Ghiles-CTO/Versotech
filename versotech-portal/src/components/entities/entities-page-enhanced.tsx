@@ -102,7 +102,7 @@ export function EntitiesPageEnhanced({ entities: initialEntities }: EntitiesPage
       total: entities.length,
       live: entities.filter((e) => e.status === 'LIVE').length,
       closed: entities.filter((e) => e.status === 'CLOSED').length,
-      tbd: entities.filter((e) => e.status === 'TBD').length,
+      pending: entities.filter((e) => e.status === 'PENDING').length,
       platforms: new Set(entities.map((e) => e.platform).filter(Boolean)).size
     }
   }, [entities])
@@ -193,6 +193,14 @@ export function EntitiesPageEnhanced({ entities: initialEntities }: EntitiesPage
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <Card className="border border-white/10 bg-white/5">
           <CardHeader className="pb-2">
+            <CardTitle className="text-sm text-muted-foreground">Platforms</CardTitle>
+            <CardDescription className="text-3xl text-foreground font-semibold">
+              {stats.platforms}
+            </CardDescription>
+          </CardHeader>
+        </Card>
+        <Card className="border border-white/10 bg-white/5">
+          <CardHeader className="pb-2">
             <CardTitle className="text-sm text-muted-foreground">Total Vehicles</CardTitle>
             <CardDescription className="text-3xl text-foreground font-semibold">
               {stats.total}
@@ -217,17 +225,9 @@ export function EntitiesPageEnhanced({ entities: initialEntities }: EntitiesPage
         </Card>
         <Card className="border border-white/10 bg-white/5">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground">TBD</CardTitle>
+            <CardTitle className="text-sm text-muted-foreground">Pending</CardTitle>
             <CardDescription className="text-3xl text-amber-400 font-semibold">
-              {stats.tbd}
-            </CardDescription>
-          </CardHeader>
-        </Card>
-        <Card className="border border-white/10 bg-white/5">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground">Platforms</CardTitle>
-            <CardDescription className="text-3xl text-foreground font-semibold">
-              {stats.platforms}
+              {stats.pending}
             </CardDescription>
           </CardHeader>
         </Card>
@@ -297,7 +297,7 @@ export function EntitiesPageEnhanced({ entities: initialEntities }: EntitiesPage
                   <SelectItem value="all">All Status</SelectItem>
                   <SelectItem value="LIVE">Live</SelectItem>
                   <SelectItem value="CLOSED">Closed</SelectItem>
-                  <SelectItem value="TBD">TBD</SelectItem>
+                  <SelectItem value="PENDING">Pending</SelectItem>
                 </SelectContent>
               </Select>
 
