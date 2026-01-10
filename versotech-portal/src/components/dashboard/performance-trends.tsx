@@ -24,6 +24,7 @@ import {
 } from 'recharts'
 import { TrendingUp, TrendingDown, Calendar, Target, DollarSign, BarChart3 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useChartColors, useChartPalette } from '@/lib/theme-colors'
 
 interface PerformanceData {
   period: string
@@ -46,6 +47,8 @@ export function PerformanceTrends({ investorIds, selectedDealId, className }: Pe
   const [data, setData] = useState<PerformanceData[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedPeriod, setSelectedPeriod] = useState<'12M' | '24M' | 'ALL'>('12M')
+  const chartColors = useChartColors()
+  const palette = useChartPalette()
 
   // Fetch real historical performance data from Supabase
   useEffect(() => {
@@ -159,8 +162,8 @@ export function PerformanceTrends({ investorIds, selectedDealId, className }: Pe
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-white p-3 border rounded-lg shadow-lg">
-          <p className="font-medium text-sm mb-2">{label}</p>
+        <div className="bg-background border border-border p-3 rounded-lg shadow-lg">
+          <p className="font-medium text-sm mb-2 text-foreground">{label}</p>
           {payload.map((entry: any, index: number) => (
             <p key={index} className="text-sm" style={{ color: entry.color }}>
               {entry.name}: {
@@ -179,8 +182,8 @@ export function PerformanceTrends({ investorIds, selectedDealId, className }: Pe
   }
 
   const pieData = data.length > 0 ? [
-    { name: 'Realized Value', value: data[data.length - 1].distributions, color: '#10b981' },
-    { name: 'Unrealized Value', value: data[data.length - 1].nav - data[data.length - 1].distributions, color: '#3b82f6' },
+    { name: 'Realized Value', value: data[data.length - 1].distributions, color: chartColors.success },
+    { name: 'Unrealized Value', value: data[data.length - 1].nav - data[data.length - 1].distributions, color: chartColors.primary },
   ] : []
 
   if (loading) {
@@ -194,8 +197,8 @@ export function PerformanceTrends({ investorIds, selectedDealId, className }: Pe
         </CardHeader>
         <CardContent>
           <div className="animate-pulse space-y-4">
-            <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-            <div className="h-64 bg-gray-200 rounded"></div>
+            <div className="h-4 bg-muted rounded w-1/4"></div>
+            <div className="h-64 bg-muted rounded"></div>
           </div>
         </CardContent>
       </Card>
@@ -238,16 +241,16 @@ export function PerformanceTrends({ investorIds, selectedDealId, className }: Pe
 
       <CardContent className="space-y-6">
         {/* Summary Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-gray-50 rounded-lg">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-muted/50 rounded-lg">
           <div className="text-center">
-            <div className="text-2xl font-bold text-gray-900">
+            <div className="text-2xl font-bold text-foreground">
               {latestData ? formatCurrency(latestData.nav) : '$0'}
             </div>
-            <div className="text-sm text-gray-500">Current NAV</div>
+            <div className="text-sm text-muted-foreground">Current NAV</div>
             {navChange !== 0 && (
               <div className={cn(
                 "flex items-center justify-center gap-1 text-sm",
-                navChange > 0 ? "text-green-600" : "text-red-600"
+                navChange > 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"
               )}>
                 {navChange > 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
                 {formatPercentage(Math.abs(navChange))} MoM
@@ -255,28 +258,28 @@ export function PerformanceTrends({ investorIds, selectedDealId, className }: Pe
             )}
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-gray-900">
+            <div className="text-2xl font-bold text-foreground">
               {latestData ? formatMultiple(latestData.dpi) : '0.00x'}
             </div>
-            <div className="text-sm text-gray-500">Current DPI</div>
+            <div className="text-sm text-muted-foreground">Current DPI</div>
             <Badge variant={latestData?.dpi > 0.5 ? 'default' : 'secondary'} className="text-xs mt-1">
               {latestData?.dpi > 1 ? 'Strong' : latestData?.dpi > 0.5 ? 'Good' : 'Early'}
             </Badge>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-gray-900">
+            <div className="text-2xl font-bold text-foreground">
               {latestData ? formatMultiple(latestData.tvpi) : '0.00x'}
             </div>
-            <div className="text-sm text-gray-500">Current TVPI</div>
+            <div className="text-sm text-muted-foreground">Current TVPI</div>
             <Badge variant={latestData?.tvpi > 1.2 ? 'default' : 'secondary'} className="text-xs mt-1">
               {latestData?.tvpi > 1.5 ? 'Excellent' : latestData?.tvpi > 1.2 ? 'Good' : 'Fair'}
             </Badge>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-gray-900">
+            <div className="text-2xl font-bold text-foreground">
               {latestData ? formatPercentage(latestData.irr) : '0.0%'}
             </div>
-            <div className="text-sm text-gray-500">Current IRR</div>
+            <div className="text-sm text-muted-foreground">Current IRR</div>
             <Badge variant={latestData?.irr > 15 ? 'default' : 'secondary'} className="text-xs mt-1">
               Net Returns
             </Badge>
@@ -295,23 +298,25 @@ export function PerformanceTrends({ investorIds, selectedDealId, className }: Pe
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={data}>
-                  <CartesianGrid strokeDasharray="3 3" />
+                  <CartesianGrid strokeDasharray="3 3" stroke={chartColors.grid} />
                   <XAxis
                     dataKey="period"
-                    tick={{ fontSize: 12 }}
+                    tick={{ fontSize: 12, fill: chartColors.axis }}
                     tickLine={false}
+                    stroke={chartColors.axisLine}
                   />
                   <YAxis
                     tickFormatter={formatCurrency}
-                    tick={{ fontSize: 12 }}
+                    tick={{ fontSize: 12, fill: chartColors.axis }}
                     tickLine={false}
+                    stroke={chartColors.axisLine}
                   />
                   <Tooltip content={<CustomTooltip />} />
                   <Area
                     type="monotone"
                     dataKey="nav"
-                    stroke="#3b82f6"
-                    fill="#3b82f6"
+                    stroke={chartColors.primary}
+                    fill={chartColors.primary}
                     fillOpacity={0.2}
                     strokeWidth={2}
                   />
@@ -324,33 +329,35 @@ export function PerformanceTrends({ investorIds, selectedDealId, className }: Pe
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={data}>
-                  <CartesianGrid strokeDasharray="3 3" />
+                  <CartesianGrid strokeDasharray="3 3" stroke={chartColors.grid} />
                   <XAxis
                     dataKey="period"
-                    tick={{ fontSize: 12 }}
+                    tick={{ fontSize: 12, fill: chartColors.axis }}
                     tickLine={false}
+                    stroke={chartColors.axisLine}
                   />
                   <YAxis
                     tickFormatter={formatMultiple}
-                    tick={{ fontSize: 12 }}
+                    tick={{ fontSize: 12, fill: chartColors.axis }}
                     tickLine={false}
+                    stroke={chartColors.axisLine}
                   />
                   <Tooltip content={<CustomTooltip />} />
                   <Line
                     type="monotone"
                     dataKey="dpi"
-                    stroke="#10b981"
+                    stroke={chartColors.success}
                     strokeWidth={2}
                     name="DPI"
-                    dot={{ fill: '#10b981', strokeWidth: 2, r: 4 }}
+                    dot={{ fill: chartColors.success, strokeWidth: 2, r: 4 }}
                   />
                   <Line
                     type="monotone"
                     dataKey="tvpi"
-                    stroke="#3b82f6"
+                    stroke={chartColors.primary}
                     strokeWidth={2}
                     name="TVPI"
-                    dot={{ fill: '#3b82f6', strokeWidth: 2, r: 4 }}
+                    dot={{ fill: chartColors.primary, strokeWidth: 2, r: 4 }}
                   />
                 </LineChart>
               </ResponsiveContainer>
@@ -361,27 +368,29 @@ export function PerformanceTrends({ investorIds, selectedDealId, className }: Pe
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={data}>
-                  <CartesianGrid strokeDasharray="3 3" />
+                  <CartesianGrid strokeDasharray="3 3" stroke={chartColors.grid} />
                   <XAxis
                     dataKey="period"
-                    tick={{ fontSize: 12 }}
+                    tick={{ fontSize: 12, fill: chartColors.axis }}
                     tickLine={false}
+                    stroke={chartColors.axisLine}
                   />
                   <YAxis
                     tickFormatter={formatCurrency}
-                    tick={{ fontSize: 12 }}
+                    tick={{ fontSize: 12, fill: chartColors.axis }}
                     tickLine={false}
+                    stroke={chartColors.axisLine}
                   />
                   <Tooltip content={<CustomTooltip />} />
                   <Bar
                     dataKey="contributions"
-                    fill="#f59e0b"
+                    fill={chartColors.warning}
                     name="Contributions"
                     opacity={0.8}
                   />
                   <Bar
                     dataKey="distributions"
-                    fill="#10b981"
+                    fill={chartColors.success}
                     name="Distributions"
                     opacity={0.8}
                   />
@@ -422,7 +431,7 @@ export function PerformanceTrends({ investorIds, selectedDealId, className }: Pe
                       style={{ backgroundColor: item.color }}
                     />
                     <span className="text-sm font-medium">{item.name}</span>
-                    <span className="text-sm text-gray-500">
+                    <span className="text-sm text-muted-foreground">
                       {formatCurrency(item.value)}
                     </span>
                   </div>

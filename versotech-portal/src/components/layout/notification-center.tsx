@@ -281,7 +281,7 @@ export function NotificationCenter({ className }: NotificationCenterProps) {
         className={cn(
           "w-80",
           isDark
-            ? "bg-[#1A1D24] border-white/10 text-white"
+            ? "bg-zinc-800 border-white/10 text-white"
             : "bg-white border-gray-200"
         )}
       >

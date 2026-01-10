@@ -27,6 +27,8 @@ import { useState } from 'react'
 import { KYCDocumentsTab } from '@/components/shared/kyc-documents-tab'
 import { BankDetailsTab } from '@/components/shared/bank-details-tab'
 import { ActivityTimelineTab } from '@/components/shared/activity-timeline-tab'
+import { IndividualKycDisplay, EntityKYCEditDialog } from '@/components/shared'
+import { StaffEntityMembersTab } from '@/components/staff/shared/staff-entity-members-tab'
 import { EditLawyerDialog } from '@/components/staff/lawyers/edit-lawyer-dialog'
 import { InviteUserDialog } from '@/components/users/invite-user-dialog'
 import { formatDate } from '@/lib/format'
@@ -60,6 +62,34 @@ type LawyerDetail = {
   kyc_expires_at: string | null
   kyc_notes: string | null
   assigned_deals: string[] | null
+  // Entity type (individual vs entity)
+  type?: string | null
+  // Individual KYC fields
+  first_name?: string | null
+  middle_name?: string | null
+  last_name?: string | null
+  name_suffix?: string | null
+  date_of_birth?: string | null
+  country_of_birth?: string | null
+  nationality?: string | null
+  email?: string | null
+  phone_mobile?: string | null
+  phone_office?: string | null
+  is_us_citizen?: boolean | null
+  is_us_taxpayer?: boolean | null
+  us_taxpayer_id?: string | null
+  country_of_tax_residency?: string | null
+  id_type?: string | null
+  id_number?: string | null
+  id_issue_date?: string | null
+  id_expiry_date?: string | null
+  id_issuing_country?: string | null
+  residential_street?: string | null
+  residential_line_2?: string | null
+  residential_city?: string | null
+  residential_state?: string | null
+  residential_postal_code?: string | null
+  residential_country?: string | null
 }
 
 type LawyerMetrics = {
@@ -85,6 +115,7 @@ interface LawyerDetailClientProps {
 export function LawyerDetailClient({ lawyer, metrics, deals }: LawyerDetailClientProps) {
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false)
+  const [kycDialogOpen, setKycDialogOpen] = useState(false)
 
   const formatAddress = () => {
     const parts = [
@@ -210,10 +241,14 @@ export function LawyerDetailClient({ lawyer, metrics, deals }: LawyerDetailClien
 
       {/* Tabbed Content */}
       <Tabs defaultValue="overview" className="space-y-6" id={`lawyer-tabs-${lawyer.id}`}>
-        <TabsList className="grid w-full grid-cols-5 lg:w-auto lg:inline-grid">
+        <TabsList className="grid w-full grid-cols-6 lg:w-auto lg:inline-grid">
           <TabsTrigger value="overview" className="gap-2">
             <Scale className="h-4 w-4" />
             <span className="hidden sm:inline">Overview</span>
+          </TabsTrigger>
+          <TabsTrigger value="members" className="gap-2">
+            <Users className="h-4 w-4" />
+            <span className="hidden sm:inline">Members</span>
           </TabsTrigger>
           <TabsTrigger value="kyc" className="gap-2">
             <Shield className="h-4 w-4" />
@@ -373,6 +408,51 @@ export function LawyerDetailClient({ lawyer, metrics, deals }: LawyerDetailClien
               )}
             </CardContent>
           </Card>
+
+          {/* Individual KYC Information (for individual lawyers) */}
+          {lawyer.type === 'individual' && (
+            <IndividualKycDisplay
+              data={{
+                first_name: lawyer.first_name,
+                middle_name: lawyer.middle_name,
+                last_name: lawyer.last_name,
+                name_suffix: lawyer.name_suffix,
+                date_of_birth: lawyer.date_of_birth,
+                country_of_birth: lawyer.country_of_birth,
+                nationality: lawyer.nationality,
+                email: lawyer.email || lawyer.primary_contact_email,
+                phone_mobile: lawyer.phone_mobile,
+                phone_office: lawyer.phone_office,
+                residential_street: lawyer.residential_street,
+                residential_line_2: lawyer.residential_line_2,
+                residential_city: lawyer.residential_city,
+                residential_state: lawyer.residential_state,
+                residential_postal_code: lawyer.residential_postal_code,
+                residential_country: lawyer.residential_country,
+                is_us_citizen: lawyer.is_us_citizen,
+                is_us_taxpayer: lawyer.is_us_taxpayer,
+                us_taxpayer_id: lawyer.us_taxpayer_id,
+                country_of_tax_residency: lawyer.country_of_tax_residency,
+                id_type: lawyer.id_type,
+                id_number: lawyer.id_number,
+                id_issue_date: lawyer.id_issue_date,
+                id_expiry_date: lawyer.id_expiry_date,
+                id_issuing_country: lawyer.id_issuing_country,
+              }}
+              showEditButton={true}
+              onEdit={() => setKycDialogOpen(true)}
+              title="Personal KYC Information"
+            />
+          )}
+        </TabsContent>
+
+        {/* Members Tab */}
+        <TabsContent value="members">
+          <StaffEntityMembersTab
+            entityType="lawyer"
+            entityId={lawyer.id}
+            entityName={lawyer.firm_name}
+          />
         </TabsContent>
 
         {/* KYC Documents Tab */}
@@ -460,6 +540,45 @@ export function LawyerDetailClient({ lawyer, metrics, deals }: LawyerDetailClien
         entityId={lawyer.id}
         entityName={lawyer.firm_name}
       />
+
+      {lawyer.type === 'individual' && (
+        <EntityKYCEditDialog
+          open={kycDialogOpen}
+          onOpenChange={setKycDialogOpen}
+          entityType="lawyer"
+          entityId={lawyer.id}
+          entityName={lawyer.firm_name}
+          apiEndpoint={`/api/admin/lawyers/${lawyer.id}`}
+          initialData={{
+            first_name: lawyer.first_name ?? undefined,
+            middle_name: lawyer.middle_name ?? undefined,
+            last_name: lawyer.last_name ?? undefined,
+            name_suffix: lawyer.name_suffix ?? undefined,
+            date_of_birth: lawyer.date_of_birth ?? undefined,
+            country_of_birth: lawyer.country_of_birth ?? undefined,
+            nationality: lawyer.nationality ?? undefined,
+            email: (lawyer.email || lawyer.primary_contact_email) ?? undefined,
+            phone_mobile: lawyer.phone_mobile ?? undefined,
+            phone_office: lawyer.phone_office ?? undefined,
+            residential_street: lawyer.residential_street ?? undefined,
+            residential_line_2: lawyer.residential_line_2 ?? undefined,
+            residential_city: lawyer.residential_city ?? undefined,
+            residential_state: lawyer.residential_state ?? undefined,
+            residential_postal_code: lawyer.residential_postal_code ?? undefined,
+            residential_country: lawyer.residential_country ?? undefined,
+            is_us_citizen: lawyer.is_us_citizen ?? undefined,
+            is_us_taxpayer: lawyer.is_us_taxpayer ?? undefined,
+            us_taxpayer_id: lawyer.us_taxpayer_id ?? undefined,
+            country_of_tax_residency: lawyer.country_of_tax_residency ?? undefined,
+            id_type: lawyer.id_type ?? undefined,
+            id_number: lawyer.id_number ?? undefined,
+            id_issue_date: lawyer.id_issue_date ?? undefined,
+            id_expiry_date: lawyer.id_expiry_date ?? undefined,
+            id_issuing_country: lawyer.id_issuing_country ?? undefined,
+          }}
+          onSuccess={() => window.location.reload()}
+        />
+      )}
     </div>
   )
 }

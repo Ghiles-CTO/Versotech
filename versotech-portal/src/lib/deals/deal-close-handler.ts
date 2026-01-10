@@ -89,7 +89,6 @@ export async function handleDealClose(
         commitment,
         funded_amount,
         currency,
-        shares,
         num_shares,
         units,
         price_per_share,
@@ -135,7 +134,6 @@ export async function handleDealClose(
             .update({
               status: 'active',
               activated_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
             })
             .eq('id', sub.id)
 
@@ -148,7 +146,7 @@ export async function handleDealClose(
 
           // Step 1b: Create position for this subscription
           const fundedAmount = Number(sub.funded_amount) || 0
-          let positionUnits = sub.num_shares || sub.units || sub.shares
+          let positionUnits = sub.num_shares || sub.units
           if (!positionUnits && sub.price_per_share) {
             positionUnits = fundedAmount / Number(sub.price_per_share)
           } else if (!positionUnits && sub.cost_per_share) {
@@ -374,7 +372,7 @@ export async function handleDealClose(
             vehicleId: sub.vehicle_id || deal.vehicle_id,
             commitment: sub.commitment || 0,
             fundedAmount: fundedAmount,
-            shares: sub.num_shares || sub.units || sub.shares,
+            shares: sub.num_shares || sub.units,
             pricePerShare: sub.price_per_share,
             profile: triggerProfile,
           })
@@ -654,41 +652,65 @@ export async function handleTermsheetClose(
 
     console.log(`[termsheet-close] Processing termsheet ${termsheetId} (${deal?.name} v${termsheet.version})`)
 
-    // Step 1: Get subscriptions linked to THIS termsheet via deal_memberships
-    // The link is: subscription (deal_id, investor_id) → deal_memberships (deal_id, investor_id, term_sheet_id)
-    const { data: subscriptions, error: subError } = await supabase
-      .from('subscriptions')
-      .select(`
-        id,
-        investor_id,
-        vehicle_id,
-        commitment,
-        funded_amount,
-        currency,
-        shares,
-        num_shares,
-        units,
-        price_per_share,
-        cost_per_share,
-        status,
-        activated_at,
-        investor:investors(
-          id,
-          display_name,
-          legal_name
-        ),
-        deal_memberships!inner (
-          id,
-          term_sheet_id,
-          referred_by_entity_id,
-          referred_by_entity_type,
-          assigned_fee_plan_id
-        )
-      `)
+    // Step 1: Get investor IDs linked to THIS termsheet via deal_memberships
+    // Then fetch their funded subscriptions separately (no FK between tables)
+    const { data: linkedMemberships, error: membershipError } = await supabase
+      .from('deal_memberships')
+      .select('investor_id, referred_by_entity_id, referred_by_entity_type, assigned_fee_plan_id')
       .eq('deal_id', termsheet.deal_id)
-      .eq('status', 'funded')
-      .is('activated_at', null)
-      .eq('deal_memberships.term_sheet_id', termsheetId)
+      .eq('term_sheet_id', termsheetId)
+
+    if (membershipError) {
+      result.errors.push(`Failed to fetch deal memberships: ${membershipError.message}`)
+      return result
+    }
+
+    const linkedInvestorIds = (linkedMemberships || []).map(m => m.investor_id).filter(Boolean)
+
+    if (linkedInvestorIds.length === 0) {
+      console.log(`[termsheet-close] No investors linked to termsheet ${termsheetId}`)
+    }
+
+    // Step 1b: Get funded subscriptions for those investors
+    let subscriptions: any[] = []
+    let subError: any = null
+
+    if (linkedInvestorIds.length > 0) {
+      const { data: subs, error: fetchError } = await supabase
+        .from('subscriptions')
+        .select(`
+          id,
+          investor_id,
+          vehicle_id,
+          commitment,
+          funded_amount,
+          currency,
+          num_shares,
+          units,
+          price_per_share,
+          cost_per_share,
+          status,
+          activated_at,
+          investor:investors(
+            id,
+            display_name,
+            legal_name
+          )
+        `)
+        .eq('deal_id', termsheet.deal_id)
+        .eq('status', 'funded')
+        .is('activated_at', null)
+        .in('investor_id', linkedInvestorIds)
+
+      subscriptions = subs || []
+      subError = fetchError
+
+      // Attach membership data to each subscription for commission processing
+      subscriptions = subscriptions.map(sub => ({
+        ...sub,
+        deal_membership: linkedMemberships?.find(m => m.investor_id === sub.investor_id) || null
+      }))
+    }
 
     if (subError) {
       result.errors.push(`Failed to fetch subscriptions: ${subError.message}`)
@@ -712,9 +734,8 @@ export async function handleTermsheetClose(
       }
 
       for (const sub of subscriptions) {
-        const dealMembership = Array.isArray(sub.deal_memberships)
-          ? sub.deal_memberships[0]
-          : sub.deal_memberships
+        // deal_membership was attached during the two-step query above
+        const dealMembership = sub.deal_membership
 
         try {
           // Step 1a: Update subscription status to 'active'
@@ -723,7 +744,6 @@ export async function handleTermsheetClose(
             .update({
               status: 'active',
               activated_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
             })
             .eq('id', sub.id)
 
@@ -736,7 +756,7 @@ export async function handleTermsheetClose(
 
           // Step 1b: Create position for this subscription
           const fundedAmount = Number(sub.funded_amount) || 0
-          let positionUnits = sub.num_shares || sub.units || sub.shares
+          let positionUnits = sub.num_shares || sub.units
           if (!positionUnits && sub.price_per_share) {
             positionUnits = fundedAmount / Number(sub.price_per_share)
           } else if (!positionUnits && sub.cost_per_share) {
@@ -886,7 +906,7 @@ export async function handleTermsheetClose(
             vehicleId: sub.vehicle_id || deal.vehicle_id,
             commitment: sub.commitment || 0,
             fundedAmount,
-            shares: sub.num_shares || sub.units || sub.shares,
+            shares: sub.num_shares || sub.units,
             pricePerShare: sub.price_per_share,
             profile: triggerProfile,
           })

@@ -28,7 +28,7 @@ import { cn } from '@/lib/utils'
 
 // Simple Skeleton component
 const Skeleton = ({ className }: { className?: string }) => (
-  <div className={cn("animate-pulse bg-gray-200 rounded", className)} />
+  <div className={cn("animate-pulse bg-muted rounded", className)} />
 )
 
 // Simple ScrollArea replacement
@@ -209,7 +209,7 @@ export function KPIDetailsModal({
 
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <h3 className="font-medium text-gray-900 truncate">{item.name}</h3>
+              <h3 className="font-medium text-foreground truncate">{item.name}</h3>
               <Badge variant="outline" className="text-xs">
                 {item.type}
               </Badge>
@@ -220,7 +220,7 @@ export function KPIDetailsModal({
               )}
             </div>
 
-            <div className="flex items-center gap-4 mt-1 text-sm text-gray-600">
+            <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
               {metadata.units && (
                 <span>{metadata.units.toLocaleString()} units</span>
               )}
@@ -239,7 +239,7 @@ export function KPIDetailsModal({
             </div>
 
             {(metadata.last_valuation_date || metadata.last_contribution_date || metadata.last_distribution_date) && (
-              <div className="flex items-center gap-1 mt-1 text-xs text-gray-500">
+              <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
                 <Calendar className="h-3 w-3" />
                 <span>
                   Last: {new Date(
@@ -266,7 +266,7 @@ export function KPIDetailsModal({
           <div className="font-semibold text-lg">
             {config?.formatValue(item.value) || item.value.toLocaleString()}
           </div>
-          <div className="text-sm text-gray-500">
+          <div className="text-sm text-muted-foreground">
             {item.percentage.toFixed(1)}%
           </div>
           {metadata.commitment && (
@@ -291,8 +291,8 @@ export function KPIDetailsModal({
               <IconComponent className={cn("h-6 w-6", `text-${config?.color || 'blue'}-600`)} />
             </div>
             <div>
-              <DialogTitle className="text-xl font-semibold text-gray-900">{title}</DialogTitle>
-              <DialogDescription className="mt-1 text-gray-600">
+              <DialogTitle className="text-xl font-semibold text-foreground">{title}</DialogTitle>
+              <DialogDescription className="mt-1 text-muted-foreground">
                 {description || config?.description}
               </DialogDescription>
             </div>
@@ -327,7 +327,7 @@ export function KPIDetailsModal({
                   <AlertCircle className="w-8 h-8 text-red-600" />
                 </div>
                 <div className="text-red-600 font-medium mb-2">Failed to load details</div>
-                <div className="text-gray-500 text-sm mb-4">{error}</div>
+                <div className="text-muted-foreground text-sm mb-4">{error}</div>
                 <Button onClick={fetchKPIDetails} size="sm">
                   <RefreshCw className="w-4 h-4 mr-2" />
                   Retry
@@ -341,19 +341,19 @@ export function KPIDetailsModal({
               <div className="flex-shrink-0 p-6 pb-4 border-b bg-gradient-to-r from-slate-50 to-blue-50">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900">
+                    <h3 className="text-lg font-semibold text-foreground">
                       {data.items.length} {data.items.length === 1 ? 'Item' : 'Items'}
                     </h3>
-                    <p className="text-sm text-gray-600 mt-1">
+                    <p className="text-sm text-muted-foreground mt-1">
                       Total: <span className="font-medium">{config?.formatValue(data.total) || data.total.toLocaleString()}</span> • As of {new Date(data.asOfDate).toLocaleDateString()}
                     </p>
                   </div>
                   {data.total > 0 && (
                     <div className="text-right">
-                        <div className="text-2xl font-bold text-gray-900">
+                        <div className="text-2xl font-bold text-foreground">
                           {config?.formatValue(data.total) || data.total.toLocaleString()}
                         </div>
-                      <div className="text-xs text-gray-500">Total Value</div>
+                      <div className="text-xs text-muted-foreground">Total Value</div>
                     </div>
                   )}
                 </div>
@@ -384,8 +384,8 @@ export function KPIDetailsModal({
                       <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
                         <Building2 className="w-10 h-10 text-blue-600" />
                       </div>
-                      <div className="text-gray-900 font-semibold text-lg mb-2">No data available</div>
-                      <div className="text-gray-600 text-sm leading-relaxed">
+                      <div className="text-foreground font-semibold text-lg mb-2">No data available</div>
+                      <div className="text-muted-foreground text-sm leading-relaxed">
                         {kpiType === 'distributions_breakdown'
                           ? 'No distributions have been received yet. This is normal for early-stage investments. Distributions will appear as your investments mature.'
                           : kpiType === 'deal_breakdown'

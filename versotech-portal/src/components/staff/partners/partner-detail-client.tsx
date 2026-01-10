@@ -31,6 +31,8 @@ import { useRouter } from 'next/navigation'
 import { KYCDocumentsTab } from '@/components/shared/kyc-documents-tab'
 import { BankDetailsTab } from '@/components/shared/bank-details-tab'
 import { ActivityTimelineTab } from '@/components/shared/activity-timeline-tab'
+import { IndividualKycDisplay, EntityKYCEditDialog } from '@/components/shared'
+import { StaffEntityMembersTab } from '@/components/staff/shared/staff-entity-members-tab'
 import { EditPartnerDialog } from '@/components/staff/partners/edit-partner-dialog'
 import { InviteUserDialog } from '@/components/users/invite-user-dialog'
 import { formatCurrency, formatDate } from '@/lib/format'
@@ -68,6 +70,31 @@ type PartnerDetail = {
   kyc_expires_at: string | null
   kyc_notes: string | null
   logo_url: string | null
+  // Individual KYC fields
+  first_name?: string | null
+  middle_name?: string | null
+  last_name?: string | null
+  name_suffix?: string | null
+  date_of_birth?: string | null
+  country_of_birth?: string | null
+  nationality?: string | null
+  phone_mobile?: string | null
+  phone_office?: string | null
+  is_us_citizen?: boolean | null
+  is_us_taxpayer?: boolean | null
+  us_taxpayer_id?: string | null
+  country_of_tax_residency?: string | null
+  id_type?: string | null
+  id_number?: string | null
+  id_issue_date?: string | null
+  id_expiry_date?: string | null
+  id_issuing_country?: string | null
+  residential_street?: string | null
+  residential_line_2?: string | null
+  residential_city?: string | null
+  residential_state?: string | null
+  residential_postal_code?: string | null
+  residential_country?: string | null
 }
 
 type PartnerMetrics = {
@@ -139,6 +166,7 @@ export function PartnerDetailClient({ partner, metrics }: PartnerDetailClientPro
   const router = useRouter()
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false)
+  const [kycDialogOpen, setKycDialogOpen] = useState(false)
 
   // Fee Plans and Referred Investors state
   const [feePlans, setFeePlans] = useState<PartnerFeePlan[]>([])
@@ -323,10 +351,14 @@ export function PartnerDetailClient({ partner, metrics }: PartnerDetailClientPro
 
       {/* Tabbed Content */}
       <Tabs defaultValue="overview" className="space-y-6" id={`partner-tabs-${partner.id}`}>
-        <TabsList className="grid w-full grid-cols-6 lg:w-auto lg:inline-grid">
+        <TabsList className="grid w-full grid-cols-7 lg:w-auto lg:inline-grid">
           <TabsTrigger value="overview" className="gap-2">
             <Briefcase className="h-4 w-4" />
             <span className="hidden sm:inline">Overview</span>
+          </TabsTrigger>
+          <TabsTrigger value="members" className="gap-2">
+            <User className="h-4 w-4" />
+            <span className="hidden sm:inline">Members</span>
           </TabsTrigger>
           <TabsTrigger value="fee-plans" className="gap-2">
             <FileCheck className="h-4 w-4" />
@@ -551,6 +583,51 @@ export function PartnerDetailClient({ partner, metrics }: PartnerDetailClientPro
               )}
             </CardContent>
           </Card>
+
+          {/* Individual KYC Information (for individual partners) */}
+          {partner.type === 'individual' && (
+            <IndividualKycDisplay
+              data={{
+                first_name: partner.first_name,
+                middle_name: partner.middle_name,
+                last_name: partner.last_name,
+                name_suffix: partner.name_suffix,
+                date_of_birth: partner.date_of_birth,
+                country_of_birth: partner.country_of_birth,
+                nationality: partner.nationality,
+                email: partner.contact_email,
+                phone_mobile: partner.phone_mobile,
+                phone_office: partner.phone_office,
+                residential_street: partner.residential_street,
+                residential_line_2: partner.residential_line_2,
+                residential_city: partner.residential_city,
+                residential_state: partner.residential_state,
+                residential_postal_code: partner.residential_postal_code,
+                residential_country: partner.residential_country,
+                is_us_citizen: partner.is_us_citizen,
+                is_us_taxpayer: partner.is_us_taxpayer,
+                us_taxpayer_id: partner.us_taxpayer_id,
+                country_of_tax_residency: partner.country_of_tax_residency,
+                id_type: partner.id_type,
+                id_number: partner.id_number,
+                id_issue_date: partner.id_issue_date,
+                id_expiry_date: partner.id_expiry_date,
+                id_issuing_country: partner.id_issuing_country,
+              }}
+              showEditButton={true}
+              onEdit={() => setKycDialogOpen(true)}
+              title="Personal KYC Information"
+            />
+          )}
+        </TabsContent>
+
+        {/* Members Tab */}
+        <TabsContent value="members">
+          <StaffEntityMembersTab
+            entityType="partner"
+            entityId={partner.id}
+            entityName={partner.name}
+          />
         </TabsContent>
 
         {/* Fee Plans Tab */}
@@ -740,6 +817,46 @@ export function PartnerDetailClient({ partner, metrics }: PartnerDetailClientPro
         entityId={partner.id}
         entityName={partner.name}
       />
+
+      {/* KYC Edit Dialog for individual partners */}
+      {partner.type === 'individual' && (
+        <EntityKYCEditDialog
+          open={kycDialogOpen}
+          onOpenChange={setKycDialogOpen}
+          entityType="partner"
+          entityId={partner.id}
+          entityName={partner.name}
+          apiEndpoint={`/api/admin/partners/${partner.id}`}
+          initialData={{
+            first_name: partner.first_name ?? undefined,
+            middle_name: partner.middle_name ?? undefined,
+            last_name: partner.last_name ?? undefined,
+            name_suffix: partner.name_suffix ?? undefined,
+            date_of_birth: partner.date_of_birth ?? undefined,
+            country_of_birth: partner.country_of_birth ?? undefined,
+            nationality: partner.nationality ?? undefined,
+            email: partner.contact_email ?? undefined,
+            phone_mobile: partner.phone_mobile ?? undefined,
+            phone_office: partner.phone_office ?? undefined,
+            residential_street: partner.residential_street ?? undefined,
+            residential_line_2: partner.residential_line_2 ?? undefined,
+            residential_city: partner.residential_city ?? undefined,
+            residential_state: partner.residential_state ?? undefined,
+            residential_postal_code: partner.residential_postal_code ?? undefined,
+            residential_country: partner.residential_country ?? undefined,
+            is_us_citizen: partner.is_us_citizen ?? undefined,
+            is_us_taxpayer: partner.is_us_taxpayer ?? undefined,
+            us_taxpayer_id: partner.us_taxpayer_id ?? undefined,
+            country_of_tax_residency: partner.country_of_tax_residency ?? undefined,
+            id_type: partner.id_type ?? undefined,
+            id_number: partner.id_number ?? undefined,
+            id_issue_date: partner.id_issue_date ?? undefined,
+            id_expiry_date: partner.id_expiry_date ?? undefined,
+            id_issuing_country: partner.id_issuing_country ?? undefined,
+          }}
+          onSuccess={() => router.refresh()}
+        />
+      )}
     </div>
   )
 }

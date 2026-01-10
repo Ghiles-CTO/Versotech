@@ -27,10 +27,10 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: 'Task ID is required' }, { status: 400 })
     }
 
-    // Verify task belongs to user
+    // Verify task belongs to user (either directly or via investor association)
     const { data: task, error: fetchError } = await supabase
       .from('tasks')
-      .select('id, owner_user_id')
+      .select('id, owner_user_id, owner_investor_id')
       .eq('id', id)
       .single()
 
@@ -38,7 +38,22 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: 'Task not found' }, { status: 404 })
     }
 
-    if (task.owner_user_id !== user.id) {
+    // Check authorization: user owns task directly OR is linked to the owner investor
+    let hasPermission = task.owner_user_id === user.id
+
+    // If task has owner_investor_id, check if user is linked to that investor
+    if (!hasPermission && task.owner_investor_id) {
+      const { data: investorLink } = await supabase
+        .from('investor_users')
+        .select('id')
+        .eq('investor_id', task.owner_investor_id)
+        .eq('user_id', user.id)
+        .single()
+
+      hasPermission = !!investorLink
+    }
+
+    if (!hasPermission) {
       return NextResponse.json(
         { error: 'You do not have permission to update this task' },
         { status: 403 }

@@ -35,7 +35,7 @@ import { SignatureSpecimenTab } from '@/components/profile/signature-specimen-ta
 import { PasswordChangeForm } from '@/components/profile/password-change-form'
 import { PreferencesEditor } from '@/components/profile/preferences-editor'
 import { LawyerKYCDocumentsTab } from '@/components/profile/lawyer-kyc-documents-tab'
-import { EntityAddressEditDialog } from '@/components/shared'
+import { EntityAddressEditDialog, EntityKYCEditDialog, IndividualKycDisplay } from '@/components/shared'
 import { GenericEntityMembersTab } from '@/components/profile/generic-entity-members-tab'
 import { NoticeContactsTab } from '@/components/profile/notice-contacts-tab'
 import { toast } from 'sonner'
@@ -76,6 +76,34 @@ type LawyerInfo = {
   registration_number?: string | null
   country_of_incorporation?: string | null
   tax_id?: string | null
+  // Entity type (individual vs entity/firm)
+  type?: string | null
+  // Individual KYC fields (for individual lawyers)
+  first_name?: string | null
+  middle_name?: string | null
+  last_name?: string | null
+  name_suffix?: string | null
+  date_of_birth?: string | null
+  country_of_birth?: string | null
+  nationality?: string | null
+  // US Tax compliance
+  is_us_citizen?: boolean | null
+  is_us_taxpayer?: boolean | null
+  us_taxpayer_id?: string | null
+  country_of_tax_residency?: string | null
+  // ID Document
+  id_type?: string | null
+  id_number?: string | null
+  id_issue_date?: string | null
+  id_expiry_date?: string | null
+  id_issuing_country?: string | null
+  // Residential Address (for individuals)
+  residential_street?: string | null
+  residential_line_2?: string | null
+  residential_city?: string | null
+  residential_state?: string | null
+  residential_postal_code?: string | null
+  residential_country?: string | null
 }
 
 type LawyerUserInfo = {
@@ -158,6 +186,7 @@ export function LawyerProfileClient({
   const [isSaving, setIsSaving] = useState(false)
   const [isUploadingLogo, setIsUploadingLogo] = useState(false)
   const [showAddressDialog, setShowAddressDialog] = useState(false)
+  const [showKycDialog, setShowKycDialog] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Edit state
@@ -597,6 +626,41 @@ export function LawyerProfileClient({
               </CardContent>
             </Card>
           ) : null}
+
+          {/* Individual KYC for Individual Lawyers (solo practitioners) */}
+          {lawyerInfo?.type === 'individual' && (
+            <IndividualKycDisplay
+              data={{
+                first_name: lawyerInfo.first_name,
+                middle_name: lawyerInfo.middle_name,
+                last_name: lawyerInfo.last_name,
+                name_suffix: lawyerInfo.name_suffix,
+                date_of_birth: lawyerInfo.date_of_birth,
+                country_of_birth: lawyerInfo.country_of_birth,
+                nationality: lawyerInfo.nationality,
+                email: lawyerInfo.email,
+                phone_mobile: lawyerInfo.phone_mobile,
+                phone_office: lawyerInfo.phone_office,
+                residential_street: lawyerInfo.residential_street,
+                residential_line_2: lawyerInfo.residential_line_2,
+                residential_city: lawyerInfo.residential_city,
+                residential_state: lawyerInfo.residential_state,
+                residential_postal_code: lawyerInfo.residential_postal_code,
+                residential_country: lawyerInfo.residential_country,
+                is_us_citizen: lawyerInfo.is_us_citizen,
+                is_us_taxpayer: lawyerInfo.is_us_taxpayer,
+                us_taxpayer_id: lawyerInfo.us_taxpayer_id,
+                country_of_tax_residency: lawyerInfo.country_of_tax_residency,
+                id_type: lawyerInfo.id_type,
+                id_number: lawyerInfo.id_number,
+                id_issue_date: lawyerInfo.id_issue_date,
+                id_expiry_date: lawyerInfo.id_expiry_date,
+                id_issuing_country: lawyerInfo.id_issuing_country,
+              }}
+              onEdit={() => setShowKycDialog(true)}
+              title="Personal KYC Information"
+            />
+          )}
         </TabsContent>
 
         {/* Members Tab */}
@@ -730,6 +794,44 @@ export function LawyerProfileClient({
             phone_mobile: lawyerInfo.phone_mobile,
             phone_office: lawyerInfo.phone_office,
             website: lawyerInfo.website,
+          }}
+          apiEndpoint="/api/lawyers/me/profile"
+          onSuccess={() => window.location.reload()}
+        />
+      )}
+
+      {/* Individual KYC Edit Dialog (for individual lawyers) */}
+      {lawyerInfo?.type === 'individual' && (
+        <EntityKYCEditDialog
+          open={showKycDialog}
+          onOpenChange={setShowKycDialog}
+          entityType="lawyer"
+          entityId={lawyerInfo.id}
+          entityName={lawyerInfo.firm_name || lawyerInfo.display_name}
+          initialData={{
+            first_name: lawyerInfo.first_name ?? undefined,
+            middle_name: lawyerInfo.middle_name ?? undefined,
+            last_name: lawyerInfo.last_name ?? undefined,
+            name_suffix: lawyerInfo.name_suffix ?? undefined,
+            date_of_birth: lawyerInfo.date_of_birth ?? undefined,
+            nationality: lawyerInfo.nationality ?? undefined,
+            country_of_birth: lawyerInfo.country_of_birth ?? undefined,
+            phone_mobile: lawyerInfo.phone_mobile ?? undefined,
+            phone_office: lawyerInfo.phone_office ?? undefined,
+            is_us_citizen: lawyerInfo.is_us_citizen === true,
+            is_us_taxpayer: lawyerInfo.is_us_taxpayer === true,
+            us_taxpayer_id: lawyerInfo.us_taxpayer_id ?? undefined,
+            country_of_tax_residency: lawyerInfo.country_of_tax_residency ?? undefined,
+            id_type: lawyerInfo.id_type ?? undefined,
+            id_number: lawyerInfo.id_number ?? undefined,
+            id_issue_date: lawyerInfo.id_issue_date ?? undefined,
+            id_expiry_date: lawyerInfo.id_expiry_date ?? undefined,
+            id_issuing_country: lawyerInfo.id_issuing_country ?? undefined,
+            residential_street: lawyerInfo.residential_street ?? undefined,
+            residential_city: lawyerInfo.residential_city ?? undefined,
+            residential_state: lawyerInfo.residential_state ?? undefined,
+            residential_postal_code: lawyerInfo.residential_postal_code ?? undefined,
+            residential_country: lawyerInfo.residential_country ?? undefined,
           }}
           apiEndpoint="/api/lawyers/me/profile"
           onSuccess={() => window.location.reload()}

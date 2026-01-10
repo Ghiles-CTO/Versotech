@@ -35,6 +35,7 @@ interface InvitationDetails {
   is_signatory: boolean
   invited_by_name: string
   expires_at: string
+  suggested_name?: string | null
 }
 
 interface InvitationResponse {
@@ -587,7 +588,7 @@ function AcceptInvitationContent() {
                 <Button
                   className="w-full"
                   size="lg"
-                  onClick={() => setShowCreateAccountForm(true)}
+                  onClick={() => { if (inv.suggested_name) setDisplayName(inv.suggested_name); setShowCreateAccountForm(true) }}
                 >
                   <UserPlus className="h-4 w-4 mr-2" />
                   Create Account to Accept

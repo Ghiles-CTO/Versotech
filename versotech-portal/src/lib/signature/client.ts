@@ -211,6 +211,12 @@ export async function createSignatureRequest(
       insertData.workflow_run_id = workflow_run_id
     }
 
+    // Include member_id for entity investor signatories
+    if (params.member_id) {
+      insertData.member_id = params.member_id
+      console.log('👤 [SIGNATURE] Setting member_id for entity signatory:', params.member_id)
+    }
+
     // Include subscription_id and document_id if provided (for manual uploads)
     // Also look up deal_id from subscription for task linking
     let deal_id: string | null = params.deal_id ?? null
@@ -350,18 +356,21 @@ export async function createSignatureRequest(
     if (signer_role === 'investor') {
       console.log('📋 [SIGNATURE] Creating task for investor signature in investor portal')
 
-      // Get investor's user account from investor_users table
+      // Get ALL user accounts linked to this investor (for task visibility and notifications)
       const { data: investorUsers, error: investorUserError } = await supabase
         .from('investor_users')
         .select('user_id')
         .eq('investor_id', investor_id)
-        .limit(1)
 
-      const ownerUserId = investorUsers?.[0]?.user_id ?? null
+      const hasUserAccount = (investorUsers && investorUsers.length > 0) && !investorUserError
+      console.log(`📋 [SIGNATURE] Found ${investorUsers?.length || 0} user(s) linked to investor`)
 
-      if (ownerUserId && !investorUserError) {
-        // Investor has user account - create task in their portal
-        console.log('✅ [SIGNATURE] Found investor user account:', ownerUserId)
+      if (hasUserAccount) {
+        // Investor has user account(s) - create task visible to ALL investor users
+        // IMPORTANT: We set owner_investor_id but NOT owner_user_id
+        // This allows any user linked to the investor to see and complete the task
+        // (shared account model for entities)
+        console.log('✅ [SIGNATURE] Investor has user account(s) - creating shared task')
 
         // Determine task kind and category based on document type
         const taskKind = document_type === 'nda'
@@ -374,19 +383,26 @@ export async function createSignatureRequest(
           ? 'compliance'
           : 'investment_setup'
 
+        // Include signatory name in title for multi-signatory entities
+        const signatoryInfo = params.member_id ? ` (${signer_name})` : ''
         const title = document_type === 'nda'
-          ? 'Sign Non-Disclosure Agreement'
+          ? `Sign Non-Disclosure Agreement${signatoryInfo}`
           : document_type === 'subscription'
-          ? 'Sign Subscription Agreement'
-          : `Sign ${document_type.toUpperCase()} Document`
+          ? `Sign Subscription Agreement${signatoryInfo}`
+          : `Sign ${document_type.toUpperCase()} Document${signatoryInfo}`
+
+        // Build description with signatory context
+        const description = params.member_id
+          ? `Signatory ${signer_name} must review and sign the ${document_type} document. Any authorized user of this investor can complete this task.`
+          : `Please review and sign the ${document_type} document`
 
         const { error: taskError } = await supabase.from('tasks').insert({
-          owner_user_id: ownerUserId,
-          owner_investor_id: investor_id,
+          owner_user_id: null, // NOT set - allows any investor user to see/complete
+          owner_investor_id: investor_id, // All investor users can see this task
           kind: taskKind,
           category: category,
           title: title,
-          description: `Please review and sign the ${document_type} document`,
+          description: description,
           status: 'pending',
           priority: 'high',
           related_entity_type: 'signature_request',
@@ -399,6 +415,8 @@ export async function createSignatureRequest(
             signature_request_id: signatureRequest.id,
             document_type: document_type,
             workflow_run_id: workflow_run_id,
+            signer_name: signer_name, // Track which signatory this is for
+            member_id: params.member_id || null, // Track member for entity signatories
             steps: [
               'Click "Start Task" to open the signature page',
               'Review the document carefully',
@@ -417,29 +435,36 @@ export async function createSignatureRequest(
           console.error('⚠️ [SIGNATURE] Failed to create investor task:', taskError)
         } else {
           console.log('✅ [SIGNATURE] Investor task created:', {
-            owner_user_id: ownerUserId,
+            owner_investor_id: investor_id,
             title: title,
-            kind: taskKind
+            kind: taskKind,
+            shared_access: true // All investor users can see this task
           })
 
-          // Create notification for investor
-          const { error: notificationError } = await supabase.from('investor_notifications').insert({
-            user_id: ownerUserId,
-            type: 'signature_required',
-            title: `${document_type.toUpperCase()} Ready for Signature`,
-            message: `Your ${document_type} document is ready for signature. Please sign within ${Math.floor((token_expires_at.getTime() - Date.now()) / (24 * 60 * 60 * 1000))} days.`,
-            action_url: `/versotech_main/tasks`,
-            metadata: {
-              signature_request_id: signatureRequest.id,
-              document_type: document_type
+          // Create notifications for ALL users linked to this investor
+          // This ensures everyone in the entity is notified about the signature request
+          for (const investorUser of investorUsers || []) {
+            const { error: notificationError } = await supabase.from('investor_notifications').insert({
+              user_id: investorUser.user_id,
+              type: 'signature_required',
+              title: `${document_type.toUpperCase()} Ready for Signature${params.member_id ? ` - ${signer_name}` : ''}`,
+              message: params.member_id
+                ? `Signatory ${signer_name} must sign the ${document_type} document. Please sign within ${Math.floor((token_expires_at.getTime() - Date.now()) / (24 * 60 * 60 * 1000))} days.`
+                : `Your ${document_type} document is ready for signature. Please sign within ${Math.floor((token_expires_at.getTime() - Date.now()) / (24 * 60 * 60 * 1000))} days.`,
+              action_url: `/versotech_main/tasks`,
+              metadata: {
+                signature_request_id: signatureRequest.id,
+                document_type: document_type,
+                signer_name: signer_name,
+                member_id: params.member_id || null
+              }
+            })
+
+            if (notificationError) {
+              console.error('⚠️ [SIGNATURE] Failed to create notification for user:', investorUser.user_id, notificationError)
             }
-          })
-
-          if (notificationError) {
-            console.error('⚠️ [SIGNATURE] Failed to create notification:', notificationError)
-          } else {
-            console.log('✅ [SIGNATURE] Notification created for investor')
           }
+          console.log(`✅ [SIGNATURE] Notifications created for ${investorUsers?.length || 0} investor user(s)`)
         }
       } else {
         // Investor has NO user account - create manual follow-up task for staff

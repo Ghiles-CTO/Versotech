@@ -26,6 +26,40 @@ const updatePartnerSchema = z.object({
   kyc_status: z.string().nullable().optional(),
   kyc_notes: z.string().nullable().optional(),
   logo_url: z.string().url().nullable().optional().or(z.literal('')),
+
+  // Individual KYC fields
+  first_name: z.string().max(100).nullable().optional(),
+  middle_name: z.string().max(100).nullable().optional(),
+  last_name: z.string().max(100).nullable().optional(),
+  name_suffix: z.string().max(20).nullable().optional(),
+  date_of_birth: z.string().nullable().optional(),
+  country_of_birth: z.string().max(2).nullable().optional(),
+  nationality: z.string().max(2).nullable().optional(),
+
+  // Phone fields
+  phone_mobile: z.string().max(30).nullable().optional(),
+  phone_office: z.string().max(30).nullable().optional(),
+
+  // US Tax compliance
+  is_us_citizen: z.boolean().nullable().optional(),
+  is_us_taxpayer: z.boolean().nullable().optional(),
+  us_taxpayer_id: z.string().max(20).nullable().optional(),
+  country_of_tax_residency: z.string().max(2).nullable().optional(),
+
+  // ID Document
+  id_type: z.string().nullable().optional(),
+  id_number: z.string().max(50).nullable().optional(),
+  id_issue_date: z.string().nullable().optional(),
+  id_expiry_date: z.string().nullable().optional(),
+  id_issuing_country: z.string().max(2).nullable().optional(),
+
+  // Residential Address
+  residential_street: z.string().max(255).nullable().optional(),
+  residential_line_2: z.string().max(255).nullable().optional(),
+  residential_city: z.string().max(100).nullable().optional(),
+  residential_state: z.string().max(100).nullable().optional(),
+  residential_postal_code: z.string().max(20).nullable().optional(),
+  residential_country: z.string().max(2).nullable().optional(),
 })
 
 type RouteContext = {

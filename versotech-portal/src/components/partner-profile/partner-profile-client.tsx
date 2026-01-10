@@ -28,7 +28,7 @@ import { PartnerKYCDocumentsTab } from '@/components/profile/partner-kyc-documen
 import { SignatureSpecimenTab } from '@/components/profile/signature-specimen-tab'
 import { GenericEntityMembersTab } from '@/components/profile/generic-entity-members-tab'
 import { NoticeContactsTab } from '@/components/profile/notice-contacts-tab'
-import { EntityKYCEditDialog, EntityAddressEditDialog } from '@/components/shared'
+import { EntityKYCEditDialog, EntityAddressEditDialog, IndividualKycDisplay } from '@/components/shared'
 import { formatDate } from '@/lib/format'
 
 type Profile = {
@@ -381,63 +381,36 @@ export function PartnerProfileClient({
 
           {/* Personal KYC for Individual Partners */}
           {partnerInfo.type === 'individual' && (
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <div>
-                  <CardTitle className="flex items-center gap-2">
-                    <Shield className="h-5 w-5" />
-                    Personal KYC Information
-                  </CardTitle>
-                  <CardDescription>
-                    Your personal identification and tax details
-                  </CardDescription>
-                </div>
-                <Button variant="outline" size="sm" onClick={() => setShowKycDialog(true)}>
-                  <Edit className="h-4 w-4 mr-2" />
-                  Edit
-                </Button>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label className="text-muted-foreground">Full Name</Label>
-                    <div className="font-medium">
-                      {[partnerInfo.first_name, partnerInfo.middle_name, partnerInfo.last_name, partnerInfo.name_suffix]
-                        .filter(Boolean).join(' ') || 'Not set'}
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-muted-foreground">Date of Birth</Label>
-                    <div className="font-medium">
-                      {partnerInfo.date_of_birth ? formatDate(partnerInfo.date_of_birth) : 'Not set'}
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-muted-foreground">Nationality</Label>
-                    <div className="font-medium">{partnerInfo.nationality || 'Not set'}</div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-muted-foreground">US Person</Label>
-                    <div className="font-medium">
-                      {partnerInfo.is_us_citizen || partnerInfo.is_us_taxpayer ? 'Yes' : 'No'}
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-muted-foreground">ID Document</Label>
-                    <div className="font-medium capitalize">
-                      {partnerInfo.id_type?.replace('_', ' ') || 'Not set'}
-                      {partnerInfo.id_number && ` (${partnerInfo.id_number})`}
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-muted-foreground">ID Expiry Date</Label>
-                    <div className="font-medium">
-                      {partnerInfo.id_expiry_date ? formatDate(partnerInfo.id_expiry_date) : 'Not set'}
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <IndividualKycDisplay
+              data={{
+                first_name: partnerInfo.first_name,
+                middle_name: partnerInfo.middle_name,
+                last_name: partnerInfo.last_name,
+                name_suffix: partnerInfo.name_suffix,
+                date_of_birth: partnerInfo.date_of_birth,
+                country_of_birth: partnerInfo.country_of_birth,
+                nationality: partnerInfo.nationality,
+                email: partnerInfo.email,
+                phone_mobile: partnerInfo.phone_mobile,
+                phone_office: partnerInfo.phone_office,
+                residential_street: partnerInfo.residential_street,
+                residential_city: partnerInfo.residential_city,
+                residential_state: partnerInfo.residential_state,
+                residential_postal_code: partnerInfo.residential_postal_code,
+                residential_country: partnerInfo.residential_country,
+                is_us_citizen: partnerInfo.is_us_citizen,
+                is_us_taxpayer: partnerInfo.is_us_taxpayer,
+                us_taxpayer_id: partnerInfo.us_taxpayer_id,
+                country_of_tax_residency: partnerInfo.country_of_tax_residency,
+                id_type: partnerInfo.id_type,
+                id_number: partnerInfo.id_number,
+                id_issue_date: partnerInfo.id_issue_date,
+                id_expiry_date: partnerInfo.id_expiry_date,
+                id_issuing_country: partnerInfo.id_issuing_country,
+              }}
+              onEdit={() => setShowKycDialog(true)}
+              title="Personal KYC Information"
+            />
           )}
 
           {/* Preferences */}

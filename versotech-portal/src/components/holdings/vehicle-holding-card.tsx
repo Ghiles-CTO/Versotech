@@ -115,7 +115,7 @@ export function VehicleHoldingCard({ holding }: VehicleHoldingCardProps) {
       case 'real_estate':
         return 'bg-orange-100 border-orange-200 text-orange-700'
       default:
-        return 'bg-gray-100 border-gray-200 text-gray-700'
+        return 'bg-gray-100 border-gray-200 text-foreground/80'
     }
   }
 
@@ -160,7 +160,7 @@ export function VehicleHoldingCard({ holding }: VehicleHoldingCardProps) {
                   ? 'bg-green-100 text-green-700 border border-green-200'
                   : holding.performance.unrealizedGainPct < 0
                   ? 'bg-red-100 text-red-700 border border-red-200'
-                  : 'bg-gray-100 text-gray-700 border border-gray-200'
+                  : 'bg-gray-100 text-foreground/80 border border-gray-200'
               )}>
                 {holding.performance.unrealizedGainPct > 0 ? (
                   <TrendingUp className="h-3 w-3" />
@@ -188,7 +188,7 @@ export function VehicleHoldingCard({ holding }: VehicleHoldingCardProps) {
         {/* Key Metrics */}
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1">
-            <div className="text-2xl font-bold text-gray-900">
+            <div className="text-2xl font-bold text-foreground">
               {holding.position?.currentValue
                 ? formatCurrency(holding.position.currentValue)
                 : 'N/A'
@@ -198,7 +198,7 @@ export function VehicleHoldingCard({ holding }: VehicleHoldingCardProps) {
           </div>
 
           <div className="space-y-1">
-            <div className="text-lg font-semibold text-gray-700">
+            <div className="text-lg font-semibold text-foreground/80">
               {holding.subscription?.commitment
                 ? formatCurrency(holding.subscription.commitment)
                 : 'N/A'
@@ -210,16 +210,16 @@ export function VehicleHoldingCard({ holding }: VehicleHoldingCardProps) {
 
         {/* Performance Summary */}
         {holding.position && (
-          <div className="bg-gradient-to-r from-slate-50 to-blue-50 rounded-lg p-4 space-y-3">
+          <div className="bg-gradient-to-r from-muted/50 to-primary/5 rounded-lg p-4 space-y-3">
             <div className="flex justify-between items-center text-sm">
               <span className="text-muted-foreground font-medium">Units Held</span>
-              <span className="font-semibold text-gray-900">
+              <span className="font-semibold text-foreground">
                 {formatUnits(holding.position.units)}
               </span>
             </div>
             <div className="flex justify-between items-center text-sm">
               <span className="text-muted-foreground font-medium">Cost Basis</span>
-              <span className="font-semibold text-gray-900">
+              <span className="font-semibold text-foreground">
                 {formatCurrency(holding.position.costBasis)}
               </span>
             </div>

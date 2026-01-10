@@ -2,11 +2,12 @@ import { createClient } from '@/lib/supabase/server'
 import { auditLogger, AuditActions, AuditEntities } from '@/lib/audit'
 import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
+import { validateDocument, isIdDocument, isProofOfAddress } from '@/lib/validation/document-validation'
 
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient()
-    
+
     // Authenticate user
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
@@ -42,12 +43,66 @@ export async function POST(request: NextRequest) {
     const tags = formData.get('tags') as string
     const isConfidential = formData.get('confidential') === 'true'
 
+    // Member ID params (Phase 4: Member document support)
+    const investorMemberId = formData.get('investor_member_id') as string
+    const arrangerMemberId = formData.get('arranger_member_id') as string
+    const partnerMemberId = formData.get('partner_member_id') as string
+    const introducerMemberId = formData.get('introducer_member_id') as string
+    const lawyerMemberId = formData.get('lawyer_member_id') as string
+    const commercialPartnerMemberId = formData.get('commercial_partner_member_id') as string
+
+    // Document validation params (Phase 5: Strict validation)
+    const documentDateStr = formData.get('document_date') as string
+    const documentExpiryDateStr = formData.get('document_expiry_date') as string
+    const documentIssueDateStr = formData.get('document_issue_date') as string
+    const staffOverride = formData.get('staff_override') === 'true'
+    const overrideReason = formData.get('override_reason') as string
+
     if (!file) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 })
     }
 
     if (!documentType) {
       return NextResponse.json({ error: 'Document type is required' }, { status: 400 })
+    }
+
+    // ============================================================
+    // Phase 5: STRICT Document Validation
+    // ============================================================
+    const documentDate = documentDateStr ? new Date(documentDateStr) : null
+    const documentExpiryDate = documentExpiryDateStr ? new Date(documentExpiryDateStr) : null
+    const documentIssueDate = documentIssueDateStr ? new Date(documentIssueDateStr) : null
+
+    // Validate document based on type
+    const validationResult = validateDocument({
+      documentType,
+      documentDate,
+      expiryDate: documentExpiryDate,
+      issueDate: documentIssueDate,
+      isStaffOverride: staffOverride,
+      overrideReason,
+    })
+
+    // Block invalid documents based on validation result
+    if (!validationResult.isValid) {
+      // Check if override is allowed and provided
+      if (validationResult.canOverride && staffOverride && overrideReason) {
+        // Allow upload with override - log the override
+        console.log(`[Document Upload] Staff override applied by ${user.id}: ${overrideReason}`)
+      } else {
+        // Block the upload
+        return NextResponse.json({
+          error: validationResult.errors[0] || 'Document validation failed',
+          validation: {
+            status: validationResult.status,
+            errors: validationResult.errors,
+            warnings: validationResult.warnings,
+            canOverride: validationResult.canOverride,
+            daysUntilExpiry: validationResult.daysUntilExpiry,
+            documentAgeInDays: validationResult.documentAgeInDays,
+          }
+        }, { status: 422 }) // 422 Unprocessable Entity
+      }
     }
     
     // Parse tags
@@ -126,6 +181,7 @@ export async function POST(request: NextRequest) {
         type: documentType,
         folder_id: folderId || null,
         tags: tagArray.length > 0 ? tagArray : null,
+        // Entity references
         owner_investor_id: ownerInvestorId || null,
         vehicle_id: vehicleId || null,
         entity_id: entityId || null,
@@ -134,6 +190,22 @@ export async function POST(request: NextRequest) {
         lawyer_id: lawyerId || null,
         partner_id: partnerId || null,
         commercial_partner_id: commercialPartnerId || null,
+        // Member references (Phase 4)
+        investor_member_id: investorMemberId || null,
+        arranger_member_id: arrangerMemberId || null,
+        partner_member_id: partnerMemberId || null,
+        introducer_member_id: introducerMemberId || null,
+        lawyer_member_id: lawyerMemberId || null,
+        commercial_partner_member_id: commercialPartnerMemberId || null,
+        // Document validation fields (Phase 5)
+        document_date: documentDate || null,
+        document_expiry_date: documentExpiryDate || null,
+        document_issue_date: documentIssueDate || null,
+        validation_status: validationResult.status,
+        validation_notes: validationResult.warnings.length > 0 ? validationResult.warnings.join('; ') : null,
+        validated_at: new Date().toISOString(),
+        validated_by: user.id,
+        // File metadata
         file_size_bytes: file.size,
         mime_type: file.type,
         current_version: 1,
@@ -185,13 +257,26 @@ export async function POST(request: NextRequest) {
         file_type: file.type,
         original_name: file.name,
         confidential: isConfidential,
+        // Entity IDs
         owner_investor_id: ownerInvestorId,
         vehicle_id: vehicleId,
         arranger_entity_id: arrangerEntityId,
         introducer_id: introducerId,
         lawyer_id: lawyerId,
         partner_id: partnerId,
-        commercial_partner_id: commercialPartnerId
+        commercial_partner_id: commercialPartnerId,
+        // Member IDs (Phase 4)
+        investor_member_id: investorMemberId,
+        arranger_member_id: arrangerMemberId,
+        partner_member_id: partnerMemberId,
+        introducer_member_id: introducerMemberId,
+        lawyer_member_id: lawyerMemberId,
+        commercial_partner_member_id: commercialPartnerMemberId,
+        // Validation info (Phase 5)
+        validation_status: validationResult.status,
+        validation_warnings: validationResult.warnings,
+        staff_override: staffOverride,
+        override_reason: overrideReason,
       }
     })
 

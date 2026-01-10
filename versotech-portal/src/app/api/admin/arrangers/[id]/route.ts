@@ -92,6 +92,36 @@ export async function PATCH(
       'kyc_notes',
       'metadata',
       'status',
+      'type',
+      // Individual KYC fields
+      'first_name',
+      'middle_name',
+      'last_name',
+      'name_suffix',
+      'date_of_birth',
+      'country_of_birth',
+      'nationality',
+      // Phone fields
+      'phone_mobile',
+      'phone_office',
+      // US Tax compliance
+      'is_us_citizen',
+      'is_us_taxpayer',
+      'us_taxpayer_id',
+      'country_of_tax_residency',
+      // ID Document
+      'id_type',
+      'id_number',
+      'id_issue_date',
+      'id_expiry_date',
+      'id_issuing_country',
+      // Residential Address
+      'residential_street',
+      'residential_line_2',
+      'residential_city',
+      'residential_state',
+      'residential_postal_code',
+      'residential_country',
     ]
 
     for (const field of allowedFields) {

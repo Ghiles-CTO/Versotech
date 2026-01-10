@@ -123,6 +123,7 @@ export async function GET(request: Request, { params }: RouteParams) {
     // Get subscription if exists (use maybeSingle as subscription might not exist)
     const vehicleId = deal.vehicle_id
     let subscription = null
+    let subscriptionSubmission: { id: string; status: string; submitted_at: string | null } | null = null
     let subscriptionDocuments: {
       nda: {
         status: string
@@ -265,6 +266,19 @@ export async function GET(request: Request, { params }: RouteParams) {
           })()
         }
       }
+    }
+
+    if (effectiveInvestorId) {
+      const { data: submission } = await serviceSupabase
+        .from('deal_subscription_submissions')
+        .select('id, status, submitted_at')
+        .eq('deal_id', dealId)
+        .eq('investor_id', effectiveInvestorId)
+        .order('submitted_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+      subscriptionSubmission = submission ?? null
     }
 
     // Get journey stages using RPC function
@@ -430,6 +444,8 @@ export async function GET(request: Request, { params }: RouteParams) {
     else if (membership?.dispatched_at) currentStage = 1
 
     // Build the response
+    const hasPendingSubmission = subscriptionSubmission?.status === 'pending_review'
+
     const opportunity = {
       id: deal.id,
       name: deal.name,
@@ -521,6 +537,7 @@ export async function GET(request: Request, { params }: RouteParams) {
         is_active: !!subscription.activated_at,
         documents: subscriptionDocuments
       } : null,
+      subscription_submission: subscriptionSubmission,
 
       // Fee structures
       fee_structures: feeStructures || [],
@@ -531,7 +548,7 @@ export async function GET(request: Request, { params }: RouteParams) {
       // Signatories for NDA/subscription signing
       signatories: signatories || [],
 
-      // Computed flags for UI (Direct subscribe allows skipping NDA)
+      // Computed flags for UI
       // Only show express interest for users with an investor persona
       can_express_interest: effectiveInvestorId !== null && !membership?.interest_confirmed_at,
       can_sign_nda: !!membership?.interest_confirmed_at && !membership?.nda_signed_at,
@@ -539,7 +556,7 @@ export async function GET(request: Request, { params }: RouteParams) {
       // SECURITY FIX: Only allow subscription for roles that permit investing
       // commercial_partner_proxy has its own endpoint at /api/commercial-partners/proxy-subscribe
       // Must have an investor profile (effectiveInvestorId) to be able to subscribe
-      can_subscribe: effectiveInvestorId !== null && !subscription && isDealOpen && (
+      can_subscribe: effectiveInvestorId !== null && !subscription && !hasPendingSubmission && isDealOpen && (
         !membership?.role || // Public deal without membership (user still needs investor profile - checked above)
         ['investor', 'partner_investor', 'introducer_investor', 'commercial_partner_investor', 'co_investor'].includes(membership.role)
       ),

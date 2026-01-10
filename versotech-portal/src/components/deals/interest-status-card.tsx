@@ -51,7 +51,7 @@ interface StageInfo {
 const stageMetadata: Record<number, StageInfo> = {
   0: {
     label: 'New',
-    description: 'Choose to subscribe directly or explore the data room first',
+    description: 'Choose to request a subscription or explore the data room first',
     icon: Sparkles,
     color: 'text-gray-600',
     bgColor: 'bg-gray-100 dark:bg-gray-800'

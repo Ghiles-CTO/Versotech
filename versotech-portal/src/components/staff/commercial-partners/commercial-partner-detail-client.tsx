@@ -27,6 +27,8 @@ import { EditCommercialPartnerDialog } from '@/components/staff/commercial-partn
 import { KYCDocumentsTab } from '@/components/shared/kyc-documents-tab'
 import { BankDetailsTab } from '@/components/shared/bank-details-tab'
 import { ActivityTimelineTab } from '@/components/shared/activity-timeline-tab'
+import { IndividualKycDisplay, EntityKYCEditDialog } from '@/components/shared'
+import { StaffEntityMembersTab } from '@/components/staff/shared/staff-entity-members-tab'
 import { InviteUserDialog } from '@/components/users/invite-user-dialog'
 import { statusStyles, kycStyles, getStatusStyle } from '@/lib/status-styles'
 
@@ -60,6 +62,32 @@ type CommercialPartner = {
   logo_url: string | null
   created_at: string
   updated_at: string
+  // Individual KYC fields
+  first_name?: string | null
+  middle_name?: string | null
+  last_name?: string | null
+  name_suffix?: string | null
+  date_of_birth?: string | null
+  country_of_birth?: string | null
+  nationality?: string | null
+  email?: string | null
+  phone_mobile?: string | null
+  phone_office?: string | null
+  is_us_citizen?: boolean | null
+  is_us_taxpayer?: boolean | null
+  us_taxpayer_id?: string | null
+  country_of_tax_residency?: string | null
+  id_type?: string | null
+  id_number?: string | null
+  id_issue_date?: string | null
+  id_expiry_date?: string | null
+  id_issuing_country?: string | null
+  residential_street?: string | null
+  residential_line_2?: string | null
+  residential_city?: string | null
+  residential_state?: string | null
+  residential_postal_code?: string | null
+  residential_country?: string | null
 }
 
 type LinkedUser = {
@@ -96,6 +124,7 @@ export function CommercialPartnerDetailClient({
 }: CommercialPartnerDetailClientProps) {
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false)
+  const [kycDialogOpen, setKycDialogOpen] = useState(false)
 
   const fullAddress = [
     partner.address_line_1,
@@ -209,6 +238,7 @@ export function CommercialPartnerDetailClient({
       <Tabs defaultValue="overview" className="space-y-6" id={`commercial-partner-tabs-${partner.id}`}>
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="members">Members</TabsTrigger>
           <TabsTrigger value="kyc-documents">KYC Documents</TabsTrigger>
           <TabsTrigger value="bank-details">Bank Details</TabsTrigger>
           <TabsTrigger value="activity">Activity</TabsTrigger>
@@ -419,6 +449,51 @@ export function CommercialPartnerDetailClient({
               </Card>
             )}
           </div>
+
+          {/* Individual KYC Information (for individual commercial partners) */}
+          {partner.type === 'individual' && (
+            <IndividualKycDisplay
+              data={{
+                first_name: partner.first_name,
+                middle_name: partner.middle_name,
+                last_name: partner.last_name,
+                name_suffix: partner.name_suffix,
+                date_of_birth: partner.date_of_birth,
+                country_of_birth: partner.country_of_birth,
+                nationality: partner.nationality,
+                email: partner.email || partner.contact_email,
+                phone_mobile: partner.phone_mobile,
+                phone_office: partner.phone_office,
+                residential_street: partner.residential_street,
+                residential_line_2: partner.residential_line_2,
+                residential_city: partner.residential_city,
+                residential_state: partner.residential_state,
+                residential_postal_code: partner.residential_postal_code,
+                residential_country: partner.residential_country,
+                is_us_citizen: partner.is_us_citizen,
+                is_us_taxpayer: partner.is_us_taxpayer,
+                us_taxpayer_id: partner.us_taxpayer_id,
+                country_of_tax_residency: partner.country_of_tax_residency,
+                id_type: partner.id_type,
+                id_number: partner.id_number,
+                id_issue_date: partner.id_issue_date,
+                id_expiry_date: partner.id_expiry_date,
+                id_issuing_country: partner.id_issuing_country,
+              }}
+              showEditButton={true}
+              onEdit={() => setKycDialogOpen(true)}
+              title="Personal KYC Information"
+            />
+          )}
+        </TabsContent>
+
+        {/* Members Tab */}
+        <TabsContent value="members">
+          <StaffEntityMembersTab
+            entityType="commercial_partner"
+            entityId={partner.id}
+            entityName={partner.name}
+          />
         </TabsContent>
 
         {/* KYC Documents Tab */}
@@ -459,6 +534,45 @@ export function CommercialPartnerDetailClient({
         entityId={partner.id}
         entityName={partner.name}
       />
+
+      {partner.type === 'individual' && (
+        <EntityKYCEditDialog
+          open={kycDialogOpen}
+          onOpenChange={setKycDialogOpen}
+          entityType="commercial_partner"
+          entityId={partner.id}
+          entityName={partner.name}
+          apiEndpoint={`/api/admin/commercial-partners/${partner.id}`}
+          initialData={{
+            first_name: partner.first_name ?? undefined,
+            middle_name: partner.middle_name ?? undefined,
+            last_name: partner.last_name ?? undefined,
+            name_suffix: partner.name_suffix ?? undefined,
+            date_of_birth: partner.date_of_birth ?? undefined,
+            country_of_birth: partner.country_of_birth ?? undefined,
+            nationality: partner.nationality ?? undefined,
+            email: (partner.email || partner.contact_email) ?? undefined,
+            phone_mobile: partner.phone_mobile ?? undefined,
+            phone_office: partner.phone_office ?? undefined,
+            residential_street: partner.residential_street ?? undefined,
+            residential_line_2: partner.residential_line_2 ?? undefined,
+            residential_city: partner.residential_city ?? undefined,
+            residential_state: partner.residential_state ?? undefined,
+            residential_postal_code: partner.residential_postal_code ?? undefined,
+            residential_country: partner.residential_country ?? undefined,
+            is_us_citizen: partner.is_us_citizen ?? undefined,
+            is_us_taxpayer: partner.is_us_taxpayer ?? undefined,
+            us_taxpayer_id: partner.us_taxpayer_id ?? undefined,
+            country_of_tax_residency: partner.country_of_tax_residency ?? undefined,
+            id_type: partner.id_type ?? undefined,
+            id_number: partner.id_number ?? undefined,
+            id_issue_date: partner.id_issue_date ?? undefined,
+            id_expiry_date: partner.id_expiry_date ?? undefined,
+            id_issuing_country: partner.id_issuing_country ?? undefined,
+          }}
+          onSuccess={() => window.location.reload()}
+        />
+      )}
     </div>
   )
 }

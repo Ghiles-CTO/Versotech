@@ -91,7 +91,7 @@ ActionItem.displayName = 'ActionItem'
 const ActionSection = React.memo(({ section }: { section: ActionSection }) => {
     const Icon = section.icon
     return (
-      <div className="bg-[#0a0a0a] p-6 space-y-4 group/section hover:bg-zinc-900/20 transition-colors">
+      <div className="bg-zinc-950 p-6 space-y-4 group/section hover:bg-zinc-900/20 transition-colors">
         <div className="flex items-center gap-2 mb-4">
            <Icon className="h-4 w-4 text-zinc-500 group-hover/section:text-zinc-300 transition-colors" />
            <h3 className="text-sm font-medium text-zinc-300 uppercase tracking-wider">{section.title}</h3>

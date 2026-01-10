@@ -705,8 +705,10 @@ export async function middleware(request: NextRequest) {
 
   } catch (error) {
     console.error('Middleware error:', error)
-    // On error, redirect to login
-    return NextResponse.redirect(new URL('/versotech_main/login', request.url))
+    // On error, redirect to login WITH error indicator so we can debug
+    const errorMessage = error instanceof Error ? error.message : 'unknown'
+    console.error('Middleware error details:', errorMessage)
+    return NextResponse.redirect(new URL(`/versotech_main/login?error=middleware_error&detail=${encodeURIComponent(errorMessage.substring(0, 100))}`, request.url))
   }
 }
 

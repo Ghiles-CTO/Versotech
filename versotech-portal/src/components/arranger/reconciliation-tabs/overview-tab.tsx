@@ -104,12 +104,12 @@ const SUBSCRIPTION_STATUS_LABELS: Record<string, string> = {
 }
 
 const FEE_STATUS_STYLES: Record<string, string> = {
-  accrued: 'bg-blue-100 text-blue-800 border-blue-200',
-  invoiced: 'bg-amber-100 text-amber-800 border-amber-200',
-  paid: 'bg-emerald-100 text-emerald-800 border-emerald-200',
-  waived: 'bg-gray-100 text-gray-800 border-gray-200',
-  cancelled: 'bg-gray-100 text-gray-800 border-gray-200',
-  disputed: 'bg-red-100 text-red-800 border-red-200',
+  accrued: 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-700',
+  invoiced: 'bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-700',
+  paid: 'bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-700',
+  waived: 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-800/50 dark:text-gray-300 dark:border-gray-700',
+  cancelled: 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-800/50 dark:text-gray-300 dark:border-gray-700',
+  disputed: 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-700',
 }
 
 const FEE_TYPE_LABELS: Record<string, string> = {

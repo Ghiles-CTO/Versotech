@@ -211,6 +211,28 @@ export function AddInvestorModal() {
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Investor Type - First Field */}
+          <div className="space-y-2">
+            <Label htmlFor="type" className="text-white">
+              Investor Type <span className="text-red-400">*</span>
+            </Label>
+            <Select
+              value={formData.type}
+              onValueChange={(value) => setFormData({ ...formData, type: value })}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="individual">Individual</SelectItem>
+                <SelectItem value="entity">Entity</SelectItem>
+                <SelectItem value="institutional">Institutional</SelectItem>
+                <SelectItem value="family_office">Family Office</SelectItem>
+                <SelectItem value="fund">Fund</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
           {/* Legal Name */}
           <div className="space-y-2">
             <Label htmlFor="legal_name" className="text-white">
@@ -236,28 +258,6 @@ export function AddInvestorModal() {
               placeholder="Optional short name"
               className="bg-zinc-900 border-zinc-700 text-white placeholder:text-gray-500"
             />
-          </div>
-
-          {/* Investor Type */}
-          <div className="space-y-2">
-            <Label htmlFor="type" className="text-white">
-              Investor Type <span className="text-red-400">*</span>
-            </Label>
-            <Select
-              value={formData.type}
-              onValueChange={(value) => setFormData({ ...formData, type: value })}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="individual">Individual</SelectItem>
-                <SelectItem value="institutional">Institutional</SelectItem>
-                <SelectItem value="entity">Entity</SelectItem>
-                <SelectItem value="family_office">Family Office</SelectItem>
-                <SelectItem value="fund">Fund</SelectItem>
-              </SelectContent>
-            </Select>
           </div>
 
           <div className="grid grid-cols-2 gap-4">

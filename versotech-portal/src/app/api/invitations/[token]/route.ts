@@ -120,7 +120,8 @@ export async function GET(
         role: invitation.role,
         is_signatory: invitation.is_signatory,
         invited_by_name: invitation.invited_by_name,
-        expires_at: invitation.expires_at
+        expires_at: invitation.expires_at,
+        suggested_name: (invitation.metadata as Record<string, any> | null)?.display_name || null
       },
       user_logged_in: !!user,
       email_match: emailMatch,

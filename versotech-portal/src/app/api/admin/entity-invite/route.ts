@@ -256,7 +256,8 @@ export async function POST(request: NextRequest) {
         invited_by: user.id,
         invited_by_name: inviterName,
         status: 'pending',
-        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 days
+        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days
+        metadata: { display_name }
       })
       .select()
       .single()

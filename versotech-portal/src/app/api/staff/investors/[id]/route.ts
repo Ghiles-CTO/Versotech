@@ -121,7 +121,35 @@ export async function PATCH(
       is_professional_investor,
       is_qualified_purchaser,
       is_pep,
-      is_sanctioned
+      is_sanctioned,
+      // Individual KYC fields
+      first_name,
+      middle_name,
+      last_name,
+      name_suffix,
+      date_of_birth,
+      country_of_birth,
+      nationality,
+      phone_mobile,
+      phone_office,
+      // US Tax compliance
+      is_us_citizen,
+      is_us_taxpayer,
+      us_taxpayer_id,
+      country_of_tax_residency,
+      // ID Document
+      id_type,
+      id_number,
+      id_issue_date,
+      id_expiry_date,
+      id_issuing_country,
+      // Residential Address
+      residential_street,
+      residential_line_2,
+      residential_city,
+      residential_state,
+      residential_postal_code,
+      residential_country,
     } = body
 
     // Helper to convert empty strings to null
@@ -193,6 +221,34 @@ export async function PATCH(
       updateData.is_qualified_purchaser = is_qualified_purchaser
     if (is_pep !== undefined) updateData.is_pep = is_pep
     if (is_sanctioned !== undefined) updateData.is_sanctioned = is_sanctioned
+    // Individual KYC fields
+    if (first_name !== undefined) updateData.first_name = cleanValue(first_name)
+    if (middle_name !== undefined) updateData.middle_name = cleanValue(middle_name)
+    if (last_name !== undefined) updateData.last_name = cleanValue(last_name)
+    if (name_suffix !== undefined) updateData.name_suffix = cleanValue(name_suffix)
+    if (date_of_birth !== undefined) updateData.date_of_birth = cleanValue(date_of_birth)
+    if (country_of_birth !== undefined) updateData.country_of_birth = cleanValue(country_of_birth)
+    if (nationality !== undefined) updateData.nationality = cleanValue(nationality)
+    if (phone_mobile !== undefined) updateData.phone_mobile = cleanValue(phone_mobile)
+    if (phone_office !== undefined) updateData.phone_office = cleanValue(phone_office)
+    // US Tax compliance
+    if (is_us_citizen !== undefined) updateData.is_us_citizen = is_us_citizen
+    if (is_us_taxpayer !== undefined) updateData.is_us_taxpayer = is_us_taxpayer
+    if (us_taxpayer_id !== undefined) updateData.us_taxpayer_id = cleanValue(us_taxpayer_id)
+    if (country_of_tax_residency !== undefined) updateData.country_of_tax_residency = cleanValue(country_of_tax_residency)
+    // ID Document
+    if (id_type !== undefined) updateData.id_type = cleanValue(id_type)
+    if (id_number !== undefined) updateData.id_number = cleanValue(id_number)
+    if (id_issue_date !== undefined) updateData.id_issue_date = cleanValue(id_issue_date)
+    if (id_expiry_date !== undefined) updateData.id_expiry_date = cleanValue(id_expiry_date)
+    if (id_issuing_country !== undefined) updateData.id_issuing_country = cleanValue(id_issuing_country)
+    // Residential Address
+    if (residential_street !== undefined) updateData.residential_street = cleanValue(residential_street)
+    if (residential_line_2 !== undefined) updateData.residential_line_2 = cleanValue(residential_line_2)
+    if (residential_city !== undefined) updateData.residential_city = cleanValue(residential_city)
+    if (residential_state !== undefined) updateData.residential_state = cleanValue(residential_state)
+    if (residential_postal_code !== undefined) updateData.residential_postal_code = cleanValue(residential_postal_code)
+    if (residential_country !== undefined) updateData.residential_country = cleanValue(residential_country)
 
     // Always update the updated_at timestamp
     updateData.updated_at = new Date().toISOString()

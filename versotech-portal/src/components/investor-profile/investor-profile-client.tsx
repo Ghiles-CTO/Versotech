@@ -29,7 +29,7 @@ import { MembersManagementTab } from '@/components/members/members-management-ta
 import { KYCDocumentsTab } from '@/components/profile/kyc-documents-tab'
 import { SignatureSpecimenTab } from '@/components/profile/signature-specimen-tab'
 import { NoticeContactsTab } from '@/components/profile/notice-contacts-tab'
-import { EntityKYCEditDialog, EntityAddressEditDialog } from '@/components/shared'
+import { EntityKYCEditDialog, EntityAddressEditDialog, IndividualKycDisplay } from '@/components/shared'
 import { formatDate } from '@/lib/format'
 
 type Profile = {
@@ -446,65 +446,40 @@ export function InvestorProfileClient({
             </Card>
           )}
 
-          {/* Personal KYC for Individual Investors */}
+          {/* Personal KYC for Individual Investors - Full Display */}
           {investorInfo.type === 'individual' && (
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <div>
-                  <CardTitle className="flex items-center gap-2">
-                    <Shield className="h-5 w-5" />
-                    Personal KYC Information
-                  </CardTitle>
-                  <CardDescription>
-                    Your personal identification and tax details
-                  </CardDescription>
-                </div>
-                <Button variant="outline" size="sm" onClick={() => setShowKycDialog(true)}>
-                  <Edit className="h-4 w-4 mr-2" />
-                  Edit
-                </Button>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label className="text-muted-foreground">Full Name</Label>
-                    <div className="font-medium">
-                      {[investorInfo.first_name, investorInfo.middle_name, investorInfo.last_name, investorInfo.name_suffix]
-                        .filter(Boolean).join(' ') || 'Not set'}
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-muted-foreground">Date of Birth</Label>
-                    <div className="font-medium">
-                      {investorInfo.date_of_birth ? formatDate(investorInfo.date_of_birth) : 'Not set'}
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-muted-foreground">Nationality</Label>
-                    <div className="font-medium">{investorInfo.nationality || 'Not set'}</div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-muted-foreground">US Person</Label>
-                    <div className="font-medium">
-                      {investorInfo.is_us_citizen || investorInfo.is_us_taxpayer ? 'Yes' : 'No'}
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-muted-foreground">ID Document</Label>
-                    <div className="font-medium capitalize">
-                      {investorInfo.id_type?.replace('_', ' ') || 'Not set'}
-                      {investorInfo.id_number && ` (${investorInfo.id_number})`}
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-muted-foreground">ID Expiry Date</Label>
-                    <div className="font-medium">
-                      {investorInfo.id_expiry_date ? formatDate(investorInfo.id_expiry_date) : 'Not set'}
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <IndividualKycDisplay
+              data={{
+                first_name: investorInfo.first_name,
+                middle_name: investorInfo.middle_name,
+                last_name: investorInfo.last_name,
+                name_suffix: investorInfo.name_suffix,
+                date_of_birth: investorInfo.date_of_birth,
+                country_of_birth: investorInfo.country_of_birth,
+                nationality: investorInfo.nationality,
+                email: investorInfo.email,
+                phone_mobile: investorInfo.phone_mobile,
+                phone_office: investorInfo.phone_office,
+                residential_street: investorInfo.residential_street,
+                residential_line_2: investorInfo.residential_line_2,
+                residential_city: investorInfo.residential_city,
+                residential_state: investorInfo.residential_state,
+                residential_postal_code: investorInfo.residential_postal_code,
+                residential_country: investorInfo.residential_country,
+                is_us_citizen: investorInfo.is_us_citizen,
+                is_us_taxpayer: investorInfo.is_us_taxpayer,
+                us_taxpayer_id: investorInfo.us_taxpayer_id,
+                country_of_tax_residency: investorInfo.country_of_tax_residency,
+                tax_id_number: investorInfo.tax_id_number,
+                id_type: investorInfo.id_type,
+                id_number: investorInfo.id_number,
+                id_issue_date: investorInfo.id_issue_date,
+                id_expiry_date: investorInfo.id_expiry_date,
+                id_issuing_country: investorInfo.id_issuing_country,
+              }}
+              onEdit={() => setShowKycDialog(true)}
+              title="Personal KYC Information"
+            />
           )}
         </TabsContent>
 

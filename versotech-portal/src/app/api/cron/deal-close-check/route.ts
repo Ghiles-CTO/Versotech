@@ -202,8 +202,10 @@ export async function GET(request: NextRequest) {
       const deal = Array.isArray((termsheet as any).deal) ? (termsheet as any).deal[0] : termsheet.deal
 
       // Skip if deal is not in appropriate status
+      // Valid statuses from deal_status_enum: draft, open, allocation_pending, closed, cancelled
+      // We process: open (active deal), allocation_pending (finalizing), closed (already closed but termsheet not processed)
       const dealStatus = deal?.status
-      if (!dealStatus || !['active', 'closing', 'collecting', 'closed'].includes(dealStatus)) {
+      if (!dealStatus || !['open', 'allocation_pending', 'closed'].includes(dealStatus)) {
         results.push({
           termsheetId: termsheet.id,
           dealId: termsheet.deal_id,

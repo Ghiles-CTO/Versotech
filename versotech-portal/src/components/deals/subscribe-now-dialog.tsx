@@ -55,9 +55,10 @@ export function SubscribeNowDialog({
             <div>
               <DialogTitle className="text-xl">Subscribe to Investment Opportunity</DialogTitle>
               <DialogDescription>
-                Subscribe directly to {dealName}. You&apos;ll receive the NDA and subscription documents to sign together.
+                Submit a subscription request for {dealName}. The team will review it before sending the NDA and
+                subscription documents.
                 <span className="block mt-1 text-amber-600 dark:text-amber-400 text-xs">
-                  Note: This direct path does not include data room access.
+                  Note: This request does not include data room access.
                 </span>
               </DialogDescription>
             </div>

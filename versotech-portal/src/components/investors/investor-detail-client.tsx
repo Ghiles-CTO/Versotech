@@ -13,6 +13,8 @@ import { SubscriptionsTab } from '@/components/investors/subscriptions-tab'
 import { ActivityTimelineWrapper } from '@/components/investors/activity-timeline-wrapper'
 import { KYCDocumentsTab } from '@/components/shared/kyc-documents-tab'
 import { BankDetailsTab } from '@/components/shared/bank-details-tab'
+import { IndividualKycDisplay, EntityKYCEditDialog } from '@/components/shared'
+import { StaffEntityMembersTab } from '@/components/staff/shared/staff-entity-members-tab'
 
 type InvestorDetail = {
   id: string
@@ -46,6 +48,34 @@ type InvestorDetail = {
       role: string
     } | null
   }>
+  // Individual KYC fields
+  first_name?: string | null
+  middle_name?: string | null
+  last_name?: string | null
+  name_suffix?: string | null
+  date_of_birth?: string | null
+  country_of_birth?: string | null
+  nationality?: string | null
+  phone_mobile?: string | null
+  phone_office?: string | null
+  // US Tax compliance
+  is_us_citizen?: boolean | null
+  is_us_taxpayer?: boolean | null
+  us_taxpayer_id?: string | null
+  country_of_tax_residency?: string | null
+  // ID Document
+  id_type?: string | null
+  id_number?: string | null
+  id_issue_date?: string | null
+  id_expiry_date?: string | null
+  id_issuing_country?: string | null
+  // Residential Address
+  residential_street?: string | null
+  residential_line_2?: string | null
+  residential_city?: string | null
+  residential_state?: string | null
+  residential_postal_code?: string | null
+  residential_country?: string | null
 }
 
 type CapitalMetrics = {
@@ -65,6 +95,7 @@ interface InvestorDetailClientProps {
 
 export function InvestorDetailClient({ investor, capitalMetrics, metricsAvailable }: InvestorDetailClientProps) {
   const [tabsReady, setTabsReady] = useState(false)
+  const [kycDialogOpen, setKycDialogOpen] = useState(false)
   const hasMetrics = metricsAvailable !== false
 
   useEffect(() => {
@@ -181,10 +212,14 @@ export function InvestorDetailClient({ investor, capitalMetrics, metricsAvailabl
       {/* Tabbed Content */}
       {tabsReady ? (
       <Tabs defaultValue="overview" className="space-y-6" id={`investor-tabs-${investor.id}`}>
-        <TabsList className="grid w-full grid-cols-6 lg:w-auto lg:inline-grid">
+        <TabsList className="grid w-full grid-cols-7 lg:w-auto lg:inline-grid">
           <TabsTrigger value="overview" className="gap-2">
             <Building2 className="h-4 w-4" />
             <span className="hidden sm:inline">Overview</span>
+          </TabsTrigger>
+          <TabsTrigger value="members" className="gap-2">
+            <User className="h-4 w-4" />
+            <span className="hidden sm:inline">Members</span>
           </TabsTrigger>
           <TabsTrigger value="subscriptions" className="gap-2">
             <DollarSign className="h-4 w-4" />
@@ -301,6 +336,51 @@ export function InvestorDetailClient({ investor, capitalMetrics, metricsAvailabl
               </CardContent>
             </Card>
           </div>
+
+          {/* Individual KYC Information (for individual investors) */}
+          {investor.type === 'individual' && (
+            <IndividualKycDisplay
+              data={{
+                first_name: investor.first_name,
+                middle_name: investor.middle_name,
+                last_name: investor.last_name,
+                name_suffix: investor.name_suffix,
+                date_of_birth: investor.date_of_birth,
+                country_of_birth: investor.country_of_birth,
+                nationality: investor.nationality,
+                email: investor.email,
+                phone_mobile: investor.phone_mobile,
+                phone_office: investor.phone_office,
+                residential_street: investor.residential_street,
+                residential_line_2: investor.residential_line_2,
+                residential_city: investor.residential_city,
+                residential_state: investor.residential_state,
+                residential_postal_code: investor.residential_postal_code,
+                residential_country: investor.residential_country,
+                is_us_citizen: investor.is_us_citizen,
+                is_us_taxpayer: investor.is_us_taxpayer,
+                us_taxpayer_id: investor.us_taxpayer_id,
+                country_of_tax_residency: investor.country_of_tax_residency,
+                id_type: investor.id_type,
+                id_number: investor.id_number,
+                id_issue_date: investor.id_issue_date,
+                id_expiry_date: investor.id_expiry_date,
+                id_issuing_country: investor.id_issuing_country,
+              }}
+              showEditButton={true}
+              onEdit={() => setKycDialogOpen(true)}
+              title="Personal KYC Information"
+            />
+          )}
+        </TabsContent>
+
+        {/* Members Tab */}
+        <TabsContent value="members">
+          <StaffEntityMembersTab
+            entityType="investor"
+            entityId={investor.id}
+            entityName={investor.legal_name}
+          />
         </TabsContent>
 
         {/* Subscriptions Tab */}
@@ -344,6 +424,46 @@ export function InvestorDetailClient({ investor, capitalMetrics, metricsAvailabl
           <div className="h-10 rounded-md bg-muted/50" />
           <div className="h-64 rounded-lg border border-dashed border-muted-foreground/30 bg-muted/20" />
         </div>
+      )}
+
+      {/* KYC Edit Dialog */}
+      {investor.type === 'individual' && (
+        <EntityKYCEditDialog
+          open={kycDialogOpen}
+          onOpenChange={setKycDialogOpen}
+          entityType="investor"
+          entityId={investor.id}
+          entityName={investor.legal_name}
+          apiEndpoint={`/api/staff/investors/${investor.id}`}
+          initialData={{
+            first_name: investor.first_name ?? undefined,
+            middle_name: investor.middle_name ?? undefined,
+            last_name: investor.last_name ?? undefined,
+            name_suffix: investor.name_suffix ?? undefined,
+            date_of_birth: investor.date_of_birth ?? undefined,
+            country_of_birth: investor.country_of_birth ?? undefined,
+            nationality: investor.nationality ?? undefined,
+            email: investor.email ?? undefined,
+            phone_mobile: investor.phone_mobile ?? undefined,
+            phone_office: investor.phone_office ?? undefined,
+            residential_street: investor.residential_street ?? undefined,
+            residential_line_2: investor.residential_line_2 ?? undefined,
+            residential_city: investor.residential_city ?? undefined,
+            residential_state: investor.residential_state ?? undefined,
+            residential_postal_code: investor.residential_postal_code ?? undefined,
+            residential_country: investor.residential_country ?? undefined,
+            is_us_citizen: investor.is_us_citizen ?? undefined,
+            is_us_taxpayer: investor.is_us_taxpayer ?? undefined,
+            us_taxpayer_id: investor.us_taxpayer_id ?? undefined,
+            country_of_tax_residency: investor.country_of_tax_residency ?? undefined,
+            id_type: investor.id_type ?? undefined,
+            id_number: investor.id_number ?? undefined,
+            id_issue_date: investor.id_issue_date ?? undefined,
+            id_expiry_date: investor.id_expiry_date ?? undefined,
+            id_issuing_country: investor.id_issuing_country ?? undefined,
+          }}
+          onSuccess={() => window.location.reload()}
+        />
       )}
     </div>
   )

@@ -55,12 +55,11 @@ export function CreateDealForm({ entities, arrangerEntities = [], basePath = '/v
     stage: '',
     location: '',
 
-    // Step 2: Financial Terms
+    // Step 2: Pipeline & Currency
+    // Note: offer_unit_price, minimum_investment, maximum_investment
+    // are now ONLY set in the termsheet (source of truth)
     currency: 'USD',
-    offer_unit_price: '',
     target_amount: '',
-    minimum_investment: '',
-    maximum_investment: '',
 
     // Step 3: Timeline & Description
     open_at: '',
@@ -130,10 +129,8 @@ export function CreateDealForm({ entities, arrangerEntities = [], basePath = '/v
         stage: formData.stage.trim() || null,
         location: formData.location.trim() || null,
         currency: formData.currency,
-        offer_unit_price: formData.offer_unit_price ? parseFloat(formData.offer_unit_price) : null,
+        // Note: offer_unit_price, minimum_investment, maximum_investment are now ONLY in termsheet
         target_amount: formData.target_amount ? parseFloat(formData.target_amount) : null,
-        minimum_investment: formData.minimum_investment ? parseFloat(formData.minimum_investment) : null,
-        maximum_investment: formData.maximum_investment ? parseFloat(formData.maximum_investment) : null,
         open_at: formData.open_at || null,
         close_at: formData.close_at || null,
         description: formData.description.trim() || null,
@@ -210,7 +207,7 @@ export function CreateDealForm({ entities, arrangerEntities = [], basePath = '/v
               {s}
             </div>
             <span className={`text-sm ${s === step ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>
-              {s === 1 ? 'Basic Info' : s === 2 ? 'Financial Terms' : 'Timeline & Details'}
+              {s === 1 ? 'Basic Info' : s === 2 ? 'Pipeline' : 'Timeline & Details'}
             </span>
             {s < 3 && <ArrowRight className="h-4 w-4 text-muted-foreground ml-2" />}
           </div>
@@ -221,13 +218,13 @@ export function CreateDealForm({ entities, arrangerEntities = [], basePath = '/v
       <Card className="border border-white/10 bg-white/5">
         <CardHeader>
           <CardTitle className="text-foreground">
-            {step === 1 ? 'Basic Information' : step === 2 ? 'Financial Terms' : 'Timeline & Description'}
+            {step === 1 ? 'Basic Information' : step === 2 ? 'Pipeline & Currency' : 'Timeline & Description'}
           </CardTitle>
           <CardDescription>
             {step === 1
               ? 'Enter the core details about this investment opportunity'
               : step === 2
-              ? 'Define pricing and investment parameters'
+              ? 'Set the target amount and currency. Investment limits (min/max) are defined in the termsheet.'
               : 'Set dates and provide context about the deal'}
           </CardDescription>
         </CardHeader>
@@ -462,7 +459,7 @@ export function CreateDealForm({ entities, arrangerEntities = [], basePath = '/v
             </div>
           )}
 
-          {/* Step 2: Financial Terms */}
+          {/* Step 2: Pipeline & Currency */}
           {step === 2 && (
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -481,18 +478,6 @@ export function CreateDealForm({ entities, arrangerEntities = [], basePath = '/v
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="offer_unit_price" className="text-foreground">Offer Price per Unit</Label>
-                  <Input
-                    id="offer_unit_price"
-                    type="number"
-                    step="0.01"
-                    placeholder="125.00"
-                    value={formData.offer_unit_price}
-                    onChange={(e) => updateField('offer_unit_price', e.target.value)}
-                  />
-                </div>
-
-                <div className="space-y-2">
                   <Label htmlFor="target_amount" className="text-foreground">Target Amount</Label>
                   <Input
                     id="target_amount"
@@ -502,31 +487,17 @@ export function CreateDealForm({ entities, arrangerEntities = [], basePath = '/v
                     value={formData.target_amount}
                     onChange={(e) => updateField('target_amount', e.target.value)}
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Total amount you aim to raise for this deal
+                  </p>
                 </div>
+              </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="minimum_investment" className="text-foreground">Minimum Investment</Label>
-                  <Input
-                    id="minimum_investment"
-                    type="number"
-                    step="1"
-                    placeholder="10000"
-                    value={formData.minimum_investment}
-                    onChange={(e) => updateField('minimum_investment', e.target.value)}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="maximum_investment" className="text-foreground">Maximum Investment</Label>
-                  <Input
-                    id="maximum_investment"
-                    type="number"
-                    step="1"
-                    placeholder="500000"
-                    value={formData.maximum_investment}
-                    onChange={(e) => updateField('maximum_investment', e.target.value)}
-                  />
-                </div>
+              <div className="p-4 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                <p className="text-sm text-amber-200">
+                  <strong>Note:</strong> Investment terms (price per share, minimum/maximum investment) are set in the Term Sheet
+                  after creating this deal. The termsheet is the source of truth for investor-facing financial details.
+                </p>
               </div>
             </div>
           )}

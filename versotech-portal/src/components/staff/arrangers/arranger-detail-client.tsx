@@ -26,6 +26,8 @@ import { useState } from 'react'
 import { KYCDocumentsTab } from '@/components/shared/kyc-documents-tab'
 import { BankDetailsTab } from '@/components/shared/bank-details-tab'
 import { ActivityTimelineTab } from '@/components/shared/activity-timeline-tab'
+import { IndividualKycDisplay, EntityKYCEditDialog } from '@/components/shared'
+import { StaffEntityMembersTab } from '@/components/staff/shared/staff-entity-members-tab'
 import { EditArrangerDialog } from '@/components/staff/arrangers/edit-arranger-dialog'
 import { InviteUserDialog } from '@/components/users/invite-user-dialog'
 import { formatCurrency, formatDate } from '@/lib/format'
@@ -54,6 +56,33 @@ type ArrangerDetail = {
   created_by: string | null
   updated_at: string | null
   updated_by: string | null
+  // Entity type (individual vs entity)
+  type?: string | null
+  // Individual KYC fields
+  first_name?: string | null
+  middle_name?: string | null
+  last_name?: string | null
+  name_suffix?: string | null
+  date_of_birth?: string | null
+  country_of_birth?: string | null
+  nationality?: string | null
+  phone_mobile?: string | null
+  phone_office?: string | null
+  is_us_citizen?: boolean | null
+  is_us_taxpayer?: boolean | null
+  us_taxpayer_id?: string | null
+  country_of_tax_residency?: string | null
+  id_type?: string | null
+  id_number?: string | null
+  id_issue_date?: string | null
+  id_expiry_date?: string | null
+  id_issuing_country?: string | null
+  residential_street?: string | null
+  residential_line_2?: string | null
+  residential_city?: string | null
+  residential_state?: string | null
+  residential_postal_code?: string | null
+  residential_country?: string | null
 }
 
 type ArrangerMetrics = {
@@ -89,6 +118,7 @@ interface ArrangerDetailClientProps {
 export function ArrangerDetailClient({ arranger, metrics, deals, vehicles }: ArrangerDetailClientProps) {
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false)
+  const [kycDialogOpen, setKycDialogOpen] = useState(false)
 
   // Format arranger data for edit dialog
   const arrangerForDialog = {
@@ -211,10 +241,14 @@ export function ArrangerDetailClient({ arranger, metrics, deals, vehicles }: Arr
 
       {/* Tabbed Content */}
       <Tabs defaultValue="overview" className="space-y-6" id={`arranger-tabs-${arranger.id}`}>
-        <TabsList className="grid w-full grid-cols-6 lg:w-auto lg:inline-grid">
+        <TabsList className="grid w-full grid-cols-7 lg:w-auto lg:inline-grid">
           <TabsTrigger value="overview" className="gap-2">
             <Building2 className="h-4 w-4" />
             <span className="hidden sm:inline">Overview</span>
+          </TabsTrigger>
+          <TabsTrigger value="members" className="gap-2">
+            <Users className="h-4 w-4" />
+            <span className="hidden sm:inline">Members</span>
           </TabsTrigger>
           <TabsTrigger value="kyc" className="gap-2">
             <Shield className="h-4 w-4" />
@@ -378,6 +412,51 @@ export function ArrangerDetailClient({ arranger, metrics, deals, vehicles }: Arr
               )}
             </CardContent>
           </Card>
+
+          {/* Individual KYC Information (for individual arrangers) */}
+          {arranger.type === 'individual' && (
+            <IndividualKycDisplay
+              data={{
+                first_name: arranger.first_name,
+                middle_name: arranger.middle_name,
+                last_name: arranger.last_name,
+                name_suffix: arranger.name_suffix,
+                date_of_birth: arranger.date_of_birth,
+                country_of_birth: arranger.country_of_birth,
+                nationality: arranger.nationality,
+                email: arranger.email,
+                phone_mobile: arranger.phone_mobile,
+                phone_office: arranger.phone_office,
+                residential_street: arranger.residential_street,
+                residential_line_2: arranger.residential_line_2,
+                residential_city: arranger.residential_city,
+                residential_state: arranger.residential_state,
+                residential_postal_code: arranger.residential_postal_code,
+                residential_country: arranger.residential_country,
+                is_us_citizen: arranger.is_us_citizen,
+                is_us_taxpayer: arranger.is_us_taxpayer,
+                us_taxpayer_id: arranger.us_taxpayer_id,
+                country_of_tax_residency: arranger.country_of_tax_residency,
+                id_type: arranger.id_type,
+                id_number: arranger.id_number,
+                id_issue_date: arranger.id_issue_date,
+                id_expiry_date: arranger.id_expiry_date,
+                id_issuing_country: arranger.id_issuing_country,
+              }}
+              showEditButton={true}
+              onEdit={() => setKycDialogOpen(true)}
+              title="Personal KYC Information"
+            />
+          )}
+        </TabsContent>
+
+        {/* Members Tab */}
+        <TabsContent value="members">
+          <StaffEntityMembersTab
+            entityType="arranger"
+            entityId={arranger.id}
+            entityName={arranger.legal_name}
+          />
         </TabsContent>
 
         {/* KYC Documents Tab */}
@@ -508,6 +587,45 @@ export function ArrangerDetailClient({ arranger, metrics, deals, vehicles }: Arr
         entityId={arranger.id}
         entityName={arranger.legal_name}
       />
+
+      {arranger.type === 'individual' && (
+        <EntityKYCEditDialog
+          open={kycDialogOpen}
+          onOpenChange={setKycDialogOpen}
+          entityType="arranger"
+          entityId={arranger.id}
+          entityName={arranger.legal_name}
+          apiEndpoint={`/api/admin/arrangers/${arranger.id}`}
+          initialData={{
+            first_name: arranger.first_name ?? undefined,
+            middle_name: arranger.middle_name ?? undefined,
+            last_name: arranger.last_name ?? undefined,
+            name_suffix: arranger.name_suffix ?? undefined,
+            date_of_birth: arranger.date_of_birth ?? undefined,
+            country_of_birth: arranger.country_of_birth ?? undefined,
+            nationality: arranger.nationality ?? undefined,
+            email: arranger.email ?? undefined,
+            phone_mobile: arranger.phone_mobile ?? undefined,
+            phone_office: arranger.phone_office ?? undefined,
+            residential_street: arranger.residential_street ?? undefined,
+            residential_line_2: arranger.residential_line_2 ?? undefined,
+            residential_city: arranger.residential_city ?? undefined,
+            residential_state: arranger.residential_state ?? undefined,
+            residential_postal_code: arranger.residential_postal_code ?? undefined,
+            residential_country: arranger.residential_country ?? undefined,
+            is_us_citizen: arranger.is_us_citizen ?? undefined,
+            is_us_taxpayer: arranger.is_us_taxpayer ?? undefined,
+            us_taxpayer_id: arranger.us_taxpayer_id ?? undefined,
+            country_of_tax_residency: arranger.country_of_tax_residency ?? undefined,
+            id_type: arranger.id_type ?? undefined,
+            id_number: arranger.id_number ?? undefined,
+            id_issue_date: arranger.id_issue_date ?? undefined,
+            id_expiry_date: arranger.id_expiry_date ?? undefined,
+            id_issuing_country: arranger.id_issuing_country ?? undefined,
+          }}
+          onSuccess={() => window.location.reload()}
+        />
+      )}
     </div>
   )
 }

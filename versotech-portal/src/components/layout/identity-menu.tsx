@@ -183,7 +183,7 @@ export function IdentityMenu({ profile, className }: IdentityMenuProps) {
         align="end"
         className={cn(
           "w-72",
-          isDark ? "bg-[#1A1D24] border-white/10" : "bg-white border-gray-200"
+          isDark ? "bg-zinc-800 border-white/10" : "bg-white border-gray-200"
         )}
       >
         {/* User Info */}

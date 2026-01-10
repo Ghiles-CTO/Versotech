@@ -3,15 +3,50 @@
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import { FileText, Upload, Download, Trash2, CheckCircle2, Circle, Loader2, AlertCircle } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
+import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Textarea } from '@/components/ui/textarea'
+import { FileText, Upload, Download, Trash2, CheckCircle2, Circle, Loader2, AlertCircle, Clock, AlertTriangle, Calendar } from 'lucide-react'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { toast } from 'sonner'
+import { differenceInDays } from 'date-fns'
+import {
+  getValidationStatusColor,
+  getValidationStatusLabel,
+  formatExpiryCountdown,
+  isIdDocument,
+  isProofOfAddress,
+  type ValidationStatus,
+} from '@/lib/validation/document-validation'
 
 export type EntityType = 'investor' | 'introducer' | 'arranger' | 'lawyer' | 'partner' | 'commercial_partner'
 
 interface RequiredDocument {
   label: string
   value: string
+}
+
+interface Member {
+  id: string
+  full_name?: string
+  first_name?: string
+  last_name?: string
+  role: string
 }
 
 interface Document {
@@ -22,6 +57,15 @@ interface Document {
   file_key: string
   created_at: string
   file_size_bytes?: number
+  document_date?: string | null
+  document_expiry_date?: string | null
+  validation_status?: ValidationStatus | null
+  investor_member_id?: string | null
+  arranger_member_id?: string | null
+  partner_member_id?: string | null
+  introducer_member_id?: string | null
+  lawyer_member_id?: string | null
+  commercial_partner_member_id?: string | null
   created_by?: {
     display_name?: string
     email?: string
@@ -75,18 +119,52 @@ const REQUIRED_DOCUMENTS: Record<EntityType, RequiredDocument[]> = {
   ],
 }
 
+// Member-specific required documents
+const MEMBER_REQUIRED_DOCUMENTS: RequiredDocument[] = [
+  { label: 'ID Document (Passport/National ID)', value: 'member_id' },
+  { label: 'Proof of Address', value: 'member_proof_of_address' },
+]
+
 interface KYCDocumentsTabProps {
   entityType: EntityType
   entityId: string
   entityName?: string
   readOnly?: boolean
+  /** Optional: Filter documents to a specific member */
+  memberId?: string
+  /** Optional: Member name for display */
+  memberName?: string
+  /** Optional: List of members for member selector during upload */
+  members?: Member[]
+  /** Optional: Show member documents section */
+  showMemberDocuments?: boolean
 }
 
-export function KYCDocumentsTab({ entityType, entityId, entityName, readOnly = false }: KYCDocumentsTabProps) {
+export function KYCDocumentsTab({
+  entityType,
+  entityId,
+  entityName,
+  readOnly = false,
+  memberId,
+  memberName,
+  members = [],
+  showMemberDocuments = false,
+}: KYCDocumentsTabProps) {
   const [documents, setDocuments] = useState<Document[]>([])
   const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState<string | null>(null)
   const fileInputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({})
+
+  // Upload dialog state for date fields and member selection
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false)
+  const [uploadDocType, setUploadDocType] = useState<string | null>(null)
+  const [uploadFile, setUploadFile] = useState<File | null>(null)
+  const [selectedMemberId, setSelectedMemberId] = useState<string>('')
+  const [documentDate, setDocumentDate] = useState<string>('')
+  const [documentExpiryDate, setDocumentExpiryDate] = useState<string>('')
+  const [staffOverride, setStaffOverride] = useState(false)
+  const [overrideReason, setOverrideReason] = useState('')
+  const [validationError, setValidationError] = useState<{ error: string; canOverride: boolean } | null>(null)
 
   const requiredDocuments = REQUIRED_DOCUMENTS[entityType] || []
 
@@ -123,6 +201,20 @@ export function KYCDocumentsTab({ entityType, entityId, entityName, readOnly = f
     fetchDocuments()
   }, [fetchDocuments])
 
+  // Open upload dialog for documents that need validation
+  const openUploadDialog = (file: File, documentType: string) => {
+    setUploadFile(file)
+    setUploadDocType(documentType)
+    setDocumentDate('')
+    setDocumentExpiryDate('')
+    setStaffOverride(false)
+    setOverrideReason('')
+    setValidationError(null)
+    setSelectedMemberId(memberId || '')
+    setUploadDialogOpen(true)
+  }
+
+  // Perform the actual upload
   const handleUpload = async (file: File, documentType: string) => {
     if (!entityId) return
 
@@ -148,7 +240,28 @@ export function KYCDocumentsTab({ entityType, entityId, entityName, readOnly = f
       return
     }
 
+    // For ID documents or proof of address, open the dialog to collect dates
+    if (isIdDocument(documentType) || isProofOfAddress(documentType)) {
+      openUploadDialog(file, documentType)
+      return
+    }
+
+    // For other documents, upload directly
+    await performUpload(file, documentType, '', '', '', false, '')
+  }
+
+  // Perform the upload with all fields
+  const performUpload = async (
+    file: File,
+    documentType: string,
+    docDate: string,
+    expiryDate: string,
+    targetMemberId: string,
+    override: boolean,
+    reason: string
+  ) => {
     setUploading(documentType)
+    setValidationError(null)
 
     try {
       const formData = new FormData()
@@ -160,20 +273,50 @@ export function KYCDocumentsTab({ entityType, entityId, entityName, readOnly = f
       const paramName = entityType === 'arranger' ? 'arranger_entity_id' : `${entityType}_id`
       formData.append(paramName, entityId)
 
+      // Add member ID if provided (Phase 4)
+      if (targetMemberId) {
+        const memberParamName = `${entityType}_member_id`
+        formData.append(memberParamName, targetMemberId)
+      }
+
+      // Add validation fields (Phase 5)
+      if (docDate) {
+        formData.append('document_date', docDate)
+      }
+      if (expiryDate) {
+        formData.append('document_expiry_date', expiryDate)
+      }
+      if (override) {
+        formData.append('staff_override', 'true')
+        formData.append('override_reason', reason)
+      }
+
       const response = await fetch('/api/documents/upload', {
         method: 'POST',
         body: formData
       })
 
+      const data = await response.json()
+
       if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || 'Upload failed')
+        // Check if it's a validation error that can be overridden
+        if (response.status === 422 && data.validation?.canOverride) {
+          setValidationError({
+            error: data.error,
+            canOverride: true
+          })
+          return
+        }
+        throw new Error(data.error || 'Upload failed')
       }
 
-      const docTypeLabel = requiredDocuments.find(d => d.value === documentType)?.label || documentType
+      const docTypeLabel = requiredDocuments.find(d => d.value === documentType)?.label ||
+        MEMBER_REQUIRED_DOCUMENTS.find(d => d.value === documentType)?.label ||
+        documentType
       toast.success(`${docTypeLabel} uploaded successfully`)
 
-      // Refresh document list
+      // Close dialog and refresh
+      setUploadDialogOpen(false)
       await fetchDocuments()
     } catch (error: any) {
       console.error('Upload error:', error)
@@ -185,6 +328,20 @@ export function KYCDocumentsTab({ entityType, entityId, entityName, readOnly = f
         fileInputRefs.current[documentType]!.value = ''
       }
     }
+  }
+
+  // Handle dialog submit
+  const handleDialogSubmit = () => {
+    if (!uploadFile || !uploadDocType) return
+    performUpload(
+      uploadFile,
+      uploadDocType,
+      documentDate,
+      documentExpiryDate,
+      selectedMemberId,
+      staffOverride,
+      overrideReason
+    )
   }
 
   const handleDelete = async (document: Document) => {
@@ -249,7 +406,192 @@ export function KYCDocumentsTab({ entityType, entityId, entityName, readOnly = f
     ? Math.round((uploadedCount / requiredDocuments.length) * 100)
     : 0
 
+  // Helper to render expiry/validation badge
+  const renderValidationBadge = (doc: Document) => {
+    // Check expiry date
+    if (doc.document_expiry_date) {
+      const expiryDate = new Date(doc.document_expiry_date)
+      const today = new Date()
+      const daysUntilExpiry = differenceInDays(expiryDate, today)
+
+      if (daysUntilExpiry < 0) {
+        return (
+          <Badge className="bg-red-500/20 text-red-400 text-xs gap-1">
+            <AlertCircle className="h-3 w-3" />
+            Expired
+          </Badge>
+        )
+      } else if (daysUntilExpiry <= 30) {
+        return (
+          <Badge className="bg-amber-500/20 text-amber-400 text-xs gap-1">
+            <Clock className="h-3 w-3" />
+            {formatExpiryCountdown(daysUntilExpiry)}
+          </Badge>
+        )
+      }
+    }
+
+    // Check validation status
+    if (doc.validation_status && doc.validation_status !== 'valid') {
+      return (
+        <Badge className={`${getValidationStatusColor(doc.validation_status)} text-xs`}>
+          {getValidationStatusLabel(doc.validation_status)}
+        </Badge>
+      )
+    }
+
+    return null
+  }
+
+  // Get member name for display
+  const getMemberName = (member: Member) => {
+    if (member.full_name) return member.full_name
+    if (member.first_name && member.last_name) return `${member.first_name} ${member.last_name}`
+    return member.id.slice(0, 8)
+  }
+
   return (
+    <>
+    {/* Upload Dialog with Date Fields */}
+    <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Upload Document</DialogTitle>
+          <DialogDescription>
+            {isIdDocument(uploadDocType || '') && 'ID documents require an expiry date for compliance tracking.'}
+            {isProofOfAddress(uploadDocType || '') && 'Proof of address must be dated within the last 3 months.'}
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4 py-4">
+          {/* File info */}
+          {uploadFile && (
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-white/5">
+              <FileText className="h-5 w-5 text-muted-foreground" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate">{uploadFile.name}</p>
+                <p className="text-xs text-muted-foreground">{formatFileSize(uploadFile.size)}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Member selector (if members available) */}
+          {members.length > 0 && (
+            <div className="space-y-2">
+              <Label>Associate with Member (Optional)</Label>
+              <Select value={selectedMemberId} onValueChange={setSelectedMemberId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Entity-level document" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Entity-level document</SelectItem>
+                  {members.map(member => (
+                    <SelectItem key={member.id} value={member.id}>
+                      {getMemberName(member)} ({member.role})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {/* Document date for proof of address */}
+          {isProofOfAddress(uploadDocType || '') && (
+            <div className="space-y-2">
+              <Label htmlFor="document_date">
+                Document Date <span className="text-red-400">*</span>
+              </Label>
+              <Input
+                id="document_date"
+                type="date"
+                value={documentDate}
+                onChange={(e) => setDocumentDate(e.target.value)}
+                max={new Date().toISOString().split('T')[0]}
+              />
+              <p className="text-xs text-muted-foreground">
+                Date shown on the document (utility bill date, bank statement date, etc.)
+              </p>
+            </div>
+          )}
+
+          {/* Expiry date for ID documents */}
+          {isIdDocument(uploadDocType || '') && (
+            <div className="space-y-2">
+              <Label htmlFor="expiry_date">
+                Document Expiry Date <span className="text-red-400">*</span>
+              </Label>
+              <Input
+                id="expiry_date"
+                type="date"
+                value={documentExpiryDate}
+                onChange={(e) => setDocumentExpiryDate(e.target.value)}
+                min={new Date().toISOString().split('T')[0]}
+              />
+              <p className="text-xs text-muted-foreground">
+                Expiry date shown on the ID document
+              </p>
+            </div>
+          )}
+
+          {/* Validation error with override option */}
+          {validationError && (
+            <div className="p-3 rounded-lg border border-red-500/50 bg-red-500/10 space-y-3">
+              <div className="flex items-start gap-2">
+                <AlertTriangle className="h-5 w-5 text-red-400 flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-red-400">{validationError.error}</p>
+              </div>
+
+              {validationError.canOverride && (
+                <div className="space-y-2 pt-2 border-t border-red-500/30">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="staff_override"
+                      checked={staffOverride}
+                      onChange={(e) => setStaffOverride(e.target.checked)}
+                      className="rounded"
+                    />
+                    <Label htmlFor="staff_override" className="text-sm">
+                      Staff Override (requires reason)
+                    </Label>
+                  </div>
+                  {staffOverride && (
+                    <Textarea
+                      placeholder="Enter reason for override..."
+                      value={overrideReason}
+                      onChange={(e) => setOverrideReason(e.target.value)}
+                      className="min-h-[60px]"
+                    />
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setUploadDialogOpen(false)}>
+            Cancel
+          </Button>
+          <Button
+            onClick={handleDialogSubmit}
+            disabled={
+              uploading === uploadDocType ||
+              (isIdDocument(uploadDocType || '') && !documentExpiryDate) ||
+              (isProofOfAddress(uploadDocType || '') && !documentDate) ||
+              (validationError?.canOverride && staffOverride && !overrideReason)
+            }
+          >
+            {uploading === uploadDocType ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Upload className="h-4 w-4 mr-2" />
+            )}
+            Upload
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
     <div className="space-y-6">
       {/* Summary Card */}
       <Card>
@@ -326,6 +668,9 @@ export function KYCDocumentsTab({ entityType, entityId, entityName, readOnly = f
                     </div>
 
                     <div className="flex items-center gap-2 flex-shrink-0">
+                      {/* Validation badge */}
+                      {uploaded && renderValidationBadge(uploaded)}
+
                       {uploaded ? (
                         <>
                           <Button
@@ -444,8 +789,11 @@ export function KYCDocumentsTab({ entityType, entityId, entityName, readOnly = f
         <p>• Maximum file size: 50MB per file</p>
         <p>• Documents are stored securely and linked to this entity</p>
         <p>• Upload actions are logged for audit trail</p>
+        {isIdDocument('signatory_id') && <p>• ID documents must have a valid expiry date</p>}
+        {isProofOfAddress('proof_of_address') && <p>• Proof of address must be dated within the last 3 months</p>}
       </div>
     </div>
+    </>
   )
 }
 

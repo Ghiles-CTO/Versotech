@@ -33,7 +33,9 @@ export function DealFeePlansTab({ dealId, feePlans }: DealFeePlansTabProps) {
       const url = window.URL.createObjectURL(blob)
       const link = document.createElement('a')
       link.href = url
-      link.download = `${referenceNumber || 'agreement'}.pdf`
+      // Extract actual filename from storage path, or fall back to reference number
+      const actualFilename = pdfUrl.split('/').pop() || `${referenceNumber || 'agreement'}.pdf`
+      link.download = actualFilename
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)

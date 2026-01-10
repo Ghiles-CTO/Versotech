@@ -46,6 +46,7 @@ import { CommercialPartnerKYCDocumentsTab } from '@/components/profile/commercia
 import { SignatureSpecimenTab } from '@/components/profile/signature-specimen-tab'
 import { GenericEntityMembersTab } from '@/components/profile/generic-entity-members-tab'
 import { NoticeContactsTab } from '@/components/profile/notice-contacts-tab'
+import { EntityKYCEditDialog, IndividualKycDisplay } from '@/components/shared'
 
 type CommercialPartnerInfo = {
   id: string
@@ -68,6 +69,36 @@ type CommercialPartnerInfo = {
   created_at: string | null
   logo_url: string | null
   kyc_status: string | null
+  // Phone numbers
+  phone_mobile?: string | null
+  phone_office?: string | null
+  // Individual KYC fields (for individual commercial partners)
+  first_name?: string | null
+  middle_name?: string | null
+  last_name?: string | null
+  name_suffix?: string | null
+  date_of_birth?: string | null
+  country_of_birth?: string | null
+  nationality?: string | null
+  email?: string | null
+  // US Tax compliance
+  is_us_citizen?: boolean | null
+  is_us_taxpayer?: boolean | null
+  us_taxpayer_id?: string | null
+  country_of_tax_residency?: string | null
+  // ID Document
+  id_type?: string | null
+  id_number?: string | null
+  id_issue_date?: string | null
+  id_expiry_date?: string | null
+  id_issuing_country?: string | null
+  // Residential Address (for individuals)
+  residential_street?: string | null
+  residential_line_2?: string | null
+  residential_city?: string | null
+  residential_state?: string | null
+  residential_postal_code?: string | null
+  residential_country?: string | null
 }
 
 type CommercialPartnerUserInfo = {
@@ -162,6 +193,7 @@ export function CommercialPartnerProfileClient({
   const [isEditing, setIsEditing] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [isUploadingLogo, setIsUploadingLogo] = useState(false)
+  const [showKycDialog, setShowKycDialog] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Edit state
@@ -585,6 +617,41 @@ export function CommercialPartnerProfileClient({
               </div>
             </CardContent>
           </Card>
+
+          {/* Individual KYC for Individual Commercial Partners */}
+          {cpInfo?.type === 'individual' && (
+            <IndividualKycDisplay
+              data={{
+                first_name: cpInfo.first_name,
+                middle_name: cpInfo.middle_name,
+                last_name: cpInfo.last_name,
+                name_suffix: cpInfo.name_suffix,
+                date_of_birth: cpInfo.date_of_birth,
+                country_of_birth: cpInfo.country_of_birth,
+                nationality: cpInfo.nationality,
+                email: cpInfo.email || cpInfo.contact_email,
+                phone_mobile: cpInfo.phone_mobile,
+                phone_office: cpInfo.phone_office,
+                residential_street: cpInfo.residential_street,
+                residential_line_2: cpInfo.residential_line_2,
+                residential_city: cpInfo.residential_city,
+                residential_state: cpInfo.residential_state,
+                residential_postal_code: cpInfo.residential_postal_code,
+                residential_country: cpInfo.residential_country,
+                is_us_citizen: cpInfo.is_us_citizen,
+                is_us_taxpayer: cpInfo.is_us_taxpayer,
+                us_taxpayer_id: cpInfo.us_taxpayer_id,
+                country_of_tax_residency: cpInfo.country_of_tax_residency,
+                id_type: cpInfo.id_type,
+                id_number: cpInfo.id_number,
+                id_issue_date: cpInfo.id_issue_date,
+                id_expiry_date: cpInfo.id_expiry_date,
+                id_issuing_country: cpInfo.id_issuing_country,
+              }}
+              onEdit={() => setShowKycDialog(true)}
+              title="Personal KYC Information"
+            />
+          )}
         </TabsContent>
 
         {/* Regulatory Tab */}
@@ -719,6 +786,44 @@ export function CommercialPartnerProfileClient({
           <NoticeContactsTab apiEndpoint="/api/commercial-partners/me/notice-contacts" />
         </TabsContent>
       </Tabs>
+
+      {/* Individual KYC Edit Dialog (for individual commercial partners) */}
+      {cpInfo?.type === 'individual' && (
+        <EntityKYCEditDialog
+          open={showKycDialog}
+          onOpenChange={setShowKycDialog}
+          entityType="commercial_partner"
+          entityId={cpInfo.id}
+          entityName={cpInfo.name || cpInfo.legal_name || 'Commercial Partner'}
+          initialData={{
+            first_name: cpInfo.first_name ?? undefined,
+            middle_name: cpInfo.middle_name ?? undefined,
+            last_name: cpInfo.last_name ?? undefined,
+            name_suffix: cpInfo.name_suffix ?? undefined,
+            date_of_birth: cpInfo.date_of_birth ?? undefined,
+            nationality: cpInfo.nationality ?? undefined,
+            country_of_birth: cpInfo.country_of_birth ?? undefined,
+            phone_mobile: cpInfo.phone_mobile ?? undefined,
+            phone_office: cpInfo.phone_office ?? undefined,
+            is_us_citizen: cpInfo.is_us_citizen === true,
+            is_us_taxpayer: cpInfo.is_us_taxpayer === true,
+            us_taxpayer_id: cpInfo.us_taxpayer_id ?? undefined,
+            country_of_tax_residency: cpInfo.country_of_tax_residency ?? undefined,
+            id_type: cpInfo.id_type ?? undefined,
+            id_number: cpInfo.id_number ?? undefined,
+            id_issue_date: cpInfo.id_issue_date ?? undefined,
+            id_expiry_date: cpInfo.id_expiry_date ?? undefined,
+            id_issuing_country: cpInfo.id_issuing_country ?? undefined,
+            residential_street: cpInfo.residential_street ?? undefined,
+            residential_city: cpInfo.residential_city ?? undefined,
+            residential_state: cpInfo.residential_state ?? undefined,
+            residential_postal_code: cpInfo.residential_postal_code ?? undefined,
+            residential_country: cpInfo.residential_country ?? undefined,
+          }}
+          apiEndpoint="/api/commercial-partners/me/profile"
+          onSuccess={() => window.location.reload()}
+        />
+      )}
     </div>
   )
 }

@@ -126,7 +126,7 @@ export function StaffAnalyticsDashboard() {
                 <Calendar className="mr-2 h-4 w-4" />
                 <SelectValue placeholder="Select range" />
               </SelectTrigger>
-              <SelectContent className="bg-[#0A1628] border-white/10 text-slate-200">
+              <SelectContent className="bg-slate-900 border-white/10 text-slate-200">
                 <SelectItem value="7d">Last 7 Days</SelectItem>
                 <SelectItem value="30d">Last 30 Days</SelectItem>
                 <SelectItem value="90d">Last 90 Days</SelectItem>
