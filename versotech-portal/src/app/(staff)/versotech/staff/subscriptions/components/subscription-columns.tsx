@@ -100,6 +100,15 @@ function formatCurrency(amount: number, currency: string) {
   }).format(amount)
 }
 
+function formatCurrencyPrecise(amount: number, currency: string) {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: currency || 'USD',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(amount)
+}
+
 function formatDate(date: string | null) {
   if (!date) return '-'
   return new Date(date).toLocaleDateString('en-US', {
@@ -346,7 +355,7 @@ export const subscriptionColumns: ColumnDef<SubscriptionRow>[] = [
       if (price == null) return <span className="text-muted-foreground text-sm">-</span>
       return (
         <div className="text-right font-semibold text-sm">
-          {formatCurrency(price, currency)}
+          {formatCurrencyPrecise(price, currency)}
         </div>
       )
     },
@@ -371,7 +380,7 @@ export const subscriptionColumns: ColumnDef<SubscriptionRow>[] = [
       if (cost == null) return <span className="text-muted-foreground text-sm">-</span>
       return (
         <div className="text-right font-semibold text-sm">
-          {formatCurrency(cost, currency)}
+          {formatCurrencyPrecise(cost, currency)}
         </div>
       )
     },
@@ -396,7 +405,7 @@ export const subscriptionColumns: ColumnDef<SubscriptionRow>[] = [
       if (spread == null) return <span className="text-muted-foreground text-sm">-</span>
       return (
         <div className="text-right font-semibold text-sm text-green-400">
-          {formatCurrency(spread, currency)}
+          {formatCurrencyPrecise(spread, currency)}
         </div>
       )
     },
