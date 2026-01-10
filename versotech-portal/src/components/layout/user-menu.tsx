@@ -76,13 +76,15 @@ export function UserMenu({ profile, brand = 'versotech', useThemeColors = false 
     return User
   }
 
-  const getInitials = (name: string) => {
+  const getInitials = (name: string | null | undefined) => {
+    if (!name) return 'U'
     return name
       .split(' ')
       .map(part => part[0])
+      .filter(Boolean)
       .join('')
       .toUpperCase()
-      .slice(0, 2)
+      .slice(0, 2) || 'U'
   }
 
   const RoleIcon = getRoleIcon(profile.role)

@@ -118,7 +118,7 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
     return {
       id: profile.id,
       email: profile.email,
-      displayName: profile.display_name,
+      displayName: profile.display_name || profile.email?.split('@')[0] || 'User',
       avatar: profile.avatar_url,
       role: profile.role as UserRole,
       title: profile.title,
