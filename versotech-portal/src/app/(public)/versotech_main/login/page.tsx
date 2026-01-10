@@ -13,7 +13,6 @@ import {
   EyeOff,
   Shield,
   Lock,
-  ArrowLeft,
   Mail
 } from 'lucide-react'
 import Link from 'next/link'
@@ -108,10 +107,6 @@ function UnifiedLoginContent() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-[#050505] p-4 font-sans text-zinc-100">
-
-      <Link href="/" className="absolute top-8 left-8 text-sm text-zinc-500 hover:text-white transition-colors flex items-center gap-2 group">
-        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Return Home
-      </Link>
 
       <div className="w-full max-w-md space-y-8 animate-in fade-in zoom-in-95 duration-700">
 
