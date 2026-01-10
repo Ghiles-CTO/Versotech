@@ -194,12 +194,12 @@ function UnifiedLoginContent() {
             {/* Request Access */}
             <div className="text-center pt-2">
               <p className="text-sm text-zinc-400">
-                Request Access.{' '}
+                Request Access:{' '}
                 <a
                   href="mailto:contact@versotech.com"
                   className="text-white hover:text-zinc-300 underline underline-offset-2 transition-colors"
                 >
-                  Please contact us
+                  contact@versotech.com
                 </a>
               </p>
             </div>

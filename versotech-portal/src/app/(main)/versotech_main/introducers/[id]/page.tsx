@@ -33,6 +33,10 @@ type Introduction = {
     id: string
     name: string
   } | null
+  investor: {
+    id: string
+    legal_name: string
+  } | null
 }
 
 type Commission = {
@@ -128,6 +132,7 @@ export default async function IntroducerDetailPage({
     .select(`
       id,
       prospect_email,
+      prospect_investor_id,
       status,
       introduced_at,
       deal_id
@@ -153,12 +158,31 @@ export default async function IntroducerDetailPage({
     }, {} as Record<string, { id: string; name: string }>)
   }
 
+  // Fetch investor names for introductions
+  const introInvestorIds = (introductionsData || [])
+    .map(i => i.prospect_investor_id)
+    .filter((id): id is string => id != null)
+
+  let introInvestorsMap: Record<string, { id: string; legal_name: string }> = {}
+  if (introInvestorIds.length > 0) {
+    const { data: investorsData } = await serviceClient
+      .from('investors')
+      .select('id, legal_name')
+      .in('id', introInvestorIds)
+
+    introInvestorsMap = (investorsData || []).reduce((acc, inv) => {
+      acc[inv.id] = { id: inv.id, legal_name: inv.legal_name }
+      return acc
+    }, {} as Record<string, { id: string; legal_name: string }>)
+  }
+
   const introductions: Introduction[] = (introductionsData || []).map(i => ({
     id: i.id,
     prospect_email: i.prospect_email,
     status: i.status || 'pending',
     introduced_at: i.introduced_at,
     deal: i.deal_id ? dealsMap[i.deal_id] || null : null,
+    investor: i.prospect_investor_id ? introInvestorsMap[i.prospect_investor_id] || null : null,
   }))
 
   // Fetch commissions separately (note: subscription_id doesn't exist, use deal_id and investor_id)

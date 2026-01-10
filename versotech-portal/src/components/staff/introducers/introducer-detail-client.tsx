@@ -116,6 +116,10 @@ type Introduction = {
     id: string
     name: string
   } | null
+  investor: {
+    id: string
+    legal_name: string
+  } | null
 }
 
 type Commission = {
@@ -1318,9 +1322,14 @@ export function IntroducerDetailClient({
                       className="flex items-center justify-between p-4 rounded-lg border border-white/10 hover:bg-white/5 transition-colors"
                     >
                       <div>
-                        <div className="font-medium text-foreground">{intro.prospect_email || 'Unknown'}</div>
+                        <div className="font-medium text-foreground">
+                          {intro.investor?.legal_name || intro.prospect_email || 'Unknown'}
+                        </div>
                         <div className="text-sm text-muted-foreground">
-                          {intro.deal?.name || 'Unknown deal'}
+                          {intro.prospect_email && intro.investor?.legal_name && (
+                            <span className="mr-2">{intro.prospect_email}</span>
+                          )}
+                          {intro.deal?.name || 'No deal linked'}
                           {intro.introduced_at && ` • ${formatDate(intro.introduced_at)}`}
                         </div>
                       </div>
