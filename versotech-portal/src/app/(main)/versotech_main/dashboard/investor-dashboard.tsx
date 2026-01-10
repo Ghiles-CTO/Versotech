@@ -540,8 +540,8 @@ export function InvestorDashboard({ investorId, userId, persona }: InvestorDashb
     )
   }
 
-  const displayName = persona.entity_name || data.profile?.displayName || 'Investor'
-  const firstName = displayName.split(' ')[0]
+  const displayName = persona?.entity_name || data.profile?.displayName || 'Investor'
+  const firstName = (displayName || 'Investor').split(' ')[0] || 'Investor'
 
   const summaryTiles = [
     {
