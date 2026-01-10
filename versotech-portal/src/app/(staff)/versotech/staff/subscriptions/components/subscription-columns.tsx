@@ -668,20 +668,13 @@ export const subscriptionColumns: ColumnDef<SubscriptionRow>[] = [
       </Button>
     ),
     cell: ({ row }) => {
-      // Fallback chain: opportunity_name -> deal.name -> vehicle.name
       const opportunityName = row.original.opportunity_name
-      const dealName = row.original.deal?.name
-      const vehicleName = row.original.vehicle?.name
-      const displayName = opportunityName || dealName || vehicleName || '-'
-      const isFromDeal = !opportunityName && dealName
+      if (!opportunityName) return <span className="text-muted-foreground text-sm">-</span>
 
       return (
         <div className="max-w-[200px]">
-          <div
-            className={`text-sm font-medium truncate ${isFromDeal ? 'text-muted-foreground' : ''}`}
-            title={displayName}
-          >
-            {displayName}
+          <div className="text-sm font-medium truncate" title={opportunityName}>
+            {opportunityName}
           </div>
         </div>
       )
