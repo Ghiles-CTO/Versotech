@@ -71,6 +71,7 @@ export function StaffManagementPanel({ staffMembers, onStaffUpdate, isDark = tru
     is_super_admin: false,
   })
   const [loading, setLoading] = useState(false)
+  const [devInviteUrl, setDevInviteUrl] = useState<string | null>(null)
 
   const handleInviteStaff = async () => {
     setLoading(true)
@@ -81,12 +82,20 @@ export function StaffManagementPanel({ staffMembers, onStaffUpdate, isDark = tru
         body: JSON.stringify(inviteFormData),
       })
 
+      const result = await response.json()
+
       if (!response.ok) {
-        const error = await response.json()
-        toast.error(error.error || 'Failed to invite staff member')
+        toast.error(result.error || 'Failed to invite staff member')
       } else {
-        toast.success('Invitation sent successfully')
-        setInviteDialogOpen(false)
+        // Check if this is a dev mode response with the accept URL
+        if (result.dev_warning && result.data?.accept_url) {
+          toast.success('Invitation created (email skipped in dev mode)')
+          setDevInviteUrl(result.data.accept_url)
+          // Don't close the dialog - show the URL instead
+        } else {
+          toast.success('Invitation sent successfully')
+          setInviteDialogOpen(false)
+        }
         onStaffUpdate()
         setInviteFormData({
           email: '',
@@ -101,6 +110,18 @@ export function StaffManagementPanel({ staffMembers, onStaffUpdate, isDark = tru
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleCopyInviteUrl = () => {
+    if (devInviteUrl) {
+      navigator.clipboard.writeText(devInviteUrl)
+      toast.success('Invite URL copied to clipboard!')
+    }
+  }
+
+  const handleCloseInviteDialog = () => {
+    setInviteDialogOpen(false)
+    setDevInviteUrl(null)
   }
 
   const handleDeactivateStaff = async (staffId: string) => {
@@ -391,7 +412,7 @@ export function StaffManagementPanel({ staffMembers, onStaffUpdate, isDark = tru
       </Card>
 
       {/* Invite Staff Dialog */}
-      <Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
+      <Dialog open={inviteDialogOpen} onOpenChange={handleCloseInviteDialog}>
         <DialogContent className={cn(
           isDark ? 'bg-zinc-900 border-zinc-700' : 'bg-white border-gray-200'
         )}>
@@ -496,19 +517,53 @@ export function StaffManagementPanel({ staffMembers, onStaffUpdate, isDark = tru
               </div>
             </div>
           </div>
+          {/* Dev Mode: Show invite URL */}
+          {devInviteUrl && (
+            <div className={cn(
+              'p-4 rounded-lg border-2 border-dashed',
+              isDark ? 'bg-amber-900/20 border-amber-500/50' : 'bg-amber-50 border-amber-300'
+            )}>
+              <div className="flex items-start gap-2 mb-2">
+                <Badge className="bg-amber-500 text-white">DEV MODE</Badge>
+                <p className={cn(
+                  'text-sm font-medium',
+                  isDark ? 'text-amber-400' : 'text-amber-700'
+                )}>
+                  Email couldn't be sent. Use this link directly:
+                </p>
+              </div>
+              <div className={cn(
+                'flex items-center gap-2 p-2 rounded',
+                isDark ? 'bg-zinc-800' : 'bg-white border border-gray-200'
+              )}>
+                <code className={cn(
+                  'text-xs flex-1 break-all',
+                  isDark ? 'text-zinc-300' : 'text-gray-700'
+                )}>
+                  {devInviteUrl}
+                </code>
+                <Button size="sm" onClick={handleCopyInviteUrl}>
+                  Copy
+                </Button>
+              </div>
+            </div>
+          )}
+
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setInviteDialogOpen(false)}
+              onClick={handleCloseInviteDialog}
               className={cn(
                 isDark ? 'border-zinc-700 text-zinc-400' : 'border-gray-300 text-gray-600'
               )}
             >
-              Cancel
+              {devInviteUrl ? 'Done' : 'Cancel'}
             </Button>
-            <Button onClick={handleInviteStaff} disabled={loading}>
-              {loading ? 'Sending...' : 'Send Invitation'}
-            </Button>
+            {!devInviteUrl && (
+              <Button onClick={handleInviteStaff} disabled={loading}>
+                {loading ? 'Sending...' : 'Send Invitation'}
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -346,7 +346,7 @@ const LedgerItem = React.memo(({ activity }: { activity: any }) => {
                         <p className="text-sm font-medium text-gray-700 dark:text-zinc-200 leading-tight">{activity.title}</p>
                         <p className="text-xs text-gray-500 dark:text-zinc-200 mt-1 leading-relaxed max-w-[200px]">{activity.description}</p>
                         <p className="text-[10px] text-gray-400 dark:text-zinc-300 font-mono mt-2 uppercase tracking-wider">
-                            {format(parseISO(activity.createdAt), 'HH:mm')} • {activity.status || 'Processed'}
+                            {activity.createdAt ? format(parseISO(activity.createdAt), 'HH:mm') : '--:--'} • {activity.status || 'Processed'}
                         </p>
                     </div>
                 </div>
@@ -387,10 +387,14 @@ export function EnhancedStaffDashboard({
     }, [router])
 
     // Memoize data processing
-    const formattedDate = useMemo(() => 
-        format(parseISO(initialData.generatedAt), 'dd MMM yyyy').toUpperCase(), 
-        [initialData.generatedAt]
-    )
+    const formattedDate = useMemo(() => {
+        if (!initialData.generatedAt) return format(new Date(), 'dd MMM yyyy').toUpperCase()
+        try {
+            return format(parseISO(initialData.generatedAt), 'dd MMM yyyy').toUpperCase()
+        } catch {
+            return format(new Date(), 'dd MMM yyyy').toUpperCase()
+        }
+    }, [initialData.generatedAt])
 
     const formatChartDate = useCallback((dateStr: string) => {
         try {

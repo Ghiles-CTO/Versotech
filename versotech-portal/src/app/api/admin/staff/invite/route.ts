@@ -129,9 +129,50 @@ export async function POST(request: NextRequest) {
       expiresAt: invitation.expires_at
     })
 
+    // In development mode, don't fail if email can't be sent
+    const isDevelopment = process.env.NODE_ENV === 'development'
+
     if (!emailResult.success) {
       console.error('Failed to send staff invitation email:', emailResult.error)
-      // Delete the invitation since email failed
+
+      if (isDevelopment) {
+        // In development, keep the invitation and return the accept URL directly
+        console.log('[DEV MODE] Email failed but invitation created. Accept URL:', acceptUrl)
+
+        // Still log the action
+        await supabase
+          .from('audit_logs')
+          .insert({
+            event_type: 'authorization',
+            actor_id: user.id,
+            action: 'staff_invited',
+            entity_type: 'staff',
+            entity_id: invitation.id,
+            action_details: {
+              invitation_id: invitation.id,
+              email: normalizedEmail,
+              role: validatedData.role,
+              display_name: validatedData.display_name,
+              is_super_admin: validatedData.is_super_admin,
+              email_skipped: true, // Note that email was skipped
+            },
+            timestamp: new Date().toISOString()
+          })
+
+        return NextResponse.json({
+          success: true,
+          message: 'Staff member invited (email skipped in development mode)',
+          data: {
+            invitation_id: invitation.id,
+            email: normalizedEmail,
+            role: validatedData.role,
+            accept_url: acceptUrl, // Return the URL so dev can use it directly
+          },
+          dev_warning: 'Email could not be sent. Use the accept_url directly to complete the invitation.',
+        })
+      }
+
+      // In production, delete the invitation since email failed
       await supabase.from('member_invitations').delete().eq('id', invitation.id)
       return NextResponse.json({
         error: 'Failed to send invitation email. Please try again.'
