@@ -309,7 +309,8 @@ export default async function InvestorsPage({
     total: count || enrichedInvestors.length,
     active: enrichedInvestors.filter((i) => i.onboardingStatus === 'completed' || i.onboardingStatus === 'active').length,
     pending: enrichedInvestors.filter((i) => ['pending', 'review'].includes(i.kycStatus)).length,
-    institutional: enrichedInvestors.filter((i) => i.type === 'institutional' || i.type === 'entity').length
+    entities: enrichedInvestors.filter((i) => i.type === 'entity').length,
+    individuals: enrichedInvestors.filter((i) => i.type === 'individual').length
   }
 
   return (
@@ -324,7 +325,7 @@ export default async function InvestorsPage({
         <AddInvestorModal />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-muted-foreground">Total Investors</CardTitle>
@@ -357,11 +358,21 @@ export default async function InvestorsPage({
 
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Institutional</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Entities</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-400">{stats.institutional}</div>
-            <div className="text-sm text-muted-foreground mt-1">Professional investors</div>
+            <div className="text-2xl font-bold text-blue-400">{stats.entities}</div>
+            <div className="text-sm text-muted-foreground mt-1">Corporate investors</div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Individuals</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-purple-400">{stats.individuals}</div>
+            <div className="text-sm text-muted-foreground mt-1">Natural persons</div>
           </CardContent>
         </Card>
       </div>
