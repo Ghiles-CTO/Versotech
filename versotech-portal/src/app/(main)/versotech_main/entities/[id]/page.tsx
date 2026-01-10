@@ -18,10 +18,23 @@ export default async function EntityDetailPage({ params }: { params: Promise<{ i
   const { id } = await params
   const supabase = await createSmartClient()
 
-  // Fetch entity with all fields including CSV data
+  // Fetch entity with all fields including CSV data, lawyer, and arranger
   const { data: entity, error: entityError } = await supabase
     .from('vehicles')
-    .select('*')
+    .select(`
+      *,
+      lawyer:lawyers (
+        id,
+        firm_name,
+        display_name,
+        primary_contact_email
+      ),
+      arranger_entity:arranger_entities (
+        id,
+        legal_name,
+        email
+      )
+    `)
     .eq('id', id)
     .single()
 
