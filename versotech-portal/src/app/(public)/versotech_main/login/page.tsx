@@ -11,9 +11,7 @@ import {
   Loader2,
   Eye,
   EyeOff,
-  Shield,
-  Lock,
-  Mail
+  Lock
 } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -110,8 +108,8 @@ function UnifiedLoginContent() {
 
       <div className="w-full max-w-md space-y-8 animate-in fade-in zoom-in-95 duration-700">
 
-        <div className="text-center space-y-4">
-          <div className="flex justify-center mb-4">
+        <div className="text-center">
+          <div className="flex justify-center mb-6">
              <div className="relative w-48 h-16">
                 <Image
                   src="/versotech-logo.jpg"
@@ -123,18 +121,10 @@ function UnifiedLoginContent() {
              </div>
           </div>
           <h1 className="text-3xl font-light tracking-tight text-white sr-only">VERSO</h1>
-          <p className="text-zinc-500 text-sm tracking-wide uppercase">
-            Unified Portal Access
-          </p>
         </div>
 
         <Card className="bg-zinc-900/50 border-white/5 backdrop-blur-sm shadow-2xl shadow-black">
           <CardContent className="p-8 space-y-6">
-
-            <div className="flex items-center justify-center gap-2 text-emerald-500/80 bg-emerald-500/5 py-2 rounded-md border border-emerald-500/10">
-                <Shield className="w-4 h-4" />
-                <span className="text-xs font-mono uppercase tracking-wider">Secure Connection</span>
-            </div>
 
             {message && (
               <div className={`p-3 rounded-md text-sm font-medium border ${
@@ -201,27 +191,21 @@ function UnifiedLoginContent() {
               </Button>
             </form>
 
-            {/* Invite-only notice */}
-            <div className="text-center space-y-3 pt-2">
-              <div className="flex items-center justify-center gap-2 text-xs text-zinc-500">
-                <Mail className="h-3 w-3" />
-                <span>This platform is invite-only</span>
-              </div>
-              <p className="text-xs text-zinc-600">
-                Need access? Contact your administrator or relationship manager.
+            {/* Request Access */}
+            <div className="text-center pt-2">
+              <p className="text-sm text-zinc-400">
+                Request Access.{' '}
+                <a
+                  href="mailto:contact@versotech.com"
+                  className="text-white hover:text-zinc-300 underline underline-offset-2 transition-colors"
+                >
+                  Please contact us
+                </a>
               </p>
             </div>
 
           </CardContent>
         </Card>
-
-        <div className="text-center space-y-2">
-           <div className="flex items-center justify-center gap-2 text-xs text-zinc-600">
-              <Shield className="h-3 w-3" />
-              <span>Bank-Level 256-bit Encryption</span>
-           </div>
-           <p className="text-[10px] text-zinc-700 font-mono">VERSO PLATFORM // UNIFIED ACCESS</p>
-        </div>
 
       </div>
     </div>
