@@ -31,6 +31,7 @@ export function StyledSubscriptionsPage({ basePath = '/versotech/staff' }: Style
   const [rawData, setRawData] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
+  const [confirmedInterestTotal, setConfirmedInterestTotal] = useState(0)
 
   // UI state
   const [quickSearch, setQuickSearch] = useState('')
@@ -54,10 +55,11 @@ export function StyledSubscriptionsPage({ basePath = '/versotech/staff' }: Style
     try {
       setLoading(true)
 
-      const [subsResponse, vehiclesResponse, investorsResponse] = await Promise.all([
+      const [subsResponse, vehiclesResponse, investorsResponse, interestsResponse] = await Promise.all([
         fetch('/api/subscriptions'),
         fetch('/api/vehicles'),
-        fetch('/api/investors')
+        fetch('/api/investors'),
+        fetch('/api/subscription-submissions/summary')
       ])
 
       if (!subsResponse.ok) throw new Error('Failed to load subscriptions')
@@ -73,6 +75,11 @@ export function StyledSubscriptionsPage({ basePath = '/versotech/staff' }: Style
       if (investorsResponse.ok) {
         const investorsData = await investorsResponse.json()
         setInvestors(investorsData.investors || [])
+      }
+
+      if (interestsResponse.ok) {
+        const interestsData = await interestsResponse.json()
+        setConfirmedInterestTotal(interestsData.totalAmount || 0)
       }
 
     } catch (err) {
@@ -240,11 +247,11 @@ export function StyledSubscriptionsPage({ basePath = '/versotech/staff' }: Style
 
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Active</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Confirmed Interest</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-400">{stats.activeCount.toLocaleString()}</div>
-            <div className="text-sm text-muted-foreground mt-1">Currently active</div>
+            <div className="text-2xl font-bold text-green-400">${(confirmedInterestTotal / 1e6).toFixed(1)}M</div>
+            <div className="text-sm text-muted-foreground mt-1">Interests confirmed</div>
           </CardContent>
         </Card>
 
