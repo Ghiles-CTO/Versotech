@@ -37,12 +37,14 @@ type RecentIntroductionRecord = {
   id: string
   introducer_id: string | null
   prospect_email: string | null
+  prospect_investor_id: string | null
   deal_id: string | null
   status: string | null
   introduced_at: string | null
   commission_rate_override_bps: number | null
   notes: string | null
   introducer: { legal_name: string | null } | null
+  prospect_investor: { legal_name: string | null } | null
   deal: { name: string | null } | null
 }
 
@@ -196,12 +198,14 @@ export default async function IntroducersPage() {
         id,
         introducer_id,
         prospect_email,
+        prospect_investor_id,
         deal_id,
         status,
         introduced_at,
         commission_rate_override_bps,
         notes,
         introducer:introducers ( legal_name ),
+        prospect_investor:investors!introductions_prospect_investor_id_fkey ( legal_name ),
         deal:deals ( name )
       `
     )
@@ -222,7 +226,7 @@ export default async function IntroducersPage() {
         id: record.id,
         introducerId: record.introducer_id ?? undefined,
         introducerName: record.introducer?.legal_name ?? 'Unknown Introducer',
-        prospectEmail: record.prospect_email ?? 'Unknown prospect',
+        prospectEmail: record.prospect_investor?.legal_name ?? record.prospect_email ?? 'VERSO BI',
         dealId: record.deal_id ?? undefined,
         dealName: record.deal?.name ?? 'Untitled deal',
         status: record.status ?? 'invited',
