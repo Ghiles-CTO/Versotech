@@ -210,20 +210,7 @@ export default function EscrowPage() {
           return
         }
 
-        // SECURITY: Block partners from accessing escrow/wire info
-        // Partners should not see sensitive bank routing information
-        const { data: partnerUser } = await supabase
-          .from('partner_users')
-          .select('partner_id')
-          .eq('user_id', user.id)
-          .maybeSingle()
-
-        if (partnerUser) {
-          setError('Access restricted. Partners cannot access escrow information.')
-          return
-        }
-
-        // Check if user is a lawyer
+        // Check if user is a lawyer FIRST (highest priority for escrow access)
         const { data: lawyerUser, error: lawyerUserError } = await supabase
           .from('lawyer_users')
           .select('lawyer_id')
@@ -246,7 +233,7 @@ export default function EscrowPage() {
           }
         }
 
-        // Check if user is an arranger
+        // Check if user is an arranger SECOND (arrangers can view escrow for their deals)
         const { data: arrangerUser, error: arrangerUserError } = await supabase
           .from('arranger_users')
           .select('arranger_id')
@@ -268,6 +255,21 @@ export default function EscrowPage() {
             await fetchArrangerEscrowData(supabase, arranger.id)
             return
           }
+        }
+
+        // SECURITY: Block partners from accessing escrow/wire info
+        // Partners should not see sensitive bank routing information
+        // NOTE: This check comes AFTER lawyer/arranger checks to support multi-persona users
+        // (a user who is both partner and arranger should get arranger access)
+        const { data: partnerUser } = await supabase
+          .from('partner_users')
+          .select('partner_id')
+          .eq('user_id', user.id)
+          .maybeSingle()
+
+        if (partnerUser) {
+          setError('Access restricted. Partners cannot access escrow information.')
+          return
         }
 
         // Staff view - show all escrow data
