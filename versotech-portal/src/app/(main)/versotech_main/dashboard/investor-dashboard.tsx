@@ -8,6 +8,7 @@ import { usePersona, Persona } from '@/contexts/persona-context'
 import { useTheme } from '@/components/theme-provider'
 import { InvestorActionCenter, DashboardTask, DashboardActivity } from '@/components/dashboard/investor-action-center'
 import { FeaturedDealsSection, FeaturedDeal } from '@/components/dashboard/featured-deals-section'
+import { VideoIntroModal } from '@/components/video/video-intro-modal'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -39,6 +40,7 @@ interface InvestorDashboardData {
   profile: {
     displayName: string | null
     avatarUrl: string | null
+    hasSeenIntroVideo: boolean
   } | null
   vehicles: PortfolioVehicle[]
   featuredDeals: FeaturedDeal[]
@@ -364,6 +366,41 @@ export function InvestorDashboard({ investorId, userId, persona }: InvestorDashb
   const [data, setData] = useState<InvestorDashboardData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [showVideoModal, setShowVideoModal] = useState(false)
+
+  // Video intro URL from Supabase storage
+  // TODO: Migrate video to new Supabase project and update URL
+  // For now, using the old project URL where the video exists
+  const videoUrl = 'https://ipguxdssecfexudnvtia.supabase.co/storage/v1/object/public/public-assets/videos/intro-video.mp4'
+
+  // Show video modal if user hasn't seen it
+  useEffect(() => {
+    if (data?.profile && !data.profile.hasSeenIntroVideo) {
+      setShowVideoModal(true)
+    }
+  }, [data?.profile])
+
+  // Handle video completion
+  const handleVideoComplete = async () => {
+    try {
+      const response = await fetch('/api/profiles/intro-video-seen', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      })
+      if (!response.ok) {
+        throw new Error('Failed to mark video as seen')
+      }
+      // Update local state to reflect video has been seen
+      if (data?.profile) {
+        setData({
+          ...data,
+          profile: { ...data.profile, hasSeenIntroVideo: true }
+        })
+      }
+    } finally {
+      setShowVideoModal(false)
+    }
+  }
 
   useEffect(() => {
     async function fetchDashboardData() {
@@ -383,10 +420,10 @@ export function InvestorDashboard({ investorId, userId, persona }: InvestorDashb
           activityRes,
           positionsRes
         ] = await Promise.all([
-          // Profile
+          // Profile (includes intro video status)
           supabase
             .from('profiles')
-            .select('display_name, avatar_url')
+            .select('display_name, avatar_url, has_seen_intro_video')
             .eq('id', userId)
             .single(),
 
@@ -404,7 +441,7 @@ export function InvestorDashboard({ investorId, userId, persona }: InvestorDashb
             .in('subscriptions.investor_id', investorIds)
             .eq('subscriptions.status', 'active'),
 
-          // Featured deals user has access to
+          // Featured deals user has access to (with published fee structures for unit price)
           supabase
             .from('deals')
             .select(`
@@ -421,7 +458,8 @@ export function InvestorDashboard({ investorId, userId, persona }: InvestorDashb
               sector,
               location,
               vehicles ( id, name, type ),
-              deal_memberships!inner ( user_id )
+              deal_memberships!inner ( user_id ),
+              deal_fee_structures ( id, price_per_share_text, allocation_up_to, minimum_ticket, status, effective_at )
             `)
             .eq('deal_memberships.user_id', userId)
             .eq('status', 'open')
@@ -500,13 +538,39 @@ export function InvestorDashboard({ investorId, userId, persona }: InvestorDashb
           return new Date(a.due_at).getTime() - new Date(b.due_at).getTime()
         })
 
+        // Process deals to pick the latest published fee structure for each deal
+        const processedDeals = (dealsRes.data ?? []).map((deal: any) => {
+          const feeStructures = deal.deal_fee_structures ?? []
+          // Find the latest published fee structure (ordered by effective_at desc)
+          const publishedStructures = feeStructures
+            .filter((fs: any) => fs.status === 'published')
+            .sort((a: any, b: any) => {
+              const dateA = a.effective_at ? new Date(a.effective_at).getTime() : 0
+              const dateB = b.effective_at ? new Date(b.effective_at).getTime() : 0
+              return dateB - dateA // descending
+            })
+          const latestFeeStructure = publishedStructures[0] ?? null
+
+          return {
+            ...deal,
+            fee_structure: latestFeeStructure ? {
+              id: latestFeeStructure.id,
+              price_per_share_text: latestFeeStructure.price_per_share_text,
+              allocation_up_to: latestFeeStructure.allocation_up_to,
+              minimum_ticket: latestFeeStructure.minimum_ticket,
+            } : null,
+            deal_fee_structures: undefined // Remove raw array from final object
+          }
+        })
+
         setData({
           profile: profileRes.data ? {
             displayName: profileRes.data.display_name,
-            avatarUrl: profileRes.data.avatar_url
+            avatarUrl: profileRes.data.avatar_url,
+            hasSeenIntroVideo: profileRes.data.has_seen_intro_video ?? true
           } : null,
           vehicles: (vehiclesRes.data ?? []) as PortfolioVehicle[],
-          featuredDeals: (dealsRes.data ?? []) as unknown as FeaturedDeal[],
+          featuredDeals: processedDeals as FeaturedDeal[],
           tasks: sortedTasks as DashboardTask[],
           tasksTotal: tasksRes.count ?? sortedTasks.length,
           recentActivity,
@@ -563,6 +627,13 @@ export function InvestorDashboard({ investorId, userId, persona }: InvestorDashb
 
   return (
     <div className="space-y-12 px-0 pb-16 pt-2">
+      {/* Video Intro Modal - shown for first-time users */}
+      <VideoIntroModal
+        open={showVideoModal}
+        videoUrl={videoUrl}
+        onComplete={handleVideoComplete}
+      />
+
       {/* Welcome Header Section */}
       <section className={cn(
         "rounded-3xl border p-8 shadow-sm",

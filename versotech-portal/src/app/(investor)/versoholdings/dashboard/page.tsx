@@ -305,7 +305,8 @@ async function getFeaturedDeals(userId: string | null): Promise<FeaturedDeal[]> 
         sector,
         location,
         vehicles ( id, name, type ),
-        deal_memberships!inner ( user_id )
+        deal_memberships!inner ( user_id ),
+        deal_fee_structures ( id, price_per_share_text, allocation_up_to, minimum_ticket, status, effective_at )
       `)
       .eq('deal_memberships.user_id', userId)
       .eq('status', 'open')
@@ -318,7 +319,32 @@ async function getFeaturedDeals(userId: string | null): Promise<FeaturedDeal[]> 
       return []
     }
 
-    return (data ?? []) as unknown as FeaturedDeal[]
+    // Process deals to pick the latest published fee structure for each deal
+    const processedDeals = (data ?? []).map((deal: any) => {
+      const feeStructures = deal.deal_fee_structures ?? []
+      // Find the latest published fee structure (ordered by effective_at desc)
+      const publishedStructures = feeStructures
+        .filter((fs: any) => fs.status === 'published')
+        .sort((a: any, b: any) => {
+          const dateA = a.effective_at ? new Date(a.effective_at).getTime() : 0
+          const dateB = b.effective_at ? new Date(b.effective_at).getTime() : 0
+          return dateB - dateA // descending
+        })
+      const latestFeeStructure = publishedStructures[0] ?? null
+
+      return {
+        ...deal,
+        fee_structure: latestFeeStructure ? {
+          id: latestFeeStructure.id,
+          price_per_share_text: latestFeeStructure.price_per_share_text,
+          allocation_up_to: latestFeeStructure.allocation_up_to,
+          minimum_ticket: latestFeeStructure.minimum_ticket,
+        } : null,
+        deal_fee_structures: undefined // Remove raw array from final object
+      }
+    })
+
+    return processedDeals as FeaturedDeal[]
   } catch (error) {
     console.error('[Investor Dashboard] Featured deals exception:', error)
     return []
