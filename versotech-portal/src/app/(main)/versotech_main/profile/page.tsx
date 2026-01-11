@@ -231,7 +231,7 @@ export default async function ProfilePage({
         id: profile.id,
         email: profile.email,
         display_name: profile.display_name,
-        full_name: profile.full_name || profile.display_name,
+        full_name: profile.display_name,
         title: profile.title,
         avatar_url: profile.avatar_url,
         phone: profile.phone,
