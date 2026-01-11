@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { isStaffUser } from "@/lib/api-auth"
 import { z } from "zod"
 
 const updateSchema = z.object({
@@ -27,9 +28,10 @@ export async function PATCH(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const role = user.user_metadata?.role || user.role
-    if (!role || !role.startsWith("staff_")) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 403 })
+    // Verify staff role using database profile (not JWT metadata)
+    const isStaff = await isStaffUser(supabase, user)
+    if (!isStaff) {
+      return NextResponse.json({ error: "Staff access required" }, { status: 403 })
     }
 
     const json = await request.json()
@@ -85,9 +87,10 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const role = user.user_metadata?.role || user.role
-    if (!role || !role.startsWith("staff_")) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 403 })
+    // Verify staff role using database profile (not JWT metadata)
+    const isStaff = await isStaffUser(supabase, user)
+    if (!isStaff) {
+      return NextResponse.json({ error: "Staff access required" }, { status: 403 })
     }
 
     // Check if introduction has associated commissions

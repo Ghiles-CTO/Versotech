@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
-import { getAuthenticatedUser } from '@/lib/api-auth'
+import { getAuthenticatedUser, isStaffUser } from '@/lib/api-auth'
 
 /**
  * Get list of available investors for group creation
@@ -17,9 +17,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Verify user is staff or arranger
-    const userRole = user.user_metadata?.role || user.role
-    const isStaff = ['staff_admin', 'staff_ops', 'staff_rm', 'ceo'].includes(userRole)
+    // Verify user is staff or arranger (check database profile, not JWT metadata)
+    const isStaff = await isStaffUser(supabase, user)
 
     // Check if user is an arranger
     let isArranger = false

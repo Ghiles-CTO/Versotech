@@ -1,5 +1,5 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
-import { getAuthenticatedUser } from '@/lib/api-auth'
+import { getAuthenticatedUser, isStaffUser } from '@/lib/api-auth'
 import { NextRequest, NextResponse } from 'next/server'
 
 /**
@@ -16,10 +16,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Verify staff role
-    const userRole = user.user_metadata?.role || user.role
-    if (!['staff_admin', 'staff_ops', 'staff_rm', 'ceo'].includes(userRole)) {
-      return NextResponse.json({ error: 'Unauthorized - Staff access required' }, { status: 403 })
+    // Verify staff role using database profile (not JWT metadata)
+    const isStaff = await isStaffUser(supabase, user)
+    if (!isStaff) {
+      return NextResponse.json({ error: 'Staff access required' }, { status: 403 })
     }
 
     // Use service client to bypass RLS since we've already verified staff access
