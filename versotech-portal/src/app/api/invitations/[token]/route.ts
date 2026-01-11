@@ -308,21 +308,30 @@ export async function POST(
 
       // CRITICAL: Staff users must also be added to ceo_users for CEO entity access
       // This gives them the 'ceo' persona via get_user_personas() RPC
-      const { error: ceoUserError } = await serviceSupabase
+      // Check first to avoid duplicate key errors (user_id is primary key)
+      const { data: existingCeoUser } = await serviceSupabase
         .from('ceo_users')
-        .insert({
-          user_id: user.id,
-          role: 'admin',
-          is_primary: false,
-          can_sign: true,
-          title: metadata.title || invitation.role || 'Staff',
-          created_by: invitation.invited_by,
-          created_at: new Date().toISOString()
-        })
+        .select('user_id')
+        .eq('user_id', user.id)
+        .maybeSingle()
 
-      if (ceoUserError) {
-        console.error('Error adding staff to ceo_users:', ceoUserError)
-        // Continue - this is not a critical failure, user can be added manually
+      if (!existingCeoUser) {
+        const { error: ceoUserError } = await serviceSupabase
+          .from('ceo_users')
+          .insert({
+            user_id: user.id,
+            role: 'admin',
+            is_primary: false,
+            can_sign: true,
+            title: metadata.title || invitation.role || 'Staff',
+            created_by: invitation.invited_by,
+            created_at: new Date().toISOString()
+          })
+
+        if (ceoUserError) {
+          console.error('Error adding staff to ceo_users:', ceoUserError)
+          // Continue - this is not a critical failure, user can be added manually
+        }
       }
     } else {
       // Non-staff entity types - create junction table records
