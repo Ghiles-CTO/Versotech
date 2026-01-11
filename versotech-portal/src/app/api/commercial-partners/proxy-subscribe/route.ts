@@ -6,7 +6,7 @@ const proxySubscribeSchema = z.object({
   deal_id: z.string().uuid(),
   client_investor_id: z.string().uuid(),
   commitment: z.number().positive(),
-  stock_type: z.enum(['ordinary', 'preference', 'convertible']).optional().default('ordinary'),
+  stock_type: z.enum(['common', 'preferred', 'convertible', 'warrant', 'bond', 'note', 'other']).optional().default('common'),
   notes: z.string().optional(),
   proxy_authorization_doc_id: z.string().uuid().optional() // Optional reference to authorization document
 })

@@ -106,7 +106,7 @@ export function DealDetailClient({
     investment_thesis: deal?.investment_thesis || '',
     status: deal?.status || 'draft',
     deal_type: deal?.deal_type || 'equity_secondary',
-    stock_type: deal?.stock_type || 'ordinary',
+    stock_type: deal?.stock_type || 'common',
     company_name: deal?.company_name || '',
     company_website: deal?.company_website || '',
     sector: deal?.sector || '',
@@ -499,9 +499,13 @@ export function DealDetailClient({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="ordinary">Ordinary Shares</SelectItem>
-                    <SelectItem value="preference">Preference Shares</SelectItem>
+                    <SelectItem value="common">Common/Ordinary Shares</SelectItem>
+                    <SelectItem value="preferred">Preferred Shares</SelectItem>
                     <SelectItem value="convertible">Convertible Notes</SelectItem>
+                    <SelectItem value="warrant">Warrants</SelectItem>
+                    <SelectItem value="bond">Bonds</SelectItem>
+                    <SelectItem value="note">Notes</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

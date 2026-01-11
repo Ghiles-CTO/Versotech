@@ -48,7 +48,7 @@ export function CreateDealForm({ entities, arrangerEntities = [], basePath = '/v
     name: '',
     company_name: '',
     deal_type: 'equity_secondary',
-    stock_type: 'ordinary',
+    stock_type: 'common',
     vehicle_id: '',
     arranger_entity_id: '',
     sector: '',
@@ -276,9 +276,13 @@ export function CreateDealForm({ entities, arrangerEntities = [], basePath = '/v
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="ordinary">Ordinary Shares</SelectItem>
-                      <SelectItem value="preference">Preference Shares</SelectItem>
+                      <SelectItem value="common">Common/Ordinary Shares</SelectItem>
+                      <SelectItem value="preferred">Preferred Shares</SelectItem>
                       <SelectItem value="convertible">Convertible Notes</SelectItem>
+                      <SelectItem value="warrant">Warrants</SelectItem>
+                      <SelectItem value="bond">Bonds</SelectItem>
+                      <SelectItem value="note">Notes</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
