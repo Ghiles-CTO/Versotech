@@ -386,6 +386,12 @@ export function ProfilePageClient({
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
+                  <Label className="text-muted-foreground">Full Name</Label>
+                  <div className="font-medium">
+                    {profile.display_name || 'Not set'}
+                  </div>
+                </div>
+                <div className="space-y-2">
                   <Label className="text-muted-foreground">Email</Label>
                   <div className="font-medium flex items-center gap-2">
                     <Mail className="h-4 w-4 text-muted-foreground" />

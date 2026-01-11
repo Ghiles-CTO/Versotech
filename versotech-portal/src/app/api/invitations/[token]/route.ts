@@ -404,7 +404,7 @@ export async function POST(
     // Determine redirect URL based on entity type
     const redirectUrls: Record<string, string> = {
       partner: '/versotech_main/partner-profile',
-      investor: '/versotech_main/investor-profile',
+      investor: '/versotech_main/profile',
       introducer: '/versotech_main/introducer-profile',
       commercial_partner: '/versotech_main/commercial-partner-profile',
       lawyer: '/versotech_main/lawyer-profile',

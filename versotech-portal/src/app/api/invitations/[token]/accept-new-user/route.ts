@@ -31,7 +31,7 @@ const ENTITY_ID_COLUMNS: Record<string, string> = {
 // Redirect URLs per entity type
 const REDIRECT_URLS: Record<string, string> = {
   partner: '/versotech_main/partner-profile',
-  investor: '/versotech_main/investor-profile',
+  investor: '/versotech_main/profile',
   introducer: '/versotech_main/introducer-profile',
   commercial_partner: '/versotech_main/commercial-partner-profile',
   lawyer: '/versotech_main/lawyer-profile',
