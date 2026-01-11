@@ -1,19 +1,19 @@
 'use client'
 
 import { useState } from 'react'
-import { useSearchParams } from 'next/navigation'
 import { ProfileImageUpload } from '@/components/profile/profile-image-upload'
 import { ProfileForm } from '@/components/profile/profile-form'
 import { PasswordChangeForm } from '@/components/profile/password-change-form'
 import { PreferencesEditor } from '@/components/profile/preferences-editor'
 import { KYCDocumentsTab } from '@/components/profile/kyc-documents-tab'
 import { CounterpartyEntitiesTab } from '@/components/profile/counterparty-entities-tab'
-import { InvestorInfoForm } from '@/components/profile/investor-info-form'
 import { ComplianceTab } from '@/components/profile/compliance-tab'
 import { KYCQuestionnaire } from '@/components/kyc/KYCQuestionnaire'
+import { GenericEntityMembersTab } from '@/components/profile/generic-entity-members-tab'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
 import { Label } from '@/components/ui/label'
+import { Button } from '@/components/ui/button'
 import {
   User,
   Lock,
@@ -30,10 +30,15 @@ import {
   Clock,
   Mail,
   Phone,
+  MapPin,
+  Edit,
+  Shield,
+  Globe,
 } from 'lucide-react'
 import { MembersManagementTab } from '@/components/members/members-management-tab'
 import { SignatureSpecimenTab } from '@/components/profile/signature-specimen-tab'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { IndividualKycDisplay, EntityKYCEditDialog, EntityAddressEditDialog, EntityInfoEditDialog } from '@/components/shared'
 
 // Types for investor entity data passed from server
 type InvestorInfo = {
@@ -49,6 +54,7 @@ type InvestorInfo = {
   tax_residency: string | null
   email: string | null
   phone: string | null
+  website: string | null
   registered_address: string | null
   city: string | null
   representative_name: string | null
@@ -57,6 +63,42 @@ type InvestorInfo = {
   is_qualified_purchaser: boolean | null
   aml_risk_rating: string | null
   logo_url: string | null
+  // Individual KYC fields
+  first_name: string | null
+  middle_name: string | null
+  last_name: string | null
+  name_suffix: string | null
+  date_of_birth: string | null
+  country_of_birth: string | null
+  nationality: string | null
+  // Phone numbers
+  phone_mobile: string | null
+  phone_office: string | null
+  // Residential address (for individuals)
+  residential_street: string | null
+  residential_line_2: string | null
+  residential_city: string | null
+  residential_state: string | null
+  residential_postal_code: string | null
+  residential_country: string | null
+  // Registered address (for entities)
+  registered_address_line_1: string | null
+  registered_address_line_2: string | null
+  registered_city: string | null
+  registered_state: string | null
+  registered_postal_code: string | null
+  registered_country: string | null
+  // US Tax compliance
+  is_us_citizen: boolean | null
+  is_us_taxpayer: boolean | null
+  us_taxpayer_id: string | null
+  country_of_tax_residency: string | null
+  // ID Document
+  id_type: string | null
+  id_number: string | null
+  id_issue_date: string | null
+  id_expiry_date: string | null
+  id_issuing_country: string | null
 }
 
 type InvestorUserInfo = {
@@ -81,6 +123,7 @@ interface ProfilePageClientProps {
     created_at: string
   }
   variant?: 'investor' | 'staff'
+  defaultTab?: string
   investorInfo?: InvestorInfo | null
   investorUserInfo?: InvestorUserInfo | null
 }
@@ -104,16 +147,30 @@ export function ProfilePageClient({
   userEmail,
   profile: initialProfile,
   variant = 'investor',
+  defaultTab = 'overview',
   investorInfo,
   investorUserInfo
 }: ProfilePageClientProps) {
   const [profile, setProfile] = useState(initialProfile)
+  const [showKycDialog, setShowKycDialog] = useState(false)
+  const [showAddressDialog, setShowAddressDialog] = useState(false)
+  const [showEntityInfoDialog, setShowEntityInfoDialog] = useState(false)
   const isStaff = variant === 'staff'
-  const searchParams = useSearchParams()
-  const defaultTab = searchParams.get('tab') || 'overview'
 
   // Use server-passed investorInfo instead of client-side fetching
   const hasInvestorEntity = !!investorInfo
+  const isIndividual = investorInfo?.type === 'individual'
+  const isEntity = hasInvestorEntity && investorInfo?.type !== 'individual'
+
+  // Debug logging on client
+  console.log('[ProfilePageClient] Props received:', {
+    variant,
+    isStaff,
+    hasInvestorEntity,
+    isIndividual,
+    isEntity,
+    investorInfo: investorInfo ? { id: investorInfo.id, legal_name: investorInfo.legal_name, type: investorInfo.type } : null,
+  })
 
   const handleAvatarUpdate = (newAvatarUrl: string) => {
     setProfile(prev => ({
@@ -148,32 +205,32 @@ export function ProfilePageClient({
             />
 
             {/* Quick Info Card - Staff Only */}
-            <div className="mt-6 p-4 border border-white/10 rounded-lg bg-white/5 space-y-3">
+            <div className="mt-6 p-4 border border-border rounded-lg bg-muted/50 space-y-3">
               <div>
-                <p className="text-xs font-medium text-white/60 uppercase tracking-wide">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                   Contact
                 </p>
-                <p className="text-sm mt-1 text-white">{profile.email}</p>
+                <p className="text-sm mt-1 text-foreground">{profile.email}</p>
                 {profile.phone && (
-                  <p className="text-sm text-white/70">{profile.phone}</p>
+                  <p className="text-sm text-muted-foreground">{profile.phone}</p>
                 )}
               </div>
 
               {profile.office_location && (
                 <div>
-                  <p className="text-xs font-medium text-white/60 uppercase tracking-wide">
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                     Office
                   </p>
-                  <p className="text-sm mt-1 text-white">{profile.office_location}</p>
+                  <p className="text-sm mt-1 text-foreground">{profile.office_location}</p>
                 </div>
               )}
 
               {profile.title && (
                 <div>
-                  <p className="text-xs font-medium text-white/60 uppercase tracking-wide">
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                     Title
                   </p>
-                  <p className="text-sm mt-1 text-white">{profile.title}</p>
+                  <p className="text-sm mt-1 text-foreground">{profile.title}</p>
                 </div>
               )}
             </div>
@@ -182,26 +239,17 @@ export function ProfilePageClient({
 
         {/* Right Column - Tabs */}
         <div className="lg:col-span-2">
-          <Tabs defaultValue="profile" className="w-full" id={`profile-tabs-${profile.id}`}>
-            <TabsList className="grid w-full grid-cols-3 bg-white/5 border border-white/10">
-              <TabsTrigger
-                value="profile"
-                className="data-[state=active]:bg-white/10 data-[state=active]:text-white text-white/70"
-              >
+          <Tabs defaultValue="profile" className="w-full">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="profile">
                 <Briefcase className="h-4 w-4 mr-2" />
                 Profile
               </TabsTrigger>
-              <TabsTrigger
-                value="security"
-                className="data-[state=active]:bg-white/10 data-[state=active]:text-white text-white/70"
-              >
+              <TabsTrigger value="security">
                 <Lock className="h-4 w-4 mr-2" />
                 Security
               </TabsTrigger>
-              <TabsTrigger
-                value="preferences"
-                className="data-[state=active]:bg-white/10 data-[state=active]:text-white text-white/70"
-              >
+              <TabsTrigger value="preferences">
                 <Bell className="h-4 w-4 mr-2" />
                 Notifications
               </TabsTrigger>
@@ -274,7 +322,7 @@ export function ProfilePageClient({
       </div>
 
       {/* Tabs */}
-      <Tabs defaultValue={defaultTab} className="space-y-6" id={`profile-tabs-${profile.id}`}>
+      <Tabs defaultValue={defaultTab} className="space-y-6">
         <TabsList>
           <TabsTrigger value="overview" className="flex items-center gap-2">
             <Building2 className="h-4 w-4" />
@@ -290,10 +338,18 @@ export function ProfilePageClient({
                 <ShieldAlert className="h-4 w-4" />
                 Compliance
               </TabsTrigger>
-              <TabsTrigger value="members" className="flex items-center gap-2">
-                <Users className="h-4 w-4" />
-                Members
-              </TabsTrigger>
+              {isEntity && (
+                <>
+                  <TabsTrigger value="members" className="flex items-center gap-2">
+                    <Users className="h-4 w-4" />
+                    Team
+                  </TabsTrigger>
+                  <TabsTrigger value="entity-members" className="flex items-center gap-2">
+                    <Users className="h-4 w-4" />
+                    Directors/UBOs
+                  </TabsTrigger>
+                </>
+              )}
               <TabsTrigger value="entities" className="flex items-center gap-2">
                 <Building2 className="h-4 w-4" />
                 Entities
@@ -317,7 +373,7 @@ export function ProfilePageClient({
         {/* Overview Tab */}
         <TabsContent value="overview" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Personal Info Card */}
+            {/* Your Info Card */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -325,16 +381,10 @@ export function ProfilePageClient({
                   Your Information
                 </CardTitle>
                 <CardDescription>
-                  Your personal account details
+                  Your account details within this investor entity
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label className="text-muted-foreground">Full Name</Label>
-                  <div className="font-medium">
-                    {profile.full_name || profile.display_name || 'Not set'}
-                  </div>
-                </div>
                 <div className="space-y-2">
                   <Label className="text-muted-foreground">Email</Label>
                   <div className="font-medium flex items-center gap-2">
@@ -342,15 +392,6 @@ export function ProfilePageClient({
                     {profile.email || userEmail}
                   </div>
                 </div>
-                {profile.phone && (
-                  <div className="space-y-2">
-                    <Label className="text-muted-foreground">Phone</Label>
-                    <div className="font-medium flex items-center gap-2">
-                      <Phone className="h-4 w-4 text-muted-foreground" />
-                      {profile.phone}
-                    </div>
-                  </div>
-                )}
                 {hasInvestorEntity && (
                   <div className="space-y-2">
                     <Label className="text-muted-foreground">Role</Label>
@@ -372,96 +413,247 @@ export function ProfilePageClient({
               </CardContent>
             </Card>
 
-            {/* Investor Entity Card */}
-            {hasInvestorEntity && (
+            {/* Investor Entity Info - Only for ENTITY type, not individual */}
+            {isEntity && investorInfo && (
               <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Building2 className="h-5 w-5" />
-                    Investor Entity
-                  </CardTitle>
-                  <CardDescription>
-                    Your investor organization details
-                  </CardDescription>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <Building2 className="h-5 w-5" />
+                      Entity Information
+                    </CardTitle>
+                    <CardDescription>
+                      Organization details
+                    </CardDescription>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={() => setShowEntityInfoDialog(true)}>
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit
+                  </Button>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <Label className="text-muted-foreground">Legal Name</Label>
-                    <div className="font-medium">{investorInfo!.legal_name}</div>
+                    <Label className="text-muted-foreground">Display Name</Label>
+                    <div className="font-medium">
+                      {investorInfo.display_name || '-'}
+                    </div>
                   </div>
-                  {investorInfo!.display_name && investorInfo!.display_name !== investorInfo!.legal_name && (
+                  <div className="space-y-2">
+                    <Label className="text-muted-foreground">Legal Name</Label>
+                    <div className="font-medium">{investorInfo.legal_name || '-'}</div>
+                  </div>
+                  {investorInfo.country_of_incorporation && (
                     <div className="space-y-2">
-                      <Label className="text-muted-foreground">Display Name</Label>
-                      <div className="font-medium">{investorInfo!.display_name}</div>
+                      <Label className="text-muted-foreground">Country of Incorporation</Label>
+                      <div className="font-medium">{investorInfo.country_of_incorporation}</div>
                     </div>
                   )}
-                  {investorInfo!.type && (
-                    <div className="space-y-2">
-                      <Label className="text-muted-foreground">Type</Label>
-                      <Badge variant="outline" className="capitalize">
-                        {investorInfo!.type.replace(/_/g, ' ')}
-                      </Badge>
-                    </div>
-                  )}
-                  {investorInfo!.country && (
-                    <div className="space-y-2">
-                      <Label className="text-muted-foreground">Country</Label>
-                      <div className="font-medium">{investorInfo!.country}</div>
-                    </div>
-                  )}
+                  <div className="space-y-2">
+                    <Label className="text-muted-foreground">Type</Label>
+                    <Badge variant="outline" className="capitalize">
+                      {(investorInfo.type || 'entity').replace(/_/g, ' ')}
+                    </Badge>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+
+          {/* Contact & Address for ENTITY investors only (individual investors show this in IndividualKycDisplay) */}
+          {isEntity && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Contact Info */}
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <Phone className="h-5 w-5" />
+                      Contact Information
+                    </CardTitle>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={() => setShowAddressDialog(true)}>
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit
+                  </Button>
+                </CardHeader>
+                <CardContent className="space-y-4">
                   {investorInfo!.email && (
                     <div className="space-y-2">
-                      <Label className="text-muted-foreground">Entity Email</Label>
+                      <Label className="text-muted-foreground">Email</Label>
                       <div className="font-medium flex items-center gap-2">
                         <Mail className="h-4 w-4 text-muted-foreground" />
                         {investorInfo!.email}
                       </div>
                     </div>
                   )}
+                  {investorInfo!.phone && (
+                    <div className="space-y-2">
+                      <Label className="text-muted-foreground">Phone</Label>
+                      <div className="font-medium flex items-center gap-2">
+                        <Phone className="h-4 w-4 text-muted-foreground" />
+                        {investorInfo!.phone}
+                      </div>
+                    </div>
+                  )}
+                  {investorInfo!.phone_mobile && (
+                    <div className="space-y-2">
+                      <Label className="text-muted-foreground">Mobile</Label>
+                      <div className="font-medium flex items-center gap-2">
+                        <Phone className="h-4 w-4 text-muted-foreground" />
+                        {investorInfo!.phone_mobile}
+                      </div>
+                    </div>
+                  )}
+                  {investorInfo!.website && (
+                    <div className="space-y-2">
+                      <Label className="text-muted-foreground">Website</Label>
+                      <div className="font-medium flex items-center gap-2">
+                        <Globe className="h-4 w-4 text-muted-foreground" />
+                        <a href={investorInfo!.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                          {investorInfo!.website}
+                        </a>
+                      </div>
+                    </div>
+                  )}
+                  {!investorInfo!.email && !investorInfo!.phone && !investorInfo!.phone_mobile && !investorInfo!.website && (
+                    <p className="text-muted-foreground text-sm">No contact information available</p>
+                  )}
                 </CardContent>
               </Card>
-            )}
 
-            {/* If no investor entity, show profile edit */}
-            {!hasInvestorEntity && (
+              {/* Address */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Settings className="h-5 w-5" />
-                    Edit Profile
+                    <MapPin className="h-5 w-5" />
+                    {isEntity ? 'Registered Address' : 'Address'}
                   </CardTitle>
-                  <CardDescription>
-                    Update your profile information
-                  </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <ProfileForm
-                    userId={profile.id}
-                    initialData={profile}
-                    onUpdate={handleProfileUpdate}
-                    showStaffFields={false}
-                  />
+                <CardContent className="space-y-4">
+                  {isEntity ? (
+                    // Entity address display - use registered_* columns
+                    investorInfo!.registered_address_line_1 ? (
+                      <>
+                        <div className="font-medium">
+                          {investorInfo!.registered_address_line_1}
+                        </div>
+                        {investorInfo!.registered_address_line_2 && (
+                          <div className="text-muted-foreground">{investorInfo!.registered_address_line_2}</div>
+                        )}
+                        {(investorInfo!.registered_city || investorInfo!.registered_state || investorInfo!.registered_postal_code || investorInfo!.registered_country) && (
+                          <div className="text-muted-foreground">
+                            {[
+                              investorInfo!.registered_city,
+                              investorInfo!.registered_state,
+                              investorInfo!.registered_postal_code,
+                              investorInfo!.registered_country
+                            ].filter(Boolean).join(', ')}
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <p className="text-muted-foreground text-sm">No address information available</p>
+                    )
+                  ) : (
+                    // Individual address display - use residential_* columns
+                    investorInfo!.residential_street ? (
+                      <>
+                        <div className="font-medium">
+                          {investorInfo!.residential_street}
+                        </div>
+                        {investorInfo!.residential_line_2 && (
+                          <div className="text-muted-foreground">{investorInfo!.residential_line_2}</div>
+                        )}
+                        {(investorInfo!.residential_city || investorInfo!.residential_state || investorInfo!.residential_postal_code || investorInfo!.residential_country) && (
+                          <div className="text-muted-foreground">
+                            {[
+                              investorInfo!.residential_city,
+                              investorInfo!.residential_state,
+                              investorInfo!.residential_postal_code,
+                              investorInfo!.residential_country
+                            ].filter(Boolean).join(', ')}
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <p className="text-muted-foreground text-sm">No address information available</p>
+                    )
+                  )}
                 </CardContent>
               </Card>
-            )}
-          </div>
+            </div>
+          )}
+
+          {/* Individual KYC Info Display */}
+          {isIndividual && investorInfo && (
+            <IndividualKycDisplay
+              data={{
+                first_name: investorInfo.first_name,
+                middle_name: investorInfo.middle_name,
+                last_name: investorInfo.last_name,
+                name_suffix: investorInfo.name_suffix,
+                date_of_birth: investorInfo.date_of_birth,
+                country_of_birth: investorInfo.country_of_birth,
+                nationality: investorInfo.nationality,
+                email: investorInfo.email,
+                phone_mobile: investorInfo.phone_mobile,
+                phone_office: investorInfo.phone_office,
+                residential_street: investorInfo.residential_street,
+                residential_city: investorInfo.residential_city,
+                residential_state: investorInfo.residential_state,
+                residential_postal_code: investorInfo.residential_postal_code,
+                residential_country: investorInfo.residential_country,
+                is_us_citizen: investorInfo.is_us_citizen,
+                is_us_taxpayer: investorInfo.is_us_taxpayer,
+                us_taxpayer_id: investorInfo.us_taxpayer_id,
+                country_of_tax_residency: investorInfo.country_of_tax_residency,
+                id_type: investorInfo.id_type,
+                id_number: investorInfo.id_number,
+                id_issue_date: investorInfo.id_issue_date,
+                id_expiry_date: investorInfo.id_expiry_date,
+                id_issuing_country: investorInfo.id_issuing_country,
+              }}
+              onEdit={() => setShowKycDialog(true)}
+              title="Personal KYC Information"
+            />
+          )}
+
+          {/* If no investor entity, show basic profile edit */}
+          {!hasInvestorEntity && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Settings className="h-5 w-5" />
+                  Edit Profile
+                </CardTitle>
+                <CardDescription>
+                  Update your profile information
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ProfileForm
+                  userId={profile.id}
+                  initialData={profile}
+                  onUpdate={handleProfileUpdate}
+                  showStaffFields={false}
+                />
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         {/* KYC Tab */}
         {hasInvestorEntity && (
           <TabsContent value="kyc" className="space-y-6">
             <div>
-              <h2 className="text-2xl font-bold tracking-tight">KYC Verification</h2>
-              <p className="text-muted-foreground">Complete your profile to unlock full access.</p>
+              <h2 className="text-2xl font-bold tracking-tight">KYC Documents</h2>
+              <p className="text-muted-foreground">
+                Upload required identity and verification documents.
+              </p>
             </div>
 
             {/* KYC Documents */}
             <KYCDocumentsTab />
-
-            {/* Contact Information */}
-            <div className="pt-6 border-t">
-              <InvestorInfoForm />
-            </div>
           </TabsContent>
         )}
 
@@ -477,14 +669,29 @@ export function ProfilePageClient({
           </TabsContent>
         )}
 
-        {/* Members Tab */}
-        {hasInvestorEntity && (
+        {/* Members Tab - Portal Team Members (Entity investors only) */}
+        {isEntity && investorInfo && (
           <TabsContent value="members" className="space-y-4">
             <MembersManagementTab
               entityType="investor"
-              entityId={investorInfo!.id}
-              entityName={investorInfo!.display_name || investorInfo!.legal_name}
+              entityId={investorInfo.id}
+              entityName={investorInfo.display_name || investorInfo.legal_name}
               showSignatoryOption={true}
+            />
+          </TabsContent>
+        )}
+
+        {/* Directors/UBOs Tab - Entity Members for KYC (only for entity type investors) */}
+        {isEntity && investorInfo && (
+          <TabsContent value="entity-members" className="space-y-4">
+            <GenericEntityMembersTab
+              entityType="investor"
+              entityId={investorInfo.id}
+              entityName={investorInfo.display_name || investorInfo.legal_name}
+              apiEndpoint="/api/investors/me/members"
+              canManage={investorUserInfo?.role === 'admin' || investorUserInfo?.is_primary}
+              title="Directors, UBOs & Signatories"
+              description="Manage directors, beneficial owners (>25% ownership), and authorized signatories with full KYC information"
             />
           </TabsContent>
         )}
@@ -521,7 +728,10 @@ export function ProfilePageClient({
                 </CardContent>
               </Card>
             ) : (
-              <SignatureSpecimenTab />
+              <SignatureSpecimenTab
+                entityType="investor"
+                entityId={investorInfo?.id}
+              />
             )}
           </TabsContent>
         )}
@@ -536,6 +746,97 @@ export function ProfilePageClient({
           <PreferencesEditor variant="investor" />
         </TabsContent>
       </Tabs>
+
+      {/* KYC Edit Dialog for Individual Investors */}
+      {isIndividual && investorInfo && (
+        <EntityKYCEditDialog
+          open={showKycDialog}
+          onOpenChange={setShowKycDialog}
+          entityType="investor"
+          entityId={investorInfo.id}
+          entityName={investorInfo.display_name || investorInfo.legal_name}
+          initialData={{
+            first_name: investorInfo.first_name ?? undefined,
+            middle_name: investorInfo.middle_name ?? undefined,
+            last_name: investorInfo.last_name ?? undefined,
+            name_suffix: investorInfo.name_suffix ?? undefined,
+            date_of_birth: investorInfo.date_of_birth ?? undefined,
+            nationality: investorInfo.nationality ?? undefined,
+            country_of_birth: investorInfo.country_of_birth ?? undefined,
+            phone_mobile: investorInfo.phone_mobile ?? undefined,
+            phone_office: investorInfo.phone_office ?? undefined,
+            is_us_citizen: investorInfo.is_us_citizen === true,
+            is_us_taxpayer: investorInfo.is_us_taxpayer === true,
+            us_taxpayer_id: investorInfo.us_taxpayer_id ?? undefined,
+            country_of_tax_residency: investorInfo.country_of_tax_residency ?? undefined,
+            id_type: investorInfo.id_type ?? undefined,
+            id_number: investorInfo.id_number ?? undefined,
+            id_issue_date: investorInfo.id_issue_date ?? undefined,
+            id_expiry_date: investorInfo.id_expiry_date ?? undefined,
+            id_issuing_country: investorInfo.id_issuing_country ?? undefined,
+            residential_street: investorInfo.residential_street ?? undefined,
+            residential_city: investorInfo.residential_city ?? undefined,
+            residential_state: investorInfo.residential_state ?? undefined,
+            residential_postal_code: investorInfo.residential_postal_code ?? undefined,
+            residential_country: investorInfo.residential_country ?? undefined,
+          }}
+          apiEndpoint="/api/investors/me"
+          onSuccess={() => window.location.reload()}
+        />
+      )}
+
+      {/* Address/Contact Edit Dialog */}
+      {hasInvestorEntity && investorInfo && (
+        <EntityAddressEditDialog
+          open={showAddressDialog}
+          onOpenChange={setShowAddressDialog}
+          entityType="investor"
+          entityName={investorInfo.display_name || investorInfo.legal_name}
+          initialData={isEntity ? {
+            // Entity address mapping - use registered_* columns
+            email: investorInfo.email ?? undefined,
+            phone: investorInfo.phone ?? undefined,
+            phone_mobile: investorInfo.phone_mobile ?? undefined,
+            phone_office: investorInfo.phone_office ?? undefined,
+            website: investorInfo.website ?? undefined,
+            address_line_1: investorInfo.registered_address_line_1 ?? undefined,
+            address_line_2: investorInfo.registered_address_line_2 ?? undefined,
+            city: investorInfo.registered_city ?? undefined,
+            state_province: investorInfo.registered_state ?? undefined,
+            postal_code: investorInfo.registered_postal_code ?? undefined,
+            country: investorInfo.registered_country ?? undefined,
+          } : {
+            // Individual address mapping - use residential_* columns
+            email: investorInfo.email ?? undefined,
+            phone: investorInfo.phone ?? undefined,
+            phone_mobile: investorInfo.phone_mobile ?? undefined,
+            phone_office: investorInfo.phone_office ?? undefined,
+            website: investorInfo.website ?? undefined,
+            address_line_1: investorInfo.residential_street ?? undefined,
+            address_line_2: investorInfo.residential_line_2 ?? undefined,
+            city: investorInfo.residential_city ?? undefined,
+            state_province: investorInfo.residential_state ?? undefined,
+            postal_code: investorInfo.residential_postal_code ?? undefined,
+            country: investorInfo.residential_country ?? undefined,
+          }}
+          apiEndpoint="/api/investors/me"
+          onSuccess={() => window.location.reload()}
+        />
+      )}
+
+      {/* Entity Info Edit Dialog (display name, legal name) */}
+      {isEntity && investorInfo && (
+        <EntityInfoEditDialog
+          open={showEntityInfoDialog}
+          onOpenChange={setShowEntityInfoDialog}
+          initialData={{
+            display_name: investorInfo.display_name,
+            legal_name: investorInfo.legal_name,
+            country_of_incorporation: investorInfo.country_of_incorporation,
+          }}
+          onSuccess={() => window.location.reload()}
+        />
+      )}
     </div>
   )
 }

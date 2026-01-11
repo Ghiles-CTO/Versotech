@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -64,8 +65,9 @@ export function TasksPageClient({
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     onboarding: true,
     staffCreated: true,
-    compliance: true
+    kyc: true
   })
+  const router = useRouter()
 
   // BUG FIX 2.4 & 2.5: Match server-side query logic with proper filters and all 3 orders
   const refreshTasks = useCallback(async () => {
@@ -113,9 +115,9 @@ export function TasksPageClient({
         !t.category && !t.related_entity_id
       ))
 
-      // BUG FIX 3.4: Include investment_setup in general compliance tasks (matching server)
+      // Filter KYC and compliance tasks (matching server)
       setGeneralComplianceTasks(allTasks.filter(t =>
-        (t.category === 'compliance' || t.category === 'investment_setup') && (
+        (t.category === 'kyc' || t.category === 'compliance' || t.category === 'investment_setup') && (
           !t.related_entity_id ||
           t.related_entity_type === 'signature_request' ||
           t.related_entity_type === 'subscription'
@@ -158,7 +160,7 @@ export function TasksPageClient({
     }))
   }
 
-  async function startTask(taskId: string) {
+  async function startTask(taskId: string, actionUrl?: string | null) {
     setIsUpdating(true)
     const supabase = createClient()
 
@@ -179,8 +181,14 @@ export function TasksPageClient({
     }
 
     setIsUpdating(false)
-    await refreshTasks()
     setSelectedTask(null)
+
+    // Navigate to the action URL if available
+    if (actionUrl) {
+      router.push(actionUrl)
+    } else {
+      await refreshTasks()
+    }
   }
 
   async function completeTask(taskId: string) {
@@ -607,10 +615,10 @@ export function TasksPageClient({
 
         {generalComplianceTasks.length > 0 && (
           <TaskSection
-            title="General Compliance"
+            title="KYC & Compliance"
             icon={FileCheck}
             tasks={generalComplianceTasks}
-            sectionKey="compliance"
+            sectionKey="kyc"
           />
         )}
 
@@ -875,30 +883,39 @@ export function TasksPageClient({
                 {selectedTask.status === 'pending' ? (
                   <Button
                     className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
-                    onClick={() => startTask(selectedTask.id)}
+                    onClick={() => startTask(selectedTask.id, selectedTask.action_url)}
                     disabled={isUpdating}
                   >
                     <Play className="h-4 w-4 mr-2" />
-                    Start Task
+                    {selectedTask.action_url ? 'Go to Task' : 'Start Task'}
                   </Button>
                 ) : (
                   <>
                     <Button
                       variant="outline"
-                      className="flex-1 border-gray-200 hover:bg-gray-50"
+                      className="border-gray-200 hover:bg-gray-50"
                       onClick={() => cancelTask(selectedTask.id)}
                       disabled={isUpdating}
                     >
                       <X className="h-4 w-4 mr-2" />
-                      Cancel Task
+                      Cancel
                     </Button>
+                    {selectedTask.action_url && (
+                      <Button
+                        className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+                        onClick={() => router.push(selectedTask.action_url!)}
+                      >
+                        <Play className="h-4 w-4 mr-2" />
+                        Continue Task
+                      </Button>
+                    )}
                     <Button
                       className="flex-1 bg-green-600 hover:bg-green-700 text-white"
                       onClick={() => completeTask(selectedTask.id)}
                       disabled={isUpdating}
                     >
                       <CheckCircle2 className="h-4 w-4 mr-2" />
-                      Mark as Complete
+                      Complete
                     </Button>
                   </>
                 )}

@@ -17,7 +17,7 @@ export default async function InvestorProfilePage() {
   // Fetch user profile
   const { data: profile } = await supabase
     .from('profiles')
-    .select('id, display_name, email, avatar_url, full_name')
+    .select('id, display_name, email, avatar_url')
     .eq('id', user.id)
     .single()
 
@@ -69,7 +69,7 @@ export default async function InvestorProfilePage() {
     <InvestorProfileClient
       userEmail={user.email || ''}
       profile={profile ? {
-        full_name: profile.full_name || profile.display_name,
+        full_name: profile.display_name,
         email: profile.email,
         avatar_url: profile.avatar_url
       } : null}

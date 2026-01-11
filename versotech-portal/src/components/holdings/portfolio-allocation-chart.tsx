@@ -1,9 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { PieChart, Pie, Cell, ResponsiveContainer, Sector } from 'recharts'
-import { TrendingUp, Wallet } from 'lucide-react'
+import { TrendingUp, Wallet, ChevronDown, ChevronUp } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { ScrollArea } from '@/components/ui/scroll-area'
 
 interface AllocationData {
   name: string
@@ -13,6 +15,7 @@ interface AllocationData {
 
 interface PortfolioAllocationChartProps {
   data: AllocationData[]
+  maxVisibleItems?: number
 }
 
 // Sophisticated, muted color palette inspired by private wealth management
@@ -26,6 +29,9 @@ const COLORS = [
   { main: '#4f46e5', light: '#6366f1', gradient: 'from-[#4f46e5] to-[#818cf8]' },  // Indigo
   { main: '#dc2626', light: '#ef4444', gradient: 'from-[#dc2626] to-[#f87171]' },  // Red
 ]
+
+// "Others" color - neutral gray
+const OTHERS_COLOR = { main: '#6b7280', light: '#9ca3af', gradient: 'from-[#6b7280] to-[#9ca3af]' }
 
 const formatCurrency = (value: number) => {
   if (value >= 1000000) {
@@ -75,12 +81,45 @@ const renderActiveShape = (props: any) => {
   )
 }
 
-export function PortfolioAllocationChart({ data }: PortfolioAllocationChartProps) {
+export function PortfolioAllocationChart({ data, maxVisibleItems = 6 }: PortfolioAllocationChartProps) {
   const [activeIndex, setActiveIndex] = useState<number | null>(null)
+  const [showAll, setShowAll] = useState(false)
   const isEmpty = !data || data.length === 0
 
   const totalValue = data?.reduce((sum, item) => sum + item.value, 0) || 0
   const formattedTotal = formatLargeCurrency(totalValue)
+
+  // Process data: show top N items + "Others" if there are more
+  const { chartData, displayData, othersCount, othersValue } = useMemo(() => {
+    if (!data || data.length === 0) {
+      return { chartData: [], displayData: [], othersCount: 0, othersValue: 0 }
+    }
+
+    // Sort by value descending
+    const sorted = [...data].sort((a, b) => b.value - a.value)
+
+    if (sorted.length <= maxVisibleItems) {
+      return { chartData: sorted, displayData: sorted, othersCount: 0, othersValue: 0 }
+    }
+
+    const topItems = sorted.slice(0, maxVisibleItems - 1)
+    const otherItems = sorted.slice(maxVisibleItems - 1)
+    const othersTotal = otherItems.reduce((sum, item) => sum + item.value, 0)
+    const othersPercentage = totalValue > 0 ? (othersTotal / totalValue) * 100 : 0
+
+    const othersItem: AllocationData = {
+      name: `Others (${otherItems.length})`,
+      value: othersTotal,
+      percentage: othersPercentage
+    }
+
+    return {
+      chartData: [...topItems, othersItem],
+      displayData: showAll ? sorted : [...topItems, othersItem],
+      othersCount: otherItems.length,
+      othersValue: othersTotal
+    }
+  }, [data, maxVisibleItems, showAll, totalValue])
 
   const onPieEnter = (_: any, index: number) => {
     setActiveIndex(index)
@@ -88,6 +127,11 @@ export function PortfolioAllocationChart({ data }: PortfolioAllocationChartProps
 
   const onPieLeave = () => {
     setActiveIndex(null)
+  }
+
+  const getColorForIndex = (index: number, isOthers: boolean) => {
+    if (isOthers) return OTHERS_COLOR
+    return COLORS[index % COLORS.length]
   }
 
   if (isEmpty) {
@@ -140,7 +184,7 @@ export function PortfolioAllocationChart({ data }: PortfolioAllocationChartProps
             <ResponsiveContainer width={220} height={220}>
               <PieChart>
                 <Pie
-                  data={data}
+                  data={chartData}
                   cx="50%"
                   cy="50%"
                   innerRadius={65}
@@ -148,7 +192,7 @@ export function PortfolioAllocationChart({ data }: PortfolioAllocationChartProps
                   paddingAngle={2}
                   dataKey="value"
                   stroke="none"
-                  activeIndex={activeIndex !== null ? activeIndex : undefined}
+                  activeIndex={activeIndex !== null && activeIndex < chartData.length ? activeIndex : undefined}
                   activeShape={renderActiveShape}
                   onMouseEnter={onPieEnter}
                   onMouseLeave={onPieLeave}
@@ -156,16 +200,20 @@ export function PortfolioAllocationChart({ data }: PortfolioAllocationChartProps
                   animationDuration={800}
                   animationEasing="ease-out"
                 >
-                  {data.map((_, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={COLORS[index % COLORS.length].main}
-                      style={{
-                        transition: 'all 0.3s ease-out',
-                        cursor: 'pointer',
-                      }}
-                    />
-                  ))}
+                  {chartData.map((item, index) => {
+                    const isOthers = item.name.startsWith('Others')
+                    const color = getColorForIndex(index, isOthers)
+                    return (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={color.main}
+                        style={{
+                          transition: 'all 0.3s ease-out',
+                          cursor: 'pointer',
+                        }}
+                      />
+                    )
+                  })}
                 </Pie>
               </PieChart>
             </ResponsiveContainer>
@@ -183,71 +231,87 @@ export function PortfolioAllocationChart({ data }: PortfolioAllocationChartProps
           </div>
 
           {/* Legend / Breakdown Section */}
-          <div className="flex-1 min-w-0">
-            <div className="space-y-3">
-              {data.map((item, index) => {
-                const color = COLORS[index % COLORS.length]
-                const isActive = activeIndex === index
+          <div className="flex-1 min-w-0 flex flex-col">
+            <ScrollArea className={showAll && data.length > maxVisibleItems ? "h-[280px]" : ""}>
+              <div className="space-y-2">
+                {displayData.map((item, index) => {
+                  const isOthers = item.name.startsWith('Others')
+                  const color = getColorForIndex(index, isOthers)
+                  const chartIndex = chartData.findIndex(c => c.name === item.name)
+                  const isActive = activeIndex === chartIndex
 
-                return (
-                  <div
-                    key={item.name}
-                    className={`group relative p-3 rounded-lg transition-all duration-200 cursor-pointer
-                      ${isActive
-                        ? 'bg-gray-50 dark:bg-zinc-800 shadow-sm ring-1 ring-gray-200 dark:ring-zinc-700'
-                        : 'hover:bg-gray-50/70 dark:hover:bg-zinc-800/50'
-                      }`}
-                    onMouseEnter={() => setActiveIndex(index)}
-                    onMouseLeave={() => setActiveIndex(null)}
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <div
-                          className={`w-3 h-3 rounded-sm flex-shrink-0 transition-transform duration-200 ${isActive ? 'scale-125' : ''}`}
-                          style={{ backgroundColor: color.main }}
-                        />
-                        <span className={`text-sm font-medium truncate transition-colors duration-200 ${isActive ? 'text-foreground' : 'text-foreground/80'}`}>
-                          {item.name}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-3 flex-shrink-0">
-                        <span className={`text-sm font-semibold tabular-nums transition-colors duration-200 ${isActive ? 'text-foreground' : 'text-foreground/90'}`}>
-                          {formatCurrency(item.value)}
-                        </span>
-                        <span
-                          className={`text-xs font-bold px-2 py-0.5 rounded-full tabular-nums transition-all duration-200`}
-                          style={{
-                            backgroundColor: isActive ? color.main : `${color.main}15`,
-                            color: isActive ? 'white' : color.main,
-                          }}
-                        >
-                          {item.percentage.toFixed(1)}%
-                        </span>
+                  return (
+                    <div
+                      key={`${item.name}-${index}`}
+                      className={`group relative p-2.5 rounded-lg transition-all duration-200 cursor-pointer
+                        ${isActive
+                          ? 'bg-gray-50 dark:bg-zinc-800 shadow-sm ring-1 ring-gray-200 dark:ring-zinc-700'
+                          : 'hover:bg-gray-50/70 dark:hover:bg-zinc-800/50'
+                        }`}
+                      onMouseEnter={() => setActiveIndex(chartIndex >= 0 ? chartIndex : null)}
+                      onMouseLeave={() => setActiveIndex(null)}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 min-w-0 flex-1">
+                          <div
+                            className={`w-2.5 h-2.5 rounded-sm flex-shrink-0 transition-transform duration-200 ${isActive ? 'scale-125' : ''}`}
+                            style={{ backgroundColor: color.main }}
+                          />
+                          <span className={`text-xs font-medium truncate transition-colors duration-200 ${isActive ? 'text-foreground' : 'text-foreground/80'}`} title={item.name}>
+                            {item.name.length > 28 ? item.name.slice(0, 28) + '...' : item.name}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+                          <span className={`text-xs font-semibold tabular-nums transition-colors duration-200 ${isActive ? 'text-foreground' : 'text-foreground/90'}`}>
+                            {formatCurrency(item.value)}
+                          </span>
+                          <span
+                            className="text-[10px] font-bold px-1.5 py-0.5 rounded-full tabular-nums transition-all duration-200"
+                            style={{
+                              backgroundColor: isActive ? color.main : `${color.main}15`,
+                              color: isActive ? 'white' : color.main,
+                            }}
+                          >
+                            {item.percentage.toFixed(1)}%
+                          </span>
+                        </div>
                       </div>
                     </div>
+                  )
+                })}
+              </div>
+            </ScrollArea>
 
-                    {/* Progress Bar */}
-                    <div className="h-1.5 bg-gray-100 dark:bg-zinc-800 rounded-full overflow-hidden">
-                      <div
-                        className="h-full rounded-full transition-all duration-500 ease-out"
-                        style={{
-                          width: `${item.percentage}%`,
-                          background: `linear-gradient(90deg, ${color.main}, ${color.light})`,
-                          boxShadow: isActive ? `0 0 8px ${color.main}40` : 'none',
-                        }}
-                      />
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
+            {/* Show All / Collapse Toggle */}
+            {othersCount > 0 && (
+              <div className="mt-3 pt-3 border-t border-gray-100 dark:border-zinc-800">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full h-8 text-xs text-muted-foreground hover:text-foreground"
+                  onClick={() => setShowAll(!showAll)}
+                >
+                  {showAll ? (
+                    <>
+                      <ChevronUp className="h-3 w-3 mr-1.5" />
+                      Show Top {maxVisibleItems - 1} Only
+                    </>
+                  ) : (
+                    <>
+                      <ChevronDown className="h-3 w-3 mr-1.5" />
+                      Show All {data.length} Vehicles
+                    </>
+                  )}
+                </Button>
+              </div>
+            )}
 
             {/* Summary Footer */}
-            <div className="mt-4 pt-3 border-t border-gray-100 dark:border-zinc-800">
+            <div className={`pt-3 border-t border-gray-100 dark:border-zinc-800 ${othersCount === 0 ? 'mt-3' : 'mt-0'}`}>
               <div className="flex items-center justify-between text-xs">
                 <span className="text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
                   <TrendingUp className="h-3.5 w-3.5" />
-                  Diversified across {data.length} vehicles
+                  {data.length} vehicles
                 </span>
                 <span className="text-gray-400 dark:text-gray-500">
                   Updated today

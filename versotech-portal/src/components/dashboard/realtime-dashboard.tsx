@@ -677,7 +677,7 @@ export function RealtimeDashboard({ initialData, investorIds, userId }: Realtime
                       <p className="text-xs text-gray-500">{activity.description}</p>
                       <p className="text-xs text-gray-400">
                         {new Date(activity.created_at).toLocaleDateString()} •
-                        {new Date(activity.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        {new Date(activity.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}
                       </p>
                     </div>
 

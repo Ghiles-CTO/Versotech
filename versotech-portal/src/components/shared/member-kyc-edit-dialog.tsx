@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -13,9 +13,17 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Checkbox } from '@/components/ui/checkbox'
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+  FormDescription,
+} from '@/components/ui/form'
 import {
   Select,
   SelectContent,
@@ -24,13 +32,20 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { toast } from 'sonner'
-import { Loader2, User, MapPin, FileText, IdCard, Briefcase } from 'lucide-react'
-
-// Import KYC form sections
-import { PersonalInfoFormSection } from '@/components/kyc/personal-info-form-section'
-import { AddressFormSection } from '@/components/kyc/address-form-section'
-import { TaxInfoFormSection } from '@/components/kyc/tax-info-form-section'
-import { IdentificationFormSection } from '@/components/kyc/identification-form-section'
+import {
+  Loader2,
+  User,
+  MapPin,
+  FileText,
+  IdCard,
+  Briefcase,
+  Calendar,
+  Globe,
+  Phone,
+  Percent,
+  LucideIcon,
+} from 'lucide-react'
+import { CountrySelect, NationalitySelect } from '@/components/kyc/country-select'
 
 // Entity types that have members
 type EntityType = 'investor' | 'partner' | 'introducer' | 'lawyer' | 'arranger' | 'commercial_partner'
@@ -42,12 +57,27 @@ const MEMBER_ROLES = [
   { value: 'signatory', label: 'Authorized Signatory' },
   { value: 'authorized_representative', label: 'Authorized Representative' },
   { value: 'beneficiary', label: 'Beneficiary' },
+  { value: 'shareholder', label: 'Shareholder' },
+  { value: 'officer', label: 'Officer' },
+  { value: 'trustee', label: 'Trustee' },
+  { value: 'managing_member', label: 'Managing Member' },
+  { value: 'general_partner', label: 'General Partner' },
+  { value: 'limited_partner', label: 'Limited Partner' },
 ] as const
+
+// ID document types
+const ID_TYPES = [
+  { value: 'passport', label: 'Passport' },
+  { value: 'national_id', label: 'National ID Card' },
+  { value: 'drivers_license', label: "Driver's License" },
+  { value: 'residence_permit', label: 'Residence Permit' },
+  { value: 'other', label: 'Other Government ID' },
+]
 
 // Member KYC schema
 const memberKycEditSchema = z.object({
   // Member role
-  role: z.enum(['director', 'ubo', 'signatory', 'authorized_representative', 'beneficiary']),
+  role: z.string().min(1, 'Role is required'),
 
   // Personal Info
   first_name: z.string().min(1, 'First name is required').max(100),
@@ -94,12 +124,42 @@ interface MemberKYCEditDialogProps {
   onOpenChange: (open: boolean) => void
   entityType: EntityType
   entityId: string
-  memberId?: string // Null for new member
+  memberId?: string
   memberName?: string
   initialData?: Partial<MemberKycEditForm>
-  apiEndpoint: string // e.g., '/api/admin/investors/{id}/members'
+  apiEndpoint: string
   onSuccess?: () => void
   mode?: 'create' | 'edit'
+}
+
+// Section wrapper component for visual separation
+function FormSection({
+  icon: Icon,
+  title,
+  description,
+  children,
+}: {
+  icon: LucideIcon
+  title: string
+  description?: string
+  children: React.ReactNode
+}) {
+  return (
+    <div className="rounded-lg border bg-card p-6 space-y-5">
+      <div className="flex items-start gap-3 pb-4 border-b">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+          <Icon className="h-5 w-5 text-primary" />
+        </div>
+        <div>
+          <h3 className="font-semibold text-lg">{title}</h3>
+          {description && (
+            <p className="text-sm text-muted-foreground mt-0.5">{description}</p>
+          )}
+        </div>
+      </div>
+      {children}
+    </div>
+  )
 }
 
 export function MemberKYCEditDialog({
@@ -115,7 +175,6 @@ export function MemberKYCEditDialog({
   mode = 'edit',
 }: MemberKYCEditDialogProps) {
   const [isSaving, setIsSaving] = useState(false)
-  const [activeTab, setActiveTab] = useState('role')
 
   const form = useForm<MemberKycEditForm>({
     resolver: zodResolver(memberKycEditSchema),
@@ -147,12 +206,49 @@ export function MemberKYCEditDialog({
       id_issue_date: initialData?.id_issue_date || '',
       id_expiry_date: initialData?.id_expiry_date || '',
       id_issuing_country: initialData?.id_issuing_country || '',
-      ownership_percentage: initialData?.ownership_percentage || undefined,
+      ownership_percentage: initialData?.ownership_percentage ?? undefined,
     },
   })
 
+  // Reset form when initialData changes (e.g., switching between members)
+  useEffect(() => {
+    if (open) {
+      form.reset({
+        role: initialData?.role || 'director',
+        first_name: initialData?.first_name || '',
+        middle_name: initialData?.middle_name || '',
+        last_name: initialData?.last_name || '',
+        name_suffix: initialData?.name_suffix || '',
+        date_of_birth: initialData?.date_of_birth || '',
+        country_of_birth: initialData?.country_of_birth || '',
+        nationality: initialData?.nationality || '',
+        email: initialData?.email || '',
+        phone_mobile: initialData?.phone_mobile || '',
+        phone_office: initialData?.phone_office || '',
+        residential_street: initialData?.residential_street || '',
+        residential_line_2: initialData?.residential_line_2 || '',
+        residential_city: initialData?.residential_city || '',
+        residential_state: initialData?.residential_state || '',
+        residential_postal_code: initialData?.residential_postal_code || '',
+        residential_country: initialData?.residential_country || '',
+        is_us_citizen: initialData?.is_us_citizen || false,
+        is_us_taxpayer: initialData?.is_us_taxpayer || false,
+        us_taxpayer_id: initialData?.us_taxpayer_id || '',
+        country_of_tax_residency: initialData?.country_of_tax_residency || '',
+        tax_id_number: initialData?.tax_id_number || '',
+        id_type: initialData?.id_type || '',
+        id_number: initialData?.id_number || '',
+        id_issue_date: initialData?.id_issue_date || '',
+        id_expiry_date: initialData?.id_expiry_date || '',
+        id_issuing_country: initialData?.id_issuing_country || '',
+        ownership_percentage: initialData?.ownership_percentage ?? undefined,
+      })
+    }
+  }, [open, initialData, form])
+
   const selectedRole = form.watch('role')
-  const isUBO = selectedRole === 'ubo'
+  const watchIsUsTaxpayer = form.watch('is_us_taxpayer')
+  const isUBO = selectedRole === 'ubo' || selectedRole === 'beneficial_owner' || selectedRole === 'shareholder'
 
   const handleSubmit = async (data: MemberKycEditForm) => {
     setIsSaving(true)
@@ -188,7 +284,7 @@ export function MemberKYCEditDialog({
 
   const getEntityTypeLabel = () => {
     const labels: Record<EntityType, string> = {
-      investor: 'investor',
+      investor: 'investor entity',
       partner: 'partner',
       introducer: 'introducer',
       lawyer: 'law firm',
@@ -200,14 +296,14 @@ export function MemberKYCEditDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>
-            {mode === 'create' ? 'Add Member' : 'Edit Member KYC'}
+      <DialogContent className="w-full sm:max-w-5xl max-h-[90vh] overflow-hidden flex flex-col">
+        <DialogHeader className="shrink-0">
+          <DialogTitle className="text-xl">
+            {mode === 'create' ? 'Add Entity Member' : 'Edit Member KYC'}
           </DialogTitle>
           <DialogDescription>
             {mode === 'create'
-              ? `Add a new member to this ${getEntityTypeLabel()}`
+              ? `Add a director, UBO, or authorized signatory to this ${getEntityTypeLabel()}`
               : memberName
                 ? `Update KYC details for ${memberName}`
                 : 'Update member KYC and compliance information'}
@@ -215,121 +311,662 @@ export function MemberKYCEditDialog({
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-5">
-                <TabsTrigger value="role" className="flex items-center gap-2">
-                  <Briefcase className="h-4 w-4" />
-                  Role
-                </TabsTrigger>
-                <TabsTrigger value="personal" className="flex items-center gap-2">
-                  <User className="h-4 w-4" />
-                  Personal
-                </TabsTrigger>
-                <TabsTrigger value="address" className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4" />
-                  Address
-                </TabsTrigger>
-                <TabsTrigger value="tax" className="flex items-center gap-2">
-                  <FileText className="h-4 w-4" />
-                  Tax
-                </TabsTrigger>
-                <TabsTrigger value="id" className="flex items-center gap-2">
-                  <IdCard className="h-4 w-4" />
-                  ID
-                </TabsTrigger>
-              </TabsList>
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="flex flex-col flex-1 overflow-hidden">
+            {/* Scrollable content area */}
+            <div className="flex-1 overflow-y-auto px-1 py-4 space-y-6">
 
-              {/* Role Tab */}
-              <TabsContent value="role" className="mt-4 space-y-4">
-                <FormField
-                  control={form.control}
-                  name="role"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Member Role *</FormLabel>
-                      <Select value={field.value} onValueChange={field.onChange}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select role..." />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {MEMBER_ROLES.map((role) => (
-                            <SelectItem key={role.value} value={role.value}>
-                              {role.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {isUBO && (
+              {/* Role & Ownership Section */}
+              <FormSection
+                icon={Briefcase}
+                title="Member Role"
+                description="Select the member's role in the entity"
+              >
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
-                    name="ownership_percentage"
+                    name="role"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Ownership Percentage</FormLabel>
+                        <FormLabel>Role *</FormLabel>
+                        <Select value={field.value} onValueChange={field.onChange}>
+                          <FormControl>
+                            <SelectTrigger className="h-11">
+                              <SelectValue placeholder="Select role..." />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {MEMBER_ROLES.map((role) => (
+                              <SelectItem key={role.value} value={role.value}>
+                                {role.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {isUBO && (
+                    <FormField
+                      control={form.control}
+                      name="ownership_percentage"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="flex items-center gap-2">
+                            <Percent className="h-4 w-4 text-muted-foreground" />
+                            Ownership Percentage
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              min={0}
+                              max={100}
+                              step={0.01}
+                              placeholder="e.g., 25.5"
+                              className="h-11"
+                              {...field}
+                              value={field.value ?? ''}
+                              onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : null)}
+                            />
+                          </FormControl>
+                          <FormDescription className="text-xs">
+                            Required for UBOs owning 25% or more
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
+                </div>
+              </FormSection>
+
+              {/* Personal Information Section */}
+              <FormSection
+                icon={User}
+                title="Personal Information"
+                description="Member's legal name and contact details"
+              >
+                {/* Full Name Row */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="first_name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>First Name *</FormLabel>
                         <FormControl>
                           <Input
-                            type="number"
-                            min={0}
-                            max={100}
-                            step={0.01}
-                            placeholder="e.g., 25.5"
                             {...field}
-                            value={field.value ?? ''}
-                            onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : null)}
+                            value={field.value || ''}
+                            placeholder="John"
+                            className="h-11"
                           />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
+                  <FormField
+                    control={form.control}
+                    name="middle_name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Middle Name</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            value={field.value || ''}
+                            placeholder="William"
+                            className="h-11"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="last_name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Last Name *</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            value={field.value || ''}
+                            placeholder="Smith"
+                            className="h-11"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="name_suffix"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Suffix</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            value={field.value || ''}
+                            placeholder="Jr., III"
+                            className="h-11"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                {/* Birth Info Row */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="date_of_birth"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="flex items-center gap-2">
+                          <Calendar className="h-4 w-4 text-muted-foreground" />
+                          Date of Birth
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            type="date"
+                            value={field.value || ''}
+                            className="h-11"
+                            max={new Date(Date.now() - 18 * 365.25 * 24 * 60 * 60 * 1000)
+                              .toISOString()
+                              .split('T')[0]}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="country_of_birth"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="flex items-center gap-2">
+                          <Globe className="h-4 w-4 text-muted-foreground" />
+                          Country of Birth
+                        </FormLabel>
+                        <FormControl>
+                          <CountrySelect
+                            value={field.value}
+                            onChange={field.onChange}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="nationality"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="flex items-center gap-2">
+                          <Globe className="h-4 w-4 text-muted-foreground" />
+                          Nationality
+                        </FormLabel>
+                        <FormControl>
+                          <NationalitySelect
+                            value={field.value}
+                            onChange={field.onChange}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                {/* Contact Info Row */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email Address</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            type="email"
+                            value={field.value || ''}
+                            placeholder="john@example.com"
+                            className="h-11"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="phone_mobile"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="flex items-center gap-2">
+                          <Phone className="h-4 w-4 text-muted-foreground" />
+                          Mobile Phone
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            type="tel"
+                            value={field.value || ''}
+                            placeholder="+1 (555) 123-4567"
+                            className="h-11"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="phone_office"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="flex items-center gap-2">
+                          <Phone className="h-4 w-4 text-muted-foreground" />
+                          Office Phone
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            type="tel"
+                            value={field.value || ''}
+                            placeholder="+1 (555) 987-6543"
+                            className="h-11"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </FormSection>
+
+              {/* Residential Address Section */}
+              <FormSection
+                icon={MapPin}
+                title="Residential Address"
+                description="Member's permanent residence"
+              >
+                {/* Street Address */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="residential_street"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Street Address</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            value={field.value || ''}
+                            placeholder="123 Main Street"
+                            className="h-11"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="residential_line_2"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Apartment / Suite / Unit</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            value={field.value || ''}
+                            placeholder="Apt 4B"
+                            className="h-11"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                {/* City, State, Postal */}
+                <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="residential_city"
+                    render={({ field }) => (
+                      <FormItem className="sm:col-span-2">
+                        <FormLabel>City</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            value={field.value || ''}
+                            placeholder="New York"
+                            className="h-11"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="residential_state"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>State / Province</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            value={field.value || ''}
+                            placeholder="NY"
+                            className="h-11"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="residential_postal_code"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Postal Code</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            value={field.value || ''}
+                            placeholder="10001"
+                            className="h-11"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                {/* Country */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="residential_country"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Country</FormLabel>
+                        <FormControl>
+                          <CountrySelect
+                            value={field.value}
+                            onChange={field.onChange}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </FormSection>
+
+              {/* Tax Information Section */}
+              <FormSection
+                icon={FileText}
+                title="Tax Information"
+                description="Tax residency and compliance details"
+              >
+                {/* US Person Status */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <FormField
+                    control={form.control}
+                    name="is_us_citizen"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-lg border p-4 bg-muted/30">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                            className="mt-1"
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel className="font-medium">
+                            US Citizen / Permanent Resident
+                          </FormLabel>
+                          <FormDescription className="text-sm text-muted-foreground">
+                            Is a US citizen or holds a green card
+                          </FormDescription>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="is_us_taxpayer"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-lg border p-4 bg-muted/30">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                            className="mt-1"
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel className="font-medium">
+                            US Taxpayer
+                          </FormLabel>
+                          <FormDescription className="text-sm text-muted-foreground">
+                            Subject to US tax obligations
+                          </FormDescription>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                {/* US Taxpayer ID (conditional) */}
+                {watchIsUsTaxpayer && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                    <FormField
+                      control={form.control}
+                      name="us_taxpayer_id"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>US Taxpayer ID (SSN/ITIN) *</FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              value={field.value || ''}
+                              placeholder="XXX-XX-XXXX"
+                              className="h-11"
+                            />
+                          </FormControl>
+                          <FormDescription className="text-xs">
+                            Required for US tax reporting
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
                 )}
-              </TabsContent>
 
-              {/* Personal Info Tab */}
-              <TabsContent value="personal" className="mt-4">
-                <PersonalInfoFormSection
-                  control={form.control}
-                  showHeader={false}
-                />
-              </TabsContent>
+                {/* Tax Residency */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="country_of_tax_residency"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Country of Tax Residency</FormLabel>
+                        <FormControl>
+                          <CountrySelect
+                            value={field.value}
+                            onChange={field.onChange}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="tax_id_number"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Tax ID Number (TIN)</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            value={field.value || ''}
+                            placeholder="Enter tax ID"
+                            className="h-11"
+                          />
+                        </FormControl>
+                        <FormDescription className="text-xs">
+                          Local tax identification number
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </FormSection>
 
-              {/* Address Tab */}
-              <TabsContent value="address" className="mt-4">
-                <AddressFormSection
-                  control={form.control}
-                  showHeader={false}
-                  prefix="residential_"
-                  title="Residential Address"
-                  description="Member's permanent residence address"
-                />
-              </TabsContent>
+              {/* Identification Document Section */}
+              <FormSection
+                icon={IdCard}
+                title="Identification Document"
+                description="Government-issued ID for verification"
+              >
+                {/* ID Type and Number */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="id_type"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Document Type</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value || ''}
+                        >
+                          <FormControl>
+                            <SelectTrigger className="h-11">
+                              <SelectValue placeholder="Select ID type" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {ID_TYPES.map((type) => (
+                              <SelectItem key={type.value} value={type.value}>
+                                {type.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="id_number"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Document Number</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            value={field.value || ''}
+                            placeholder="Enter document number"
+                            className="h-11"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
-              {/* Tax Info Tab */}
-              <TabsContent value="tax" className="mt-4">
-                <TaxInfoFormSection
-                  control={form.control}
-                  showHeader={false}
-                />
-              </TabsContent>
+                {/* Issue and Expiry Dates */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="id_issue_date"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Issue Date</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            type="date"
+                            value={field.value || ''}
+                            className="h-11"
+                            max={new Date().toISOString().split('T')[0]}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="id_expiry_date"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Expiry Date</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            type="date"
+                            value={field.value || ''}
+                            className="h-11"
+                            min={new Date().toISOString().split('T')[0]}
+                          />
+                        </FormControl>
+                        <FormDescription className="text-xs">
+                          Must be valid for at least 6 months
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="id_issuing_country"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Issuing Country</FormLabel>
+                        <FormControl>
+                          <CountrySelect
+                            value={field.value}
+                            onChange={field.onChange}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </FormSection>
+            </div>
 
-              {/* ID Tab */}
-              <TabsContent value="id" className="mt-4">
-                <IdentificationFormSection
-                  control={form.control}
-                  showHeader={false}
-                />
-              </TabsContent>
-            </Tabs>
-
-            <DialogFooter>
+            {/* Fixed footer */}
+            <DialogFooter className="shrink-0 border-t pt-4 mt-4 gap-2">
               <Button
                 type="button"
                 variant="outline"
@@ -338,7 +975,7 @@ export function MemberKYCEditDialog({
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={isSaving}>
+              <Button type="submit" disabled={isSaving} className="min-w-[140px]">
                 {isSaving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                 {mode === 'create' ? 'Add Member' : 'Save Changes'}
               </Button>

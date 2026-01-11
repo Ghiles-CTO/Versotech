@@ -1,32 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { getSuggestedDocumentTypes, getDocumentTypeLabel } from '@/constants/kyc-document-types'
+import { getDocumentTypeLabel, getIndividualDocumentTypes, getEntityDocumentTypes } from '@/constants/kyc-document-types'
 import { z } from 'zod'
 
-// Allowed document types for KYC submissions
-// Synced with SUGGESTED_KYC_DOCUMENT_TYPES in /constants/kyc-document-types.ts
+// Allowed document types for KYC submissions - SIMPLIFIED
 const ALLOWED_DOCUMENT_TYPES = [
-  // Questionnaire
-  'questionnaire',
-  // Entity documents
-  'nda_ndnc',
+  // Individual docs
+  'passport',
+  'utility_bill',
+  // Entity docs
   'incorporation_certificate',
   'memo_articles',
-  'register_members',
   'register_directors',
+  'register_members',
+  'register_beneficial_owners',
   'bank_confirmation',
-  'trust_deed',
-  'financial_statements',
-  'beneficial_ownership',
-  // Individual / member documents
-  'passport_id',
-  'utility_bill',
-  'accreditation_letter',
-  // Tax documents
-  'tax_w8_ben',
-  'tax_w9',
-  'source_of_funds',
-  // Other
+  // Custom/other
   'other'
 ] as const
 
@@ -96,16 +85,14 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Get investor type to provide relevant suggestions
+    // Get investor type to provide relevant document suggestions
     const { data: investors } = await supabase
       .from('investors')
       .select('id, type')
       .in('id', investorIds)
 
-    const hasIndividual = investors?.some(i => i.type === 'individual')
-    const hasCorporate = investors?.some(i => i.type === 'corporate' || i.type === 'entity' || i.type === 'institution')
     const investorType = investors?.[0]?.type || 'individual'
-    const isEntityInvestor = ['corporate', 'entity', 'institution'].includes(investorType)
+    const isEntityInvestor = investorType !== 'individual'
 
     // Get investor members if entity-type investor
     let investorMembers: any[] = []
@@ -120,15 +107,10 @@ export async function GET(request: NextRequest) {
       investorMembers = members || []
     }
 
-    // Get suggested documents based on investor type (NOT requirements, just suggestions)
-    let suggestedCategory: 'individual' | 'entity' | 'both' = 'both'
-    if (hasIndividual && !hasCorporate) {
-      suggestedCategory = 'individual'
-    } else if (hasCorporate && !hasIndividual) {
-      suggestedCategory = 'entity'
-    }
-
-    const suggestedDocuments = getSuggestedDocumentTypes(suggestedCategory)
+    // Get suggested documents based on investor type - use SIMPLIFIED lists
+    const suggestedDocuments = isEntityInvestor
+      ? getEntityDocumentTypes()
+      : getIndividualDocumentTypes()
 
     // Group submissions by document type
     const groupedSubmissions: Record<string, any[]> = {}

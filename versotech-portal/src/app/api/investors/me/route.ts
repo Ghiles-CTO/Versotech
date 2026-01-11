@@ -50,6 +50,11 @@ export async function GET(request: Request) {
 }
 
 const updateInvestorSchema = z.object({
+  // Entity Info (for entity-type investors)
+  display_name: z.string().max(200).optional().nullable(),
+  legal_name: z.string().max(200).optional().nullable(),
+  country_of_incorporation: z.string().optional().nullable(),
+
   // Personal Info (for individual investors)
   first_name: z.string().max(100).optional().nullable(),
   middle_name: z.string().max(100).optional().nullable(),
@@ -59,7 +64,7 @@ const updateInvestorSchema = z.object({
   country_of_birth: z.string().optional().nullable(),
   nationality: z.string().optional().nullable(),
 
-  // Residential Address
+  // Residential Address (for individuals)
   residential_street: z.string().optional().nullable(),
   residential_line_2: z.string().optional().nullable(),
   residential_city: z.string().optional().nullable(),
@@ -67,9 +72,20 @@ const updateInvestorSchema = z.object({
   residential_postal_code: z.string().optional().nullable(),
   residential_country: z.string().optional().nullable(),
 
-  // Phone numbers
+  // Registered Address (for entities) - from EntityAddressEditDialog
+  address_line_1: z.string().max(200).optional().nullable(),
+  address_line_2: z.string().max(200).optional().nullable(),
+  city: z.string().max(100).optional().nullable(),
+  state_province: z.string().max(100).optional().nullable(),
+  postal_code: z.string().max(20).optional().nullable(),
+  country: z.string().optional().nullable(),
+
+  // Contact info
+  email: z.string().email().optional().nullable().or(z.literal('')),
+  phone: z.string().max(30).optional().nullable(),
   phone_mobile: z.string().optional().nullable(),
   phone_office: z.string().optional().nullable(),
+  website: z.string().url().optional().nullable().or(z.literal('')),
 
   // US Tax compliance (FATCA)
   is_us_citizen: z.boolean().optional(),
@@ -116,6 +132,19 @@ export async function PATCH(request: Request) {
 
     const investorId = investorLinks[0].investor_id
 
+    // Fetch investor to determine type (entity vs individual)
+    const { data: investor, error: investorError } = await serviceSupabase
+      .from('investors')
+      .select('type')
+      .eq('id', investorId)
+      .single()
+
+    if (investorError || !investor) {
+      return NextResponse.json({ error: 'Investor not found' }, { status: 404 })
+    }
+
+    const isEntity = investor.type !== 'individual'
+
     // Parse and validate request body
     const body = await request.json()
     const parsed = updateInvestorSchema.safeParse(body)
@@ -130,6 +159,10 @@ export async function PATCH(request: Request) {
     // Build update object (only include non-undefined values)
     const updateData: Record<string, any> = {}
     const validFields = [
+      // Entity Info
+      'display_name',
+      'legal_name',
+      'country_of_incorporation',
       // Personal Info
       'first_name',
       'middle_name',
@@ -138,16 +171,19 @@ export async function PATCH(request: Request) {
       'date_of_birth',
       'country_of_birth',
       'nationality',
-      // Residential Address
+      // Residential Address (for individuals - direct mapping)
       'residential_street',
       'residential_line_2',
       'residential_city',
       'residential_state',
       'residential_postal_code',
       'residential_country',
-      // Phone
+      // Contact
+      'email',
+      'phone',
       'phone_mobile',
       'phone_office',
+      'website',
       // US Tax compliance
       'is_us_citizen',
       'is_us_taxpayer',
@@ -168,6 +204,64 @@ export async function PATCH(request: Request) {
     for (const field of validFields) {
       if (parsed.data[field as keyof typeof parsed.data] !== undefined) {
         updateData[field] = parsed.data[field as keyof typeof parsed.data]
+      }
+    }
+
+    // Handle address fields from EntityAddressEditDialog
+    // These need to be mapped to correct DB columns based on investor type
+    const dialogAddressFields = {
+      address_line_1: parsed.data.address_line_1,
+      address_line_2: parsed.data.address_line_2,
+      city: parsed.data.city,
+      state_province: parsed.data.state_province,
+      postal_code: parsed.data.postal_code,
+      country: parsed.data.country,
+    }
+
+    // Check if any address fields were provided
+    const hasAddressFields = Object.values(dialogAddressFields).some(v => v !== undefined)
+
+    if (hasAddressFields) {
+      if (isEntity) {
+        // Map to registered_* columns for entities
+        if (dialogAddressFields.address_line_1 !== undefined) {
+          updateData.registered_address_line_1 = dialogAddressFields.address_line_1
+        }
+        if (dialogAddressFields.address_line_2 !== undefined) {
+          updateData.registered_address_line_2 = dialogAddressFields.address_line_2
+        }
+        if (dialogAddressFields.city !== undefined) {
+          updateData.registered_city = dialogAddressFields.city
+        }
+        if (dialogAddressFields.state_province !== undefined) {
+          updateData.registered_state = dialogAddressFields.state_province
+        }
+        if (dialogAddressFields.postal_code !== undefined) {
+          updateData.registered_postal_code = dialogAddressFields.postal_code
+        }
+        if (dialogAddressFields.country !== undefined) {
+          updateData.registered_country = dialogAddressFields.country
+        }
+      } else {
+        // Map to residential_* columns for individuals
+        if (dialogAddressFields.address_line_1 !== undefined) {
+          updateData.residential_street = dialogAddressFields.address_line_1
+        }
+        if (dialogAddressFields.address_line_2 !== undefined) {
+          updateData.residential_line_2 = dialogAddressFields.address_line_2
+        }
+        if (dialogAddressFields.city !== undefined) {
+          updateData.residential_city = dialogAddressFields.city
+        }
+        if (dialogAddressFields.state_province !== undefined) {
+          updateData.residential_state = dialogAddressFields.state_province
+        }
+        if (dialogAddressFields.postal_code !== undefined) {
+          updateData.residential_postal_code = dialogAddressFields.postal_code
+        }
+        if (dialogAddressFields.country !== undefined) {
+          updateData.residential_country = dialogAddressFields.country
+        }
       }
     }
 

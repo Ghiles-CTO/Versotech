@@ -54,15 +54,8 @@ interface InvestorMember {
   role: string
 }
 
-interface SuggestedDocument {
-  value: string
-  label: string
-  description: string
-}
-
 export function KYCDocumentsTab() {
   const [submissions, setSubmissions] = useState<KYCSubmission[]>([])
-  const [suggestedDocuments, setSuggestedDocuments] = useState<SuggestedDocument[]>([])
   const [investorMembers, setInvestorMembers] = useState<InvestorMember[]>([])
   const [isEntityInvestor, setIsEntityInvestor] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -81,7 +74,6 @@ export function KYCDocumentsTab() {
 
       const data = await response.json()
       setSubmissions(data.submissions || [])
-      setSuggestedDocuments(data.suggested_documents || [])
       setInvestorMembers(data.investor_members || [])
       setIsEntityInvestor(data.is_entity_investor || false)
     } catch (error: any) {
@@ -213,27 +205,45 @@ export function KYCDocumentsTab() {
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <Alert>
-            <Info className="h-4 w-4" />
-            <AlertDescription className="text-sm">
-              {isEntityInvestor
-                ? 'Required: Entity documents (NDA, Incorporation Certificate, Memo & Articles, Registers, Bank Confirmation) + ID and Utility Bill for each member/director.'
-                : 'Required: ID/Passport and Utility Bill (less than 3 months old).'}
-            </AlertDescription>
-          </Alert>
+          {/* Required Documents Breakdown */}
+          {isEntityInvestor ? (
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="p-4 border rounded-lg bg-blue-50/50">
+                <h4 className="font-medium text-sm text-blue-900 mb-2">Entity Documents</h4>
+                <ul className="text-sm text-blue-800 space-y-1">
+                  <li>• Incorporation Certificate</li>
+                  <li>• Memo & Articles</li>
+                  <li>• Register of Directors</li>
+                  <li>• Register of Members/Shareholders</li>
+                  <li>• Register of UBOs</li>
+                  <li>• Bank Confirmation Letter</li>
+                </ul>
+              </div>
+              <div className="p-4 border rounded-lg bg-green-50/50">
+                <h4 className="font-medium text-sm text-green-900 mb-2">For Each Director/UBO</h4>
+                <ul className="text-sm text-green-800 space-y-1">
+                  <li>• Passport / ID</li>
+                  <li>• Proof of Address (less than 3 months)</li>
+                </ul>
+              </div>
+            </div>
+          ) : (
+            <div className="p-4 border rounded-lg bg-slate-50">
+              <h4 className="font-medium text-sm text-slate-900 mb-2">Required Documents</h4>
+              <ul className="text-sm text-slate-700 space-y-1">
+                <li>• Passport / ID</li>
+                <li>• Proof of Address (utility bill or bank statement, less than 3 months)</li>
+              </ul>
+            </div>
+          )}
 
           {submissions.length === 0 ? (
-            <div className="text-center py-12 border-2 border-dashed border-gray-300 rounded-lg">
-              <FileText className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-              <p className="text-gray-600 mb-2">No KYC documents uploaded yet</p>
-              <p className="text-sm text-gray-500 mb-4">
-                {isEntityInvestor
-                  ? 'Upload your entity documents and ID/Utility Bill for each member'
-                  : 'Upload your ID/Passport and Utility Bill'}
-              </p>
-              <Button onClick={() => setUploadDialogOpen(true)} variant="outline">
+            <div className="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
+              <FileText className="h-10 w-10 mx-auto text-gray-400 mb-3" />
+              <p className="text-gray-600 mb-2">No documents uploaded yet</p>
+              <Button onClick={() => setUploadDialogOpen(true)} variant="outline" size="sm">
                 <Upload className="mr-2 h-4 w-4" />
-                Upload First Document
+                Upload Document
               </Button>
             </div>
           ) : (
@@ -328,25 +338,6 @@ export function KYCDocumentsTab() {
             </div>
           )}
 
-          {suggestedDocuments.length > 0 && (
-            <div className="mt-6">
-              <h4 className="text-sm font-medium text-gray-700 mb-3">Required Documents</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {suggestedDocuments.map((doc) => (
-                  <Card key={doc.value} className="border-gray-200">
-                    <CardContent className="pt-4">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <p className="font-medium text-sm text-gray-900">{doc.label}</p>
-                          <p className="text-xs text-gray-600 mt-1">{doc.description}</p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          )}
         </CardContent>
       </Card>
 

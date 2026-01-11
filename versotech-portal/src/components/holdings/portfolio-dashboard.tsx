@@ -193,7 +193,7 @@ export function PortfolioDashboard({
         <div className="flex items-center gap-2">
           <Badge variant="outline" className="text-xs">
             <Activity className="h-3 w-3 mr-1" />
-            {new Date(asOfDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            {new Date(asOfDate).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}
           </Badge>
           <Button 
             variant="outline" 

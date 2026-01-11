@@ -91,16 +91,16 @@ export function IdentityMenu({ profile, className }: IdentityMenuProps) {
   const handleProfileClick = () => {
     setOpen(false)
     // Route to persona-specific profile page
+    // Each persona type has its own entity profile page with member management
     const profileRoutes: Record<string, string> = {
       ceo: '/versotech_main/ceo-profile',
+      staff: '/versotech_main/profile',
+      investor: '/versotech_main/profile',
       arranger: '/versotech_main/arranger-profile',
       lawyer: '/versotech_main/lawyer-profile',
-      // investor and staff use the unified profile
-      investor: '/versotech_main/profile',
-      staff: '/versotech_main/profile',
-      introducer: '/versotech_main/profile',
-      partner: '/versotech_main/profile',
-      commercial_partner: '/versotech_main/profile',
+      introducer: '/versotech_main/introducer-profile',
+      partner: '/versotech_main/partner-profile',
+      commercial_partner: '/versotech_main/commercial-partner-profile',
     }
     const route = activePersona
       ? profileRoutes[activePersona.persona_type] || '/versotech_main/profile'

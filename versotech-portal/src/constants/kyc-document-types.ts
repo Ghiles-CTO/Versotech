@@ -375,37 +375,62 @@ export function getSuggestedDocumentTypes(
 }
 
 /**
- * Get document types specifically for members (directors, UBOs, signatories)
+ * ==============================================
+ * SIMPLIFIED KYC DOCUMENT TYPES
+ * ==============================================
+ *
+ * INDIVIDUAL INVESTOR: ID + Proof of Address
+ * ENTITY INVESTOR: Company docs + ID/Address for each director/UBO
  */
-export function getMemberDocumentTypes(): Array<{
-  value: string
-  label: string
-  description: string
-}> {
-  return Object.entries(SUGGESTED_KYC_DOCUMENT_TYPES)
-    .filter(([_, info]) => info.memberOnly || info.category === 'individual' || info.category === 'both')
-    .map(([value, info]) => ({
-      value,
-      label: info.label,
-      description: info.description,
-    }))
+
+/**
+ * Documents for INDIVIDUAL investors - ID + Proof of Address
+ */
+export const INDIVIDUAL_REQUIRED_DOCS = [
+  { value: 'passport', label: 'Passport', description: 'Valid passport (photo page)' },
+  { value: 'utility_bill', label: 'Utility Bill / Proof of Address', description: 'Recent utility bill or bank statement (less than 3 months)' },
+] as const
+
+/**
+ * Documents for ENTITY-LEVEL (the company itself)
+ * NO NDA - that's handled separately in deal flow
+ */
+export const ENTITY_REQUIRED_DOCS = [
+  { value: 'incorporation_certificate', label: 'Incorporation Certificate', description: 'Certificate of Incorporation' },
+  { value: 'memo_articles', label: 'Memo & Articles', description: 'Memorandum and Articles of Association' },
+  { value: 'register_directors', label: 'Register of Directors', description: 'Current list of all directors' },
+  { value: 'register_members', label: 'Register of Members/Shareholders', description: 'Current list of shareholders' },
+  { value: 'register_beneficial_owners', label: 'Register of UBOs', description: 'List of beneficial owners (>25%)' },
+  { value: 'bank_confirmation', label: 'Bank Confirmation Letter', description: 'Bank details for wire transfers' },
+] as const
+
+/**
+ * Documents for MEMBERS (Directors, UBOs) - personal ID docs
+ */
+export const MEMBER_REQUIRED_DOCS = [
+  { value: 'passport', label: 'Passport / ID', description: 'Valid passport or government ID' },
+  { value: 'utility_bill', label: 'Proof of Address', description: 'Utility bill or bank statement (less than 3 months)' },
+] as const
+
+/**
+ * Get document types for INDIVIDUAL investors
+ */
+export function getIndividualDocumentTypes() {
+  return [...INDIVIDUAL_REQUIRED_DOCS]
 }
 
 /**
- * Get document types for entity-level KYC (excludes member-specific docs)
+ * Get document types for ENTITY-level uploads
  */
-export function getEntityDocumentTypes(): Array<{
-  value: string
-  label: string
-  description: string
-}> {
-  return Object.entries(SUGGESTED_KYC_DOCUMENT_TYPES)
-    .filter(([_, info]) => !info.memberOnly && (info.category === 'entity' || info.category === 'both'))
-    .map(([value, info]) => ({
-      value,
-      label: info.label,
-      description: info.description,
-    }))
+export function getEntityDocumentTypes() {
+  return [...ENTITY_REQUIRED_DOCS]
+}
+
+/**
+ * Get document types for MEMBER uploads (personal ID for directors/UBOs)
+ */
+export function getMemberDocumentTypes() {
+  return [...MEMBER_REQUIRED_DOCS]
 }
 
 /**

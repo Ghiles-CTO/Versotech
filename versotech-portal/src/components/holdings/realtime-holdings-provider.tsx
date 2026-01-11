@@ -354,7 +354,7 @@ export function RealtimeHoldingsProvider({
           {isConnected ? 'Live' : 'Offline'}
           {lastUpdate && isConnected && (
             <span className="opacity-70">
-              • {new Date(lastUpdate).toLocaleTimeString()}
+              • {new Date(lastUpdate).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })}
             </span>
           )}
         </div>

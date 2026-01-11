@@ -6,6 +6,7 @@ import { triggerWorkflow } from '@/lib/trigger-workflow'
 import { createSignatureRequest } from '@/lib/signature/client'
 import { getCeoSigner } from '@/lib/staff/ceo-signer'
 import { sendInvitationEmail } from '@/lib/email/resend-service'
+import { getAppUrl } from '@/lib/signature/token'
 import { handleDealClose, handleTermsheetClose } from '@/lib/deals/deal-close-handler'
 
 /**
@@ -1598,7 +1599,13 @@ async function handleEntityApproval(
         }
 
         // Send the invitation email
-        const acceptUrl = `${process.env.NEXT_PUBLIC_APP_URL}/invitation/accept?token=${invitation.invitation_token}`
+        const acceptUrl = `${getAppUrl()}/invitation/accept?token=${invitation.invitation_token}`
+
+        console.log('[member_invitation] Sending invitation email:', {
+          email: invitation.email,
+          entityName: invitation.entity_name,
+          acceptUrl: acceptUrl
+        })
 
         const emailResult = await sendInvitationEmail({
           email: invitation.email,
@@ -1612,8 +1619,16 @@ async function handleEntityApproval(
         })
 
         if (!emailResult.success) {
-          console.error('Failed to send invitation email:', emailResult.error)
+          console.error('[member_invitation] Failed to send invitation email:', emailResult.error)
+          // Log more details for debugging
+          console.error('[member_invitation] Email details:', {
+            to: invitation.email,
+            acceptUrl,
+            entityType: invitation.entity_type
+          })
           // Don't fail - invitation is approved, email can be resent
+        } else {
+          console.log('[member_invitation] Email sent successfully:', emailResult.messageId)
         }
 
         // Notify the inviter that their invitation was approved
@@ -1623,7 +1638,7 @@ async function handleEntityApproval(
             title: 'Member Invitation Approved',
             message: `Your invitation to ${invitation.email} has been approved and sent.`,
             type: 'member_invitation_approved',
-            metadata: {
+            data: {
               invitation_id: invitationId,
               invitee_email: invitation.email,
               entity_type: invitation.entity_type

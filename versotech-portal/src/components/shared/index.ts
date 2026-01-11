@@ -14,6 +14,8 @@ export type { MemberKycEditForm } from './member-kyc-edit-dialog'
 export { EntityAddressEditDialog, entityAddressSchema } from './entity-address-edit-dialog'
 export type { EntityAddressForm } from './entity-address-edit-dialog'
 
+export { EntityInfoEditDialog } from './entity-info-edit-dialog'
+
 // KYC Display Components
 export { IndividualKycDisplay } from './individual-kyc-display'
 export type { IndividualKycData } from './individual-kyc-display'

@@ -110,7 +110,13 @@ export function VehicleCard({
 }: VehicleCardProps) {
   const router = useRouter()
   const [sellSheetOpen, setSellSheetOpen] = useState(false)
-  const hasPosition = holding.position && holding.position.currentValue > 0
+
+  // Check if has actual position with units (units matter, not currentValue which depends on NAV)
+  const hasPosition = holding.position && holding.position.units > 0
+
+  // Show position data when there's a position with units
+  const showPositionData = hasPosition
+
   const canSell = hasPosition && holding.subscription?.id
   const isPositive = holding.position?.unrealizedGainPct ? holding.position.unrealizedGainPct >= 0 : false
   const rawStatus =
@@ -138,7 +144,7 @@ export function VehicleCard({
   }
 
   return (
-    <Card className="group relative overflow-hidden border shadow-sm hover:shadow-md transition-shadow duration-200 h-[520px] flex flex-col">
+    <Card className="group relative overflow-hidden border shadow-sm hover:shadow-md transition-shadow duration-200 min-h-[420px] flex flex-col">
       <CardHeader className="pb-3 flex-shrink-0">
         <div className="flex items-start justify-between">
           <div className="space-y-3">
@@ -153,8 +159,10 @@ export function VehicleCard({
                   className="h-12 w-12 rounded-lg object-contain bg-muted p-1.5"
                 />
               ) : (
-                <div className="h-12 w-12 rounded-lg bg-muted flex items-center justify-center">
-                  <DollarSign className="h-6 w-6 text-muted-foreground" />
+                <div className="h-12 w-12 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center shadow-sm">
+                  <span className="text-white font-bold text-lg">
+                    {(holding.investment_name || holding.name || 'V').charAt(0).toUpperCase()}
+                  </span>
                 </div>
               )}
               <div>
@@ -206,7 +214,7 @@ export function VehicleCard({
 
       <CardContent className="flex-1 flex flex-col">
         <div className="flex-1 space-y-4">
-          {hasPosition ? (
+          {showPositionData ? (
             <>
               <div className="space-y-3">
                 <div className="flex justify-between items-center">

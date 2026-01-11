@@ -15,7 +15,8 @@ import {
   MoreHorizontal,
   Loader2,
   Send,
-  AlertCircle
+  AlertCircle,
+  Edit,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -140,6 +141,14 @@ export function MembersManagementTab({
   const [inviteRole, setInviteRole] = useState('member')
   const [isSignatory, setIsSignatory] = useState(false)
 
+  // Edit member state
+  const [editDialogOpen, setEditDialogOpen] = useState(false)
+  const [editingMember, setEditingMember] = useState<Member | null>(null)
+  const [editRole, setEditRole] = useState('member')
+  const [editCanSign, setEditCanSign] = useState(false)
+  const [editIsPrimary, setEditIsPrimary] = useState(false)
+  const [saving, setSaving] = useState(false)
+
   useEffect(() => {
     fetchMembers()
     fetchInvitations()
@@ -174,6 +183,77 @@ export function MembersManagementTab({
     }
   }
 
+  // Open edit dialog with member data
+  const handleEditMember = (member: Member) => {
+    setEditingMember(member)
+    setEditRole(member.role)
+    setEditCanSign(member.can_sign || false)
+    setEditIsPrimary(member.is_primary)
+    setEditDialogOpen(true)
+  }
+
+  // Save member edits
+  const handleSaveEdit = async () => {
+    if (!editingMember) return
+
+    setSaving(true)
+    try {
+      const response = await fetch(`/api/members/${editingMember.user_id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          entity_type: entityType,
+          entity_id: entityId,
+          role: editRole,
+          can_sign: editCanSign,
+          is_primary: editIsPrimary,
+        })
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        toast.error(data.error || 'Failed to update member')
+        return
+      }
+
+      toast.success('Member updated successfully')
+      setEditDialogOpen(false)
+      setEditingMember(null)
+      fetchMembers() // Refresh the list
+    } catch (error) {
+      console.error('Error updating member:', error)
+      toast.error('Failed to update member')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  // Remove member
+  const handleRemoveMember = async (memberId: string) => {
+    if (!confirm('Are you sure you want to remove this member?')) return
+
+    try {
+      const response = await fetch(
+        `/api/members/${memberId}?entity_type=${entityType}&entity_id=${entityId}`,
+        { method: 'DELETE' }
+      )
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        toast.error(data.error || 'Failed to remove member')
+        return
+      }
+
+      toast.success('Member removed successfully')
+      fetchMembers() // Refresh the list
+    } catch (error) {
+      console.error('Error removing member:', error)
+      toast.error('Failed to remove member')
+    }
+  }
+
   const handleInvite = async () => {
     if (!inviteEmail) {
       toast.error('Please enter an email address')
@@ -202,7 +282,15 @@ export function MembersManagementTab({
         return
       }
 
-      toast.success(`Invitation sent to ${inviteEmail}`)
+      // Show appropriate message based on whether CEO approval is required
+      if (data.requires_approval) {
+        toast.success(`Invitation request created for ${inviteEmail}. Awaiting CEO approval.`, {
+          description: 'The invitation email will be sent after approval.',
+          duration: 5000
+        })
+      } else {
+        toast.success(`Invitation sent to ${inviteEmail}`)
+      }
       setInviteDialogOpen(false)
       setInviteEmail('')
       setInviteRole('member')
@@ -262,6 +350,8 @@ export function MembersManagementTab({
     switch (status) {
       case 'pending':
         return <Badge variant="outline" className="bg-yellow-500/10 text-yellow-600 border-yellow-500/30"><Clock className="w-3 h-3 mr-1" />Pending</Badge>
+      case 'pending_approval':
+        return <Badge variant="outline" className="bg-orange-500/10 text-orange-600 border-orange-500/30"><Clock className="w-3 h-3 mr-1" />Awaiting CEO Approval</Badge>
       case 'accepted':
         return <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/30"><CheckCircle2 className="w-3 h-3 mr-1" />Accepted</Badge>
       case 'expired':
@@ -273,8 +363,8 @@ export function MembersManagementTab({
     }
   }
 
-  const pendingInvitations = invitations.filter(i => i.status === 'pending')
-  const pastInvitations = invitations.filter(i => i.status !== 'pending')
+  const pendingInvitations = invitations.filter(i => ['pending', 'pending_approval'].includes(i.status))
+  const pastInvitations = invitations.filter(i => !['pending', 'pending_approval'].includes(i.status))
 
   return (
     <div className="space-y-6">
@@ -405,21 +495,28 @@ export function MembersManagementTab({
                         </TableCell>
                         {userPermissions.can_manage && (
                           <TableCell>
-                            {!member.is_primary && (
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="sm">
-                                    <MoreHorizontal className="h-4 w-4" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  <DropdownMenuItem className="text-destructive">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="sm">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => handleEditMember(member)}>
+                                  <Edit className="h-4 w-4 mr-2" />
+                                  Edit Member
+                                </DropdownMenuItem>
+                                {!member.is_primary && (
+                                  <DropdownMenuItem
+                                    className="text-destructive"
+                                    onClick={() => handleRemoveMember(member.user_id)}
+                                  >
                                     <Trash2 className="h-4 w-4 mr-2" />
                                     Remove Member
                                   </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            )}
+                                )}
+                              </DropdownMenuContent>
+                            </DropdownMenu>
                           </TableCell>
                         )}
                       </TableRow>
@@ -633,6 +730,97 @@ export function MembersManagementTab({
                   <Send className="h-4 w-4 mr-2" />
                   Send Invitation
                 </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Member Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Team Member</DialogTitle>
+            <DialogDescription>
+              Update {editingMember?.profile?.display_name || editingMember?.profile?.email || 'member'} settings
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            {/* Role */}
+            <div className="space-y-2">
+              <Label>Role</Label>
+              <Select value={editRole} onValueChange={setEditRole}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select role" />
+                </SelectTrigger>
+                <SelectContent>
+                  {ROLE_OPTIONS.map(option => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Signatory Option */}
+            {showSignatoryOption && (
+              <div className="flex items-center space-x-2 pt-2">
+                <Checkbox
+                  id="edit-signatory"
+                  checked={editCanSign}
+                  onCheckedChange={(checked) => setEditCanSign(checked === true)}
+                />
+                <Label htmlFor="edit-signatory" className="flex items-center gap-2 cursor-pointer">
+                  <PenTool className="h-4 w-4" />
+                  Authorized Signatory
+                  <span className="text-xs text-muted-foreground">(can sign documents)</span>
+                </Label>
+              </div>
+            )}
+
+            {/* Primary Contact Option (only if user is already primary) */}
+            {userPermissions.is_primary && !editingMember?.is_primary && (
+              <div className="flex items-center space-x-2 pt-2">
+                <Checkbox
+                  id="edit-primary"
+                  checked={editIsPrimary}
+                  onCheckedChange={(checked) => setEditIsPrimary(checked === true)}
+                />
+                <Label htmlFor="edit-primary" className="flex items-center gap-2 cursor-pointer">
+                  <Shield className="h-4 w-4" />
+                  Make Primary Contact
+                  <span className="text-xs text-muted-foreground">(transfers primary status)</span>
+                </Label>
+              </div>
+            )}
+
+            {editingMember?.is_primary && (
+              <div className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg">
+                <Shield className="h-4 w-4 inline mr-2" />
+                This member is the primary contact. To change primary status,
+                select another member and make them primary.
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setEditDialogOpen(false)}
+              disabled={saving}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleSaveEdit} disabled={saving}>
+              {saving ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                'Save Changes'
               )}
             </Button>
           </DialogFooter>

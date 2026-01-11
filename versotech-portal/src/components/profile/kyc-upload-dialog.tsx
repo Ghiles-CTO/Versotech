@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { toast } from 'sonner'
 import {
   Dialog,
@@ -21,8 +21,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Upload, Loader2, Info } from 'lucide-react'
-import { getSuggestedDocumentTypes } from '@/constants/kyc-document-types'
+import { Upload, Loader2, Info, Building2, User, AlertCircle } from 'lucide-react'
+import { getEntityDocumentTypes, getMemberDocumentTypes, getIndividualDocumentTypes } from '@/constants/kyc-document-types'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 
 interface Member {
@@ -35,10 +35,10 @@ interface KYCUploadDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onUploadSuccess: () => void
-  entityId?: string | null // Optional: for entity KYC upload
-  category?: 'individual' | 'entity' | 'both' // Filter suggested types
-  members?: Member[] // Optional: list of members to associate document with
-  memberType?: 'investor' | 'counterparty' // Type of member (investor_member or counterparty_entity_member)
+  entityId?: string | null
+  category?: 'individual' | 'entity' | 'both'
+  members?: Member[]
+  memberType?: 'investor' | 'counterparty'
 }
 
 export function KYCUploadDialog({
@@ -55,29 +55,57 @@ export function KYCUploadDialog({
   const [customLabel, setCustomLabel] = useState<string>('')
   const [expiryDate, setExpiryDate] = useState<string>('')
   const [notes, setNotes] = useState<string>('')
-  const [selectedMemberId, setSelectedMemberId] = useState<string>('')
+  const [uploadTarget, setUploadTarget] = useState<string>('')
   const [isUploading, setIsUploading] = useState(false)
 
-  const suggestedTypes = getSuggestedDocumentTypes(category)
-  const isCustomType = documentType === 'custom'
+  const isEntityInvestor = category === 'entity'
+  const isForMember = uploadTarget && uploadTarget !== 'entity-level'
+  const hasMembers = members.length > 0
+
+  // Get document types based on selection
+  const availableDocumentTypes = useMemo(() => {
+    if (!isEntityInvestor) {
+      // Individual investor - simple personal docs
+      return getIndividualDocumentTypes()
+    }
+
+    if (isForMember) {
+      // Uploading for a specific member - personal ID docs
+      return getMemberDocumentTypes()
+    }
+
+    // Entity-level docs
+    return getEntityDocumentTypes()
+  }, [isEntityInvestor, isForMember])
+
+  // Reset document type when target changes
+  useEffect(() => {
+    setDocumentType('')
+  }, [uploadTarget])
+
+  // Reset form when dialog opens
+  useEffect(() => {
+    if (open) {
+      setFile(null)
+      setDocumentType('')
+      setCustomLabel('')
+      setExpiryDate('')
+      setNotes('')
+      setUploadTarget('')
+    }
+  }, [open])
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0]
     if (selectedFile) {
-      // Validate file size (10MB max)
       if (selectedFile.size > 10 * 1024 * 1024) {
-        toast.error('File too large', {
-          description: 'Maximum file size is 10MB'
-        })
+        toast.error('File too large', { description: 'Maximum file size is 10MB' })
         return
       }
 
-      // Validate file type
       const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png', 'image/heic', 'image/webp']
       if (!allowedTypes.includes(selectedFile.type)) {
-        toast.error('Invalid file type', {
-          description: 'Only PDF and image files are allowed'
-        })
+        toast.error('Invalid file type', { description: 'Only PDF and image files are allowed' })
         return
       }
 
@@ -93,13 +121,13 @@ export function KYCUploadDialog({
       return
     }
 
-    if (!documentType) {
-      toast.error('Please select a document type')
+    if (isEntityInvestor && !uploadTarget) {
+      toast.error('Please select who this document is for')
       return
     }
 
-    if (isCustomType && !customLabel.trim()) {
-      toast.error('Please provide a custom label for your document')
+    if (!documentType) {
+      toast.error('Please select a document type')
       return
     }
 
@@ -108,9 +136,9 @@ export function KYCUploadDialog({
     try {
       const formData = new FormData()
       formData.append('file', file)
-      formData.append('documentType', isCustomType ? customLabel.toLowerCase().replace(/\s+/g, '_') : documentType)
+      formData.append('documentType', documentType === 'custom' ? customLabel.toLowerCase().replace(/\s+/g, '_') : documentType)
 
-      if (isCustomType && customLabel) {
+      if (documentType === 'custom' && customLabel) {
         formData.append('customLabel', customLabel)
       }
 
@@ -126,12 +154,12 @@ export function KYCUploadDialog({
         formData.append('entityId', entityId)
       }
 
-      // Add member ID based on member type (skip if "entity-level" selected)
-      if (selectedMemberId && selectedMemberId !== 'entity-level' && memberType) {
+      // Add member ID if uploading for a specific member
+      if (isForMember && memberType) {
         if (memberType === 'investor') {
-          formData.append('investorMemberId', selectedMemberId)
+          formData.append('investorMemberId', uploadTarget)
         } else if (memberType === 'counterparty') {
-          formData.append('counterpartyMemberId', selectedMemberId)
+          formData.append('counterpartyMemberId', uploadTarget)
         }
       }
 
@@ -146,38 +174,16 @@ export function KYCUploadDialog({
         throw new Error(data.error || 'Failed to upload document')
       }
 
-      toast.success('Document uploaded successfully', {
-        description: 'Your KYC document is now pending review'
-      })
-
-      // Reset form
-      setFile(null)
-      setDocumentType('')
-      setCustomLabel('')
-      setExpiryDate('')
-      setNotes('')
-      setSelectedMemberId('')
+      toast.success('Document uploaded successfully')
       onOpenChange(false)
       onUploadSuccess()
 
     } catch (error: any) {
       console.error('Upload error:', error)
-      toast.error('Upload failed', {
-        description: error.message
-      })
+      toast.error('Upload failed', { description: error.message })
     } finally {
       setIsUploading(false)
     }
-  }
-
-  const handleCancel = () => {
-    setFile(null)
-    setDocumentType('')
-    setCustomLabel('')
-    setExpiryDate('')
-    setNotes('')
-    setSelectedMemberId('')
-    onOpenChange(false)
   }
 
   return (
@@ -186,88 +192,116 @@ export function KYCUploadDialog({
         <DialogHeader>
           <DialogTitle>Upload KYC Document</DialogTitle>
           <DialogDescription>
-            {category === 'entity'
-              ? 'Upload entity documents or member identification (ID/Passport, Utility Bill)'
-              : 'Upload your identification documents (ID/Passport, Utility Bill)'}
+            {isEntityInvestor
+              ? 'Upload entity documents or member ID documents'
+              : 'Upload your ID and proof of address'}
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Document Type Selection */}
-          <div className="space-y-2">
-            <Label htmlFor="document-type">Document Type</Label>
-            <Select
-              value={documentType}
-              onValueChange={setDocumentType}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select document type..." />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="custom">Custom (Enter your own)</SelectItem>
-                {suggestedTypes.map((type) => (
-                  <SelectItem key={type.value} value={type.value}>
-                    {type.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {documentType && !isCustomType && (
-              <p className="text-xs text-muted-foreground">
-                {suggestedTypes.find(t => t.value === documentType)?.description}
-              </p>
-            )}
-          </div>
-
-          {/* Custom Label (if custom type selected) */}
-          {isCustomType && (
+          {/* STEP 1: For entity investors - WHO is this document for? */}
+          {isEntityInvestor && (
             <div className="space-y-2">
-              <Label htmlFor="custom-label">Custom Document Label</Label>
-              <Input
-                id="custom-label"
-                type="text"
-                placeholder="e.g., Trust Agreement, Operating Agreement"
-                value={customLabel}
-                onChange={(e) => setCustomLabel(e.target.value)}
-                required={isCustomType}
-              />
-              <p className="text-xs text-muted-foreground">
-                Enter a name for this document type
-              </p>
-            </div>
-          )}
-
-          {/* Member Selection (if members provided) */}
-          {members.length > 0 && (
-            <div className="space-y-2">
-              <Label htmlFor="member-select">Member / Director</Label>
-              <Select
-                value={selectedMemberId}
-                onValueChange={setSelectedMemberId}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select member or director..." />
+              <Label className="text-base font-semibold">
+                Step 1: Who is this document for?
+              </Label>
+              <Select value={uploadTarget} onValueChange={setUploadTarget}>
+                <SelectTrigger className={!uploadTarget ? 'border-amber-400 bg-amber-50' : ''}>
+                  <SelectValue placeholder="Select..." />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="entity-level">Entity-level document</SelectItem>
-                  {members.map((member) => (
+                  {/* Entity option - always available */}
+                  <SelectItem value="entity-level">
+                    <div className="flex items-center gap-2">
+                      <Building2 className="h-4 w-4 text-blue-600" />
+                      <span className="font-medium">Entity (Company Documents)</span>
+                    </div>
+                  </SelectItem>
+
+                  {/* Member options - if members exist */}
+                  {hasMembers && members.map((member) => (
                     <SelectItem key={member.id} value={member.id}>
-                      {member.full_name} ({member.role})
+                      <div className="flex items-center gap-2">
+                        <User className="h-4 w-4 text-green-600" />
+                        <span>{member.full_name}</span>
+                        <span className="text-muted-foreground text-xs">({member.role})</span>
+                      </div>
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+
+              {/* Helpful description */}
+              {uploadTarget === 'entity-level' && (
+                <p className="text-sm text-blue-600">
+                  Entity docs: Incorporation Certificate, Memo & Articles, Registers, Bank Confirmation
+                </p>
+              )}
+              {isForMember && (
+                <p className="text-sm text-green-600">
+                  Member docs: Passport/ID, Proof of Address
+                </p>
+              )}
+
+              {/* Alert if no members */}
+              {!hasMembers && (
+                <Alert className="border-amber-300 bg-amber-50">
+                  <AlertCircle className="h-4 w-4 text-amber-600" />
+                  <AlertDescription className="text-amber-800">
+                    <strong>No members added yet.</strong> To upload ID documents for Directors/UBOs,
+                    first add them in the <span className="font-semibold">Directors/UBOs tab</span>.
+                  </AlertDescription>
+                </Alert>
+              )}
+            </div>
+          )}
+
+          {/* STEP 2: Document Type */}
+          <div className="space-y-2">
+            <Label className={isEntityInvestor ? "text-base font-semibold" : ""}>
+              {isEntityInvestor ? 'Step 2: Document Type' : 'Document Type'}
+            </Label>
+            <Select
+              value={documentType}
+              onValueChange={setDocumentType}
+              disabled={isEntityInvestor && !uploadTarget}
+            >
+              <SelectTrigger className={isEntityInvestor && !uploadTarget ? 'opacity-50' : ''}>
+                <SelectValue placeholder={isEntityInvestor && !uploadTarget ? 'First select who...' : 'Select document type...'} />
+              </SelectTrigger>
+              <SelectContent>
+                {availableDocumentTypes.map((type) => (
+                  <SelectItem key={type.value} value={type.value}>
+                    {type.label}
+                  </SelectItem>
+                ))}
+                <SelectItem value="custom">Other (Custom)</SelectItem>
+              </SelectContent>
+            </Select>
+            {documentType && documentType !== 'custom' && (
               <p className="text-xs text-muted-foreground">
-                For ID/Passport or Utility Bill, select the member. For entity documents, leave as &quot;Entity-level document&quot;.
+                {availableDocumentTypes.find(t => t.value === documentType)?.description}
               </p>
+            )}
+          </div>
+
+          {/* Custom label if "Other" selected */}
+          {documentType === 'custom' && (
+            <div className="space-y-2">
+              <Label>Custom Document Name</Label>
+              <Input
+                value={customLabel}
+                onChange={(e) => setCustomLabel(e.target.value)}
+                placeholder="e.g., Trust Agreement"
+                required
+              />
             </div>
           )}
 
           {/* File Upload */}
           <div className="space-y-2">
-            <Label htmlFor="file">Document File</Label>
+            <Label>File</Label>
             <Input
-              id="file"
               type="file"
               accept=".pdf,.jpg,.jpeg,.png,.heic,.webp"
               onChange={handleFileChange}
@@ -278,49 +312,39 @@ export function KYCUploadDialog({
                 Selected: {file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)
               </p>
             )}
-            <Alert>
-              <Info className="h-4 w-4" />
-              <AlertDescription className="text-xs">
-                Max file size: 10MB. Accepted formats: PDF, JPEG, PNG, HEIC, WEBP
-              </AlertDescription>
-            </Alert>
+            <p className="text-xs text-muted-foreground">
+              Max 10MB. PDF, JPEG, PNG, HEIC, WEBP accepted.
+            </p>
           </div>
 
-          {/* Expiry Date (Optional) */}
+          {/* Expiry Date */}
           <div className="space-y-2">
-            <Label htmlFor="expiry-date">Expiry Date (Optional)</Label>
+            <Label>Expiry Date (Optional)</Label>
             <Input
-              id="expiry-date"
               type="date"
               value={expiryDate}
               onChange={(e) => setExpiryDate(e.target.value)}
             />
           </div>
 
-          {/* Notes (Optional) */}
+          {/* Notes */}
           <div className="space-y-2">
-            <Label htmlFor="notes">Notes (Optional)</Label>
+            <Label>Notes (Optional)</Label>
             <Textarea
-              id="notes"
-              placeholder="Add any additional information about this document..."
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              rows={3}
+              placeholder="Any additional info..."
+              rows={2}
             />
           </div>
 
           <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleCancel}
-              disabled={isUploading}
-            >
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isUploading}>
               Cancel
             </Button>
             <Button
               type="submit"
-              disabled={isUploading || !file || !documentType || (isCustomType && !customLabel.trim())}
+              disabled={isUploading || !file || !documentType || (isEntityInvestor && !uploadTarget) || (documentType === 'custom' && !customLabel.trim())}
             >
               {isUploading ? (
                 <>
@@ -330,7 +354,7 @@ export function KYCUploadDialog({
               ) : (
                 <>
                   <Upload className="mr-2 h-4 w-4" />
-                  Upload Document
+                  Upload
                 </>
               )}
             </Button>

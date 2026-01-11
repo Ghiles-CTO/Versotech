@@ -285,7 +285,7 @@ export function RealtimeStaffDashboard({
                 )}
               </div>
               <Badge variant="outline" className="text-[10px] border-gray-300 dark:border-white/10 text-gray-500 dark:text-slate-400">
-                Last updated: {new Date(metrics.lastUpdated).toLocaleTimeString()}
+                Last updated: {new Date(metrics.lastUpdated).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })}
               </Badge>
             </div>
 
@@ -345,7 +345,7 @@ export function RealtimeStaffDashboard({
                   <span className="text-gray-500 dark:text-slate-400">{update.type}</span>
                 </div>
                 <span className="text-gray-400 dark:text-slate-600 text-[10px]">
-                  {new Date(update.timestamp).toLocaleTimeString()}
+                  {new Date(update.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })}
                 </span>
               </div>
             ))}

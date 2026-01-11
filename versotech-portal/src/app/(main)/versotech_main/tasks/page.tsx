@@ -141,9 +141,9 @@ export default async function TasksPage() {
     !t.category && !t.related_entity_id
   )
 
-  // General compliance tasks not tied to a vehicle (includes signature tasks, subscriptions, and investment setup)
+  // KYC and compliance tasks not tied to a vehicle (includes signature tasks, subscriptions, and investment setup)
   const generalComplianceTasks = allTasks.filter(t =>
-    (t.category === 'compliance' || t.category === 'investment_setup') && (
+    (t.category === 'kyc' || t.category === 'compliance' || t.category === 'investment_setup') && (
       !t.related_entity_id ||
       t.related_entity_type === 'signature_request' ||
       t.related_entity_type === 'subscription'
