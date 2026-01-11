@@ -206,6 +206,25 @@ export async function POST(
           // Continue - staff can still be granted permissions manually
         }
       }
+
+      // CRITICAL: Staff users must also be added to ceo_users for CEO entity access
+      // This gives them the 'ceo' persona via get_user_personas() RPC
+      const { error: ceoUserError } = await serviceSupabase
+        .from('ceo_users')
+        .insert({
+          user_id: authData.user.id,
+          role: 'admin',
+          is_primary: false,
+          can_sign: true,
+          title: metadata.title || invitation.role || 'Staff',
+          created_by: invitation.invited_by,
+          created_at: new Date().toISOString()
+        })
+
+      if (ceoUserError) {
+        console.error('Error adding staff to ceo_users:', ceoUserError)
+        // Continue - this is not a critical failure, user can be added manually
+      }
     } else {
       // Non-staff entity types - create junction table records
       let insertData: Record<string, any>
