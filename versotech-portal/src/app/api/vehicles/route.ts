@@ -207,15 +207,18 @@ export async function GET(request: Request) {
       if (position) {
         const units = parseFloat(position.units || 0)
         const costBasis = parseFloat(position.cost_basis || 0)
-        const navPerUnit = latestValuation?.nav_per_unit
-          ? parseFloat(latestValuation.nav_per_unit)
-          : parseFloat(position.last_nav || 0)
 
-        // If NAV is missing/zero, fall back to cost basis (at-cost valuation)
-        const hasValidNav = navPerUnit > 0
-        const currentValue = hasValidNav ? units * navPerUnit : costBasis
-        const unrealizedGain = hasValidNav ? currentValue - costBasis : 0
-        const unrealizedGainPct = hasValidNav && costBasis > 0 ? (unrealizedGain / costBasis) * 100 : 0
+        // PRIORITY: position.last_nav FIRST (even if 0), then valuations
+        const posLastNav = position.last_nav !== null && position.last_nav !== undefined
+          ? parseFloat(position.last_nav) : null
+        const valNav = latestValuation?.nav_per_unit ? parseFloat(latestValuation.nav_per_unit) : null
+        const navPerUnit = posLastNav !== null ? posLastNav : (valNav ?? 0)
+
+        // Calculate - use NAV if available, else cost basis
+        const hasNav = posLastNav !== null || valNav !== null
+        const currentValue = hasNav ? units * navPerUnit : costBasis
+        const unrealizedGain = currentValue - costBasis
+        const unrealizedGainPct = costBasis > 0 ? (unrealizedGain / costBasis) * 100 : 0
 
         positionData = {
           units,
