@@ -147,7 +147,7 @@ export async function POST(
           investor_id: null,
           title: 'Payment Request - Introducer Commission',
           message: `Payment of ${formattedAmount} requested for ${introducer?.legal_name || 'Introducer'}${deal ? ` (${deal.name})` : ''}.`,
-          link: `/versotech_main/staff/fees`,
+          link: `/versotech_main/fees`,
           type: 'action_required',
         })
       }

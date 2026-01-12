@@ -671,7 +671,7 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
                 )}
 
                 {hasDataRoomAccess && (
-                  <Link href="/versotech_main/data-rooms">
+                  <Link href={`/versoholdings/data-rooms/${deal.id}`}>
                     <Button variant="outline" className="w-full gap-2">
                       <ShieldCheck className="h-4 w-4" />
                       Access Data Room

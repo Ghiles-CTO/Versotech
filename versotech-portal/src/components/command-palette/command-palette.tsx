@@ -210,7 +210,7 @@ export function CommandPalette({ onQuickAddSubscription, brand = 'versotech' }: 
       description: 'Account settings',
       icon: Settings,
       keywords: ['preferences', 'profile'],
-      action: () => router.push('/versotech_main/settings'),
+      action: () => router.push('/versotech_main/admin'),
       group: 'navigation'
     },
 

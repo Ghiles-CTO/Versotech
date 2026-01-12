@@ -202,7 +202,7 @@ export async function POST(
           investor_id: null,
           title: 'Introducer Payment Confirmed',
           message: `Payment of ${formattedAmount} to ${introducer?.legal_name || 'Introducer'} has been confirmed by lawyer.`,
-          link: `/versotech_main/staff/fees`,
+          link: `/versotech_main/fees`,
           type: 'info',
         })
       }

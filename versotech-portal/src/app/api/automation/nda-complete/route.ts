@@ -289,7 +289,7 @@ export async function POST(request: NextRequest) {
         investor_id,
         title: 'Data room unlocked',
         message: `Your NDA for ${dealName} is complete. The data room is now available for review.`,
-        link: '/versotech_main/data-rooms',
+        link: `/versotech_main/opportunities/${deal_id}?tab=data-room`,
         metadata: {
           type: 'nda_complete',
           deal_id,

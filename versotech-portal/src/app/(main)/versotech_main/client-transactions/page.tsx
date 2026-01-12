@@ -870,7 +870,7 @@ export default function ClientTransactionsPage() {
                             )}
                             {client.deal_id && client.has_dataroom_access && (
                               <Button variant="ghost" size="icon" asChild title="Access Dataroom">
-                                <Link href={`/versotech_main/opportunities/${client.deal_id}?tab=dataroom${client.investor_id ? `&client_investor_id=${client.investor_id}` : ''}`}>
+                                <Link href={`/versotech_main/opportunities/${client.deal_id}?tab=data-room${client.investor_id ? `&client_investor_id=${client.investor_id}` : ''}`}>
                                   <FolderOpen className="h-4 w-4" />
                                 </Link>
                               </Button>
@@ -960,7 +960,7 @@ export default function ClientTransactionsPage() {
                               </Link>
                             </Button>
                             <Button variant="ghost" size="sm" className="h-6 px-2 text-xs" asChild>
-                              <Link href={`/versotech_main/opportunities/${client.deal_id}?tab=dataroom${client.investor_id ? `&client_investor_id=${client.investor_id}` : ''}`}>
+                              <Link href={`/versotech_main/opportunities/${client.deal_id}?tab=data-room${client.investor_id ? `&client_investor_id=${client.investor_id}` : ''}`}>
                                 <FolderOpen className="h-3 w-3 mr-1" />
                                 Files
                               </Link>

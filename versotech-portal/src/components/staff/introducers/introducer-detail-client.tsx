@@ -1029,7 +1029,7 @@ export function IntroducerDetailClient({
                                   className="mt-4 w-full"
                                   onClick={(e) => {
                                     e.stopPropagation()
-                                    router.push(`/versotech_main/deals/${feePlan.deal?.id}?tab=fee-plans`)
+                                    router.push(`/versotech_main/deals/${feePlan.deal?.id}?tab=fees`)
                                   }}
                                 >
                                   <ExternalLink className="h-4 w-4 mr-2" />

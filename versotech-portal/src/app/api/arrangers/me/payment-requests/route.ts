@@ -233,7 +233,7 @@ export async function POST(request: NextRequest) {
         investor_id: null,
         title: 'New Arranger Payment Request',
         message: `An arranger has submitted a payment request for ${feeEvents.length} fee event(s) totaling ${total.toLocaleString()}.`,
-        link: `/versotech_main/staff/fees?tab=invoices&invoice=${invoice.id}`,
+        link: `/versotech_main/fees?tab=invoices&invoice=${invoice.id}`,
       }))
 
       await serviceSupabase.from('investor_notifications').insert(notifications)

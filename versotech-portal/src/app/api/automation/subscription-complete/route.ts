@@ -168,7 +168,7 @@ export async function POST(request: NextRequest) {
           investor_id,
           title: 'Subscription confirmed',
           message: `Your allocation for ${deal_id} has been confirmed. Review the funding instructions to proceed.`,
-          link: `/versotech_main/data-rooms`
+          link: `/versotech_main/opportunities/${deal_id}?tab=data-room`
         })
       } catch (notificationError) {
         console.error('Failed to create investor notification', notificationError)

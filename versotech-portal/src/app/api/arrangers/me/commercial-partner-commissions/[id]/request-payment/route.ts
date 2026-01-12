@@ -142,7 +142,7 @@ export async function POST(
           investor_id: null,
           title: 'Payment Request - Commercial Partner Commission',
           message: `Payment of ${formattedAmount} requested for ${cp?.name || cp?.legal_name || 'Commercial Partner'}${deal ? ` (${deal.name})` : ''}.`,
-          link: `/versotech_main/staff/fees`,
+          link: `/versotech_main/fees`,
           type: 'action_required',
         })
       }

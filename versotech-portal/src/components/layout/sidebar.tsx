@@ -93,12 +93,6 @@ const investorNavItems: SidebarItem[] = [
     description: 'My investments'
   },
   {
-    name: 'Data Rooms',
-    href: '/versotech_main/data-rooms',
-    icon: FileText,
-    description: 'Documents & Due Diligence'
-  },
-  {
     name: 'Calendar',
     href: '/versotech_main/calendar',
     icon: Calendar,

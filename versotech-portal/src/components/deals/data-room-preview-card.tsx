@@ -42,7 +42,7 @@ function daysUntil(date: string | null) {
 export function DataRoomPreviewCard({ deal, access, documentCount, status }: DataRoomPreviewCardProps) {
   const daysRemaining = daysUntil(access.expires_at)
   return (
-    <Link href={`/versotech_main/data-rooms/${deal.id}`}>
+    <Link href={`/versotech_main/opportunities/${deal.id}?tab=data-room`}>
       <Card className="cursor-pointer hover:border-blue-600 hover:shadow-lg transition-all border-2 border-gray-200 bg-white h-full">
         <CardContent className="p-4 space-y-3">
           {/* Header with logo and name */}
