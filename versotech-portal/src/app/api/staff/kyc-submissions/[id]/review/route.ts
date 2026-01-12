@@ -256,12 +256,15 @@ export async function POST(
  * Check if all required KYC documents are approved and update investor status
  *
  * For individual investors:
- * - Requires: questionnaire, passport_id, utility_bill
+ * - Requires: passport_id (or passport), utility_bill
  *
  * For entity investors:
- * - Entity-level docs: questionnaire, nda_ndnc, incorporation_certificate, memo_articles,
+ * - Entity-level docs: incorporation_certificate, memo_articles,
  *   register_members, register_directors, bank_confirmation
  * - Per-member docs: Each active member needs passport_id AND utility_bill
+ *
+ * NOTE: Questionnaire is COMPLIANCE, not KYC - handled separately
+ * NOTE: NDA is handled in deal flow, not KYC requirements
  */
 async function checkAndUpdateInvestorKYCStatus(
   supabase: any,
@@ -297,19 +300,16 @@ async function checkAndUpdateInvestorKYCStatus(
       )
     }
 
-    // 1. Check questionnaire is approved (required for all investors)
-    const questionnaireApproved = isDocApproved('questionnaire')
-    if (!questionnaireApproved) {
-      console.log(`[KYC Status] Investor ${investorId}: Questionnaire not approved`)
-      return
+    // Helper to check if either passport or passport_id is approved (they're equivalent)
+    const isIdDocApproved = (memberId?: string | null) => {
+      return isDocApproved('passport_id', memberId) || isDocApproved('passport', memberId)
     }
 
     if (isEntityType) {
       // Entity investor: Check entity-level docs + per-member docs
 
-      // Entity-level required documents
+      // Entity-level required documents (NO questionnaire, NO NDA)
       const entityDocs = [
-        'nda_ndnc',
         'incorporation_certificate',
         'memo_articles',
         'register_members',
@@ -334,30 +334,49 @@ async function checkAndUpdateInvestorKYCStatus(
         .eq('investor_id', investorId)
         .eq('is_active', true)
 
-      if (members && members.length > 0) {
-        // Each member needs passport_id AND utility_bill approved
-        const memberDocTypes = ['passport_id', 'utility_bill']
+      // Track which members have all docs approved
+      const membersWithAllDocsApproved: string[] = []
 
+      if (members && members.length > 0) {
+        // Each member needs ID (passport or passport_id) AND utility_bill approved
         for (const member of members) {
-          for (const docType of memberDocTypes) {
-            const hasDoc = isDocApproved(docType, member.id)
-            if (!hasDoc) {
-              console.log(`[KYC Status] Investor ${investorId}: Member ${member.full_name} missing approved ${docType}`)
-              return
+          const hasId = isIdDocApproved(member.id)
+          const hasAddress = isDocApproved('utility_bill', member.id)
+
+          if (hasId && hasAddress) {
+            membersWithAllDocsApproved.push(member.id)
+          } else {
+            // Missing docs - investor can't be fully approved yet
+            if (!hasId) {
+              console.log(`[KYC Status] Investor ${investorId}: Member ${member.full_name} missing approved ID document`)
             }
+            if (!hasAddress) {
+              console.log(`[KYC Status] Investor ${investorId}: Member ${member.full_name} missing approved utility_bill`)
+            }
+            return
           }
         }
       }
+
+      // Update member KYC status for those with all docs approved
+      if (membersWithAllDocsApproved.length > 0) {
+        await supabase
+          .from('investor_members')
+          .update({ kyc_status: 'approved' })
+          .in('id', membersWithAllDocsApproved)
+          .neq('kyc_status', 'approved') // Only update if not already approved
+
+        console.log(`[KYC Status] Updated ${membersWithAllDocsApproved.length} member(s) to approved`)
+      }
     } else {
-      // Individual investor: Check individual-level docs
-      const individualDocs = ['passport_id', 'utility_bill']
+      // Individual investor: Check ID (passport or passport_id) + utility_bill
+      if (!isIdDocApproved(null)) {
+        console.log(`[KYC Status] Investor ${investorId}: Individual ID document not approved`)
+        return
+      }
 
-      const individualDocsApproved = individualDocs.every(docType =>
-        isDocApproved(docType, null)
-      )
-
-      if (!individualDocsApproved) {
-        console.log(`[KYC Status] Investor ${investorId}: Individual documents not all approved`)
+      if (!isDocApproved('utility_bill', null)) {
+        console.log(`[KYC Status] Investor ${investorId}: Individual utility_bill not approved`)
         return
       }
     }
@@ -396,13 +415,14 @@ async function autoCompleteRelatedTasks(
     const taskTitlePatterns: Record<string, string> = {
       // Individual documents
       passport_id: 'Upload ID',
+      passport: 'Upload ID',
       utility_bill: 'Upload Utility Bill',
       // Entity documents
-      nda_ndnc: 'Upload NDA',
       incorporation_certificate: 'Upload Incorporation',
       memo_articles: 'Upload Memo',
       register_members: 'Upload Register of Members',
       register_directors: 'Upload Register of Directors',
+      register_beneficial_owners: 'Upload Register of UBOs',
       bank_confirmation: 'Upload Bank Confirmation',
       // Catch-all for other types
       other: 'Upload Document'

@@ -44,21 +44,7 @@ export async function GET(request: Request) {
       )
     }
 
-    // Get user profile to check role
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
-
-    if (!profile || profile.role !== 'investor') {
-      return NextResponse.json(
-        { error: 'Investor access required' },
-        { status: 403 }
-      )
-    }
-
-    // Get investor entities linked to this user
+    // Get investor entities linked to this user - this is the real authorization check
     const { data: investorLinks } = await supabase
       .from('investor_users')
       .select('investor_id')

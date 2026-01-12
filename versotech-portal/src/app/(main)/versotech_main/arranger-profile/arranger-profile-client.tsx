@@ -45,6 +45,7 @@ import { ArrangerKYCDocumentsTab } from '@/components/profile/arranger-kyc-docum
 import { MembersManagementTab } from '@/components/members/members-management-tab'
 import { GenericEntityMembersTab } from '@/components/profile/generic-entity-members-tab'
 import { NoticeContactsTab } from '@/components/profile/notice-contacts-tab'
+import { EntityKYCEditDialog, IndividualKycDisplay } from '@/components/shared'
 
 type ArrangerInfo = {
   id: string
@@ -66,6 +67,37 @@ type ArrangerInfo = {
   is_active: boolean
   created_at: string | null
   logo_url?: string | null
+  // Entity type (individual vs entity)
+  type?: string | null
+  // Phone numbers
+  phone_mobile?: string | null
+  phone_office?: string | null
+  // Individual KYC fields (for individual arrangers)
+  first_name?: string | null
+  middle_name?: string | null
+  last_name?: string | null
+  name_suffix?: string | null
+  date_of_birth?: string | null
+  country_of_birth?: string | null
+  nationality?: string | null
+  // US Tax compliance
+  is_us_citizen?: boolean | null
+  is_us_taxpayer?: boolean | null
+  us_taxpayer_id?: string | null
+  country_of_tax_residency?: string | null
+  // ID Document
+  id_type?: string | null
+  id_number?: string | null
+  id_issue_date?: string | null
+  id_expiry_date?: string | null
+  id_issuing_country?: string | null
+  // Residential Address (for individuals)
+  residential_street?: string | null
+  residential_line_2?: string | null
+  residential_city?: string | null
+  residential_state?: string | null
+  residential_postal_code?: string | null
+  residential_country?: string | null
 }
 
 type ArrangerUserInfo = {
@@ -188,6 +220,7 @@ export function ArrangerProfileClient({
   const [isEditingContact, setIsEditingContact] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [isUploadingLogo, setIsUploadingLogo] = useState(false)
+  const [showKycDialog, setShowKycDialog] = useState(false)
   const logoInputRef = useRef<HTMLInputElement>(null)
 
   // Edit form data
@@ -691,6 +724,42 @@ export function ArrangerProfileClient({
               </div>
             </CardContent>
           </Card>
+
+          {/* Individual KYC for Individual Arrangers */}
+          {arrangerInfo.type === 'individual' && (
+            <IndividualKycDisplay
+              data={{
+                first_name: arrangerInfo.first_name,
+                middle_name: arrangerInfo.middle_name,
+                last_name: arrangerInfo.last_name,
+                name_suffix: arrangerInfo.name_suffix,
+                date_of_birth: arrangerInfo.date_of_birth,
+                country_of_birth: arrangerInfo.country_of_birth,
+                nationality: arrangerInfo.nationality,
+                email: arrangerInfo.email,
+                phone_mobile: arrangerInfo.phone_mobile,
+                phone_office: arrangerInfo.phone_office,
+                residential_street: arrangerInfo.residential_street,
+                residential_line_2: arrangerInfo.residential_line_2,
+                residential_city: arrangerInfo.residential_city,
+                residential_state: arrangerInfo.residential_state,
+                residential_postal_code: arrangerInfo.residential_postal_code,
+                residential_country: arrangerInfo.residential_country,
+                is_us_citizen: arrangerInfo.is_us_citizen,
+                is_us_taxpayer: arrangerInfo.is_us_taxpayer,
+                us_taxpayer_id: arrangerInfo.us_taxpayer_id,
+                country_of_tax_residency: arrangerInfo.country_of_tax_residency,
+                id_type: arrangerInfo.id_type,
+                id_number: arrangerInfo.id_number,
+                id_issue_date: arrangerInfo.id_issue_date,
+                id_expiry_date: arrangerInfo.id_expiry_date,
+                id_issuing_country: arrangerInfo.id_issuing_country,
+              }}
+              onEdit={() => setShowKycDialog(true)}
+              title="Personal KYC Information"
+              className="mt-6"
+            />
+          )}
         </TabsContent>
 
         {/* Members Tab */}
@@ -943,6 +1012,44 @@ export function ArrangerProfileClient({
           <NoticeContactsTab apiEndpoint="/api/arrangers/me/notice-contacts" />
         </TabsContent>
       </Tabs>
+
+      {/* Individual KYC Edit Dialog (for individual arrangers) */}
+      {arrangerInfo.type === 'individual' && (
+        <EntityKYCEditDialog
+          open={showKycDialog}
+          onOpenChange={setShowKycDialog}
+          entityType="arranger"
+          entityId={arrangerInfo.id}
+          entityName={arrangerInfo.legal_name}
+          initialData={{
+            first_name: arrangerInfo.first_name ?? undefined,
+            middle_name: arrangerInfo.middle_name ?? undefined,
+            last_name: arrangerInfo.last_name ?? undefined,
+            name_suffix: arrangerInfo.name_suffix ?? undefined,
+            date_of_birth: arrangerInfo.date_of_birth ?? undefined,
+            nationality: arrangerInfo.nationality ?? undefined,
+            country_of_birth: arrangerInfo.country_of_birth ?? undefined,
+            phone_mobile: arrangerInfo.phone_mobile ?? undefined,
+            phone_office: arrangerInfo.phone_office ?? undefined,
+            is_us_citizen: arrangerInfo.is_us_citizen === true,
+            is_us_taxpayer: arrangerInfo.is_us_taxpayer === true,
+            us_taxpayer_id: arrangerInfo.us_taxpayer_id ?? undefined,
+            country_of_tax_residency: arrangerInfo.country_of_tax_residency ?? undefined,
+            id_type: arrangerInfo.id_type ?? undefined,
+            id_number: arrangerInfo.id_number ?? undefined,
+            id_issue_date: arrangerInfo.id_issue_date ?? undefined,
+            id_expiry_date: arrangerInfo.id_expiry_date ?? undefined,
+            id_issuing_country: arrangerInfo.id_issuing_country ?? undefined,
+            residential_street: arrangerInfo.residential_street ?? undefined,
+            residential_city: arrangerInfo.residential_city ?? undefined,
+            residential_state: arrangerInfo.residential_state ?? undefined,
+            residential_postal_code: arrangerInfo.residential_postal_code ?? undefined,
+            residential_country: arrangerInfo.residential_country ?? undefined,
+          }}
+          apiEndpoint="/api/arrangers/me/profile"
+          onSuccess={() => window.location.reload()}
+        />
+      )}
     </div>
   )
 }

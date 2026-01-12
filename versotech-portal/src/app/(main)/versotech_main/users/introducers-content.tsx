@@ -194,7 +194,7 @@ export default function IntroducersContent() {
               id: entry.id,
               introducerId: entry.introducer_id ?? undefined,
               introducerName: entry.introducer?.legal_name ?? 'Unknown Introducer',
-              prospectEmail: entry.prospect_email ?? 'Unknown prospect',
+              prospectEmail: entry.prospect_email ?? 'VERSO BI',
               dealId: entry.deal_id ?? undefined,
               dealName: entry.deal?.name ?? 'Untitled deal',
               status: entry.status ?? 'invited',

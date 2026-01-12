@@ -354,36 +354,9 @@ export default function OpportunityDetailPage() {
     }
   }
 
-  const handleSignNda = async () => {
-    try {
-      setActionLoading(true)
-      const response = await fetch(`/api/investors/me/opportunities/${dealId}/nda`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
-      })
-
-      if (!response.ok) {
-        const err = await response.json()
-        throw new Error(err.error || 'Failed to initiate NDA signing')
-      }
-
-      const result = await response.json()
-
-      // Refresh data to update status
-      const refreshResponse = await fetch(`/api/investors/me/opportunities/${dealId}`)
-      const data = await refreshResponse.json()
-      setOpportunity(data.opportunity)
-      setShowNdaDialog(false)
-
-      // Show success message
-      alert(`NDA signing initiated! ${result.signature_requests} signatory(ies) will receive signing requests.`)
-    } catch (err: any) {
-      console.error('Error initiating NDA:', err)
-      alert(err.message || 'Failed to initiate NDA signing')
-    } finally {
-      setActionLoading(false)
-    }
-  }
+  // NDA signing is now handled automatically after CEO approval
+  // This function has been removed - NDA documents are generated and sent
+  // via the approval workflow, not triggered directly by investors
 
   const handleSubscribe = async () => {
     if (!subscribeAmount || !opportunity) return
@@ -647,11 +620,11 @@ export default function OpportunityDetailPage() {
             </div>
           )}
 
-          {/* Show NDA button only when in NDA stage */}
+          {/* Show NDA info when in NDA stage - signing is triggered after CEO approval */}
           {canSignNda && (
             <Button variant="outline" onClick={() => setShowNdaDialog(true)}>
               <FileSignature className="w-4 h-4 mr-2" />
-              Sign NDA
+              About NDA Signing
             </Button>
           )}
 
@@ -1207,37 +1180,44 @@ export default function OpportunityDetailPage() {
         </DialogContent>
       </Dialog>
 
-      {/* NDA Dialog */}
+      {/* NDA Info Dialog - NDA is sent automatically after CEO approval */}
       <Dialog open={showNdaDialog} onOpenChange={setShowNdaDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Sign Non-Disclosure Agreement</DialogTitle>
+            <DialogTitle>NDA Signing Process</DialogTitle>
             <DialogDescription>
-              Review and sign the NDA to access the data room documents. All authorized signatories
-              ({opportunity.signatories.length}) will need to sign.
+              The NDA will be sent to you automatically once your interest is approved.
             </DialogDescription>
           </DialogHeader>
-          <div className="py-4">
+          <div className="py-4 space-y-4">
+            <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+              <div className="flex items-start gap-3">
+                <CheckCircle2 className="w-5 h-5 text-blue-600 mt-0.5" />
+                <div className="text-sm">
+                  <p className="font-medium text-blue-800 dark:text-blue-200">Automatic NDA Generation</p>
+                  <p className="text-blue-700 dark:text-blue-300 mt-1">
+                    Once your interest is approved by the VERSO team, each authorized signatory
+                    ({opportunity.signatories.length}) will receive their own NDA document to sign.
+                  </p>
+                </div>
+              </div>
+            </div>
             <div className="p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
               <div className="flex items-start gap-3">
                 <AlertCircle className="w-5 h-5 text-amber-600 mt-0.5" />
                 <div className="text-sm">
                   <p className="font-medium text-amber-800 dark:text-amber-200">Multi-Signatory Required</p>
                   <p className="text-amber-700 dark:text-amber-300 mt-1">
-                    Each authorized signatory will receive a separate NDA to sign. Data room access
-                    will be granted once all signatories have completed signing.
+                    Data room access will be granted only after <strong>all signatories</strong> have
+                    completed signing their individual NDAs.
                   </p>
                 </div>
               </div>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowNdaDialog(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleSignNda}>
-              <FileSignature className="w-4 h-4 mr-2" />
-              Proceed to Sign
+            <Button onClick={() => setShowNdaDialog(false)}>
+              Got it
             </Button>
           </DialogFooter>
         </DialogContent>

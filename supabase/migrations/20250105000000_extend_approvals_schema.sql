@@ -118,6 +118,7 @@ BEGIN
   RETURN NEW;
 END;
 $$;
+DROP TRIGGER IF EXISTS approvals_set_sla ON approvals;
 CREATE TRIGGER approvals_set_sla
   BEFORE INSERT ON approvals
   FOR EACH ROW
@@ -187,6 +188,7 @@ BEGIN
   RETURN NEW;
 END;
 $$;
+DROP TRIGGER IF EXISTS approvals_auto_assign ON approvals;
 CREATE TRIGGER approvals_auto_assign
   BEFORE INSERT ON approvals
   FOR EACH ROW
@@ -280,6 +282,7 @@ BEGIN
   RETURN NEW;
 END;
 $$;
+DROP TRIGGER IF EXISTS approvals_log_changes ON approvals;
 CREATE TRIGGER approvals_log_changes
   AFTER INSERT OR UPDATE ON approvals
   FOR EACH ROW

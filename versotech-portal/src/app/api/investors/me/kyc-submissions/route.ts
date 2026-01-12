@@ -105,6 +105,39 @@ export async function GET(request: NextRequest) {
         .order('full_name')
 
       investorMembers = members || []
+
+      // Also include the current user if they're a signatory/admin but not already in investor_members
+      const { data: currentUserLink } = await supabase
+        .from('investor_users')
+        .select('role, can_sign, is_primary')
+        .eq('user_id', user.id)
+        .eq('investor_id', investorIds[0])
+        .single()
+
+      if (currentUserLink && (currentUserLink.can_sign || currentUserLink.role === 'admin' || currentUserLink.is_primary)) {
+        // Get current user's profile info
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('display_name, email')
+          .eq('id', user.id)
+          .single()
+
+        const userName = profile?.display_name || profile?.email || 'Current User'
+
+        // Check if user is not already in the members list (by matching name/email)
+        const alreadyInList = investorMembers.some(m =>
+          m.full_name?.toLowerCase() === userName.toLowerCase()
+        )
+
+        if (!alreadyInList) {
+          // Add current user as a pseudo-member with special ID prefix
+          investorMembers.unshift({
+            id: `self_${user.id}`,
+            full_name: `${userName} (You)`,
+            role: currentUserLink.role === 'admin' ? 'authorized_signatory' : 'signatory'
+          })
+        }
+      }
     }
 
     // Get suggested documents based on investor type - use SIMPLIFIED lists

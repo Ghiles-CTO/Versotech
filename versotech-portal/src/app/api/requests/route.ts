@@ -127,18 +127,11 @@ export async function POST(request: Request) {
       )
     }
 
-    // Get user profile and investor links
-    const [{ data: profile }, { data: investorLinks }] = await Promise.all([
-      supabase.from('profiles').select('role').eq('id', user.id).single(),
-      supabase.from('investor_users').select('investor_id').eq('user_id', user.id)
-    ])
-
-    if (!profile || profile.role !== 'investor') {
-      return NextResponse.json(
-        { error: 'Investor access required' },
-        { status: 403 }
-      )
-    }
+    // Get investor links - this is the real authorization check
+    const { data: investorLinks } = await supabase
+      .from('investor_users')
+      .select('investor_id')
+      .eq('user_id', user.id)
 
     if (!investorLinks || investorLinks.length === 0) {
       return NextResponse.json(

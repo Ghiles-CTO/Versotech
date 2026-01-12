@@ -94,10 +94,11 @@ USING (
   )
   OR EXISTS (
     SELECT 1 FROM profiles p
-    WHERE p.id = auth.uid() AND p.role LIKE 'staff_%'
+    WHERE p.id = auth.uid() AND p.role::text LIKE 'staff_%'
   )
 );
 -- Conversations: create if user is investor or staff
+DROP POLICY IF EXISTS conversations_insert ON conversations;
 CREATE POLICY conversations_insert ON conversations FOR INSERT
 WITH CHECK (
   auth.uid() = created_by
@@ -120,17 +121,18 @@ USING (
   )
   OR EXISTS (
     SELECT 1 FROM profiles p
-    WHERE p.id = auth.uid() AND p.role LIKE 'staff_%'
+    WHERE p.id = auth.uid() AND p.role::text LIKE 'staff_%'
   )
 );
 -- Participants: insert only for own conversations or staff
+DROP POLICY IF EXISTS conversation_participants_insert ON conversation_participants;
 CREATE POLICY conversation_participants_insert ON conversation_participants FOR INSERT
 WITH CHECK (
   EXISTS (
     SELECT 1 FROM conversations c
     WHERE c.id = conversation_id
       AND (c.created_by = auth.uid() OR EXISTS (
-        SELECT 1 FROM profiles p WHERE p.id = auth.uid() AND p.role LIKE 'staff_%'
+        SELECT 1 FROM profiles p WHERE p.id = auth.uid() AND p.role::text LIKE 'staff_%'
       ))
   )
 );
@@ -145,10 +147,11 @@ USING (
   )
   OR EXISTS (
     SELECT 1 FROM profiles p
-    WHERE p.id = auth.uid() AND p.role LIKE 'staff_%'
+    WHERE p.id = auth.uid() AND p.role::text LIKE 'staff_%'
   )
 );
 -- Messages: insert only if participant
+DROP POLICY IF EXISTS messages_insert ON messages;
 CREATE POLICY messages_insert ON messages FOR INSERT
 WITH CHECK (
   EXISTS (
@@ -159,19 +162,22 @@ WITH CHECK (
   AND sender_id = auth.uid()
 );
 -- Messages: update only own messages (for editing)
+DROP POLICY IF EXISTS messages_update ON messages;
 CREATE POLICY messages_update ON messages FOR UPDATE
 USING (sender_id = auth.uid())
 WITH CHECK (sender_id = auth.uid());
 -- Message reads: users can read their own read receipts
+DROP POLICY IF EXISTS message_reads_read ON message_reads;
 CREATE POLICY message_reads_read ON message_reads FOR SELECT
 USING (
   user_id = auth.uid()
   OR EXISTS (
     SELECT 1 FROM profiles p
-    WHERE p.id = auth.uid() AND p.role LIKE 'staff_%'
+    WHERE p.id = auth.uid() AND p.role::text LIKE 'staff_%'
   )
 );
 -- Message reads: users can insert their own read receipts
+DROP POLICY IF EXISTS message_reads_insert ON message_reads;
 CREATE POLICY message_reads_insert ON message_reads FOR INSERT
 WITH CHECK (user_id = auth.uid());
 -- ============================================================================
@@ -194,6 +200,7 @@ CREATE TRIGGER update_conversation_last_message_trigger
   FOR EACH ROW
   EXECUTE FUNCTION update_conversation_last_message();
 -- Update updated_at timestamp on conversations
+DROP TRIGGER IF EXISTS update_conversations_updated_at ON conversations;
 CREATE TRIGGER update_conversations_updated_at BEFORE UPDATE ON conversations
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 -- ============================================================================

@@ -198,7 +198,7 @@ export default async function IntroducersPage() {
         id: record.id,
         introducerId: record.introducer_id ?? undefined,
         introducerName: record.introducer?.legal_name ?? 'Unknown Introducer',
-        prospectEmail: record.prospect_email ?? 'Unknown prospect',
+        prospectEmail: record.prospect_email ?? 'VERSO BI',
         dealId: record.deal_id ?? undefined,
         dealName: record.deal?.name ?? 'Untitled deal',
         status: record.status ?? 'invited',

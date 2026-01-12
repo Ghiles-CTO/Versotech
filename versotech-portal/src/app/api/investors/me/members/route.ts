@@ -267,15 +267,22 @@ export async function POST(request: Request) {
         // Dates & metadata
         effective_from: memberData.effective_from || new Date().toISOString().split('T')[0],
         created_by: user.id,
-        kyc_status: 'not_started',
+        kyc_status: 'pending',
       })
       .select()
       .single()
 
     if (insertError) {
       console.error('Error creating member:', insertError)
+      console.error('Insert data was:', {
+        investor_id: investorId,
+        full_name: fullName,
+        role: dbRole,
+        first_name: memberData.first_name,
+        last_name: memberData.last_name,
+      })
       return NextResponse.json(
-        { error: 'Failed to create member' },
+        { error: 'Failed to create member', details: insertError.message },
         { status: 500 }
       )
     }

@@ -321,7 +321,7 @@ export async function createSignatureRequest(
         const { error: taskError } = await supabase.from('tasks').insert({
           owner_user_id: staffProfile.id,
           kind: 'countersignature',
-          category: 'compliance',
+          category: 'signatures',
           title: `Countersign ${document_type.toUpperCase()} for ${signer_name}`,
           description: `Review and countersign the ${document_type} document`,
           status: 'pending',
@@ -380,7 +380,7 @@ export async function createSignatureRequest(
           : 'other'
 
         const category = document_type === 'nda'
-          ? 'compliance'
+          ? 'signatures'
           : 'investment_setup'
 
         // Include signatory name in title for multi-signatory entities
@@ -483,7 +483,7 @@ export async function createSignatureRequest(
           const { error: followUpError } = await supabase.from('tasks').insert({
             owner_user_id: adminUserId,
             kind: 'other',
-            category: 'compliance',
+            category: 'signatures',
             title: `Manual Follow-up: Send ${document_type.toUpperCase()} Signature Link`,
             description: `Investor ${signer_name} does not have a user account. Manually send them the signature link.`,
             status: 'pending',

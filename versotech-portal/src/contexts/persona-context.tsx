@@ -1,6 +1,7 @@
 'use client'
 
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
 /**
@@ -59,6 +60,7 @@ interface PersonaProviderProps {
 }
 
 export function PersonaProvider({ children, initialPersonas = [] }: PersonaProviderProps) {
+  const router = useRouter()
   const [personas, setPersonas] = useState<Persona[]>(initialPersonas)
   const [activePersona, setActivePersona] = useState<Persona | null>(null)
   const [isLoading, setIsLoading] = useState(!initialPersonas.length)
@@ -146,14 +148,16 @@ export function PersonaProvider({ children, initialPersonas = [] }: PersonaProvi
 
   // Switch active persona
   const switchPersona = useCallback((persona: Persona) => {
+    // Update React state immediately for instant UI feedback
     setActivePersona(persona)
+    // Persist to localStorage for future sessions
     localStorage.setItem(ACTIVE_PERSONA_KEY, persona.entity_id)
     // Set cookie for server-side persona detection
     setPersonaCookie(persona.persona_type)
-    // Force page reload to update server-rendered content
-    // This ensures the dashboard shows the correct persona view
-    window.location.reload()
-  }, [])
+    // Use client-side navigation - MUCH faster than window.location.href
+    // router.push preserves React context and only re-renders necessary components
+    router.push('/versotech_main/dashboard')
+  }, [router])
 
   // Load personas on mount if not provided
   useEffect(() => {

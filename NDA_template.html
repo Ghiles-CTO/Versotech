@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>VERSO Capital - NDA-NDNC Agreement</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 2cm 2cm 3cm 2cm;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      font-size: 10pt;
+      line-height: 1.3;
+      color: #000;
+    }
+
+    .zoho-header {
+      font-size: 8pt;
+      color: #666;
+      margin-bottom: 0.8cm;
+    }
+
+    .verso-logo {
+      text-align: center;
+      font-size: 22pt;
+      font-weight: bold;
+      letter-spacing: 10px;
+      margin: 1cm 0 0.4cm 0;
+    }
+
+    .main-title {
+      text-align: center;
+      margin: 0.4cm 0 0.8cm 0;
+      line-height: 1.4;
+    }
+
+    .title-line {
+      font-size: 13pt;
+      font-weight: bold;
+      color: #002060;
+    }
+
+    .title-subline {
+      font-size: 13pt;
+      font-weight: bold;
+      color: #0d0d0d;
+    }
+
+    table.section-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 0.4cm 0;
+      border: 1px solid #bfbfbf;
+      page-break-inside: avoid;
+    }
+
+    table.section-table td {
+      padding: 6px 10px;
+      border: 1px solid #bfbfbf;
+      vertical-align: top;
+      font-size: 9.5pt;
+    }
+
+    .section-header {
+      background-color: #b4c6e7;
+      font-weight: bold;
+      color: #002060;
+    }
+
+    .section-subheader {
+      background-color: #f2f2f2;
+      font-weight: normal;
+    }
+
+    .section-content {
+      background-color: #fff;
+    }
+
+    table.party-details {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 6px 0 0 0;
+    }
+
+    table.party-details td {
+      padding: 6px 10px;
+      border: 1px solid #bfbfbf;
+      font-size: 9.5pt;
+    }
+
+    table.party-details .label-cell {
+      width: 32%;
+      font-weight: bold;
+      background-color: #f2f2f2;
+    }
+
+    p {
+      margin: 0.25cm 0;
+      text-align: justify;
+      line-height: 1.35;
+    }
+
+    p.intro {
+      margin-top: 0.5cm;
+      margin-bottom: 0.4cm;
+    }
+
+    p.clause {
+      margin: 0.3cm 0;
+      text-align: justify;
+    }
+
+    p.sub-clause {
+      margin: 0.2cm 0 0.2cm 1cm;
+      text-align: justify;
+    }
+
+    .dataroom-email {
+      text-align: center;
+      border-bottom: 1.5px solid #000;
+      padding: 6px 0;
+      margin: 10px 15%;
+      font-size: 10pt;
+    }
+
+    .divider {
+      text-align: center;
+      font-size: 14pt;
+      letter-spacing: 6px;
+      margin: 1.2cm 0 0.8cm 0;
+    }
+
+    table.signature-table {
+      width: 100%;
+      border-collapse: collapse;
+      border: 1px solid #bfbfbf;
+      margin-top: 0.8cm;
+      page-break-inside: avoid;
+    }
+
+    table.signature-table td {
+      padding: 10px;
+      border: 1px solid #bfbfbf;
+      text-align: center;
+      vertical-align: middle;
+    }
+
+    table.signature-table .sig-header {
+      background-color: #b4c6e7;
+      font-weight: bold;
+      color: #002060;
+    }
+
+    table.signature-table .sig-date {
+      text-align: left;
+      padding: 8px 10px;
+    }
+
+    table.signature-table .sig-space {
+      height: 180px;
+      vertical-align: bottom;
+    }
+
+    .page-footer {
+      text-align: center;
+      margin-top: 1.2cm;
+      margin-bottom: 0.4cm;
+    }
+
+    .page-number {
+      font-weight: bold;
+      font-size: 10pt;
+      margin-bottom: 3px;
+    }
+
+    .verso-footer {
+      font-weight: bold;
+      font-size: 11pt;
+      letter-spacing: 3px;
+    }
+
+    .page-break {
+      page-break-after: always;
+    }
+
+    @media print {
+      table.section-table,
+      table.signature-table {
+        page-break-inside: avoid;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="zoho-header">Zoho Sign Document ID: {{ $json.zoho_sign_document_id }}</div>
+
+<div class="verso-logo">VERSO</div>
+
+<div class="main-title">
+  <div class="title-line">Non-Disclosure &amp; Non-Circumvention Agreement</div>
+  <div class="title-subline">VERSO CAPITAL {{ $json.series_entity_code }}</div>
+</div>
+
+<table class="section-table">
+  <tr>
+    <td class="section-header">Project ("Project")</td>
+    <td class="section-header"></td>
+  </tr>
+  <tr>
+    <td class="section-subheader" colspan="2">This NDA-NDNC Agreement applies to the following Project:</td>
+  </tr>
+  <tr>
+    <td class="section-content" colspan="2">
+      VERSO Capital 2 SCSP {{ $json.vehicle_name }} Series {{ $json.series_code }} {{ $json.series_numeric }} ("{{ $json.series_entity_code }}")
+    </td>
+  </tr>
+</table>
+
+<table class="section-table">
+  <tr>
+    <td class="section-header">Investment ("Investment")</td>
+    <td class="section-header"></td>
+  </tr>
+  <tr>
+    <td class="section-subheader" colspan="2">This NDA-NDNC Agreement covers the following Investment:</td>
+  </tr>
+  <tr>
+    <td class="section-content" colspan="2">{{ $json.investment_name }}</td>
+  </tr>
+</table>
+
+<table class="section-table">
+  <tr>
+    <td class="section-header">Parties ("Parties")</td>
+  </tr>
+  <tr>
+    <td class="section-subheader">PARTY A ("Receiving Party")</td>
+  </tr>
+  <tr>
+    <td class="section-content">
+      <table class="party-details">
+        <tr>
+          <td class="label-cell">Name:</td>
+          <td>{{ $json.party_a_name }}</td>
+        </tr>
+        <tr>
+          <td class="label-cell">Registered Address:</td>
+          <td>{{ $json.party_a_registered_address }}</td>
+        </tr>
+        <tr>
+          <td class="label-cell">City / Country:</td>
+          <td>{{ $json.party_a_city_country }}</td>
+        </tr>
+        <tr>
+          <td class="label-cell">Represented by:</td>
+          <td>{{ $json.party_a_representative_name }}, {{ $json.party_a_representative_title }}</td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+  <tr>
+    <td class="section-subheader">PARTY B ("Disclosing Party")</td>
+  </tr>
+  <tr>
+    <td class="section-content">
+      <table class="party-details">
+        <tr>
+          <td class="label-cell">Name:</td>
+          <td>{{ $json.party_b_name }}</td>
+        </tr>
+        <tr>
+          <td class="label-cell">Registered Address:</td>
+          <td>{{ $json.party_b_registered_address }}</td>
+        </tr>
+        <tr>
+          <td class="label-cell">City / Country:</td>
+          <td>{{ $json.party_b_city_country }}</td>
+        </tr>
+        <tr>
+          <td class="label-cell">Represented by:</td>
+          <td>{{ $json.vehicle_managing_partner_name }}, {{ $json.vehicle_managing_partner_title }}</td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+
+<p class="intro">This NDA-NDNC Agreement ("NDA-NDNC" or "Agreement") is by and between the Parties, herein identified, in regard to all information related the Project ("Project") and its investment ("Investment") here mentioned. Party A is the Receiving Party ("Receiving Party") and Party B is the Disclosing Party ("Disclosing Party").</p>
+
+<div class="page-footer">
+  <div class="page-number">1</div>
+  <div class="verso-footer">VERSO</div>
+</div>
+
+<div class="page-break"></div>
+
+<div class="zoho-header">Zoho Sign Document ID: {{ $json.zoho_sign_document_id }}</div>
+
+<p>Whereas the Parties indicated above desire to explore a possible exchange of certain Information (as defined below) related to business operations, research, development, marketing and financial matters, the Parties agree as follows:</p>
+
+<p class="clause"><strong>1.</strong> "Information" as used herein shall mean all information identified by the Disclosing Party as confidential or proprietary, which information is not in the receiving Party's possession without covenant of secrecy prior to disclosure or which is not in the public domain ("Information"). Such Information shall specifically include, among other things, financial statements, marketing data, lists of present and prospective customers and partners, computer programs and documentation, and proprietary analysis.</p>
+
+<p class="clause"><strong>2.</strong> The Parties acknowledge that the Information considered as part of this agreement and related documentation constitutes confidential or proprietary Information that is the property of the Disclosing Party ("Documentation"). Each Party shall comply with all relevant securities laws and exercise all precautions commensurate with the highest reasonable standards of industrial security for the protection of the Information to ensure that such Information is kept secret.</p>
+
+<p class="clause"><strong>3.</strong> In consideration of the disclosure of the Information by the Disclosing Party, the Receiving Party agrees to maintain the confidentiality of the Information disclosed. Notwithstanding the foregoing, confidentiality shall not be required for Information that is: (a) already known to the Receiving Party as of the date of disclosure hereunder; (b) already in possession of the public or becomes available to the public other than through the act or omission of the Receiving Party in breach hereof; (c) required to be disclosed under applicable law or by a governmental order, decree, regulation, subpoena or rule (provided that the Receiving Party shall give prompt written notice to the Disclosing Party in the event such disclosure is required); (d) is acquired independently from a third party that, to the knowledge of the Receiving Party, has the right to disseminate the Information without the requirement of confidentiality at the time it is acquired by the Receiving Party; or (e) independently developed by the Receiving Party without reliance on the Information disclosed by the Disclosing Party.</p>
+
+<p class="clause"><strong>4.</strong> Neither Party will make any solicitation or offer of employment to employees of the other Party.</p>
+
+<p class="clause"><strong>5.</strong> Both Parties agree to restrict the Information to only those employees, administrators, affiliates or agents who have a "need-to-know", and to take appropriate action by instruction, agreement or notice to those who receive said Information of its confidential or proprietary nature.</p>
+
+<p class="clause"><strong>6.</strong> All Parties will return or destroy all said Information immediately upon demand. Notwithstanding the foregoing, the receiving Party may retain copies of the Information to the extent necessary to comply with the requirements of any law or regulation or as may be consistent with the receiving Party's policies and procedures governing the retention of documents.</p>
+
+<p class="clause"><strong>7.</strong> This Agreement shall terminate 24 months after the date of the signing of the present NDA-NDNC Agreement ("Termination Period").</p>
+
+<p class="clause"><strong>8.</strong> At any time prior to the expiration of this Agreement, it is expressly agreed that the identities of any individual or entity and any other third parties (including, without limitation, transacting parties, investors, asset managers, financial advisors, suppliers, customers, financial sources, manufacturers and consultants) discussed and made available by the Disclosing Party in respect of the Purpose and any related business opportunity shall constitute Confidential Information and the Recipient or any Group company or associated entity or individual shall not (without the prior written consent of, or having entered into a commission agreement with, the Disclosing Party):</p>
+
+<p class="sub-clause">a) directly or indirectly initiate, solicit, negotiate, contract or enter into any business transactions, agreements or undertakings with any such third party identified or introduced by the Disclosing Party; or</p>
+
+<p class="sub-clause">b) seek to by-pass, compete, avoid or circumvent the Disclosing Party from any business opportunity that relates to the Purpose by utilising any Confidential Information or by otherwise exploiting or deriving any benefit from the Confidential Information.</p>
+
+<p class="clause"><strong>9.</strong> The Recipient covenants that any financial gain made by it, or any associated party, from a breach of clause 8 including 8a and 8b shall be held on trust for the benefit of the Disclosing Party and then be transferred to a nominated account of the Disclosing Party, until which time such outstanding amount shall incur interest at the net rate of 5% per annum. Such interest shall accrue on a daily basis from the due date until actual payment of the overdue amount, whether before or after judgment and the Recipient shall pay the interest together with the overdue amount.</p>
+
+<p class="clause"><strong>10.</strong> Clause 9 in this Agreement does not affect the Disclosing Party's ability to also sue for damages should the covenants in clause 8 including 8a and 8b be violated in any way. Such damages may equal or exceed the economic lost resulting from the circumvention by the Receiving Party or any third-party used to that effect by the Disclosing Party. The economic lost will be considered on the basis of the calculation of net earnings provided by the Disclosing Party, the total legal cost and charges that will be required for the Disclosing Party to claim such damages and any additional calculation of damages including but not limited to reputational damage.</p>
+
+<p class="clause"><strong>11.</strong> This Agreement contains the entire agreement between the parties concerning the confidentiality of the Information and supersedes all prior written and oral communications and agreements relating to the subject matter hereof.</p>
+
+<p class="clause"><strong>12.</strong> This Agreement may be executed in counterparts, each of which when executed and delivered shall be an original, but all of which shall constitute one and the same instrument.</p>
+
+<p class="clause"><strong>13.</strong> Title in and to Information disclosed pursuant to this Agreement remains with the Disclosing Party.</p>
+
+<p class="clause"><strong>14.</strong> The Disclosing Party may request the Receiving Party to sign a specific Non-Circumvention Agreement directly issued by the Company to access advanced Due Diligence documentation.</p>
+
+<p class="clause"><strong>15.</strong> Secured Dataroom ("Dataroom") access will be provided by the Disclosing Party to the Receiving Party. The Receiving Party indicates the following information to gain such secured access:</p>
+
+<table class="section-table">
+  <tr>
+    <td class="section-header">Dataroom Access ("Dataroom")</td>
+    <td class="section-header"></td>
+  </tr>
+  <tr>
+    <td class="section-subheader" colspan="2">The Disclosing Party will access the Secured Dataroom with the email below:</td>
+  </tr>
+  <tr>
+    <td class="section-content" colspan="2">
+      <div class="dataroom-email">{{ $json.dataroom_email }}</div>
+    </td>
+  </tr>
+</table>
+
+<div class="page-footer">
+  <div class="page-number">2</div>
+  <div class="verso-footer">VERSO</div>
+</div>
+
+<div class="page-break"></div>
+
+<div class="zoho-header">Zoho Sign Document ID: {{ $json.zoho_sign_document_id }}</div>
+
+<div class="divider">*****</div>
+
+<p style="text-align: center; margin: 0.8cm 0;">Confirmed and irrevocably accepted by the Receiving and Disclosing Parties:</p>
+
+<table class="signature-table">
+  <tr>
+    <td colspan="2" class="sig-header">Execution</td>
+  </tr>
+  <tr>
+    <td colspan="2" class="sig-date"><strong>DATE:</strong>&nbsp;&nbsp;&nbsp;{{ $json.execution_date }}</td>
+  </tr>
+  <tr>
+    <td style="width: 50%;"><strong>PARTY A</strong></td>
+    <td style="width: 50%;"><strong>PARTY B</strong></td>
+  </tr>
+  <tr class="sig-space">
+    <td>&nbsp;</td>
+    <td>&nbsp;</td>
+  </tr>
+  <tr>
+    <td>Executed by Authorized Signatory.</td>
+    <td>Executed by Authorized Signatory.</td>
+  </tr>
+</table>
+
+<div class="page-footer">
+  <div class="page-number">3</div>
+  <div class="verso-footer">VERSO</div>
+</div>
+
+</body>
+</html>

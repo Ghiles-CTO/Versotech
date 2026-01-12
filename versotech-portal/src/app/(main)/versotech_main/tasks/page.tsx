@@ -141,12 +141,20 @@ export default async function TasksPage() {
     !t.category && !t.related_entity_id
   )
 
-  // KYC and compliance tasks not tied to a vehicle (includes signature tasks, subscriptions, and investment setup)
+  // KYC, compliance, and investment setup tasks not tied to a vehicle (NOT signatures)
   const generalComplianceTasks = allTasks.filter(t =>
     (t.category === 'kyc' || t.category === 'compliance' || t.category === 'investment_setup') && (
       !t.related_entity_id ||
       t.related_entity_type === 'signature_request' ||
       t.related_entity_type === 'subscription'
+    )
+  )
+
+  // Signature tasks - separate section
+  const signatureTasks = allTasks.filter(t =>
+    t.category === 'signatures' && (
+      !t.related_entity_id ||
+      t.related_entity_type === 'signature_request'
     )
   )
 
@@ -159,6 +167,7 @@ export default async function TasksPage() {
         onboardingTasks={onboardingTasks}
         staffCreatedTasks={staffCreatedTasks}
         generalComplianceTasks={generalComplianceTasks}
+        signatureTasks={signatureTasks}
       />
     </div>
   )

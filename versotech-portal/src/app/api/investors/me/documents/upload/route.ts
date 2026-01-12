@@ -26,21 +26,14 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get user profile
+    // Get user profile for display_name in watermark
     const { data: profile } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', user.id)
       .single()
 
-    if (!profile || profile.role !== 'investor') {
-      return NextResponse.json(
-        { error: 'Investor access required' },
-        { status: 403 }
-      )
-    }
-
-    // Get investor ID for this user
+    // Get investor ID for this user - this is the real authorization check
     const { data: investorUser } = await supabase
       .from('investor_users')
       .select('investor_id')
@@ -104,7 +97,58 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate investor member belongs to this investor if provided
-    if (investorMemberId) {
+    // Handle special "self_" prefix for current user uploading their own KYC
+    let resolvedInvestorMemberId = investorMemberId
+    if (investorMemberId?.startsWith('self_')) {
+      // User is uploading for themselves - create or find their investor_member record
+      const selfUserId = investorMemberId.replace('self_', '')
+
+      // Get user's profile info
+      const { data: selfProfile } = await serviceSupabase
+        .from('profiles')
+        .select('display_name, email')
+        .eq('id', selfUserId)
+        .single()
+
+      const userName = selfProfile?.display_name || selfProfile?.email || 'Portal User'
+
+      // Check if investor_member already exists for this user (by email match)
+      const { data: existingMember } = await serviceSupabase
+        .from('investor_members')
+        .select('id')
+        .eq('investor_id', investorId)
+        .eq('email', selfProfile?.email)
+        .eq('is_active', true)
+        .maybeSingle()
+
+      if (existingMember) {
+        resolvedInvestorMemberId = existingMember.id
+      } else {
+        // Create new investor_member for this user
+        const { data: newMember, error: createError } = await serviceSupabase
+          .from('investor_members')
+          .insert({
+            investor_id: investorId,
+            full_name: userName,
+            email: selfProfile?.email,
+            role: 'authorized_signatory',
+            kyc_status: 'pending',
+            is_signatory: true,
+            created_by: user.id
+          })
+          .select('id')
+          .single()
+
+        if (createError || !newMember) {
+          console.error('Failed to create investor_member for self:', createError)
+          return NextResponse.json(
+            { error: 'Failed to create member record for KYC upload' },
+            { status: 500 }
+          )
+        }
+        resolvedInvestorMemberId = newMember.id
+      }
+    } else if (investorMemberId) {
       const { data: member, error: memberError } = await serviceSupabase
         .from('investor_members')
         .select('id')
@@ -238,7 +282,14 @@ export async function POST(request: NextRequest) {
       versionQuery = versionQuery.eq('investor_id', investorId).is('counterparty_entity_id', null)
     }
 
-    const { data: latestSubmission } = await versionQuery.single()
+    // Also filter by investor_member_id for member-specific documents
+    if (resolvedInvestorMemberId) {
+      versionQuery = versionQuery.eq('investor_member_id', resolvedInvestorMemberId)
+    } else {
+      versionQuery = versionQuery.is('investor_member_id', null)
+    }
+
+    const { data: latestSubmission } = await versionQuery.maybeSingle()
 
     const newVersion = latestSubmission ? latestSubmission.version + 1 : 1
     const previousSubmissionId = latestSubmission?.id || null
@@ -249,7 +300,7 @@ export async function POST(request: NextRequest) {
       .insert({
         investor_id: investorId,  // Always set - counterparty entities belong to an investor
         counterparty_entity_id: entityId || null,
-        investor_member_id: investorMemberId || null,
+        investor_member_id: resolvedInvestorMemberId || null,
         counterparty_member_id: counterpartyMemberId || null,
         document_type: documentType,
         custom_label: customLabel || null, // Store user-defined label

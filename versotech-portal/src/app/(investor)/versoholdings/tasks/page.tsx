@@ -25,7 +25,7 @@ export interface Task {
   owner_user_id: string
   owner_investor_id: string | null
   kind: string | null
-  category: 'onboarding' | 'kyc' | 'compliance' | 'investment_setup' | null
+  category: 'onboarding' | 'kyc' | 'compliance' | 'investment_setup' | 'signatures' | null
   title: string
   description: string | null
   instructions: TaskInstructions | null
@@ -102,7 +102,7 @@ export default async function TasksPage() {
 
   // Sort by priority (high → medium → low), then by due_at, then by created_at
   const priorityOrder: Record<string, number> = { high: 0, medium: 1, low: 2 }
-  const allTasks = ((tasks as Task[]) || []).sort((a, b) => {
+  const allTasks: Task[] = ((tasks as Task[]) || []).sort((a, b) => {
     const pA = priorityOrder[a.priority] ?? 99
     const pB = priorityOrder[b.priority] ?? 99
     if (pA !== pB) return pA - pB
@@ -134,12 +134,20 @@ export default async function TasksPage() {
     !t.category && !t.related_entity_id
   )
 
-  // KYC and compliance tasks not tied to a vehicle (includes signature tasks, subscriptions, and investment setup)
+  // KYC, compliance, and investment setup tasks not tied to a vehicle (NOT signatures)
   const generalComplianceTasks = allTasks.filter(t =>
     (t.category === 'kyc' || t.category === 'compliance' || t.category === 'investment_setup') && (
       !t.related_entity_id ||
       t.related_entity_type === 'signature_request' ||
       t.related_entity_type === 'subscription'
+    )
+  )
+
+  // Signature tasks - separate section
+  const signatureTasks = allTasks.filter(t =>
+    t.category === 'signatures' && (
+      !t.related_entity_id ||
+      t.related_entity_type === 'signature_request'
     )
   )
 
@@ -152,6 +160,7 @@ export default async function TasksPage() {
         onboardingTasks={onboardingTasks}
         staffCreatedTasks={staffCreatedTasks}
         generalComplianceTasks={generalComplianceTasks}
+        signatureTasks={signatureTasks}
       />
     </AppLayout>
   )

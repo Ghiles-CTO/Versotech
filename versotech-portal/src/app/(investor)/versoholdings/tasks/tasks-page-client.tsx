@@ -44,6 +44,7 @@ interface TasksPageClientProps {
   onboardingTasks: Task[]
   staffCreatedTasks: Task[]
   generalComplianceTasks: Task[]
+  signatureTasks: Task[]
 }
 
 export function TasksPageClient({
@@ -52,12 +53,14 @@ export function TasksPageClient({
   tasksByVehicle: initialTasksByVehicle,
   onboardingTasks: initialOnboardingTasks,
   staffCreatedTasks: initialStaffCreatedTasks,
-  generalComplianceTasks: initialGeneralComplianceTasks
+  generalComplianceTasks: initialGeneralComplianceTasks,
+  signatureTasks: initialSignatureTasks
 }: TasksPageClientProps) {
   const [tasksByVehicle, setTasksByVehicle] = useState(initialTasksByVehicle)
   const [onboardingTasks, setOnboardingTasks] = useState(initialOnboardingTasks)
   const [staffCreatedTasks, setStaffCreatedTasks] = useState(initialStaffCreatedTasks)
   const [generalComplianceTasks, setGeneralComplianceTasks] = useState(initialGeneralComplianceTasks)
+  const [signatureTasks, setSignatureTasks] = useState(initialSignatureTasks)
   const [selectedTask, setSelectedTask] = useState<Task | null>(null)
   const [isUpdating, setIsUpdating] = useState(false)
   const [uploading, setUploading] = useState(false)
@@ -65,7 +68,8 @@ export function TasksPageClient({
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     onboarding: true,
     staffCreated: true,
-    kyc: true
+    kyc: true,
+    signatures: true
   })
   const router = useRouter()
 
@@ -115,12 +119,20 @@ export function TasksPageClient({
         !t.category && !t.related_entity_id
       ))
 
-      // Filter KYC and compliance tasks (matching server)
+      // Filter KYC, compliance, and investment_setup tasks (NOT signatures)
       setGeneralComplianceTasks(allTasks.filter(t =>
         (t.category === 'kyc' || t.category === 'compliance' || t.category === 'investment_setup') && (
           !t.related_entity_id ||
           t.related_entity_type === 'signature_request' ||
           t.related_entity_type === 'subscription'
+        )
+      ))
+
+      // Filter signature tasks separately
+      setSignatureTasks(allTasks.filter(t =>
+        t.category === 'signatures' && (
+          !t.related_entity_id ||
+          t.related_entity_type === 'signature_request'
         )
       ))
 
@@ -513,7 +525,7 @@ export function TasksPageClient({
     )
   }
 
-  const allTasks = [...onboardingTasks, ...staffCreatedTasks, ...generalComplianceTasks, ...tasksByVehicle.flatMap(g => g.tasks)]
+  const allTasks = [...onboardingTasks, ...staffCreatedTasks, ...generalComplianceTasks, ...signatureTasks, ...tasksByVehicle.flatMap(g => g.tasks)]
   const totalPending = allTasks.filter(t => t.status !== 'completed' && t.status !== 'waived').length
   const totalCompleted = allTasks.filter(t => t.status === 'completed' || t.status === 'waived').length
   const totalInProgress = allTasks.filter(t => t.status === 'in_progress').length
@@ -619,6 +631,15 @@ export function TasksPageClient({
             icon={FileCheck}
             tasks={generalComplianceTasks}
             sectionKey="kyc"
+          />
+        )}
+
+        {signatureTasks.length > 0 && (
+          <TaskSection
+            title="Signatures"
+            icon={FileText}
+            tasks={signatureTasks}
+            sectionKey="signatures"
           />
         )}
 

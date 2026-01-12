@@ -21,7 +21,8 @@ import {
   UserPlus,
   Briefcase,
   Scale,
-  User
+  User,
+  Loader2
 } from 'lucide-react'
 import Image from 'next/image'
 
@@ -55,6 +56,7 @@ export function PersonaSwitcher({ className }: PersonaSwitcherProps) {
   const [mounted, setMounted] = useState(false)
   const { personas, activePersona, switchPersona } = usePersona()
   const [open, setOpen] = useState(false)
+  const [switching, setSwitching] = useState(false)
   const { theme } = useTheme()
 
   // Theme based on ACTIVE persona only
@@ -144,10 +146,14 @@ export function PersonaSwitcher({ className }: PersonaSwitcherProps) {
             </span>
           </div>
 
-          <ChevronDown className={cn(
-            "h-4 w-4 transition-transform",
-            open && "rotate-180"
-          )} />
+          {switching ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <ChevronDown className={cn(
+              "h-4 w-4 transition-transform",
+              open && "rotate-180"
+            )} />
+          )}
         </Button>
       </DropdownMenuTrigger>
 
@@ -176,9 +182,13 @@ export function PersonaSwitcher({ className }: PersonaSwitcherProps) {
             <DropdownMenuItem
               key={persona.entity_id}
               onClick={() => {
-                switchPersona(persona)
+                if (isActive || switching) return // Don't switch to current persona or while switching
+                setSwitching(true)
                 setOpen(false)
+                // Navigate immediately - router.push is fast client-side navigation
+                switchPersona(persona)
               }}
+              disabled={switching}
               className={cn(
                 "flex items-center gap-3 py-2 cursor-pointer",
                 isDark

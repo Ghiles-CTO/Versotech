@@ -72,7 +72,7 @@ export async function GET(request: NextRequest) {
           mime_type,
           created_at
         ),
-        reviewer:profiles(
+        reviewer:profiles!kyc_submissions_reviewed_by_fkey(
           id,
           display_name,
           email

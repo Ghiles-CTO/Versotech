@@ -655,7 +655,7 @@ export async function middleware(request: NextRequest) {
         return NextResponse.redirect(new URL('/versotech_main/dashboard', request.url))
       }
 
-      if (matchesPrefix(introducerPaths) && !hasPersona('introducer')) {
+      if (matchesPrefix(introducerPaths) && !hasAnyPersona(['introducer', 'staff', 'ceo'])) {
         return NextResponse.redirect(new URL('/versotech_main/dashboard', request.url))
       }
 
