@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="ascii"?>
+<w:fonts xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:w14="http://schemas.microsoft.com/office/word/2010/wordml" xmlns:w15="http://schemas.microsoft.com/office/word/2012/wordml" xmlns:w16cex="http://schemas.microsoft.com/office/word/2018/wordml/cex" xmlns:w16cid="http://schemas.microsoft.com/office/word/2016/wordml/cid" xmlns:w16="http://schemas.microsoft.com/office/word/2018/wordml" xmlns:w16du="http://schemas.microsoft.com/office/word/2023/wordml/word16du" xmlns:w16sdtdh="http://schemas.microsoft.com/office/word/2020/wordml/sdtdatahash" xmlns:w16sdtfl="http://schemas.microsoft.com/office/word/2024/wordml/sdtformatlock" xmlns:w16se="http://schemas.microsoft.com/office/word/2015/wordml/symex" mc:Ignorable="w14 w15 w16se w16cid w16 w16cex w16sdtdh w16sdtfl w16du">
+  <w:font w:name="Helvetica Neue">
+    <w:altName w:val="Arial"/>
+    <w:charset w:val="00"/>
+    <w:family w:val="auto"/>
+    <w:pitch w:val="default"/>
+    <w:embedRegular r:id="rId1" w:fontKey="{99524375-D365-43D3-8450-B99283530E49}"/>
+    <w:embedBold r:id="rId2" w:fontKey="{478832F2-0F22-4D87-AF60-03AD165B13EB}"/>
+  </w:font>
+  <w:font w:name="Times New Roman">
+    <w:panose1 w:val="02020603050405020304"/>
+    <w:charset w:val="00"/>
+    <w:family w:val="roman"/>
+    <w:pitch w:val="variable"/>
+    <w:sig w:usb0="E0002EFF" w:usb1="C000785B" w:usb2="00000009" w:usb3="00000000" w:csb0="000001FF" w:csb1="00000000"/>
+  </w:font>
+  <w:font w:name="HelveticaNeue">
+    <w:altName w:val="Courier New"/>
+    <w:charset w:val="00"/>
+    <w:family w:val="auto"/>
+    <w:pitch w:val="variable"/>
+    <w:sig w:usb0="00000003" w:usb1="00000000" w:usb2="00000000" w:usb3="00000000" w:csb0="00000001" w:csb1="00000000"/>
+  </w:font>
+  <w:font w:name="Georgia">
+    <w:panose1 w:val="02040502050405020303"/>
+    <w:charset w:val="00"/>
+    <w:family w:val="roman"/>
+    <w:pitch w:val="variable"/>
+    <w:sig w:usb0="00000287" w:usb1="00000000" w:usb2="00000000" w:usb3="00000000" w:csb0="0000009F" w:csb1="00000000"/>
+    <w:embedRegular r:id="rId3" w:fontKey="{05070AC5-60A6-47D1-BF09-3800A35AE6B9}"/>
+    <w:embedItalic r:id="rId4" w:fontKey="{58C50DB5-C5AA-4288-953F-B98C31254DE6}"/>
+  </w:font>
+  <w:font w:name="Arial">
+    <w:panose1 w:val="020B0604020202020204"/>
+    <w:charset w:val="00"/>
+    <w:family w:val="swiss"/>
+    <w:pitch w:val="variable"/>
+    <w:sig w:usb0="E0002EFF" w:usb1="C000785B" w:usb2="00000009" w:usb3="00000000" w:csb0="000001FF" w:csb1="00000000"/>
+  </w:font>
+  <w:font w:name="Spartan SemiBold">
+    <w:altName w:val="Calibri"/>
+    <w:charset w:val="00"/>
+    <w:family w:val="auto"/>
+    <w:pitch w:val="variable"/>
+    <w:sig w:usb0="A00000EF" w:usb1="4000205B" w:usb2="00000000" w:usb3="00000000" w:csb0="00000093" w:csb1="00000000"/>
+  </w:font>
+  <w:font w:name="Spartan ExtraBold">
+    <w:altName w:val="Calibri"/>
+    <w:charset w:val="00"/>
+    <w:family w:val="auto"/>
+    <w:pitch w:val="variable"/>
+    <w:sig w:usb0="A00000EF" w:usb1="4000205B" w:usb2="00000000" w:usb3="00000000" w:csb0="00000093" w:csb1="00000000"/>
+  </w:font>
+  <w:font w:name="Spartan">
+    <w:altName w:val="Calibri"/>
+    <w:charset w:val="00"/>
+    <w:family w:val="auto"/>
+    <w:pitch w:val="variable"/>
+    <w:sig w:usb0="A00000EF" w:usb1="4000205B" w:usb2="00000000" w:usb3="00000000" w:csb0="00000093" w:csb1="00000000"/>
+  </w:font>
+  <w:font w:name="DengXian Light">
+    <w:charset w:val="86"/>
+    <w:family w:val="auto"/>
+    <w:pitch w:val="variable"/>
+    <w:sig w:usb0="A00002BF" w:usb1="38CF7CFA" w:usb2="00000016" w:usb3="00000000" w:csb0="0004000F" w:csb1="00000000"/>
+  </w:font>
+  <w:font w:name="Calibri Light">
+    <w:panose1 w:val="020F0302020204030204"/>
+    <w:charset w:val="00"/>
+    <w:family w:val="swiss"/>
+    <w:pitch w:val="variable"/>
+    <w:sig w:usb0="E4002EFF" w:usb1="C200247B" w:usb2="00000009" w:usb3="00000000" w:csb0="000001FF" w:csb1="00000000"/>
+    <w:embedRegular r:id="rId5" w:fontKey="{E5A73874-A7BE-4B95-A1AA-7BDE9BE045EB}"/>
+  </w:font>
+  <w:font w:name="DengXian">
+    <w:altName w:val="&#31561;&#32447;"/>
+    <w:panose1 w:val="02010600030101010101"/>
+    <w:charset w:val="86"/>
+    <w:family w:val="auto"/>
+    <w:pitch w:val="variable"/>
+    <w:sig w:usb0="A00002BF" w:usb1="38CF7CFA" w:usb2="00000016" w:usb3="00000000" w:csb0="0004000F" w:csb1="00000000"/>
+  </w:font>
+  <w:font w:name="Calibri">
+    <w:panose1 w:val="020F0502020204030204"/>
+    <w:charset w:val="00"/>
+    <w:family w:val="swiss"/>
+    <w:pitch w:val="variable"/>
+    <w:sig w:usb0="E4002EFF" w:usb1="C200247B" w:usb2="00000009" w:usb3="00000000" w:csb0="000001FF" w:csb1="00000000"/>
+    <w:embedRegular r:id="rId6" w:fontKey="{394FD840-1452-4264-8567-B4B449BBE6BC}"/>
+  </w:font>
+</w:fonts>

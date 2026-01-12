@@ -1,0 +1,1428 @@
+<?xml version="1.0" encoding="ascii"?>
+<w:document xmlns:wpc="http://schemas.microsoft.com/office/word/2010/wordprocessingCanvas" xmlns:cx="http://schemas.microsoft.com/office/drawing/2014/chartex" xmlns:cx1="http://schemas.microsoft.com/office/drawing/2015/9/8/chartex" xmlns:cx2="http://schemas.microsoft.com/office/drawing/2015/10/21/chartex" xmlns:cx3="http://schemas.microsoft.com/office/drawing/2016/5/9/chartex" xmlns:cx4="http://schemas.microsoft.com/office/drawing/2016/5/10/chartex" xmlns:cx5="http://schemas.microsoft.com/office/drawing/2016/5/11/chartex" xmlns:cx6="http://schemas.microsoft.com/office/drawing/2016/5/12/chartex" xmlns:cx7="http://schemas.microsoft.com/office/drawing/2016/5/13/chartex" xmlns:cx8="http://schemas.microsoft.com/office/drawing/2016/5/14/chartex" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:aink="http://schemas.microsoft.com/office/drawing/2016/ink" xmlns:am3d="http://schemas.microsoft.com/office/drawing/2017/model3d" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:oel="http://schemas.microsoft.com/office/2019/extlst" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:m="http://schemas.openxmlformats.org/officeDocument/2006/math" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:wp14="http://schemas.microsoft.com/office/word/2010/wordprocessingDrawing" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" xmlns:w10="urn:schemas-microsoft-com:office:word" xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:w14="http://schemas.microsoft.com/office/word/2010/wordml" xmlns:w15="http://schemas.microsoft.com/office/word/2012/wordml" xmlns:w16cex="http://schemas.microsoft.com/office/word/2018/wordml/cex" xmlns:w16cid="http://schemas.microsoft.com/office/word/2016/wordml/cid" xmlns:w16="http://schemas.microsoft.com/office/word/2018/wordml" xmlns:w16du="http://schemas.microsoft.com/office/word/2023/wordml/word16du" xmlns:w16sdtdh="http://schemas.microsoft.com/office/word/2020/wordml/sdtdatahash" xmlns:w16sdtfl="http://schemas.microsoft.com/office/word/2024/wordml/sdtformatlock" xmlns:w16se="http://schemas.microsoft.com/office/word/2015/wordml/symex" xmlns:wpg="http://schemas.microsoft.com/office/word/2010/wordprocessingGroup" xmlns:wpi="http://schemas.microsoft.com/office/word/2010/wordprocessingInk" xmlns:wne="http://schemas.microsoft.com/office/word/2006/wordml" xmlns:wps="http://schemas.microsoft.com/office/word/2010/wordprocessingShape" mc:Ignorable="w14 w15 w16se w16cid w16 w16cex w16sdtdh w16sdtfl w16du wp14">
+  <w:body>
+    <w:p w14:paraId="4C87CED6" w14:textId="77777777" w:rsidR="00277C41" w:rsidRDefault="00000000">
+      <w:pPr>
+        <w:pBdr>
+          <w:top w:val="nil"/>
+          <w:left w:val="nil"/>
+          <w:bottom w:val="nil"/>
+          <w:right w:val="nil"/>
+          <w:between w:val="nil"/>
+        </w:pBdr>
+        <w:spacing w:line="276" w:lineRule="auto"/>
+      </w:pPr>
+      <w:r>
+        <w:pict w14:anchorId="39348FE3">
+          <v:shapetype id="_x0000_t136" coordsize="21600,21600" o:spt="136" adj="10800" path="m@7,l@8,m@5,21600l@6,21600e">
+            <v:formulas>
+              <v:f eqn="sum #0 0 10800"/>
+              <v:f eqn="prod #0 2 1"/>
+              <v:f eqn="sum 21600 0 @1"/>
+              <v:f eqn="sum 0 0 @2"/>
+              <v:f eqn="sum 21600 0 @3"/>
+              <v:f eqn="if @0 @3 0"/>
+              <v:f eqn="if @0 21600 @1"/>
+              <v:f eqn="if @0 0 @2"/>
+              <v:f eqn="if @0 @4 21600"/>
+              <v:f eqn="mid @5 @6"/>
+              <v:f eqn="mid @8 @5"/>
+              <v:f eqn="mid @7 @8"/>
+              <v:f eqn="mid @6 @7"/>
+              <v:f eqn="sum @6 0 @5"/>
+            </v:formulas>
+            <v:path textpathok="t" o:connecttype="custom" o:connectlocs="@9,0;@10,10800;@11,21600;@12,10800" o:connectangles="270,180,90,0"/>
+            <v:textpath on="t" fitshape="t"/>
+            <v:handles>
+              <v:h position="#0,bottomRight" xrange="6629,14971"/>
+            </v:handles>
+            <o:lock v:ext="edit" text="t" shapetype="t"/>
+          </v:shapetype>
+          <v:shape id="_x0000_s2050" type="#_x0000_t136" style="position:absolute;margin-left:0;margin-top:0;width:50pt;height:50pt;z-index:251657728;visibility:hidden">
+            <o:lock v:ext="edit" selection="t"/>
+          </v:shape>
+        </w:pict>
+      </w:r>
+    </w:p>
+    <w:p w14:paraId="1116BB71" w14:textId="3D64F84F" w:rsidR="00277C41" w:rsidRDefault="00AE286B" w:rsidP="00AE286B">
+      <w:pPr>
+        <w:pBdr>
+          <w:top w:val="nil"/>
+          <w:left w:val="nil"/>
+          <w:bottom w:val="nil"/>
+          <w:right w:val="nil"/>
+          <w:between w:val="nil"/>
+        </w:pBdr>
+        <w:tabs>
+          <w:tab w:val="left" w:pos="11333"/>
+        </w:tabs>
+        <w:spacing w:line="276" w:lineRule="auto"/>
+        <w:rPr>
+          <w:rFonts w:ascii="Arial" w:eastAsia="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+          <w:color w:val="000000"/>
+        </w:rPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:rFonts w:ascii="Arial" w:eastAsia="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+          <w:color w:val="000000"/>
+        </w:rPr>
+        <w:tab/>
+      </w:r>
+    </w:p>
+    <w:tbl>
+      <w:tblPr>
+        <w:tblStyle w:val="a"/>
+        <w:tblW w:w="14560" w:type="dxa"/>
+        <w:tblBorders>
+          <w:top w:val="nil"/>
+          <w:left w:val="nil"/>
+          <w:bottom w:val="nil"/>
+          <w:right w:val="nil"/>
+          <w:insideH w:val="single" w:sz="4" w:space="0" w:color="000000"/>
+          <w:insideV w:val="single" w:sz="4" w:space="0" w:color="000000"/>
+        </w:tblBorders>
+        <w:tblLayout w:type="fixed"/>
+        <w:tblLook w:val="0400" w:firstRow="0" w:lastRow="0" w:firstColumn="0" w:lastColumn="0" w:noHBand="0" w:noVBand="1"/>
+      </w:tblPr>
+      <w:tblGrid>
+        <w:gridCol w:w="3640"/>
+        <w:gridCol w:w="3640"/>
+        <w:gridCol w:w="3640"/>
+        <w:gridCol w:w="3640"/>
+      </w:tblGrid>
+      <w:tr w:rsidR="00277C41" w14:paraId="6E07EFE9" w14:textId="77777777">
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:w="3640" w:type="dxa"/>
+            <w:vAlign w:val="center"/>
+          </w:tcPr>
+          <w:p w14:paraId="30218D68" w14:textId="77777777" w:rsidR="00277C41" w:rsidRDefault="00672A5C">
+            <w:pPr>
+              <w:pStyle w:val="Title"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:noProof/>
+              </w:rPr>
+              <w:drawing>
+                <wp:inline distT="0" distB="0" distL="0" distR="0" wp14:anchorId="3080C996" wp14:editId="57C25C54">
+                  <wp:extent cx="899794" cy="899794"/>
+                  <wp:effectExtent l="0" t="0" r="0" b="0"/>
+                  <wp:docPr id="1121008533" name="image1.jpg" descr="A black text on a white background
+
+Description automatically generated"/>
+                  <wp:cNvGraphicFramePr/>
+                  <a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+                    <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">
+                      <pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">
+                        <pic:nvPicPr>
+                          <pic:cNvPr id="0" name="image1.jpg" descr="A black text on a white background
+
+Description automatically generated"/>
+                          <pic:cNvPicPr preferRelativeResize="0"/>
+                        </pic:nvPicPr>
+                        <pic:blipFill>
+                          <a:blip r:embed="rId7"/>
+                          <a:srcRect/>
+                          <a:stretch>
+                            <a:fillRect/>
+                          </a:stretch>
+                        </pic:blipFill>
+                        <pic:spPr>
+                          <a:xfrm>
+                            <a:off x="0" y="0"/>
+                            <a:ext cx="899794" cy="899794"/>
+                          </a:xfrm>
+                          <a:prstGeom prst="rect">
+                            <a:avLst/>
+                          </a:prstGeom>
+                          <a:ln/>
+                        </pic:spPr>
+                      </pic:pic>
+                    </a:graphicData>
+                  </a:graphic>
+                </wp:inline>
+              </w:drawing>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:w="3640" w:type="dxa"/>
+            <w:vAlign w:val="center"/>
+          </w:tcPr>
+          <w:p w14:paraId="123AA0D5" w14:textId="1E45E302" w:rsidR="00277C41" w:rsidRPr="00004997" w:rsidRDefault="00672A5C">
+            <w:pPr>
+              <w:pStyle w:val="Title"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r w:rsidRPr="00004997">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t>VC</w:t>
+            </w:r>
+            <w:r w:rsidR="00004997" w:rsidRPr="00004997">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:highlight w:val="yellow"/>
+              </w:rPr>
+              <w:t>[Series Code]</w:t>
+            </w:r>
+            <w:r w:rsidRPr="00004997">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t>SH</w:t>
+            </w:r>
+            <w:r w:rsidR="00004997" w:rsidRPr="00004997">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:highlight w:val="yellow"/>
+              </w:rPr>
+              <w:t xml:space="preserve">[Unique index </w:t>
+            </w:r>
+            <w:r w:rsidR="00004997">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:highlight w:val="yellow"/>
+              </w:rPr>
+              <w:t xml:space="preserve">per </w:t>
+            </w:r>
+            <w:r w:rsidR="00004997" w:rsidRPr="00004997">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:highlight w:val="yellow"/>
+              </w:rPr>
+              <w:t>investor/ investment]</w:t>
+            </w:r>
+          </w:p>
+          <w:p w14:paraId="6E38BAE2" w14:textId="77777777" w:rsidR="00277C41" w:rsidRPr="00004997" w:rsidRDefault="00672A5C">
+            <w:pPr>
+              <w:pStyle w:val="Title"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:lang w:val="fr-FR"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r w:rsidRPr="00004997">
+              <w:rPr>
+                <w:rFonts w:ascii="Spartan SemiBold" w:eastAsia="Spartan SemiBold" w:hAnsi="Spartan SemiBold" w:cs="Spartan SemiBold"/>
+                <w:b w:val="0"/>
+                <w:sz w:val="22"/>
+                <w:szCs w:val="22"/>
+                <w:lang w:val="fr-FR"/>
+              </w:rPr>
+              <w:t>(</w:t>
+            </w:r>
+            <w:proofErr w:type="spellStart"/>
+            <w:r w:rsidRPr="00004997">
+              <w:rPr>
+                <w:rFonts w:ascii="Spartan SemiBold" w:eastAsia="Spartan SemiBold" w:hAnsi="Spartan SemiBold" w:cs="Spartan SemiBold"/>
+                <w:b w:val="0"/>
+                <w:sz w:val="22"/>
+                <w:szCs w:val="22"/>
+                <w:lang w:val="fr-FR"/>
+              </w:rPr>
+              <w:t>Certificate</w:t>
+            </w:r>
+            <w:proofErr w:type="spellEnd"/>
+            <w:r w:rsidRPr="00004997">
+              <w:rPr>
+                <w:rFonts w:ascii="Spartan SemiBold" w:eastAsia="Spartan SemiBold" w:hAnsi="Spartan SemiBold" w:cs="Spartan SemiBold"/>
+                <w:b w:val="0"/>
+                <w:sz w:val="22"/>
+                <w:szCs w:val="22"/>
+                <w:lang w:val="fr-FR"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> No)</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:w="3640" w:type="dxa"/>
+            <w:vAlign w:val="center"/>
+          </w:tcPr>
+          <w:p w14:paraId="11665016" w14:textId="6B87FE85" w:rsidR="00277C41" w:rsidRDefault="00004997">
+            <w:pPr>
+              <w:pStyle w:val="Title"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r w:rsidRPr="00004997">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:highlight w:val="yellow"/>
+              </w:rPr>
+              <w:t xml:space="preserve">[Number of </w:t>
+            </w:r>
+            <w:r w:rsidR="0073068A">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:highlight w:val="yellow"/>
+              </w:rPr>
+              <w:t>Certificates</w:t>
+            </w:r>
+            <w:r w:rsidRPr="00004997">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:highlight w:val="yellow"/>
+              </w:rPr>
+              <w:t>]</w:t>
+            </w:r>
+            <w:r w:rsidR="005B130C">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r w:rsidR="00672A5C">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t>Units</w:t>
+            </w:r>
+          </w:p>
+          <w:p w14:paraId="3D7761B7" w14:textId="77777777" w:rsidR="00277C41" w:rsidRDefault="00672A5C">
+            <w:pPr>
+              <w:pStyle w:val="Title"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Spartan SemiBold" w:eastAsia="Spartan SemiBold" w:hAnsi="Spartan SemiBold" w:cs="Spartan SemiBold"/>
+                <w:b w:val="0"/>
+                <w:sz w:val="22"/>
+                <w:szCs w:val="22"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Spartan SemiBold" w:eastAsia="Spartan SemiBold" w:hAnsi="Spartan SemiBold" w:cs="Spartan SemiBold"/>
+                <w:b w:val="0"/>
+                <w:sz w:val="22"/>
+                <w:szCs w:val="22"/>
+              </w:rPr>
+              <w:t>(No of Certificates)</w:t>
+            </w:r>
+          </w:p>
+          <w:p w14:paraId="1D1B29B2" w14:textId="3993751A" w:rsidR="00004997" w:rsidRPr="00004997" w:rsidRDefault="00004997" w:rsidP="00004997">
+            <w:pPr>
+              <w:pStyle w:val="Title"/>
+              <w:ind w:left="720"/>
+              <w:jc w:val="left"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Spartan SemiBold" w:eastAsia="Spartan SemiBold" w:hAnsi="Spartan SemiBold" w:cs="Spartan SemiBold"/>
+                <w:b w:val="0"/>
+                <w:sz w:val="22"/>
+                <w:szCs w:val="22"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r w:rsidRPr="00004997">
+              <w:rPr>
+                <w:rFonts w:ascii="Spartan SemiBold" w:eastAsia="Spartan SemiBold" w:hAnsi="Spartan SemiBold" w:cs="Spartan SemiBold"/>
+                <w:b w:val="0"/>
+                <w:sz w:val="22"/>
+                <w:szCs w:val="22"/>
+              </w:rPr>
+              <w:t xml:space="preserve">   </w:t>
+            </w:r>
+            <w:r w:rsidRPr="00004997">
+              <w:rPr>
+                <w:rFonts w:ascii="Spartan SemiBold" w:eastAsia="Spartan SemiBold" w:hAnsi="Spartan SemiBold" w:cs="Spartan SemiBold"/>
+                <w:b w:val="0"/>
+                <w:sz w:val="22"/>
+                <w:szCs w:val="22"/>
+                <w:highlight w:val="yellow"/>
+              </w:rPr>
+              <w:t>(</w:t>
+            </w:r>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Spartan SemiBold" w:eastAsia="Spartan SemiBold" w:hAnsi="Spartan SemiBold" w:cs="Spartan SemiBold"/>
+                <w:b w:val="0"/>
+                <w:sz w:val="22"/>
+                <w:szCs w:val="22"/>
+                <w:highlight w:val="yellow"/>
+              </w:rPr>
+              <w:t>subscription pack</w:t>
+            </w:r>
+            <w:r w:rsidRPr="00004997">
+              <w:rPr>
+                <w:rFonts w:ascii="Spartan SemiBold" w:eastAsia="Spartan SemiBold" w:hAnsi="Spartan SemiBold" w:cs="Spartan SemiBold"/>
+                <w:b w:val="0"/>
+                <w:sz w:val="22"/>
+                <w:szCs w:val="22"/>
+                <w:highlight w:val="yellow"/>
+              </w:rPr>
+              <w:t>)</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:w="3640" w:type="dxa"/>
+            <w:vAlign w:val="center"/>
+          </w:tcPr>
+          <w:p w14:paraId="361B5301" w14:textId="3206A1E1" w:rsidR="00277C41" w:rsidRDefault="00F655AC" w:rsidP="00D45659">
+            <w:pPr>
+              <w:pStyle w:val="Title"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t>December</w:t>
+            </w:r>
+            <w:r w:rsidR="00672A5C">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r w:rsidR="00C72AB7">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t>16</w:t>
+            </w:r>
+            <w:r w:rsidR="00672A5C">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t>, 2025</w:t>
+            </w:r>
+            <w:r w:rsidR="00F450D3">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r w:rsidR="00F450D3" w:rsidRPr="00F450D3">
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+                <w:highlight w:val="yellow"/>
+              </w:rPr>
+              <w:t>[Closing date]</w:t>
+            </w:r>
+          </w:p>
+          <w:p w14:paraId="514C0FD3" w14:textId="77777777" w:rsidR="00277C41" w:rsidRDefault="00672A5C">
+            <w:pPr>
+              <w:pStyle w:val="Title"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Arial" w:eastAsia="Arial" w:hAnsi="Arial" w:cs="Arial"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Spartan SemiBold" w:eastAsia="Spartan SemiBold" w:hAnsi="Spartan SemiBold" w:cs="Spartan SemiBold"/>
+                <w:b w:val="0"/>
+                <w:sz w:val="22"/>
+                <w:szCs w:val="22"/>
+              </w:rPr>
+              <w:t>(Date)</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+      </w:tr>
+    </w:tbl>
+    <w:p w14:paraId="418BAAD1" w14:textId="28F92663" w:rsidR="00277C41" w:rsidRDefault="00004997" w:rsidP="00004997">
+      <w:pPr>
+        <w:pStyle w:val="Title"/>
+        <w:ind w:left="720"/>
+        <w:jc w:val="left"/>
+        <w:rPr>
+          <w:rFonts w:ascii="Spartan SemiBold" w:eastAsia="Spartan SemiBold" w:hAnsi="Spartan SemiBold" w:cs="Spartan SemiBold"/>
+          <w:b w:val="0"/>
+          <w:sz w:val="22"/>
+          <w:szCs w:val="22"/>
+        </w:rPr>
+      </w:pPr>
+      <w:r w:rsidRPr="00004997">
+        <w:rPr>
+          <w:rFonts w:ascii="Spartan SemiBold" w:eastAsia="Spartan SemiBold" w:hAnsi="Spartan SemiBold" w:cs="Spartan SemiBold"/>
+          <w:b w:val="0"/>
+          <w:sz w:val="22"/>
+          <w:szCs w:val="22"/>
+          <w:highlight w:val="yellow"/>
+        </w:rPr>
+        <w:t>(logo of the vehicle)</w:t>
+      </w:r>
+    </w:p>
+    <w:p w14:paraId="2624E06E" w14:textId="77777777" w:rsidR="00277C41" w:rsidRDefault="00277C41" w:rsidP="00004997">
+      <w:pPr>
+        <w:pStyle w:val="Title"/>
+        <w:rPr>
+          <w:rFonts w:ascii="Spartan SemiBold" w:eastAsia="Spartan SemiBold" w:hAnsi="Spartan SemiBold" w:cs="Spartan SemiBold"/>
+          <w:b w:val="0"/>
+          <w:sz w:val="22"/>
+          <w:szCs w:val="22"/>
+        </w:rPr>
+      </w:pPr>
+    </w:p>
+    <w:p w14:paraId="6FC2A0E4" w14:textId="77777777" w:rsidR="00277C41" w:rsidRDefault="00277C41">
+      <w:pPr>
+        <w:pStyle w:val="Title"/>
+        <w:rPr>
+          <w:rFonts w:ascii="Spartan SemiBold" w:eastAsia="Spartan SemiBold" w:hAnsi="Spartan SemiBold" w:cs="Spartan SemiBold"/>
+          <w:b w:val="0"/>
+          <w:sz w:val="22"/>
+          <w:szCs w:val="22"/>
+        </w:rPr>
+      </w:pPr>
+    </w:p>
+    <w:p w14:paraId="4C233C69" w14:textId="77777777" w:rsidR="00277C41" w:rsidRDefault="00277C41" w:rsidP="00357C90">
+      <w:pPr>
+        <w:pStyle w:val="Title"/>
+        <w:jc w:val="left"/>
+        <w:rPr>
+          <w:rFonts w:ascii="Spartan SemiBold" w:eastAsia="Spartan SemiBold" w:hAnsi="Spartan SemiBold" w:cs="Spartan SemiBold"/>
+          <w:b w:val="0"/>
+          <w:sz w:val="22"/>
+          <w:szCs w:val="22"/>
+        </w:rPr>
+      </w:pPr>
+    </w:p>
+    <w:p w14:paraId="7ED167E6" w14:textId="77777777" w:rsidR="00277C41" w:rsidRDefault="00672A5C">
+      <w:pPr>
+        <w:pStyle w:val="Title"/>
+        <w:rPr>
+          <w:rFonts w:ascii="Spartan ExtraBold" w:eastAsia="Spartan ExtraBold" w:hAnsi="Spartan ExtraBold" w:cs="Spartan ExtraBold"/>
+          <w:sz w:val="56"/>
+          <w:szCs w:val="56"/>
+        </w:rPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:rFonts w:ascii="Spartan ExtraBold" w:eastAsia="Spartan ExtraBold" w:hAnsi="Spartan ExtraBold" w:cs="Spartan ExtraBold"/>
+          <w:sz w:val="56"/>
+          <w:szCs w:val="56"/>
+        </w:rPr>
+        <w:t>EQUITY CERTIFICATE</w:t>
+      </w:r>
+    </w:p>
+    <w:p w14:paraId="428BE801" w14:textId="77777777" w:rsidR="00277C41" w:rsidRDefault="00672A5C">
+      <w:pPr>
+        <w:pStyle w:val="Title"/>
+        <w:rPr>
+          <w:rFonts w:ascii="Spartan ExtraBold" w:eastAsia="Spartan ExtraBold" w:hAnsi="Spartan ExtraBold" w:cs="Spartan ExtraBold"/>
+          <w:sz w:val="44"/>
+          <w:szCs w:val="44"/>
+        </w:rPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:rFonts w:ascii="Spartan ExtraBold" w:eastAsia="Spartan ExtraBold" w:hAnsi="Spartan ExtraBold" w:cs="Spartan ExtraBold"/>
+          <w:sz w:val="56"/>
+          <w:szCs w:val="56"/>
+        </w:rPr>
+        <w:t>&amp; STATEMENT OF HOLDINGS</w:t>
+      </w:r>
+    </w:p>
+    <w:p w14:paraId="0C50352D" w14:textId="77777777" w:rsidR="00277C41" w:rsidRDefault="00277C41">
+      <w:pPr>
+        <w:rPr>
+          <w:rFonts w:ascii="Spartan" w:eastAsia="Spartan" w:hAnsi="Spartan" w:cs="Spartan"/>
+        </w:rPr>
+      </w:pPr>
+    </w:p>
+    <w:p w14:paraId="7C14A568" w14:textId="77777777" w:rsidR="00277C41" w:rsidRDefault="00672A5C">
+      <w:pPr>
+        <w:tabs>
+          <w:tab w:val="left" w:pos="3588"/>
+        </w:tabs>
+        <w:jc w:val="both"/>
+        <w:rPr>
+          <w:rFonts w:ascii="Spartan" w:eastAsia="Spartan" w:hAnsi="Spartan" w:cs="Spartan"/>
+        </w:rPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:rFonts w:ascii="Spartan" w:eastAsia="Spartan" w:hAnsi="Spartan" w:cs="Spartan"/>
+        </w:rPr>
+        <w:tab/>
+      </w:r>
+    </w:p>
+    <w:p w14:paraId="3F1A9179" w14:textId="1F20CE2D" w:rsidR="00277C41" w:rsidRDefault="00672A5C">
+      <w:pPr>
+        <w:jc w:val="center"/>
+        <w:rPr>
+          <w:rFonts w:ascii="Spartan SemiBold" w:eastAsia="Spartan SemiBold" w:hAnsi="Spartan SemiBold" w:cs="Spartan SemiBold"/>
+        </w:rPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:rFonts w:ascii="Spartan SemiBold" w:eastAsia="Spartan SemiBold" w:hAnsi="Spartan SemiBold" w:cs="Spartan SemiBold"/>
+        </w:rPr>
+        <w:t>VERSO Capital 2 SCSP</w:t>
+      </w:r>
+      <w:r w:rsidR="0073068A">
+        <w:rPr>
+          <w:rFonts w:ascii="Spartan SemiBold" w:eastAsia="Spartan SemiBold" w:hAnsi="Spartan SemiBold" w:cs="Spartan SemiBold"/>
+        </w:rPr>
+        <w:t xml:space="preserve"> </w:t>
+      </w:r>
+      <w:r w:rsidR="00F450D3" w:rsidRPr="00F450D3">
+        <w:rPr>
+          <w:rFonts w:ascii="Spartan SemiBold" w:eastAsia="Spartan SemiBold" w:hAnsi="Spartan SemiBold" w:cs="Spartan SemiBold"/>
+          <w:highlight w:val="yellow"/>
+        </w:rPr>
+        <w:t>[Vehicle</w:t>
+      </w:r>
+      <w:r w:rsidR="0073068A">
+        <w:rPr>
+          <w:rFonts w:ascii="Spartan SemiBold" w:eastAsia="Spartan SemiBold" w:hAnsi="Spartan SemiBold" w:cs="Spartan SemiBold"/>
+          <w:highlight w:val="yellow"/>
+        </w:rPr>
+        <w:t xml:space="preserve"> Name</w:t>
+      </w:r>
+      <w:r w:rsidR="00F450D3" w:rsidRPr="00F450D3">
+        <w:rPr>
+          <w:rFonts w:ascii="Spartan SemiBold" w:eastAsia="Spartan SemiBold" w:hAnsi="Spartan SemiBold" w:cs="Spartan SemiBold"/>
+          <w:highlight w:val="yellow"/>
+        </w:rPr>
+        <w:t>]</w:t>
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:rFonts w:ascii="Spartan SemiBold" w:eastAsia="Spartan SemiBold" w:hAnsi="Spartan SemiBold" w:cs="Spartan SemiBold"/>
+        </w:rPr>
+        <w:t xml:space="preserve">, the Issuer, in the name and on behalf of Series </w:t>
+      </w:r>
+      <w:r w:rsidR="0073068A" w:rsidRPr="0073068A">
+        <w:rPr>
+          <w:rFonts w:ascii="Spartan SemiBold" w:eastAsia="Spartan SemiBold" w:hAnsi="Spartan SemiBold" w:cs="Spartan SemiBold"/>
+          <w:highlight w:val="yellow"/>
+        </w:rPr>
+        <w:t>[Series Code]</w:t>
+      </w:r>
+      <w:r w:rsidR="0073068A" w:rsidRPr="0073068A">
+        <w:rPr>
+          <w:rFonts w:ascii="Spartan SemiBold" w:eastAsia="Spartan SemiBold" w:hAnsi="Spartan SemiBold" w:cs="Spartan SemiBold"/>
+          <w:color w:val="EE0000"/>
+        </w:rPr>
+        <w:t xml:space="preserve"> </w:t>
+      </w:r>
+      <w:r w:rsidR="0073068A" w:rsidRPr="0073068A">
+        <w:rPr>
+          <w:rFonts w:ascii="Spartan SemiBold" w:eastAsia="Spartan SemiBold" w:hAnsi="Spartan SemiBold" w:cs="Spartan SemiBold"/>
+          <w:highlight w:val="cyan"/>
+        </w:rPr>
+        <w:t>209</w:t>
+      </w:r>
+      <w:r w:rsidR="0073068A">
+        <w:rPr>
+          <w:rFonts w:ascii="Spartan SemiBold" w:eastAsia="Spartan SemiBold" w:hAnsi="Spartan SemiBold" w:cs="Spartan SemiBold"/>
+        </w:rPr>
+        <w:t xml:space="preserve"> </w:t>
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:rFonts w:ascii="Spartan SemiBold" w:eastAsia="Spartan SemiBold" w:hAnsi="Spartan SemiBold" w:cs="Spartan SemiBold"/>
+        </w:rPr>
+        <w:t>&#8220;X.AI&#8221;</w:t>
+      </w:r>
+    </w:p>
+    <w:p w14:paraId="794BB12F" w14:textId="0860EFEC" w:rsidR="00277C41" w:rsidRDefault="00672A5C">
+      <w:pPr>
+        <w:jc w:val="center"/>
+        <w:rPr>
+          <w:rFonts w:ascii="Spartan SemiBold" w:eastAsia="Spartan SemiBold" w:hAnsi="Spartan SemiBold" w:cs="Spartan SemiBold"/>
+        </w:rPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:rFonts w:ascii="Spartan SemiBold" w:eastAsia="Spartan SemiBold" w:hAnsi="Spartan SemiBold" w:cs="Spartan SemiBold"/>
+        </w:rPr>
+        <w:t xml:space="preserve">Company Number: </w:t>
+      </w:r>
+      <w:r w:rsidR="00F450D3" w:rsidRPr="00F450D3">
+        <w:rPr>
+          <w:rFonts w:ascii="Spartan SemiBold" w:eastAsia="Spartan SemiBold" w:hAnsi="Spartan SemiBold" w:cs="Spartan SemiBold"/>
+          <w:highlight w:val="yellow"/>
+        </w:rPr>
+        <w:t xml:space="preserve">[Vehicle </w:t>
+      </w:r>
+      <w:r w:rsidR="0073068A">
+        <w:rPr>
+          <w:rFonts w:ascii="Spartan SemiBold" w:eastAsia="Spartan SemiBold" w:hAnsi="Spartan SemiBold" w:cs="Spartan SemiBold"/>
+          <w:highlight w:val="yellow"/>
+        </w:rPr>
+        <w:t>Registration</w:t>
+      </w:r>
+      <w:r w:rsidR="00F450D3" w:rsidRPr="00F450D3">
+        <w:rPr>
+          <w:rFonts w:ascii="Spartan SemiBold" w:eastAsia="Spartan SemiBold" w:hAnsi="Spartan SemiBold" w:cs="Spartan SemiBold"/>
+          <w:highlight w:val="yellow"/>
+        </w:rPr>
+        <w:t xml:space="preserve"> Number]</w:t>
+      </w:r>
+      <w:r w:rsidR="00F450D3">
+        <w:rPr>
+          <w:rFonts w:ascii="Spartan SemiBold" w:eastAsia="Spartan SemiBold" w:hAnsi="Spartan SemiBold" w:cs="Spartan SemiBold"/>
+        </w:rPr>
+        <w:t xml:space="preserve"> </w:t>
+      </w:r>
+      <w:r w:rsidRPr="0073068A">
+        <w:rPr>
+          <w:rFonts w:ascii="Spartan SemiBold" w:eastAsia="Spartan SemiBold" w:hAnsi="Spartan SemiBold" w:cs="Spartan SemiBold"/>
+          <w:highlight w:val="cyan"/>
+        </w:rPr>
+        <w:t>B291900</w:t>
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:rFonts w:ascii="Spartan SemiBold" w:eastAsia="Spartan SemiBold" w:hAnsi="Spartan SemiBold" w:cs="Spartan SemiBold"/>
+        </w:rPr>
+        <w:t xml:space="preserve"> </w:t>
+      </w:r>
+    </w:p>
+    <w:p w14:paraId="67D95D4B" w14:textId="77777777" w:rsidR="00277C41" w:rsidRDefault="00277C41">
+      <w:pPr>
+        <w:rPr>
+          <w:rFonts w:ascii="Spartan SemiBold" w:eastAsia="Spartan SemiBold" w:hAnsi="Spartan SemiBold" w:cs="Spartan SemiBold"/>
+        </w:rPr>
+      </w:pPr>
+    </w:p>
+    <w:p w14:paraId="18DD04F4" w14:textId="5B0BC835" w:rsidR="00277C41" w:rsidRDefault="00672A5C" w:rsidP="00C72AB7">
+      <w:pPr>
+        <w:jc w:val="center"/>
+        <w:rPr>
+          <w:rFonts w:ascii="Spartan" w:eastAsia="Spartan" w:hAnsi="Spartan" w:cs="Spartan"/>
+        </w:rPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:rFonts w:ascii="Spartan" w:eastAsia="Spartan" w:hAnsi="Spartan" w:cs="Spartan"/>
+        </w:rPr>
+        <w:t>This is to certify that</w:t>
+      </w:r>
+      <w:r w:rsidR="0073068A">
+        <w:rPr>
+          <w:rFonts w:ascii="Spartan" w:eastAsia="Spartan" w:hAnsi="Spartan" w:cs="Spartan"/>
+        </w:rPr>
+        <w:t xml:space="preserve"> </w:t>
+      </w:r>
+      <w:r w:rsidR="0073068A" w:rsidRPr="0073068A">
+        <w:rPr>
+          <w:rFonts w:ascii="Spartan" w:eastAsia="Spartan" w:hAnsi="Spartan" w:cs="Spartan"/>
+          <w:highlight w:val="yellow"/>
+        </w:rPr>
+        <w:t>[</w:t>
+      </w:r>
+      <w:r w:rsidR="0073068A">
+        <w:rPr>
+          <w:rFonts w:ascii="Spartan" w:eastAsia="Spartan" w:hAnsi="Spartan" w:cs="Spartan"/>
+          <w:highlight w:val="yellow"/>
+        </w:rPr>
+        <w:t>FIRST NAME LAST NAME or ENTITY NAME</w:t>
+      </w:r>
+      <w:r w:rsidR="0073068A" w:rsidRPr="0073068A">
+        <w:rPr>
+          <w:rFonts w:ascii="Spartan" w:eastAsia="Spartan" w:hAnsi="Spartan" w:cs="Spartan"/>
+          <w:highlight w:val="yellow"/>
+        </w:rPr>
+        <w:t>]</w:t>
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:rFonts w:ascii="Spartan" w:eastAsia="Spartan" w:hAnsi="Spartan" w:cs="Spartan"/>
+        </w:rPr>
+        <w:t xml:space="preserve"> </w:t>
+      </w:r>
+      <w:r w:rsidR="00C72AB7" w:rsidRPr="0073068A">
+        <w:rPr>
+          <w:rFonts w:ascii="Spartan" w:eastAsia="Spartan" w:hAnsi="Spartan" w:cs="Spartan"/>
+          <w:highlight w:val="cyan"/>
+        </w:rPr>
+        <w:t>PREAMBLE X CAPITAL I, A SERIES OF PREAMBLE X CAPITAL LLC</w:t>
+      </w:r>
+      <w:r w:rsidR="00C72AB7">
+        <w:rPr>
+          <w:rFonts w:ascii="Spartan" w:eastAsia="Spartan" w:hAnsi="Spartan" w:cs="Spartan"/>
+        </w:rPr>
+        <w:t xml:space="preserve"> </w:t>
+      </w:r>
+      <w:r w:rsidRPr="005B130C">
+        <w:rPr>
+          <w:rFonts w:ascii="Spartan" w:eastAsia="Spartan" w:hAnsi="Spartan" w:cs="Spartan"/>
+          <w:sz w:val="20"/>
+          <w:szCs w:val="20"/>
+        </w:rPr>
+        <w:t xml:space="preserve">the registered </w:t>
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:rFonts w:ascii="Spartan" w:eastAsia="Spartan" w:hAnsi="Spartan" w:cs="Spartan"/>
+        </w:rPr>
+        <w:t xml:space="preserve">holder of </w:t>
+      </w:r>
+      <w:r w:rsidR="0073068A" w:rsidRPr="0073068A">
+        <w:rPr>
+          <w:rFonts w:ascii="Spartan" w:eastAsia="Spartan" w:hAnsi="Spartan" w:cs="Spartan"/>
+          <w:highlight w:val="yellow"/>
+        </w:rPr>
+        <w:t>[Number of Certificates]</w:t>
+      </w:r>
+      <w:r w:rsidR="0073068A">
+        <w:rPr>
+          <w:rFonts w:ascii="Spartan" w:eastAsia="Spartan" w:hAnsi="Spartan" w:cs="Spartan"/>
+        </w:rPr>
+        <w:t xml:space="preserve"> </w:t>
+      </w:r>
+      <w:r w:rsidR="00C72AB7" w:rsidRPr="0073068A">
+        <w:rPr>
+          <w:rFonts w:ascii="Spartan" w:eastAsia="Spartan" w:hAnsi="Spartan" w:cs="Spartan"/>
+          <w:sz w:val="20"/>
+          <w:szCs w:val="20"/>
+          <w:highlight w:val="cyan"/>
+        </w:rPr>
+        <w:t>40,106</w:t>
+      </w:r>
+      <w:r w:rsidR="005B130C">
+        <w:rPr>
+          <w:rFonts w:ascii="Spartan" w:eastAsia="Spartan" w:hAnsi="Spartan" w:cs="Spartan"/>
+          <w:sz w:val="20"/>
+          <w:szCs w:val="20"/>
+        </w:rPr>
+        <w:t xml:space="preserve"> </w:t>
+      </w:r>
+      <w:r w:rsidRPr="005B130C">
+        <w:rPr>
+          <w:rFonts w:ascii="Spartan" w:eastAsia="Spartan" w:hAnsi="Spartan" w:cs="Spartan"/>
+          <w:sz w:val="20"/>
+          <w:szCs w:val="20"/>
+        </w:rPr>
+        <w:t>Certificates</w:t>
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:rFonts w:ascii="Spartan" w:eastAsia="Spartan" w:hAnsi="Spartan" w:cs="Spartan"/>
+        </w:rPr>
+        <w:t xml:space="preserve"> only as issued by the Issuer and ultimately backed by </w:t>
+      </w:r>
+      <w:r w:rsidR="0073068A" w:rsidRPr="0073068A">
+        <w:rPr>
+          <w:rFonts w:ascii="Spartan" w:eastAsia="Spartan" w:hAnsi="Spartan" w:cs="Spartan"/>
+          <w:highlight w:val="yellow"/>
+        </w:rPr>
+        <w:t>[</w:t>
+      </w:r>
+      <w:r w:rsidR="002F33EB">
+        <w:rPr>
+          <w:rFonts w:ascii="Spartan" w:eastAsia="Spartan" w:hAnsi="Spartan" w:cs="Spartan"/>
+          <w:highlight w:val="yellow"/>
+        </w:rPr>
+        <w:t>Subscription | Underlying Units</w:t>
+      </w:r>
+      <w:r w:rsidR="0073068A" w:rsidRPr="0073068A">
+        <w:rPr>
+          <w:rFonts w:ascii="Spartan" w:eastAsia="Spartan" w:hAnsi="Spartan" w:cs="Spartan"/>
+          <w:highlight w:val="yellow"/>
+        </w:rPr>
+        <w:t>]</w:t>
+      </w:r>
+      <w:r w:rsidR="0073068A">
+        <w:rPr>
+          <w:rFonts w:ascii="Spartan" w:eastAsia="Spartan" w:hAnsi="Spartan" w:cs="Spartan"/>
+        </w:rPr>
+        <w:t xml:space="preserve"> </w:t>
+      </w:r>
+      <w:r w:rsidR="00C72AB7" w:rsidRPr="002876A0">
+        <w:rPr>
+          <w:rFonts w:ascii="Spartan" w:eastAsia="Spartan" w:hAnsi="Spartan" w:cs="Spartan"/>
+          <w:sz w:val="20"/>
+          <w:szCs w:val="20"/>
+          <w:highlight w:val="cyan"/>
+        </w:rPr>
+        <w:t>40,106</w:t>
+      </w:r>
+      <w:r w:rsidR="009A2A9E">
+        <w:rPr>
+          <w:rFonts w:ascii="Spartan" w:eastAsia="Spartan" w:hAnsi="Spartan" w:cs="Spartan"/>
+          <w:sz w:val="20"/>
+          <w:szCs w:val="20"/>
+        </w:rPr>
+        <w:t xml:space="preserve"> </w:t>
+      </w:r>
+      <w:r w:rsidR="0073068A" w:rsidRPr="0073068A">
+        <w:rPr>
+          <w:rFonts w:ascii="Spartan" w:eastAsia="Spartan" w:hAnsi="Spartan" w:cs="Spartan"/>
+          <w:highlight w:val="yellow"/>
+        </w:rPr>
+        <w:t>[</w:t>
+      </w:r>
+      <w:r w:rsidR="002F33EB">
+        <w:rPr>
+          <w:rFonts w:ascii="Spartan" w:eastAsia="Spartan" w:hAnsi="Spartan" w:cs="Spartan"/>
+          <w:highlight w:val="yellow"/>
+        </w:rPr>
+        <w:t>Subscription | Product description</w:t>
+      </w:r>
+      <w:r w:rsidR="0073068A" w:rsidRPr="0073068A">
+        <w:rPr>
+          <w:rFonts w:ascii="Spartan" w:eastAsia="Spartan" w:hAnsi="Spartan" w:cs="Spartan"/>
+          <w:highlight w:val="yellow"/>
+        </w:rPr>
+        <w:t>]</w:t>
+      </w:r>
+      <w:r w:rsidR="0073068A">
+        <w:rPr>
+          <w:rFonts w:ascii="Spartan" w:eastAsia="Spartan" w:hAnsi="Spartan" w:cs="Spartan"/>
+          <w:sz w:val="20"/>
+          <w:szCs w:val="20"/>
+        </w:rPr>
+        <w:t xml:space="preserve"> </w:t>
+      </w:r>
+      <w:r w:rsidRPr="0073068A">
+        <w:rPr>
+          <w:rFonts w:ascii="Spartan" w:eastAsia="Spartan" w:hAnsi="Spartan" w:cs="Spartan"/>
+          <w:highlight w:val="cyan"/>
+        </w:rPr>
+        <w:t xml:space="preserve">Shares of </w:t>
+      </w:r>
+      <w:r w:rsidR="0061158B" w:rsidRPr="0073068A">
+        <w:rPr>
+          <w:rFonts w:ascii="Spartan" w:hAnsi="Spartan" w:cs="Arial"/>
+          <w:bCs/>
+          <w:highlight w:val="cyan"/>
+        </w:rPr>
+        <w:t>Series B Preferred Stock</w:t>
+      </w:r>
+      <w:r w:rsidR="002F33EB">
+        <w:rPr>
+          <w:rFonts w:ascii="Spartan" w:hAnsi="Spartan" w:cs="Arial"/>
+          <w:bCs/>
+        </w:rPr>
+        <w:t xml:space="preserve"> </w:t>
+      </w:r>
+      <w:r w:rsidR="002F33EB" w:rsidRPr="002F33EB">
+        <w:rPr>
+          <w:rFonts w:ascii="Spartan" w:hAnsi="Spartan" w:cs="Arial"/>
+          <w:bCs/>
+          <w:highlight w:val="cyan"/>
+        </w:rPr>
+        <w:t xml:space="preserve">of </w:t>
+      </w:r>
+      <w:r w:rsidR="002F33EB" w:rsidRPr="002F33EB">
+        <w:rPr>
+          <w:rFonts w:ascii="Spartan" w:eastAsia="Spartan" w:hAnsi="Spartan" w:cs="Spartan"/>
+          <w:highlight w:val="cyan"/>
+        </w:rPr>
+        <w:t>X.AI</w:t>
+      </w:r>
+      <w:r>
+        <w:rPr>
+          <w:rFonts w:ascii="Spartan" w:eastAsia="Spartan" w:hAnsi="Spartan" w:cs="Spartan"/>
+        </w:rPr>
+        <w:t>.</w:t>
+      </w:r>
+    </w:p>
+    <w:p w14:paraId="7213BE08" w14:textId="77777777" w:rsidR="00277C41" w:rsidRDefault="00277C41">
+      <w:pPr>
+        <w:rPr>
+          <w:rFonts w:ascii="Spartan" w:eastAsia="Spartan" w:hAnsi="Spartan" w:cs="Spartan"/>
+        </w:rPr>
+      </w:pPr>
+    </w:p>
+    <w:p w14:paraId="7A6E3E5A" w14:textId="77777777" w:rsidR="00277C41" w:rsidRDefault="00672A5C">
+      <w:pPr>
+        <w:jc w:val="center"/>
+        <w:rPr>
+          <w:rFonts w:ascii="Spartan" w:eastAsia="Spartan" w:hAnsi="Spartan" w:cs="Spartan"/>
+        </w:rPr>
+      </w:pPr>
+      <w:r>
+        <w:rPr>
+          <w:rFonts w:ascii="Spartan" w:eastAsia="Spartan" w:hAnsi="Spartan" w:cs="Spartan"/>
+        </w:rPr>
+        <w:t>This certificate was authorised by:</w:t>
+      </w:r>
+    </w:p>
+    <w:p w14:paraId="25B0E427" w14:textId="77777777" w:rsidR="00277C41" w:rsidRDefault="00277C41" w:rsidP="00DA1FD1">
+      <w:pPr>
+        <w:rPr>
+          <w:rFonts w:ascii="Spartan" w:eastAsia="Spartan" w:hAnsi="Spartan" w:cs="Spartan"/>
+        </w:rPr>
+      </w:pPr>
+    </w:p>
+    <w:p w14:paraId="0E2D712E" w14:textId="77777777" w:rsidR="00277C41" w:rsidRDefault="00277C41">
+      <w:pPr>
+        <w:rPr>
+          <w:rFonts w:ascii="Spartan" w:eastAsia="Spartan" w:hAnsi="Spartan" w:cs="Spartan"/>
+        </w:rPr>
+      </w:pPr>
+    </w:p>
+    <w:tbl>
+      <w:tblPr>
+        <w:tblStyle w:val="a0"/>
+        <w:tblW w:w="14560" w:type="dxa"/>
+        <w:tblLayout w:type="fixed"/>
+        <w:tblLook w:val="0680" w:firstRow="0" w:lastRow="0" w:firstColumn="1" w:lastColumn="0" w:noHBand="1" w:noVBand="1"/>
+      </w:tblPr>
+      <w:tblGrid>
+        <w:gridCol w:w="4853"/>
+        <w:gridCol w:w="4853"/>
+        <w:gridCol w:w="4854"/>
+      </w:tblGrid>
+      <w:tr w:rsidR="00277C41" w14:paraId="20809D9C" w14:textId="77777777" w:rsidTr="00277C41">
+        <w:tc>
+          <w:tcPr>
+            <w:cnfStyle w:val="001000000000" w:firstRow="0" w:lastRow="0" w:firstColumn="1" w:lastColumn="0" w:oddVBand="0" w:evenVBand="0" w:oddHBand="0" w:evenHBand="0" w:firstRowFirstColumn="0" w:firstRowLastColumn="0" w:lastRowFirstColumn="0" w:lastRowLastColumn="0"/>
+            <w:tcW w:w="4853" w:type="dxa"/>
+            <w:tcBorders>
+              <w:right w:val="single" w:sz="4" w:space="0" w:color="000000"/>
+            </w:tcBorders>
+          </w:tcPr>
+          <w:p w14:paraId="005BB05B" w14:textId="77777777" w:rsidR="00277C41" w:rsidRDefault="00277C41">
+            <w:pPr>
+              <w:jc w:val="center"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Spartan" w:eastAsia="Spartan" w:hAnsi="Spartan" w:cs="Spartan"/>
+              </w:rPr>
+            </w:pPr>
+          </w:p>
+          <w:p w14:paraId="588940D7" w14:textId="77777777" w:rsidR="00277C41" w:rsidRDefault="00672A5C">
+            <w:pPr>
+              <w:jc w:val="center"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Spartan" w:eastAsia="Spartan" w:hAnsi="Spartan" w:cs="Spartan"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:noProof/>
+              </w:rPr>
+              <w:drawing>
+                <wp:inline distT="0" distB="0" distL="0" distR="0" wp14:anchorId="565CDE60" wp14:editId="43CBFD3D">
+                  <wp:extent cx="2057913" cy="567558"/>
+                  <wp:effectExtent l="0" t="0" r="0" b="0"/>
+                  <wp:docPr id="1121008535" name="image2.jpg" descr="Graphical user interface
+
+Description automatically generated with medium confidence"/>
+                  <wp:cNvGraphicFramePr/>
+                  <a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+                    <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">
+                      <pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">
+                        <pic:nvPicPr>
+                          <pic:cNvPr id="0" name="image2.jpg" descr="Graphical user interface
+
+Description automatically generated with medium confidence"/>
+                          <pic:cNvPicPr preferRelativeResize="0"/>
+                        </pic:nvPicPr>
+                        <pic:blipFill>
+                          <a:blip r:embed="rId8"/>
+                          <a:srcRect l="8756" t="38636" r="63127" b="39046"/>
+                          <a:stretch>
+                            <a:fillRect/>
+                          </a:stretch>
+                        </pic:blipFill>
+                        <pic:spPr>
+                          <a:xfrm>
+                            <a:off x="0" y="0"/>
+                            <a:ext cx="2057913" cy="567558"/>
+                          </a:xfrm>
+                          <a:prstGeom prst="rect">
+                            <a:avLst/>
+                          </a:prstGeom>
+                          <a:ln/>
+                        </pic:spPr>
+                      </pic:pic>
+                    </a:graphicData>
+                  </a:graphic>
+                </wp:inline>
+              </w:drawing>
+            </w:r>
+          </w:p>
+          <w:p w14:paraId="24895146" w14:textId="77777777" w:rsidR="00277C41" w:rsidRDefault="00277C41">
+            <w:pPr>
+              <w:jc w:val="center"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Spartan" w:eastAsia="Spartan" w:hAnsi="Spartan" w:cs="Spartan"/>
+              </w:rPr>
+            </w:pPr>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:w="4853" w:type="dxa"/>
+            <w:vMerge w:val="restart"/>
+            <w:tcBorders>
+              <w:left w:val="single" w:sz="4" w:space="0" w:color="000000"/>
+              <w:right w:val="single" w:sz="4" w:space="0" w:color="000000"/>
+            </w:tcBorders>
+            <w:vAlign w:val="center"/>
+          </w:tcPr>
+          <w:p w14:paraId="42FFB223" w14:textId="6E8684CF" w:rsidR="00277C41" w:rsidRPr="00F30089" w:rsidRDefault="00672A5C">
+            <w:pPr>
+              <w:jc w:val="center"/>
+              <w:cnfStyle w:val="000000000000" w:firstRow="0" w:lastRow="0" w:firstColumn="0" w:lastColumn="0" w:oddVBand="0" w:evenVBand="0" w:oddHBand="0" w:evenHBand="0" w:firstRowFirstColumn="0" w:firstRowLastColumn="0" w:lastRowFirstColumn="0" w:lastRowLastColumn="0"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Spartan" w:eastAsia="Spartan" w:hAnsi="Spartan" w:cs="Spartan"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r w:rsidRPr="00F30089">
+              <w:rPr>
+                <w:rFonts w:ascii="Spartan" w:eastAsia="Spartan" w:hAnsi="Spartan" w:cs="Spartan"/>
+              </w:rPr>
+              <w:t>VERSO Capital 2 SCSP</w:t>
+            </w:r>
+            <w:r w:rsidR="00F30089" w:rsidRPr="00F30089">
+              <w:rPr>
+                <w:rFonts w:ascii="Spartan" w:eastAsia="Spartan" w:hAnsi="Spartan" w:cs="Spartan"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r w:rsidR="00F30089" w:rsidRPr="00F450D3">
+              <w:rPr>
+                <w:rFonts w:ascii="Spartan SemiBold" w:eastAsia="Spartan SemiBold" w:hAnsi="Spartan SemiBold" w:cs="Spartan SemiBold"/>
+                <w:highlight w:val="yellow"/>
+              </w:rPr>
+              <w:t>[Vehicle</w:t>
+            </w:r>
+            <w:r w:rsidR="00F30089">
+              <w:rPr>
+                <w:rFonts w:ascii="Spartan SemiBold" w:eastAsia="Spartan SemiBold" w:hAnsi="Spartan SemiBold" w:cs="Spartan SemiBold"/>
+                <w:highlight w:val="yellow"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> Name</w:t>
+            </w:r>
+            <w:r w:rsidR="00F30089" w:rsidRPr="00F450D3">
+              <w:rPr>
+                <w:rFonts w:ascii="Spartan SemiBold" w:eastAsia="Spartan SemiBold" w:hAnsi="Spartan SemiBold" w:cs="Spartan SemiBold"/>
+                <w:highlight w:val="yellow"/>
+              </w:rPr>
+              <w:t>]</w:t>
+            </w:r>
+          </w:p>
+          <w:p w14:paraId="6661BC08" w14:textId="77777777" w:rsidR="00277C41" w:rsidRPr="00004997" w:rsidRDefault="00672A5C">
+            <w:pPr>
+              <w:jc w:val="center"/>
+              <w:cnfStyle w:val="000000000000" w:firstRow="0" w:lastRow="0" w:firstColumn="0" w:lastColumn="0" w:oddVBand="0" w:evenVBand="0" w:oddHBand="0" w:evenHBand="0" w:firstRowFirstColumn="0" w:firstRowLastColumn="0" w:lastRowFirstColumn="0" w:lastRowLastColumn="0"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Spartan" w:eastAsia="Spartan" w:hAnsi="Spartan" w:cs="Spartan"/>
+                <w:lang w:val="fr-FR"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r w:rsidRPr="00004997">
+              <w:rPr>
+                <w:rFonts w:ascii="Spartan" w:eastAsia="Spartan" w:hAnsi="Spartan" w:cs="Spartan"/>
+                <w:lang w:val="fr-FR"/>
+              </w:rPr>
+              <w:t>2 Avenue Charles de Gaulle</w:t>
+            </w:r>
+          </w:p>
+          <w:p w14:paraId="4E777E82" w14:textId="79F1D1E8" w:rsidR="00277C41" w:rsidRPr="00F30089" w:rsidRDefault="00672A5C">
+            <w:pPr>
+              <w:jc w:val="center"/>
+              <w:cnfStyle w:val="000000000000" w:firstRow="0" w:lastRow="0" w:firstColumn="0" w:lastColumn="0" w:oddVBand="0" w:evenVBand="0" w:oddHBand="0" w:evenHBand="0" w:firstRowFirstColumn="0" w:firstRowLastColumn="0" w:lastRowFirstColumn="0" w:lastRowLastColumn="0"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Spartan" w:eastAsia="Spartan" w:hAnsi="Spartan" w:cs="Spartan"/>
+                <w:lang w:val="fr-FR"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r w:rsidRPr="00F30089">
+              <w:rPr>
+                <w:rFonts w:ascii="Spartan" w:eastAsia="Spartan" w:hAnsi="Spartan" w:cs="Spartan"/>
+                <w:lang w:val="fr-FR"/>
+              </w:rPr>
+              <w:t xml:space="preserve">L-1653 Luxembourg </w:t>
+            </w:r>
+            <w:r w:rsidR="00F30089" w:rsidRPr="00F30089">
+              <w:rPr>
+                <w:rFonts w:ascii="Spartan SemiBold" w:eastAsia="Spartan SemiBold" w:hAnsi="Spartan SemiBold" w:cs="Spartan SemiBold"/>
+                <w:highlight w:val="yellow"/>
+                <w:lang w:val="fr-FR"/>
+              </w:rPr>
+              <w:t>[</w:t>
+            </w:r>
+            <w:proofErr w:type="spellStart"/>
+            <w:r w:rsidR="00F30089" w:rsidRPr="00F30089">
+              <w:rPr>
+                <w:rFonts w:ascii="Spartan SemiBold" w:eastAsia="Spartan SemiBold" w:hAnsi="Spartan SemiBold" w:cs="Spartan SemiBold"/>
+                <w:highlight w:val="yellow"/>
+                <w:lang w:val="fr-FR"/>
+              </w:rPr>
+              <w:t>Vehicle</w:t>
+            </w:r>
+            <w:proofErr w:type="spellEnd"/>
+            <w:r w:rsidR="00F30089" w:rsidRPr="00F30089">
+              <w:rPr>
+                <w:rFonts w:ascii="Spartan SemiBold" w:eastAsia="Spartan SemiBold" w:hAnsi="Spartan SemiBold" w:cs="Spartan SemiBold"/>
+                <w:highlight w:val="yellow"/>
+                <w:lang w:val="fr-FR"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:proofErr w:type="spellStart"/>
+            <w:r w:rsidR="00F30089">
+              <w:rPr>
+                <w:rFonts w:ascii="Spartan SemiBold" w:eastAsia="Spartan SemiBold" w:hAnsi="Spartan SemiBold" w:cs="Spartan SemiBold"/>
+                <w:highlight w:val="yellow"/>
+                <w:lang w:val="fr-FR"/>
+              </w:rPr>
+              <w:t>Address</w:t>
+            </w:r>
+            <w:proofErr w:type="spellEnd"/>
+            <w:r w:rsidR="00F30089" w:rsidRPr="00F30089">
+              <w:rPr>
+                <w:rFonts w:ascii="Spartan SemiBold" w:eastAsia="Spartan SemiBold" w:hAnsi="Spartan SemiBold" w:cs="Spartan SemiBold"/>
+                <w:highlight w:val="yellow"/>
+                <w:lang w:val="fr-FR"/>
+              </w:rPr>
+              <w:t>]</w:t>
+            </w:r>
+          </w:p>
+          <w:p w14:paraId="593D27E1" w14:textId="77777777" w:rsidR="00277C41" w:rsidRDefault="00672A5C">
+            <w:pPr>
+              <w:jc w:val="center"/>
+              <w:cnfStyle w:val="000000000000" w:firstRow="0" w:lastRow="0" w:firstColumn="0" w:lastColumn="0" w:oddVBand="0" w:evenVBand="0" w:oddHBand="0" w:evenHBand="0" w:firstRowFirstColumn="0" w:firstRowLastColumn="0" w:lastRowFirstColumn="0" w:lastRowLastColumn="0"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Spartan" w:eastAsia="Spartan" w:hAnsi="Spartan" w:cs="Spartan"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Spartan" w:eastAsia="Spartan" w:hAnsi="Spartan" w:cs="Spartan"/>
+              </w:rPr>
+              <w:t>acting in the name and on behalf of its</w:t>
+            </w:r>
+          </w:p>
+          <w:p w14:paraId="1A2FB6BC" w14:textId="56B1B8D8" w:rsidR="00277C41" w:rsidRDefault="00672A5C">
+            <w:pPr>
+              <w:jc w:val="center"/>
+              <w:cnfStyle w:val="000000000000" w:firstRow="0" w:lastRow="0" w:firstColumn="0" w:lastColumn="0" w:oddVBand="0" w:evenVBand="0" w:oddHBand="0" w:evenHBand="0" w:firstRowFirstColumn="0" w:firstRowLastColumn="0" w:lastRowFirstColumn="0" w:lastRowLastColumn="0"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Spartan" w:eastAsia="Spartan" w:hAnsi="Spartan" w:cs="Spartan"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Spartan" w:eastAsia="Spartan" w:hAnsi="Spartan" w:cs="Spartan"/>
+              </w:rPr>
+              <w:t xml:space="preserve">Series </w:t>
+            </w:r>
+            <w:r w:rsidR="00F30089" w:rsidRPr="0073068A">
+              <w:rPr>
+                <w:rFonts w:ascii="Spartan SemiBold" w:eastAsia="Spartan SemiBold" w:hAnsi="Spartan SemiBold" w:cs="Spartan SemiBold"/>
+                <w:highlight w:val="yellow"/>
+              </w:rPr>
+              <w:t>[Series Code]</w:t>
+            </w:r>
+            <w:r w:rsidR="00F30089" w:rsidRPr="0073068A">
+              <w:rPr>
+                <w:rFonts w:ascii="Spartan SemiBold" w:eastAsia="Spartan SemiBold" w:hAnsi="Spartan SemiBold" w:cs="Spartan SemiBold"/>
+                <w:color w:val="EE0000"/>
+              </w:rPr>
+              <w:t xml:space="preserve"> </w:t>
+            </w:r>
+            <w:r w:rsidR="00F30089" w:rsidRPr="0073068A">
+              <w:rPr>
+                <w:rFonts w:ascii="Spartan SemiBold" w:eastAsia="Spartan SemiBold" w:hAnsi="Spartan SemiBold" w:cs="Spartan SemiBold"/>
+                <w:highlight w:val="cyan"/>
+              </w:rPr>
+              <w:t>209</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:w="4854" w:type="dxa"/>
+            <w:tcBorders>
+              <w:left w:val="single" w:sz="4" w:space="0" w:color="000000"/>
+            </w:tcBorders>
+            <w:vAlign w:val="bottom"/>
+          </w:tcPr>
+          <w:p w14:paraId="33821587" w14:textId="77777777" w:rsidR="00277C41" w:rsidRDefault="00672A5C">
+            <w:pPr>
+              <w:jc w:val="center"/>
+              <w:cnfStyle w:val="000000000000" w:firstRow="0" w:lastRow="0" w:firstColumn="0" w:lastColumn="0" w:oddVBand="0" w:evenVBand="0" w:oddHBand="0" w:evenHBand="0" w:firstRowFirstColumn="0" w:firstRowLastColumn="0" w:lastRowFirstColumn="0" w:lastRowLastColumn="0"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Spartan" w:eastAsia="Spartan" w:hAnsi="Spartan" w:cs="Spartan"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:noProof/>
+              </w:rPr>
+              <w:drawing>
+                <wp:inline distT="0" distB="0" distL="0" distR="0" wp14:anchorId="03BEEA60" wp14:editId="4E3216DA">
+                  <wp:extent cx="2188792" cy="630717"/>
+                  <wp:effectExtent l="0" t="0" r="0" b="0"/>
+                  <wp:docPr id="1121008534" name="image2.jpg" descr="Graphical user interface
+
+Description automatically generated with medium confidence"/>
+                  <wp:cNvGraphicFramePr/>
+                  <a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+                    <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">
+                      <pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">
+                        <pic:nvPicPr>
+                          <pic:cNvPr id="0" name="image2.jpg" descr="Graphical user interface
+
+Description automatically generated with medium confidence"/>
+                          <pic:cNvPicPr preferRelativeResize="0"/>
+                        </pic:nvPicPr>
+                        <pic:blipFill>
+                          <a:blip r:embed="rId8"/>
+                          <a:srcRect l="46459" t="43090" r="25008" b="42302"/>
+                          <a:stretch>
+                            <a:fillRect/>
+                          </a:stretch>
+                        </pic:blipFill>
+                        <pic:spPr>
+                          <a:xfrm>
+                            <a:off x="0" y="0"/>
+                            <a:ext cx="2188792" cy="630717"/>
+                          </a:xfrm>
+                          <a:prstGeom prst="rect">
+                            <a:avLst/>
+                          </a:prstGeom>
+                          <a:ln/>
+                        </pic:spPr>
+                      </pic:pic>
+                    </a:graphicData>
+                  </a:graphic>
+                </wp:inline>
+              </w:drawing>
+            </w:r>
+          </w:p>
+        </w:tc>
+      </w:tr>
+      <w:tr w:rsidR="00277C41" w14:paraId="12AEEC70" w14:textId="77777777" w:rsidTr="00277C41">
+        <w:tc>
+          <w:tcPr>
+            <w:cnfStyle w:val="001000000000" w:firstRow="0" w:lastRow="0" w:firstColumn="1" w:lastColumn="0" w:oddVBand="0" w:evenVBand="0" w:oddHBand="0" w:evenHBand="0" w:firstRowFirstColumn="0" w:firstRowLastColumn="0" w:lastRowFirstColumn="0" w:lastRowLastColumn="0"/>
+            <w:tcW w:w="4853" w:type="dxa"/>
+            <w:tcBorders>
+              <w:right w:val="single" w:sz="4" w:space="0" w:color="000000"/>
+            </w:tcBorders>
+          </w:tcPr>
+          <w:p w14:paraId="012B1AAE" w14:textId="77777777" w:rsidR="00277C41" w:rsidRDefault="00672A5C">
+            <w:pPr>
+              <w:jc w:val="center"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Spartan" w:eastAsia="Spartan" w:hAnsi="Spartan" w:cs="Spartan"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Spartan" w:eastAsia="Spartan" w:hAnsi="Spartan" w:cs="Spartan"/>
+              </w:rPr>
+              <w:t>Mr Julien Machot</w:t>
+            </w:r>
+          </w:p>
+          <w:p w14:paraId="6DAB30BE" w14:textId="77777777" w:rsidR="00277C41" w:rsidRDefault="00672A5C">
+            <w:pPr>
+              <w:jc w:val="center"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Spartan" w:eastAsia="Spartan" w:hAnsi="Spartan" w:cs="Spartan"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Spartan" w:eastAsia="Spartan" w:hAnsi="Spartan" w:cs="Spartan"/>
+                <w:b w:val="0"/>
+              </w:rPr>
+              <w:t>Managing Partner</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:w="4853" w:type="dxa"/>
+            <w:vMerge/>
+            <w:tcBorders>
+              <w:left w:val="single" w:sz="4" w:space="0" w:color="000000"/>
+              <w:right w:val="single" w:sz="4" w:space="0" w:color="000000"/>
+            </w:tcBorders>
+            <w:vAlign w:val="center"/>
+          </w:tcPr>
+          <w:p w14:paraId="5B79D751" w14:textId="77777777" w:rsidR="00277C41" w:rsidRDefault="00277C41">
+            <w:pPr>
+              <w:pBdr>
+                <w:top w:val="nil"/>
+                <w:left w:val="nil"/>
+                <w:bottom w:val="nil"/>
+                <w:right w:val="nil"/>
+                <w:between w:val="nil"/>
+              </w:pBdr>
+              <w:spacing w:line="276" w:lineRule="auto"/>
+              <w:cnfStyle w:val="000000000000" w:firstRow="0" w:lastRow="0" w:firstColumn="0" w:lastColumn="0" w:oddVBand="0" w:evenVBand="0" w:oddHBand="0" w:evenHBand="0" w:firstRowFirstColumn="0" w:firstRowLastColumn="0" w:lastRowFirstColumn="0" w:lastRowLastColumn="0"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Spartan" w:eastAsia="Spartan" w:hAnsi="Spartan" w:cs="Spartan"/>
+              </w:rPr>
+            </w:pPr>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:tcPr>
+            <w:tcW w:w="4854" w:type="dxa"/>
+            <w:tcBorders>
+              <w:left w:val="single" w:sz="4" w:space="0" w:color="000000"/>
+            </w:tcBorders>
+          </w:tcPr>
+          <w:p w14:paraId="6C463230" w14:textId="77777777" w:rsidR="00277C41" w:rsidRDefault="00672A5C">
+            <w:pPr>
+              <w:jc w:val="center"/>
+              <w:cnfStyle w:val="000000000000" w:firstRow="0" w:lastRow="0" w:firstColumn="0" w:lastColumn="0" w:oddVBand="0" w:evenVBand="0" w:oddHBand="0" w:evenHBand="0" w:firstRowFirstColumn="0" w:firstRowLastColumn="0" w:lastRowFirstColumn="0" w:lastRowLastColumn="0"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Spartan" w:eastAsia="Spartan" w:hAnsi="Spartan" w:cs="Spartan"/>
+                <w:b/>
+              </w:rPr>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Spartan" w:eastAsia="Spartan" w:hAnsi="Spartan" w:cs="Spartan"/>
+                <w:b/>
+              </w:rPr>
+              <w:t>Mr Frederic Dupont</w:t>
+            </w:r>
+          </w:p>
+          <w:p w14:paraId="5C004DA0" w14:textId="77777777" w:rsidR="00277C41" w:rsidRDefault="00672A5C">
+            <w:pPr>
+              <w:jc w:val="center"/>
+              <w:cnfStyle w:val="000000000000" w:firstRow="0" w:lastRow="0" w:firstColumn="0" w:lastColumn="0" w:oddVBand="0" w:evenVBand="0" w:oddHBand="0" w:evenHBand="0" w:firstRowFirstColumn="0" w:firstRowLastColumn="0" w:lastRowFirstColumn="0" w:lastRowLastColumn="0"/>
+              <w:rPr>
+                <w:rFonts w:ascii="Spartan" w:eastAsia="Spartan" w:hAnsi="Spartan" w:cs="Spartan"/>
+              </w:rPr>
+            </w:pPr>
+            <w:r>
+              <w:rPr>
+                <w:rFonts w:ascii="Spartan" w:eastAsia="Spartan" w:hAnsi="Spartan" w:cs="Spartan"/>
+              </w:rPr>
+              <w:t>General Counsel</w:t>
+            </w:r>
+          </w:p>
+        </w:tc>
+      </w:tr>
+    </w:tbl>
+    <w:p w14:paraId="5BB13B16" w14:textId="77777777" w:rsidR="00277C41" w:rsidRDefault="00277C41">
+      <w:pPr>
+        <w:rPr>
+          <w:rFonts w:ascii="Spartan" w:eastAsia="Spartan" w:hAnsi="Spartan" w:cs="Spartan"/>
+        </w:rPr>
+      </w:pPr>
+    </w:p>
+    <w:sectPr w:rsidR="00277C41">
+      <w:headerReference w:type="even" r:id="rId9"/>
+      <w:headerReference w:type="default" r:id="rId10"/>
+      <w:footerReference w:type="even" r:id="rId11"/>
+      <w:footerReference w:type="default" r:id="rId12"/>
+      <w:headerReference w:type="first" r:id="rId13"/>
+      <w:footerReference w:type="first" r:id="rId14"/>
+      <w:pgSz w:w="16838" w:h="11906" w:orient="landscape"/>
+      <w:pgMar w:top="1134" w:right="1134" w:bottom="709" w:left="1134" w:header="709" w:footer="709" w:gutter="0"/>
+      <w:pgNumType w:start="1"/>
+      <w:cols w:space="720"/>
+    </w:sectPr>
+  </w:body>
+</w:document>
