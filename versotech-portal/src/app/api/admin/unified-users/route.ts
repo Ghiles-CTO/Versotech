@@ -125,7 +125,7 @@ export async function GET(): Promise<NextResponse<UnifiedUsersResponse>> {
             entityName: inv.legal_name || 'Unnamed Investor',
             userName: 'No users assigned',
             userEmail: '-',
-            userRole: inv.type || 'investor',
+            userRole: inv.type || 'individual',  // Entity type: individual/entity/institutional
             isPrimary: false,
             canSign: false,
             status: inv.status === 'active' ? 'active' : 'inactive',
@@ -142,7 +142,7 @@ export async function GET(): Promise<NextResponse<UnifiedUsersResponse>> {
               entityName: inv.legal_name || 'Unnamed Investor',
               userName: iu.profiles?.display_name || 'Unknown User',
               userEmail: iu.profiles?.email || '-',
-              userRole: iu.role || 'member',
+              userRole: inv.type || 'individual',  // Entity type: individual/entity/institutional (was incorrectly showing iu.role)
               isPrimary: iu.is_primary || false,
               canSign: iu.can_sign || false,
               status: inv.status === 'active' ? 'active' : 'inactive',
@@ -158,7 +158,7 @@ export async function GET(): Promise<NextResponse<UnifiedUsersResponse>> {
     // 2. Fetch Lawyers (simple query without nested joins)
     const { data: lawyers, error: lawyersError } = await serviceClient
       .from('lawyers')
-      .select('id, firm_name, display_name, kyc_status, country, is_active, created_at')
+      .select('id, firm_name, display_name, type, kyc_status, country, is_active, created_at')
       .order('created_at', { ascending: false })
 
     // Fetch lawyer_users separately
@@ -207,7 +207,7 @@ export async function GET(): Promise<NextResponse<UnifiedUsersResponse>> {
             entityName: law.firm_name || law.display_name || 'Unnamed Firm',
             userName: 'No users assigned',
             userEmail: '-',
-            userRole: 'lawyer',
+            userRole: law.type || 'entity',  // Entity type: individual/entity (was static 'lawyer')
             isPrimary: false,
             canSign: false,
             status: law.is_active ? 'active' : 'inactive',
@@ -224,7 +224,7 @@ export async function GET(): Promise<NextResponse<UnifiedUsersResponse>> {
               entityName: law.firm_name || law.display_name || 'Unnamed Firm',
               userName: lu.profiles?.display_name || 'Unknown User',
               userEmail: lu.profiles?.email || '-',
-              userRole: lu.role || 'member',
+              userRole: law.type || 'entity',  // Entity type: individual/entity (was incorrectly showing lu.role)
               isPrimary: lu.is_primary || false,
               canSign: lu.can_sign || false,
               status: law.is_active ? 'active' : 'inactive',
@@ -240,7 +240,7 @@ export async function GET(): Promise<NextResponse<UnifiedUsersResponse>> {
     // 3. Fetch Partners (simple query without nested joins)
     const { data: partners, error: partnersError } = await serviceClient
       .from('partners')
-      .select('id, name, legal_name, kyc_status, country, status, created_at')
+      .select('id, name, legal_name, type, kyc_status, country, status, created_at')
       .order('created_at', { ascending: false })
 
     // Fetch partner_users separately
@@ -289,7 +289,7 @@ export async function GET(): Promise<NextResponse<UnifiedUsersResponse>> {
             entityName: p.name || p.legal_name || 'Unnamed Partner',
             userName: 'No users assigned',
             userEmail: '-',
-            userRole: 'partner',
+            userRole: p.type || 'entity',  // Entity type: individual/entity/institutional (was static 'partner')
             isPrimary: false,
             canSign: false,
             status: p.status === 'active' ? 'active' : 'inactive',
@@ -306,7 +306,7 @@ export async function GET(): Promise<NextResponse<UnifiedUsersResponse>> {
               entityName: p.name || p.legal_name || 'Unnamed Partner',
               userName: pu.profiles?.display_name || 'Unknown User',
               userEmail: pu.profiles?.email || '-',
-              userRole: pu.role || 'member',
+              userRole: p.type || 'entity',  // Entity type: individual/entity/institutional (was incorrectly showing pu.role)
               isPrimary: pu.is_primary || false,
               canSign: pu.can_sign || false,
               status: p.status === 'active' ? 'active' : 'inactive',
@@ -322,7 +322,7 @@ export async function GET(): Promise<NextResponse<UnifiedUsersResponse>> {
     // 4. Fetch Commercial Partners (simple query without nested joins)
     const { data: commercialPartners, error: cpError } = await serviceClient
       .from('commercial_partners')
-      .select('id, name, legal_name, kyc_status, country, status, created_at')
+      .select('id, name, legal_name, type, kyc_status, country, status, created_at')
       .order('created_at', { ascending: false })
 
     // Fetch commercial_partner_users separately
@@ -371,7 +371,7 @@ export async function GET(): Promise<NextResponse<UnifiedUsersResponse>> {
             entityName: cp.name || cp.legal_name || 'Unnamed Commercial Partner',
             userName: 'No users assigned',
             userEmail: '-',
-            userRole: 'commercial_partner',
+            userRole: cp.type || 'entity',  // Entity type: individual/entity (was static 'commercial_partner')
             isPrimary: false,
             canSign: false,
             status: cp.status === 'active' ? 'active' : 'inactive',
@@ -388,7 +388,7 @@ export async function GET(): Promise<NextResponse<UnifiedUsersResponse>> {
               entityName: cp.name || cp.legal_name || 'Unnamed Commercial Partner',
               userName: cpu.profiles?.display_name || 'Unknown User',
               userEmail: cpu.profiles?.email || '-',
-              userRole: cpu.role || 'member',
+              userRole: cp.type || 'entity',  // Entity type: individual/entity (was incorrectly showing cpu.role)
               isPrimary: cpu.is_primary || false,
               canSign: cpu.can_sign || false,
               status: cp.status === 'active' ? 'active' : 'inactive',
@@ -402,12 +402,12 @@ export async function GET(): Promise<NextResponse<UnifiedUsersResponse>> {
     }
 
     // 5. Fetch Introducers
-    // Columns: legal_name, email, contact_name, status (no country, no type)
     const { data: introducers, error: introducersError } = await serviceClient
       .from('introducers')
       .select(`
         id,
         legal_name,
+        type,
         email,
         contact_name,
         status,
@@ -426,7 +426,7 @@ export async function GET(): Promise<NextResponse<UnifiedUsersResponse>> {
           entityName: intro.legal_name || 'Unnamed Introducer',
           userName: intro.contact_name || 'No contact',
           userEmail: intro.email || '-',
-          userRole: 'introducer',
+          userRole: intro.type || 'individual',  // Entity type: individual/entity (was static 'introducer')
           isPrimary: true,
           canSign: false,
           status: intro.status === 'active' ? 'active' : 'inactive',
@@ -438,12 +438,12 @@ export async function GET(): Promise<NextResponse<UnifiedUsersResponse>> {
     }
 
     // 6. Fetch Arrangers
-    // Columns: legal_name, email, status, kyc_status (no contact_name, no country, no type)
     const { data: arrangers, error: arrangersError } = await serviceClient
       .from('arranger_entities')
       .select(`
         id,
         legal_name,
+        type,
         email,
         status,
         kyc_status,
@@ -462,7 +462,7 @@ export async function GET(): Promise<NextResponse<UnifiedUsersResponse>> {
           entityName: arr.legal_name || 'Unnamed Arranger',
           userName: 'Entity Contact',
           userEmail: arr.email || '-',
-          userRole: 'arranger',
+          userRole: arr.type || 'entity',  // Entity type: individual/entity (was static 'arranger')
           isPrimary: true,
           canSign: false,
           status: arr.status === 'active' ? 'active' : 'inactive',

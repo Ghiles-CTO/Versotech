@@ -53,27 +53,36 @@ interface NavItem {
 const PERSONA_NAV_ITEMS: Record<string, NavItem[]> = {
   // CEO persona - Verso Capital management (full access)
   // Note: CEO Profile is accessed via user menu (Profile Settings), not sidebar
+  // Grouped by: Core → Deal Flow → People → Docs & Legal → Finance → Compliance → Operations → Admin
   ceo: [
+    // Core (daily use)
     { name: 'Dashboard', href: '/versotech_main/dashboard', icon: LayoutDashboard, description: 'Overview' },
     { name: 'Messages', href: '/versotech_main/messages', icon: MessageSquare, description: 'Inbox' },
     { name: 'Approvals', href: '/versotech_main/approvals', icon: UserCheck, description: 'Pending approvals' },
+    // Deal Flow
     { name: 'Deals', href: '/versotech_main/deals', icon: Activity, description: 'Deal management' },
     { name: 'Vehicles', href: '/versotech_main/entities', icon: Building2, description: 'Investment vehicles' },
-    { name: 'Investors', href: '/versotech_main/investors', icon: Users, description: 'Investor relations' },
     { name: 'Subscriptions', href: '/versotech_main/subscriptions', icon: FileText, description: 'Subscription tracking' },
-    { name: 'Requests', href: '/versotech_main/requests', icon: ClipboardList, description: 'Service requests' },
+    // People
+    { name: 'Users', href: '/versotech_main/users', icon: Users, description: 'All user types' },
+    { name: 'Investors', href: '/versotech_main/investors', icon: Users, description: 'Investor relations' },
+    { name: 'Introducers', href: '/versotech_main/introducers', icon: HandHeart, description: 'Partners' },
+    { name: 'Arrangers', href: '/versotech_main/arrangers', icon: Briefcase, description: 'Regulated entities' },
+    // Docs & Legal
     { name: 'Documents', href: '/versotech_main/documents', icon: FileText, description: 'Document center' },
     { name: 'VersoSign', href: '/versotech_main/versosign', icon: FileSignature, description: 'E-signatures' },
-    { name: 'Introducers', href: '/versotech_main/introducers', icon: HandHeart, description: 'Partners' },
     { name: 'Introducer Agreements', href: '/versotech_main/introducer-agreements', icon: FileText, description: 'Fee agreements' },
-    { name: 'Arrangers', href: '/versotech_main/arrangers', icon: Briefcase, description: 'Regulated entities' },
-    { name: 'Users', href: '/versotech_main/users', icon: Users, description: 'All user types' },
-    { name: 'Calendar', href: '/versotech_main/calendar', icon: Calendar, description: 'Schedule' },
-    { name: 'KYC Review', href: '/versotech_main/kyc-review', icon: UserCheck, description: 'KYC compliance' },
+    // Finance
     { name: 'Fees', href: '/versotech_main/fees', icon: Calculator, description: 'Billing' },
     { name: 'Reconciliation', href: '/versotech_main/reconciliation', icon: Calculator, description: 'Payments' },
+    // Compliance
+    { name: 'KYC Review', href: '/versotech_main/kyc-review', icon: UserCheck, description: 'KYC compliance' },
     { name: 'Audit', href: '/versotech_main/audit', icon: Shield, description: 'Compliance logs' },
+    // Operations
+    { name: 'Requests', href: '/versotech_main/requests', icon: ClipboardList, description: 'Service requests' },
+    { name: 'Calendar', href: '/versotech_main/calendar', icon: Calendar, description: 'Schedule' },
     { name: 'Processes', href: '/versotech_main/processes', icon: Workflow, description: 'Workflows' },
+    // Admin (always last)
     { name: 'Admin', href: '/versotech_main/admin', icon: Database, description: 'System settings' },
   ],
 
