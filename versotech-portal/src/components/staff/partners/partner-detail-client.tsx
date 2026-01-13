@@ -665,7 +665,7 @@ export function PartnerDetailClient({ partner, metrics }: PartnerDetailClientPro
                     <div
                       key={feePlan.id}
                       className="group flex items-center justify-between p-4 rounded-xl border border-white/10 hover:border-white/20 hover:bg-white/5 transition-all cursor-pointer"
-                      onClick={() => router.push(`/versotech_main/deals/${feePlan.deal?.id}?tab=fees`)}
+                      onClick={() => feePlan.deal?.id && router.push(`/versotech_main/deals/${feePlan.deal.id}?tab=fees`)}
                     >
                       <div className="flex items-center gap-4">
                         <div className={`p-2.5 rounded-lg ${feePlan.status === 'accepted' ? 'bg-green-500/20' : 'bg-slate-500/20'}`}>
@@ -734,7 +734,13 @@ export function PartnerDetailClient({ partner, metrics }: PartnerDetailClientPro
                     <div
                       key={refInvestor.id}
                       className="group flex items-center justify-between p-4 rounded-xl border border-white/10 hover:border-white/20 hover:bg-white/5 transition-all cursor-pointer"
-                      onClick={() => router.push(`/versotech_main/deals/${refInvestor.deal?.id}?tab=members`)}
+                      onClick={() => {
+                      if (refInvestor.deal?.id) {
+                        router.push(`/versotech_main/deals/${refInvestor.deal.id}?tab=members`)
+                      } else if (refInvestor.investor?.id) {
+                        router.push(`/versotech_main/investors/${refInvestor.investor.id}`)
+                      }
+                    }}
                     >
                       <div className="flex items-center gap-4">
                         <div className="p-2.5 rounded-lg bg-purple-500/20">
