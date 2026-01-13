@@ -45,6 +45,7 @@ const individualKycEditSchema = z.object({
   // Personal Info
   first_name: z.string().min(1, 'First name is required').max(100),
   middle_name: z.string().max(100).optional().nullable(),
+  middle_initial: z.string().max(5).optional().nullable(),
   last_name: z.string().min(1, 'Last name is required').max(100),
   name_suffix: z.string().max(20).optional().nullable(),
   date_of_birth: z.string().optional().nullable(),
@@ -75,6 +76,10 @@ const individualKycEditSchema = z.object({
   id_issue_date: z.string().optional().nullable(),
   id_expiry_date: z.string().optional().nullable(),
   id_issuing_country: z.string().optional().nullable(),
+
+  // Proof of Address Document Dates
+  proof_of_address_date: z.string().optional().nullable(),
+  proof_of_address_expiry: z.string().optional().nullable(),
 })
 
 type IndividualKycEditForm = z.infer<typeof individualKycEditSchema>
@@ -154,6 +159,7 @@ export function EntityKYCEditDialog({
     defaultValues: {
       first_name: initialData?.first_name || '',
       middle_name: initialData?.middle_name || '',
+      middle_initial: initialData?.middle_initial || '',
       last_name: initialData?.last_name || '',
       name_suffix: initialData?.name_suffix || '',
       date_of_birth: initialData?.date_of_birth || '',
@@ -178,6 +184,8 @@ export function EntityKYCEditDialog({
       id_issue_date: initialData?.id_issue_date || '',
       id_expiry_date: initialData?.id_expiry_date || '',
       id_issuing_country: initialData?.id_issuing_country || '',
+      proof_of_address_date: initialData?.proof_of_address_date || '',
+      proof_of_address_expiry: initialData?.proof_of_address_expiry || '',
     },
   })
 
@@ -250,7 +258,7 @@ export function EntityKYCEditDialog({
                   description="Your legal name and personal details"
                 >
                   {/* Full Name Row */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                     <FormField
                       control={form.control}
                       name="first_name"
@@ -280,6 +288,25 @@ export function EntityKYCEditDialog({
                               {...field}
                               value={field.value || ''}
                               placeholder="William"
+                              className="h-11"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="middle_initial"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>M.I.</FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              value={field.value || ''}
+                              placeholder="W"
+                              maxLength={5}
                               className="h-11"
                             />
                           </FormControl>
@@ -825,6 +852,53 @@ export function EntityKYCEditDialog({
                               onChange={field.onChange}
                             />
                           </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  {/* Proof of Address Dates */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t">
+                    <FormField
+                      control={form.control}
+                      name="proof_of_address_date"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Proof of Address Date</FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              type="date"
+                              value={field.value || ''}
+                              className="h-11"
+                              max={new Date().toISOString().split('T')[0]}
+                            />
+                          </FormControl>
+                          <FormDescription className="text-xs">
+                            Date on utility bill or address proof
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="proof_of_address_expiry"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Proof of Address Expiry</FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              type="date"
+                              value={field.value || ''}
+                              className="h-11"
+                            />
+                          </FormControl>
+                          <FormDescription className="text-xs">
+                            When this proof needs renewal (typically 3 months)
+                          </FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}

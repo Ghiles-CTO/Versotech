@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Loader2, Plus, UserPlus } from 'lucide-react'
+import { Loader2, Plus, UserPlus, Building2, User } from 'lucide-react'
 import { toast } from 'sonner'
 import {
   Dialog,
@@ -24,6 +24,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
+import { cn } from '@/lib/utils'
 
 type StaffMember = {
   id: string
@@ -31,6 +32,12 @@ type StaffMember = {
   email: string
   role: string
 }
+
+// Helper to check if type is individual
+const isIndividualType = (type: string) => type === 'individual'
+
+// Helper to check if type is entity-like (entity, institutional, family_office, fund)
+const isEntityType = (type: string) => ['entity', 'institutional', 'family_office', 'fund'].includes(type)
 
 export function AddInvestorModal() {
   const router = useRouter()
@@ -44,15 +51,23 @@ export function AddInvestorModal() {
     title: '',
   })
   const [formData, setFormData] = useState({
-    legal_name: '',
-    display_name: '',
+    // Common fields
     type: 'individual',
     email: '',
     phone: '',
     country: '',
-    country_of_incorporation: '',
     tax_residency: '',
     primary_rm: '',
+    // Individual-specific fields
+    first_name: '',
+    middle_name: '',
+    last_name: '',
+    // Entity-specific fields
+    legal_name: '',
+    display_name: '',
+    country_of_incorporation: '',
+    representative_name: '',
+    representative_title: '',
   })
 
   // Fetch staff members when modal opens
@@ -76,10 +91,18 @@ export function AddInvestorModal() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
-    if (!formData.legal_name) {
-      toast.error('Legal name is required')
-      return
+
+    // Validation based on type
+    if (isIndividualType(formData.type)) {
+      if (!formData.first_name.trim()) {
+        toast.error('First name is required for individuals')
+        return
+      }
+    } else {
+      if (!formData.legal_name.trim()) {
+        toast.error('Legal name is required')
+        return
+      }
     }
 
     const inviteEmail = inviteData.email.trim().toLowerCase()
@@ -100,12 +123,29 @@ export function AddInvestorModal() {
     setLoading(true)
 
     try {
-      console.log('[AddInvestor] Submitting:', formData)
-      
+      // Prepare data for API - compute legal_name for individuals
+      const submitData = { ...formData }
+
+      if (isIndividualType(formData.type)) {
+        // Compute legal_name from structured name fields
+        const nameParts = [
+          formData.first_name.trim(),
+          formData.middle_name.trim(),
+          formData.last_name.trim(),
+        ].filter(Boolean)
+        submitData.legal_name = nameParts.join(' ')
+        // Also set display_name if not provided
+        if (!submitData.display_name.trim()) {
+          submitData.display_name = submitData.legal_name
+        }
+      }
+
+      console.log('[AddInvestor] Submitting:', submitData)
+
       const response = await fetch('/api/staff/investors', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(submitData),
       })
 
       console.log('[AddInvestor] Response status:', response.status)
@@ -170,15 +210,20 @@ export function AddInvestorModal() {
       
       // Reset form
       setFormData({
-        legal_name: '',
-        display_name: '',
         type: 'individual',
         email: '',
         phone: '',
         country: '',
-        country_of_incorporation: '',
         tax_residency: '',
         primary_rm: '',
+        first_name: '',
+        middle_name: '',
+        last_name: '',
+        legal_name: '',
+        display_name: '',
+        country_of_incorporation: '',
+        representative_name: '',
+        representative_title: '',
       })
       setInviteUser(false)
       setInviteData({ email: '', display_name: '', title: '' })
@@ -211,7 +256,7 @@ export function AddInvestorModal() {
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Investor Type - First Field */}
+          {/* Investor Type - FIRST FIELD */}
           <div className="space-y-2">
             <Label htmlFor="type" className="text-white">
               Investor Type <span className="text-red-400">*</span>
@@ -224,106 +269,210 @@ export function AddInvestorModal() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="individual">Individual</SelectItem>
-                <SelectItem value="entity">Entity</SelectItem>
+                <SelectItem value="individual">
+                  <div className="flex items-center gap-2">
+                    <User className="h-4 w-4" />
+                    Individual
+                  </div>
+                </SelectItem>
+                <SelectItem value="entity">
+                  <div className="flex items-center gap-2">
+                    <Building2 className="h-4 w-4" />
+                    Entity
+                  </div>
+                </SelectItem>
                 <SelectItem value="institutional">Institutional</SelectItem>
                 <SelectItem value="family_office">Family Office</SelectItem>
                 <SelectItem value="fund">Fund</SelectItem>
               </SelectContent>
             </Select>
+            <p className="text-xs text-gray-400">
+              {isIndividualType(formData.type)
+                ? 'A natural person investing in their own name'
+                : 'A company, fund, or institutional entity'}
+            </p>
           </div>
 
-          {/* Legal Name */}
-          <div className="space-y-2">
-            <Label htmlFor="legal_name" className="text-white">
-              Legal Name <span className="text-red-400">*</span>
-            </Label>
-            <Input
-              id="legal_name"
-              value={formData.legal_name}
-              onChange={(e) => setFormData({ ...formData, legal_name: e.target.value })}
-              placeholder="John Smith / Acme Investment Fund LP"
-              className="bg-zinc-900 border-zinc-700 text-white placeholder:text-gray-500"
-              required
-            />
-          </div>
+          {/* INDIVIDUAL-SPECIFIC FIELDS */}
+          {isIndividualType(formData.type) && (
+            <div className="space-y-4 p-4 rounded-lg border border-zinc-800 bg-zinc-900/50">
+              <div className="flex items-center gap-2 text-sm font-medium text-gray-300">
+                <User className="h-4 w-4" />
+                Personal Information
+              </div>
 
-          {/* Display Name */}
-          <div className="space-y-2">
-            <Label htmlFor="display_name" className="text-white">Display Name</Label>
-            <Input
-              id="display_name"
-              value={formData.display_name}
-              onChange={(e) => setFormData({ ...formData, display_name: e.target.value })}
-              placeholder="Optional short name"
-              className="bg-zinc-900 border-zinc-700 text-white placeholder:text-gray-500"
-            />
-          </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="first_name" className="text-white">
+                    First Name <span className="text-red-400">*</span>
+                  </Label>
+                  <Input
+                    id="first_name"
+                    value={formData.first_name}
+                    onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
+                    placeholder="John"
+                    className="bg-zinc-900 border-zinc-700 text-white placeholder:text-gray-500"
+                  />
+                </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            {/* Email */}
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-white">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                placeholder="investor@email.com"
-                className="bg-zinc-900 border-zinc-700 text-white placeholder:text-gray-500"
-              />
+                <div className="space-y-2">
+                  <Label htmlFor="middle_name" className="text-white">Middle Name</Label>
+                  <Input
+                    id="middle_name"
+                    value={formData.middle_name}
+                    onChange={(e) => setFormData({ ...formData, middle_name: e.target.value })}
+                    placeholder="Michael"
+                    className="bg-zinc-900 border-zinc-700 text-white placeholder:text-gray-500"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="last_name" className="text-white">Last Name</Label>
+                <Input
+                  id="last_name"
+                  value={formData.last_name}
+                  onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
+                  placeholder="Smith"
+                  className="bg-zinc-900 border-zinc-700 text-white placeholder:text-gray-500"
+                />
+              </div>
+
+              {/* Preview computed legal name */}
+              {(formData.first_name || formData.last_name) && (
+                <div className="text-xs text-gray-400 bg-zinc-800/50 px-3 py-2 rounded">
+                  Legal name will be: <span className="text-white font-medium">
+                    {[formData.first_name, formData.middle_name, formData.last_name].filter(Boolean).join(' ')}
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ENTITY-SPECIFIC FIELDS */}
+          {isEntityType(formData.type) && (
+            <div className="space-y-4 p-4 rounded-lg border border-zinc-800 bg-zinc-900/50">
+              <div className="flex items-center gap-2 text-sm font-medium text-gray-300">
+                <Building2 className="h-4 w-4" />
+                Entity Information
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="legal_name" className="text-white">
+                  Legal Name <span className="text-red-400">*</span>
+                </Label>
+                <Input
+                  id="legal_name"
+                  value={formData.legal_name}
+                  onChange={(e) => setFormData({ ...formData, legal_name: e.target.value })}
+                  placeholder="Acme Investment Holdings LP"
+                  className="bg-zinc-900 border-zinc-700 text-white placeholder:text-gray-500"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="display_name" className="text-white">Display Name</Label>
+                <Input
+                  id="display_name"
+                  value={formData.display_name}
+                  onChange={(e) => setFormData({ ...formData, display_name: e.target.value })}
+                  placeholder="Acme Holdings (optional short name)"
+                  className="bg-zinc-900 border-zinc-700 text-white placeholder:text-gray-500"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="country_of_incorporation" className="text-white">Country of Incorporation</Label>
+                <Input
+                  id="country_of_incorporation"
+                  value={formData.country_of_incorporation}
+                  onChange={(e) => setFormData({ ...formData, country_of_incorporation: e.target.value })}
+                  placeholder="Cayman Islands"
+                  className="bg-zinc-900 border-zinc-700 text-white placeholder:text-gray-500"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="representative_name" className="text-white">Representative Name</Label>
+                  <Input
+                    id="representative_name"
+                    value={formData.representative_name}
+                    onChange={(e) => setFormData({ ...formData, representative_name: e.target.value })}
+                    placeholder="Jane Doe"
+                    className="bg-zinc-900 border-zinc-700 text-white placeholder:text-gray-500"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="representative_title" className="text-white">Representative Title</Label>
+                  <Input
+                    id="representative_title"
+                    value={formData.representative_title}
+                    onChange={(e) => setFormData({ ...formData, representative_title: e.target.value })}
+                    placeholder="Managing Director"
+                    className="bg-zinc-900 border-zinc-700 text-white placeholder:text-gray-500"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* COMMON FIELDS - Contact Information */}
+          <div className="space-y-4">
+            <div className="text-sm font-medium text-gray-300">Contact Information</div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-white">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  placeholder="investor@email.com"
+                  className="bg-zinc-900 border-zinc-700 text-white placeholder:text-gray-500"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="phone" className="text-white">Phone</Label>
+                <Input
+                  id="phone"
+                  type="tel"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  placeholder="+1 (555) 123-4567"
+                  className="bg-zinc-900 border-zinc-700 text-white placeholder:text-gray-500"
+                />
+              </div>
             </div>
 
-            {/* Phone */}
-            <div className="space-y-2">
-              <Label htmlFor="phone" className="text-white">Phone</Label>
-              <Input
-                id="phone"
-                type="tel"
-                value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                placeholder="+1 (555) 123-4567"
-                className="bg-zinc-900 border-zinc-700 text-white placeholder:text-gray-500"
-              />
-            </div>
-          </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="country" className="text-white">
+                  {isIndividualType(formData.type) ? 'Country of Residence' : 'Country'}
+                </Label>
+                <Input
+                  id="country"
+                  value={formData.country}
+                  onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+                  placeholder="United States"
+                  className="bg-zinc-900 border-zinc-700 text-white placeholder:text-gray-500"
+                />
+              </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            {/* Country */}
-            <div className="space-y-2">
-              <Label htmlFor="country" className="text-white">Country</Label>
-              <Input
-                id="country"
-                value={formData.country}
-                onChange={(e) => setFormData({ ...formData, country: e.target.value })}
-                placeholder="United States"
-                className="bg-zinc-900 border-zinc-700 text-white placeholder:text-gray-500"
-              />
+              <div className="space-y-2">
+                <Label htmlFor="tax_residency" className="text-white">Tax Residency</Label>
+                <Input
+                  id="tax_residency"
+                  value={formData.tax_residency}
+                  onChange={(e) => setFormData({ ...formData, tax_residency: e.target.value })}
+                  placeholder="United States"
+                  className="bg-zinc-900 border-zinc-700 text-white placeholder:text-gray-500"
+                />
+              </div>
             </div>
-
-            {/* Country of Incorporation */}
-            <div className="space-y-2">
-              <Label htmlFor="country_of_incorporation" className="text-white">Country of Incorporation</Label>
-              <Input
-                id="country_of_incorporation"
-                value={formData.country_of_incorporation}
-                onChange={(e) => setFormData({ ...formData, country_of_incorporation: e.target.value })}
-                placeholder="Cayman Islands"
-                className="bg-zinc-900 border-zinc-700 text-white placeholder:text-gray-500"
-              />
-            </div>
-          </div>
-
-          {/* Tax Residency */}
-          <div className="space-y-2">
-            <Label htmlFor="tax_residency" className="text-white">Tax Residency</Label>
-            <Input
-              id="tax_residency"
-              value={formData.tax_residency}
-              onChange={(e) => setFormData({ ...formData, tax_residency: e.target.value })}
-              placeholder="United States"
-              className="bg-zinc-900 border-zinc-700 text-white placeholder:text-gray-500"
-            />
           </div>
 
           {/* Relationship Manager */}
