@@ -618,6 +618,11 @@ export function PartnerDetailClient({ partner, metrics }: PartnerDetailClientPro
                 id_issue_date: partner.id_issue_date,
                 id_expiry_date: partner.id_expiry_date,
                 id_issuing_country: partner.id_issuing_country,
+                // Additional KYC fields
+                middle_initial: partner.middle_initial,
+                proof_of_address_date: partner.proof_of_address_date,
+                proof_of_address_expiry: partner.proof_of_address_expiry,
+                tax_id_number: partner.tax_id_number,
               }}
               showEditButton={true}
               onEdit={() => setKycDialogOpen(true)}
@@ -864,6 +869,11 @@ export function PartnerDetailClient({ partner, metrics }: PartnerDetailClientPro
             id_issue_date: partner.id_issue_date ?? undefined,
             id_expiry_date: partner.id_expiry_date ?? undefined,
             id_issuing_country: partner.id_issuing_country ?? undefined,
+            // Additional KYC fields
+            middle_initial: partner.middle_initial ?? undefined,
+            proof_of_address_date: partner.proof_of_address_date ?? undefined,
+            proof_of_address_expiry: partner.proof_of_address_expiry ?? undefined,
+            tax_id_number: partner.tax_id_number ?? undefined,
           }}
           onSuccess={() => router.refresh()}
         />

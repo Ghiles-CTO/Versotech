@@ -443,6 +443,11 @@ export function LawyerDetailClient({ lawyer, metrics, deals }: LawyerDetailClien
                 id_issue_date: lawyer.id_issue_date,
                 id_expiry_date: lawyer.id_expiry_date,
                 id_issuing_country: lawyer.id_issuing_country,
+                // Additional KYC fields
+                middle_initial: lawyer.middle_initial,
+                proof_of_address_date: lawyer.proof_of_address_date,
+                proof_of_address_expiry: lawyer.proof_of_address_expiry,
+                tax_id_number: lawyer.tax_id_number,
               }}
               showEditButton={true}
               onEdit={() => setKycDialogOpen(true)}
@@ -580,6 +585,11 @@ export function LawyerDetailClient({ lawyer, metrics, deals }: LawyerDetailClien
             id_issue_date: lawyer.id_issue_date ?? undefined,
             id_expiry_date: lawyer.id_expiry_date ?? undefined,
             id_issuing_country: lawyer.id_issuing_country ?? undefined,
+            // Additional KYC fields
+            middle_initial: lawyer.middle_initial ?? undefined,
+            proof_of_address_date: lawyer.proof_of_address_date ?? undefined,
+            proof_of_address_expiry: lawyer.proof_of_address_expiry ?? undefined,
+            tax_id_number: lawyer.tax_id_number ?? undefined,
           }}
           onSuccess={() => window.location.reload()}
         />

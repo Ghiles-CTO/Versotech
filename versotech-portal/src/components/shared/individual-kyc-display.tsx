@@ -24,6 +24,7 @@ export interface IndividualKycData {
   // Personal Info
   first_name?: string | null
   middle_name?: string | null
+  middle_initial?: string | null
   last_name?: string | null
   name_suffix?: string | null
   date_of_birth?: string | null

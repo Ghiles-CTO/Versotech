@@ -35,6 +35,42 @@ type LawyerDetail = {
   kyc_expires_at: string | null
   kyc_notes: string | null
   assigned_deals: string[] | null
+  // Entity type (individual vs entity)
+  type?: string | null
+  // Individual KYC fields
+  first_name?: string | null
+  middle_name?: string | null
+  last_name?: string | null
+  name_suffix?: string | null
+  date_of_birth?: string | null
+  country_of_birth?: string | null
+  nationality?: string | null
+  email?: string | null
+  phone_mobile?: string | null
+  phone_office?: string | null
+  // US Tax compliance
+  is_us_citizen?: boolean | null
+  is_us_taxpayer?: boolean | null
+  us_taxpayer_id?: string | null
+  country_of_tax_residency?: string | null
+  // ID Document
+  id_type?: string | null
+  id_number?: string | null
+  id_issue_date?: string | null
+  id_expiry_date?: string | null
+  id_issuing_country?: string | null
+  // Residential Address
+  residential_street?: string | null
+  residential_line_2?: string | null
+  residential_city?: string | null
+  residential_state?: string | null
+  residential_postal_code?: string | null
+  residential_country?: string | null
+  // Additional KYC fields
+  middle_initial?: string | null
+  proof_of_address_date?: string | null
+  proof_of_address_expiry?: string | null
+  tax_id_number?: string | null
 }
 
 type Deal = {
