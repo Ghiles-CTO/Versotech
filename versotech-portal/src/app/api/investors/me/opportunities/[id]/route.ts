@@ -91,6 +91,14 @@ export async function GET(request: Request, { params }: RouteParams) {
       return NextResponse.json({ error: 'Deal not found' }, { status: 404 })
     }
 
+    // DEBUG: Log what deal was fetched to verify correct data
+    console.log('🔵 [opportunities/[id]] Deal fetched:', {
+      requestedId: dealId,
+      returnedId: deal.id,
+      returnedName: deal.name,
+      match: dealId === deal.id
+    })
+
     // Fetch vehicle separately if it exists
     let vehicle = null
     if (deal.vehicle_id) {
@@ -153,7 +161,10 @@ export async function GET(request: Request, { params }: RouteParams) {
       } | null
     } | null = null
 
-    if (vehicleId) {
+    // Query subscription by deal_id (NOT vehicle_id) to ensure deal-specific data
+    // Multiple deals can share the same vehicle_id, so using vehicle_id would
+    // return subscriptions from wrong deals (e.g., both Anthropic deals share a vehicle)
+    if (dealId) {
       const { data: sub } = await serviceSupabase
         .from('subscriptions')
         .select(`
@@ -169,7 +180,7 @@ export async function GET(request: Request, { params }: RouteParams) {
           activated_at,
           created_at
         `)
-        .eq('vehicle_id', vehicleId)
+        .eq('deal_id', dealId)
         .eq('investor_id', effectiveInvestorId)
         .order('created_at', { ascending: false })
         .limit(1)

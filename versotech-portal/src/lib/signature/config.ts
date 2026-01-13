@@ -22,12 +22,19 @@ export const SIGNATURE_CONFIG = {
       height: 70
     },
     table: {
-      bottom: 50,
-      height: 180
+      // Y position calibrated from actual NDA template (Page 5, US Letter 612×792pt)
+      // Signature boxes: y=433 from bottom, height=112
+      // Formula: signatureY = bottom + height/2 - sigHeight/2
+      // Target Y = 433 + 56 - 35 = 454 (centered in 112pt box)
+      bottom: 433,
+      height: 112
     },
     positions: {
-      party_a: { xPercent: 0.25 },
-      party_b: { xPercent: 0.75 }
+      // X positions calibrated from actual NDA template (Page 5)
+      // Party A (Investor): left box x=53, width=252 → center=179 → 179/612=0.292
+      party_a: { xPercent: 0.292 },
+      // Party B (VERSO): right box x=305, width=252 → center=431 → 431/612=0.704
+      party_b: { xPercent: 0.704 }
     },
     metadata: {
       timestampFontSize: 7,

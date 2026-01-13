@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -1248,7 +1249,13 @@ export function InvestorDealsListClient({
                     </div>
 
                     {/* View Details button */}
-                    <Link href={`${detailUrlBase}/${deal.id}`}>
+                    <Link
+                      href={`${detailUrlBase}/${deal.id}`}
+                      prefetch={false}
+                      onClick={() => console.log(`[DealsList] CLICKED: "${deal.name}" → navigating to ${detailUrlBase}/${deal.id}`)}
+                      data-deal-id={deal.id}
+                      data-deal-name={deal.name}
+                    >
                       <Button
                         variant="outline"
                         size="sm"
@@ -1299,7 +1306,10 @@ export function InvestorDealsListClient({
         </div>
       ) : (
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-          {filteredDeals.map((deal) => {
+          {filteredDeals.map((deal, index) => {
+            // DEBUG: Log each deal being rendered
+            console.log(`[DealsList] Rendering card #${index}: "${deal.name}" (ID: ${deal.id})`)
+
             const feeStructure = feeStructureMap.get(deal.id) ?? null
             const interest = interestByDeal.get(deal.id) ?? null
             const ndaAccess = accessByDeal.get(deal.id) ?? null
@@ -1609,12 +1619,21 @@ export function InvestorDealsListClient({
                         : 'Opening window announced soon'}
                     </div>
                     <div className="flex flex-wrap items-center gap-3">
-                      <Link href={`${detailUrlBase}/${deal.id}`}>
-                        <Button variant="outline" className="gap-2">
-                          View details
-                          <ArrowUpRight className="h-4 w-4" />
-                        </Button>
-                      </Link>
+                      <Button
+                        variant="outline"
+                        className="gap-2"
+                        data-deal-id={deal.id}
+                        data-deal-name={deal.name}
+                        onClick={() => {
+                          const url = `${detailUrlBase}/${deal.id}`
+                          console.log(`[DealsList] CLICKED: "${deal.name}" (ID: ${deal.id}) → HARD navigating to ${url}`)
+                          // NUCLEAR OPTION: Force full page reload to bypass ALL Next.js caching
+                          window.location.href = url
+                        }}
+                      >
+                        View details
+                        <ArrowUpRight className="h-4 w-4" />
+                      </Button>
 
                       {/* Subscribe to Investment - primary CTA for investors with valid investor ID */}
                       {!isClosed && primaryInvestorId && canInvest && (

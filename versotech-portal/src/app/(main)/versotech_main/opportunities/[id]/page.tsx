@@ -278,10 +278,11 @@ export default function OpportunityDetailPage() {
   const actionParam = searchParams.get('action')
   const fromParam = searchParams.get('from') // Track where user came from
 
-  const { hasAnyPersona, isLoading: personaLoading, activePersona } = usePersona()
+  const { hasAnyPersona, isLoading: personaLoading, activePersona, error: personaError } = usePersona()
   const [opportunity, setOpportunity] = useState<Opportunity | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+
 
   // Dialog states
   const [showInterestDialog, setShowInterestDialog] = useState(false)
@@ -292,39 +293,94 @@ export default function OpportunityDetailPage() {
   const isPartnerPersona = activePersona?.persona_type === 'partner'
 
   useEffect(() => {
+    // CRITICAL: AbortController prevents race conditions when navigating between deals
+    // Without this, if you navigate A→B quickly, fetch A might complete AFTER fetch B
+    // and overwrite the correct data with stale data
+    const abortController = new AbortController()
+    let isCancelled = false
+
+    // Reset state when dealId changes
+    setOpportunity(null)
+    setError(null)
+    setLoading(true)
+
     async function fetchOpportunity() {
       try {
-        setLoading(true)
+        console.log(`[OpportunityDetail] Starting fetch for dealId: ${dealId}`)
 
-        // Record view
-        await fetch(`/api/investors/me/opportunities/${dealId}`, {
+        // Record view (fire and forget, don't block on this)
+        fetch(`/api/investors/me/opportunities/${dealId}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'view' })
+          body: JSON.stringify({ action: 'view' }),
+          cache: 'no-store'
+        }).catch(() => {}) // Ignore errors from view recording
+
+        // Fetch opportunity data with abort signal
+        const timestamp = Date.now()
+        const response = await fetch(`/api/investors/me/opportunities/${dealId}?_t=${timestamp}`, {
+          cache: 'no-store',
+          signal: abortController.signal,
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache'
+          }
         })
 
-        const response = await fetch(`/api/investors/me/opportunities/${dealId}`)
+        // Check if this request was cancelled (user navigated away)
+        if (isCancelled) {
+          console.log(`[OpportunityDetail] Fetch for ${dealId} was cancelled (user navigated away)`)
+          return
+        }
+
         const data = await response.json()
         if (!response.ok) {
           throw new Error(data.error || `Failed to fetch opportunity (${response.status})`)
         }
+
+        // Double-check we're still on the same deal before setting state
+        if (isCancelled) {
+          console.log(`[OpportunityDetail] Ignoring response for ${dealId} - request was cancelled`)
+          return
+        }
+
+        console.log(`[OpportunityDetail] ✅ Setting state for: "${data.opportunity?.name}" (ID: ${data.opportunity?.id})`)
+
+        if (data.opportunity?.id !== dealId) {
+          console.error(`[OpportunityDetail] ⚠️ MISMATCH! URL has ${dealId} but API returned ${data.opportunity?.id}`)
+        }
+
         setOpportunity(data.opportunity)
         const trackingOnlyForPersona = data.opportunity.is_tracking_only || (isPartnerPersona && !data.opportunity.membership?.role)
 
-        // Handle action param
         if (actionParam === 'subscribe' && data.opportunity.can_subscribe && !trackingOnlyForPersona) {
           setShowSubscribeDialog(true)
         }
-      } catch (err) {
-        console.error('Error fetching opportunity:', err)
-        setError('Failed to load opportunity details')
+      } catch (err: any) {
+        if (err.name === 'AbortError') {
+          console.log(`[OpportunityDetail] Fetch aborted for ${dealId}`)
+          return
+        }
+        if (!isCancelled) {
+          console.error('Error fetching opportunity:', err)
+          setError('Failed to load opportunity details')
+        }
       } finally {
-        setLoading(false)
+        if (!isCancelled) {
+          setLoading(false)
+        }
       }
     }
 
     if (hasAnyPersona && dealId) {
       fetchOpportunity()
+    }
+
+    // Cleanup: Cancel any in-flight requests when dealId changes or component unmounts
+    return () => {
+      console.log(`[OpportunityDetail] Cleanup: Cancelling fetch for ${dealId}`)
+      isCancelled = true
+      abortController.abort()
     }
   }, [hasAnyPersona, dealId, actionParam, isPartnerPersona])
 

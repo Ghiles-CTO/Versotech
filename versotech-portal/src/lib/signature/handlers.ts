@@ -85,6 +85,24 @@ export async function handleNDASignature(
     vehicle_id: deal?.vehicle_id
   })
 
+  // Get investor info for document naming
+  console.log('🔍 [NDA HANDLER] Fetching investor information for document naming')
+  const { data: investor } = await supabase
+    .from('investors')
+    .select('id, legal_name, display_name')
+    .eq('id', dealInterest.investor_id)
+    .single()
+
+  const investorName = investor?.display_name || investor?.legal_name || 'Investor'
+  const signatoryName = signatureRequest.signer_name || ''
+  const dealName = deal?.name || 'Deal'
+
+  console.log('✅ [NDA HANDLER] Names for document:', {
+    investor_name: investorName,
+    signatory_name: signatoryName,
+    deal_name: dealName
+  })
+
   // Look up the NDAs folder for this vehicle
   let ndaFolderId: string | null = null
   if (deal?.vehicle_id) {
@@ -116,9 +134,21 @@ export async function handleNDASignature(
 
   console.log('✅ [NDA HANDLER] Downloaded signed PDF from signatures bucket')
 
-  // Generate document storage path
+  // Generate document storage path with human-readable names
   const timestamp = Date.now()
-  const documentFileName = `ndas/${dealInterest.deal_id}/${dealInterest.investor_id}_nda_${timestamp}.pdf`
+  // Sanitize names for file path (remove special chars, replace spaces with underscores)
+  // Falls back to 'Unknown' if sanitization removes all characters (e.g., non-ASCII names)
+  const sanitize = (str: string): string => {
+    if (!str) return 'Unknown'
+    const sanitized = str.replace(/[^a-zA-Z0-9\s-]/g, '').replace(/\s+/g, '_').trim().substring(0, 50)
+    return sanitized || 'Unknown'
+  }
+  const safeInvestorName = sanitize(investorName)
+  const safeSignatoryName = signatoryName ? sanitize(signatoryName) : ''
+  const safeDealName = sanitize(dealName)
+
+  // Path format: ndas/{deal_id}/{DealName}_{InvestorName}_{SignatoryName}_{timestamp}.pdf
+  const documentFileName = `ndas/${dealInterest.deal_id}/${safeDealName}_${safeInvestorName}${safeSignatoryName ? `_${safeSignatoryName}` : ''}_${timestamp}.pdf`
   console.log('📤 [NDA HANDLER] Uploading to documents bucket:', documentFileName)
 
   // Upload to documents bucket
@@ -147,6 +177,12 @@ export async function handleNDASignature(
     status: 'published'
   })
 
+  // Build document display name with length safety (max 200 chars to fit DB column)
+  let documentDisplayName = `NDA - ${dealName} - ${investorName}${signatoryName ? ` - ${signatoryName}` : ''}.pdf`
+  if (documentDisplayName.length > 200) {
+    documentDisplayName = documentDisplayName.substring(0, 196) + '.pdf'
+  }
+
   const { data: document, error: docError } = await supabase
     .from('documents')
     .insert({
@@ -156,8 +192,8 @@ export async function handleNDASignature(
       folder_id: ndaFolderId,
       type: 'nda',
       file_key: docUploadData.path,
-      name: `NDA - Signed.pdf`,
-      description: 'Fully executed Non-Disclosure Agreement',
+      name: documentDisplayName,
+      description: `Fully executed Non-Disclosure Agreement for ${dealName}`.substring(0, 500),
       tags: ['nda', 'signed', 'executed'],
       mime_type: 'application/pdf',
       file_size_bytes: signedPdfBytes.length,
