@@ -46,7 +46,7 @@ import { CommercialPartnerKYCDocumentsTab } from '@/components/profile/commercia
 import { SignatureSpecimenTab } from '@/components/profile/signature-specimen-tab'
 import { GenericEntityMembersTab } from '@/components/profile/generic-entity-members-tab'
 import { NoticeContactsTab } from '@/components/profile/notice-contacts-tab'
-import { EntityKYCEditDialog, IndividualKycDisplay } from '@/components/shared'
+import { EntityKYCEditDialog, EntityAddressEditDialog, IndividualKycDisplay } from '@/components/shared'
 
 type CommercialPartnerInfo = {
   id: string
@@ -99,6 +99,11 @@ type CommercialPartnerInfo = {
   residential_state?: string | null
   residential_postal_code?: string | null
   residential_country?: string | null
+  // Additional KYC fields
+  middle_initial?: string | null
+  proof_of_address_date?: string | null
+  proof_of_address_expiry?: string | null
+  tax_id_number?: string | null
 }
 
 type CommercialPartnerUserInfo = {
@@ -194,6 +199,7 @@ export function CommercialPartnerProfileClient({
   const [isSaving, setIsSaving] = useState(false)
   const [isUploadingLogo, setIsUploadingLogo] = useState(false)
   const [showKycDialog, setShowKycDialog] = useState(false)
+  const [showAddressDialog, setShowAddressDialog] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Edit state
@@ -819,6 +825,25 @@ export function CommercialPartnerProfileClient({
             residential_state: cpInfo.residential_state ?? undefined,
             residential_postal_code: cpInfo.residential_postal_code ?? undefined,
             residential_country: cpInfo.residential_country ?? undefined,
+          }}
+          apiEndpoint="/api/commercial-partners/me/profile"
+          onSuccess={() => window.location.reload()}
+        />
+      )}
+
+      {/* Entity Address Edit Dialog (for entity commercial partners) */}
+      {cpInfo && cpInfo.type !== 'individual' && (
+        <EntityAddressEditDialog
+          open={showAddressDialog}
+          onOpenChange={setShowAddressDialog}
+          entityType="commercial_partner"
+          entityName={cpInfo.name || cpInfo.legal_name || 'Commercial Partner'}
+          initialData={{
+            email: cpInfo.contact_email ?? '',
+            phone: cpInfo.contact_phone ?? '',
+            phone_mobile: cpInfo.phone_mobile ?? '',
+            phone_office: cpInfo.phone_office ?? '',
+            website: cpInfo.website ?? '',
           }}
           apiEndpoint="/api/commercial-partners/me/profile"
           onSuccess={() => window.location.reload()}

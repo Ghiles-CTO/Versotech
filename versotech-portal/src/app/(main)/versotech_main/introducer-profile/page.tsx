@@ -164,6 +164,12 @@ export default async function IntroducerProfilePage() {
         country_of_incorporation: introducer.country_of_incorporation,
         registration_number: introducer.registration_number,
         tax_id: introducer.tax_id,
+        // Additional KYC fields
+        residential_line_2: introducer.residential_line_2,
+        middle_initial: introducer.middle_initial,
+        proof_of_address_date: introducer.proof_of_address_date,
+        proof_of_address_expiry: introducer.proof_of_address_expiry,
+        tax_id_number: introducer.tax_id_number,
       } : null}
       introducerUserInfo={{
         role: introducerUser.role,

@@ -88,10 +88,16 @@ type PartnerInfo = {
   id_issuing_country: string | null
   // Residential Address
   residential_street: string | null
+  residential_line_2: string | null
   residential_city: string | null
   residential_state: string | null
   residential_postal_code: string | null
   residential_country: string | null
+  // Additional KYC fields
+  middle_initial: string | null
+  proof_of_address_date: string | null
+  proof_of_address_expiry: string | null
+  tax_id_number: string | null
 }
 
 type PartnerUserInfo = {

@@ -88,6 +88,11 @@ type CommercialPartner = {
   residential_state?: string | null
   residential_postal_code?: string | null
   residential_country?: string | null
+  // New KYC fields
+  middle_initial?: string | null
+  proof_of_address_date?: string | null
+  proof_of_address_expiry?: string | null
+  tax_id_number?: string | null
 }
 
 type LinkedUser = {

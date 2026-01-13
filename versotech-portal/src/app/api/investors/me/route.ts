@@ -101,6 +101,11 @@ const updateInvestorSchema = z.object({
   id_expiry_date: z.string().optional().nullable(),
   id_issuing_country: z.string().optional().nullable(),
 
+  // Proof of Address
+  middle_initial: z.string().max(5).optional().nullable(),
+  proof_of_address_date: z.string().optional().nullable(),
+  proof_of_address_expiry: z.string().optional().nullable(),
+
   // Representative info (for entity-type investors)
   representative_name: z.string().optional().nullable(),
   representative_title: z.string().optional().nullable(),
@@ -196,6 +201,10 @@ export async function PATCH(request: Request) {
       'id_issue_date',
       'id_expiry_date',
       'id_issuing_country',
+      // Proof of Address
+      'middle_initial',
+      'proof_of_address_date',
+      'proof_of_address_expiry',
       // Representative
       'representative_name',
       'representative_title',

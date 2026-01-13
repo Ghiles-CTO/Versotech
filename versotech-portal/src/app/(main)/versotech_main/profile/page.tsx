@@ -117,7 +117,12 @@ export default async function ProfilePage({
         id_number,
         id_issue_date,
         id_expiry_date,
-        id_issuing_country
+        id_issuing_country,
+        middle_initial,
+        proof_of_address_date,
+        proof_of_address_expiry,
+        tax_id_number,
+        country_of_tax_residency
       `)
       .eq('id', investorUser.investor_id)
       .single()
@@ -186,7 +191,12 @@ export default async function ProfilePage({
         id_number: investor.id_number,
         id_issue_date: investor.id_issue_date,
         id_expiry_date: investor.id_expiry_date,
-        id_issuing_country: investor.id_issuing_country
+        id_issuing_country: investor.id_issuing_country,
+        // Additional KYC fields
+        middle_initial: investor.middle_initial,
+        proof_of_address_date: investor.proof_of_address_date,
+        proof_of_address_expiry: investor.proof_of_address_expiry,
+        tax_id_number: investor.tax_id_number,
       }
 
       investorUserInfo = {

@@ -30,6 +30,7 @@ const updatePartnerSchema = z.object({
   // Individual KYC fields
   first_name: z.string().max(100).nullable().optional(),
   middle_name: z.string().max(100).nullable().optional(),
+  middle_initial: z.string().max(5).nullable().optional(),
   last_name: z.string().max(100).nullable().optional(),
   name_suffix: z.string().max(20).nullable().optional(),
   date_of_birth: z.string().nullable().optional(),

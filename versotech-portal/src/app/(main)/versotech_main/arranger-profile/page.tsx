@@ -120,6 +120,42 @@ export default async function ArrangerProfilePage() {
         is_active: arranger.status === 'active', // Derive from status
         created_at: arranger.created_at,
         logo_url: arranger.logo_url, // Pass logo URL for display and upload
+        // Entity type
+        type: arranger.type,
+        // Phone numbers
+        phone_mobile: arranger.phone_mobile,
+        phone_office: arranger.phone_office,
+        // Individual KYC fields
+        first_name: arranger.first_name,
+        middle_name: arranger.middle_name,
+        last_name: arranger.last_name,
+        name_suffix: arranger.name_suffix,
+        date_of_birth: arranger.date_of_birth,
+        country_of_birth: arranger.country_of_birth,
+        nationality: arranger.nationality,
+        // US Tax compliance
+        is_us_citizen: arranger.is_us_citizen,
+        is_us_taxpayer: arranger.is_us_taxpayer,
+        us_taxpayer_id: arranger.us_taxpayer_id,
+        country_of_tax_residency: arranger.country_of_tax_residency,
+        // ID Document
+        id_type: arranger.id_type,
+        id_number: arranger.id_number,
+        id_issue_date: arranger.id_issue_date,
+        id_expiry_date: arranger.id_expiry_date,
+        id_issuing_country: arranger.id_issuing_country,
+        // Residential Address (for individuals)
+        residential_street: arranger.residential_street,
+        residential_line_2: arranger.residential_line_2,
+        residential_city: arranger.residential_city,
+        residential_state: arranger.residential_state,
+        residential_postal_code: arranger.residential_postal_code,
+        residential_country: arranger.residential_country,
+        // Additional KYC fields
+        middle_initial: arranger.middle_initial,
+        proof_of_address_date: arranger.proof_of_address_date,
+        proof_of_address_expiry: arranger.proof_of_address_expiry,
+        tax_id_number: arranger.tax_id_number,
       } : null}
       arrangerUserInfo={{
         role: arrangerUser.role,

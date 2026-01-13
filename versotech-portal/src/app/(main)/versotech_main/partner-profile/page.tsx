@@ -124,10 +124,16 @@ export default async function PartnerProfilePage() {
         id_issuing_country: partner.id_issuing_country,
         // Residential Address
         residential_street: partner.residential_street,
+        residential_line_2: partner.residential_line_2,
         residential_city: partner.residential_city,
         residential_state: partner.residential_state,
         residential_postal_code: partner.residential_postal_code,
         residential_country: partner.residential_country,
+        // Additional KYC fields
+        middle_initial: partner.middle_initial,
+        proof_of_address_date: partner.proof_of_address_date,
+        proof_of_address_expiry: partner.proof_of_address_expiry,
+        tax_id_number: partner.tax_id_number,
       }}
       partnerUserInfo={{
         role: partnerUser.role,

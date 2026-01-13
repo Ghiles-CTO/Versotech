@@ -56,6 +56,7 @@ interface EntityMember {
   full_name?: string
   first_name?: string
   middle_name?: string
+  middle_initial?: string
   last_name?: string
   name_suffix?: string
   role: string

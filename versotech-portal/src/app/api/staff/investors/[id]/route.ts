@@ -125,6 +125,7 @@ export async function PATCH(
       // Individual KYC fields
       first_name,
       middle_name,
+      middle_initial,
       last_name,
       name_suffix,
       date_of_birth,
@@ -150,6 +151,10 @@ export async function PATCH(
       residential_state,
       residential_postal_code,
       residential_country,
+      // New KYC fields
+      proof_of_address_date,
+      proof_of_address_expiry,
+      tax_id_number,
     } = body
 
     // Helper to convert empty strings to null
@@ -224,6 +229,7 @@ export async function PATCH(
     // Individual KYC fields
     if (first_name !== undefined) updateData.first_name = cleanValue(first_name)
     if (middle_name !== undefined) updateData.middle_name = cleanValue(middle_name)
+    if (middle_initial !== undefined) updateData.middle_initial = cleanValue(middle_initial)
     if (last_name !== undefined) updateData.last_name = cleanValue(last_name)
     if (name_suffix !== undefined) updateData.name_suffix = cleanValue(name_suffix)
     if (date_of_birth !== undefined) updateData.date_of_birth = cleanValue(date_of_birth)
@@ -249,6 +255,10 @@ export async function PATCH(
     if (residential_state !== undefined) updateData.residential_state = cleanValue(residential_state)
     if (residential_postal_code !== undefined) updateData.residential_postal_code = cleanValue(residential_postal_code)
     if (residential_country !== undefined) updateData.residential_country = cleanValue(residential_country)
+    // New KYC fields
+    if (proof_of_address_date !== undefined) updateData.proof_of_address_date = cleanValue(proof_of_address_date)
+    if (proof_of_address_expiry !== undefined) updateData.proof_of_address_expiry = cleanValue(proof_of_address_expiry)
+    if (tax_id_number !== undefined) updateData.tax_id_number = cleanValue(tax_id_number)
 
     // Always update the updated_at timestamp
     updateData.updated_at = new Date().toISOString()

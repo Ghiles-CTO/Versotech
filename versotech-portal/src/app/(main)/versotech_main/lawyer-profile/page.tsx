@@ -72,10 +72,10 @@ export default async function LawyerProfilePage() {
     )
   }
 
-  // Get lawyer details
+  // Get lawyer details with all KYC fields
   const { data: lawyer } = await serviceSupabase
     .from('lawyers')
-    .select('id, firm_name, display_name, specializations, is_active, primary_contact_phone, primary_contact_email, primary_contact_name, logo_url, kyc_status')
+    .select('*')
     .eq('id', lawyerUser.lawyer_id)
     .maybeSingle()
 
@@ -105,7 +105,55 @@ export default async function LawyerProfilePage() {
         email: lawyer.primary_contact_email,
         primary_contact_name: lawyer.primary_contact_name,
         logo_url: lawyer.logo_url,
-        kyc_status: lawyer.kyc_status
+        kyc_status: lawyer.kyc_status,
+        // Entity type
+        type: lawyer.type,
+        // Address fields
+        address_line_1: lawyer.address_line_1,
+        address_line_2: lawyer.address_line_2,
+        city: lawyer.city,
+        state_province: lawyer.state_province,
+        postal_code: lawyer.postal_code,
+        country: lawyer.country,
+        // Phone numbers
+        phone_mobile: lawyer.phone_mobile,
+        phone_office: lawyer.phone_office,
+        website: lawyer.website,
+        // Entity fields
+        registration_number: lawyer.registration_number,
+        country_of_incorporation: lawyer.country_of_incorporation,
+        tax_id: lawyer.tax_id,
+        // Individual KYC fields
+        first_name: lawyer.first_name,
+        middle_name: lawyer.middle_name,
+        last_name: lawyer.last_name,
+        name_suffix: lawyer.name_suffix,
+        date_of_birth: lawyer.date_of_birth,
+        country_of_birth: lawyer.country_of_birth,
+        nationality: lawyer.nationality,
+        // US Tax compliance
+        is_us_citizen: lawyer.is_us_citizen,
+        is_us_taxpayer: lawyer.is_us_taxpayer,
+        us_taxpayer_id: lawyer.us_taxpayer_id,
+        country_of_tax_residency: lawyer.country_of_tax_residency,
+        // ID Document
+        id_type: lawyer.id_type,
+        id_number: lawyer.id_number,
+        id_issue_date: lawyer.id_issue_date,
+        id_expiry_date: lawyer.id_expiry_date,
+        id_issuing_country: lawyer.id_issuing_country,
+        // Residential Address (for individuals)
+        residential_street: lawyer.residential_street,
+        residential_line_2: lawyer.residential_line_2,
+        residential_city: lawyer.residential_city,
+        residential_state: lawyer.residential_state,
+        residential_postal_code: lawyer.residential_postal_code,
+        residential_country: lawyer.residential_country,
+        // Additional KYC fields
+        middle_initial: lawyer.middle_initial,
+        proof_of_address_date: lawyer.proof_of_address_date,
+        proof_of_address_expiry: lawyer.proof_of_address_expiry,
+        tax_id_number: lawyer.tax_id_number,
       } : null}
       lawyerUserInfo={{
         role: lawyerUser.role,

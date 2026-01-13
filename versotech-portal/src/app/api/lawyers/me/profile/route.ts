@@ -36,6 +36,45 @@ const profileUpdateSchema = z.object({
   registration_number: z.string().max(100).optional().nullable(),
   country_of_incorporation: z.string().max(2).optional().nullable(),
   tax_id: z.string().max(50).optional().nullable(),
+
+  // Entity type
+  type: z.enum(['individual', 'entity']).optional(),
+
+  // Individual KYC fields (for type='individual')
+  first_name: z.string().max(100).optional().nullable(),
+  middle_name: z.string().max(100).optional().nullable(),
+  middle_initial: z.string().max(5).optional().nullable(),
+  last_name: z.string().max(100).optional().nullable(),
+  name_suffix: z.string().max(20).optional().nullable(),
+  date_of_birth: z.string().optional().nullable(),
+  country_of_birth: z.string().max(2).optional().nullable(),
+  nationality: z.string().max(2).optional().nullable(),
+
+  // US Tax compliance
+  is_us_citizen: z.boolean().optional(),
+  is_us_taxpayer: z.boolean().optional(),
+  us_taxpayer_id: z.string().max(20).optional().nullable(),
+  country_of_tax_residency: z.string().max(2).optional().nullable(),
+  tax_id_number: z.string().max(50).optional().nullable(),
+
+  // ID Document
+  id_type: z.enum(['passport', 'national_id', 'drivers_license', 'residence_permit']).optional().nullable(),
+  id_number: z.string().max(50).optional().nullable(),
+  id_issue_date: z.string().optional().nullable(),
+  id_expiry_date: z.string().optional().nullable(),
+  id_issuing_country: z.string().max(2).optional().nullable(),
+
+  // Proof of Address
+  proof_of_address_date: z.string().optional().nullable(),
+  proof_of_address_expiry: z.string().optional().nullable(),
+
+  // Residential Address (for individuals)
+  residential_street: z.string().max(255).optional().nullable(),
+  residential_line_2: z.string().max(255).optional().nullable(),
+  residential_city: z.string().max(100).optional().nullable(),
+  residential_state: z.string().max(100).optional().nullable(),
+  residential_postal_code: z.string().max(20).optional().nullable(),
+  residential_country: z.string().max(2).optional().nullable(),
 })
 
 /**
@@ -154,10 +193,15 @@ export async function PATCH(request: NextRequest) {
     const updateData = validation.data
 
     // Filter out empty/undefined values and build update object
-    const updateFields: Record<string, string | null> = {}
+    const updateFields: Record<string, string | boolean | null> = {}
     for (const [key, value] of Object.entries(updateData)) {
       if (value !== undefined) {
-        updateFields[key] = value === '' ? null : value
+        // Convert empty strings to null for optional string fields
+        if (typeof value === 'string') {
+          updateFields[key] = value === '' ? null : value
+        } else {
+          updateFields[key] = value
+        }
       }
     }
 

@@ -121,6 +121,41 @@ export default async function CommercialPartnerProfilePage() {
         created_at: commercialPartner.created_at,
         logo_url: commercialPartner.logo_url,
         kyc_status: commercialPartner.kyc_status,
+        // Phone numbers
+        phone_mobile: commercialPartner.phone_mobile,
+        phone_office: commercialPartner.phone_office,
+        email: commercialPartner.email,
+        // Individual KYC fields
+        first_name: commercialPartner.first_name,
+        middle_name: commercialPartner.middle_name,
+        last_name: commercialPartner.last_name,
+        name_suffix: commercialPartner.name_suffix,
+        date_of_birth: commercialPartner.date_of_birth,
+        country_of_birth: commercialPartner.country_of_birth,
+        nationality: commercialPartner.nationality,
+        // US Tax compliance
+        is_us_citizen: commercialPartner.is_us_citizen,
+        is_us_taxpayer: commercialPartner.is_us_taxpayer,
+        us_taxpayer_id: commercialPartner.us_taxpayer_id,
+        country_of_tax_residency: commercialPartner.country_of_tax_residency,
+        // ID Document
+        id_type: commercialPartner.id_type,
+        id_number: commercialPartner.id_number,
+        id_issue_date: commercialPartner.id_issue_date,
+        id_expiry_date: commercialPartner.id_expiry_date,
+        id_issuing_country: commercialPartner.id_issuing_country,
+        // Residential Address (for individuals)
+        residential_street: commercialPartner.residential_street,
+        residential_line_2: commercialPartner.residential_line_2,
+        residential_city: commercialPartner.residential_city,
+        residential_state: commercialPartner.residential_state,
+        residential_postal_code: commercialPartner.residential_postal_code,
+        residential_country: commercialPartner.residential_country,
+        // Additional KYC fields
+        middle_initial: commercialPartner.middle_initial,
+        proof_of_address_date: commercialPartner.proof_of_address_date,
+        proof_of_address_expiry: commercialPartner.proof_of_address_expiry,
+        tax_id_number: commercialPartner.tax_id_number,
       } : null}
       cpUserInfo={{
         role: cpUser.role,

@@ -14,6 +14,7 @@ const updateMemberSchema = z.object({
   full_name: z.string().min(1).optional(),
   first_name: z.string().max(100).optional().nullable(),
   middle_name: z.string().max(100).optional().nullable(),
+  middle_initial: z.string().max(5).optional().nullable(),
   last_name: z.string().max(100).optional().nullable(),
   name_suffix: z.string().max(20).optional().nullable(),
   date_of_birth: z.string().optional().nullable(),

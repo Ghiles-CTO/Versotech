@@ -269,9 +269,28 @@ export async function createFeeEvents(
   investorId: string,
   dealId: string | null,
   feePlanId: string | null,
-  feeEvents: FeeEvent[]
-): Promise<{ success: boolean; feeEventIds?: string[]; error?: string }> {
+  feeEvents: FeeEvent[],
+  options?: { skipDeduplication?: boolean }
+): Promise<{ success: boolean; feeEventIds?: string[]; error?: string; skipped?: boolean }> {
   try {
+    // Deduplication check: Skip if fee events already exist for this subscription
+    // This prevents double-charging if createFeeEvents is called multiple times
+    if (!options?.skipDeduplication) {
+      const { data: existingEvents, error: checkError } = await supabase
+        .from('fee_events')
+        .select('id')
+        .eq('allocation_id', subscriptionId)
+        .limit(1);
+
+      if (checkError) {
+        console.warn('[FEE EVENTS] Error checking existing fee events:', checkError.message);
+        // Continue anyway - better to risk duplicates than fail silently
+      } else if (existingEvents && existingEvents.length > 0) {
+        console.log(`[FEE EVENTS] Fee events already exist for subscription ${subscriptionId}, skipping creation`);
+        return { success: true, feeEventIds: [], skipped: true };
+      }
+    }
+
     // Fetch subscription to get currency
     const { data: subscription } = await supabase
       .from('subscriptions')

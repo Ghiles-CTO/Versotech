@@ -63,10 +63,17 @@ const profileUpdateSchema = z.object({
 
   // Residential Address (for individuals)
   residential_street: z.string().max(255).optional().nullable(),
+  residential_line_2: z.string().max(255).optional().nullable(),
   residential_city: z.string().max(100).optional().nullable(),
   residential_state: z.string().max(100).optional().nullable(),
   residential_postal_code: z.string().max(20).optional().nullable(),
   residential_country: z.string().max(2).optional().nullable(),
+
+  // New KYC fields
+  middle_initial: z.string().max(5).optional().nullable(),
+  proof_of_address_date: z.string().optional().nullable(),
+  proof_of_address_expiry: z.string().optional().nullable(),
+  tax_id_number: z.string().max(50).optional().nullable(),
 })
 
 /**

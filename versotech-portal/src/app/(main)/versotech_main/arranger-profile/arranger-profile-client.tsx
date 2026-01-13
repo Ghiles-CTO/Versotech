@@ -45,7 +45,7 @@ import { ArrangerKYCDocumentsTab } from '@/components/profile/arranger-kyc-docum
 import { MembersManagementTab } from '@/components/members/members-management-tab'
 import { GenericEntityMembersTab } from '@/components/profile/generic-entity-members-tab'
 import { NoticeContactsTab } from '@/components/profile/notice-contacts-tab'
-import { EntityKYCEditDialog, IndividualKycDisplay } from '@/components/shared'
+import { EntityKYCEditDialog, EntityAddressEditDialog, IndividualKycDisplay } from '@/components/shared'
 
 type ArrangerInfo = {
   id: string
@@ -98,6 +98,11 @@ type ArrangerInfo = {
   residential_state?: string | null
   residential_postal_code?: string | null
   residential_country?: string | null
+  // Additional KYC fields
+  middle_initial?: string | null
+  proof_of_address_date?: string | null
+  proof_of_address_expiry?: string | null
+  tax_id_number?: string | null
 }
 
 type ArrangerUserInfo = {
@@ -221,6 +226,7 @@ export function ArrangerProfileClient({
   const [isSaving, setIsSaving] = useState(false)
   const [isUploadingLogo, setIsUploadingLogo] = useState(false)
   const [showKycDialog, setShowKycDialog] = useState(false)
+  const [showAddressDialog, setShowAddressDialog] = useState(false)
   const logoInputRef = useRef<HTMLInputElement>(null)
 
   // Edit form data
@@ -1045,6 +1051,25 @@ export function ArrangerProfileClient({
             residential_state: arrangerInfo.residential_state ?? undefined,
             residential_postal_code: arrangerInfo.residential_postal_code ?? undefined,
             residential_country: arrangerInfo.residential_country ?? undefined,
+          }}
+          apiEndpoint="/api/arrangers/me/profile"
+          onSuccess={() => window.location.reload()}
+        />
+      )}
+
+      {/* Entity Address Edit Dialog (for entity arrangers) */}
+      {arrangerInfo.type !== 'individual' && (
+        <EntityAddressEditDialog
+          open={showAddressDialog}
+          onOpenChange={setShowAddressDialog}
+          entityType="arranger"
+          entityName={arrangerInfo.legal_name}
+          initialData={{
+            address_line_1: arrangerInfo.address ?? '',
+            email: arrangerInfo.email ?? '',
+            phone: arrangerInfo.phone ?? '',
+            phone_mobile: arrangerInfo.phone_mobile ?? '',
+            phone_office: arrangerInfo.phone_office ?? '',
           }}
           apiEndpoint="/api/arrangers/me/profile"
           onSuccess={() => window.location.reload()}

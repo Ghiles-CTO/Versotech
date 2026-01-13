@@ -99,6 +99,11 @@ type InvestorInfo = {
   id_issue_date: string | null
   id_expiry_date: string | null
   id_issuing_country: string | null
+  // Additional KYC fields
+  middle_initial?: string | null
+  proof_of_address_date?: string | null
+  proof_of_address_expiry?: string | null
+  tax_id_number?: string | null
 }
 
 type InvestorUserInfo = {

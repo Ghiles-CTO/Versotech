@@ -108,6 +108,12 @@ type IntroducerInfo = {
   country_of_incorporation: string | null
   registration_number: string | null
   tax_id: string | null
+  // Additional KYC fields
+  residential_line_2: string | null
+  middle_initial: string | null
+  proof_of_address_date: string | null
+  proof_of_address_expiry: string | null
+  tax_id_number: string | null
 }
 
 type IntroducerUserInfo = {
