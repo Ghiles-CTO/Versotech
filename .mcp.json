@@ -1,10 +1,8 @@
 {
   "mcpServers": {
-    "supabase": {
-      "command": "cmd",
+    "supabase-old": {
+      "command": "npx",
       "args": [
-        "/c",
-        "npx",
         "-y",
         "@supabase/mcp-server-supabase@latest",
         "--project-ref=ipguxdssecfexudnvtia"
@@ -13,11 +11,20 @@
         "SUPABASE_ACCESS_TOKEN": "sbp_20bd5d2289cf105338f2452c367375765d3d947a"
       }
     },
-    "executeautomation-playwright-server": {
-      "command": "cmd",
+    "supabase": {
+      "command": "npx",
       "args": [
-        "/c",
-        "npx",
+        "-y",
+        "@supabase/mcp-server-supabase@latest",
+        "--project-ref=kagzryotbbnusdcyvqei"
+      ],
+      "env": {
+        "SUPABASE_ACCESS_TOKEN": "sbp_20bd5d2289cf105338f2452c367375765d3d947a"
+      }
+    },
+    "executeautomation-playwright-server": {
+      "command": "npx",
+      "args": [
         "-y",
         "@executeautomation/playwright-mcp-server"
       ]

@@ -121,8 +121,7 @@ export default async function ProfilePage({
         middle_initial,
         proof_of_address_date,
         proof_of_address_expiry,
-        tax_id_number,
-        country_of_tax_residency
+        tax_id_number
       `)
       .eq('id', investorUser.investor_id)
       .single()

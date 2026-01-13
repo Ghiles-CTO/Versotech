@@ -93,9 +93,9 @@ export async function GET(
           id,
           name,
           status,
-          introducer:introducer_id (id, name, company_name),
-          partner:partner_id (id, name, company_name),
-          commercial_partner:commercial_partner_id (id, name, company_name)
+          introducer:introducer_id (id, legal_name, display_name),
+          partner:partner_id (id, name, legal_name),
+          commercial_partner:commercial_partner_id (id, name, legal_name)
         ),
         assigned_term_sheet:term_sheet_id (
           id,

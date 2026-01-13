@@ -343,17 +343,15 @@ export function ProfilePageClient({
                 <ShieldAlert className="h-4 w-4" />
                 Compliance
               </TabsTrigger>
+              <TabsTrigger value="members" className="flex items-center gap-2">
+                <Users className="h-4 w-4" />
+                Team
+              </TabsTrigger>
               {isEntity && (
-                <>
-                  <TabsTrigger value="members" className="flex items-center gap-2">
-                    <Users className="h-4 w-4" />
-                    Team
-                  </TabsTrigger>
-                  <TabsTrigger value="entity-members" className="flex items-center gap-2">
-                    <Users className="h-4 w-4" />
-                    Directors/UBOs
-                  </TabsTrigger>
-                </>
+                <TabsTrigger value="entity-members" className="flex items-center gap-2">
+                  <Users className="h-4 w-4" />
+                  Directors/UBOs
+                </TabsTrigger>
               )}
               <TabsTrigger value="entities" className="flex items-center gap-2">
                 <Building2 className="h-4 w-4" />
@@ -680,14 +678,15 @@ export function ProfilePageClient({
           </TabsContent>
         )}
 
-        {/* Members Tab - Portal Team Members (Entity investors only) */}
-        {isEntity && investorInfo && (
+        {/* Members Tab - Portal Team Members (ALL investors) */}
+        {hasInvestorEntity && investorInfo && (
           <TabsContent value="members" className="space-y-4">
             <MembersManagementTab
               entityType="investor"
               entityId={investorInfo.id}
               entityName={investorInfo.display_name || investorInfo.legal_name}
-              showSignatoryOption={true}
+              showSignatoryOption={isEntity}
+              canManageMembers={investorUserInfo?.role === 'admin' || investorUserInfo?.is_primary}
             />
           </TabsContent>
         )}

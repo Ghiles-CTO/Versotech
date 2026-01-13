@@ -92,12 +92,31 @@ type EntityType = keyof typeof ENTITY_TYPES
 
 // Schemas for each entity type
 const investorSchema = z.object({
-  legal_name: z.string().min(1, 'Legal name is required'),
-  display_name: z.string().optional(),
   type: z.enum(['individual', 'institutional', 'entity', 'family_office', 'fund']),
+  // Individual fields
+  first_name: z.string().optional(),
+  middle_name: z.string().optional(),
+  last_name: z.string().optional(),
+  // Entity fields
+  legal_name: z.string().optional(),
+  display_name: z.string().optional(),
+  country_of_incorporation: z.string().optional(),
+  representative_name: z.string().optional(),
+  representative_title: z.string().optional(),
+  // Common fields
   email: z.string().email().optional().or(z.literal('')),
   phone: z.string().optional(),
   country: z.string().optional(),
+}).refine((data) => {
+  // For individual: first_name is required
+  if (data.type === 'individual') {
+    return data.first_name && data.first_name.trim().length > 0
+  }
+  // For entity types: legal_name is required
+  return data.legal_name && data.legal_name.trim().length > 0
+}, {
+  message: 'First name is required for individuals, Legal name is required for entities',
+  path: ['legal_name'],
 })
 
 const introducerSchema = z.object({
@@ -204,7 +223,17 @@ export function AddAccountModal({
     setStep('details')
     // Initialize form data with defaults based on type
     const defaults: Record<EntityType, Record<string, string | number | boolean | null | undefined>> = {
-      investor: { type: 'individual', legal_name: '' },
+      investor: {
+        type: 'individual',
+        first_name: '',
+        middle_name: '',
+        last_name: '',
+        legal_name: '',
+        display_name: '',
+        country_of_incorporation: '',
+        representative_name: '',
+        representative_title: '',
+      },
       introducer: { status: 'active', payment_terms: 'net_30', legal_name: '' },
       lawyer: { firm_name: '', display_name: '' },
       partner: { type: 'entity', partner_type: 'co_investor', status: 'active', name: '' },
@@ -260,12 +289,29 @@ export function AddAccountModal({
 
         setErrors({})
 
+        // Prepare submission data
+        let submitData: Record<string, unknown> = { ...(validationResult.data as Record<string, unknown>) }
+
+        // For investors: compute legal_name from individual fields if type is individual
+        if (entityType === 'investor' && formData.type === 'individual') {
+          const nameParts = [
+            (formData.first_name as string)?.trim(),
+            (formData.middle_name as string)?.trim(),
+            (formData.last_name as string)?.trim(),
+          ].filter(Boolean)
+          submitData = {
+            ...submitData,
+            legal_name: nameParts.join(' '),
+            display_name: submitData.display_name || nameParts.join(' '),
+          }
+        }
+
         // Create entity
         const config = ENTITY_TYPES[entityType]
         const response = await fetch(config.apiPath, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(validationResult.data),
+          body: JSON.stringify(submitData),
         })
 
         if (!response.ok) {
@@ -439,20 +485,47 @@ export function AddAccountModal({
     const forms: Record<EntityType, React.ReactNode> = {
       investor: (
         <div className="space-y-4">
-          {renderFormField('legal_name', 'Legal Name', 'text', undefined, 'John Smith / Acme Fund LP')}
-          {renderFormField('display_name', 'Display Name', 'text', undefined, 'Optional short name')}
+          {/* TYPE FIRST */}
           {renderFormField('type', 'Investor Type', 'select', [
             { value: 'individual', label: 'Individual' },
-            { value: 'institutional', label: 'Institutional' },
             { value: 'entity', label: 'Entity' },
+            { value: 'institutional', label: 'Institutional' },
             { value: 'family_office', label: 'Family Office' },
             { value: 'fund', label: 'Fund' },
           ])}
+
+          {/* INDIVIDUAL FIELDS */}
+          {formData.type === 'individual' && (
+            <div className="space-y-4 p-3 rounded-lg border bg-muted/30">
+              <p className="text-xs font-medium text-muted-foreground">Personal Information</p>
+              <div className="grid grid-cols-2 gap-4">
+                {renderFormField('first_name', 'First Name *', 'text', undefined, 'John')}
+                {renderFormField('middle_name', 'Middle Name', 'text', undefined, 'Michael')}
+              </div>
+              {renderFormField('last_name', 'Last Name', 'text', undefined, 'Smith')}
+            </div>
+          )}
+
+          {/* ENTITY FIELDS */}
+          {formData.type !== 'individual' && (
+            <div className="space-y-4 p-3 rounded-lg border bg-muted/30">
+              <p className="text-xs font-medium text-muted-foreground">Entity Information</p>
+              {renderFormField('legal_name', 'Legal Name *', 'text', undefined, 'Acme Investment Holdings LP')}
+              {renderFormField('display_name', 'Display Name', 'text', undefined, 'Optional short name')}
+              {renderFormField('country_of_incorporation', 'Country of Incorporation', 'text', undefined, 'Cayman Islands')}
+              <div className="grid grid-cols-2 gap-4">
+                {renderFormField('representative_name', 'Representative Name', 'text', undefined, 'Jane Doe')}
+                {renderFormField('representative_title', 'Representative Title', 'text', undefined, 'Managing Director')}
+              </div>
+            </div>
+          )}
+
+          {/* COMMON CONTACT FIELDS */}
           <div className="grid grid-cols-2 gap-4">
             {renderFormField('email', 'Email', 'email', undefined, 'investor@example.com')}
             {renderFormField('phone', 'Phone', 'text', undefined, '+1 (555) 123-4567')}
           </div>
-          {renderFormField('country', 'Country', 'text', undefined, 'United States')}
+          {renderFormField('country', formData.type === 'individual' ? 'Country of Residence' : 'Country', 'text', undefined, 'United States')}
         </div>
       ),
       introducer: (
