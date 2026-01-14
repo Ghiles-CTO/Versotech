@@ -388,10 +388,19 @@ export async function GET(request: Request, { params }: RouteParams) {
       // Arrangers get AUTOMATIC access - no NDA required (per Fred: "doesn't need to sign an NDA so it's automatic")
       hasDataRoomAccess = true
     } else {
-      // Standard entity-level NDA check: ALL signatories must have signed before granting data room access
-      hasDataRoomAccess = allSignatoriesSignedNda &&
-        dataRoomAccess && !dataRoomAccess.revoked_at &&
+      // Check if access was already legitimately granted (grandfathering)
+      // This handles the case where new signatories are added AFTER NDA was signed
+      // - Expiry check is preserved (7-day access period still enforced)
+      // - Revocation check is preserved
+      // - New investors still need ALL signatories to sign before first access
+      const accessRecordValid = dataRoomAccess &&
+        !dataRoomAccess.revoked_at &&
         (!dataRoomAccess.expires_at || new Date(dataRoomAccess.expires_at) > new Date())
+
+      const accessAlreadyGranted = membership?.data_room_granted_at && accessRecordValid
+
+      // Grant access if: already granted (grandfather) OR all current signatories have signed
+      hasDataRoomAccess = accessAlreadyGranted || (allSignatoriesSignedNda && accessRecordValid)
     }
 
     if (hasDataRoomAccess) {
