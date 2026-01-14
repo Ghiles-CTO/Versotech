@@ -38,6 +38,7 @@ import {
   Globe,
   FileText,
   Download,
+  Eye,
   Lock,
   CheckCircle2,
   Clock,
@@ -48,8 +49,11 @@ import {
   HelpCircle,
   MessageSquare,
   Tag,
-  FolderOpen
+  FolderOpen,
+  Loader2
 } from 'lucide-react'
+import { DocumentViewerFullscreen } from '@/components/documents/DocumentViewerFullscreen'
+import type { DocumentReference } from '@/types/document-viewer.types'
 import { usePersona } from '@/contexts/persona-context'
 
 interface Document {
@@ -291,6 +295,13 @@ export default function OpportunityDetailPage() {
   const [subscribeAmount, setSubscribeAmount] = useState('')
   const [actionLoading, setActionLoading] = useState(false)
   const isPartnerPersona = activePersona?.persona_type === 'partner'
+
+  // Term sheet preview state
+  const [previewOpen, setPreviewOpen] = useState(false)
+  const [previewLoading, setPreviewLoading] = useState(false)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [previewError, setPreviewError] = useState<string | null>(null)
+  const [previewDocument, setPreviewDocument] = useState<DocumentReference | null>(null)
 
   useEffect(() => {
     // CRITICAL: AbortController prevents race conditions when navigating between deals
@@ -865,15 +876,47 @@ export default function OpportunityDetailPage() {
             const termSheet = opportunity.fee_structures.find(ts => ts.status === 'published') || opportunity.fee_structures[0]
             if (!termSheet) return null
 
-            const handleDownloadTermSheet = async () => {
+            const handlePreviewTermSheet = async () => {
               if (!termSheet.term_sheet_attachment_key) return
+
+              // Set up document reference for viewer
+              const fileName = termSheet.term_sheet_attachment_key.split('/').pop() || 'Term Sheet.pdf'
+              setPreviewDocument({
+                id: termSheet.id,
+                file_name: fileName,
+                name: fileName,
+                mime_type: 'application/pdf',
+                type: 'term_sheet'
+              })
+              setPreviewOpen(true)
+              setPreviewLoading(true)
+              setPreviewError(null)
+              setPreviewUrl(null)
+
               try {
-                const response = await fetch(`/api/deals/${opportunity.id}/term-sheet/download`)
+                // Use the correct endpoint with structureId
+                const response = await fetch(`/api/deals/${opportunity.id}/fee-structures/${termSheet.id}/attachment`)
                 const result = await response.json()
-                if (!response.ok) throw new Error(result.error || 'Failed to download')
-                if (result.download_url) window.open(result.download_url, '_blank', 'noopener,noreferrer')
+                if (!response.ok) throw new Error(result.error || 'Failed to load preview')
+                setPreviewUrl(result.url)
               } catch (err) {
-                console.error('Error downloading term sheet:', err)
+                console.error('Error loading term sheet preview:', err)
+                setPreviewError(err instanceof Error ? err.message : 'Failed to load preview')
+              } finally {
+                setPreviewLoading(false)
+              }
+            }
+
+            const closePreview = () => {
+              setPreviewOpen(false)
+              setPreviewUrl(null)
+              setPreviewError(null)
+              setPreviewDocument(null)
+            }
+
+            const handleDownloadFromPreview = () => {
+              if (previewUrl) {
+                window.open(previewUrl, '_blank')
               }
             }
 
@@ -904,9 +947,9 @@ export default function OpportunityDetailPage() {
                       )}
                     </div>
                     {termSheet.term_sheet_attachment_key && (
-                      <Button onClick={handleDownloadTermSheet} size="sm" className="gap-2">
-                        <Download className="w-4 h-4" />
-                        Download PDF
+                      <Button onClick={handlePreviewTermSheet} size="sm" className="gap-2">
+                        <Eye className="w-4 h-4" />
+                        Preview PDF
                       </Button>
                     )}
                   </div>
@@ -1338,6 +1381,26 @@ export default function OpportunityDetailPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Term Sheet Preview - Fullscreen Viewer */}
+      <DocumentViewerFullscreen
+        isOpen={previewOpen}
+        document={previewDocument}
+        previewUrl={previewUrl}
+        isLoading={previewLoading}
+        error={previewError}
+        onClose={() => {
+          setPreviewOpen(false)
+          setPreviewUrl(null)
+          setPreviewError(null)
+          setPreviewDocument(null)
+        }}
+        onDownload={() => {
+          if (previewUrl) {
+            window.open(previewUrl, '_blank')
+          }
+        }}
+      />
     </div>
   )
 }

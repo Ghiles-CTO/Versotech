@@ -5,8 +5,156 @@ import { auditLogger, AuditActions, AuditEntities } from '@/lib/audit'
 export const dynamic = 'force-dynamic'
 
 /**
+ * Check if user has access to view this term sheet based on their persona
+ * Returns { allowed: boolean, reason?: string }
+ */
+async function checkTermsheetAccess(
+  serviceSupabase: ReturnType<typeof createServiceClient>,
+  userId: string,
+  dealId: string,
+  structureId: string
+): Promise<{ allowed: boolean; reason?: string }> {
+  // Get user personas
+  const { data: personas, error: personaError } = await serviceSupabase.rpc('get_user_personas', {
+    p_user_id: userId,
+  })
+
+  console.log('🔍 [TERMSHEET ACCESS] userId:', userId)
+  console.log('🔍 [TERMSHEET ACCESS] personas:', JSON.stringify(personas))
+  console.log('🔍 [TERMSHEET ACCESS] personaError:', personaError)
+
+  if (personaError || !personas || personas.length === 0) {
+    console.log('🔍 [TERMSHEET ACCESS] No personas found, denying access')
+    return { allowed: false, reason: 'No personas found' }
+  }
+
+  // Check persona types
+  const isStaff = personas.some((p: any) => p.persona_type === 'staff')
+  const isCeo = personas.some((p: any) => p.persona_type === 'ceo')
+  const investorPersona = personas.find((p: any) => p.persona_type === 'investor')
+  const partnerPersona = personas.find((p: any) => p.persona_type === 'partner')
+  const commercialPartnerPersona = personas.find((p: any) => p.persona_type === 'commercial_partner')
+  const arrangerPersona = personas.find((p: any) => p.persona_type === 'arranger')
+
+  console.log('🔍 [TERMSHEET ACCESS] isStaff:', isStaff, 'isCeo:', isCeo)
+
+  // Staff and CEO have full access
+  if (isStaff || isCeo) {
+    console.log('🔍 [TERMSHEET ACCESS] Granting access - staff/ceo')
+    return { allowed: true }
+  }
+
+  // Verify the fee structure is published (non-staff can only view published termsheets)
+  const { data: feeStructure } = await serviceSupabase
+    .from('deal_fee_structures')
+    .select('status')
+    .eq('id', structureId)
+    .eq('deal_id', dealId)
+    .single()
+
+  if (!feeStructure || feeStructure.status !== 'published') {
+    return { allowed: false, reason: 'Term sheet not published' }
+  }
+
+  // Investor: Check deal membership
+  if (investorPersona) {
+    const { data: membership } = await serviceSupabase
+      .from('deal_memberships')
+      .select('deal_id')
+      .eq('deal_id', dealId)
+      .eq('investor_id', investorPersona.entity_id)
+      .maybeSingle()
+
+    if (membership) {
+      return { allowed: true }
+    }
+  }
+
+  // Partner: Check fee_plans or deal_memberships referrals
+  if (partnerPersona) {
+    // Check if partner has a fee plan for this term sheet
+    const { data: feePlan } = await serviceSupabase
+      .from('fee_plans')
+      .select('id')
+      .eq('deal_id', dealId)
+      .eq('partner_id', partnerPersona.entity_id)
+      .maybeSingle()
+
+    if (feePlan) {
+      return { allowed: true }
+    }
+
+    // Check if partner has referred investors to this deal
+    const { data: referral } = await serviceSupabase
+      .from('deal_memberships')
+      .select('deal_id')
+      .eq('deal_id', dealId)
+      .eq('referred_by_entity_type', 'partner')
+      .eq('referred_by_entity_id', partnerPersona.entity_id)
+      .limit(1)
+      .maybeSingle()
+
+    if (referral) {
+      return { allowed: true }
+    }
+  }
+
+  // Commercial Partner: Same logic as partner
+  if (commercialPartnerPersona) {
+    const { data: feePlan } = await serviceSupabase
+      .from('fee_plans')
+      .select('id')
+      .eq('deal_id', dealId)
+      .eq('commercial_partner_id', commercialPartnerPersona.entity_id)
+      .maybeSingle()
+
+    if (feePlan) {
+      return { allowed: true }
+    }
+
+    const { data: referral } = await serviceSupabase
+      .from('deal_memberships')
+      .select('deal_id')
+      .eq('deal_id', dealId)
+      .eq('referred_by_entity_type', 'commercial_partner')
+      .eq('referred_by_entity_id', commercialPartnerPersona.entity_id)
+      .limit(1)
+      .maybeSingle()
+
+    if (referral) {
+      return { allowed: true }
+    }
+  }
+
+  // Arranger: Check if deal belongs to their vehicle
+  if (arrangerPersona) {
+    const { data: deal } = await serviceSupabase
+      .from('deals')
+      .select('vehicle_id')
+      .eq('id', dealId)
+      .single()
+
+    if (deal?.vehicle_id) {
+      const { data: vehicle } = await serviceSupabase
+        .from('vehicles')
+        .select('arranger_entity_id')
+        .eq('id', deal.vehicle_id)
+        .single()
+
+      if (vehicle?.arranger_entity_id === arrangerPersona.entity_id) {
+        return { allowed: true }
+      }
+    }
+  }
+
+  return { allowed: false, reason: 'Access denied' }
+}
+
+/**
  * GET /api/deals/[id]/fee-structures/[structureId]/attachment
  * Get signed URL for term sheet attachment preview/download
+ *
+ * Access: Staff, Investors (with deal membership), Partners/Commercial Partners (with referrals or fee plans), Arrangers (for their vehicles)
  */
 export async function GET(
   request: NextRequest,
@@ -21,17 +169,13 @@ export async function GET(
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const { data: profile } = await clientSupabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single()
-
-  if (!(profile?.role?.startsWith('staff_') || profile?.role === 'ceo')) {
-    return NextResponse.json({ error: 'Staff access required' }, { status: 403 })
-  }
-
   const serviceSupabase = createServiceClient()
+
+  // Check persona-based access
+  const accessCheck = await checkTermsheetAccess(serviceSupabase, user.id, dealId, structureId)
+  if (!accessCheck.allowed) {
+    return NextResponse.json({ error: accessCheck.reason || 'Access denied' }, { status: 403 })
+  }
 
   // Fetch the term sheet to get attachment key
   const { data: feeStructure, error: fetchError } = await serviceSupabase
@@ -49,7 +193,8 @@ export async function GET(
     return NextResponse.json({ error: 'No attachment uploaded' }, { status: 404 })
   }
 
-  const bucket = process.env.NEXT_PUBLIC_STORAGE_BUCKET_NAME || 'documents'
+  // Term sheets are stored in 'deal-documents' bucket
+  const bucket = 'deal-documents'
 
   // Create signed URL for preview (1 hour expiry)
   const { data: signedUrlData, error: signedUrlError } = await serviceSupabase.storage
@@ -124,7 +269,8 @@ export async function POST(
     return NextResponse.json({ error: 'Term sheet not found' }, { status: 404 })
   }
 
-  const bucket = process.env.NEXT_PUBLIC_STORAGE_BUCKET_NAME || 'documents'
+  // Term sheets are stored in 'deal-documents' bucket
+  const bucket = 'deal-documents'
   const timestamp = Date.now()
   const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_')
   const fileKey = `term-sheets/${dealId}/${structureId}/${timestamp}-${sanitizedName}`

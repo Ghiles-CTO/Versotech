@@ -24,6 +24,8 @@ import { Separator } from '@/components/ui/separator'
 import { format } from 'date-fns'
 import { Loader2, Plus, Copy, Rocket, Archive, Pencil, Upload, FileCheck, Users, Building2, Briefcase, Eye, Download, X } from 'lucide-react'
 import FeePlanEditModal from '@/components/fees/FeePlanEditModal'
+import { DocumentViewerFullscreen } from '@/components/documents/DocumentViewerFullscreen'
+import type { DocumentReference } from '@/types/document-viewer.types'
 
 type TermSheet = Record<string, any>
 
@@ -175,12 +177,16 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
   const [feePlanModalOpen, setFeePlanModalOpen] = useState(false)
   const [selectedTermSheetIdForFeePlan, setSelectedTermSheetIdForFeePlan] = useState<string | undefined>()
 
-  // Document preview state
+  // Document preview state (fullscreen viewer)
   const [previewOpen, setPreviewOpen] = useState(false)
   const [previewLoading, setPreviewLoading] = useState(false)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [previewTermSheetId, setPreviewTermSheetId] = useState<string | null>(null)
   const [previewError, setPreviewError] = useState<string | null>(null)
+  const [previewDocument, setPreviewDocument] = useState<DocumentReference | null>(null)
+
+  // PDF generation state
+  const [generatingId, setGeneratingId] = useState<string | null>(null)
 
   useEffect(() => {
     setItems(termSheets ?? [])
@@ -263,9 +269,20 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
     fetchFeePlans()
   }
 
-  // Document preview handlers
+  // Document preview handlers (fullscreen viewer)
   const openPreview = async (termSheetId: string) => {
+    // Find the term sheet to get filename info
+    const termSheet = items.find(ts => ts.id === termSheetId)
+    const fileName = termSheet?.term_sheet_attachment_key?.split('/').pop() || 'Term Sheet.pdf'
+
     setPreviewTermSheetId(termSheetId)
+    setPreviewDocument({
+      id: termSheetId,
+      file_name: fileName,
+      name: fileName,
+      mime_type: 'application/pdf',
+      type: 'term_sheet'
+    })
     setPreviewOpen(true)
     setPreviewLoading(true)
     setPreviewError(null)
@@ -291,11 +308,34 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
     setPreviewUrl(null)
     setPreviewTermSheetId(null)
     setPreviewError(null)
+    setPreviewDocument(null)
   }
 
   const handleDownload = () => {
     if (previewUrl) {
       window.open(previewUrl, '_blank')
+    }
+  }
+
+  // Generate PDF handler - triggers n8n workflow
+  const handleGenerateTermsheet = async (structureId: string) => {
+    setGeneratingId(structureId)
+    setErrorMessage(null)
+    try {
+      const response = await fetch(
+        `/api/deals/${dealId}/fee-structures/${structureId}/generate`,
+        { method: 'POST' }
+      )
+      const data = await response.json()
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to generate term sheet')
+      }
+      // Refresh to show updated attachment (user can preview manually)
+      await refresh()
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'Failed to generate term sheet')
+    } finally {
+      setGeneratingId(null)
     }
   }
 
@@ -536,6 +576,25 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
                   <>
                     <Upload className="h-4 w-4" />
                     Upload Attachment
+                  </>
+                )}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2 border-blue-500/30 hover:bg-blue-500/10"
+                onClick={() => handleGenerateTermsheet(published.id)}
+                disabled={generatingId === published.id}
+              >
+                {generatingId === published.id ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <FileCheck className="h-4 w-4" />
+                    Generate PDF
                   </>
                 )}
               </Button>
@@ -1032,6 +1091,25 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
                     </>
                   )}
                 </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                  onClick={() => handleGenerateTermsheet(termSheet.id)}
+                  disabled={generatingId === termSheet.id}
+                >
+                  {generatingId === termSheet.id ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <FileCheck className="h-4 w-4" />
+                      Generate PDF
+                    </>
+                  )}
+                </Button>
               </div>
 
               {/* Linked Fee Plans - Only show for published term sheets */}
@@ -1381,54 +1459,16 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
         initialTermSheetId={selectedTermSheetIdForFeePlan}
       />
 
-      {/* Document Preview Dialog */}
-      <Dialog open={previewOpen} onOpenChange={(open) => !open && closePreview()}>
-        <DialogContent className="max-w-5xl h-[90vh] flex flex-col">
-          <DialogHeader>
-            <div className="flex items-center justify-between pr-8">
-              <DialogTitle className="text-lg font-semibold">Term Sheet Document</DialogTitle>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleDownload}
-                  disabled={!previewUrl || previewLoading}
-                >
-                  <Download className="h-4 w-4 mr-2" />
-                  Download
-                </Button>
-              </div>
-            </div>
-          </DialogHeader>
-
-          <div className="flex-1 overflow-auto bg-black/20 rounded-lg">
-            {previewLoading && (
-              <div className="flex items-center justify-center h-full">
-                <div className="text-center">
-                  <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2 text-blue-600" />
-                  <p className="text-sm text-muted-foreground">Loading document...</p>
-                </div>
-              </div>
-            )}
-
-            {previewError && (
-              <div className="flex items-center justify-center h-full">
-                <div className="text-center text-red-400">
-                  <p className="text-sm">{previewError}</p>
-                </div>
-              </div>
-            )}
-
-            {!previewLoading && !previewError && previewUrl && (
-              <iframe
-                src={previewUrl}
-                className="w-full h-full border-0 rounded-lg"
-                title="Term Sheet Preview"
-              />
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* Document Preview - Fullscreen Viewer */}
+      <DocumentViewerFullscreen
+        isOpen={previewOpen}
+        document={previewDocument}
+        previewUrl={previewUrl}
+        isLoading={previewLoading}
+        error={previewError}
+        onClose={closePreview}
+        onDownload={handleDownload}
+      />
     </div>
   )
 }
