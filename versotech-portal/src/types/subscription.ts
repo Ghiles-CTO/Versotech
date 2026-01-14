@@ -74,6 +74,13 @@ export type SubscriptionWithRelations = Subscription & {
     kyc_status: string
     status: string
     primary_rm: string | null
+    aml_risk_rating?: string | null
+    is_pep?: boolean | null
+    primary_rm_profile?: {
+      id: string
+      display_name: string | null
+      email: string | null
+    } | null
   }
   vehicle: {
     id: string
@@ -83,6 +90,7 @@ export type SubscriptionWithRelations = Subscription & {
     currency: string
     status: string
     domicile: string | null
+    formation_date?: string | null
   }
 }
 

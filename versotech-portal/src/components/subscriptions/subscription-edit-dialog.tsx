@@ -168,7 +168,7 @@ export function SubscriptionEditDialog({
         <DialogHeader>
           <DialogTitle className="text-white">Edit Subscription #{subscription.subscription_number}</DialogTitle>
           <DialogDescription className="text-gray-400">
-            Update all subscription details for {subscription.investor.legal_name}
+            Update all subscription details for {subscription.investor?.legal_name || 'Unknown Investor'}
           </DialogDescription>
         </DialogHeader>
 
