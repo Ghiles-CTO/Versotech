@@ -33,7 +33,17 @@ function generateSubscriptionPackFilename(
   const cleanInvestmentName = investmentName.trim().replace(/\s+/g, ' ')
   const cleanInvestorName = investorName.trim().replace(/\s+/g, ' ')
 
-  return `${cleanEntityCode} - SUBSCRIPTION PACK - ${cleanInvestmentName} - ${cleanInvestorName} - ${formattedDate}.docx`
+  return `${cleanEntityCode} - SUBSCRIPTION PACK - ${cleanInvestmentName} - ${cleanInvestorName} - ${formattedDate}`
+}
+
+/**
+ * Determine file extension from mime type
+ */
+function getFileExtension(mimeType: string): string {
+  if (mimeType === 'application/pdf') return '.pdf'
+  if (mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') return '.docx'
+  if (mimeType.includes('word')) return '.docx'
+  return '.pdf' // Default to PDF since that's our new output_format default
 }
 
 export async function POST(
@@ -831,6 +841,8 @@ async function handleEntityApproval(
               name,
               vehicle_id,
               currency,
+              company_name,
+              company_logo_url,
               vehicle:vehicles(
                 entity_code,
                 investment_name,
@@ -1014,6 +1026,70 @@ async function handleEntityApproval(
                 counterpartyEntity = entityData
               }
 
+              // Build signatories array for multi-signatory subscription packs
+              // Each signatory includes a 'number' field for template display (1, 2, 3...)
+              let signatories: { name: string; title: string; number: number }[] = []
+              // Check BOTH: submission type OR investor's actual type (entity/institutional)
+              const isEntityInvestor = submission.subscription_type === 'entity' ||
+                                       investorData?.type === 'entity' ||
+                                       investorData?.type === 'institutional'
+              if (isEntityInvestor && submission.investor_id) {
+                // For entity investors: get authorized signatories from investor_members
+                const { data: members } = await supabase
+                  .from('investor_members')
+                  .select('id, full_name, email, role_title')
+                  .eq('investor_id', submission.investor_id)
+                  .eq('is_signatory', true)
+                  .eq('is_active', true)
+
+                if (members && members.length > 0) {
+                  signatories = members.map((m: { full_name: string | null; role_title: string | null }, index: number) => ({
+                    name: m.full_name || '',
+                    title: m.role_title || 'Authorized Signatory',
+                    number: index + 1
+                  }))
+                  console.log(`👥 [SUBSCRIPTION PACK] Found ${signatories.length} authorized signatories for entity`)
+                } else {
+                  // Fallback: use entity representative if no signatories marked
+                  signatories = [{
+                    name: counterpartyEntity?.representative_name || investorData?.legal_name || '',
+                    title: counterpartyEntity?.representative_title || 'Authorized Representative',
+                    number: 1
+                  }]
+                  console.warn('[SUBSCRIPTION PACK] No signatories marked, using representative fallback')
+                }
+              } else {
+                // For individual investors: single signatory
+                signatories = [{
+                  name: investorData?.legal_name || '',
+                  title: 'Investor',
+                  number: 1
+                }]
+              }
+
+              // Generate pre-rendered HTML for signatories (n8n doesn't support Handlebars {{#each}})
+              const signatoriesTableHtml = signatories.map(s => `
+            <div style="margin-bottom: 0.5cm;">
+                <div class="signature-line"></div>
+                Name: ${s.name}<br>
+                Title: ${s.title}
+            </div>`).join('')
+
+              const signatoriesSignatureHtml = signatories.map(s => `
+<div class="signature-block" style="margin-bottom: 0.8cm;">
+    <p><strong>The Subscriber</strong>, represented by Authorized Signatory ${s.number}</p>
+    <div class="signature-line"></div>
+    <p>Name: ${s.name}<br>
+    Title: ${s.title}</p>
+</div>`).join('')
+
+              const signatoriesAppendixHtml = signatories.map(s => `
+    <div style="margin-bottom: 0.5cm;">
+        <div class="signature-line"></div>
+        <p>Name: ${s.name}<br>
+        Title: ${s.title}</p>
+    </div>`).join('')
+
               const { data: vehicleData } = await supabase
                 .from('vehicles')
                 .select('series_number, name, series_short_title, investment_name, issuer_gp_name, issuer_gp_rcc_number, issuer_rcc_number, issuer_website')
@@ -1039,8 +1115,10 @@ async function handleEntityApproval(
                   console.warn('⚠️ [SUBSCRIPTION PACK] Missing price_per_share_text for deal:', submission.deal_id, '- defaulting to $1.00')
                 }
                 const certificatesCount = Math.floor(amount / pricePerShare)
+                // Fee percentages are stored as whole numbers (2.0 = 2%, 25.0 = 25%)
                 const subscriptionFeeRate = feeStructure.subscription_fee_percent || 0
-                const subscriptionFeeAmount = amount * subscriptionFeeRate
+                // Divide by 100 to convert percentage to decimal for calculation
+                const subscriptionFeeAmount = amount * (subscriptionFeeRate / 100)
                 const totalSubscriptionPrice = amount + subscriptionFeeAmount
 
                 // Format dates
@@ -1098,6 +1176,9 @@ async function handleEntityApproval(
 
                 // Build comprehensive subscription pack payload
                 const subscriptionPayload = {
+                  // Output format: 'pdf' for direct PDF, 'docx' for editable Word doc
+                  output_format: 'pdf',
+
                   // Series & Investment info
                   series_number: vehicleData.series_number || '',
                   series_title: vehicleData.investment_name || vehicleData.name,
@@ -1119,23 +1200,24 @@ async function handleEntityApproval(
                   certificates_count: certificatesCount.toString(),
                   price_per_share: pricePerShare.toFixed(2),
                   subscription_amount: amount.toFixed(2),
-                  subscription_fee_rate: `${(subscriptionFeeRate * 100).toFixed(2)}%`,
+                  // Fee rates are already stored as percentages (2.0 = 2%), no multiplication needed
+                  subscription_fee_rate: `${subscriptionFeeRate.toFixed(2)}%`,
                   subscription_fee_amount: subscriptionFeeAmount.toFixed(2),
-                  subscription_fee_text: `${(subscriptionFeeRate * 100).toFixed(2)}% upfront subscription fee`,
+                  subscription_fee_text: `${subscriptionFeeRate.toFixed(2)}% upfront subscription fee`,
                   total_subscription_price: totalSubscriptionPrice.toFixed(2),
 
                   // Currency
                   currency_code: submission.deal.currency || 'USD',
                   currency_long: submission.deal.currency === 'USD' ? 'United States Dollars' : submission.deal.currency,
 
-                  // Fee structures
-                  management_fee_text: `${((feeStructure.management_fee_percent || 0) * 100).toFixed(2)}% of net asset value per annum, calculated and payable quarterly`,
-                  performance_fee_text: `${((feeStructure.carried_interest_percent || 0) * 100).toFixed(2)}% performance fee on realized gains`,
+                  // Fee structures - values are already percentages (2.0 = 2%, 25.0 = 25%)
+                  management_fee_text: `${(feeStructure.management_fee_percent || 0).toFixed(2)}% of net asset value per annum, calculated and payable quarterly`,
+                  performance_fee_text: `${(feeStructure.carried_interest_percent || 0).toFixed(2)}% performance fee on realized gains`,
                   escrow_fee_text: feeStructure.escrow_fee_text || 'As per escrow agreement',
 
-                  // Legal clauses
-                  management_fee_clause: feeStructure.management_fee_clause || `The Issuer shall charge a Management Fee of ${((feeStructure.management_fee_percent || 0) * 100).toFixed(2)}% per annum of the net asset value of the Series, calculated on a quarterly basis and payable quarterly in advance.`,
-                  performance_fee_clause: feeStructure.performance_fee_clause || `The Issuer shall be entitled to a Performance Fee equal to ${((feeStructure.carried_interest_percent || 0) * 100).toFixed(2)}% of the net profits generated by the Series.`,
+                  // Legal clauses - values are already percentages
+                  management_fee_clause: feeStructure.management_fee_clause || `The Issuer shall charge a Management Fee of ${(feeStructure.management_fee_percent || 0).toFixed(2)}% per annum of the net asset value of the Series, calculated on a quarterly basis and payable quarterly in advance.`,
+                  performance_fee_clause: feeStructure.performance_fee_clause || `The Issuer shall be entitled to a Performance Fee equal to ${(feeStructure.carried_interest_percent || 0).toFixed(2)}% of the net profits generated by the Series.`,
 
                   // Wire/Escrow instructions
                   wire_bank_name: feeStructure.wire_bank_name || 'Banque de Luxembourg',
@@ -1169,7 +1251,24 @@ async function handleEntityApproval(
 
                   // Arranger
                   arranger_name: feeStructure.arranger_person_name || 'Julien Machot',
-                  arranger_title: feeStructure.arranger_person_title || 'Director'
+                  arranger_title: feeStructure.arranger_person_title || 'Director',
+                  arranger_company_name: feeStructure.exclusive_arranger || 'VERSO Management',
+
+                  // LPA & Certificates details
+                  // Note: lpa_date and max_aggregate_amount columns don't exist in vehicles table yet
+                  lpa_date: '',
+                  max_aggregate_amount: '100,000,000',
+
+                  // Accession Undertaking (Appendix) fields
+                  selling_subscriber_name: subscriberName,
+                  accession_holder_name: subscriberName,
+                  accession_signatory_name: signatories[0]?.name || '',
+                  accession_signatory_title: signatories[0]?.title || '',
+
+                  // Multi-signatory support: pre-rendered HTML (n8n doesn't support Handlebars loops)
+                  signatories_table_html: signatoriesTableHtml,
+                  signatories_signature_html: signatoriesSignatureHtml,
+                  signatories_appendix_html: signatoriesAppendixHtml
                 }
 
                 console.log('🔔 Triggering Subscription Pack workflow:', {
@@ -1221,40 +1320,53 @@ async function handleEntityApproval(
                       let fileName: string
                       let mimeType: string
 
-                      if (n8nResponse.raw && typeof n8nResponse.raw === 'string') {
-                        // Binary wrapped in { raw: "..." } format (from triggerWorkflow error handling)
+                      if (n8nResponse.binary) {
+                        // Binary buffer format (preferred - from triggerWorkflow binary handling)
+                        fileBuffer = Buffer.from(n8nResponse.binary)
+                        mimeType = n8nResponse.mimeType || 'application/pdf'
+                        const baseName = generateSubscriptionPackFilename(entityCode, investmentName, investorName, submittedAt)
+                        fileName = n8nResponse.filename || (baseName + getFileExtension(mimeType))
+                        console.log('✅ Received binary data, buffer size:', fileBuffer.length, 'mimeType:', mimeType)
+                      } else if (n8nResponse.raw && typeof n8nResponse.raw === 'string' && n8nResponse.raw.length > 0) {
+                        // Binary wrapped in { raw: "..." } format (from triggerWorkflow text handling)
                         // Use 'latin1' encoding to preserve binary data (1-to-1 byte mapping)
                         fileBuffer = Buffer.from(n8nResponse.raw, 'latin1')
-                        fileName = generateSubscriptionPackFilename(entityCode, investmentName, investorName, submittedAt)
-                        mimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-                        console.log('✅ Received binary data in raw format, buffer size:', fileBuffer.length)
-                      } else if (n8nResponse.binary) {
-                        // Binary buffer format
-                        fileBuffer = Buffer.from(n8nResponse.binary)
-                        fileName = n8nResponse.filename || generateSubscriptionPackFilename(entityCode, investmentName, investorName, submittedAt)
-                        mimeType = n8nResponse.mimeType || 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+                        // Detect PDF from file signature
+                        const sig = fileBuffer.slice(0, 4).toString('hex')
+                        mimeType = sig === '25504446' ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+                        const baseName = generateSubscriptionPackFilename(entityCode, investmentName, investorName, submittedAt)
+                        fileName = baseName + getFileExtension(mimeType)
+                        console.log('✅ Received binary data in raw format, buffer size:', fileBuffer.length, 'detected mimeType:', mimeType)
                       } else if (n8nResponse.data) {
                         // Base64 string format
                         fileBuffer = Buffer.from(n8nResponse.data, 'base64')
-                        fileName = n8nResponse.filename || generateSubscriptionPackFilename(entityCode, investmentName, investorName, submittedAt)
-                        mimeType = n8nResponse.mimeType || 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-                      } else if (typeof n8nResponse === 'string') {
+                        mimeType = n8nResponse.mimeType || 'application/pdf'
+                        const baseName = generateSubscriptionPackFilename(entityCode, investmentName, investorName, submittedAt)
+                        fileName = n8nResponse.filename || (baseName + getFileExtension(mimeType))
+                      } else if (typeof n8nResponse === 'string' && n8nResponse.length > 0) {
                         // Direct string format (n8n returns binary as string)
-                        // Use 'latin1' encoding to preserve binary data (1-to-1 byte mapping)
                         fileBuffer = Buffer.from(n8nResponse, 'latin1')
-                        fileName = generateSubscriptionPackFilename(entityCode, investmentName, investorName, submittedAt)
-                        mimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-                        console.log('✅ Received binary data as string, buffer size:', fileBuffer.length)
+                        // Detect PDF from file signature
+                        const sig = fileBuffer.slice(0, 4).toString('hex')
+                        mimeType = sig === '25504446' ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+                        const baseName = generateSubscriptionPackFilename(entityCode, investmentName, investorName, submittedAt)
+                        fileName = baseName + getFileExtension(mimeType)
+                        console.log('✅ Received binary data as string, buffer size:', fileBuffer.length, 'detected mimeType:', mimeType)
                       } else {
                         throw new Error('No binary data in n8n response')
                       }
 
-                      // Verify file signature for Word documents (should be PK for ZIP/DOCX)
+                      // Verify file signature matches expected type
                       const signature = fileBuffer.slice(0, 4).toString('hex')
-                      console.log('📄 Document file signature:', signature)
-                      if (fileName.endsWith('.docx') && signature !== '504b0304') {
+                      console.log('📄 Document file signature:', signature, '| Expected:', fileName.endsWith('.pdf') ? '25504446 (PDF)' : '504b0304 (DOCX)')
+
+                      const isPdf = signature === '25504446' // %PDF
+                      const isDocx = signature === '504b0304' // PK (ZIP)
+
+                      if (fileName.endsWith('.pdf') && !isPdf) {
+                        console.warn('⚠️ Warning: PDF file signature mismatch. Expected: 25504446, Got:', signature)
+                      } else if (fileName.endsWith('.docx') && !isDocx) {
                         console.warn('⚠️ Warning: DOCX file signature mismatch. Expected: 504b0304, Got:', signature)
-                        console.warn('⚠️ File may be corrupted. First 20 bytes:', fileBuffer.slice(0, 20).toString('hex'))
                       } else {
                         console.log('✅ File signature valid for', fileName)
                       }

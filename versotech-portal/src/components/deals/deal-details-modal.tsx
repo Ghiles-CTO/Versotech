@@ -281,21 +281,21 @@ export function DealDetailsModal({ deal, investorId, children }: DealDetailsModa
       {
         label: 'Subscription Fee',
         value: termSheet.subscription_fee_percent !== null
-          ? `${(termSheet.subscription_fee_percent * 100).toFixed(2)}%`
+          ? `${termSheet.subscription_fee_percent.toFixed(2)}%`
           : '—'
       },
       {
         label: 'Management Fee',
         value: termSheet.management_fee_clause
           ?? (termSheet.management_fee_percent !== null
-            ? `${(termSheet.management_fee_percent * 100).toFixed(2)}%`
+            ? `${termSheet.management_fee_percent.toFixed(2)}%`
             : '—')
       },
       {
         label: 'Performance Fee',
         value: termSheet.performance_fee_clause
           ?? (termSheet.carried_interest_percent !== null
-            ? `${(termSheet.carried_interest_percent * 100).toFixed(2)}%`
+            ? `${termSheet.carried_interest_percent.toFixed(2)}%`
             : '—')
       },
       { label: 'Legal Counsel', value: termSheet.legal_counsel ?? '—' },

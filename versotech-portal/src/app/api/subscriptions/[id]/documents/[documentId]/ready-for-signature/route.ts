@@ -75,15 +75,21 @@ export async function POST(
   }
 
   // Check if document is DOCX - if so, convert to PDF first
+  // If already PDF, use directly (no conversion needed!)
   const isDocx = document.mime_type?.includes('wordprocessingml') ||
                  document.mime_type?.includes('msword') ||
                  document.file_key?.toLowerCase().endsWith('.docx') ||
                  document.file_key?.toLowerCase().endsWith('.doc')
 
+  const isPdf = document.mime_type === 'application/pdf' ||
+                document.file_key?.toLowerCase().endsWith('.pdf')
+
   let signableDocument = document
   let signableDocumentId = documentId
 
-  if (isDocx) {
+  if (isPdf) {
+    console.log('✅ [READY-FOR-SIGNATURE] Document is already PDF, skipping conversion')
+  } else if (isDocx) {
     console.log('📄 [READY-FOR-SIGNATURE] DOCX detected, converting to PDF via Gotenberg')
 
     // Download the DOCX from storage
@@ -211,6 +217,7 @@ export async function POST(
       *,
       investor:investors(
         id,
+        type,
         legal_name,
         display_name,
         email,
@@ -278,12 +285,43 @@ export async function POST(
       email: m.email
     }))
   } else {
-    // Fallback: use investor's primary email (backwards compatible)
-    signatories = [{
-      id: 'investor_primary',
-      full_name: subscription.investor.legal_name || subscription.investor.display_name,
-      email: subscription.investor.email
-    }]
+    // Check if investor is entity type - auto-fetch signatories from investor_members
+    const isEntityInvestor = subscription.investor.type === 'entity' ||
+                             subscription.investor.type === 'institutional'
+
+    if (isEntityInvestor) {
+      // Fetch authorized signatories for entity investor
+      const { data: entityMembers } = await serviceSupabase
+        .from('investor_members')
+        .select('id, full_name, email')
+        .eq('investor_id', subscription.investor_id)
+        .eq('is_signatory', true)
+        .eq('is_active', true)
+
+      if (entityMembers && entityMembers.length > 0) {
+        signatories = entityMembers.map(m => ({
+          id: m.id,
+          full_name: m.full_name,
+          email: m.email
+        }))
+        console.log(`👥 [READY-FOR-SIGNATURE] Auto-fetched ${signatories.length} signatories for entity investor`)
+      } else {
+        // Entity but no signatories marked - fall back to investor name
+        console.warn('[READY-FOR-SIGNATURE] Entity investor has no signatories marked, using investor name')
+        signatories = [{
+          id: 'investor_primary',
+          full_name: subscription.investor.legal_name || subscription.investor.display_name,
+          email: subscription.investor.email
+        }]
+      }
+    } else {
+      // Individual investor: use investor's primary email
+      signatories = [{
+        id: 'investor_primary',
+        full_name: subscription.investor.legal_name || subscription.investor.display_name,
+        email: subscription.investor.email
+      }]
+    }
   }
 
   // Create signature requests for each signatory
@@ -305,7 +343,8 @@ export async function POST(
         signature_position: position,
         subscription_id: subscriptionId,
         document_id: signableDocumentId,
-        member_id: signatory.id !== 'investor_primary' ? signatory.id : undefined
+        member_id: signatory.id !== 'investor_primary' ? signatory.id : undefined,
+        total_party_a_signatories: signatories.length // For multi-signatory positioning
       }
 
       const investorSigResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/signature/request`, {

@@ -4,6 +4,7 @@
 
 import { PDFDocument, rgb } from 'pdf-lib'
 import { SIGNATURE_CONFIG } from './config'
+import { calculateSignaturePosition } from './helpers'
 import type { EmbedSignatureParams } from './types'
 
 /**
@@ -24,7 +25,8 @@ export async function embedSignatureInPDF(
     signatureDataUrl,
     signerName,
     signaturePosition,
-    timestamp = new Date()
+    timestamp = new Date(),
+    totalPartyASignatories = 1 // Default for backwards compatibility
   } = params
 
   // Load PDF document
@@ -46,19 +48,20 @@ export async function embedSignatureInPDF(
   const { width, height } = lastPage.getSize()
 
   // Signature dimensions from config
-  const { signature: sigConfig, table: tableConfig } = SIGNATURE_CONFIG.pdf
+  const { signature: sigConfig } = SIGNATURE_CONFIG.pdf
 
-  // Calculate Y position for signature table
-  // Standard PDF: 792pt tall, signature space: 50-230pt from bottom
-  // Center signatures vertically in signature space
-  const signatureY =
-    tableConfig.bottom + tableConfig.height / 2 - sigConfig.height / 2
+  // Calculate dynamic position for multi-signatory support
+  // Uses helper to compute X% and Y based on position (party_a, party_a_2, etc.)
+  const { xPercent, yFromBottom } = calculateSignaturePosition(
+    signaturePosition,
+    totalPartyASignatories
+  )
 
-  // Calculate X position based on signature_position (two-column table)
-  // PARTY A (left column): centered at 25% of page width
-  // PARTY B (right column): centered at 75% of page width
-  const xPercent = SIGNATURE_CONFIG.pdf.positions[signaturePosition].xPercent
+  // Calculate actual X coordinate (percentage of page width, centered on signature)
   const signatureX = width * xPercent - sigConfig.width / 2
+
+  // Calculate actual Y coordinate (from bottom of page)
+  const signatureY = yFromBottom
 
   // Draw signature on last page
   lastPage.drawImage(signatureImage, {

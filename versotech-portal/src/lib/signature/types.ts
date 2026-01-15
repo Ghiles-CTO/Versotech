@@ -4,7 +4,10 @@
 
 export type DocumentType = 'nda' | 'subscription' | 'amendment' | 'introducer_agreement' | 'placement_agreement' | 'certificate' | 'other'
 export type SignerRole = 'investor' | 'admin' | 'arranger' | 'introducer' | 'commercial_partner' | 'lawyer' | 'ceo'
-export type SignaturePosition = 'party_a' | 'party_b'
+// Supports multiple signatories: party_a, party_a_2, party_a_3, etc.
+export type SignaturePosition =
+  | 'party_a' | 'party_a_1' | 'party_a_2' | 'party_a_3' | 'party_a_4' | 'party_a_5'
+  | 'party_b' | 'party_b_1' | 'party_b_2' | 'party_b_3' | 'party_b_4' | 'party_b_5'
 export type SignatureStatus = 'pending' | 'signed' | 'expired' | 'cancelled'
 
 export interface SignatureRequestRecord {
@@ -37,6 +40,7 @@ export interface SignatureRequestRecord {
   introducer_agreement_id?: string // For introducer agreement signing
   placement_id?: string // For placement agreement signing (commercial partner ID)
   placement_agreement_id?: string // For placement agreement signing
+  total_party_a_signatories?: number // For multi-signatory: total Party A signers
   created_at: string
   updated_at: string
   created_by?: string
@@ -60,6 +64,7 @@ export interface CreateSignatureRequestParams {
   introducer_agreement_id?: string // For introducer agreement signing
   placement_id?: string // For placement agreement signing (commercial partner ID)
   placement_agreement_id?: string // For placement agreement signing
+  total_party_a_signatories?: number // For multi-signatory: total Party A signers
 }
 
 export interface CreateSignatureRequestResult {
@@ -100,6 +105,7 @@ export interface EmbedSignatureParams {
   signerName: string
   signaturePosition: SignaturePosition
   timestamp?: Date
+  totalPartyASignatories?: number // For multi-signatory: how many Party A signers total
 }
 
 export interface PostSignatureHandlerParams {

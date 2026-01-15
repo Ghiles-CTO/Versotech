@@ -189,6 +189,70 @@ export async function POST(
       counterpartyEntity = entityData
     }
 
+    // Build signatories array for multi-signatory subscription packs
+    // Each signatory includes a 'number' field for template display (1, 2, 3...)
+    let signatories: { name: string; title: string; number: number }[] = []
+    // Check BOTH: submission type OR investor's actual type (entity/institutional)
+    const isEntityInvestor = originalSubmission?.subscription_type === 'entity' ||
+                             subscription.investor?.type === 'entity' ||
+                             subscription.investor?.type === 'institutional'
+    if (isEntityInvestor && subscription.investor_id) {
+      // For entity investors: get authorized signatories from investor_members
+      const { data: members } = await serviceSupabase
+        .from('investor_members')
+        .select('id, full_name, email, role_title')
+        .eq('investor_id', subscription.investor_id)
+        .eq('is_signatory', true)
+        .eq('is_active', true)
+
+      if (members && members.length > 0) {
+        signatories = members.map((m: { full_name: string | null; role_title: string | null }, index: number) => ({
+          name: m.full_name || '',
+          title: m.role_title || 'Authorized Signatory',
+          number: index + 1
+        }))
+        console.log(`👥 [REGENERATE] Found ${signatories.length} authorized signatories for entity`)
+      } else {
+        // Fallback: use entity representative if no signatories marked
+        signatories = [{
+          name: counterpartyEntity?.representative_name || subscription.investor?.legal_name || '',
+          title: counterpartyEntity?.representative_title || 'Authorized Representative',
+          number: 1
+        }]
+        console.warn('[REGENERATE] No signatories marked, using representative fallback')
+      }
+    } else {
+      // For individual investors: single signatory
+      signatories = [{
+        name: subscription.investor?.legal_name || '',
+        title: 'Investor',
+        number: 1
+      }]
+    }
+
+    // Generate pre-rendered HTML for signatories (n8n doesn't support Handlebars {{#each}})
+    const signatoriesTableHtml = signatories.map(s => `
+            <div style="margin-bottom: 0.5cm;">
+                <div class="signature-line"></div>
+                Name: ${s.name}<br>
+                Title: ${s.title}
+            </div>`).join('')
+
+    const signatoriesSignatureHtml = signatories.map(s => `
+<div class="signature-block" style="margin-bottom: 0.8cm;">
+    <p><strong>The Subscriber</strong>, represented by Authorized Signatory ${s.number}</p>
+    <div class="signature-line"></div>
+    <p>Name: ${s.name}<br>
+    Title: ${s.title}</p>
+</div>`).join('')
+
+    const signatoriesAppendixHtml = signatories.map(s => `
+    <div style="margin-bottom: 0.5cm;">
+        <div class="signature-line"></div>
+        <p>Name: ${s.name}<br>
+        Title: ${s.title}</p>
+    </div>`).join('')
+
     // Fetch fee structure for the deal (get most recent published one)
     const { data: feeStructure } = await serviceSupabase
       .from('deal_fee_structures')
@@ -228,8 +292,10 @@ export async function POST(
       ? Number(subscription.num_shares)
       : Math.floor(amount / pricePerShare)
 
+    // Fee percentages are stored as whole numbers (2.0 = 2%, 25.0 = 25%)
     const subscriptionFeeRate = Number(subscription.subscription_fee_percent) || feeStructure.subscription_fee_percent || 0
-    const subscriptionFeeAmount = Number(subscription.subscription_fee_amount) || (amount * subscriptionFeeRate)
+    // Divide by 100 to convert percentage to decimal for calculation
+    const subscriptionFeeAmount = Number(subscription.subscription_fee_amount) || (amount * (subscriptionFeeRate / 100))
     const totalSubscriptionPrice = amount + subscriptionFeeAmount
 
     // Format dates
@@ -272,6 +338,9 @@ export async function POST(
 
     // Build comprehensive subscription pack payload (same structure as initial generation)
     const subscriptionPayload = {
+      // Output format: 'pdf' for direct PDF, 'docx' for editable Word doc
+      output_format: outputFormat,
+
       // Series & Investment info
       series_number: vehicleData?.series_number || '',
       series_title: vehicleData?.investment_name || vehicleData?.name || '',
@@ -293,23 +362,24 @@ export async function POST(
       certificates_count: numShares.toString(),
       price_per_share: pricePerShare.toFixed(2),
       subscription_amount: amount.toFixed(2),
-      subscription_fee_rate: `${(subscriptionFeeRate * 100).toFixed(2)}%`,
+      // Fee rates are already stored as percentages (2.0 = 2%), no multiplication needed
+      subscription_fee_rate: `${subscriptionFeeRate.toFixed(2)}%`,
       subscription_fee_amount: subscriptionFeeAmount.toFixed(2),
-      subscription_fee_text: `${(subscriptionFeeRate * 100).toFixed(2)}% upfront subscription fee`,
+      subscription_fee_text: `${subscriptionFeeRate.toFixed(2)}% upfront subscription fee`,
       total_subscription_price: totalSubscriptionPrice.toFixed(2),
 
       // Currency
       currency_code: subscription.currency || dealData?.currency || 'USD',
       currency_long: (subscription.currency || dealData?.currency) === 'USD' ? 'United States Dollars' : (subscription.currency || dealData?.currency),
 
-      // Fee structures
-      management_fee_text: `${((feeStructure.management_fee_percent || 0) * 100).toFixed(2)}% of net asset value per annum, calculated and payable quarterly`,
-      performance_fee_text: `${((feeStructure.carried_interest_percent || 0) * 100).toFixed(2)}% performance fee on realized gains`,
+      // Fee structures - values are already percentages (2.0 = 2%, 25.0 = 25%)
+      management_fee_text: `${(feeStructure.management_fee_percent || 0).toFixed(2)}% of net asset value per annum, calculated and payable quarterly`,
+      performance_fee_text: `${(feeStructure.carried_interest_percent || 0).toFixed(2)}% performance fee on realized gains`,
       escrow_fee_text: feeStructure.escrow_fee_text || 'As per escrow agreement',
 
-      // Legal clauses
-      management_fee_clause: feeStructure.management_fee_clause || `The Issuer shall charge a Management Fee of ${((feeStructure.management_fee_percent || 0) * 100).toFixed(2)}% per annum of the net asset value of the Series, calculated on a quarterly basis and payable quarterly in advance.`,
-      performance_fee_clause: feeStructure.performance_fee_clause || `The Issuer shall be entitled to a Performance Fee equal to ${((feeStructure.carried_interest_percent || 0) * 100).toFixed(2)}% of the net profits generated by the Series.`,
+      // Legal clauses - values are already percentages
+      management_fee_clause: feeStructure.management_fee_clause || `The Issuer shall charge a Management Fee of ${(feeStructure.management_fee_percent || 0).toFixed(2)}% per annum of the net asset value of the Series, calculated on a quarterly basis and payable quarterly in advance.`,
+      performance_fee_clause: feeStructure.performance_fee_clause || `The Issuer shall be entitled to a Performance Fee equal to ${(feeStructure.carried_interest_percent || 0).toFixed(2)}% of the net profits generated by the Series.`,
 
       // Wire/Escrow instructions
       wire_bank_name: feeStructure.wire_bank_name || 'Banque de Luxembourg',
@@ -344,6 +414,23 @@ export async function POST(
       // Arranger
       arranger_name: feeStructure.arranger_person_name || 'Julien Machot',
       arranger_title: feeStructure.arranger_person_title || 'Director',
+      arranger_company_name: feeStructure.exclusive_arranger || 'VERSO Management',
+
+      // LPA & Certificates details
+      // Note: lpa_date and max_aggregate_amount columns don't exist in vehicles table yet
+      lpa_date: '',
+      max_aggregate_amount: '100,000,000',
+
+      // Accession Undertaking (Appendix) fields
+      selling_subscriber_name: subscriberName,
+      accession_holder_name: subscriberName,
+      accession_signatory_name: signatories[0]?.name || '',
+      accession_signatory_title: signatories[0]?.title || '',
+
+      // Multi-signatory support: pre-rendered HTML (n8n doesn't support Handlebars loops)
+      signatories_table_html: signatoriesTableHtml,
+      signatories_signature_html: signatoriesSignatureHtml,
+      signatories_appendix_html: signatoriesAppendixHtml,
 
       // Regeneration flag (useful for N8N to know this is a regeneration)
       is_regeneration: true,

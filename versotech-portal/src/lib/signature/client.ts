@@ -120,20 +120,28 @@ export async function createSignatureRequest(
     }
 
     if (params.document_id) {
-      // For manual uploads: check (document_id, signer_role) pair
-      const { data: existingDocument } = await supabase
+      // For manual uploads: check (document_id, signer_role, signature_position) tuple
+      // This allows multiple signatories with same role but different positions (party_a, party_a_2, etc.)
+      let duplicateQuery = supabase
         .from('signature_requests')
-        .select('id, status')
+        .select('id, status, signature_position')
         .eq('document_id', params.document_id)
         .eq('signer_role', signer_role)
         .in('status', ['pending', 'signed'])
-        .limit(1)
+
+      // If signature_position is provided, include it in duplicate check
+      // This enables multi-signatory support (party_a vs party_a_2 are different)
+      if (signature_position) {
+        duplicateQuery = duplicateQuery.eq('signature_position', signature_position)
+      }
+
+      const { data: existingDocument } = await duplicateQuery.limit(1)
 
       if (existingDocument && existingDocument.length > 0) {
-        console.warn(`⚠️ [SIGNATURE] Duplicate prevention: Found existing ${signer_role} signature request for document ${params.document_id}`)
+        console.warn(`⚠️ [SIGNATURE] Duplicate prevention: Found existing ${signer_role} (${signature_position}) signature request for document ${params.document_id}`)
         return {
           success: false,
-          error: `A signature request already exists for ${signer_role} on this document (status: ${existingDocument[0].status})`
+          error: `A signature request already exists for ${signer_role} at position ${signature_position} on this document (status: ${existingDocument[0].status})`
         }
       }
     }
@@ -247,6 +255,12 @@ export async function createSignatureRequest(
     }
     if (params.document_id) {
       insertData.document_id = params.document_id
+    }
+
+    // Include total_party_a_signatories for multi-signatory positioning
+    if (params.total_party_a_signatories) {
+      insertData.total_party_a_signatories = params.total_party_a_signatories
+      console.log('👥 [SIGNATURE] Multi-signatory mode:', params.total_party_a_signatories, 'Party A signers')
     }
 
     const { data: signatureRequest, error: insertError } = await supabase
@@ -710,27 +724,33 @@ export async function submitSignature(
     }
 
     // PROGRESSIVE SIGNING ORDER ENFORCEMENT
-    // party_b cannot sign until party_a has signed
-    if (signatureRequest.signature_position === 'party_b') {
-      console.log('🔍 [SIGNATURE] Checking if party_a has signed first (progressive signing)...')
+    // party_b cannot sign until ALL party_a signatories have signed (multi-signatory support)
+    if (signatureRequest.signature_position?.startsWith('party_b')) {
+      console.log('🔍 [SIGNATURE] Checking if ALL party_a signatories have signed (progressive signing)...')
 
-      // Find the party_a signature request for the same document
-      const { data: partyARequest } = await supabase
+      // Find ALL party_a signature requests for the same document (party_a, party_a_2, party_a_3, etc.)
+      const { data: partyARequests } = await supabase
         .from('signature_requests')
-        .select('id, status, signer_name')
+        .select('id, status, signer_name, signature_position')
         .eq('document_id', signatureRequest.document_id)
-        .eq('signature_position', 'party_a')
-        .single()
+        .like('signature_position', 'party_a%')
 
-      if (partyARequest && partyARequest.status !== 'signed') {
-        console.log('❌ [SIGNATURE] Progressive signing violation: party_a has not signed yet')
-        return {
-          success: false,
-          error: `Cannot sign yet. ${partyARequest.signer_name} (first signatory) must sign before you.`
+      if (partyARequests && partyARequests.length > 0) {
+        // Check if ANY party_a signatory has NOT signed yet
+        const unsignedPartyA = partyARequests.find(req => req.status !== 'signed')
+
+        if (unsignedPartyA) {
+          console.log('❌ [SIGNATURE] Progressive signing violation: party_a signatory has not signed yet:', unsignedPartyA.signer_name)
+          return {
+            success: false,
+            error: `Cannot sign yet. ${unsignedPartyA.signer_name} must sign before you.`
+          }
         }
-      }
 
-      console.log('✅ [SIGNATURE] Progressive signing check passed - party_a has signed')
+        console.log(`✅ [SIGNATURE] Progressive signing check passed - all ${partyARequests.length} party_a signatories have signed`)
+      } else {
+        console.log('✅ [SIGNATURE] No party_a signatories found - allowing party_b to sign')
+      }
     }
 
     console.log('✅ [SIGNATURE] Validation passed - token valid and not yet signed')
@@ -782,36 +802,74 @@ export async function submitSignature(
     }
 
     // PROGRESSIVE SIGNING: Check if another signer has already signed
+    // This enables signature chaining - each subsequent signer signs the previous signer's PDF
     let pdfBytes: Uint8Array | null = null
     const storage = new SignatureStorageManager(supabase)
 
+    // Check for existing signatures by workflow_run_id (for n8n workflows like NDA)
     if (signatureRequest.workflow_run_id) {
       console.log('🔄 [SIGNATURE] Checking for progressive signing in workflow:', signatureRequest.workflow_run_id)
       // Get all other signature requests for this workflow
       const { data: otherSignatures } = await supabase
         .from('signature_requests')
-        .select('id, status, signed_pdf_path, signer_role')
+        .select('id, status, signed_pdf_path, signer_role, signer_name')
         .eq('workflow_run_id', signatureRequest.workflow_run_id)
         .neq('id', signatureRequest.id)
         .eq('status', 'signed')
-        .order('created_at', { ascending: true })
+        .order('created_at', { ascending: false }) // Most recent first (has all previous signatures)
 
       // If another party already signed, use their signed PDF as base
       if (otherSignatures && otherSignatures.length > 0) {
-        const firstSigned = otherSignatures[0]
+        const mostRecentSigned = otherSignatures[0]
 
         console.log('✅ [SIGNATURE] Found existing signature - progressive signing active')
-        console.log('📥 [SIGNATURE] Loading already-signed PDF from', firstSigned.signer_role)
+        console.log('📥 [SIGNATURE] Loading already-signed PDF from', mostRecentSigned.signer_name)
 
-        if (firstSigned.signed_pdf_path) {
-          pdfBytes = await storage.downloadPDF(firstSigned.signed_pdf_path)
+        if (mostRecentSigned.signed_pdf_path) {
+          pdfBytes = await storage.downloadPDF(mostRecentSigned.signed_pdf_path)
           console.log('✅ [SIGNATURE] Downloaded already-signed PDF:', {
             size_bytes: pdfBytes.length,
-            from_signer: firstSigned.signer_role
+            from_signer: mostRecentSigned.signer_name
           })
         }
       } else {
-        console.log('ℹ️ [SIGNATURE] No other signatures found - this is the first signature')
+        console.log('ℹ️ [SIGNATURE] No other signatures found in workflow - this is the first signature')
+      }
+    }
+
+    // Check for existing signatures by document_id (for subscription packs and manual uploads)
+    // This is critical for multi-signatory subscription packs where multiple investors sign
+    if (!pdfBytes && signatureRequest.document_id) {
+      console.log('🔄 [SIGNATURE] Checking for progressive signing by document_id:', signatureRequest.document_id)
+
+      // Get all other signature requests for this document that have been signed
+      const { data: otherSignatures } = await supabase
+        .from('signature_requests')
+        .select('id, status, signed_pdf_path, signer_role, signer_name, signature_position')
+        .eq('document_id', signatureRequest.document_id)
+        .neq('id', signatureRequest.id)
+        .eq('status', 'signed')
+        .order('created_at', { ascending: false }) // Most recent first (has all previous signatures)
+
+      if (otherSignatures && otherSignatures.length > 0) {
+        // Use the most recently signed PDF as the base - it contains all previous signatures
+        const mostRecentSigned = otherSignatures[0]
+
+        console.log('✅ [SIGNATURE] Found existing signature(s) on document - progressive signing active')
+        console.log('📥 [SIGNATURE] Loading already-signed PDF from', mostRecentSigned.signer_name, `(${mostRecentSigned.signature_position})`)
+        console.log('📊 [SIGNATURE] Total previous signatures:', otherSignatures.length)
+
+        if (mostRecentSigned.signed_pdf_path) {
+          pdfBytes = await storage.downloadPDF(mostRecentSigned.signed_pdf_path)
+          console.log('✅ [SIGNATURE] Downloaded already-signed PDF:', {
+            size_bytes: pdfBytes.length,
+            from_signer: mostRecentSigned.signer_name,
+            position: mostRecentSigned.signature_position,
+            contains_signatures: otherSignatures.length
+          })
+        }
+      } else {
+        console.log('ℹ️ [SIGNATURE] No other signatures found on document - this is the first signature')
       }
     }
 
@@ -862,7 +920,8 @@ export async function submitSignature(
       signatureDataUrl: signature_data_url,
       signerName: signatureRequest.signer_name,
       signaturePosition: signatureRequest.signature_position,
-      timestamp: new Date()
+      timestamp: new Date(),
+      totalPartyASignatories: signatureRequest.total_party_a_signatories || 1
     })
     console.log('✅ [SIGNATURE] Signature embedded successfully:', {
       pdf_size_after: signedPdfBytes.length

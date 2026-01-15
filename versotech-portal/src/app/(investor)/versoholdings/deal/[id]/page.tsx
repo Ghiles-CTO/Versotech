@@ -480,7 +480,7 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
                         <p className="text-xs text-gray-500">Subscription Fee</p>
                         <p className="font-medium text-gray-900">
                           {feeStructure.subscription_fee_percent !== null
-                            ? `${(feeStructure.subscription_fee_percent * 100).toFixed(2)}%`
+                            ? `${feeStructure.subscription_fee_percent.toFixed(2)}%`
                             : '—'}
                         </p>
                       </div>
@@ -488,7 +488,7 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
                         <p className="text-xs text-gray-500">Management Fee</p>
                         <p className="font-medium text-gray-900">
                           {feeStructure.management_fee_percent !== null
-                            ? `${(feeStructure.management_fee_percent * 100).toFixed(2)}% p.a.`
+                            ? `${feeStructure.management_fee_percent.toFixed(2)}% p.a.`
                             : '—'}
                         </p>
                       </div>
@@ -496,7 +496,7 @@ export default async function DealDetailPage({ params }: DealDetailPageProps) {
                         <p className="text-xs text-gray-500">Carried Interest</p>
                         <p className="font-medium text-gray-900">
                           {feeStructure.carried_interest_percent !== null
-                            ? `${(feeStructure.carried_interest_percent * 100).toFixed(2)}%`
+                            ? `${feeStructure.carried_interest_percent.toFixed(2)}%`
                             : '—'}
                         </p>
                       </div>

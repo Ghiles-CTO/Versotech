@@ -555,7 +555,8 @@ export async function handleSubscriptionSignature(
         email,
         investor_users!inner(user_id)
       ),
-      vehicle:vehicles(id, name)
+      vehicle:vehicles(id, name),
+      deal:deals(id, name)
     `)
     .eq('id', subscriptionId)
     .single()
@@ -590,11 +591,11 @@ export async function handleSubscriptionSignature(
   // Generate document storage path
   const timestamp = Date.now()
   const documentFileName = `subscriptions/${subscription.vehicle_id}/${subscription.investor_id}_subscription_${timestamp}.pdf`
-  console.log('📤 [SUBSCRIPTION HANDLER] Uploading to documents bucket:', documentFileName)
+  console.log('📤 [SUBSCRIPTION HANDLER] Uploading to deal-documents bucket:', documentFileName)
 
-  // Upload to documents bucket
+  // Upload to deal-documents bucket (same bucket used for subscription pack generation)
   const { data: docUploadData, error: docUploadError } = await supabase.storage
-    .from(process.env.STORAGE_BUCKET_NAME || 'documents')
+    .from('deal-documents')
     .upload(documentFileName, signaturesPdfData, {
       contentType: 'application/pdf',
       upsert: false
@@ -609,6 +610,42 @@ export async function handleSubscriptionSignature(
 
   // 2. UPDATE DOCUMENT RECORD WITH SIGNED PDF PATH
   console.log('\n📄 [SUBSCRIPTION HANDLER] Step 2: Updating document record')
+
+  // Look up the Subscription Documents folder for this deal/vehicle
+  let subscriptionFolderId: string | null = null
+  if (subscription.deal_id) {
+    // Try to find deal-specific Subscription Documents folder first
+    const { data: dealFolder } = await supabase
+      .from('document_folders')
+      .select('id')
+      .eq('vehicle_id', subscription.vehicle_id)
+      .eq('name', 'Subscription Documents')
+      .like('path', '%' + (subscription.deal?.name || '') + '%')
+      .limit(1)
+      .maybeSingle()
+
+    if (dealFolder) {
+      subscriptionFolderId = dealFolder.id
+      console.log('📁 [SUBSCRIPTION HANDLER] Found deal-specific Subscription Documents folder:', subscriptionFolderId)
+    }
+  }
+
+  // Fall back to vehicle-level folder if no deal-specific folder found
+  if (!subscriptionFolderId && subscription.vehicle_id) {
+    const { data: vehicleFolder } = await supabase
+      .from('document_folders')
+      .select('id')
+      .eq('vehicle_id', subscription.vehicle_id)
+      .eq('name', 'Subscription Documents')
+      .limit(1)
+      .maybeSingle()
+
+    if (vehicleFolder) {
+      subscriptionFolderId = vehicleFolder.id
+      console.log('📁 [SUBSCRIPTION HANDLER] Found vehicle-level Subscription Documents folder:', subscriptionFolderId)
+    }
+  }
+
   const { error: docUpdateError } = await supabase
     .from('documents')
     .update({
@@ -617,7 +654,8 @@ export async function handleSubscriptionSignature(
       published_at: new Date().toISOString(),
       status: 'published',
       vehicle_id: subscription.vehicle_id,
-      owner_investor_id: subscription.investor_id
+      owner_investor_id: subscription.investor_id,
+      folder_id: subscriptionFolderId
     })
     .eq('id', document.id)
 
