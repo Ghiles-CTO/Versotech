@@ -2,28 +2,11 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { VersoSignPageClient } from '@/app/(staff)/versotech/staff/versosign/versosign-page-client'
 import { AlertCircle } from 'lucide-react'
 import type { SignatureGroup, SignatureTask, ExpiredSignature } from '@/app/(staff)/versotech/staff/versosign/page'
-import { IntroducerAgreementSigningSection } from './introducer-agreement-signing-section'
+// IntroducerAgreementSigningSection removed - introducer agreements now use standard task flow
 import { PlacementAgreementSigningSection } from './placement-agreement-signing-section'
 import { checkStaffAccess } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
-
-type IntroducerAgreementForSigning = {
-  id: string
-  status: string
-  default_commission_bps: number | null
-  introducer: {
-    id: string
-    legal_name: string
-    email: string | null
-  }
-  ceo_signature_request_id: string | null
-  introducer_signature_request_id: string | null
-  arranger_signature_request_id: string | null
-  arranger_id: string | null
-  pdf_url: string | null
-  created_at: string
-}
 
 type PlacementAgreementForSigning = {
   id: string
@@ -113,75 +96,7 @@ export default async function VersoSignPage() {
     introducerIds = introducerLinks?.map(link => link.introducer_id) || []
   }
 
-  // Fetch introducer agreements pending signature
-  let introducerAgreementsForSigning: IntroducerAgreementForSigning[] = []
-  const fetchedIntroducerAgreementIds = new Set<string>()
-
-  if (isStaff) {
-    // CEO/Staff: See agreements approved and waiting for CEO signature (non-arranger agreements)
-    const { data: agreementsData } = await serviceSupabase
-      .from('introducer_agreements')
-      .select(`
-        id, status, default_commission_bps, pdf_url, created_at,
-        ceo_signature_request_id, introducer_signature_request_id,
-        arranger_signature_request_id, arranger_id,
-        introducer:introducer_id (id, legal_name, email)
-      `)
-      .eq('status', 'approved')
-      .is('arranger_id', null)  // Only non-arranger agreements for CEO
-      .order('created_at', { ascending: false })
-
-    for (const agreement of (agreementsData || [])) {
-      if (!fetchedIntroducerAgreementIds.has(agreement.id)) {
-        introducerAgreementsForSigning.push(agreement as unknown as IntroducerAgreementForSigning)
-        fetchedIntroducerAgreementIds.add(agreement.id)
-      }
-    }
-  }
-
-  if (isIntroducer && introducerIds.length > 0) {
-    // Introducer: See their agreements pending their signature
-    const { data: agreementsData } = await serviceSupabase
-      .from('introducer_agreements')
-      .select(`
-        id, status, default_commission_bps, pdf_url, created_at,
-        ceo_signature_request_id, introducer_signature_request_id,
-        arranger_signature_request_id, arranger_id,
-        introducer:introducer_id (id, legal_name, email)
-      `)
-      .in('introducer_id', introducerIds)
-      .eq('status', 'pending_introducer_signature')
-      .order('created_at', { ascending: false })
-
-    for (const agreement of (agreementsData || [])) {
-      if (!fetchedIntroducerAgreementIds.has(agreement.id)) {
-        introducerAgreementsForSigning.push(agreement as unknown as IntroducerAgreementForSigning)
-        fetchedIntroducerAgreementIds.add(agreement.id)
-      }
-    }
-  }
-
-  if (isArranger && arrangerIds.length > 0) {
-    // Arranger: See their agreements pending arranger signature
-    const { data: arrangerAgreementsData } = await serviceSupabase
-      .from('introducer_agreements')
-      .select(`
-        id, status, default_commission_bps, pdf_url, created_at,
-        ceo_signature_request_id, introducer_signature_request_id,
-        arranger_signature_request_id, arranger_id,
-        introducer:introducer_id (id, legal_name, email)
-      `)
-      .in('arranger_id', arrangerIds)
-      .eq('status', 'approved')
-      .order('created_at', { ascending: false })
-
-    for (const agreement of (arrangerAgreementsData || [])) {
-      if (!fetchedIntroducerAgreementIds.has(agreement.id)) {
-        introducerAgreementsForSigning.push(agreement as unknown as IntroducerAgreementForSigning)
-        fetchedIntroducerAgreementIds.add(agreement.id)
-      }
-    }
-  }
+  // Introducer agreements now use standard task flow - no separate section needed
 
   // Fetch placement agreements pending signature
   let placementAgreementsForSigning: PlacementAgreementForSigning[] = []
@@ -268,11 +183,12 @@ export default async function VersoSignPage() {
     }
   }
 
-  // 1. Staff: See ALL signature tasks
+  // 1. Staff: See their OWN signature tasks (not all tasks in the system)
   if (isStaff) {
     const { data: staffTasks } = await serviceSupabase
       .from('tasks')
       .select('*')
+      .eq('owner_user_id', user.id)
       .in('kind', ['countersignature', 'subscription_pack_signature', 'other'])
       .order('due_at', { ascending: true, nullsFirst: false })
     addTasksWithDedup(staffTasks || [])
@@ -390,7 +306,7 @@ export default async function VersoSignPage() {
 
   // If user has no signature tasks and no agreements to sign and is not staff/lawyer/introducer/arranger/partner, show appropriate message
   const hasTasks = tasks && tasks.length > 0
-  const hasAgreementsToSign = introducerAgreementsForSigning.length > 0 || placementAgreementsForSigning.length > 0
+  const hasAgreementsToSign = placementAgreementsForSigning.length > 0
   const hasRelevantPersona = isStaff || isLawyer || isIntroducer || isArranger || isPartner
 
   if (!hasTasks && !hasAgreementsToSign && !hasRelevantPersona) {
@@ -484,15 +400,6 @@ export default async function VersoSignPage() {
 
   return (
     <div className="p-6 space-y-6">
-      {/* Introducer Agreement Signing Section - Staff, Introducers, and Arrangers */}
-      {(isStaff || isIntroducer || isArranger) && introducerAgreementsForSigning.length > 0 && (
-        <IntroducerAgreementSigningSection
-          agreements={introducerAgreementsForSigning}
-          isStaff={isStaff}
-          isArranger={isArranger}
-        />
-      )}
-
       {/* Placement Agreement Signing Section - Staff and Arrangers */}
       {(isStaff || isArranger) && placementAgreementsForSigning.length > 0 && (
         <PlacementAgreementSigningSection

@@ -14,8 +14,11 @@ import {
   getAppUrl
 } from './token'
 import { SignatureStorageManager, downloadPDFFromUrl } from './storage'
-import { embedSignatureInPDF } from './pdf-processor'
+import { embedSignatureInPDF, embedSignatureMultipleLocations } from './pdf-processor'
 import { routeSignatureHandler } from './handlers'
+import { getPlacementsForPosition } from './subscription-positions'
+import { detectAnchors, getPlacementsFromAnchors } from './anchor-detector'
+import type { SignaturePlacementRecord } from './types'
 import { sendSignatureRequestEmail } from '@/lib/email/resend-service'
 import type {
   CreateSignatureRequestParams,
@@ -229,28 +232,96 @@ export async function createSignatureRequest(
     // Also look up deal_id from subscription for task linking
     let deal_id: string | null = params.deal_id ?? null
 
-    // If deal_id provided directly, use it
+    // Fetch subscription and deal details for task context
+    let subscriptionDetails: {
+      commitment?: number
+      currency?: string
+      deal_name?: string
+      company_name?: string
+      investor_name?: string
+    } = {}
+
+    // If deal_id provided directly, fetch deal info for task context
     if (params.deal_id) {
       insertData.deal_id = params.deal_id
       console.log('📋 [SIGNATURE] Using provided deal_id:', deal_id)
+
+      // Fetch deal info directly for task title/description
+      const { data: deal } = await supabase
+        .from('deals')
+        .select('id, name, company_name')
+        .eq('id', params.deal_id)
+        .single()
+
+      if (deal) {
+        subscriptionDetails.deal_name = deal.name || deal.company_name
+        subscriptionDetails.company_name = deal.company_name
+        console.log('📋 [SIGNATURE] Deal info for task:', { deal_name: subscriptionDetails.deal_name })
+      }
     }
 
     if (params.subscription_id) {
       insertData.subscription_id = params.subscription_id
 
-      // Look up deal_id from subscription if not already provided
-      if (!deal_id) {
-        const { data: subscription } = await supabase
-          .from('subscriptions')
-          .select('deal_id')
-          .eq('id', params.subscription_id)
-          .single()
+      // Look up subscription with deal and investor info
+      const { data: subscription } = await supabase
+        .from('subscriptions')
+        .select(`
+          deal_id,
+          commitment,
+          currency,
+          deal:deals!subscriptions_deal_id_fkey (
+            id,
+            name,
+            company_name
+          ),
+          investor:investors!subscriptions_investor_id_fkey (
+            id,
+            legal_name,
+            display_name
+          )
+        `)
+        .eq('id', params.subscription_id)
+        .single()
 
-        if (subscription?.deal_id) {
+      if (subscription) {
+        if (subscription.deal_id && !deal_id) {
           deal_id = subscription.deal_id
-          insertData.deal_id = deal_id  // Also set on signature_request
+          insertData.deal_id = deal_id
           console.log('📋 [SIGNATURE] Found deal_id from subscription:', deal_id)
         }
+
+        // Store details for task creation
+        // Note: Supabase returns relations as arrays in types, but single() makes them objects
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const deal = subscription.deal as any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const investor = subscription.investor as any
+
+        // Merge with any existing deal info (from direct deal_id lookup)
+        subscriptionDetails = {
+          ...subscriptionDetails,
+          commitment: subscription.commitment,
+          currency: subscription.currency || 'USD',
+          deal_name: subscriptionDetails.deal_name || deal?.name || deal?.company_name,
+          company_name: subscriptionDetails.company_name || deal?.company_name,
+          investor_name: investor?.display_name || investor?.legal_name
+        }
+        console.log('📋 [SIGNATURE] Subscription details for task:', subscriptionDetails)
+      }
+    }
+
+    // If we still don't have investor name, fetch it directly
+    if (!subscriptionDetails.investor_name && investor_id) {
+      const { data: investorData } = await supabase
+        .from('investors')
+        .select('id, legal_name, display_name')
+        .eq('id', investor_id)
+        .single()
+
+      if (investorData) {
+        subscriptionDetails.investor_name = investorData.display_name || investorData.legal_name
+        console.log('📋 [SIGNATURE] Fetched investor name directly:', subscriptionDetails.investor_name)
       }
     }
     if (params.document_id) {
@@ -261,6 +332,80 @@ export async function createSignatureRequest(
     if (params.total_party_a_signatories) {
       insertData.total_party_a_signatories = params.total_party_a_signatories
       console.log('👥 [SIGNATURE] Multi-signatory mode:', params.total_party_a_signatories, 'Party A signers')
+    }
+
+    // MULTI-PAGE SIGNATURE PLACEMENTS
+    // For subscription documents, detect anchor positions from the PDF
+    // Each signer may need their signature on multiple pages (e.g., page 12 + page 40)
+    if (document_type === 'subscription' && params.document_id) {
+      console.log('🔍 [SIGNATURE] Attempting anchor detection for document:', params.document_id)
+
+      try {
+        // Fetch PDF bytes from storage for anchor detection
+        const pdfBytes = await fetchDocumentPdf(params.document_id, supabase)
+
+        if (pdfBytes) {
+          // Detect anchors in the PDF
+          const anchors = await detectAnchors(pdfBytes)
+          console.log(`📊 [SIGNATURE] Found ${anchors.length} anchors in PDF`)
+
+          // Get placements for this specific signer using anchor positions
+          const placements = getPlacementsFromAnchors(anchors, signature_position)
+
+          if (placements.length > 0) {
+            insertData.signature_placements = placements
+            console.log('📐 [SIGNATURE] Anchor-based signature placements:', {
+              position: signature_position,
+              placements: placements.map(p => `page ${p.page} at (${(p.x * 100).toFixed(1)}%, ${p.y.toFixed(0)}pt) - ${p.label}`).join(', ')
+            })
+          } else {
+            // FALLBACK: If no anchors found for this position, use hardcoded positions
+            console.warn(`⚠️ [SIGNATURE] No anchors found for ${signature_position}, falling back to hardcoded positions`)
+            const subscriberCount = params.total_party_a_signatories || 1
+            const fallbackPlacements = getPlacementsForPosition(subscriberCount, signature_position)
+            if (fallbackPlacements.length > 0) {
+              insertData.signature_placements = fallbackPlacements
+              console.log('📐 [SIGNATURE] Using fallback hardcoded placements:', {
+                position: signature_position,
+                placements: fallbackPlacements.map(p => `page ${p.page} (${p.label})`).join(', ')
+              })
+            }
+          }
+        } else {
+          // PDF not found - use hardcoded positions as fallback
+          console.warn('⚠️ [SIGNATURE] Could not fetch PDF for anchor detection, using hardcoded positions')
+          const subscriberCount = params.total_party_a_signatories || 1
+          const placements = getPlacementsForPosition(subscriberCount, signature_position)
+          if (placements.length > 0) {
+            insertData.signature_placements = placements
+            console.log('📐 [SIGNATURE] Using hardcoded placements (no PDF):', {
+              position: signature_position,
+              placements: placements.map(p => `page ${p.page} (${p.label})`).join(', ')
+            })
+          }
+        }
+      } catch (anchorError) {
+        // Anchor detection failed - use hardcoded positions as fallback
+        console.error('❌ [SIGNATURE] Anchor detection failed:', anchorError)
+        console.warn('⚠️ [SIGNATURE] Falling back to hardcoded positions')
+        const subscriberCount = params.total_party_a_signatories || 1
+        const placements = getPlacementsForPosition(subscriberCount, signature_position)
+        if (placements.length > 0) {
+          insertData.signature_placements = placements
+        }
+      }
+    } else if (document_type === 'subscription') {
+      // No document_id provided - use hardcoded positions
+      console.log('📐 [SIGNATURE] No document_id, using hardcoded positions')
+      const subscriberCount = params.total_party_a_signatories || 1
+      const placements = getPlacementsForPosition(subscriberCount, signature_position)
+      if (placements.length > 0) {
+        insertData.signature_placements = placements
+        console.log('📐 [SIGNATURE] Stored hardcoded signature placements:', {
+          position: signature_position,
+          placements: placements.map(p => `page ${p.page} (${p.label})`).join(', ')
+        })
+      }
     }
 
     const { data: signatureRequest, error: insertError } = await supabase
@@ -286,6 +431,13 @@ export async function createSignatureRequest(
     const signing_url = generateSigningUrl(signing_token)
     console.log('🔗 [SIGNATURE] Generated signing URL:', signing_url)
 
+    // EMAIL DISABLED FOR TESTING
+    // Users will access signature requests via tasks portal instead
+    // To re-enable: uncomment the block below
+    console.log('📧 [SIGNATURE] Email sending DISABLED - user can access via tasks portal')
+    console.log('📧 [SIGNATURE] Would have sent email to:', signer_email)
+
+    /*
     // Send email with signing link using Resend
     console.log('📧 [SIGNATURE] Sending signature request email to:', signer_email)
 
@@ -319,6 +471,7 @@ export async function createSignatureRequest(
         })
         .eq('id', signatureRequest.id)
     }
+    */
 
     // Create task for staff signatures (admin, arranger roles) to appear in VERSOSign
     if (signer_role === 'admin' || signer_role === 'arranger') {
@@ -332,24 +485,61 @@ export async function createSignatureRequest(
         .single()
 
       if (staffProfile && !profileError) {
+        // Build rich task title and description with subscription/deal context
+        const dealContext = subscriptionDetails.deal_name || subscriptionDetails.company_name
+        const amountFormatted = subscriptionDetails.commitment
+          ? new Intl.NumberFormat('en-US', { style: 'currency', currency: subscriptionDetails.currency || 'USD', maximumFractionDigits: 0 }).format(subscriptionDetails.commitment)
+          : null
+        // For countersigner tasks: investor_name is the INVESTOR (subscriber), NOT the signer (CEO/arranger)
+        // Don't fall back to signer_name as that would show the countersigner's name
+        const investorContext = subscriptionDetails.investor_name
+        const dateFormatted = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+
+        console.log('📋 [SIGNATURE] Building staff task with context:', {
+          dealContext,
+          investorContext,
+          amountFormatted,
+          subscriptionDetails
+        })
+
+        // Create descriptive title: "Countersign SUBSCRIPTION - [Deal] - [Investor] ($Amount)"
+        const titleParts = [`Countersign ${document_type.toUpperCase()}`]
+        if (dealContext) titleParts.push(`- ${dealContext}`)
+        if (investorContext) titleParts.push(`- ${investorContext}`)
+        if (amountFormatted && document_type === 'subscription') titleParts.push(`(${amountFormatted})`)
+        const richTitle = titleParts.join(' ')
+
+        // Create detailed description with all context
+        const descriptionParts = [`Review and countersign the ${document_type} document as ${signer_name}.`]
+        if (dealContext) descriptionParts.push(`\n• Deal: ${dealContext}`)
+        if (investorContext) descriptionParts.push(`\n• Investor: ${investorContext}`)
+        if (amountFormatted) descriptionParts.push(`\n• Subscription Amount: ${amountFormatted}`)
+        descriptionParts.push(`\n• Countersigner: ${signer_name}`)
+        descriptionParts.push(`\n• Created: ${dateFormatted}`)
+        const richDescription = descriptionParts.join('')
+
         const { error: taskError } = await supabase.from('tasks').insert({
           owner_user_id: staffProfile.id,
           kind: 'countersignature',
           category: 'signatures',
-          title: `Countersign ${document_type.toUpperCase()} for ${signer_name}`,
-          description: `Review and countersign the ${document_type} document`,
+          title: richTitle,
+          description: richDescription,
           status: 'pending',
           priority: 'high',
           related_entity_type: 'signature_request',
           related_entity_id: signatureRequest.id,
-          related_deal_id: deal_id,  // Link task to deal for VERSOSign queries
+          related_deal_id: deal_id,
           instructions: {
             type: 'signature',
             action_url: signing_url,
             signature_request_id: signatureRequest.id,
             document_type: document_type,
-            investor_name: signer_name,
-            workflow_run_id: workflow_run_id
+            investor_name: investorContext,
+            deal_name: dealContext,
+            amount: subscriptionDetails.commitment,
+            currency: subscriptionDetails.currency,
+            workflow_run_id: workflow_run_id,
+            created_at: new Date().toISOString()
           }
         })
 
@@ -379,6 +569,14 @@ export async function createSignatureRequest(
       const hasUserAccount = (investorUsers && investorUsers.length > 0) && !investorUserError
       console.log(`📋 [SIGNATURE] Found ${investorUsers?.length || 0} user(s) linked to investor`)
 
+      // Build rich context from subscription details (used in both branches)
+      const dealContext = subscriptionDetails.deal_name || subscriptionDetails.company_name
+      const amountFormatted = subscriptionDetails.commitment
+        ? new Intl.NumberFormat('en-US', { style: 'currency', currency: subscriptionDetails.currency || 'USD', maximumFractionDigits: 0 }).format(subscriptionDetails.commitment)
+        : null
+      const dateFormatted = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+      const dueDate = token_expires_at.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+
       if (hasUserAccount) {
         // Investor has user account(s) - create task visible to ALL investor users
         // IMPORTANT: We set owner_investor_id but NOT owner_user_id
@@ -387,28 +585,49 @@ export async function createSignatureRequest(
         console.log('✅ [SIGNATURE] Investor has user account(s) - creating shared task')
 
         // Determine task kind and category based on document type
+        // ALL signature tasks should be in 'signatures' category
         const taskKind = document_type === 'nda'
           ? 'deal_nda_signature'
           : document_type === 'subscription'
           ? 'subscription_pack_signature'
           : 'other'
 
-        const category = document_type === 'nda'
-          ? 'signatures'
-          : 'investment_setup'
+        // All signature-related tasks go under 'signatures' category
+        const category = 'signatures'
 
         // Include signatory name in title for multi-signatory entities
         const signatoryInfo = params.member_id ? ` (${signer_name})` : ''
-        const title = document_type === 'nda'
-          ? `Sign Non-Disclosure Agreement${signatoryInfo}`
-          : document_type === 'subscription'
-          ? `Sign Subscription Agreement${signatoryInfo}`
-          : `Sign ${document_type.toUpperCase()} Document${signatoryInfo}`
 
-        // Build description with signatory context
-        const description = params.member_id
-          ? `Signatory ${signer_name} must review and sign the ${document_type} document. Any authorized user of this investor can complete this task.`
-          : `Please review and sign the ${document_type} document`
+        // Build rich title with deal context: "Sign Subscription Agreement - [Deal] ($Amount)"
+        let title: string
+        if (document_type === 'nda') {
+          title = dealContext
+            ? `Sign NDA${signatoryInfo} - ${dealContext}`
+            : `Sign Non-Disclosure Agreement${signatoryInfo}`
+        } else if (document_type === 'subscription') {
+          const titleParts = [`Sign Subscription Pack${signatoryInfo}`]
+          if (dealContext) titleParts.push(`- ${dealContext}`)
+          if (amountFormatted) titleParts.push(`(${amountFormatted})`)
+          title = titleParts.join(' ')
+        } else {
+          title = `Sign ${document_type.toUpperCase()} Document${signatoryInfo}`
+        }
+
+        // Build detailed description with all context
+        const descriptionParts: string[] = []
+        if (params.member_id) {
+          descriptionParts.push(`Signatory ${signer_name} must review and sign the ${document_type} document.`)
+        } else {
+          descriptionParts.push(`Please review and sign the ${document_type} document.`)
+        }
+        if (dealContext) descriptionParts.push(`\n• Deal: ${dealContext}`)
+        if (amountFormatted) descriptionParts.push(`\n• Subscription: ${amountFormatted}`)
+        descriptionParts.push(`\n• Created: ${dateFormatted}`)
+        descriptionParts.push(`\n• Due by: ${dueDate}`)
+        if (params.member_id) {
+          descriptionParts.push(`\n\nAny authorized user of this investor can complete this task.`)
+        }
+        const description = descriptionParts.join('')
 
         const { error: taskError } = await supabase.from('tasks').insert({
           owner_user_id: null, // NOT set - allows any investor user to see/complete
@@ -421,16 +640,20 @@ export async function createSignatureRequest(
           priority: 'high',
           related_entity_type: 'signature_request',
           related_entity_id: signatureRequest.id,
-          related_deal_id: deal_id,  // Link task to deal for VERSOSign queries
+          related_deal_id: deal_id,
           due_at: token_expires_at.toISOString(),
           instructions: {
             type: 'signature',
             action_url: signing_url,
             signature_request_id: signatureRequest.id,
             document_type: document_type,
+            deal_name: dealContext,
+            amount: subscriptionDetails.commitment,
+            currency: subscriptionDetails.currency,
             workflow_run_id: workflow_run_id,
-            signer_name: signer_name, // Track which signatory this is for
-            member_id: params.member_id || null, // Track member for entity signatories
+            signer_name: signer_name,
+            member_id: params.member_id || null,
+            created_at: new Date().toISOString(),
             steps: [
               'Click "Start Task" to open the signature page',
               'Review the document carefully',
@@ -457,19 +680,36 @@ export async function createSignatureRequest(
 
           // Create notifications for ALL users linked to this investor
           // This ensures everyone in the entity is notified about the signature request
+          const daysRemaining = Math.floor((token_expires_at.getTime() - Date.now()) / (24 * 60 * 60 * 1000))
           for (const investorUser of investorUsers || []) {
+            // Build rich notification with deal context
+            const notifTitle = dealContext
+              ? `${document_type.toUpperCase()} Ready - ${dealContext}${params.member_id ? ` (${signer_name})` : ''}`
+              : `${document_type.toUpperCase()} Ready for Signature${params.member_id ? ` - ${signer_name}` : ''}`
+
+            const messageParts: string[] = []
+            if (params.member_id) {
+              messageParts.push(`Signatory ${signer_name} must sign the ${document_type} document.`)
+            } else {
+              messageParts.push(`Your ${document_type} document is ready for signature.`)
+            }
+            if (dealContext) messageParts.push(` Deal: ${dealContext}.`)
+            if (amountFormatted) messageParts.push(` Amount: ${amountFormatted}.`)
+            messageParts.push(` Please sign within ${daysRemaining} days.`)
+
             const { error: notificationError } = await supabase.from('investor_notifications').insert({
               user_id: investorUser.user_id,
               type: 'signature_required',
-              title: `${document_type.toUpperCase()} Ready for Signature${params.member_id ? ` - ${signer_name}` : ''}`,
-              message: params.member_id
-                ? `Signatory ${signer_name} must sign the ${document_type} document. Please sign within ${Math.floor((token_expires_at.getTime() - Date.now()) / (24 * 60 * 60 * 1000))} days.`
-                : `Your ${document_type} document is ready for signature. Please sign within ${Math.floor((token_expires_at.getTime() - Date.now()) / (24 * 60 * 60 * 1000))} days.`,
+              title: notifTitle,
+              message: messageParts.join(''),
               action_url: `/versotech_main/tasks`,
               metadata: {
                 signature_request_id: signatureRequest.id,
                 document_type: document_type,
                 signer_name: signer_name,
+                deal_name: dealContext,
+                amount: subscriptionDetails.commitment,
+                currency: subscriptionDetails.currency,
                 member_id: params.member_id || null
               }
             })
@@ -494,24 +734,40 @@ export async function createSignatureRequest(
         const adminUserId = adminUsers?.[0]?.id
 
         if (adminUserId && !adminError) {
+          // Build rich follow-up task with all context
+          const followUpTitleParts = [`Manual Follow-up: ${document_type.toUpperCase()} for ${signer_name}`]
+          if (dealContext) followUpTitleParts.push(`- ${dealContext}`)
+          const followUpTitle = followUpTitleParts.join(' ')
+
+          const followUpDescParts = [`Investor ${signer_name} does not have a user account.`]
+          if (dealContext) followUpDescParts.push(`\n• Deal: ${dealContext}`)
+          if (amountFormatted) followUpDescParts.push(`\n• Amount: ${amountFormatted}`)
+          followUpDescParts.push(`\n• Email: ${signer_email}`)
+          followUpDescParts.push(`\n\nManually send them the signature link.`)
+          const followUpDescription = followUpDescParts.join('')
+
           const { error: followUpError } = await supabase.from('tasks').insert({
             owner_user_id: adminUserId,
             kind: 'other',
             category: 'signatures',
-            title: `Manual Follow-up: Send ${document_type.toUpperCase()} Signature Link`,
-            description: `Investor ${signer_name} does not have a user account. Manually send them the signature link.`,
+            title: followUpTitle,
+            description: followUpDescription,
             status: 'pending',
             priority: 'high',
             related_entity_type: 'signature_request',
             related_entity_id: signatureRequest.id,
-            related_deal_id: deal_id,  // Link task to deal for VERSOSign queries
+            related_deal_id: deal_id,
             instructions: {
               type: 'manual_follow_up',
               action_url: signing_url,
               investor_name: signer_name,
               investor_email: signer_email,
               document_type: document_type,
+              deal_name: dealContext,
+              amount: subscriptionDetails.commitment,
+              currency: subscriptionDetails.currency,
               signature_request_id: signatureRequest.id,
+              created_at: new Date().toISOString(),
               action_required: 'Send the signature link to the investor via email or other communication channel'
             }
           })
@@ -697,7 +953,9 @@ export async function submitSignature(
       signer_role: signatureRequest.signer_role,
       signature_position: signatureRequest.signature_position,
       status: signatureRequest.status,
-      workflow_run_id: signatureRequest.workflow_run_id
+      workflow_run_id: signatureRequest.workflow_run_id,
+      document_id: signatureRequest.document_id,
+      subscription_id: signatureRequest.subscription_id
     })
 
     // Validate token not expired
@@ -724,32 +982,33 @@ export async function submitSignature(
     }
 
     // PROGRESSIVE SIGNING ORDER ENFORCEMENT
-    // party_b cannot sign until ALL party_a signatories have signed (multi-signatory support)
-    if (signatureRequest.signature_position?.startsWith('party_b')) {
-      console.log('🔍 [SIGNATURE] Checking if ALL party_a signatories have signed (progressive signing)...')
+    // COMPANY SIGNS FIRST: party_a (investors) cannot sign until party_b (company) has signed
+    // This ensures the company approves the document before investors sign
+    if (signatureRequest.signature_position?.startsWith('party_a')) {
+      console.log('🔍 [SIGNATURE] Checking if company (party_b) has signed first (progressive signing)...')
 
-      // Find ALL party_a signature requests for the same document (party_a, party_a_2, party_a_3, etc.)
-      const { data: partyARequests } = await supabase
+      // Find party_b signature request for the same document (company/arranger/CEO)
+      const { data: partyBRequests } = await supabase
         .from('signature_requests')
         .select('id, status, signer_name, signature_position')
         .eq('document_id', signatureRequest.document_id)
-        .like('signature_position', 'party_a%')
+        .like('signature_position', 'party_b%')
 
-      if (partyARequests && partyARequests.length > 0) {
-        // Check if ANY party_a signatory has NOT signed yet
-        const unsignedPartyA = partyARequests.find(req => req.status !== 'signed')
+      if (partyBRequests && partyBRequests.length > 0) {
+        // Check if party_b (company) has NOT signed yet
+        const unsignedPartyB = partyBRequests.find(req => req.status !== 'signed')
 
-        if (unsignedPartyA) {
-          console.log('❌ [SIGNATURE] Progressive signing violation: party_a signatory has not signed yet:', unsignedPartyA.signer_name)
+        if (unsignedPartyB) {
+          console.log('❌ [SIGNATURE] Progressive signing violation: company has not signed yet:', unsignedPartyB.signer_name)
           return {
             success: false,
-            error: `Cannot sign yet. ${unsignedPartyA.signer_name} must sign before you.`
+            error: `Cannot sign yet. The company (${unsignedPartyB.signer_name}) must sign before you.`
           }
         }
 
-        console.log(`✅ [SIGNATURE] Progressive signing check passed - all ${partyARequests.length} party_a signatories have signed`)
+        console.log('✅ [SIGNATURE] Progressive signing check passed - company (party_b) has signed')
       } else {
-        console.log('✅ [SIGNATURE] No party_a signatories found - allowing party_b to sign')
+        console.log('⚠️ [SIGNATURE] No party_b (company) signature found - allowing party_a to sign (legacy flow)')
       }
     }
 
@@ -837,19 +1096,35 @@ export async function submitSignature(
       }
     }
 
+    // DEBUG: Log state before document_id chain check
+    console.log('🔍 [SIGNATURE] Pre-chain check state:', {
+      pdfBytes_already_set: !!pdfBytes,
+      pdfBytes_size: pdfBytes?.length || 0,
+      document_id: signatureRequest.document_id,
+      document_id_type: typeof signatureRequest.document_id,
+      will_run_chain_query: !pdfBytes && !!signatureRequest.document_id
+    })
+
     // Check for existing signatures by document_id (for subscription packs and manual uploads)
     // This is critical for multi-signatory subscription packs where multiple investors sign
     if (!pdfBytes && signatureRequest.document_id) {
       console.log('🔄 [SIGNATURE] Checking for progressive signing by document_id:', signatureRequest.document_id)
+      console.log('🔍 [SIGNATURE] Current request ID:', signatureRequest.id)
 
       // Get all other signature requests for this document that have been signed
-      const { data: otherSignatures } = await supabase
+      const { data: otherSignatures, error: chainError } = await supabase
         .from('signature_requests')
-        .select('id, status, signed_pdf_path, signer_role, signer_name, signature_position')
+        .select('id, status, signed_pdf_path, signer_role, signer_name, signature_position, updated_at')
         .eq('document_id', signatureRequest.document_id)
         .neq('id', signatureRequest.id)
         .eq('status', 'signed')
-        .order('created_at', { ascending: false }) // Most recent first (has all previous signatures)
+        .order('updated_at', { ascending: false }) // Most recently SIGNED first (has all previous signatures)
+
+      console.log('📊 [SIGNATURE] Chain query result:', {
+        found: otherSignatures?.length || 0,
+        error: chainError?.message || null,
+        signatures: otherSignatures?.map(s => ({ name: s.signer_name, position: s.signature_position, status: s.status }))
+      })
 
       if (otherSignatures && otherSignatures.length > 0) {
         // Use the most recently signed PDF as the base - it contains all previous signatures
@@ -913,16 +1188,64 @@ export async function submitSignature(
     console.log('📐 [SIGNATURE] Signature details:', {
       signer_name: signatureRequest.signer_name,
       signature_position: signatureRequest.signature_position,
-      pdf_size_before: pdfBytes.length
+      document_type: signatureRequest.document_type,
+      pdf_size_before: pdfBytes.length,
+      has_stored_placements: !!signatureRequest.signature_placements
     })
-    const signedPdfBytes = await embedSignatureInPDF({
-      pdfBytes,
-      signatureDataUrl: signature_data_url,
-      signerName: signatureRequest.signer_name,
-      signaturePosition: signatureRequest.signature_position,
-      timestamp: new Date(),
-      totalPartyASignatories: signatureRequest.total_party_a_signatories || 1
-    })
+
+    let signedPdfBytes: Uint8Array
+
+    // Check if we have pre-calculated placements (subscription documents)
+    const storedPlacements = signatureRequest.signature_placements as SignaturePlacementRecord[] | null
+
+    if (storedPlacements && storedPlacements.length > 0) {
+      // MULTI-PAGE SIGNING: Use stored placements to embed on ALL required pages
+      console.log('📐 [SIGNATURE] Using stored placements for multi-page signing:', {
+        placement_count: storedPlacements.length,
+        pages: storedPlacements.map(p => `page ${p.page} (${p.label})`).join(', ')
+      })
+
+      signedPdfBytes = await embedSignatureMultipleLocations({
+        pdfBytes,
+        signatureDataUrl: signature_data_url,
+        placements: storedPlacements,
+        signerName: signatureRequest.signer_name,
+        timestamp: new Date()
+      })
+
+      console.log('✅ [SIGNATURE] Signature embedded on', storedPlacements.length, 'page(s)')
+    } else {
+      // LEGACY SINGLE-PAGE SIGNING: Fall back to calculated position (NDA and other docs)
+      console.log('📐 [SIGNATURE] No stored placements - using legacy single-page signing')
+
+      // Import the legacy helper for non-subscription documents
+      const { calculateSignaturePosition } = await import('./helpers')
+
+      const position = calculateSignaturePosition(
+        signatureRequest.signature_position,
+        signatureRequest.total_party_a_signatories || 1,
+        signatureRequest.document_type || 'nda'
+      )
+
+      console.log('📍 [SIGNATURE] Legacy position calculated:', {
+        xPercent: (position.xPercent * 100).toFixed(1) + '%',
+        yFromBottom: position.yFromBottom.toFixed(1) + 'pt'
+      })
+
+      signedPdfBytes = await embedSignatureInPDF({
+        pdfBytes,
+        signatureDataUrl: signature_data_url,
+        signerName: signatureRequest.signer_name,
+        signaturePosition: signatureRequest.signature_position,
+        timestamp: new Date(),
+        totalPartyASignatories: signatureRequest.total_party_a_signatories || 1,
+        documentType: signatureRequest.document_type,
+        pageNumber: -1,  // Last page for legacy documents
+        xPercent: position.xPercent,
+        yFromBottom: position.yFromBottom
+      })
+    }
+
     console.log('✅ [SIGNATURE] Signature embedded successfully:', {
       pdf_size_after: signedPdfBytes.length
     })
@@ -1037,6 +1360,69 @@ export async function submitSignature(
       console.log('ℹ️ [SIGNATURE] No pending tasks found for this signature request')
     }
 
+    // IMMEDIATELY update document file_key so signature is visible when viewing
+    // This ensures users can see signatures before ALL signatories have signed
+    if (signatureRequest.document_id) {
+      console.log('📄 [SIGNATURE] Updating document to show signature immediately')
+
+      // Get current signature status for this document
+      const { data: docSignatures } = await supabase
+        .from('signature_requests')
+        .select('id, status')
+        .eq('document_id', signatureRequest.document_id)
+
+      const totalSigs = docSignatures?.length || 1
+      const signedSigs = docSignatures?.filter(s => s.status === 'signed').length || 1
+      const allComplete = totalSigs === signedSigs
+
+      // CRITICAL: Copy signed PDF from 'signatures' bucket to 'deal-documents' bucket
+      // The document download API expects files in 'deal-documents', not 'signatures'
+      console.log('📦 [SIGNATURE] Copying signed PDF to deal-documents bucket')
+
+      const signaturesBucket = process.env.SIGNATURES_BUCKET || 'signatures'
+      const documentsBucket = 'deal-documents'
+
+      // Download from signatures bucket
+      const { data: signedPdfData, error: downloadError } = await supabase.storage
+        .from(signaturesBucket)
+        .download(signedPdfPath)
+
+      if (downloadError || !signedPdfData) {
+        console.error('⚠️ [SIGNATURE] Failed to download signed PDF for copy:', downloadError)
+      } else {
+        // Upload to deal-documents bucket with same path
+        const { error: uploadError } = await supabase.storage
+          .from(documentsBucket)
+          .upload(signedPdfPath, signedPdfData, {
+            contentType: 'application/pdf',
+            upsert: true  // Overwrite if exists (progressive signing)
+          })
+
+        if (uploadError) {
+          console.error('⚠️ [SIGNATURE] Failed to copy signed PDF to deal-documents:', uploadError)
+        } else {
+          console.log(`✅ [SIGNATURE] Signed PDF copied to ${documentsBucket}/${signedPdfPath}`)
+        }
+      }
+
+      const { error: docUpdateError } = await supabase
+        .from('documents')
+        .update({
+          file_key: signedPdfPath,  // Point to latest signed PDF (now in deal-documents)
+          file_size_bytes: signedPdfBytes.length,
+          status: allComplete ? 'published' : 'pending_signature',
+          signature_status: allComplete ? 'complete' : 'partial',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', signatureRequest.document_id)
+
+      if (docUpdateError) {
+        console.error('⚠️ [SIGNATURE] Failed to update document file_key:', docUpdateError)
+      } else {
+        console.log(`✅ [SIGNATURE] Document updated - ${signedSigs}/${totalSigs} signatures, file_key now points to signed PDF`)
+      }
+    }
+
     // Check if all signatures for this document/workflow are complete
     console.log('🔍 [SIGNATURE] Checking if all signatures are complete')
     await checkAndCompleteSignatures(
@@ -1134,8 +1520,21 @@ async function checkAndCompleteSignatures(
 
       allSignatureRequests = result.data
       fetchAllError = result.error
+    } else if (signatureRequest.introducer_agreement_id) {
+      // Introducer agreements: group by introducer_agreement_id
+      groupingType = 'introducer_agreement' as any
+      console.log('🔍 [SIGNATURE] Grouping by introducer_agreement_id:', signatureRequest.introducer_agreement_id)
+
+      const result = await supabase
+        .from('signature_requests')
+        .select('id, status, signer_role, signed_pdf_path')
+        .eq('introducer_agreement_id', signatureRequest.introducer_agreement_id)
+        .order('created_at', { ascending: true })
+
+      allSignatureRequests = result.data
+      fetchAllError = result.error
     } else {
-      console.error('❌ [SIGNATURE] Cannot determine signature grouping - no workflow_run_id or document_id')
+      console.error('❌ [SIGNATURE] Cannot determine signature grouping - no workflow_run_id, document_id, or introducer_agreement_id')
       return
     }
 
@@ -1213,5 +1612,60 @@ async function checkAndCompleteSignatures(
     }
   } catch (error) {
     console.error('❌ [SIGNATURE] Error checking signature completion:', error)
+  }
+}
+
+/**
+ * Fetch PDF bytes from storage for a given document
+ *
+ * This helper retrieves the PDF file associated with a document record,
+ * which is needed for anchor detection during signature request creation.
+ *
+ * @param documentId - The document UUID
+ * @param supabase - Supabase client instance
+ * @returns PDF bytes as Uint8Array, or null if not found
+ */
+async function fetchDocumentPdf(
+  documentId: string,
+  supabase: SupabaseClient
+): Promise<Uint8Array | null> {
+  try {
+    // Get document record to find storage path
+    const { data: doc, error: docError } = await supabase
+      .from('documents')
+      .select('storage_path, file_key')
+      .eq('id', documentId)
+      .single()
+
+    if (docError || !doc) {
+      console.warn('⚠️ [SIGNATURE] Document not found:', documentId)
+      return null
+    }
+
+    // Use file_key (preferred) or storage_path
+    const storagePath = doc.file_key || doc.storage_path
+    if (!storagePath) {
+      console.warn('⚠️ [SIGNATURE] No storage path found for document:', documentId)
+      return null
+    }
+
+    console.log('📥 [SIGNATURE] Downloading PDF from:', storagePath)
+
+    // Download from deal-documents bucket (where subscription packs are stored)
+    const { data, error } = await supabase.storage
+      .from('deal-documents')
+      .download(storagePath)
+
+    if (error || !data) {
+      console.warn('⚠️ [SIGNATURE] Failed to download PDF:', error?.message)
+      return null
+    }
+
+    const buffer = await data.arrayBuffer()
+    console.log('✅ [SIGNATURE] PDF downloaded:', buffer.byteLength, 'bytes')
+    return new Uint8Array(buffer)
+  } catch (error) {
+    console.error('❌ [SIGNATURE] Error fetching document PDF:', error)
+    return null
   }
 }

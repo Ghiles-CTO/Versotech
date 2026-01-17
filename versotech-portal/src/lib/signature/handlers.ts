@@ -653,6 +653,7 @@ export async function handleSubscriptionSignature(
       is_published: true,
       published_at: new Date().toISOString(),
       status: 'published',
+      signature_status: 'complete',  // All signatures collected
       vehicle_id: subscription.vehicle_id,
       owner_investor_id: subscription.investor_id,
       folder_id: subscriptionFolderId
@@ -1211,18 +1212,32 @@ export async function handleIntroducerAgreementSignature(
     }
 
     // Fall back to legacy user_id if no introducer_users found
+    // IMPORTANT: Exclude the party_a signer (CEO/Arranger) from introducer signatories
+    // This prevents the same person from getting both a CEO task and an introducer task
+    const ceoSignerEmail = signatureRequest.signer_email?.toLowerCase()
+
     const signatoriesToNotify = introducerSignatories && introducerSignatories.length > 0
-      ? introducerSignatories.map((s: any) => ({
-          user_id: s.user_id,
-          email: s.profiles?.email || introducer?.email || '',
-          name: s.profiles?.display_name || introducer?.legal_name || '',
-          is_primary: s.is_primary
-        }))
+      ? introducerSignatories
+          .filter((s: any) => {
+            const introducerEmail = s.profiles?.email?.toLowerCase()
+            // Exclude if this introducer user is the same as the CEO/Arranger who just signed
+            if (introducerEmail && ceoSignerEmail && introducerEmail === ceoSignerEmail) {
+              console.log(`⚠️ [INTRODUCER AGREEMENT HANDLER] Excluding ${introducerEmail} - same as party_a signer`)
+              return false
+            }
+            return true
+          })
+          .map((s: any) => ({
+            user_id: s.user_id,
+            email: s.profiles?.email || introducer?.email || '',
+            name: s.profiles?.display_name || introducer?.legal_name || '',
+            is_primary: s.is_primary
+          }))
       : introducer?.user_id
         ? [{ user_id: introducer.user_id, email: introducer.email || '', name: introducer.legal_name || '', is_primary: true }]
         : []
 
-    console.log(`📝 [INTRODUCER AGREEMENT HANDLER] Found ${signatoriesToNotify.length} signatory(ies) for introducer`)
+    console.log(`📝 [INTRODUCER AGREEMENT HANDLER] Found ${signatoriesToNotify.length} signatory(ies) for introducer (after excluding party_a signer)`)
 
     if (signatoriesToNotify.length > 0) {
       const crypto = await import('crypto')
@@ -1242,8 +1257,9 @@ export async function handleIntroducerAgreementSignature(
             document_type: 'introducer_agreement',
             introducer_agreement_id: agreementId,
             introducer_id: agreement.introducer_id,
-            investor_id: agreement.introducer_id, // Required field, use introducer_id
-            signer_user_id: signatory.user_id,
+            deal_id: agreement.deal_id, // Link to deal for task context
+            investor_id: null, // NULL for introducer agreements (no investor involved)
+            // Note: signer_user_id column doesn't exist - user tracked via signer_email
             signer_email: signatory.email,
             signer_name: signatory.name,
             signer_role: 'introducer',
@@ -1272,8 +1288,8 @@ export async function handleIntroducerAgreementSignature(
         const signingUrl = `/sign/${signingToken}`
         const { error: taskError } = await supabase.from('tasks').insert({
           owner_user_id: signatory.user_id,
-          kind: 'introducer_agreement_signature',
-          category: 'compliance',
+          kind: 'countersignature', // Must use valid kind from constraint
+          category: 'signatures', // Signature tasks go in 'signatures' category
           title: `Sign Fee Agreement - ${introducer?.legal_name}`,
           description: `Review and sign the introducer fee agreement. ${signatoriesToNotify.length > 1 ? `(${signatoriesToNotify.length} signatories required)` : ''}`,
           status: 'pending',

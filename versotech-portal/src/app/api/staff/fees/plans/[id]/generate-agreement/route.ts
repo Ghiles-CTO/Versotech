@@ -27,7 +27,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { triggerWorkflow } from '@/lib/trigger-workflow';
 
 // Helper functions for formatting
@@ -620,9 +620,10 @@ export async function POST(
             .substring(0, 30);
           const fileName = `Fee_Agreement_${safeCompanyName}_${safeIntroducerName}_${referenceNumber}.pdf`;
 
-          // Upload to Supabase Storage
+          // Upload to Supabase Storage (use service client to bypass RLS)
+          const serviceSupabase = createServiceClient();
           const fileKey = `introducer-agreements/${feePlan.deal_id}/${agreement.id}/${fileName}`;
-          const { error: uploadError } = await supabase.storage
+          const { error: uploadError } = await serviceSupabase.storage
             .from('deal-documents')
             .upload(fileKey, pdfBuffer, {
               contentType: 'application/pdf',
@@ -635,7 +636,7 @@ export async function POST(
             console.log('✅ Introducer agreement PDF uploaded:', fileKey);
 
             // Get public URL (or signed URL for private bucket)
-            const { data: urlData } = supabase.storage
+            const { data: urlData } = serviceSupabase.storage
               .from('deal-documents')
               .getPublicUrl(fileKey);
 
@@ -654,20 +655,21 @@ export async function POST(
 
               // === CREATE CEO SIGNATURE TASK IN VERSOSIGN ===
               // Automatically queue the agreement for CEO signature
+              // Use the CURRENT user who is generating the agreement as the signer
               console.log('📝 Creating CEO signature request and task...');
 
               try {
-                // Find CEO/staff_admin users to assign the signature task
-                const { data: ceoUsers, error: ceoError } = await supabase
-                  .from('profiles')
-                  .select('id, email, display_name')
-                  .eq('role', 'staff_admin')
-                  .limit(1);
+                // Use the current user (who generated the agreement) as the CEO signer
+                // This ensures the person initiating the agreement is the one who signs it
+                const ceoUser = {
+                  id: user.id,
+                  email: user.email || '',
+                  display_name: userProfile?.display_name || 'CEO'
+                };
 
-                if (ceoError || !ceoUsers || ceoUsers.length === 0) {
-                  console.warn('⚠️ No CEO/staff_admin users found for signature task');
+                if (!ceoUser.email) {
+                  console.warn('⚠️ Current user has no email for signature task');
                 } else {
-                  const ceoUser = ceoUsers[0];
                   console.log('👔 Found CEO user:', ceoUser.email);
 
                   // Generate signing token
@@ -675,8 +677,8 @@ export async function POST(
                   const signingToken = crypto.randomUUID();
                   const expiresAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000); // 14 days
 
-                  // Create signature request for CEO
-                  const { data: signatureRequest, error: sigReqError } = await supabase
+                  // Create signature request for CEO (use service client to bypass RLS)
+                  const { data: signatureRequest, error: sigReqError } = await serviceSupabase
                     .from('signature_requests')
                     .insert({
                       // investor_id is nullable - don't set it for introducer agreements
@@ -703,7 +705,7 @@ export async function POST(
                     console.log('✅ CEO signature request created:', signatureRequest.id);
 
                     // Update agreement with CEO signature request ID and status
-                    await supabase
+                    await serviceSupabase
                       .from('introducer_agreements')
                       .update({
                         ceo_signature_request_id: signatureRequest.id,
@@ -712,28 +714,42 @@ export async function POST(
                       })
                       .eq('id', agreement.id);
 
-                    // Create task for CEO in VERSOSign
+                    // Create task for CEO in VERSOSign with detailed info
                     const signingUrl = `/sign/${signingToken}`;
-                    const { error: taskError } = await supabase.from('tasks').insert({
+                    const dealName = deal?.company_name || deal?.name || 'Unknown Deal';
+                    const introducerName = introducer?.legal_name || 'Unknown Introducer';
+                    const feeDescription = `${subscriptionFeePercent}% subscription fee${hasPerformanceFee ? `, ${performanceFeePercent}% performance fee` : ''}`;
+
+                    const { error: taskError } = await serviceSupabase.from('tasks').insert({
                       owner_user_id: ceoUser.id,
                       kind: 'countersignature',
                       category: 'compliance',
-                      title: `Sign Fee Agreement - ${introducer?.legal_name}`,
-                      description: `Review and sign the introducer fee agreement for ${introducer?.legal_name} (${deal?.company_name || deal?.name})`,
+                      title: `Sign Introducer Agreement: ${introducerName} → ${dealName}`,
+                      description: `Review and sign the introducer fee agreement.\n\n` +
+                        `• Introducer: ${introducerName}\n` +
+                        `• Deal: ${dealName}\n` +
+                        `• Fees: ${feeDescription}\n` +
+                        `• Reference: ${referenceNumber}\n\n` +
+                        `After you sign, the introducer will receive a signing link.`,
                       status: 'pending',
                       priority: 'high',
                       related_entity_type: 'signature_request',
                       related_entity_id: signatureRequest.id,
                       related_deal_id: feePlan.deal_id,
                       due_at: expiresAt.toISOString(),
+                      action_url: signingUrl,
                       instructions: {
                         type: 'signature',
                         action_url: signingUrl,
                         signature_request_id: signatureRequest.id,
                         document_type: 'introducer_agreement',
-                        introducer_name: introducer?.legal_name,
+                        introducer_id: feePlan.introducer_id,
+                        introducer_name: introducerName,
+                        introducer_email: introducer?.email,
+                        deal_name: dealName,
                         agreement_id: agreement.id,
                         reference_number: referenceNumber,
+                        fee_summary: feeDescription,
                       },
                     });
 
