@@ -126,6 +126,135 @@ export async function POST(
       return NextResponse.json({ error: 'Failed to mark commission as paid' }, { status: 500 });
     }
 
+    // For introducer commissions, create an introduction record when paid
+    let createdIntroductionId: string | null = null;
+    if (entityType === 'introducer') {
+      try {
+        // Fetch full commission details
+        const { data: fullCommission } = await serviceSupabase
+          .from('introducer_commissions')
+          .select('introducer_id, deal_id, investor_id, fee_plan_id, rate_bps')
+          .eq('id', id)
+          .single();
+
+        if (fullCommission) {
+          // Get investor email
+          const { data: investor } = await serviceSupabase
+            .from('investors')
+            .select('email')
+            .eq('id', fullCommission.investor_id)
+            .single();
+
+          const investorEmail = investor?.email || null;
+
+          // Check if introduction already exists - must check BOTH:
+          // 1. By (prospect_email, deal_id) - matches unique constraint
+          // 2. By (prospect_investor_id, deal_id) - for linked investors
+          let existingIntro: { id: string } | null = null;
+
+          // First check by email (matches unique constraint)
+          if (investorEmail) {
+            const { data: byEmail } = await serviceSupabase
+              .from('introductions')
+              .select('id')
+              .eq('prospect_email', investorEmail)
+              .eq('deal_id', fullCommission.deal_id)
+              .maybeSingle();
+            existingIntro = byEmail;
+          }
+
+          // If not found by email, check by investor_id
+          if (!existingIntro) {
+            const { data: byInvestor } = await serviceSupabase
+              .from('introductions')
+              .select('id')
+              .eq('prospect_investor_id', fullCommission.investor_id)
+              .eq('deal_id', fullCommission.deal_id)
+              .maybeSingle();
+            existingIntro = byInvestor;
+          }
+
+          if (!existingIntro) {
+            // Create introduction record
+            // Note: If investor has no email, we need a placeholder to satisfy the unique constraint
+            const emailForInsert = investorEmail || `investor-${fullCommission.investor_id}@placeholder.local`;
+
+            const { data: introduction, error: introError } = await serviceSupabase
+              .from('introductions')
+              .insert({
+                introducer_id: fullCommission.introducer_id,
+                prospect_email: emailForInsert,
+                prospect_investor_id: fullCommission.investor_id,
+                deal_id: fullCommission.deal_id,
+                status: 'allocated',
+                introduced_at: new Date().toISOString().split('T')[0],
+                commission_rate_override_bps: fullCommission.rate_bps,
+                created_by: user.id,
+              })
+              .select('id')
+              .single();
+
+            if (introduction && !introError) {
+              createdIntroductionId = introduction.id;
+              // Link commission to introduction
+              await serviceSupabase
+                .from('introducer_commissions')
+                .update({ introduction_id: introduction.id })
+                .eq('id', id);
+
+              console.log(`[mark-paid] Created introduction ${introduction.id} for commission ${id}`);
+            } else if (introError) {
+              // Check if it's a unique constraint violation - might be a race condition
+              if (introError.code === '23505') {
+                // Unique constraint violation - try to find and link existing
+                const { data: existing } = await serviceSupabase
+                  .from('introductions')
+                  .select('id')
+                  .eq('prospect_email', emailForInsert)
+                  .eq('deal_id', fullCommission.deal_id)
+                  .maybeSingle();
+
+                if (existing) {
+                  createdIntroductionId = existing.id;
+                  await serviceSupabase
+                    .from('introducer_commissions')
+                    .update({ introduction_id: existing.id })
+                    .eq('id', id);
+                  console.log(`[mark-paid] Linked to existing introduction ${existing.id} after constraint conflict`);
+                }
+              } else {
+                console.error('[mark-paid] Error creating introduction:', introError);
+              }
+              // Don't fail the payment - introduction is secondary
+            }
+          } else {
+            // Link to existing introduction if not already linked
+            createdIntroductionId = existingIntro.id;
+
+            // Also update the introduction with investor_id if not set
+            await serviceSupabase
+              .from('introductions')
+              .update({
+                prospect_investor_id: fullCommission.investor_id,
+                status: 'allocated' // Ensure status is updated
+              })
+              .eq('id', existingIntro.id)
+              .is('prospect_investor_id', null); // Only if not already set
+
+            await serviceSupabase
+              .from('introducer_commissions')
+              .update({ introduction_id: existingIntro.id })
+              .eq('id', id);
+
+            console.log(`[mark-paid] Linked commission ${id} to existing introduction ${existingIntro.id}`);
+          }
+        }
+      } catch (introErr) {
+        console.error('[mark-paid] Error in introduction creation:', introErr);
+        // Don't fail the payment marking - introduction is a secondary concern
+      }
+    }
+
     // Get entity name for notifications
     const { data: entity } = await serviceSupabase
       .from(config.entityTable)
@@ -207,6 +336,7 @@ export async function POST(
         currency: commissionData.currency,
         payment_reference: payment_reference || null,
         notifications_sent: notifications.length,
+        introduction_id: createdIntroductionId,
       },
       timestamp: new Date().toISOString(),
     });
@@ -215,6 +345,7 @@ export async function POST(
       success: true,
       message: 'Commission marked as paid',
       notifications_sent: notifications.length,
+      introduction_id: createdIntroductionId,
     });
   } catch (error) {
     console.error('Error in mark-paid route:', error);
