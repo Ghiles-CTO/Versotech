@@ -887,7 +887,7 @@ async function handleEntityApproval(
             // NOTE: Use order().limit(1) instead of .maybeSingle() because deals can have multiple published fee structures
             const { data: feeStructureForSub } = await supabase
               .from('deal_fee_structures')
-              .select('subscription_fee_percent, management_fee_percent, carried_interest_percent, price_per_share_text, payment_deadline_days')
+              .select('subscription_fee_percent, management_fee_percent, carried_interest_percent, price_per_share_text, price_per_share, cost_per_share, payment_deadline_days')
               .eq('deal_id', submission.deal_id)
               .eq('status', 'published')
               .order('created_at', { ascending: false })
@@ -933,20 +933,38 @@ async function handleEntityApproval(
               .in('status', ['allocated', 'joined'])
               .maybeSingle()
 
-            // Calculate price_per_share: parse from fee structure, fallback to valuation
+            // Calculate price_per_share: use numeric field from fee structure, fallback to text parsing, then valuation
             let pricePerShare: number | null = null
-            if (feeStructureForSub?.price_per_share_text) {
+            // Prefer numeric price_per_share field
+            if (feeStructureForSub?.price_per_share != null && feeStructureForSub.price_per_share > 0) {
+              pricePerShare = feeStructureForSub.price_per_share
+            }
+            // Fallback: parse from text field (for backwards compatibility)
+            else if (feeStructureForSub?.price_per_share_text) {
               const parsed = parseFloat(feeStructureForSub.price_per_share_text.replace(/[^\d.]/g, ''))
               if (!isNaN(parsed) && parsed > 0) {
                 pricePerShare = parsed
               }
             }
+            // Final fallback: use latest valuation NAV
             if (pricePerShare === null && latestValuation?.nav_per_unit) {
               pricePerShare = latestValuation.nav_per_unit
             }
 
+            // Get cost_per_share from fee structure (CEO-set acquisition cost)
+            const costPerShare: number | null = feeStructureForSub?.cost_per_share ?? null
+
             // Calculate num_shares (draft - staff can adjust later)
             const numShares = pricePerShare ? Math.floor(amount / pricePerShare) : null
+
+            // Calculate spread (price - cost) and spread fee amount
+            // Use explicit null checks to handle zero values correctly
+            const spreadPerShare = (pricePerShare !== null && costPerShare !== null && pricePerShare > 0 && costPerShare >= 0)
+              ? pricePerShare - costPerShare
+              : null
+            const spreadFeeAmount = (spreadPerShare !== null && numShares !== null && numShares > 0)
+              ? spreadPerShare * numShares
+              : null
 
             // Pre-calculate subscription fee amount for fee events consistency
             // Normalize percent: if > 1, it's whole number format (2 = 2%), convert to decimal
@@ -981,6 +999,9 @@ async function handleEntityApproval(
                 // NEW: Populate additional fields for complete subscription record
                 opportunity_name: submission.deal.vehicle?.investment_name || submission.deal.name,
                 price_per_share: pricePerShare,
+                cost_per_share: costPerShare,
+                spread_per_share: spreadPerShare,
+                spread_fee_amount: spreadFeeAmount,
                 num_shares: numShares,
                 subscription_fee_amount: subscriptionFeeAmount,
                 management_fee_frequency: managementFeeFrequency,
@@ -1068,6 +1089,49 @@ async function handleEntityApproval(
               }
 
               // Generate pre-rendered HTML for signatories (n8n doesn't support Handlebars {{#each}})
+              // ANCHOR ID CONVENTION: First subscriber is 'party_a', subsequent are 'party_a_2', 'party_a_3', etc.
+              const getAnchorId = (number: number, suffix?: string): string => {
+                const base = number === 1 ? 'party_a' : `party_a_${number}`
+                return suffix ? `${base}_${suffix}` : base
+              }
+
+              // ANCHOR CSS: Invisible but DETECTABLE by PDF.js text extraction
+              // - font-size:1px - tiny but still rendered and extractable
+              // - line-height:0 - collapses vertical space
+              // - color:#ffffff - pure white (invisible on white background)
+              // NOTE: Do NOT use position:absolute as it breaks PDF.js text extraction!
+              const ANCHOR_CSS = 'font-size:1px;line-height:0;color:#ffffff;'
+
+              // Page 2 - Subscription Form: Subscriber signatures with anchors (right column)
+              const signatoriesFormHtml = signatories.map(s => `
+            <div style="margin-bottom: 0.5cm;">
+                <span style="${ANCHOR_CSS}">SIG_ANCHOR:${getAnchorId(s.number, 'form')}</span>
+                <div class="signature-line"></div>
+                Name: ${s.name}<br>
+                Title: ${s.title}
+            </div>`).join('')
+
+              // Page 12 - Main Agreement: Subscriber signatures with anchors
+              // Increased spacing: min-height 4cm, margin-top 3cm for ~85pt signature space
+              const signatoriesSignatureHtml = signatories.map(s => `
+<div class="signature-block" style="margin-bottom: 1.5cm; min-height: 4cm;">
+    <span style="${ANCHOR_CSS}">SIG_ANCHOR:${getAnchorId(s.number)}</span>
+    <p><strong>The Subscriber</strong>, represented by Authorized Signatory ${s.number}</p>
+    <div class="signature-line" style="margin-top: 3cm;"></div>
+    <p style="margin-top: 0.3cm;">Name: ${s.name}<br>
+    Title: ${s.title}</p>
+</div>`).join('')
+
+              // Page 40 - Appendix: Subscriber signatures with anchors
+              const signatoriesAppendixHtml = signatories.map(s => `
+    <div style="margin-bottom: 0.5cm;">
+        <span style="${ANCHOR_CSS}">SIG_ANCHOR:${getAnchorId(s.number, 'appendix')}</span>
+        <div class="signature-line"></div>
+        <p>Name: ${s.name}<br>
+        Title: ${s.title}</p>
+    </div>`).join('')
+
+              // Legacy: Keep signatoriesTableHtml for backwards compatibility (no anchors)
               const signatoriesTableHtml = signatories.map(s => `
             <div style="margin-bottom: 0.5cm;">
                 <div class="signature-line"></div>
@@ -1075,20 +1139,7 @@ async function handleEntityApproval(
                 Title: ${s.title}
             </div>`).join('')
 
-              const signatoriesSignatureHtml = signatories.map(s => `
-<div class="signature-block" style="margin-bottom: 0.8cm;">
-    <p><strong>The Subscriber</strong>, represented by Authorized Signatory ${s.number}</p>
-    <div class="signature-line"></div>
-    <p>Name: ${s.name}<br>
-    Title: ${s.title}</p>
-</div>`).join('')
-
-              const signatoriesAppendixHtml = signatories.map(s => `
-    <div style="margin-bottom: 0.5cm;">
-        <div class="signature-line"></div>
-        <p>Name: ${s.name}<br>
-        Title: ${s.title}</p>
-    </div>`).join('')
+              // NOTE: issuer and arranger signature HTML with anchors are generated after feeStructure is fetched
 
               const { data: vehicleData } = await supabase
                 .from('vehicles')
@@ -1151,6 +1202,30 @@ async function handleEntityApproval(
                 const subscriberBlock = counterpartyEntity
                   ? `${counterpartyEntity.legal_name}, a ${counterpartyEntity.entity_type.replace(/_/g, ' ')} with registered office at ${subscriberAddress}`
                   : `${investorData.legal_name}, ${investorData.type || 'entity'} with registered office at ${investorData.registered_address || ''}`
+
+                // Pre-rendered HTML for issuer (party_b) and arranger (party_c) signature blocks
+                // These include SIG_ANCHOR markers for signature positioning
+                // Page 12 - Main Agreement: Issuer signature with anchor
+                // Increased spacing: min-height 4cm, margin-top 3cm for ~85pt signature space
+                const issuerSignatureHtml = `
+<div class="signature-block" style="margin-bottom: 1.5cm; min-height: 4cm;">
+    <span style="${ANCHOR_CSS}">SIG_ANCHOR:party_b</span>
+    <p><strong>The Issuer, VERSO Capital 2 SCSP</strong>, duly represented by its general partner <strong>VERSO Capital 2 GP SARL</strong></p>
+    <div class="signature-line" style="margin-top: 3cm;"></div>
+    <p style="margin-top: 0.3cm;">Name: ${feeStructure.issuer_signatory_name || 'Alexandre Müller'}<br>
+    Title: ${feeStructure.issuer_signatory_title || 'Authorized Signatory'}</p>
+</div>`
+
+                // Page 12 - Main Agreement: Arranger signature with anchor
+                // Increased spacing: min-height 4cm, margin-top 3cm for ~85pt signature space
+                const arrangerSignatureHtml = `
+<div class="signature-block" style="margin-bottom: 1.5cm; min-height: 4cm;">
+    <span style="${ANCHOR_CSS}">SIG_ANCHOR:party_c</span>
+    <p><strong>The Attorney, Verso Management Ltd.</strong>, for the purpose of the powers granted under Clause 6</p>
+    <div class="signature-line" style="margin-top: 3cm;"></div>
+    <p style="margin-top: 0.3cm;">Name: ${feeStructure.arranger_person_name || 'Julien Machot'}<br>
+    Title: ${feeStructure.arranger_person_title || 'Director'}</p>
+</div>`
 
                 // Warn about incomplete address data (helps identify data quality issues)
                 if (counterpartyEntity) {
@@ -1266,9 +1341,13 @@ async function handleEntityApproval(
                   accession_signatory_title: signatories[0]?.title || '',
 
                   // Multi-signatory support: pre-rendered HTML (n8n doesn't support Handlebars loops)
-                  signatories_table_html: signatoriesTableHtml,
-                  signatories_signature_html: signatoriesSignatureHtml,
-                  signatories_appendix_html: signatoriesAppendixHtml
+                  // All signature blocks include SIG_ANCHOR markers for precise signature positioning
+                  signatories_table_html: signatoriesTableHtml,  // Legacy: no anchors
+                  signatories_form_html: signatoriesFormHtml,    // Page 2: subscriber form signatures with anchors
+                  signatories_signature_html: signatoriesSignatureHtml, // Page 12: subscriber main agreement signatures
+                  signatories_appendix_html: signatoriesAppendixHtml,   // Page 40: subscriber appendix signatures
+                  issuer_signature_html: issuerSignatureHtml,    // Page 12: issuer main agreement signature
+                  arranger_signature_html: arrangerSignatureHtml  // Page 12: arranger main agreement signature
                 }
 
                 console.log('🔔 Triggering Subscription Pack workflow:', {
@@ -1398,6 +1477,10 @@ async function handleEntityApproval(
                         }
 
                         // Create document record linked to both submission and subscription
+                        // Store countersigner info so we don't have to ask again at signing time
+                        const countersignerName = feeStructure?.issuer_signatory_name || 'Alexandre Müller'
+                        const countersignerTitle = feeStructure?.issuer_signatory_title || 'Authorized Signatory'
+
                         const { data: docRecord, error: docError } = await supabase
                           .from('documents')
                           .insert({
@@ -1413,7 +1496,11 @@ async function handleEntityApproval(
                             file_size_bytes: fileBuffer.length,
                             status: 'draft',
                             current_version: 1,
-                            created_by: user.id
+                            created_by: user.id,
+                            // Countersigner info - stored at generation time, read at signing time
+                            countersigner_type: 'ceo',
+                            countersigner_name: countersignerName,
+                            countersigner_title: countersignerTitle
                           })
                           .select()
                           .single()
