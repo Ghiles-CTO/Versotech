@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { z } from 'zod'
+import { auditLogger, AuditActions, AuditEntities } from '@/lib/audit'
 
 const rejectSchema = z.object({
   reason: z.string().min(1).max(1000).optional(),
@@ -98,6 +99,21 @@ export async function POST(
       console.error('[introducer-agreements/reject] Update error:', error)
       return NextResponse.json({ error: 'Failed to reject agreement' }, { status: 500 })
     }
+
+    // Audit log: Agreement rejected by introducer (GAP-8)
+    await auditLogger.log({
+      actor_user_id: user.id,
+      action: AuditActions.AGREEMENT_REJECTED,
+      entity: AuditEntities.INTRODUCER_AGREEMENTS,
+      entity_id: id,
+      metadata: {
+        introducer_id: agreement.introducer_id,
+        arranger_id: agreement.arranger_id,
+        previous_status: 'pending_approval',
+        new_status: 'rejected',
+        rejection_reason: reason || null
+      }
+    })
 
     // Get CEO/staff_admin user to notify
     const { data: ceoUsers } = await serviceSupabase

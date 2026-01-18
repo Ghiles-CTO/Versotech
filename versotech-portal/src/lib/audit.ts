@@ -81,7 +81,24 @@ export const AuditActions = {
   CAPITAL_CALL_CREATED: 'capital_call_created',
   DISTRIBUTION_CREATED: 'distribution_created',
   REPORT_REQUESTED: 'report_requested',
-  MESSAGE_SENT: 'message_sent'
+  MESSAGE_SENT: 'message_sent',
+
+  // Commission lifecycle (GAP-7)
+  COMMISSION_CREATED: 'commission_created',
+  COMMISSION_ACCRUED: 'commission_accrued',
+  COMMISSION_INVOICE_REQUESTED: 'commission_invoice_requested',
+  COMMISSION_INVOICED: 'commission_invoiced',
+  COMMISSION_PAID: 'commission_paid',
+  COMMISSION_CANCELLED: 'commission_cancelled',
+
+  // Agreement events (GAP-8)
+  AGREEMENT_CREATED: 'agreement_created',
+  AGREEMENT_SENT: 'agreement_sent',
+  AGREEMENT_APPROVED: 'agreement_approved',
+  AGREEMENT_SIGNED: 'agreement_signed',
+  AGREEMENT_ACTIVATED: 'agreement_activated',
+  AGREEMENT_REJECTED: 'agreement_rejected',
+  AGREEMENT_EXPIRED: 'agreement_expired'
 } as const
 
 // Entity types
@@ -110,8 +127,19 @@ export const AuditEntities = {
   ARRANGER: 'arranger_entities',
   INTRODUCER: 'introducers',
   PARTNER: 'partners',
+  COMMERCIAL_PARTNER: 'commercial_partners',
   FEE_PLANS: 'arranger_fee_plans',
   CEO_ENTITY: 'ceo_entity',
   CEO_USERS: 'ceo_users',
+  // Commission entities (GAP-7)
+  INTRODUCER_COMMISSIONS: 'introducer_commissions',
+  PARTNER_COMMISSIONS: 'partner_commissions',
+  COMMERCIAL_PARTNER_COMMISSIONS: 'commercial_partner_commissions',
+  // Agreement entities (GAP-8)
+  INTRODUCER_AGREEMENTS: 'introducer_agreements',
+  PARTNER_AGREEMENTS: 'partner_agreements',
+  COMMERCIAL_PARTNER_AGREEMENTS: 'commercial_partner_agreements',
+  // Introductions
+  INTRODUCTIONS: 'introductions',
 } as const
 

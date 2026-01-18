@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { z } from 'zod'
+import { auditLogger, AuditActions, AuditEntities } from '@/lib/audit'
 
 const createAgreementSchema = z.object({
   introducer_id: z.string().uuid(),
@@ -194,6 +195,21 @@ export async function POST(request: NextRequest) {
       console.error('[introducer-agreements] Create error:', error)
       return NextResponse.json({ error: 'Failed to create agreement' }, { status: 500 })
     }
+
+    // Audit log: Agreement created (GAP-8)
+    await auditLogger.log({
+      actor_user_id: user.id,
+      action: AuditActions.AGREEMENT_CREATED,
+      entity: AuditEntities.INTRODUCER_AGREEMENTS,
+      entity_id: data.id,
+      metadata: {
+        introducer_id: agreementData.introducer_id,
+        arranger_id: finalArrangerId,
+        agreement_type: agreementData.agreement_type,
+        default_commission_bps: agreementData.default_commission_bps,
+        status: 'draft'
+      }
+    })
 
     return NextResponse.json({ data }, { status: 201 })
   } catch (error) {

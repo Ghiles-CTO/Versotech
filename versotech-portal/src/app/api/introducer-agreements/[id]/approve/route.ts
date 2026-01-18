@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { auditLogger, AuditActions, AuditEntities } from '@/lib/audit'
 
 /**
  * POST /api/introducer-agreements/[id]/approve
@@ -78,6 +79,20 @@ export async function POST(
       console.error('[introducer-agreements/approve] Update error:', error)
       return NextResponse.json({ error: 'Failed to approve agreement' }, { status: 500 })
     }
+
+    // Audit log: Agreement approved by introducer (GAP-8)
+    await auditLogger.log({
+      actor_user_id: user.id,
+      action: AuditActions.AGREEMENT_APPROVED,
+      entity: AuditEntities.INTRODUCER_AGREEMENTS,
+      entity_id: id,
+      metadata: {
+        introducer_id: agreement.introducer_id,
+        arranger_id: agreement.arranger_id,
+        previous_status: 'pending_approval',
+        new_status: 'approved'
+      }
+    })
 
     // Get CEO/staff_admin user to notify
     const { data: ceoUsers } = await serviceSupabase

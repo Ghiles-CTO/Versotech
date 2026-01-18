@@ -10,6 +10,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import crypto from 'crypto'
+import { auditLogger, AuditActions, AuditEntities } from '@/lib/audit'
 
 export async function POST(
   request: NextRequest,
@@ -145,6 +146,22 @@ export async function POST(
         })
         .eq('id', id)
 
+      // Audit log: Arranger initiated signing (GAP-8)
+      await auditLogger.log({
+        actor_user_id: user.id,
+        action: AuditActions.AGREEMENT_SIGNED,
+        entity: AuditEntities.INTRODUCER_AGREEMENTS,
+        entity_id: id,
+        metadata: {
+          introducer_id: agreement.introducer_id,
+          arranger_id: agreement.arranger_id,
+          signer_role: 'arranger',
+          previous_status: 'approved',
+          new_status: 'pending_arranger_signature',
+          signature_request_id: signatureRequest.id
+        }
+      })
+
       return NextResponse.json({
         signing_url: `/sign/${signingToken}`,
         pdf_url: agreement.pdf_url,
@@ -212,6 +229,21 @@ export async function POST(
           updated_at: new Date().toISOString(),
         })
         .eq('id', id)
+
+      // Audit log: CEO initiated signing (GAP-8)
+      await auditLogger.log({
+        actor_user_id: user.id,
+        action: AuditActions.AGREEMENT_SIGNED,
+        entity: AuditEntities.INTRODUCER_AGREEMENTS,
+        entity_id: id,
+        metadata: {
+          introducer_id: agreement.introducer_id,
+          signer_role: 'ceo',
+          previous_status: 'approved',
+          new_status: 'pending_ceo_signature',
+          signature_request_id: signatureRequest.id
+        }
+      })
 
       return NextResponse.json({
         signing_url: `/sign/${signingToken}`,
