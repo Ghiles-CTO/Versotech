@@ -3,13 +3,14 @@
 import { ReactNode, useState, useEffect } from 'react'
 import { ThemeProvider, useTheme } from '@/components/theme-provider'
 import { GlobalKeyboardShortcuts } from './global-keyboard-shortcuts'
-import { PersonaSidebar } from './persona-sidebar'
+import { PersonaSidebar, MobileSidebarContent } from './persona-sidebar'
 import { NotificationCenter } from './notification-center'
 import { IdentityMenu } from './identity-menu'
 import { usePersona } from '@/contexts/persona-context'
 import { AuthUser } from '@/lib/auth'
-import { Sun, Moon, Monitor } from 'lucide-react'
+import { Sun, Moon, Monitor, Menu } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -106,6 +107,11 @@ function ThemeToggle() {
 // HTML has static class names, and the actual colors come from CSS cascade.
 function UnifiedAppLayoutInner({ children, profile }: UnifiedAppLayoutProps) {
   const { isLoading } = usePersona()
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const { theme } = useTheme()
+
+  // Determine if dark mode for Sheet styling
+  const isDark = theme === 'staff-dark'
 
   if (isLoading) {
     // Use CSS classes that respond to .staff-dark - prevents SSR flash
@@ -128,9 +134,21 @@ function UnifiedAppLayoutInner({ children, profile }: UnifiedAppLayoutProps) {
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header - uses app-header CSS class for SSR-safe theming */}
-        <header className="app-header px-6 py-4 flex items-center justify-between">
-          {/* Left spacer for centering */}
-          <div className="w-32" />
+        {/* Responsive padding: tighter on mobile (px-4), normal on desktop (px-6) */}
+        <header className="app-header px-4 md:px-6 py-4 flex items-center justify-between">
+          {/* Mobile hamburger - visible only on mobile */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="md:hidden h-10 w-10"
+            onClick={() => setMobileMenuOpen(true)}
+            aria-label="Open menu"
+          >
+            <Menu className="h-5 w-5" />
+          </Button>
+
+          {/* Left spacer for centering - hidden on mobile */}
+          <div className="hidden md:block w-32" />
 
           {/* Center - Brand name */}
           <h1
@@ -147,6 +165,18 @@ function UnifiedAppLayoutInner({ children, profile }: UnifiedAppLayoutProps) {
             <IdentityMenu profile={profile} />
           </div>
         </header>
+
+        {/* Mobile Navigation Sheet */}
+        <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+          <SheetContent
+            side="left"
+            className={`w-[280px] p-0 ${isDark ? 'bg-zinc-950 border-white/10' : 'bg-white border-gray-200'}`}
+          >
+            {/* Visually hidden title for accessibility - required by Radix Dialog */}
+            <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
+            <MobileSidebarContent onClose={() => setMobileMenuOpen(false)} />
+          </SheetContent>
+        </Sheet>
 
         {/* Content Area - uses app-content CSS class for SSR-safe theming */}
         <main className="flex-1 overflow-y-auto scrollbar-hide app-content">
