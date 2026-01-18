@@ -38,7 +38,7 @@ export function InvestorContacts({
   const unreadTotal = conversations.reduce((total, conversation) => total + (conversation.unreadCount || 0), 0)
 
   return (
-    <aside className="w-[320px] border-r bg-card flex flex-col">
+    <aside className="w-full sm:w-[320px] border-r bg-card flex flex-col">
       <div className="p-4 border-b space-y-3">
         <div className="flex items-center justify-between gap-2">
           <div>

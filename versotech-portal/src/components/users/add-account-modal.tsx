@@ -120,54 +120,132 @@ const investorSchema = z.object({
 })
 
 const introducerSchema = z.object({
-  legal_name: z.string().min(1, 'Legal name is required'),
-  contact_name: z.string().optional(),
+  type: z.enum(['individual', 'entity']),
+  // Individual fields
+  first_name: z.string().optional(),
+  middle_name: z.string().optional(),
+  last_name: z.string().optional(),
+  // Entity fields
+  legal_name: z.string().optional(),
+  display_name: z.string().optional(),
+  country_of_incorporation: z.string().optional(),
+  // Common fields
   email: z.string().email().optional().or(z.literal('')),
+  country: z.string().optional(),
   default_commission_bps: z.coerce.number().min(0).max(300).optional(),
   payment_terms: z.enum(['net_15', 'net_30', 'net_45', 'net_60']).optional(),
   status: z.enum(['active', 'inactive', 'suspended']).default('active'),
   notes: z.string().optional(),
+}).refine((data) => {
+  if (data.type === 'individual') {
+    return data.first_name && data.first_name.trim().length > 0
+  }
+  return data.legal_name && data.legal_name.trim().length > 0
+}, {
+  message: 'First name is required for individuals, Legal name is required for entities',
+  path: ['legal_name'],
 })
 
 const lawyerSchema = z.object({
-  firm_name: z.string().min(2, 'Firm name is required'),
-  display_name: z.string().min(2, 'Display name is required'),
+  type: z.enum(['individual', 'entity']),
+  // Individual fields
+  first_name: z.string().optional(),
+  middle_name: z.string().optional(),
+  last_name: z.string().optional(),
+  // Entity fields
+  firm_name: z.string().optional(),
+  display_name: z.string().optional(),
   primary_contact_name: z.string().optional(),
   primary_contact_email: z.string().email().optional().or(z.literal('')),
   primary_contact_phone: z.string().optional(),
+  // Common fields
+  email: z.string().email().optional().or(z.literal('')),
   country: z.string().optional(),
+}).refine((data) => {
+  if (data.type === 'individual') {
+    return data.first_name && data.first_name.trim().length > 0
+  }
+  return data.firm_name && data.firm_name.trim().length >= 2
+}, {
+  message: 'First name is required for individuals, Firm name is required for law firms',
+  path: ['firm_name'],
 })
 
 const partnerSchema = z.object({
-  name: z.string().min(2, 'Name is required'),
-  legal_name: z.string().optional(),
   type: z.enum(['entity', 'individual', 'institutional']),
+  // Individual fields
+  first_name: z.string().optional(),
+  middle_name: z.string().optional(),
+  last_name: z.string().optional(),
+  // Entity fields
+  name: z.string().optional(),
+  legal_name: z.string().optional(),
+  // Common fields
   partner_type: z.enum(['co_investor', 'syndicate', 'strategic', 'institutional', 'other']),
   status: z.enum(['active', 'inactive', 'suspended']).default('active'),
   contact_name: z.string().optional(),
   contact_email: z.string().email().optional().or(z.literal('')),
+  email: z.string().email().optional().or(z.literal('')),
   country: z.string().optional(),
+}).refine((data) => {
+  if (data.type === 'individual') {
+    return data.first_name && data.first_name.trim().length > 0
+  }
+  return data.name && data.name.trim().length >= 2
+}, {
+  message: 'First name is required for individuals, Name is required for entities',
+  path: ['name'],
 })
 
 const commercialPartnerSchema = z.object({
-  name: z.string().min(2, 'Name is required'),
-  legal_name: z.string().optional(),
   type: z.enum(['entity', 'individual', 'institutional']),
+  // Individual fields
+  first_name: z.string().optional(),
+  middle_name: z.string().optional(),
+  last_name: z.string().optional(),
+  // Entity fields
+  name: z.string().optional(),
+  legal_name: z.string().optional(),
+  // Common fields
   cp_type: z.enum(['placement_agent', 'distributor', 'wealth_manager', 'family_office', 'bank', 'other']),
   status: z.enum(['active', 'inactive', 'suspended']).default('active'),
   contact_name: z.string().optional(),
   contact_email: z.string().email().optional().or(z.literal('')),
+  email: z.string().email().optional().or(z.literal('')),
   country: z.string().optional(),
+}).refine((data) => {
+  if (data.type === 'individual') {
+    return data.first_name && data.first_name.trim().length > 0
+  }
+  return data.name && data.name.trim().length >= 2
+}, {
+  message: 'First name is required for individuals, Name is required for entities',
+  path: ['name'],
 })
 
 const arrangerSchema = z.object({
-  legal_name: z.string().min(1, 'Legal name is required'),
+  type: z.enum(['entity', 'individual']),
+  // Individual fields
+  first_name: z.string().optional(),
+  middle_name: z.string().optional(),
+  last_name: z.string().optional(),
+  // Entity fields
+  legal_name: z.string().optional(),
+  // Common fields
   registration_number: z.string().optional(),
   email: z.string().email().optional().or(z.literal('')),
   phone: z.string().optional(),
   regulator: z.string().optional(),
   license_number: z.string().optional(),
   status: z.enum(['active', 'inactive']).default('active'),
+}).refine((data) => {
+  if (data.type === 'individual') {
+    return data.first_name && data.first_name.trim().length > 0
+  }
+  return data.legal_name && data.legal_name.trim().length > 0
+}, {
+  message: 'First name is required for individuals, Legal name is required for entities',
+  path: ['legal_name'],
 })
 
 // User invite schema
@@ -222,6 +300,7 @@ export function AddAccountModal({
     setEntityType(type)
     setStep('details')
     // Initialize form data with defaults based on type
+    // All entity types support individual vs entity distinction
     const defaults: Record<EntityType, Record<string, string | number | boolean | null | undefined>> = {
       investor: {
         type: 'individual',
@@ -233,12 +312,81 @@ export function AddAccountModal({
         country_of_incorporation: '',
         representative_name: '',
         representative_title: '',
+        email: '',
+        phone: '',
+        country: '',
       },
-      introducer: { status: 'active', payment_terms: 'net_30', legal_name: '' },
-      lawyer: { firm_name: '', display_name: '' },
-      partner: { type: 'entity', partner_type: 'co_investor', status: 'active', name: '' },
-      commercial_partner: { type: 'entity', cp_type: 'bank', status: 'active', name: '' },
-      arranger: { status: 'active', legal_name: '' },
+      introducer: {
+        type: 'individual',
+        first_name: '',
+        middle_name: '',
+        last_name: '',
+        legal_name: '',
+        display_name: '',
+        country_of_incorporation: '',
+        status: 'active',
+        payment_terms: 'net_30',
+        email: '',
+        country: '',
+        default_commission_bps: '',
+        notes: '',
+      },
+      lawyer: {
+        type: 'individual',
+        first_name: '',
+        middle_name: '',
+        last_name: '',
+        firm_name: '',
+        display_name: '',
+        email: '',
+        country: '',
+        primary_contact_name: '',
+        primary_contact_email: '',
+        primary_contact_phone: '',
+      },
+      partner: {
+        type: 'individual',
+        first_name: '',
+        middle_name: '',
+        last_name: '',
+        name: '',
+        legal_name: '',
+        partner_type: 'co_investor',
+        status: 'active',
+        email: '',
+        contact_email: '',
+        contact_name: '',
+        contact_phone: '',
+        country: '',
+      },
+      commercial_partner: {
+        type: 'individual',
+        first_name: '',
+        middle_name: '',
+        last_name: '',
+        name: '',
+        legal_name: '',
+        cp_type: 'bank',
+        status: 'active',
+        email: '',
+        contact_email: '',
+        contact_name: '',
+        contact_phone: '',
+        country: '',
+      },
+      arranger: {
+        type: 'entity', // Arrangers are typically entities (licensed companies)
+        first_name: '',
+        middle_name: '',
+        last_name: '',
+        legal_name: '',
+        status: 'active',
+        email: '',
+        phone: '',
+        registration_number: '',
+        license_number: '',
+        regulator: '',
+      },
     }
     setFormData(defaults[type] || {})
   }
@@ -292,18 +440,51 @@ export function AddAccountModal({
         // Prepare submission data
         let submitData: Record<string, unknown> = { ...(validationResult.data as Record<string, unknown>) }
 
-        // For investors: compute legal_name from individual fields if type is individual
-        if (entityType === 'investor' && formData.type === 'individual') {
+        // For ALL entity types: compute legal_name/name from individual fields if type is individual
+        if (formData.type === 'individual') {
           const nameParts = [
             (formData.first_name as string)?.trim(),
             (formData.middle_name as string)?.trim(),
             (formData.last_name as string)?.trim(),
           ].filter(Boolean)
+          const fullName = nameParts.join(' ')
+
           submitData = {
             ...submitData,
-            legal_name: nameParts.join(' '),
-            display_name: submitData.display_name || nameParts.join(' '),
+            first_name: (formData.first_name as string)?.trim() || '',
+            middle_name: (formData.middle_name as string)?.trim() || '',
+            last_name: (formData.last_name as string)?.trim() || '',
           }
+
+          // Different tables use different primary name fields
+          if (entityType === 'investor' || entityType === 'introducer' || entityType === 'arranger') {
+            submitData.legal_name = fullName
+            submitData.display_name = submitData.display_name || fullName
+          } else if (entityType === 'partner' || entityType === 'commercial_partner') {
+            submitData.name = fullName
+            submitData.legal_name = fullName
+          } else if (entityType === 'lawyer') {
+            // For individual lawyers, firm_name becomes their name
+            submitData.firm_name = fullName
+            submitData.display_name = submitData.display_name || fullName
+          }
+        }
+
+        // For entity lawyers, sync primary_contact_email to email for consistent searching
+        if (entityType === 'lawyer' && submitData.type !== 'individual' && submitData.primary_contact_email) {
+          submitData.email = submitData.primary_contact_email
+        }
+
+        // For entity commercial partners, sync contact_email to email for consistent searching
+        // (Individual commercial partners fill email directly)
+        if (entityType === 'commercial_partner' && submitData.type !== 'individual' && submitData.contact_email) {
+          submitData.email = submitData.contact_email
+        }
+
+        // For entity partners, sync contact_email to email for consistent searching
+        // (Individual partners fill email directly)
+        if (entityType === 'partner' && submitData.type !== 'individual' && submitData.contact_email) {
+          submitData.email = submitData.contact_email
         }
 
         // Create entity
@@ -385,7 +566,10 @@ export function AddAccountModal({
   }
 
   const updateFormData = (key: string, value: string | number | boolean | null | undefined) => {
-    setFormData(prev => ({ ...prev, [key]: value }))
+    setFormData(prev => {
+      const next = { ...prev, [key]: value }
+      return next
+    })
     // Clear error for this field
     if (errors[key]) {
       setErrors(prev => {
@@ -397,7 +581,7 @@ export function AddAccountModal({
   }
 
   const renderEntityTypeSelection = () => (
-    <div className="grid grid-cols-2 gap-3">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
       {(Object.entries(ENTITY_TYPES) as [EntityType, typeof ENTITY_TYPES[EntityType]][]).map(([type, config]) => {
         const Icon = config.icon
         return (
@@ -498,7 +682,7 @@ export function AddAccountModal({
           {formData.type === 'individual' && (
             <div className="space-y-4 p-3 rounded-lg border bg-muted/30">
               <p className="text-xs font-medium text-muted-foreground">Personal Information</p>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {renderFormField('first_name', 'First Name *', 'text', undefined, 'John')}
                 {renderFormField('middle_name', 'Middle Name', 'text', undefined, 'Michael')}
               </div>
@@ -513,7 +697,7 @@ export function AddAccountModal({
               {renderFormField('legal_name', 'Legal Name *', 'text', undefined, 'Acme Investment Holdings LP')}
               {renderFormField('display_name', 'Display Name', 'text', undefined, 'Optional short name')}
               {renderFormField('country_of_incorporation', 'Country of Incorporation', 'text', undefined, 'Cayman Islands')}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {renderFormField('representative_name', 'Representative Name', 'text', undefined, 'Jane Doe')}
                 {renderFormField('representative_title', 'Representative Title', 'text', undefined, 'Managing Director')}
               </div>
@@ -521,7 +705,7 @@ export function AddAccountModal({
           )}
 
           {/* COMMON CONTACT FIELDS */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {renderFormField('email', 'Email', 'email', undefined, 'investor@example.com')}
             {renderFormField('phone', 'Phone', 'text', undefined, '+1 (555) 123-4567')}
           </div>
@@ -530,10 +714,40 @@ export function AddAccountModal({
       ),
       introducer: (
         <div className="space-y-4">
-          {renderFormField('legal_name', 'Legal Name', 'text', undefined, 'ABC Advisors Ltd')}
-          {renderFormField('contact_name', 'Contact Name', 'text', undefined, 'John Smith')}
-          {renderFormField('email', 'Email', 'email', undefined, 'contact@company.com')}
-          <div className="grid grid-cols-2 gap-4">
+          {/* TYPE FIRST */}
+          {renderFormField('type', 'Introducer Type', 'select', [
+            { value: 'individual', label: 'Individual' },
+            { value: 'entity', label: 'Entity' },
+          ])}
+
+          {/* INDIVIDUAL FIELDS */}
+          {formData.type === 'individual' && (
+            <div className="space-y-4 p-3 rounded-lg border bg-muted/30">
+              <p className="text-xs font-medium text-muted-foreground">Personal Information</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {renderFormField('first_name', 'First Name *', 'text', undefined, 'John')}
+                {renderFormField('middle_name', 'Middle Name', 'text', undefined, 'Michael')}
+              </div>
+              {renderFormField('last_name', 'Last Name', 'text', undefined, 'Smith')}
+            </div>
+          )}
+
+          {/* ENTITY FIELDS */}
+          {formData.type !== 'individual' && (
+            <div className="space-y-4 p-3 rounded-lg border bg-muted/30">
+              <p className="text-xs font-medium text-muted-foreground">Entity Information</p>
+              {renderFormField('legal_name', 'Legal Name *', 'text', undefined, 'ABC Advisors Ltd')}
+              {renderFormField('display_name', 'Display Name', 'text', undefined, 'Optional short name')}
+              {renderFormField('country_of_incorporation', 'Country of Incorporation', 'text', undefined, 'United Kingdom')}
+            </div>
+          )}
+
+          {/* COMMON FIELDS */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {renderFormField('email', 'Email', 'email', undefined, 'contact@company.com')}
+            {renderFormField('country', formData.type === 'individual' ? 'Country of Residence' : 'Country', 'text', undefined, 'United States')}
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {renderFormField('default_commission_bps', 'Commission (bps)', 'number', undefined, '0-300')}
             {renderFormField('payment_terms', 'Payment Terms', 'select', [
               { value: 'net_15', label: 'Net 15' },
@@ -547,32 +761,64 @@ export function AddAccountModal({
             { value: 'inactive', label: 'Inactive' },
             { value: 'suspended', label: 'Suspended' },
           ])}
-          {renderFormField('notes', 'Notes', 'textarea', undefined, 'Additional notes...')}
         </div>
       ),
       lawyer: (
         <div className="space-y-4">
-          {renderFormField('firm_name', 'Firm Name', 'text', undefined, 'Smith & Associates LLP')}
-          {renderFormField('display_name', 'Display Name', 'text', undefined, 'Smith & Associates')}
-          {renderFormField('primary_contact_name', 'Primary Contact', 'text', undefined, 'Jane Smith')}
-          <div className="grid grid-cols-2 gap-4">
-            {renderFormField('primary_contact_email', 'Contact Email', 'email', undefined, 'jane@firm.com')}
-            {renderFormField('primary_contact_phone', 'Contact Phone', 'text', undefined, '+1 (555) 123-4567')}
-          </div>
-          {renderFormField('country', 'Country', 'text', undefined, 'United States')}
+          {/* TYPE FIRST */}
+          {renderFormField('type', 'Lawyer Type', 'select', [
+            { value: 'individual', label: 'Individual Lawyer' },
+            { value: 'entity', label: 'Law Firm' },
+          ])}
+
+          {/* INDIVIDUAL FIELDS */}
+          {formData.type === 'individual' && (
+            <div className="space-y-4 p-3 rounded-lg border bg-muted/30">
+              <p className="text-xs font-medium text-muted-foreground">Personal Information</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {renderFormField('first_name', 'First Name *', 'text', undefined, 'Jane')}
+                {renderFormField('middle_name', 'Middle Name', 'text', undefined, 'Marie')}
+              </div>
+              {renderFormField('last_name', 'Last Name', 'text', undefined, 'Smith')}
+              {renderFormField('display_name', 'Display Name', 'text', undefined, 'Jane Smith, Esq.')}
+            </div>
+          )}
+
+          {/* ENTITY FIELDS */}
+          {formData.type !== 'individual' && (
+            <div className="space-y-4 p-3 rounded-lg border bg-muted/30">
+              <p className="text-xs font-medium text-muted-foreground">Firm Information</p>
+              {renderFormField('firm_name', 'Firm Name *', 'text', undefined, 'Smith & Associates LLP')}
+              {renderFormField('display_name', 'Display Name', 'text', undefined, 'Smith & Associates')}
+              {renderFormField('primary_contact_name', 'Primary Contact', 'text', undefined, 'Jane Smith')}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {renderFormField('primary_contact_email', 'Contact Email', 'email', undefined, 'jane@firm.com')}
+                {renderFormField('primary_contact_phone', 'Contact Phone', 'text', undefined, '+1 (555) 123-4567')}
+              </div>
+            </div>
+          )}
+
+          {/* COMMON FIELDS */}
+          {formData.type === 'individual' ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {renderFormField('email', 'Email', 'email', undefined, 'lawyer@firm.com')}
+              {renderFormField('country', 'Country of Residence', 'text', undefined, 'United States')}
+            </div>
+          ) : (
+            renderFormField('country', 'Country', 'text', undefined, 'United States')
+          )}
         </div>
       ),
       partner: (
         <div className="space-y-4">
-          {renderFormField('name', 'Partner Name', 'text', undefined, 'Partner Capital LLC')}
-          {renderFormField('legal_name', 'Legal Name', 'text', undefined, 'Optional full legal name')}
-          <div className="grid grid-cols-2 gap-4">
-            {renderFormField('type', 'Type', 'select', [
-              { value: 'entity', label: 'Entity' },
+          {/* TYPE FIRST */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {renderFormField('type', 'Partner Type', 'select', [
               { value: 'individual', label: 'Individual' },
+              { value: 'entity', label: 'Entity' },
               { value: 'institutional', label: 'Institutional' },
             ])}
-            {renderFormField('partner_type', 'Partner Type', 'select', [
+            {renderFormField('partner_type', 'Partner Category', 'select', [
               { value: 'co_investor', label: 'Co-Investor' },
               { value: 'syndicate', label: 'Syndicate' },
               { value: 'strategic', label: 'Strategic' },
@@ -580,21 +826,56 @@ export function AddAccountModal({
               { value: 'other', label: 'Other' },
             ])}
           </div>
-          {renderFormField('contact_name', 'Contact Name', 'text', undefined, 'John Smith')}
-          <div className="grid grid-cols-2 gap-4">
-            {renderFormField('contact_email', 'Contact Email', 'email', undefined, 'john@partner.com')}
-            {renderFormField('country', 'Country', 'text', undefined, 'United States')}
-          </div>
+
+          {/* INDIVIDUAL FIELDS */}
+          {formData.type === 'individual' && (
+            <div className="space-y-4 p-3 rounded-lg border bg-muted/30">
+              <p className="text-xs font-medium text-muted-foreground">Personal Information</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {renderFormField('first_name', 'First Name *', 'text', undefined, 'John')}
+                {renderFormField('middle_name', 'Middle Name', 'text', undefined, 'Michael')}
+              </div>
+              {renderFormField('last_name', 'Last Name', 'text', undefined, 'Smith')}
+            </div>
+          )}
+
+          {/* ENTITY FIELDS */}
+          {formData.type !== 'individual' && (
+            <div className="space-y-4 p-3 rounded-lg border bg-muted/30">
+              <p className="text-xs font-medium text-muted-foreground">Entity Information</p>
+              {renderFormField('name', 'Partner Name *', 'text', undefined, 'Partner Capital LLC')}
+              {renderFormField('legal_name', 'Legal Name', 'text', undefined, 'Full legal entity name')}
+              {renderFormField('contact_name', 'Contact Name', 'text', undefined, 'John Smith')}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {renderFormField('contact_email', 'Contact Email', 'email', undefined, 'john@partner.com')}
+                {renderFormField('contact_phone', 'Contact Phone', 'text', undefined, '+1 (555) 123-4567')}
+              </div>
+            </div>
+          )}
+
+          {/* COMMON FIELDS */}
+          {formData.type === 'individual' ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {renderFormField('email', 'Email', 'email', undefined, 'john@example.com')}
+              {renderFormField('country', 'Country of Residence', 'text', undefined, 'United States')}
+            </div>
+          ) : (
+            renderFormField('country', 'Country', 'text', undefined, 'United States')
+          )}
+          {renderFormField('status', 'Status', 'select', [
+            { value: 'active', label: 'Active' },
+            { value: 'inactive', label: 'Inactive' },
+            { value: 'suspended', label: 'Suspended' },
+          ])}
         </div>
       ),
       commercial_partner: (
         <div className="space-y-4">
-          {renderFormField('name', 'Partner Name', 'text', undefined, 'First National Bank')}
-          {renderFormField('legal_name', 'Legal Name', 'text', undefined, 'Optional full legal name')}
-          <div className="grid grid-cols-2 gap-4">
-            {renderFormField('type', 'Type', 'select', [
-              { value: 'entity', label: 'Entity' },
+          {/* TYPE FIRST */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {renderFormField('type', 'Partner Type', 'select', [
               { value: 'individual', label: 'Individual' },
+              { value: 'entity', label: 'Entity' },
               { value: 'institutional', label: 'Institutional' },
             ])}
             {renderFormField('cp_type', 'Service Type', 'select', [
@@ -606,21 +887,83 @@ export function AddAccountModal({
               { value: 'other', label: 'Other' },
             ])}
           </div>
-          {renderFormField('contact_name', 'Contact Name', 'text', undefined, 'Jane Smith')}
-          <div className="grid grid-cols-2 gap-4">
-            {renderFormField('contact_email', 'Contact Email', 'email', undefined, 'jane@bank.com')}
-            {renderFormField('country', 'Country', 'text', undefined, 'United States')}
-          </div>
+
+          {/* INDIVIDUAL FIELDS */}
+          {formData.type === 'individual' && (
+            <div className="space-y-4 p-3 rounded-lg border bg-muted/30">
+              <p className="text-xs font-medium text-muted-foreground">Personal Information</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {renderFormField('first_name', 'First Name *', 'text', undefined, 'Jane')}
+                {renderFormField('middle_name', 'Middle Name', 'text', undefined, 'Marie')}
+              </div>
+              {renderFormField('last_name', 'Last Name', 'text', undefined, 'Smith')}
+            </div>
+          )}
+
+          {/* ENTITY FIELDS */}
+          {formData.type !== 'individual' && (
+            <div className="space-y-4 p-3 rounded-lg border bg-muted/30">
+              <p className="text-xs font-medium text-muted-foreground">Entity Information</p>
+              {renderFormField('name', 'Partner Name *', 'text', undefined, 'First National Bank')}
+              {renderFormField('legal_name', 'Legal Name', 'text', undefined, 'Full legal entity name')}
+              {renderFormField('contact_name', 'Contact Name', 'text', undefined, 'Jane Smith')}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {renderFormField('contact_email', 'Contact Email', 'email', undefined, 'jane@bank.com')}
+                {renderFormField('contact_phone', 'Contact Phone', 'text', undefined, '+1 (555) 123-4567')}
+              </div>
+            </div>
+          )}
+
+          {/* COMMON FIELDS */}
+          {formData.type === 'individual' ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {renderFormField('email', 'Email', 'email', undefined, 'jane@example.com')}
+              {renderFormField('country', 'Country of Residence', 'text', undefined, 'United States')}
+            </div>
+          ) : (
+            renderFormField('country', 'Country', 'text', undefined, 'United States')
+          )}
+          {renderFormField('status', 'Status', 'select', [
+            { value: 'active', label: 'Active' },
+            { value: 'inactive', label: 'Inactive' },
+            { value: 'suspended', label: 'Suspended' },
+          ])}
         </div>
       ),
       arranger: (
         <div className="space-y-4">
-          {renderFormField('legal_name', 'Legal Name', 'text', undefined, 'VERSO Arranger Ltd')}
-          <div className="grid grid-cols-2 gap-4">
+          {/* TYPE FIRST */}
+          {renderFormField('type', 'Arranger Type', 'select', [
+            { value: 'entity', label: 'Entity (Default)' },
+            { value: 'individual', label: 'Individual' },
+          ])}
+
+          {/* INDIVIDUAL FIELDS */}
+          {formData.type === 'individual' && (
+            <div className="space-y-4 p-3 rounded-lg border bg-muted/30">
+              <p className="text-xs font-medium text-muted-foreground">Personal Information</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {renderFormField('first_name', 'First Name *', 'text', undefined, 'John')}
+                {renderFormField('middle_name', 'Middle Name', 'text', undefined, 'Michael')}
+              </div>
+              {renderFormField('last_name', 'Last Name', 'text', undefined, 'Smith')}
+            </div>
+          )}
+
+          {/* ENTITY FIELDS */}
+          {formData.type !== 'individual' && (
+            <div className="space-y-4 p-3 rounded-lg border bg-muted/30">
+              <p className="text-xs font-medium text-muted-foreground">Entity Information</p>
+              {renderFormField('legal_name', 'Legal Name *', 'text', undefined, 'VERSO Arranger Ltd')}
+            </div>
+          )}
+
+          {/* REGISTRATION / LICENSE FIELDS */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {renderFormField('registration_number', 'Registration Number', 'text', undefined, 'Company reg #')}
             {renderFormField('license_number', 'License Number', 'text', undefined, 'License #')}
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {renderFormField('email', 'Email', 'email', undefined, 'contact@arranger.com')}
             {renderFormField('phone', 'Phone', 'text', undefined, '+1 (555) 123-4567')}
           </div>

@@ -95,7 +95,7 @@ export function ConversationsSidebar({
   }, [conversations])
 
   return (
-    <aside className="w-[360px] border-r border-border bg-card flex flex-col text-foreground">
+    <aside className="w-full sm:w-[360px] border-r border-border bg-card flex flex-col text-foreground">
       <div className="p-4 border-b border-border space-y-3">
         <div className="flex items-center justify-between gap-2 text-foreground">
           <div>

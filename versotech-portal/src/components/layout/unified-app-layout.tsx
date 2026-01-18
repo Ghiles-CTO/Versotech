@@ -170,7 +170,7 @@ function UnifiedAppLayoutInner({ children, profile }: UnifiedAppLayoutProps) {
         <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
           <SheetContent
             side="left"
-            className={`w-[280px] p-0 ${isDark ? 'bg-zinc-950 border-white/10' : 'bg-white border-gray-200'}`}
+            className={`w-[calc(100%-1rem)] max-w-[280px] p-0 ${isDark ? 'bg-zinc-950 border-white/10' : 'bg-white border-gray-200'}`}
           >
             {/* Visually hidden title for accessibility - required by Radix Dialog */}
             <SheetTitle className="sr-only">Navigation Menu</SheetTitle>

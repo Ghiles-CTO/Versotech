@@ -246,7 +246,7 @@ export function ArrangerDetailClient({ arranger, metrics, deals, vehicles }: Arr
 
       {/* Tabbed Content */}
       <Tabs defaultValue="overview" className="space-y-6" id={`arranger-tabs-${arranger.id}`}>
-        <TabsList className="grid w-full grid-cols-7 lg:w-auto lg:inline-grid">
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 lg:w-auto lg:inline-grid">
           <TabsTrigger value="overview" className="gap-2">
             <Building2 className="h-4 w-4" />
             <span className="hidden sm:inline">Overview</span>

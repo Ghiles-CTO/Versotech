@@ -75,6 +75,27 @@ interface TermSheet {
   term_sheet_date: string | null
 }
 
+// Types for the new Introducer dispatch flow
+interface ActiveAgreement {
+  id: string
+  introducer_id: string
+  introducer_name: string
+  fee_plan_id: string
+  fee_plan_name: string
+  term_sheet_id: string
+  term_sheet_version: number
+  reference_number?: string
+  signed_date?: string
+}
+
+interface LinkableInvestor {
+  user_id: string
+  investor_id: string
+  display_name: string
+  email: string
+  current_role: string
+}
+
 // Roles that require a referring entity and fee plan
 const ROLES_REQUIRING_REFERRER: Record<string, ReferringEntityType> = {
   'partner_investor': 'partner',
@@ -166,11 +187,20 @@ export function AddParticipantModal({ dealId, onParticipantAdded }: AddParticipa
   const [selectedTermSheetId, setSelectedTermSheetId] = useState<string>('')
   const [termSheetsLoading, setTermSheetsLoading] = useState(false)
 
-  // Entity-specific fields (partner/introducer/commercial_partner)
+  // Entity-specific fields (partner/commercial_partner only - introducer uses dispatch flow)
   const [feePlanName, setFeePlanName] = useState('')
   const [feeComponents, setFeeComponents] = useState<FeeComponent[]>([
     { kind: 'subscription', rate_bps: 200 },
   ])
+
+  // Introducer dispatch flow state
+  const [activeAgreements, setActiveAgreements] = useState<ActiveAgreement[]>([])
+  const [activeAgreementsLoading, setActiveAgreementsLoading] = useState(false)
+  const [selectedAgreementId, setSelectedAgreementId] = useState<string>('')
+  const [selectedAgreement, setSelectedAgreement] = useState<ActiveAgreement | null>(null)
+  const [linkableInvestors, setLinkableInvestors] = useState<LinkableInvestor[]>([])
+  const [linkableInvestorsLoading, setLinkableInvestorsLoading] = useState(false)
+  const [selectedLinkableInvestorId, setSelectedLinkableInvestorId] = useState<string>('')
 
   // Check if current role requires a referring entity
   const requiresReferrer = !!ROLES_REQUIRING_REFERRER[investorRole]
@@ -263,6 +293,45 @@ export function AddParticipantModal({ dealId, onParticipantAdded }: AddParticipa
     }
   }, [dealId, selectedReferringEntity, referrerEntityType, selectedTermSheetId])
 
+  // Fetch active introducer agreements for the selected introducer on this deal
+  const fetchActiveAgreements = useCallback(async (introducerId: string) => {
+    setActiveAgreementsLoading(true)
+    setActiveAgreements([])
+    setSelectedAgreementId('')
+    setSelectedAgreement(null)
+    setLinkableInvestors([])
+    setSelectedLinkableInvestorId('')
+    try {
+      const response = await fetch(`/api/deals/${dealId}/active-agreements?introducer_id=${introducerId}`)
+      if (response.ok) {
+        const data = await response.json()
+        setActiveAgreements(data.agreements || [])
+      }
+    } catch (err) {
+      console.error('Active agreements fetch failed:', err)
+    } finally {
+      setActiveAgreementsLoading(false)
+    }
+  }, [dealId])
+
+  // Fetch linkable investors for a specific term sheet
+  const fetchLinkableInvestors = useCallback(async (termSheetId: string) => {
+    setLinkableInvestorsLoading(true)
+    setLinkableInvestors([])
+    setSelectedLinkableInvestorId('')
+    try {
+      const response = await fetch(`/api/deals/${dealId}/linkable-investors?term_sheet_id=${termSheetId}`)
+      if (response.ok) {
+        const data = await response.json()
+        setLinkableInvestors(data.investors || [])
+      }
+    } catch (err) {
+      console.error('Linkable investors fetch failed:', err)
+    } finally {
+      setLinkableInvestorsLoading(false)
+    }
+  }, [dealId])
+
   // ===== USE EFFECTS (after callbacks are defined) =====
 
   // Reset form when modal closes
@@ -281,6 +350,12 @@ export function AddParticipantModal({ dealId, onParticipantAdded }: AddParticipa
       setSelectedFeePlanId('')
       setPublishedTermSheets([])
       setSelectedTermSheetId('')
+      // Reset introducer dispatch state
+      setActiveAgreements([])
+      setSelectedAgreementId('')
+      setSelectedAgreement(null)
+      setLinkableInvestors([])
+      setSelectedLinkableInvestorId('')
     }
   }, [open])
 
@@ -301,6 +376,12 @@ export function AddParticipantModal({ dealId, onParticipantAdded }: AddParticipa
     setFeePlansData(null)
     setSelectedFeePlanId('')
     setFeePlanName('')
+    // Reset introducer dispatch state
+    setActiveAgreements([])
+    setSelectedAgreementId('')
+    setSelectedAgreement(null)
+    setLinkableInvestors([])
+    setSelectedLinkableInvestorId('')
   }, [category])
 
   // Reset referring entity when role changes
@@ -320,6 +401,38 @@ export function AddParticipantModal({ dealId, onParticipantAdded }: AddParticipa
       setSelectedTermSheetId('')
     }
   }, [category, open, fetchPublishedTermSheets])
+
+  // Fetch active agreements when an introducer is selected (for dispatch flow)
+  useEffect(() => {
+    if (category === 'introducer' && selectedEntity?.id) {
+      fetchActiveAgreements(selectedEntity.id)
+    } else if (category === 'introducer') {
+      // Reset agreement state when introducer is deselected
+      setActiveAgreements([])
+      setSelectedAgreementId('')
+      setSelectedAgreement(null)
+      setLinkableInvestors([])
+      setSelectedLinkableInvestorId('')
+    }
+  }, [category, selectedEntity?.id, fetchActiveAgreements])
+
+  // Update selectedAgreement and fetch linkable investors when agreement is selected
+  useEffect(() => {
+    if (!selectedAgreementId) {
+      setSelectedAgreement(null)
+      setLinkableInvestors([])
+      setSelectedLinkableInvestorId('')
+      return
+    }
+
+    const agreement = activeAgreements.find(a => a.id === selectedAgreementId)
+    setSelectedAgreement(agreement || null)
+
+    // Fetch linkable investors for this agreement's term sheet
+    if (agreement?.term_sheet_id) {
+      fetchLinkableInvestors(agreement.term_sheet_id)
+    }
+  }, [selectedAgreementId, activeAgreements, fetchLinkableInvestors])
 
   // Fetch fee plans when referring entity is selected AND term sheet is selected
   useEffect(() => {
@@ -412,7 +525,18 @@ export function AddParticipantModal({ dealId, onParticipantAdded }: AddParticipa
           return
         }
       }
+    } else if (category === 'introducer') {
+      // Introducer dispatch flow validation
+      if (!selectedAgreement) {
+        setError('Please select an active introducer agreement')
+        return
+      }
+      if (!selectedLinkableInvestorId) {
+        setError('Please select an investor to link to this introducer')
+        return
+      }
     } else {
+      // Partner / Commercial Partner flow
       if (!selectedEntity) {
         setError(`Please select a ${category.replace('_', ' ')}`)
         return
@@ -451,7 +575,30 @@ export function AddParticipantModal({ dealId, onParticipantAdded }: AddParticipa
           const data = await response.json()
           throw new Error(data.message || data.error || 'Failed to add investor')
         }
+      } else if (category === 'introducer') {
+        // Introducer dispatch flow - link existing investor to introducer
+        const linkedInvestor = linkableInvestors.find(i => i.user_id === selectedLinkableInvestorId)
+        if (!linkedInvestor || !selectedAgreement) {
+          throw new Error('Invalid selection')
+        }
+
+        const response = await fetch(`/api/deals/${dealId}/members/${linkedInvestor.user_id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            referred_by_entity_id: selectedAgreement.introducer_id,
+            referred_by_entity_type: 'introducer',
+            assigned_fee_plan_id: selectedAgreement.fee_plan_id,
+            role: 'introducer_investor'
+          }),
+        })
+
+        if (!response.ok) {
+          const data = await response.json()
+          throw new Error(data.error || 'Failed to link investor to introducer')
+        }
       } else {
+        // Partner / Commercial Partner flow
         const response = await fetch(`/api/deals/${dealId}/partners`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -509,7 +656,11 @@ export function AddParticipantModal({ dealId, onParticipantAdded }: AddParticipa
         if (!selectedFeePlanId) return false
       }
       return true
+    } else if (category === 'introducer') {
+      // Introducer dispatch flow validation
+      return !!(selectedAgreement && selectedLinkableInvestorId)
     } else {
+      // Partner / Commercial Partner
       return !!(selectedEntity && feePlanName.trim())
     }
   }
@@ -534,7 +685,7 @@ export function AddParticipantModal({ dealId, onParticipantAdded }: AddParticipa
           {/* Step 1: Category Selection */}
           <div className="space-y-3">
             <Label>Participant Type</Label>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {PARTICIPANT_CATEGORIES.map((cat) => {
                 const Icon = cat.icon
                 const isSelected = category === cat.value
@@ -762,8 +913,8 @@ export function AddParticipantModal({ dealId, onParticipantAdded }: AddParticipa
                 </div>
               )}
 
-              {/* Fee Plan for entities (non-investor) */}
-              {category !== 'investor' && selectedEntity && (
+              {/* Fee Plan for entities (partner/commercial_partner only - introducer uses dispatch flow) */}
+              {category !== 'investor' && category !== 'introducer' && selectedEntity && (
                 <>
                   <div className="space-y-2">
                     <Label>Fee Plan Name</Label>
@@ -858,6 +1009,123 @@ export function AddParticipantModal({ dealId, onParticipantAdded }: AddParticipa
             </>
           )}
 
+          {/* Introducer Dispatch Flow - Shows AFTER an introducer is selected */}
+          {category === 'introducer' && selectedEntity && (
+            <div className="space-y-4 p-4 rounded-lg border border-orange-500/30 bg-orange-500/5">
+              <div className="flex items-center gap-2">
+                <Users className="h-5 w-5 text-orange-400" />
+                <div>
+                  <h4 className="font-medium text-orange-300">Link Investor to {getEntityDisplayName(selectedEntity)}</h4>
+                  <p className="text-xs text-muted-foreground">
+                    Select an active agreement, then choose an investor to link
+                  </p>
+                </div>
+              </div>
+
+              {/* Step 2: Select Active Agreement for this introducer */}
+              <div className="space-y-2">
+                <Label>Select Agreement (Term Sheet)</Label>
+                {activeAgreementsLoading ? (
+                  <div className="flex items-center gap-2 py-3">
+                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                    <span className="text-sm text-muted-foreground">Loading agreements...</span>
+                  </div>
+                ) : activeAgreements.length === 0 ? (
+                  <div className="p-3 rounded-lg border border-amber-500/30 bg-amber-500/5 text-amber-300 text-sm">
+                    <div className="flex items-start gap-2">
+                      <AlertCircle className="h-4 w-4 mt-0.5" />
+                      <div>
+                        <p className="font-medium">No active agreements for this introducer</p>
+                        <p className="text-xs text-amber-300/80 mt-1">
+                          {getEntityDisplayName(selectedEntity)} has no signed agreements on this deal.
+                          Create and sign an introducer agreement in the Introducers tab first.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <Select value={selectedAgreementId} onValueChange={setSelectedAgreementId}>
+                    <SelectTrigger className={cn(selectedAgreement && 'border-orange-500/50')}>
+                      <SelectValue placeholder="Select an agreement" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {activeAgreements.map((agreement) => (
+                        <SelectItem key={agreement.id} value={agreement.id}>
+                          <div className="flex flex-col">
+                            <span className="font-medium">{agreement.fee_plan_name}</span>
+                            <span className="text-xs text-muted-foreground">
+                              Term Sheet v{agreement.term_sheet_version} {agreement.reference_number ? `• ${agreement.reference_number}` : ''}
+                            </span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
+
+              {/* Step 3: Select Investor (shown after agreement is selected) */}
+              {selectedAgreement && (
+                <div className="space-y-2">
+                  <Label>Select Investor to Link</Label>
+                  {linkableInvestorsLoading ? (
+                    <div className="flex items-center gap-2 py-3">
+                      <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                      <span className="text-sm text-muted-foreground">Loading eligible investors...</span>
+                    </div>
+                  ) : linkableInvestors.length === 0 ? (
+                    <div className="p-3 rounded-lg border border-blue-500/30 bg-blue-500/5 text-blue-300 text-sm">
+                      <div className="flex items-start gap-2">
+                        <AlertCircle className="h-4 w-4 mt-0.5" />
+                        <div>
+                          <p className="font-medium">No eligible investors</p>
+                          <p className="text-xs text-blue-300/80 mt-1">
+                            No investors on Term Sheet v{selectedAgreement.term_sheet_version} are available to link.
+                            They may already be linked to an introducer, or you need to add investors to this term sheet first.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <Select value={selectedLinkableInvestorId} onValueChange={setSelectedLinkableInvestorId}>
+                      <SelectTrigger className={cn(selectedLinkableInvestorId && 'border-orange-500/50')}>
+                        <SelectValue placeholder="Select an investor" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {linkableInvestors.map((investor) => (
+                          <SelectItem key={investor.user_id} value={investor.user_id}>
+                            <div className="flex flex-col">
+                              <span>{investor.display_name}</span>
+                              {investor.email && (
+                                <span className="text-xs text-muted-foreground">{investor.email}</span>
+                              )}
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                </div>
+              )}
+
+              {/* Summary of what will happen */}
+              {selectedAgreement && selectedLinkableInvestorId && (
+                <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30">
+                  <div className="flex items-start gap-2">
+                    <div className="text-emerald-400 mt-0.5">✓</div>
+                    <div className="text-sm">
+                      <p className="text-emerald-300 font-medium">Ready to link</p>
+                      <p className="text-emerald-300/80 text-xs mt-1">
+                        This investor will be linked to <strong>{getEntityDisplayName(selectedEntity)}</strong> using
+                        the <strong>{selectedAgreement.fee_plan_name}</strong> fee plan (Term Sheet v{selectedAgreement.term_sheet_version}).
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Error Display */}
           {error && (
             <div className="p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
@@ -877,8 +1145,10 @@ export function AddParticipantModal({ dealId, onParticipantAdded }: AddParticipa
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Adding...
+                  {category === 'introducer' ? 'Linking...' : 'Adding...'}
                 </>
+              ) : category === 'introducer' ? (
+                'Link Investor to Introducer'
               ) : (
                 `Add ${selectedCategoryInfo?.label || 'Participant'}`
               )}

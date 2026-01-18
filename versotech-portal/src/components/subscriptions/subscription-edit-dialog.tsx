@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -87,6 +87,23 @@ export function SubscriptionEditDialog({
     acknowledgement_notes: subscription.acknowledgement_notes || '',
   })
 
+  // Auto-calculate spread when price, cost, or num_shares changes
+  useEffect(() => {
+    const price = parseFloat(formData.price_per_share) || 0
+    const cost = parseFloat(formData.cost_per_share) || 0
+    const numShares = parseFloat(formData.num_shares) || 0
+
+    if (price > 0 && cost > 0) {
+      const spread = price - cost
+      const spreadFee = spread * numShares
+      setFormData(prev => ({
+        ...prev,
+        spread_per_share: spread.toFixed(6),
+        spread_fee_amount: spreadFee.toFixed(2)
+      }))
+    }
+  }, [formData.price_per_share, formData.cost_per_share, formData.num_shares])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
@@ -164,7 +181,7 @@ export function SubscriptionEditDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl max-h-[90vh] bg-gray-900 text-white border-gray-700">
+      <DialogContent className="w-[calc(100vw-2rem)] sm:max-w-5xl max-h-[90vh] bg-gray-900 text-white border-gray-700">
         <DialogHeader>
           <DialogTitle className="text-white">Edit Subscription #{subscription.subscription_number}</DialogTitle>
           <DialogDescription className="text-gray-400">
@@ -174,7 +191,7 @@ export function SubscriptionEditDialog({
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <Tabs defaultValue="basic" className="w-full" id={`subscription-edit-tabs-${subscription.id}`}>
-            <TabsList className="grid w-full grid-cols-7 bg-gray-800">
+            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 bg-gray-800">
               <TabsTrigger value="basic" className="text-xs">Basic</TabsTrigger>
               <TabsTrigger value="financial" className="text-xs">Financial</TabsTrigger>
               <TabsTrigger value="shares" className="text-xs">Shares</TabsTrigger>
@@ -187,7 +204,7 @@ export function SubscriptionEditDialog({
             <ScrollArea className="h-[400px] pr-4">
               {/* Basic Info Tab */}
               <TabsContent value="basic" className="space-y-4 mt-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="status" className="text-white">Status *</Label>
                     <Select
@@ -280,7 +297,7 @@ export function SubscriptionEditDialog({
 
               {/* Financial Terms Tab */}
               <TabsContent value="financial" className="space-y-4 mt-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="commitment" className="text-white">Commitment Amount *</Label>
                     <Input
@@ -330,7 +347,7 @@ export function SubscriptionEditDialog({
 
               {/* Share Structure Tab */}
               <TabsContent value="shares" className="space-y-4 mt-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="num_shares" className="text-white">Number of Shares</Label>
                     <Input
@@ -371,29 +388,37 @@ export function SubscriptionEditDialog({
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="spread_per_share" className="text-white">Spread Per Share</Label>
+                    <Label htmlFor="spread_per_share" className="text-white">
+                      Spread Per Share
+                      <span className="ml-2 text-xs text-amber-400">(auto-calculated)</span>
+                    </Label>
                     <Input
                       id="spread_per_share"
                       type="number"
                       step="0.01"
                       value={formData.spread_per_share}
                       onChange={(e) => setFormData({ ...formData, spread_per_share: e.target.value })}
-                      className="bg-gray-800 border-gray-700 text-white"
+                      className="bg-gray-800 border-amber-500/30 text-white"
                       placeholder="Spread markup"
                     />
+                    <p className="text-xs text-gray-500">Price − Cost (can override)</p>
                   </div>
 
                   <div className="space-y-2 col-span-2">
-                    <Label htmlFor="spread_fee_amount" className="text-white">Spread Fee Amount</Label>
+                    <Label htmlFor="spread_fee_amount" className="text-white">
+                      Spread Fee Amount
+                      <span className="ml-2 text-xs text-amber-400">(auto-calculated)</span>
+                    </Label>
                     <Input
                       id="spread_fee_amount"
                       type="number"
                       step="0.01"
                       value={formData.spread_fee_amount}
                       onChange={(e) => setFormData({ ...formData, spread_fee_amount: e.target.value })}
-                      className="bg-gray-800 border-gray-700 text-white"
+                      className="bg-gray-800 border-amber-500/30 text-white"
                       placeholder="Total spread fee"
                     />
+                    <p className="text-xs text-gray-500">Spread × Shares (can override)</p>
                   </div>
                 </div>
               </TabsContent>
@@ -404,7 +429,7 @@ export function SubscriptionEditDialog({
                   {/* Subscription Fees */}
                   <div>
                     <h3 className="text-sm font-semibold text-white mb-3">Subscription Fees</h3>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="subscription_fee_percent" className="text-white">Subscription Fee %</Label>
                         <Input
@@ -436,7 +461,7 @@ export function SubscriptionEditDialog({
                   {/* Broker-Dealer Fees */}
                   <div>
                     <h3 className="text-sm font-semibold text-white mb-3">Broker-Dealer Fees</h3>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="bd_fee_percent" className="text-white">BD Fee %</Label>
                         <Input
@@ -468,7 +493,7 @@ export function SubscriptionEditDialog({
                   {/* FINRA Fee */}
                   <div>
                     <h3 className="text-sm font-semibold text-white mb-3">Regulatory Fees</h3>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="finra_fee_amount" className="text-white">FINRA Fee Amount</Label>
                         <Input
@@ -487,7 +512,7 @@ export function SubscriptionEditDialog({
                   {/* Performance Fees */}
                   <div>
                     <h3 className="text-sm font-semibold text-white mb-3">Performance Fees (Tier Structure)</h3>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="performance_fee_tier1_percent" className="text-white">Tier 1 %</Label>
                         <Input
@@ -546,7 +571,7 @@ export function SubscriptionEditDialog({
 
               {/* Tracking Tab */}
               <TabsContent value="tracking" className="space-y-4 mt-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="funded_amount" className="text-white">Funded Amount</Label>
                     <Input
@@ -613,7 +638,7 @@ export function SubscriptionEditDialog({
 
               {/* Relationships Tab */}
               <TabsContent value="relationships" className="space-y-4 mt-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2 col-span-2">
                     <Label htmlFor="introducer_id" className="text-white">Introducer ID</Label>
                     <Input

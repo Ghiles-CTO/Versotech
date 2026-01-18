@@ -57,6 +57,7 @@ import { StaffEntityMembersTab } from '@/components/staff/shared/staff-entity-me
 import { EditIntroducerDialog } from '@/components/staff/introducers/edit-introducer-dialog'
 import { CreateAgreementDialog } from '@/components/staff/introducers/create-agreement-dialog'
 import { InviteUserDialog } from '@/components/users/invite-user-dialog'
+import { DispatchIntroducerInvestorDialog } from '@/components/staff/introducers/dispatch-introducer-investor-dialog'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { formatCurrency, formatBps, formatDate } from '@/lib/format'
@@ -269,6 +270,7 @@ export function IntroducerDetailClient({
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false)
   const [createAgreementOpen, setCreateAgreementOpen] = useState(false)
   const [kycDialogOpen, setKycDialogOpen] = useState(false)
+  const [dispatchDialogOpen, setDispatchDialogOpen] = useState(false)
   const [sendingAgreement, setSendingAgreement] = useState<string | null>(null)
   const [downloadingPdf, setDownloadingPdf] = useState<string | null>(null)
 
@@ -527,6 +529,15 @@ export function IntroducerDetailClient({
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <Button
+            variant="default"
+            size="sm"
+            onClick={() => setDispatchDialogOpen(true)}
+            className="bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white"
+          >
+            <Send className="h-4 w-4 mr-2" />
+            Dispatch Investor
+          </Button>
           <Button variant="outline" size="sm" onClick={() => setInviteDialogOpen(true)}>
             <UserPlus className="h-4 w-4 mr-2" />
             Invite User
@@ -639,7 +650,7 @@ export function IntroducerDetailClient({
 
       {/* Tabbed Content */}
       <Tabs defaultValue="overview" className="space-y-6" id={`introducer-tabs-${introducer.id}`}>
-        <TabsList className="grid w-full grid-cols-10 lg:w-auto lg:inline-grid">
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-10 lg:w-auto lg:inline-grid">
           <TabsTrigger value="overview" className="gap-2">
             <Building2 className="h-4 w-4" />
             <span className="hidden sm:inline">Overview</span>
@@ -1076,14 +1087,21 @@ export function IntroducerDetailClient({
                   <p className="text-sm text-muted-foreground/70 mb-4">
                     Investors dispatched through this introducer will appear here
                   </p>
+                  <Button
+                    onClick={() => setDispatchDialogOpen(true)}
+                    className="mb-4 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white"
+                  >
+                    <Send className="h-4 w-4 mr-2" />
+                    Dispatch Investor
+                  </Button>
                   <div className="max-w-md p-4 rounded-lg bg-blue-500/10 border border-blue-500/20 text-left">
                     <div className="flex items-start gap-3">
                       <Info className="h-5 w-5 text-blue-400 mt-0.5 flex-shrink-0" />
                       <div>
                         <p className="text-sm font-medium text-blue-400 mb-1">How to link investors</p>
                         <p className="text-xs text-muted-foreground">
-                          When dispatching investors from a Deal's Members tab, select this introducer as the
-                          referrer and assign a fee plan. The investor will then appear here with commission tracking.
+                          Click "Dispatch Investor" above to link an investor from a deal where {introducer.legal_name} has
+                          an active fee agreement. You can also dispatch from the Deal's Members tab.
                         </p>
                       </div>
                     </div>
@@ -1446,6 +1464,14 @@ export function IntroducerDetailClient({
         introducerId={introducer.id}
         introducerName={introducer.legal_name}
         defaultCommissionBps={introducer.default_commission_bps || 100}
+      />
+
+      <DispatchIntroducerInvestorDialog
+        open={dispatchDialogOpen}
+        onOpenChange={setDispatchDialogOpen}
+        introducerId={introducer.id}
+        introducerName={introducer.legal_name}
+        feePlans={feePlans}
       />
 
       {introducer.type === 'individual' && (

@@ -246,7 +246,7 @@ export function LawyerDetailClient({ lawyer, metrics, deals }: LawyerDetailClien
 
       {/* Tabbed Content */}
       <Tabs defaultValue="overview" className="space-y-6" id={`lawyer-tabs-${lawyer.id}`}>
-        <TabsList className="grid w-full grid-cols-6 lg:w-auto lg:inline-grid">
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-6 lg:w-auto lg:inline-grid">
           <TabsTrigger value="overview" className="gap-2">
             <Scale className="h-4 w-4" />
             <span className="hidden sm:inline">Overview</span>
