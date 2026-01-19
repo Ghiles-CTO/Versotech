@@ -61,7 +61,7 @@ type GroupedSubscriptions = {
   vehicle: {
     id: string
     name: string
-  }
+  } | null
   subscriptions: Subscription[]
   total_commitment: number
   currency: string
@@ -206,14 +206,14 @@ export function SubscriptionsTab({ investorId }: { investorId: string }) {
         </Card>
       ) : (
         <>
-          {data.grouped_by_vehicle.map((group) => (
-            <Card key={group.vehicle.id}>
+          {data.grouped_by_vehicle.map((group, index) => (
+            <Card key={group.vehicle?.id ?? `no-vehicle-${index}`}>
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div>
                     <CardTitle className="flex items-center gap-2">
                       <Building2 className="h-5 w-5" />
-                      {group.vehicle.name}
+                      {group.vehicle?.name ?? 'No Vehicle Assigned'}
                     </CardTitle>
                     <CardDescription className="mt-1">
                       {group.subscriptions.length} subscription

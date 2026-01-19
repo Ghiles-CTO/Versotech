@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { isStaffUser } from '@/lib/api-auth'
 
 // GET /api/admin/bank-details/[id]
 export async function GET(
@@ -15,14 +16,9 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Check if user is staff
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
-
-    if (!profile || !['staff_admin', 'staff_ops', 'staff_rm'].includes(profile.role)) {
+    // Check if user is staff (includes CEO and multi_persona staff)
+    const staffUser = await isStaffUser(supabase, user)
+    if (!staffUser) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
@@ -59,15 +55,10 @@ export async function PATCH(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Check if user is staff_admin
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
-
-    if (!profile || profile.role !== 'staff_admin') {
-      return NextResponse.json({ error: 'Only staff admins can update bank details' }, { status: 403 })
+    // Check if user is staff (includes CEO and multi_persona staff)
+    const staffUser = await isStaffUser(supabase, user)
+    if (!staffUser) {
+      return NextResponse.json({ error: 'Only staff members can update bank details' }, { status: 403 })
     }
 
     const body = await request.json()
@@ -164,15 +155,10 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Check if user is staff_admin
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
-
-    if (!profile || profile.role !== 'staff_admin') {
-      return NextResponse.json({ error: 'Only staff admins can delete bank details' }, { status: 403 })
+    // Check if user is staff (includes CEO and multi_persona staff)
+    const staffUser = await isStaffUser(supabase, user)
+    if (!staffUser) {
+      return NextResponse.json({ error: 'Only staff members can delete bank details' }, { status: 403 })
     }
 
     const serviceClient = createServiceClient()
