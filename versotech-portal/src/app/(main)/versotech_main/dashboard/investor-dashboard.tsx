@@ -72,7 +72,8 @@ function DashboardSkeleton() {
         "rounded-3xl border p-8",
         isDark ? "border-white/10 bg-white/5" : "border-slate-200/80 bg-white"
       )}>
-        <div className="grid gap-8 lg:grid-cols-[1.9fr,1fr]">
+        {/* Responsive: single column on mobile, two columns on tablet+ */}
+        <div className="grid gap-6 md:gap-8 md:grid-cols-[1.9fr,1fr]">
           <div className="space-y-6">
             <div className="flex items-center gap-4">
               <Skeleton className="h-16 w-16 rounded-full" />
@@ -82,7 +83,8 @@ function DashboardSkeleton() {
                 <Skeleton className="h-4 w-64" />
               </div>
             </div>
-            <div className="grid gap-4 sm:grid-cols-3">
+            {/* Responsive: stack on phone, 2 cols on small, 3 on medium+ */}
+            <div className="grid gap-3 md:gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
               {[1, 2, 3].map(i => (
                 <Skeleton key={i} className="h-24 rounded-2xl" />
               ))}
@@ -636,10 +638,11 @@ export function InvestorDashboard({ investorId, userId, persona }: InvestorDashb
 
       {/* Welcome Header Section */}
       <section className={cn(
-        "rounded-3xl border p-8 shadow-sm",
+        "rounded-3xl border p-4 sm:p-6 md:p-8 shadow-sm",
         isDark ? "border-white/10 bg-card" : "border-slate-200/80 bg-white"
       )}>
-        <div className="grid gap-8 lg:grid-cols-[1.9fr,1fr]">
+        {/* Responsive: single column on mobile, two columns on tablet+ */}
+        <div className="grid gap-6 md:gap-8 md:grid-cols-[1.9fr,1fr]">
           <div className="space-y-6">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-4">
@@ -697,7 +700,8 @@ export function InvestorDashboard({ investorId, userId, persona }: InvestorDashb
               </div>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-3">
+            {/* Responsive: stack on phone, 2 cols on small, 3 on medium+ */}
+            <div className="grid gap-3 md:gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
               {summaryTiles.map((tile) => (
                 <div
                   key={tile.label}

@@ -1095,16 +1095,27 @@ async function handleEntityApproval(
                 return suffix ? `${base}_${suffix}` : base
               }
 
-              // ANCHOR CSS: Invisible but DETECTABLE by PDF.js text extraction
-              // - font-size:1px - tiny but still rendered and extractable
-              // - line-height:0 - collapses vertical space
-              // - color:#ffffff - pure white (invisible on white background)
-              // NOTE: Do NOT use position:absolute as it breaks PDF.js text extraction!
-              const ANCHOR_CSS = 'font-size:1px;line-height:0;color:#ffffff;'
+              // ANCHOR CSS: Invisible anchors for PDF signature positioning
+              //
+              // APPROACH: Use off-page positioning to completely hide anchor text
+              // - position:absolute;left:-9999px moves anchor off-page (invisible)
+              // - font-size:1px ensures minimal space even if positioning fails
+              //
+              // WHY THIS APPROACH:
+              // Previous approach using color:#ffffff (white text) didn't work because:
+              // 1. PDF renderer may not use pure white backgrounds
+              // 2. Anchor text in table cells with slight gray backgrounds was visible
+              // 3. The white text still appeared as visual artifacts in the PDF
+              //
+              // IMPORTANT: Anchors are now used ONLY for page detection (which page needs a signature).
+              // Y positions are FIXED values in anchor-detector.ts getFixedYPosition().
+              // This means anchor extraction accuracy is less critical - we mainly need page numbers.
+              const ANCHOR_CSS = 'position:absolute;left:-9999px;font-size:1px;'
 
               // Page 2 - Subscription Form: Subscriber signatures with anchors (right column)
+              // Parent div needs position:relative for anchor's position:absolute to work
               const signatoriesFormHtml = signatories.map(s => `
-            <div style="margin-bottom: 0.5cm;">
+            <div style="position:relative;margin-bottom: 0.5cm;">
                 <span style="${ANCHOR_CSS}">SIG_ANCHOR:${getAnchorId(s.number, 'form')}</span>
                 <div class="signature-line"></div>
                 Name: ${s.name}<br>
@@ -1113,8 +1124,9 @@ async function handleEntityApproval(
 
               // Page 12 - Main Agreement: Subscriber signatures with anchors
               // Increased spacing: min-height 4cm, margin-top 3cm for ~85pt signature space
+              // Parent div needs position:relative for anchor's position:absolute to work
               const signatoriesSignatureHtml = signatories.map(s => `
-<div class="signature-block" style="margin-bottom: 1.5cm; min-height: 4cm;">
+<div class="signature-block" style="position:relative;margin-bottom: 1.5cm; min-height: 4cm;">
     <span style="${ANCHOR_CSS}">SIG_ANCHOR:${getAnchorId(s.number)}</span>
     <p><strong>The Subscriber</strong>, represented by Authorized Signatory ${s.number}</p>
     <div class="signature-line" style="margin-top: 3cm;"></div>
@@ -1123,8 +1135,9 @@ async function handleEntityApproval(
 </div>`).join('')
 
               // Page 40 - Appendix: Subscriber signatures with anchors
+              // Parent div needs position:relative for anchor's position:absolute to work
               const signatoriesAppendixHtml = signatories.map(s => `
-    <div style="margin-bottom: 0.5cm;">
+    <div style="position:relative;margin-bottom: 0.5cm;">
         <span style="${ANCHOR_CSS}">SIG_ANCHOR:${getAnchorId(s.number, 'appendix')}</span>
         <div class="signature-line"></div>
         <p>Name: ${s.name}<br>
@@ -1207,8 +1220,9 @@ async function handleEntityApproval(
                 // These include SIG_ANCHOR markers for signature positioning
                 // Page 12 - Main Agreement: Issuer signature with anchor
                 // Increased spacing: min-height 4cm, margin-top 3cm for ~85pt signature space
+                // Parent div needs position:relative for anchor's position:absolute to work
                 const issuerSignatureHtml = `
-<div class="signature-block" style="margin-bottom: 1.5cm; min-height: 4cm;">
+<div class="signature-block" style="position:relative;margin-bottom: 1.5cm; min-height: 4cm;">
     <span style="${ANCHOR_CSS}">SIG_ANCHOR:party_b</span>
     <p><strong>The Issuer, VERSO Capital 2 SCSP</strong>, duly represented by its general partner <strong>VERSO Capital 2 GP SARL</strong></p>
     <div class="signature-line" style="margin-top: 3cm;"></div>
@@ -1218,8 +1232,9 @@ async function handleEntityApproval(
 
                 // Page 12 - Main Agreement: Arranger signature with anchor
                 // Increased spacing: min-height 4cm, margin-top 3cm for ~85pt signature space
+                // Parent div needs position:relative for anchor's position:absolute to work
                 const arrangerSignatureHtml = `
-<div class="signature-block" style="margin-bottom: 1.5cm; min-height: 4cm;">
+<div class="signature-block" style="position:relative;margin-bottom: 1.5cm; min-height: 4cm;">
     <span style="${ANCHOR_CSS}">SIG_ANCHOR:party_c</span>
     <p><strong>The Attorney, Verso Management Ltd.</strong>, for the purpose of the powers granted under Clause 6</p>
     <div class="signature-line" style="margin-top: 3cm;"></div>

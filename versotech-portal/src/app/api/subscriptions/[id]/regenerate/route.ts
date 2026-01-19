@@ -3,6 +3,7 @@ import { auditLogger, AuditActions, AuditEntities } from '@/lib/audit'
 import { NextResponse } from 'next/server'
 import { triggerWorkflow } from '@/lib/trigger-workflow'
 import { convertDocxToPdf } from '@/lib/gotenberg/convert'
+import { getCeoSigner } from '@/lib/staff/ceo-signer'
 
 const STAFF_ROLES = ['staff_admin', 'staff_ops', 'staff_rm', 'ceo']
 
@@ -231,27 +232,69 @@ export async function POST(
     }
 
     // Generate pre-rendered HTML for signatories (n8n doesn't support Handlebars {{#each}})
+    // ANCHOR ID CONVENTION: First subscriber is 'party_a', subsequent are 'party_a_2', 'party_a_3', etc.
+    const getAnchorId = (number: number, suffix?: string): string => {
+      const base = number === 1 ? 'party_a' : `party_a_${number}`
+      return suffix ? `${base}_${suffix}` : base
+    }
+
+    // ANCHOR CSS: Invisible anchors for PDF signature positioning
+    //
+    // APPROACH: Use off-page positioning to completely hide anchor text
+    // - position:absolute;left:-9999px moves anchor off-page (invisible)
+    // - font-size:1px ensures minimal space even if positioning fails
+    //
+    // WHY THIS APPROACH:
+    // Previous approach using color:#ffffff (white text) didn't work because:
+    // 1. PDF renderer may not use pure white backgrounds
+    // 2. Anchor text in table cells with slight gray backgrounds was visible
+    // 3. The white text still appeared as visual artifacts in the PDF
+    //
+    // IMPORTANT: Anchors are now used ONLY for page detection (which page needs a signature).
+    // Y positions are FIXED values in anchor-detector.ts getFixedYPosition().
+    // This means anchor extraction accuracy is less critical - we mainly need page numbers.
+    const ANCHOR_CSS = 'position:absolute;left:-9999px;font-size:1px;'
+
+    // Page 2 - Subscription Form: Subscriber signatures with anchors (right column)
+    // Parent div needs position:relative for anchor's position:absolute to work
+    const signatoriesFormHtml = signatories.map(s => `
+            <div style="position:relative;margin-bottom: 0.5cm;">
+                <span style="${ANCHOR_CSS}">SIG_ANCHOR:${getAnchorId(s.number, 'form')}</span>
+                <div class="signature-line"></div>
+                Name: ${s.name}<br>
+                Title: ${s.title}
+            </div>`).join('')
+
+    // Page 12 - Main Agreement: Subscriber signatures with anchors
+    // Increased spacing: margin-bottom 1.5cm, min-height 4cm, margin-top 3cm on signature line
+    // This provides ~85pt of space for signature image (50pt) + timestamp (12pt) + name (12pt) + buffer (10pt)
+    // Parent div needs position:relative for anchor's position:absolute to work
+    const signatoriesSignatureHtml = signatories.map(s => `
+<div class="signature-block" style="position:relative;margin-bottom: 1.5cm; min-height: 4cm;">
+    <span style="${ANCHOR_CSS}">SIG_ANCHOR:${getAnchorId(s.number)}</span>
+    <p><strong>The Subscriber</strong>, represented by Authorized Signatory ${s.number}</p>
+    <div class="signature-line" style="margin-top: 3cm;"></div>
+    <p style="margin-top: 0.3cm;">Name: ${s.name}<br>
+    Title: ${s.title}</p>
+</div>`).join('')
+
+    // Page 40 - Appendix: Subscriber signatures with anchors
+    // Parent div needs position:relative for anchor's position:absolute to work
+    const signatoriesAppendixHtml = signatories.map(s => `
+    <div style="position:relative;margin-bottom: 0.5cm;">
+        <span style="${ANCHOR_CSS}">SIG_ANCHOR:${getAnchorId(s.number, 'appendix')}</span>
+        <div class="signature-line"></div>
+        <p>Name: ${s.name}<br>
+        Title: ${s.title}</p>
+    </div>`).join('')
+
+    // Legacy: Keep signatoriesTableHtml for backwards compatibility (no anchors)
     const signatoriesTableHtml = signatories.map(s => `
             <div style="margin-bottom: 0.5cm;">
                 <div class="signature-line"></div>
                 Name: ${s.name}<br>
                 Title: ${s.title}
             </div>`).join('')
-
-    const signatoriesSignatureHtml = signatories.map(s => `
-<div class="signature-block" style="margin-bottom: 0.8cm;">
-    <p><strong>The Subscriber</strong>, represented by Authorized Signatory ${s.number}</p>
-    <div class="signature-line"></div>
-    <p>Name: ${s.name}<br>
-    Title: ${s.title}</p>
-</div>`).join('')
-
-    const signatoriesAppendixHtml = signatories.map(s => `
-    <div style="margin-bottom: 0.5cm;">
-        <div class="signature-line"></div>
-        <p>Name: ${s.name}<br>
-        Title: ${s.title}</p>
-    </div>`).join('')
 
     // Fetch fee structure for the deal (get most recent published one)
     const { data: feeStructure } = await serviceSupabase
@@ -269,6 +312,98 @@ export async function POST(
         { status: 400 }
       )
     }
+
+    // ============================================================
+    // FETCH ACTUAL SIGNERS FROM DATABASE (no more hardcoded names!)
+    // ============================================================
+
+    // Get CEO signer for issuer block (party_b)
+    const ceoSigner = await getCeoSigner(serviceSupabase)
+    const issuerName = ceoSigner?.displayName || feeStructure.issuer_signatory_name || ''
+    const issuerTitle = ceoSigner?.title || feeStructure.issuer_signatory_title || 'Authorized Signatory'
+    console.log('[REGENERATE] Issuer signer:', { name: issuerName, title: issuerTitle })
+
+    // Get arranger signer for arranger block (party_c)
+    let arrangerName = feeStructure.arranger_person_name || ''
+    let arrangerTitle = feeStructure.arranger_person_title || 'Director'
+
+    // Fetch arranger from deal's arranger entity
+    const { data: dealForArranger } = await serviceSupabase
+      .from('deals')
+      .select('arranger_entity_id')
+      .eq('id', subscription.deal_id)
+      .single()
+
+    if (dealForArranger?.arranger_entity_id) {
+      // Get arranger user who can sign
+      const { data: arrangerUser } = await serviceSupabase
+        .from('arranger_users')
+        .select('user_id, title')
+        .eq('arranger_id', dealForArranger.arranger_entity_id)
+        .eq('can_sign', true)
+        .order('is_primary', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+      if (arrangerUser?.user_id) {
+        const { data: arrangerProfile } = await serviceSupabase
+          .from('profiles')
+          .select('display_name')
+          .eq('id', arrangerUser.user_id)
+          .single()
+
+        if (arrangerProfile?.display_name) {
+          arrangerName = arrangerProfile.display_name
+          arrangerTitle = arrangerUser.title || arrangerTitle
+          console.log('[REGENERATE] Arranger signer found:', { name: arrangerName, title: arrangerTitle })
+        }
+      }
+    }
+
+    // Hardcoded fallback if no arranger name found from any source
+    // This ensures the arranger block is never empty
+    if (!arrangerName) {
+      arrangerName = 'Julien Machot'
+      console.warn('[REGENERATE] Using hardcoded arranger fallback: Julien Machot')
+    }
+    console.log('[REGENERATE] Arranger signer:', { name: arrangerName, title: arrangerTitle })
+
+    // DEBUG: Log the ANCHOR_CSS to verify it's correct
+    console.log('[REGENERATE] ANCHOR_CSS:', ANCHOR_CSS)
+
+    // Pre-rendered HTML for issuer (party_b) and arranger (party_c) signature blocks
+    // These include SIG_ANCHOR markers for signature positioning
+    // Page 12 - Main Agreement: Issuer signature with anchor
+    // Increased spacing: min-height 4cm, margin-top 3cm for ~85pt signature space
+    // Parent div needs position:relative for anchor's position:absolute to work
+    const issuerSignatureHtml = `
+<div class="signature-block" style="position:relative;margin-bottom: 1.5cm; min-height: 4cm;">
+    <span style="${ANCHOR_CSS}">SIG_ANCHOR:party_b</span>
+    <p><strong>The Issuer, VERSO Capital 2 SCSP</strong>, duly represented by its general partner <strong>VERSO Capital 2 GP SARL</strong></p>
+    <div class="signature-line" style="margin-top: 3cm;"></div>
+    <p style="margin-top: 0.3cm;">Name: ${issuerName}<br>
+    Title: ${issuerTitle}</p>
+</div>`
+
+    // Page 12 - Main Agreement: Arranger signature with anchor
+    // Increased spacing: min-height 4cm, margin-top 3cm for ~85pt signature space
+    // Parent div needs position:relative for anchor's position:absolute to work
+    const arrangerSignatureHtml = `
+<div class="signature-block" style="position:relative;margin-bottom: 1.5cm; min-height: 4cm;">
+    <span style="${ANCHOR_CSS}">SIG_ANCHOR:party_c</span>
+    <p><strong>The Attorney, Verso Management Ltd.</strong>, for the purpose of the powers granted under Clause 6</p>
+    <div class="signature-line" style="margin-top: 3cm;"></div>
+    <p style="margin-top: 0.3cm;">Name: ${arrangerName}<br>
+    Title: ${arrangerTitle}</p>
+</div>`
+
+    // DEBUG: Log the generated HTML to verify anchors are present
+    console.log('[REGENERATE] ========== SIGNATURE HTML DEBUG ==========')
+    console.log('[REGENERATE] ANCHOR_CSS used:', ANCHOR_CSS)
+    console.log('[REGENERATE] issuerSignatureHtml contains party_b:', issuerSignatureHtml.includes('SIG_ANCHOR:party_b'))
+    console.log('[REGENERATE] arrangerSignatureHtml contains party_c:', arrangerSignatureHtml.includes('SIG_ANCHOR:party_c'))
+    console.log('[REGENERATE] arrangerSignatureHtml FULL:', arrangerSignatureHtml)
+    console.log('[REGENERATE] ==========================================')
 
     // === KEY DIFFERENCE: Use subscription.commitment (source of truth) ===
     const amount = Number(subscription.commitment) || 0
@@ -394,13 +529,13 @@ export async function POST(
       wire_arranger: feeStructure.exclusive_arranger || 'VERSO Management Ltd',
       wire_contact_email: feeStructure.wire_contact_email || 'subscription@verso.capital',
 
-      // Issuer info
+      // Issuer info (using dynamically fetched issuerName/issuerTitle)
       issuer_gp_name: vehicleData?.issuer_gp_name || 'VERSO Capital 2 GP SARL',
       issuer_gp_rcc_number: vehicleData?.issuer_gp_rcc_number || '',
       issuer_rcc_number: vehicleData?.issuer_rcc_number || '',
       issuer_website: vehicleData?.issuer_website || 'www.verso.capital',
-      issuer_name: feeStructure.issuer_signatory_name || 'Alexandre Müller',
-      issuer_title: feeStructure.issuer_signatory_title || 'Authorized Signatory',
+      issuer_name: issuerName,  // From getCeoSigner or feeStructure
+      issuer_title: issuerTitle, // From getCeoSigner or feeStructure
 
       // Dates & deadlines
       agreement_date: agreementDate,
@@ -411,9 +546,9 @@ export async function POST(
       // Recitals
       recital_b_html: feeStructure.recital_b_html || `(B) The Issuer intends to issue Certificates which shall track equity interests in ${dealData?.company_name || dealData?.name}, and the Subscriber intends to subscribe for ${numShares} Certificates.`,
 
-      // Arranger
-      arranger_name: feeStructure.arranger_person_name || 'Julien Machot',
-      arranger_title: feeStructure.arranger_person_title || 'Director',
+      // Arranger (using dynamically fetched arrangerName/arrangerTitle)
+      arranger_name: arrangerName,  // From arranger_users or feeStructure
+      arranger_title: arrangerTitle, // From arranger_users or feeStructure
       arranger_company_name: feeStructure.exclusive_arranger || 'VERSO Management',
 
       // LPA & Certificates details
@@ -428,9 +563,13 @@ export async function POST(
       accession_signatory_title: signatories[0]?.title || '',
 
       // Multi-signatory support: pre-rendered HTML (n8n doesn't support Handlebars loops)
-      signatories_table_html: signatoriesTableHtml,
-      signatories_signature_html: signatoriesSignatureHtml,
-      signatories_appendix_html: signatoriesAppendixHtml,
+      // All signature blocks include SIG_ANCHOR markers for precise signature positioning
+      signatories_table_html: signatoriesTableHtml,  // Legacy: no anchors
+      signatories_form_html: signatoriesFormHtml,    // Page 2: subscriber form signatures with anchors
+      signatories_signature_html: signatoriesSignatureHtml, // Page 12: subscriber main agreement signatures
+      signatories_appendix_html: signatoriesAppendixHtml,   // Page 40: subscriber appendix signatures
+      issuer_signature_html: issuerSignatureHtml,    // Page 12: issuer main agreement signature
+      arranger_signature_html: arrangerSignatureHtml, // Page 12: arranger main agreement signature
 
       // Regeneration flag (useful for N8N to know this is a regeneration)
       is_regeneration: true,
@@ -498,9 +637,13 @@ export async function POST(
           throw new Error('No binary data in n8n response')
         }
 
-        // Verify DOCX signature
+        // Check file signature to determine actual format
+        // PDF signature: 25504446 (%PDF)
+        // DOCX/ZIP signature: 504b0304 (PK)
         const signature = docxBuffer.slice(0, 4).toString('hex')
-        console.log('📄 Regenerated DOCX signature:', signature, 'size:', docxBuffer.length)
+        const isPDF = signature === '25504446'
+        const isDOCX = signature === '504b0304'
+        console.log('📄 N8N response file signature:', signature, isPDF ? '(PDF)' : isDOCX ? '(DOCX)' : '(unknown)', 'size:', docxBuffer.length)
 
         // Prepare final output based on requested format
         let fileBuffer: Buffer
@@ -508,27 +651,35 @@ export async function POST(
         let mimeType: string
 
         if (outputFormat === 'pdf') {
-          // Convert DOCX to PDF using Gotenberg
-          console.log('🔄 Converting DOCX to PDF via Gotenberg...')
-          const docxFileName = generateSubscriptionPackFilename(entityCode, investmentName, investorName, new Date(), 'docx')
-          const conversionResult = await convertDocxToPdf(docxBuffer, docxFileName)
+          if (isPDF) {
+            // N8N already returned PDF - use directly without Gotenberg conversion
+            console.log('✅ N8N returned PDF directly, skipping Gotenberg conversion')
+            fileBuffer = docxBuffer
+            fileName = generateSubscriptionPackFilename(entityCode, investmentName, investorName, new Date(), 'pdf')
+            mimeType = 'application/pdf'
+          } else {
+            // Convert DOCX to PDF using Gotenberg
+            console.log('🔄 Converting DOCX to PDF via Gotenberg...')
+            const docxFileName = generateSubscriptionPackFilename(entityCode, investmentName, investorName, new Date(), 'docx')
+            const conversionResult = await convertDocxToPdf(docxBuffer, docxFileName)
 
-          if (!conversionResult.success || !conversionResult.pdfBuffer) {
-            console.error('❌ Gotenberg conversion failed:', conversionResult.error)
-            return NextResponse.json({
-              error: 'Document generated but PDF conversion failed',
-              details: conversionResult.error || 'Conversion service unavailable'
-            }, { status: 500 })
+            if (!conversionResult.success || !conversionResult.pdfBuffer) {
+              console.error('❌ Gotenberg conversion failed:', conversionResult.error)
+              return NextResponse.json({
+                error: 'Document generated but PDF conversion failed',
+                details: conversionResult.error || 'Conversion service unavailable'
+              }, { status: 500 })
+            }
+
+            console.log('✅ DOCX converted to PDF:', {
+              docx_size: docxBuffer.length,
+              pdf_size: conversionResult.pdfBuffer.length
+            })
+
+            fileBuffer = conversionResult.pdfBuffer
+            fileName = generateSubscriptionPackFilename(entityCode, investmentName, investorName, new Date(), 'pdf')
+            mimeType = 'application/pdf'
           }
-
-          console.log('✅ DOCX converted to PDF:', {
-            docx_size: docxBuffer.length,
-            pdf_size: conversionResult.pdfBuffer.length
-          })
-
-          fileBuffer = conversionResult.pdfBuffer
-          fileName = generateSubscriptionPackFilename(entityCode, investmentName, investorName, new Date(), 'pdf')
-          mimeType = 'application/pdf'
         } else {
           // Keep as DOCX
           fileBuffer = docxBuffer
@@ -539,8 +690,9 @@ export async function POST(
         console.log('📄 Final document:', { format: outputFormat, fileName, size: fileBuffer.length })
 
         // Upload to Supabase Storage with regenerated- prefix
+        // Use service client to bypass RLS policies on storage bucket
         const fileKey = `subscriptions/${subscriptionId}/regenerated/${Date.now()}-${fileName}`
-        const { error: uploadError } = await supabase.storage
+        const { error: uploadError } = await serviceSupabase.storage
           .from('deal-documents')
           .upload(fileKey, fileBuffer, {
             contentType: mimeType,
@@ -561,17 +713,20 @@ export async function POST(
         let subscriptionFolderId: string | null = null
         const vehicleIdForFolder = subscription.vehicle_id || vehicleData?.id
         if (vehicleIdForFolder) {
-          const { data: subFolder } = await supabase
+          // Use limit(1).maybeSingle() to handle duplicates gracefully
+          const { data: subFolder } = await serviceSupabase
             .from('document_folders')
             .select('id')
             .eq('vehicle_id', vehicleIdForFolder)
             .eq('name', 'Subscription Documents')
-            .single()
+            .limit(1)
+            .maybeSingle()
           subscriptionFolderId = subFolder?.id || null
+          console.log('[REGENERATE] Folder lookup:', { vehicleIdForFolder, subscriptionFolderId })
         }
 
-        // Create document record
-        const { data: docRecord, error: docError } = await supabase
+        // Create document record (use service client to bypass RLS)
+        const { data: docRecord, error: docError } = await serviceSupabase
           .from('documents')
           .insert({
             subscription_id: subscriptionId,
@@ -597,8 +752,8 @@ export async function POST(
           console.log('✅ Regenerated document record created:', docRecord.id)
         }
 
-        // Update subscription pack_generated_at
-        await supabase
+        // Update subscription pack_generated_at (use service client to bypass RLS)
+        await serviceSupabase
           .from('subscriptions')
           .update({ pack_generated_at: new Date().toISOString() })
           .eq('id', subscriptionId)

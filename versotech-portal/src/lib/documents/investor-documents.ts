@@ -18,6 +18,7 @@ interface RawDocument {
   type: string
   file_key: string
   file_size_bytes: number | null
+  mime_type: string | null
   created_at: string
   watermark: Record<string, unknown> | null
   vehicle_id: string | null
@@ -47,6 +48,7 @@ const BASE_DOCUMENT_SELECT = `
   type,
   file_key,
   file_size_bytes,
+  mime_type,
   created_at,
   watermark,
   vehicle_id,
@@ -119,6 +121,7 @@ export async function loadInvestorDocuments(
         file_name: fileName,
         file_key: doc.file_key,
         file_size_bytes: doc.file_size_bytes ?? undefined,
+        mime_type: doc.mime_type ?? undefined,
         created_at: doc.created_at,
         created_by: doc.created_by_profile ?? undefined,
         scope,

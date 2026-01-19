@@ -337,75 +337,82 @@ export async function createSignatureRequest(
     // MULTI-PAGE SIGNATURE PLACEMENTS
     // For subscription documents, detect anchor positions from the PDF
     // Each signer may need their signature on multiple pages (e.g., page 12 + page 40)
-    if (document_type === 'subscription' && params.document_id) {
-      console.log('🔍 [SIGNATURE] Attempting anchor detection for document:', params.document_id)
-
-      try {
-        // Fetch PDF bytes from storage for anchor detection
-        const pdfBytes = await fetchDocumentPdf(params.document_id, supabase)
-
-        if (pdfBytes) {
-          // Detect anchors in the PDF
-          const anchors = await detectAnchors(pdfBytes)
-          console.log(`📊 [SIGNATURE] Found ${anchors.length} anchors in PDF`)
-
-          // Get placements for this specific signer using anchor positions
-          const placements = getPlacementsFromAnchors(anchors, signature_position)
-
-          if (placements.length > 0) {
-            insertData.signature_placements = placements
-            console.log('📐 [SIGNATURE] Anchor-based signature placements:', {
-              position: signature_position,
-              placements: placements.map(p => `page ${p.page} at (${(p.x * 100).toFixed(1)}%, ${p.y.toFixed(0)}pt) - ${p.label}`).join(', ')
-            })
-          } else {
-            // FALLBACK: If no anchors found for this position, use hardcoded positions
-            console.warn(`⚠️ [SIGNATURE] No anchors found for ${signature_position}, falling back to hardcoded positions`)
-            const subscriberCount = params.total_party_a_signatories || 1
-            const fallbackPlacements = getPlacementsForPosition(subscriberCount, signature_position)
-            if (fallbackPlacements.length > 0) {
-              insertData.signature_placements = fallbackPlacements
-              console.log('📐 [SIGNATURE] Using fallback hardcoded placements:', {
-                position: signature_position,
-                placements: fallbackPlacements.map(p => `page ${p.page} (${p.label})`).join(', ')
-              })
-            }
-          }
-        } else {
-          // PDF not found - use hardcoded positions as fallback
-          console.warn('⚠️ [SIGNATURE] Could not fetch PDF for anchor detection, using hardcoded positions')
-          const subscriberCount = params.total_party_a_signatories || 1
-          const placements = getPlacementsForPosition(subscriberCount, signature_position)
-          if (placements.length > 0) {
-            insertData.signature_placements = placements
-            console.log('📐 [SIGNATURE] Using hardcoded placements (no PDF):', {
-              position: signature_position,
-              placements: placements.map(p => `page ${p.page} (${p.label})`).join(', ')
-            })
-          }
-        }
-      } catch (anchorError) {
-        // Anchor detection failed - use hardcoded positions as fallback
-        console.error('❌ [SIGNATURE] Anchor detection failed:', anchorError)
-        console.warn('⚠️ [SIGNATURE] Falling back to hardcoded positions')
-        const subscriberCount = params.total_party_a_signatories || 1
-        const placements = getPlacementsForPosition(subscriberCount, signature_position)
-        if (placements.length > 0) {
-          insertData.signature_placements = placements
+    // NO FALLBACK - if anchors aren't found, the document is broken and we FAIL LOUDLY
+    if (document_type === 'subscription') {
+      if (!params.document_id) {
+        console.error('❌ [SIGNATURE] CRITICAL: No document_id provided for subscription signature')
+        return {
+          success: false,
+          error: 'Subscription signature requires document_id for anchor detection'
         }
       }
-    } else if (document_type === 'subscription') {
-      // No document_id provided - use hardcoded positions
-      console.log('📐 [SIGNATURE] No document_id, using hardcoded positions')
-      const subscriberCount = params.total_party_a_signatories || 1
-      const placements = getPlacementsForPosition(subscriberCount, signature_position)
-      if (placements.length > 0) {
-        insertData.signature_placements = placements
-        console.log('📐 [SIGNATURE] Stored hardcoded signature placements:', {
-          position: signature_position,
-          placements: placements.map(p => `page ${p.page} (${p.label})`).join(', ')
-        })
+
+      console.log('🔍 [SIGNATURE] Detecting signature anchors for document:', params.document_id)
+
+      // Fetch PDF bytes from storage for anchor detection
+      const pdfBytes = await fetchDocumentPdf(params.document_id, supabase)
+
+      if (!pdfBytes) {
+        console.error('❌ [SIGNATURE] CRITICAL: Could not fetch PDF for anchor detection')
+        return {
+          success: false,
+          error: 'Failed to fetch PDF for signature anchor detection. Document may not exist in storage.'
+        }
       }
+
+      // Detect anchors in the PDF
+      const anchors = await detectAnchors(pdfBytes)
+      console.log(`📊 [SIGNATURE] Found ${anchors.length} total anchors in PDF`)
+
+      if (anchors.length === 0) {
+        console.error('❌ [SIGNATURE] CRITICAL: No SIG_ANCHOR markers found in PDF!')
+        console.error('   This means the PDF was generated without anchor markers.')
+        console.error('   The subscription pack template needs to be updated with anchors.')
+        return {
+          success: false,
+          error: 'PDF has no signature anchor markers. Please regenerate the subscription pack.'
+        }
+      }
+
+      // Get placements for this specific signer using anchor positions
+      const placements = getPlacementsFromAnchors(anchors, signature_position)
+
+      if (placements.length === 0) {
+        console.error(`❌ [SIGNATURE] CRITICAL: No anchors found for position "${signature_position}"`)
+        console.error(`   Available anchors: ${anchors.map(a => a.anchorId).join(', ')}`)
+        return {
+          success: false,
+          error: `No signature anchors found for ${signature_position}. Available: ${anchors.map(a => a.anchorId).join(', ')}`
+        }
+      }
+
+      // Validate expected placement counts for multi-page signatures
+      // party_c (arranger) should have 2 placements: page 12 (main agreement) + page 39 (T&Cs)
+      // party_b (issuer) should have 4 placements: page 2 (form) + page 3 (wire) + page 12 (main) + page 39 (T&Cs)
+      // party_a (subscriber) should have 3 placements: page 2 (form) + page 12 (main) + page 40 (appendix)
+      const expectedCounts: Record<string, number> = {
+        'party_c': 2,  // Page 12 + Page 39
+        'party_b': 4,  // Page 2 form + Page 3 wire + Page 12 main + Page 39 T&Cs
+        'party_a': 3,  // Page 2 form + Page 12 main + Page 40 appendix
+      }
+      const basePosition = signature_position.replace(/_\d+$/, '') as string
+      const expectedCount = expectedCounts[basePosition] || 1
+
+      if (placements.length < expectedCount) {
+        console.warn(`⚠️ [SIGNATURE] Placement count warning: Found ${placements.length}/${expectedCount} placements for ${signature_position}`)
+        console.warn(`   Expected ${expectedCount} placements but only found: ${placements.map(p => `page ${p.page}`).join(', ')}`)
+        console.warn(`   This may indicate missing anchors in the PDF template`)
+      } else {
+        console.log(`✅ [SIGNATURE] All ${placements.length} expected placements found for ${signature_position}`)
+      }
+
+      insertData.signature_placements = placements
+      console.log('📍 [SIGNATURE] Anchor-based signature placements:', {
+        position: signature_position,
+        count: placements.length,
+        expected: expectedCount,
+        placements: placements.map(p => `page ${p.page} at (${(p.x * 100).toFixed(1)}%, ${p.y.toFixed(0)}pt) - ${p.label}`).join(', ')
+      })
     }
 
     const { data: signatureRequest, error: insertError } = await supabase
@@ -473,16 +480,31 @@ export async function createSignatureRequest(
     }
     */
 
-    // Create task for staff signatures (admin, arranger roles) to appear in VERSOSign
+    // Create task for CEO/admin and arranger signatures to appear in VERSOSign
+    // - CEO tasks: owned by ceo_entity_id (found via owner_ceo_entity_id)
+    // - Arranger tasks: NOT owned by user (found via related_deal_id in arranger query)
     if (signer_role === 'admin' || signer_role === 'arranger') {
       console.log('📋 [SIGNATURE] Creating task for staff signature in VERSOSign')
 
-      // Find the staff user by email
+      // Find the staff user by email (for logging/context, not ownership)
       const { data: staffProfile, error: profileError } = await supabase
         .from('profiles')
         .select('id, display_name')
         .eq('email', signer_email)
         .single()
+
+      // For CEO/admin tasks, get the CEO entity ID for entity-based ownership
+      // This allows ALL CEO members to see the task, not just one user
+      let ceoEntityId: string | null = null
+      if (signer_role === 'admin') {
+        const { data: ceoEntity } = await supabase
+          .from('ceo_entity')
+          .select('id')
+          .limit(1)
+          .single()
+        ceoEntityId = ceoEntity?.id || null
+        console.log('📋 [SIGNATURE] CEO entity for task ownership:', ceoEntityId)
+      }
 
       if (staffProfile && !profileError) {
         // Build rich task title and description with subscription/deal context
@@ -518,8 +540,16 @@ export async function createSignatureRequest(
         descriptionParts.push(`\n• Created: ${dateFormatted}`)
         const richDescription = descriptionParts.join('')
 
+        // Task ownership based on role:
+        // - CEO/admin: owner_ceo_entity_id (all CEO members see it)
+        // - Arranger: NO owner (found via related_deal_id, not owner_user_id)
+        //   This prevents arranger tasks from showing in staff VERSOsign view
+        const taskOwnership = signer_role === 'admin' && ceoEntityId
+          ? { owner_user_id: null, owner_ceo_entity_id: ceoEntityId }
+          : { owner_user_id: null, owner_ceo_entity_id: null }  // Arranger: no ownership, use related_deal_id
+
         const { error: taskError } = await supabase.from('tasks').insert({
-          owner_user_id: staffProfile.id,
+          ...taskOwnership,
           kind: 'countersignature',
           category: 'signatures',
           title: richTitle,
@@ -1633,19 +1663,19 @@ async function fetchDocumentPdf(
     // Get document record to find storage path
     const { data: doc, error: docError } = await supabase
       .from('documents')
-      .select('storage_path, file_key')
+      .select('file_key')
       .eq('id', documentId)
       .single()
 
     if (docError || !doc) {
-      console.warn('⚠️ [SIGNATURE] Document not found:', documentId)
+      console.warn('⚠️ [SIGNATURE] Document not found:', documentId, docError?.message)
       return null
     }
 
-    // Use file_key (preferred) or storage_path
-    const storagePath = doc.file_key || doc.storage_path
+    // Use file_key for storage path
+    const storagePath = doc.file_key
     if (!storagePath) {
-      console.warn('⚠️ [SIGNATURE] No storage path found for document:', documentId)
+      console.warn('⚠️ [SIGNATURE] No file_key found for document:', documentId)
       return null
     }
 

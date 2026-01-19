@@ -26,6 +26,7 @@ import { Loader2, Plus, Copy, Rocket, Archive, Pencil, Upload, FileCheck, Users,
 import FeePlanEditModal from '@/components/fees/FeePlanEditModal'
 import { DocumentViewerFullscreen } from '@/components/documents/DocumentViewerFullscreen'
 import type { DocumentReference } from '@/types/document-viewer.types'
+import { usePersona } from '@/contexts/persona-context'
 
 type TermSheet = Record<string, any>
 
@@ -84,6 +85,8 @@ const emptyForm = {
   structure: '',
   allocation_up_to: '',
   price_per_share_text: '',
+  price_per_share: '',
+  cost_per_share: '',
   minimum_ticket: '',
   subscription_fee_percent: '',
   management_fee_percent: '',
@@ -112,6 +115,8 @@ function mapTermSheetToForm(termSheet?: TermSheet): FormState {
     structure: termSheet.structure ?? '',
     allocation_up_to: termSheet.allocation_up_to ?? '',
     price_per_share_text: termSheet.price_per_share_text ?? '',
+    price_per_share: termSheet.price_per_share != null ? String(termSheet.price_per_share) : '',
+    cost_per_share: termSheet.cost_per_share != null ? String(termSheet.cost_per_share) : '',
     minimum_ticket: termSheet.minimum_ticket ?? '',
     subscription_fee_percent: termSheet.subscription_fee_percent ?? '',
     management_fee_percent: termSheet.management_fee_percent ?? '',
@@ -146,6 +151,8 @@ function buildPayload(values: FormState) {
     structure: values.structure || null,
     allocation_up_to: toNumber(values.allocation_up_to),
     price_per_share_text: values.price_per_share_text || null,
+    price_per_share: toNumber(values.price_per_share),
+    cost_per_share: toNumber(values.cost_per_share),
     minimum_ticket: toNumber(values.minimum_ticket),
     subscription_fee_percent: toNumber(values.subscription_fee_percent),
     management_fee_percent: toNumber(values.management_fee_percent),
@@ -187,6 +194,10 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
 
   // PDF generation state
   const [generatingId, setGeneratingId] = useState<string | null>(null)
+
+  // Persona for CEO/staff visibility of cost fields
+  const { isCEO, isStaff } = usePersona()
+  const canViewCost = isCEO || isStaff
 
   useEffect(() => {
     setItems(termSheets ?? [])
@@ -1323,13 +1334,89 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="price_per_share_text">Price per Share</Label>
+                <Label htmlFor="price_per_share_text">Price per Share (Display Text)</Label>
                 <Input
                   id="price_per_share_text"
+                  placeholder="e.g., £10.00 per share"
                   value={formValues.price_per_share_text}
                   onChange={event => setFormValues(prev => ({ ...prev, price_per_share_text: event.target.value }))}
                 />
+                <p className="text-xs text-muted-foreground">
+                  Display text for investors (e.g., "£10.00 per share", "~$15-20")
+                </p>
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="price_per_share">Price per Share (Numeric)</Label>
+                <Input
+                  id="price_per_share"
+                  type="number"
+                  step="0.01"
+                  placeholder="e.g., 10.00"
+                  value={formValues.price_per_share}
+                  onChange={event => setFormValues(prev => ({ ...prev, price_per_share: event.target.value }))}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Used for subscription calculations
+                </p>
+              </div>
+            </div>
+
+            {/* Cost & Spread - CEO/Staff only */}
+            {canViewCost && (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 rounded-lg bg-amber-500/5 border border-amber-500/20">
+                <div className="space-y-2">
+                  <Label htmlFor="cost_per_share" className="text-amber-200">Cost per Share (Internal)</Label>
+                  <Input
+                    id="cost_per_share"
+                    type="number"
+                    step="0.01"
+                    placeholder="e.g., 8.00"
+                    value={formValues.cost_per_share}
+                    onChange={event => setFormValues(prev => ({ ...prev, cost_per_share: event.target.value }))}
+                    className="border-amber-500/30"
+                  />
+                  <p className="text-xs text-amber-200/70">
+                    VERSO's acquisition cost (not shown to investors)
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-amber-200">Spread per Share</Label>
+                  <div className="h-10 px-3 rounded-md bg-background/50 border border-amber-500/30 flex items-center text-sm font-medium">
+                    {(() => {
+                      const price = parseFloat(formValues.price_per_share) || 0
+                      const cost = parseFloat(formValues.cost_per_share) || 0
+                      if (price > 0 && cost > 0) {
+                        const spread = price - cost
+                        return `${spread.toFixed(2)}`
+                      }
+                      return '—'
+                    })()}
+                  </div>
+                  <p className="text-xs text-amber-200/70">
+                    Calculated: price − cost
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-amber-200">Margin %</Label>
+                  <div className="h-10 px-3 rounded-md bg-background/50 border border-amber-500/30 flex items-center text-sm font-medium">
+                    {(() => {
+                      const price = parseFloat(formValues.price_per_share) || 0
+                      const cost = parseFloat(formValues.cost_per_share) || 0
+                      if (price > 0 && cost > 0) {
+                        const margin = ((price - cost) / cost) * 100
+                        return `${margin.toFixed(1)}%`
+                      }
+                      return '—'
+                    })()}
+                  </div>
+                  <p className="text-xs text-amber-200/70">
+                    Margin on cost
+                  </p>
+                </div>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="minimum_ticket">Minimum Ticket</Label>
                 <Input

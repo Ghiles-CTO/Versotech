@@ -39,7 +39,7 @@ const DOCUMENT_CATEGORIES = {
     icon: FileCheck,
     color: 'blue',
     description: 'Subscription agreements, LPAs, side letters',
-    types: ['Subscription', 'Agreement', 'subscription', 'agreement', 'subscription_pack']
+    types: ['Subscription', 'Agreement', 'subscription', 'agreement', 'subscription_pack', 'subscription_draft']
   },
   statements: {
     id: 'statements',

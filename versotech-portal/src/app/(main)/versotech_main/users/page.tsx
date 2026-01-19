@@ -4,8 +4,8 @@ import { Suspense } from 'react'
 import { Loader2 } from 'lucide-react'
 import dynamic from 'next/dynamic'
 
-const UnifiedUsersContent = dynamic(
-  () => import('./unified-users-content'),
+const UsersPageClient = dynamic(
+  () => import('./users-page-client'),
   {
     loading: () => <LoadingState />,
     ssr: false
@@ -22,36 +22,32 @@ function LoadingState() {
 }
 
 /**
- * Unified Users Page for Versotech Portal
+ * Users Management Page for Versotech Portal
  *
- * Single page to view and manage ALL user types in one place:
- * - Investors
- * - Lawyers
- * - Partners
- * - Commercial Partners
- * - Introducers
- * - Arrangers
- *
- * Features:
- * - Single API call fetches all user types
- * - Filter by type, status
- * - Search across all fields
+ * Comprehensive view of all platform users (people with logins):
+ * - View all profiles from the profiles table
+ * - See entity associations per user
+ * - View KYC status where applicable
+ * - Advanced filtering, sorting, and pagination
  * - Export to CSV
+ *
+ * This page shows "Users" (people with logins).
+ * For business entities, see the Accounts page.
  */
 export default function UsersPage() {
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">All Users</h1>
+          <h1 className="text-2xl font-bold text-foreground">Users</h1>
           <p className="text-muted-foreground mt-1">
-            Complete directory of all platform users and entities
+            Manage platform users and their access
           </p>
         </div>
       </div>
 
       <Suspense fallback={<LoadingState />}>
-        <UnifiedUsersContent />
+        <UsersPageClient />
       </Suspense>
     </div>
   )

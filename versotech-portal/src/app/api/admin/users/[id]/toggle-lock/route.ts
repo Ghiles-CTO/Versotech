@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { getCurrentUser } from '@/lib/auth'
+import { isSuperAdmin } from '@/lib/api-auth'
+import { auditLogger, AuditEntities } from '@/lib/audit'
 
 // NOTE: Lock functionality uses deleted_at as a soft-delete/deactivation mechanism
 // Since profiles table doesn't have an is_locked column, we use deleted_at instead
@@ -13,21 +15,15 @@ export async function PATCH(
   try {
     const user = await getCurrentUser()
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
     }
 
     const supabase = createServiceClient()
 
-    // Check if user is super admin
-    const { data: permission } = await supabase
-      .from('staff_permissions')
-      .select('permission')
-      .eq('user_id', user.id)
-      .eq('permission', 'super_admin')
-      .single()
-
-    if (!permission) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    // Check if user is super admin OR CEO (using centralized auth helper)
+    const hasAccess = await isSuperAdmin(supabase, user.id)
+    if (!hasAccess) {
+      return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 })
     }
 
     const { id: targetUserId } = await params
@@ -35,7 +31,7 @@ export async function PATCH(
     // Cannot lock yourself
     if (targetUserId === user.id) {
       return NextResponse.json(
-        { error: 'Cannot lock your own account' },
+        { success: false, error: 'Cannot lock your own account' },
         { status: 400 }
       )
     }
@@ -43,12 +39,12 @@ export async function PATCH(
     // Get current status (using deleted_at as lock indicator)
     const { data: targetUser, error: userError } = await supabase
       .from('profiles')
-      .select('deleted_at, email')
+      .select('deleted_at, email, display_name')
       .eq('id', targetUserId)
       .single()
 
     if (userError || !targetUser) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+      return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 })
     }
 
     const isCurrentlyLocked = targetUser.deleted_at !== null
@@ -61,26 +57,30 @@ export async function PATCH(
       .eq('id', targetUserId)
 
     if (updateError) {
-      console.error('Toggle lock error:', updateError)
-      return NextResponse.json({ error: 'Failed to update user' }, { status: 500 })
+      console.error('[toggle-lock] Update error:', updateError)
+      return NextResponse.json({ success: false, error: 'Failed to update user' }, { status: 500 })
     }
 
-    // Log the action
-    await supabase.from('audit_logs').insert({
-      actor_id: user.id,
+    // Log the action using standardized audit logger
+    await auditLogger.log({
+      actor_user_id: user.id,
       action: newLockStatus ? 'user_locked' : 'user_unlocked',
-      entity_type: 'user',
+      entity: AuditEntities.USERS,
       entity_id: targetUserId,
-      before_value: { locked: isCurrentlyLocked },
-      after_value: { locked: newLockStatus },
+      metadata: {
+        target_email: targetUser.email,
+        target_name: targetUser.display_name,
+        previous_status: isCurrentlyLocked ? 'locked' : 'unlocked',
+        new_status: newLockStatus ? 'locked' : 'unlocked'
+      }
     })
 
     return NextResponse.json({
       success: true,
-      data: { is_locked: newLockStatus },
+      data: { is_locked: newLockStatus }
     })
   } catch (error) {
-    console.error('Toggle lock API error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    console.error('[toggle-lock] API error:', error)
+    return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 })
   }
 }

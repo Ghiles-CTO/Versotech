@@ -5,6 +5,7 @@ import type { SignatureGroup, SignatureTask, ExpiredSignature } from '@/app/(sta
 // IntroducerAgreementSigningSection removed - introducer agreements now use standard task flow
 import { PlacementAgreementSigningSection } from './placement-agreement-signing-section'
 import { checkStaffAccess } from '@/lib/auth'
+import { cookies } from 'next/headers'
 
 export const dynamic = 'force-dynamic'
 
@@ -66,6 +67,16 @@ export default async function VersoSignPage() {
   const isArranger = personas?.some((p: any) => p.persona_type === 'arranger') || false
   const isPartner = personas?.some((p: any) => p.persona_type === 'partner') || false
 
+  // Get ACTIVE persona from cookie - filter tasks by active persona only
+  const cookieStore = await cookies()
+  const activePersonaType = cookieStore.get('verso_active_persona_type')?.value
+
+  // Determine which persona queries should run based on ACTIVE persona
+  const shouldShowStaffTasks = isStaff && (activePersonaType === 'ceo' || activePersonaType === 'staff' || !activePersonaType)
+  const shouldShowArrangerTasks = isArranger && activePersonaType === 'arranger'
+  const shouldShowInvestorTasks = activePersonaType === 'investor'
+  const shouldShowLawyerTasks = isLawyer && activePersonaType === 'lawyer'
+
   // Get partner IDs if user has partner persona
   let partnerIds: string[] = []
   if (isPartner) {
@@ -94,6 +105,24 @@ export default async function VersoSignPage() {
       .select('introducer_id')
       .eq('user_id', user.id)
     introducerIds = introducerLinks?.map(link => link.introducer_id) || []
+  }
+
+  // Get CEO entity ID if user is a CEO member
+  // This allows CEO members to see tasks owned by the CEO entity
+  let ceoEntityId: string | null = null
+  const { data: ceoMembership } = await serviceSupabase
+    .from('ceo_users')
+    .select('user_id')
+    .eq('user_id', user.id)
+    .maybeSingle()
+
+  if (ceoMembership) {
+    const { data: ceoEntity } = await serviceSupabase
+      .from('ceo_entity')
+      .select('id')
+      .limit(1)
+      .single()
+    ceoEntityId = ceoEntity?.id || null
   }
 
   // Introducer agreements now use standard task flow - no separate section needed
@@ -183,19 +212,31 @@ export default async function VersoSignPage() {
     }
   }
 
-  // 1. Staff: See their OWN signature tasks (not all tasks in the system)
-  if (isStaff) {
-    const { data: staffTasks } = await serviceSupabase
+  // 1. Staff/CEO: See their OWN signature tasks AND tasks owned by CEO entity (if CEO member)
+  // ONLY runs if active persona is ceo/staff
+  if (shouldShowStaffTasks) {
+    // Build query for staff tasks: user-owned OR CEO-entity-owned (if user is CEO member)
+    let staffTasksQuery = serviceSupabase
       .from('tasks')
       .select('*')
-      .eq('owner_user_id', user.id)
       .in('kind', ['countersignature', 'subscription_pack_signature', 'other'])
       .order('due_at', { ascending: true, nullsFirst: false })
+
+    if (ceoEntityId) {
+      // CEO member: see both user-owned AND CEO-entity-owned tasks
+      staffTasksQuery = staffTasksQuery.or(`owner_user_id.eq.${user.id},owner_ceo_entity_id.eq.${ceoEntityId}`)
+    } else {
+      // Non-CEO staff: only see their own tasks
+      staffTasksQuery = staffTasksQuery.eq('owner_user_id', user.id)
+    }
+
+    const { data: staffTasks } = await staffTasksQuery
     addTasksWithDedup(staffTasks || [])
   }
 
   // 2. Lawyer: See subscription_pack_signature tasks for assigned deals
-  if (isLawyer && lawyerIds.length > 0) {
+  // ONLY runs if active persona is lawyer
+  if (shouldShowLawyerTasks && lawyerIds.length > 0) {
     const { data: lawyerAssignments } = await serviceSupabase
       .from('deal_lawyer_assignments')
       .select('deal_id')
@@ -215,7 +256,8 @@ export default async function VersoSignPage() {
   }
 
   // 3. Investor: Tasks owned by user OR by their investor entities
-  if (investorIds.length > 0) {
+  // ONLY runs if active persona is investor
+  if (shouldShowInvestorTasks && investorIds.length > 0) {
     const { data: investorTasks } = await serviceSupabase
       .from('tasks')
       .select('*')
@@ -226,7 +268,10 @@ export default async function VersoSignPage() {
   }
 
   // 4. Arranger: Tasks for their mandates (deals they arrange)
-  if (isArranger && arrangerIds.length > 0) {
+  // ONLY runs if active persona is arranger
+  // IMPORTANT: Exclude CEO-owned tasks (owner_ceo_entity_id IS NOT NULL) to prevent
+  // arranger seeing CEO countersign tasks when both are on the same deal
+  if (shouldShowArrangerTasks && arrangerIds.length > 0) {
     const { data: arrangerDeals } = await serviceSupabase
       .from('deals')
       .select('id')
@@ -239,7 +284,8 @@ export default async function VersoSignPage() {
         .from('tasks')
         .select('*')
         .in('kind', ['countersignature', 'subscription_pack_signature'])
-        .or(`owner_user_id.eq.${user.id},related_deal_id.in.(${arrangerDealIds.join(',')})`)
+        .in('related_deal_id', arrangerDealIds)
+        .is('owner_ceo_entity_id', null)  // Exclude CEO tasks
         .order('due_at', { ascending: true, nullsFirst: false })
       addTasksWithDedup(arrangerTasks || [])
     }

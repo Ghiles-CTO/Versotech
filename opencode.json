@@ -1,6 +1,6 @@
 {
   "mcp": {
-    "supabase": {
+    "supabase-old": {
       "type": "local",
       "command": [
         "npx",
@@ -9,8 +9,28 @@
         "--project-ref=ipguxdssecfexudnvtia"
       ],
       "environment": {
-        "SUPABASE_ACCESS_TOKEN": "sbp_640cee4b402a7897fcecc7f66bb8577351edb7d7"
+        "SUPABASE_ACCESS_TOKEN": "sbp_20bd5d2289cf105338f2452c367375765d3d947a"
       }
+    },
+    "supabase": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "@supabase/mcp-server-supabase@latest",
+        "--project-ref=kagzryotbbnusdcyvqei"
+      ],
+      "environment": {
+        "SUPABASE_ACCESS_TOKEN": "sbp_20bd5d2289cf105338f2452c367375765d3d947a"
+      }
+    },
+    "pw": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "@executeautomation/playwright-mcp-server"
+      ]
     }
   },
   "$schema": "https://opencode.ai/config.json"

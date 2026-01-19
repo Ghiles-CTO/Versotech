@@ -175,21 +175,45 @@ export async function canEntityInvest(
     })
   }
 
-  // 3. Get member KYC status from kyc_submissions table
-  // For investors, member KYC is tracked via kyc_submissions.investor_member_id
-  const memberUserIds = signatoriesToCheck.map(m => m.user_id)
+  // 3. Get member KYC status
+  // We need to check investor_members table since kyc_submissions.investor_member_id
+  // references investor_members.id (not user_id from investor_users)
 
-  // Query KYC submissions for these members
-  // A member has approved KYC if they have at least one approved KYC submission
+  // Get investor_members to map user emails to member IDs
+  const { data: investorMembers } = await supabase
+    .from('investor_members')
+    .select('id, email, kyc_status, is_signatory, can_sign')
+    .eq('investor_id', entityId)
+    .eq('is_active', true)
+
+  // Create email -> member mapping for lookup
+  const emailToMember = new Map<string, { id: string; kyc_status: string | null }>()
+  for (const im of investorMembers || []) {
+    if (im.email) {
+      emailToMember.set(im.email.toLowerCase(), { id: im.id, kyc_status: im.kyc_status })
+    }
+  }
+
+  // Get member IDs for KYC submission lookup (mapped via email)
+  const memberIdsByEmail: string[] = []
+  for (const m of signatoriesToCheck) {
+    const profile = m.profiles as unknown as { email?: string } | null
+    if (profile?.email) {
+      const member = emailToMember.get(profile.email.toLowerCase())
+      if (member) memberIdsByEmail.push(member.id)
+    }
+  }
+
+  // Query KYC submissions with correct member IDs
   const { data: kycSubmissions } = await supabase
     .from('kyc_submissions')
     .select('investor_member_id, status')
     .eq('investor_id', entityId)
-    .in('investor_member_id', memberUserIds)
+    .in('investor_member_id', memberIdsByEmail)
     .eq('status', 'approved')
 
-  // Build a set of members with approved KYC
-  const membersWithApprovedKyc = new Set(
+  // Build a set of members with approved KYC (by member_id)
+  const memberIdsWithApprovedKycSubmission = new Set(
     kycSubmissions?.map(k => k.investor_member_id) || []
   )
 
@@ -202,7 +226,19 @@ export async function canEntityInvest(
     } | null
 
     const memberName = profile?.display_name || profile?.email || 'Unknown member'
-    const hasApprovedKyc = membersWithApprovedKyc.has(member.user_id)
+
+    // Get the investor_member record for this user (via email)
+    const investorMember = profile?.email
+      ? emailToMember.get(profile.email.toLowerCase())
+      : null
+
+    // Check KYC: either has approved kyc_status OR has approved kyc_submission
+    const hasApprovedKycStatus = investorMember?.kyc_status?.toLowerCase() === 'approved' ||
+                                  investorMember?.kyc_status?.toLowerCase() === 'completed'
+    const hasApprovedKycSubmission = investorMember
+      ? memberIdsWithApprovedKycSubmission.has(investorMember.id)
+      : false
+    const hasApprovedKyc = hasApprovedKycStatus || hasApprovedKycSubmission
 
     // Check CEO approval status
     if (member.ceo_approval_status !== 'approved') {

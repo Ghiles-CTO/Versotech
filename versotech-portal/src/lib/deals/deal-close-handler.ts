@@ -14,6 +14,7 @@
 import { SupabaseClient } from '@supabase/supabase-js'
 import { triggerCertificateGeneration } from '@/lib/subscription/certificate-trigger'
 import { createInvestorNotification } from '@/lib/notifications'
+import { auditLogger, AuditActions, AuditEntities } from '@/lib/audit'
 
 export interface DealCloseResult {
   success: boolean
@@ -24,7 +25,90 @@ export interface DealCloseResult {
   certificatesTriggered: number
   feePlansEnabled: number
   notificationsSent: number
+  accrualNotificationsSent: number  // GAP-5: Track commission accrual notifications
   errors: string[]
+}
+
+/**
+ * GAP-5 & GAP-7: Helper to send commission accrual notification and create audit log
+ */
+async function sendCommissionAccrualNotification(
+  supabase: SupabaseClient,
+  params: {
+    entityType: 'introducer' | 'partner' | 'commercial_partner'
+    entityId: string
+    dealId: string
+    dealName: string
+    investorName: string
+    commissionAmount: number
+    currency: string
+    commissionId?: string
+  }
+): Promise<number> {
+  let notificationsSent = 0
+
+  try {
+    // Determine user table and entity table based on type
+    const userTable = `${params.entityType}_users` as 'introducer_users' | 'partner_users' | 'commercial_partner_users'
+    const entityIdField = `${params.entityType}_id`
+
+    // Get all users linked to this entity
+    const { data: entityUsers } = await supabase
+      .from(userTable)
+      .select('user_id')
+      .eq(entityIdField, params.entityId)
+
+    if (entityUsers && entityUsers.length > 0) {
+      const formattedAmount = new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: params.currency || 'USD',
+      }).format(params.commissionAmount)
+
+      for (const eu of entityUsers) {
+        try {
+          await createInvestorNotification({
+            userId: eu.user_id,
+            title: 'Commission Earned',
+            message: `You've earned a ${formattedAmount} commission for ${params.investorName}'s investment in ${params.dealName}.`,
+            link: '/versotech_main/my-commissions',
+            type: 'introducer_commission_accrued',
+            sendEmailNotification: true,
+            dealId: params.dealId,
+          })
+          notificationsSent++
+        } catch (error) {
+          console.error(`[deal-close] Failed to send accrual notification to user ${eu.user_id}:`, error)
+        }
+      }
+    }
+
+    // GAP-7: Create audit log for commission creation
+    const entityMapping = {
+      'introducer': AuditEntities.INTRODUCER_COMMISSIONS,
+      'partner': AuditEntities.PARTNER_COMMISSIONS,
+      'commercial_partner': AuditEntities.COMMERCIAL_PARTNER_COMMISSIONS,
+    }
+
+    await auditLogger.log({
+      action: AuditActions.COMMISSION_ACCRUED,
+      entity: entityMapping[params.entityType],
+      entity_id: params.commissionId,
+      metadata: {
+        entity_type: params.entityType,
+        entity_id: params.entityId,
+        deal_id: params.dealId,
+        deal_name: params.dealName,
+        investor_name: params.investorName,
+        commission_amount: params.commissionAmount,
+        currency: params.currency,
+        created_by: 'deal_close_handler',
+      },
+    })
+  } catch (error) {
+    console.error('[deal-close] Error sending accrual notification:', error)
+  }
+
+  return notificationsSent
 }
 
 /**
@@ -53,6 +137,7 @@ export async function handleDealClose(
     certificatesTriggered: 0,
     feePlansEnabled: 0,
     notificationsSent: 0,
+    accrualNotificationsSent: 0,
     errors: [],
   }
 
@@ -128,12 +213,30 @@ export async function handleDealClose(
 
       for (const sub of subscriptions) {
         try {
-          // Step 1a: Update subscription status to 'active'
+          // Step 1a: Calculate and lock spread values if not already set
+          const pricePerShare = Number(sub.price_per_share) || null
+          const costPerShare = Number(sub.cost_per_share) || null
+          const numShares = sub.num_shares || sub.units || null
+
+          // Calculate spread values if we have both price and cost
+          let spreadPerShare: number | null = null
+          let spreadFeeAmount: number | null = null
+          if (pricePerShare && costPerShare && pricePerShare > 0 && costPerShare > 0) {
+            spreadPerShare = pricePerShare - costPerShare
+            if (numShares && numShares > 0) {
+              spreadFeeAmount = spreadPerShare * Number(numShares)
+            }
+          }
+
+          // Step 1b: Update subscription status to 'active' and capture final spread values
           const { error: statusError } = await supabase
             .from('subscriptions')
             .update({
               status: 'active',
               activated_at: new Date().toISOString(),
+              // Lock spread values at close time
+              ...(spreadPerShare !== null && { spread_per_share: spreadPerShare }),
+              ...(spreadFeeAmount !== null && { spread_fee_amount: spreadFeeAmount }),
             })
             .eq('id', sub.id)
 
@@ -280,7 +383,7 @@ export async function handleDealClose(
                     .maybeSingle()
 
                   if (!existingCommission) {
-                    await supabase.from('introducer_commissions').insert({
+                    const { data: newCommission } = await supabase.from('introducer_commissions').insert({
                       introducer_id: dealMembership.referred_by_entity_id,
                       deal_id: dealId,
                       investor_id: sub.investor_id,
@@ -293,9 +396,24 @@ export async function handleDealClose(
                       currency,
                       status: 'accrued',
                       created_at: now,
-                    })
+                    }).select('id').single()
 
                     result.commissionsCreated++
+
+                    // GAP-5 & GAP-7: Send commission accrual notification and audit log
+                    const investor = sub.investor as { display_name?: string; legal_name?: string } | null
+                    const investorName = investor?.display_name || investor?.legal_name || 'Investor'
+                    const accrualNotifications = await sendCommissionAccrualNotification(supabase, {
+                      entityType: 'introducer',
+                      entityId: dealMembership.referred_by_entity_id,
+                      dealId,
+                      dealName: deal.name || 'Deal',
+                      investorName,
+                      commissionAmount,
+                      currency,
+                      commissionId: newCommission?.id,
+                    })
+                    result.accrualNotificationsSent += accrualNotifications
                   }
                 }
               } else if (dealMembership.referred_by_entity_type === 'partner') {
@@ -308,7 +426,7 @@ export async function handleDealClose(
                   .maybeSingle()
 
                 if (!existingCommission) {
-                  await supabase.from('partner_commissions').insert({
+                  const { data: newCommission } = await supabase.from('partner_commissions').insert({
                     partner_id: dealMembership.referred_by_entity_id,
                     deal_id: dealId,
                     investor_id: sub.investor_id,
@@ -321,9 +439,24 @@ export async function handleDealClose(
                     currency,
                     status: 'accrued',
                     created_at: now,
-                  })
+                  }).select('id').single()
 
                   result.commissionsCreated++
+
+                  // GAP-5 & GAP-7: Send commission accrual notification and audit log
+                  const investor = sub.investor as { display_name?: string; legal_name?: string } | null
+                  const investorName = investor?.display_name || investor?.legal_name || 'Investor'
+                  const accrualNotifications = await sendCommissionAccrualNotification(supabase, {
+                    entityType: 'partner',
+                    entityId: dealMembership.referred_by_entity_id,
+                    dealId,
+                    dealName: deal.name || 'Deal',
+                    investorName,
+                    commissionAmount,
+                    currency,
+                    commissionId: newCommission?.id,
+                  })
+                  result.accrualNotificationsSent += accrualNotifications
                 }
               } else if (dealMembership.referred_by_entity_type === 'commercial_partner') {
                 if (!deal.arranger_entity_id) {
@@ -338,7 +471,7 @@ export async function handleDealClose(
                     .maybeSingle()
 
                   if (!existingCommission) {
-                    await supabase.from('commercial_partner_commissions').insert({
+                    const { data: newCommission } = await supabase.from('commercial_partner_commissions').insert({
                       commercial_partner_id: dealMembership.referred_by_entity_id,
                       deal_id: dealId,
                       investor_id: sub.investor_id,
@@ -351,9 +484,24 @@ export async function handleDealClose(
                       currency,
                       status: 'accrued',
                       created_at: now,
-                    })
+                    }).select('id').single()
 
                     result.commissionsCreated++
+
+                    // GAP-5 & GAP-7: Send commission accrual notification and audit log
+                    const investor = sub.investor as { display_name?: string; legal_name?: string } | null
+                    const investorName = investor?.display_name || investor?.legal_name || 'Investor'
+                    const accrualNotifications = await sendCommissionAccrualNotification(supabase, {
+                      entityType: 'commercial_partner',
+                      entityId: dealMembership.referred_by_entity_id,
+                      dealId,
+                      dealName: deal.name || 'Deal',
+                      investorName,
+                      commissionAmount,
+                      currency,
+                      commissionId: newCommission?.id,
+                    })
+                    result.accrualNotificationsSent += accrualNotifications
                   }
                 }
               }
@@ -572,6 +720,7 @@ export interface TermsheetCloseResult {
   certificatesTriggered: number
   feePlansEnabled: number
   notificationsSent: number
+  accrualNotificationsSent: number  // GAP-5: Track commission accrual notifications
   errors: string[]
 }
 
@@ -607,6 +756,7 @@ export async function handleTermsheetClose(
     certificatesTriggered: 0,
     feePlansEnabled: 0,
     notificationsSent: 0,
+    accrualNotificationsSent: 0,
     errors: [],
   }
 
@@ -738,12 +888,30 @@ export async function handleTermsheetClose(
         const dealMembership = sub.deal_membership
 
         try {
-          // Step 1a: Update subscription status to 'active'
+          // Step 1a: Calculate and lock spread values if not already set
+          const pricePerShare = Number(sub.price_per_share) || null
+          const costPerShare = Number(sub.cost_per_share) || null
+          const numShares = sub.num_shares || sub.units || null
+
+          // Calculate spread values if we have both price and cost
+          let spreadPerShare: number | null = null
+          let spreadFeeAmount: number | null = null
+          if (pricePerShare && costPerShare && pricePerShare > 0 && costPerShare > 0) {
+            spreadPerShare = pricePerShare - costPerShare
+            if (numShares && numShares > 0) {
+              spreadFeeAmount = spreadPerShare * Number(numShares)
+            }
+          }
+
+          // Step 1b: Update subscription status to 'active' and capture final spread values
           const { error: statusError } = await supabase
             .from('subscriptions')
             .update({
               status: 'active',
               activated_at: new Date().toISOString(),
+              // Lock spread values at close time
+              ...(spreadPerShare !== null && { spread_per_share: spreadPerShare }),
+              ...(spreadFeeAmount !== null && { spread_fee_amount: spreadFeeAmount }),
             })
             .eq('id', sub.id)
 
@@ -824,7 +992,7 @@ export async function handleTermsheetClose(
                       .maybeSingle()
 
                     if (!existingCommission) {
-                      await supabase.from('introducer_commissions').insert({
+                      const { data: newCommission } = await supabase.from('introducer_commissions').insert({
                         introducer_id: dealMembership.referred_by_entity_id,
                         deal_id: termsheet.deal_id,
                         investor_id: sub.investor_id,
@@ -837,8 +1005,23 @@ export async function handleTermsheetClose(
                         currency,
                         status: 'accrued',
                         created_at: now,
-                      })
+                      }).select('id').single()
                       result.commissionsCreated++
+
+                      // GAP-5 & GAP-7: Send commission accrual notification and audit log
+                      const investor = sub.investor as { display_name?: string; legal_name?: string } | null
+                      const investorName = investor?.display_name || investor?.legal_name || 'Investor'
+                      const accrualNotifications = await sendCommissionAccrualNotification(supabase, {
+                        entityType: 'introducer',
+                        entityId: dealMembership.referred_by_entity_id,
+                        dealId: termsheet.deal_id,
+                        dealName: deal.name || 'Deal',
+                        investorName,
+                        commissionAmount,
+                        currency,
+                        commissionId: newCommission?.id,
+                      })
+                      result.accrualNotificationsSent += accrualNotifications
                     }
                   } else if (dealMembership.referred_by_entity_type === 'partner' && feePlan.partner_id === dealMembership.referred_by_entity_id) {
                     const { data: existingCommission } = await supabase
@@ -850,7 +1033,7 @@ export async function handleTermsheetClose(
                       .maybeSingle()
 
                     if (!existingCommission) {
-                      await supabase.from('partner_commissions').insert({
+                      const { data: newCommission } = await supabase.from('partner_commissions').insert({
                         partner_id: dealMembership.referred_by_entity_id,
                         deal_id: termsheet.deal_id,
                         investor_id: sub.investor_id,
@@ -863,8 +1046,23 @@ export async function handleTermsheetClose(
                         currency,
                         status: 'accrued',
                         created_at: now,
-                      })
+                      }).select('id').single()
                       result.commissionsCreated++
+
+                      // GAP-5 & GAP-7: Send commission accrual notification and audit log
+                      const investor = sub.investor as { display_name?: string; legal_name?: string } | null
+                      const investorName = investor?.display_name || investor?.legal_name || 'Investor'
+                      const accrualNotifications = await sendCommissionAccrualNotification(supabase, {
+                        entityType: 'partner',
+                        entityId: dealMembership.referred_by_entity_id,
+                        dealId: termsheet.deal_id,
+                        dealName: deal.name || 'Deal',
+                        investorName,
+                        commissionAmount,
+                        currency,
+                        commissionId: newCommission?.id,
+                      })
+                      result.accrualNotificationsSent += accrualNotifications
                     }
                   } else if (dealMembership.referred_by_entity_type === 'commercial_partner' && feePlan.commercial_partner_id === dealMembership.referred_by_entity_id && deal.arranger_entity_id) {
                     const { data: existingCommission } = await supabase
@@ -876,7 +1074,7 @@ export async function handleTermsheetClose(
                       .maybeSingle()
 
                     if (!existingCommission) {
-                      await supabase.from('commercial_partner_commissions').insert({
+                      const { data: newCommission } = await supabase.from('commercial_partner_commissions').insert({
                         commercial_partner_id: dealMembership.referred_by_entity_id,
                         deal_id: termsheet.deal_id,
                         investor_id: sub.investor_id,
@@ -889,8 +1087,23 @@ export async function handleTermsheetClose(
                         currency,
                         status: 'accrued',
                         created_at: now,
-                      })
+                      }).select('id').single()
                       result.commissionsCreated++
+
+                      // GAP-5 & GAP-7: Send commission accrual notification and audit log
+                      const investor = sub.investor as { display_name?: string; legal_name?: string } | null
+                      const investorName = investor?.display_name || investor?.legal_name || 'Investor'
+                      const accrualNotifications = await sendCommissionAccrualNotification(supabase, {
+                        entityType: 'commercial_partner',
+                        entityId: dealMembership.referred_by_entity_id,
+                        dealId: termsheet.deal_id,
+                        dealName: deal.name || 'Deal',
+                        investorName,
+                        commissionAmount,
+                        currency,
+                        commissionId: newCommission?.id,
+                      })
+                      result.accrualNotificationsSent += accrualNotifications
                     }
                   }
                 }

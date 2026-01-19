@@ -1,12 +1,23 @@
 import { NextRequest, NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase/server"
+import { createClient, createServiceClient } from "@/lib/supabase/server"
 import { isStaffUser } from "@/lib/api-auth"
 import { z } from "zod"
 
 const bodySchema = z.object({
+  // Type field for individual vs entity
+  type: z.enum(["individual", "entity"]).optional().default("entity"),
+  // Individual fields
+  first_name: z.string().trim().optional().nullable(),
+  middle_name: z.string().trim().optional().nullable(),
+  last_name: z.string().trim().optional().nullable(),
+  // Entity fields
   legal_name: z.string().trim().min(1),
+  display_name: z.string().trim().optional().nullable(),
+  country_of_incorporation: z.string().trim().optional().nullable(),
+  // Common fields
   contact_name: z.string().trim().optional().nullable(),
-  email: z.string().trim().email().optional().nullable(),
+  email: z.string().trim().email().optional().nullable().or(z.literal("")),
+  country: z.string().trim().optional().nullable(),
   default_commission_bps: z.coerce.number().int().min(0).max(300).optional().nullable(),
   commission_cap_amount: z.coerce.number().min(0).optional().nullable(),
   payment_terms: z.string().trim().optional().nullable(),
@@ -45,9 +56,16 @@ export async function POST(request: NextRequest) {
     const parsed = result.data
 
     const insertData = {
+      type: parsed.type,
+      first_name: parsed.first_name ?? null,
+      middle_name: parsed.middle_name ?? null,
+      last_name: parsed.last_name ?? null,
       legal_name: parsed.legal_name,
+      display_name: parsed.display_name ?? null,
+      country_of_incorporation: parsed.country_of_incorporation ?? null,
       contact_name: parsed.contact_name ?? null,
-      email: parsed.email ?? null,
+      email: parsed.email || null,
+      country: parsed.country ?? null,
       default_commission_bps: parsed.default_commission_bps ?? null,
       commission_cap_amount: parsed.commission_cap_amount ?? null,
       payment_terms: parsed.payment_terms ?? null,
@@ -55,7 +73,9 @@ export async function POST(request: NextRequest) {
       notes: parsed.notes ?? null,
     }
 
-    const { error, data } = await supabase.from("introducers").insert(insertData).select()
+    // Use service client to bypass RLS (we've already verified staff access above)
+    const serviceSupabase = createServiceClient()
+    const { error, data } = await serviceSupabase.from("introducers").insert(insertData).select()
 
     if (error) {
       return NextResponse.json({ error: `Failed to create introducer: ${error.message}` }, { status: 500 })

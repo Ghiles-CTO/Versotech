@@ -3,6 +3,9 @@
  *
  * Utilities for parsing and calculating signature positions
  * in multi-signatory documents (subscription packs, NDAs, etc.)
+ *
+ * For SUBSCRIPTION documents: Positions are stored at creation time in signature_placements JSONB
+ * For NDA and other documents: Uses legacy hardcoded positions
  */
 
 /**
@@ -11,13 +14,14 @@
  * @example parseSignaturePosition('party_a') → { party: 'a', index: 1 }
  * @example parseSignaturePosition('party_a_2') → { party: 'a', index: 2 }
  * @example parseSignaturePosition('party_b') → { party: 'b', index: 1 }
+ * @example parseSignaturePosition('party_c') → { party: 'c', index: 1 }
  */
 export function parseSignaturePosition(position: string): {
-  party: 'a' | 'b'
+  party: 'a' | 'b' | 'c'
   index: number
 } {
-  // Match patterns like 'party_a', 'party_a_2', 'party_b_3'
-  const match = position.match(/^party_([ab])(?:_(\d+))?$/)
+  // Match patterns like 'party_a', 'party_a_2', 'party_b', 'party_c'
+  const match = position.match(/^party_([abc])(?:_(\d+))?$/)
 
   if (!match) {
     // Default fallback for unknown positions
@@ -25,7 +29,7 @@ export function parseSignaturePosition(position: string): {
     return { party: 'a', index: 1 }
   }
 
-  const party = match[1] as 'a' | 'b'
+  const party = match[1] as 'a' | 'b' | 'c'
   // If no index suffix, it's index 1 (party_a = party_a_1)
   const index = match[2] ? parseInt(match[2], 10) : 1
 
@@ -57,20 +61,32 @@ export function isPartyB(position: string): boolean {
 /**
  * Calculate X and Y coordinates for a signature based on position and total signatories
  *
- * Layout:
- * - All Party A signatures stack VERTICALLY in the LEFT column (same X, different Y)
- * - Party B signatures stay in the RIGHT column at fixed position
+ * LEGACY FUNCTION - Used only for NDA and other non-subscription documents.
+ * For subscription documents, positions are stored in signature_placements JSONB column.
+ *
+ * Layout: Side-by-side columns (Party A left, Party B right)
  *
  * @param position - Signature position (e.g., 'party_a', 'party_a_2', 'party_b')
  * @param totalPartyASignatories - Total number of Party A signatories (for Y spacing calculation)
+ * @param documentType - Document type for position calculation (default: 'nda')
  * @returns { xPercent, yFromBottom } - X as percentage of page width, Y in points from bottom
  */
 export function calculateSignaturePosition(
   position: string,
-  totalPartyASignatories: number = 1
+  totalPartyASignatories: number = 1,
+  documentType: string = 'nda'
 ): { xPercent: number; yFromBottom: number } {
   const { party, index } = parseSignaturePosition(position)
 
+  // SUBSCRIPTION PACK: No longer supported here - positions come from signature_placements JSONB
+  if (documentType === 'subscription') {
+    throw new Error(
+      'SIGNATURE_ERROR: Subscription documents use pre-calculated signature_placements. ' +
+      'This function should not be called for subscription documents.'
+    )
+  }
+
+  // NDA AND OTHER DOCUMENTS: Side-by-side columns (original behavior)
   // Party B (CEO/Julien/Arranger): fixed position on RIGHT side
   if (party === 'b') {
     return {

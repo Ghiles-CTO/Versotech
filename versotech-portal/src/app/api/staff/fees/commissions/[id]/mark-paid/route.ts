@@ -292,7 +292,7 @@ export async function POST(
           title: 'Payment Confirmed',
           message: `Your commission payment of ${formattedAmount} has been processed.${payment_reference ? ` Reference: ${payment_reference}` : ''}`,
           link: config.commissionLink,
-          type: 'payment_confirmed',
+          type: 'introducer_payment_confirmed', // Use proper notification type from NotificationType
         });
       }
     }
@@ -311,7 +311,7 @@ export async function POST(
           title: 'Commission Payment Completed',
           message: `Payment of ${formattedAmount} to ${entityName} has been confirmed.${payment_reference ? ` Reference: ${payment_reference}` : ''}`,
           link: config.arrangerLink,
-          type: 'payment_confirmed',
+          type: 'introducer_payment_confirmed', // Use proper notification type from NotificationType
         });
       }
     }

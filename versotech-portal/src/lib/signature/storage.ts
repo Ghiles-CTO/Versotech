@@ -62,12 +62,12 @@ export class SignatureStorageManager {
    * Download PDF from storage
    *
    * Handles files from both 'signatures' and 'deal-documents' buckets:
-   * - Paths starting with 'subscriptions/' are in 'deal-documents' (certificates)
+   * - Paths starting with 'subscriptions/', 'introducer-agreements/', 'placement-agreements/' are in 'deal-documents'
    * - All other paths are in 'signatures' bucket
    */
   async downloadPDF(path: string): Promise<Uint8Array> {
     // Determine bucket based on path pattern
-    const bucket = path.startsWith('subscriptions/')
+    const bucket = (path.startsWith('subscriptions/') || path.startsWith('introducer-agreements/') || path.startsWith('placement-agreements/'))
       ? 'deal-documents'
       : SIGNATURE_CONFIG.storage.bucket
 
@@ -91,8 +91,8 @@ export class SignatureStorageManager {
    */
   async getSignedUrl(path: string, expirySeconds: number = 3600): Promise<string> {
     // Determine bucket based on path pattern
-    // Certificates are stored in deal-documents bucket under subscriptions/
-    const bucket = path.startsWith('subscriptions/')
+    // Documents in deal-documents bucket: subscriptions/, introducer-agreements/, placement-agreements/
+    const bucket = (path.startsWith('subscriptions/') || path.startsWith('introducer-agreements/') || path.startsWith('placement-agreements/'))
       ? 'deal-documents'
       : SIGNATURE_CONFIG.storage.bucket
 

@@ -53,12 +53,8 @@ export async function POST(
     // Empty body is OK - use default behavior
   }
 
-  // Validate arranger_id is provided when countersigner_type is 'arranger'
-  if (body.countersigner_type === 'arranger' && !body.arranger_id) {
-    return NextResponse.json({
-      error: 'arranger_id is required when countersigner_type is arranger'
-    }, { status: 400 })
-  }
+  // Note: arranger_id validation is only needed for legacy documents without stored countersigner
+  // New documents have countersigner info stored at generation time
 
   const serviceSupabase = createServiceClient()
 
@@ -211,6 +207,7 @@ export async function POST(
   }
 
   // Get subscription with investor details including user_id from join table
+  console.log('🔍 [READY-FOR-SIGNATURE] Fetching subscription...')
   const { data: subscription } = await serviceSupabase
     .from('subscriptions')
     .select(`
@@ -231,8 +228,10 @@ export async function POST(
   if (!subscription) {
     return NextResponse.json({ error: 'Subscription not found' }, { status: 404 })
   }
+  console.log('✅ [READY-FOR-SIGNATURE] Subscription fetched:', { investor_type: subscription.investor?.type })
 
   // Check for existing signature requests to prevent duplicates
+  console.log('🔍 [READY-FOR-SIGNATURE] Checking existing requests...')
   const { data: existingRequests } = await serviceSupabase
     .from('signature_requests')
     .select('id, signer_role, status')
@@ -250,6 +249,8 @@ export async function POST(
     }, { status: 409 }) // 409 Conflict
   }
 
+  console.log('✅ [READY-FOR-SIGNATURE] No existing requests, proceeding...')
+
   // Get signed URL for document (use the signable PDF)
   const { data: urlData } = await serviceSupabase.storage
     .from('deal-documents')
@@ -259,7 +260,10 @@ export async function POST(
     return NextResponse.json({ error: 'Failed to generate document URL' }, { status: 500 })
   }
 
+  console.log('✅ [READY-FOR-SIGNATURE] Got signed URL')
+
   // Determine signatories
+  console.log('🔍 [READY-FOR-SIGNATURE] Determining signatories...')
   type Signatory = { id: string; full_name: string; email: string }
   let signatories: Signatory[] = []
 
@@ -324,14 +328,221 @@ export async function POST(
     }
   }
 
-  // Create signature requests for each signatory
+  // Create signature requests - COMPANY SIGNS FIRST, then investors
+  // This ensures the company (arranger/CEO) approves the document before investors sign
+  console.log('✅ [READY-FOR-SIGNATURE] Signatories determined:', signatories.length)
   try {
+    // ============================================================
+    // STEP 1: CREATE ISSUER (party_b) SIGNATURE REQUEST
+    // ============================================================
+    // The Issuer (VERSO Capital 2 SCSP via GP SARL) ALWAYS signs as party_b
+    // This is separate from the Arranger (party_c) which is handled in STEP 1.5
+    //
+    // IMPORTANT: countersigner_type only affects WORKFLOW ORDER, not signature positions!
+    // - countersigner_type='ceo': CEO signs first, then arranger, then investors
+    // - countersigner_type='arranger': Arranger signs first, then CEO, then investors
+    // Both CEO and Arranger ALWAYS sign, just in different order.
+    console.log('🔍 [READY-FOR-SIGNATURE] Creating ISSUER (party_b) signature request...')
+
+    // ALWAYS get CEO/Issuer signer - they sign party_b regardless of countersigner_type
+    const ceoSigner = await getCeoSigner(serviceSupabase)
+
+    if (!ceoSigner || !ceoSigner.email) {
+      console.error('[ready-for-signature] CRITICAL: No CEO signer configured in ceo_users table')
+      return NextResponse.json({
+        error: 'No CEO/Issuer signer configured. Please add a CEO user with can_sign=true in the CEO settings.'
+      }, { status: 400 })
+    }
+
+    const issuerEmail = ceoSigner.email
+    const issuerName = ceoSigner.displayName
+
+    console.log('[ready-for-signature] Using configured CEO/Issuer signer for party_b:', {
+      email: issuerEmail,
+      name: issuerName
+    })
+
+    // Create Issuer (party_b) signature request
+    console.log(`🔍 [READY-FOR-SIGNATURE] Creating ISSUER signature request for ${issuerName} (party_b)`)
+    const issuerSigPayload = {
+      investor_id: subscription.investor_id,
+      signer_email: issuerEmail,
+      signer_name: issuerName,
+      document_type: 'subscription',
+      google_drive_url: urlData.signedUrl,
+      signer_role: 'admin',  // CEO/Issuer is always 'admin' role
+      signature_position: 'party_b',  // ALWAYS party_b for Issuer
+      subscription_id: subscriptionId,
+      document_id: signableDocumentId,
+      deal_id: subscription.deal_id
+    }
+
+    const issuerSigResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/signature/request`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(issuerSigPayload)
+    })
+
+    if (!issuerSigResponse.ok) {
+      const errorText = await issuerSigResponse.text()
+      throw new Error(`Failed to create Issuer (party_b) signature request: ${errorText}`)
+    }
+
+    const issuerSigData = await issuerSigResponse.json()
+    console.log('✅ [READY-FOR-SIGNATURE] Issuer (party_b) signature request created')
+
+    // ============================================================
+    // STEP 1.5: CREATE ARRANGER (party_c) SIGNATURE REQUEST
+    // ============================================================
+    // The arranger signs separately from the issuer on pages 12 and 39
+    // This is required because the legal document has THREE parties:
+    // - party_a: Subscribers (investors)
+    // - party_b: Issuer (VERSO Capital 2 SCSP)
+    // - party_c: Arranger (Verso Management Ltd.)
+    console.log('🔍 [READY-FOR-SIGNATURE] Creating arranger (party_c) signature request...')
+    console.log('   Deal ID:', subscription.deal_id)
+
+    let arrangerSigData = null
+
+    // Get arranger details from the deal
+    const { data: dealForArranger, error: dealError } = await serviceSupabase
+      .from('deals')
+      .select('arranger_entity_id')
+      .eq('id', subscription.deal_id)
+      .single()
+
+    if (dealError) {
+      console.error('❌ [READY-FOR-SIGNATURE] Failed to fetch deal for arranger:', dealError.message)
+    }
+
+    console.log('   Arranger entity ID:', dealForArranger?.arranger_entity_id || 'NOT SET')
+
+    if (dealForArranger?.arranger_entity_id) {
+      // Get arranger entity and primary user who can sign
+      const { data: arrangerEntity, error: entityError } = await serviceSupabase
+        .from('arranger_entities')
+        .select('legal_name')
+        .eq('id', dealForArranger.arranger_entity_id)
+        .single()
+
+      if (entityError) {
+        console.error('❌ [READY-FOR-SIGNATURE] Failed to fetch arranger entity:', entityError.message)
+      }
+      console.log('   Arranger entity name:', arrangerEntity?.legal_name || 'NOT FOUND')
+
+      // Get primary arranger user who can sign (use maybeSingle to avoid error on no results)
+      const { data: arrangerUser, error: userError } = await serviceSupabase
+        .from('arranger_users')
+        .select('user_id')
+        .eq('arranger_id', dealForArranger.arranger_entity_id)
+        .eq('can_sign', true)
+        .eq('is_primary', true)
+        .maybeSingle()
+
+      if (userError) {
+        console.error('❌ [READY-FOR-SIGNATURE] Failed to fetch primary arranger user:', userError.message)
+      }
+      console.log('   Primary arranger user_id:', arrangerUser?.user_id || 'NOT FOUND')
+
+      // Fallback: get any arranger user who can sign
+      let arrangerUserId = arrangerUser?.user_id
+      if (!arrangerUserId) {
+        console.log('   Looking for fallback arranger user with can_sign=true...')
+        const { data: anySigningUser, error: fallbackError } = await serviceSupabase
+          .from('arranger_users')
+          .select('user_id')
+          .eq('arranger_id', dealForArranger.arranger_entity_id)
+          .eq('can_sign', true)
+          .limit(1)
+          .maybeSingle()
+
+        if (fallbackError) {
+          console.error('❌ [READY-FOR-SIGNATURE] Failed to fetch fallback arranger user:', fallbackError.message)
+        }
+        arrangerUserId = anySigningUser?.user_id
+        console.log('   Fallback arranger user_id:', arrangerUserId || 'NOT FOUND')
+      }
+
+      if (arrangerUserId) {
+        const { data: arrangerProfile, error: profileError } = await serviceSupabase
+          .from('profiles')
+          .select('email, display_name')
+          .eq('id', arrangerUserId)
+          .single()
+
+        if (profileError) {
+          console.error('❌ [READY-FOR-SIGNATURE] Failed to fetch arranger profile:', profileError.message)
+        }
+        console.log('   Arranger profile:', arrangerProfile?.email, arrangerProfile?.display_name)
+
+        if (arrangerProfile?.email) {
+          const arrangerSigPayload = {
+            investor_id: subscription.investor_id,
+            signer_email: arrangerProfile.email,
+            signer_name: arrangerProfile.display_name || arrangerEntity?.legal_name || 'Arranger',
+            document_type: 'subscription',
+            google_drive_url: urlData.signedUrl,
+            signer_role: 'arranger',
+            signature_position: 'party_c',  // KEY: Use party_c for arranger, NOT party_b!
+            subscription_id: subscriptionId,
+            document_id: signableDocumentId,
+            deal_id: subscription.deal_id
+          }
+
+          console.log('   Creating arranger signature request for:', arrangerProfile.email)
+
+          const arrangerSigResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/signature/request`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(arrangerSigPayload)
+          })
+
+          if (arrangerSigResponse.ok) {
+            arrangerSigData = await arrangerSigResponse.json()
+            console.log('✅ [READY-FOR-SIGNATURE] Arranger (party_c) signature request created:', arrangerSigData.signature_request_id)
+          } else {
+            const errorText = await arrangerSigResponse.text()
+            console.error('❌ [READY-FOR-SIGNATURE] Failed to create arranger signature request:', errorText)
+            // FATAL: Arranger signature is required - fail the entire request
+            return NextResponse.json({
+              error: 'Failed to create arranger signature request',
+              details: errorText
+            }, { status: 500 })
+          }
+        } else {
+          // FATAL: Arranger must have email configured
+          console.error('❌ [READY-FOR-SIGNATURE] FATAL: Arranger user has no email configured')
+          return NextResponse.json({
+            error: `Arranger user for ${arrangerEntity?.legal_name || 'arranger entity'} has no email configured. Please update the arranger user's profile.`
+          }, { status: 400 })
+        }
+      } else {
+        // FATAL: Arranger must have a signer configured
+        console.error('❌ [READY-FOR-SIGNATURE] FATAL: No arranger user with can_sign=true found for arranger_id:', dealForArranger.arranger_entity_id)
+        return NextResponse.json({
+          error: `No arranger signer configured for ${arrangerEntity?.legal_name || 'arranger entity'}. Please configure an arranger user with can_sign=true.`
+        }, { status: 400 })
+      }
+    } else {
+      // FATAL: Deal must have an arranger entity for subscription pack signatures
+      console.error('❌ [READY-FOR-SIGNATURE] FATAL: No arranger entity linked to deal:', subscription.deal_id)
+      return NextResponse.json({
+        error: 'No arranger entity linked to this deal. Subscription packs require an arranger to sign as party_c. Please link an arranger entity to the deal.'
+      }, { status: 400 })
+    }
+
+    // ============================================================
+    // STEP 2: CREATE INVESTOR SIGNATURE REQUESTS (AFTER COMPANY)
+    // ============================================================
+    // Investors will sign after the company has signed
+    console.log('🔍 [READY-FOR-SIGNATURE] Creating investor signature requests (they sign AFTER company)...')
     const signerPositions = ['party_a', 'party_a_2', 'party_a_3', 'party_a_4', 'party_a_5']
     const investorSignatureRequests = []
 
     for (let i = 0; i < signatories.length; i++) {
       const signatory = signatories[i]
       const position = signerPositions[i] || `party_a_${i + 1}`
+      console.log(`🔍 [READY-FOR-SIGNATURE] Creating investor signature ${i + 1}/${signatories.length} for ${signatory.full_name}`)
 
       const investorSigPayload = {
         investor_id: subscription.investor_id,
@@ -343,6 +554,7 @@ export async function POST(
         signature_position: position,
         subscription_id: subscriptionId,
         document_id: signableDocumentId,
+        deal_id: subscription.deal_id, // For task context (deal name, amount)
         member_id: signatory.id !== 'investor_primary' ? signatory.id : undefined,
         total_party_a_signatories: signatories.length // For multi-signatory positioning
       }
@@ -366,104 +578,15 @@ export async function POST(
       })
     }
 
-    // Staff/Admin or Arranger signature request (countersignature)
-    const ceoSigner = await getCeoSigner(serviceSupabase)
-
-    // Graceful fallback: If no CEO signer found and not using arranger, use the current staff user
-    // This allows signature workflows to proceed even when no CEO profile exists
-    const useStaffFallback = body.countersigner_type !== 'arranger' && !ceoSigner
-    if (useStaffFallback) {
-      console.warn('[ready-for-signature] No CEO signer found, falling back to current staff user:', {
-        user_id: user.id,
-        email: profile?.email,
-        display_name: profile?.display_name
-      })
-    }
-
-    // Use CEO if available, otherwise fall back to current staff user
-    let countersignerEmail = ceoSigner?.email || (useStaffFallback ? profile?.email : '') || ''
-    let countersignerName = ceoSigner?.displayName || (useStaffFallback ? profile?.display_name : '') || 'Staff Admin'
-    let signerRole: 'admin' | 'arranger' = 'admin'
-
-    // If still no countersigner after fallback, return error
-    if (!countersignerEmail && body.countersigner_type !== 'arranger') {
-      return NextResponse.json(
-        { error: 'No countersigner available. Please configure a CEO profile or use arranger countersigning.' },
-        { status: 400 }
-      )
-    }
-
-    // If arranger is selected as countersigner, fetch arranger details
-    if (body.countersigner_type === 'arranger' && body.arranger_id) {
-      // Get arranger details with primary user
-      // Note: arranger_entities has no 'company_name' - use legal_name
-      const { data: arranger, error: arrangerError } = await serviceSupabase
-        .from('arranger_entities')
-        .select(`
-          id,
-          legal_name,
-          arranger_users!inner(user_id)
-        `)
-        .eq('id', body.arranger_id)
-        .single()
-
-      if (arrangerError || !arranger) {
-        throw new Error(`Arranger not found: ${body.arranger_id}`)
-      }
-
-      // Get primary arranger user's profile
-      const primaryUserId = (arranger.arranger_users as any)?.[0]?.user_id
-      if (!primaryUserId) {
-        throw new Error('Arranger has no associated users')
-      }
-
-      // Note: profiles has 'display_name' not 'full_name'
-      const { data: arrangerProfile } = await serviceSupabase
-        .from('profiles')
-        .select('email, display_name')
-        .eq('id', primaryUserId)
-        .single()
-
-      if (!arrangerProfile?.email) {
-        throw new Error('Arranger user profile not found')
-      }
-
-      countersignerEmail = arrangerProfile.email
-      countersignerName = arrangerProfile.display_name || arranger.legal_name
-      signerRole = 'arranger'
-    }
-
-    const staffSigPayload = {
-      investor_id: subscription.investor_id,
-      signer_email: countersignerEmail,
-      signer_name: countersignerName,
-      document_type: 'subscription',
-      google_drive_url: urlData.signedUrl,
-      signer_role: signerRole,
-      signature_position: 'party_b',
-      subscription_id: subscriptionId,
-      document_id: signableDocumentId
-    }
-
-    const staffSigResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/signature/request`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(staffSigPayload)
-    })
-
-    if (!staffSigResponse.ok) {
-      const errorText = await staffSigResponse.text()
-      throw new Error(`Failed to create ${signerRole} signature request: ${errorText}`)
-    }
-
-    const staffSigData = await staffSigResponse.json()
+    console.log('✅ [READY-FOR-SIGNATURE] All investor signatures created')
 
     // Update document status (update the signable PDF document)
     await serviceSupabase
       .from('documents')
       .update({
         ready_for_signature: true,
-        status: 'pending_signature'
+        status: 'pending_signature',
+        signature_status: 'pending'  // Track signature collection progress
       })
       .eq('id', signableDocumentId)
 
@@ -514,17 +637,23 @@ export async function POST(
     console.log('✅ Multi-signatory signature requests created for subscription pack:', {
       document_id: signableDocumentId,
       investor_requests: investorSignatureRequests.length,
-      countersigner_type: signerRole,
-      countersigner_request: staffSigData.signature_request_id
+      issuer_request: issuerSigData.signature_request_id,
+      arranger_request: arrangerSigData?.signature_request_id || null
     })
 
     return NextResponse.json({
       success: true,
       investor_signature_requests: investorSignatureRequests,
-      countersigner_request: staffSigData,
-      countersigner_type: signerRole,
-      countersigner_name: countersignerName,
-      total_signatories: signatories.length + 1 // investors + countersigner
+      // NEW: Separate issuer (party_b) and arranger (party_c) requests
+      issuer_request: issuerSigData,        // party_b - VERSO Capital 2 SCSP (via GP SARL)
+      issuer_name: issuerName,
+      arranger_request: arrangerSigData,    // party_c - Verso Management Ltd.
+      // BACKWARDS COMPATIBLE: countersigner fields for existing UI consumers
+      // The "countersigner" is now always the CEO (party_b), not the arranger
+      countersigner_request: issuerSigData,
+      countersigner_type: 'ceo' as const,   // Always 'ceo' - party_b is always CEO/Issuer
+      countersigner_name: issuerName,
+      total_signatories: signatories.length + 1 + (arrangerSigData ? 1 : 0) // investors + issuer + arranger
     })
 
   } catch (error) {

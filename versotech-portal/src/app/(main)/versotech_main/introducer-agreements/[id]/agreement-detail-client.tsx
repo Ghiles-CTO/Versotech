@@ -40,11 +40,13 @@ import {
   ExternalLink,
   FileDown,
   Download,
+  Eye,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { formatDate } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { AgreementStatusTimeline } from './agreement-status-timeline'
+import { DocumentViewerFullscreen } from '@/components/documents/DocumentViewerFullscreen'
 
 type Introducer = {
   id: string
@@ -85,6 +87,7 @@ type Agreement = {
   introducer_signature_request: SignatureRequest
   // New fields for PDF visibility
   pdf_url: string | null
+  signed_pdf_url: string | null
   reference_number: string | null
   performance_fee_bps: number | null
   hurdle_rate_bps: number | null
@@ -132,13 +135,25 @@ export function AgreementDetailClient({
   const [rejectReason, setRejectReason] = useState('')
   const [downloadingPdf, setDownloadingPdf] = useState(false)
 
-  // Handle PDF download
+  // PDF Preview state
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [previewLoading, setPreviewLoading] = useState(false)
+  const [previewError, setPreviewError] = useState<string | null>(null)
+
+  // Handle PDF download - use signed PDF for active agreements
   const handleDownloadPdf = async () => {
-    if (!agreement.pdf_url) return
+    // For active agreements, prefer the signed PDF; otherwise use the original
+    const isActive = agreement.status === 'active'
+    const pdfPath = isActive && agreement.signed_pdf_url ? agreement.signed_pdf_url : agreement.pdf_url
+    // Signed PDFs are in 'signatures' bucket, originals in 'deal-documents'
+    const bucket = isActive && agreement.signed_pdf_url ? 'signatures' : 'deal-documents'
+
+    if (!pdfPath) return
 
     setDownloadingPdf(true)
     try {
-      const response = await fetch(`/api/storage/download?path=${encodeURIComponent(agreement.pdf_url)}&bucket=deal-documents`)
+      const response = await fetch(`/api/storage/download?path=${encodeURIComponent(pdfPath)}&bucket=${bucket}`)
       if (!response.ok) {
         throw new Error('Failed to download file')
       }
@@ -158,6 +173,43 @@ export function AgreementDetailClient({
     } finally {
       setDownloadingPdf(false)
     }
+  }
+
+  // Handle PDF preview - opens fullscreen viewer
+  const handlePreviewPdf = async () => {
+    const isActive = agreement.status === 'active'
+    const pdfPath = isActive && agreement.signed_pdf_url ? agreement.signed_pdf_url : agreement.pdf_url
+    const bucket = isActive && agreement.signed_pdf_url ? 'signatures' : 'deal-documents'
+
+    if (!pdfPath) return
+
+    setPreviewLoading(true)
+    setPreviewError(null)
+    setIsPreviewOpen(true)
+
+    try {
+      // Get a signed URL for the PDF
+      const response = await fetch(`/api/storage/signed-url?path=${encodeURIComponent(pdfPath)}&bucket=${bucket}`)
+      if (!response.ok) {
+        throw new Error('Failed to get preview URL')
+      }
+      const data = await response.json()
+      setPreviewUrl(data.signedUrl)
+    } catch (error) {
+      console.error('Error loading PDF preview:', error)
+      setPreviewError('Failed to load PDF preview')
+      toast.error('Failed to load PDF preview')
+    } finally {
+      setPreviewLoading(false)
+    }
+  }
+
+  const handleClosePreview = () => {
+    setIsPreviewOpen(false)
+    setTimeout(() => {
+      setPreviewUrl(null)
+      setPreviewError(null)
+    }, 300)
   }
 
   const statusStyle = STATUS_STYLES[agreement.status] || STATUS_STYLES.draft
@@ -364,21 +416,36 @@ export function AgreementDetailClient({
             </Button>
           )}
 
-          {/* PDF Download - always visible when pdf_url exists */}
-          {agreement.pdf_url && (
-            <Button
-              variant="outline"
-              onClick={handleDownloadPdf}
-              disabled={downloadingPdf}
-              className="border-blue-500/30 text-blue-500 hover:bg-blue-500/10"
-            >
-              {downloadingPdf ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              ) : (
-                <FileDown className="h-4 w-4 mr-2" />
-              )}
-              Download PDF
-            </Button>
+          {/* PDF Preview & Download - visible when any PDF exists */}
+          {(agreement.pdf_url || agreement.signed_pdf_url) && (
+            <>
+              <Button
+                variant="outline"
+                onClick={handlePreviewPdf}
+                disabled={previewLoading}
+                className="border-emerald-500/30 text-emerald-600 hover:bg-emerald-500/10"
+              >
+                {previewLoading ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Eye className="h-4 w-4 mr-2" />
+                )}
+                Preview
+              </Button>
+              <Button
+                variant="outline"
+                onClick={handleDownloadPdf}
+                disabled={downloadingPdf}
+                className="border-blue-500/30 text-blue-500 hover:bg-blue-500/10"
+              >
+                {downloadingPdf ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <FileDown className="h-4 w-4 mr-2" />
+                )}
+                {agreement.status === 'active' ? 'Download Signed Agreement' : 'Download PDF'}
+              </Button>
+            </>
           )}
         </div>
       </div>
@@ -579,6 +646,22 @@ export function AgreementDetailClient({
 
         </div>
       </div>
+
+      {/* PDF Preview Modal */}
+      <DocumentViewerFullscreen
+        isOpen={isPreviewOpen}
+        document={{
+          id: agreement.id,
+          name: `${agreement.reference_number || 'Fee_Agreement'}.pdf`,
+          file_name: `${agreement.reference_number || 'Fee_Agreement'}.pdf`,
+          type: 'introducer_agreement',
+        }}
+        previewUrl={previewUrl}
+        isLoading={previewLoading}
+        error={previewError}
+        onClose={handleClosePreview}
+        onDownload={handleDownloadPdf}
+      />
     </div>
   )
 }

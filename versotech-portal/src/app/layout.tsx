@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, League_Spartan } from "next/font/google";
 import "./globals.css";
 import { AuthInitWrapper } from "@/components/auth-init-wrapper";
@@ -24,6 +24,13 @@ const spartanFont = League_Spartan({
 export const metadata: Metadata = {
   title: "VERSO Holdings | Investment Portal",
   description: "Secure investment platform for VERSO Holdings - Access your portfolio, documents, and performance reports",
+};
+
+// Viewport configuration for proper mobile scaling
+// Note: maximumScale removed to allow pinch-to-zoom (WCAG 2.1 compliance)
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
 };
 
 // Critical CSS to prevent white flash - sets background BEFORE Tailwind loads

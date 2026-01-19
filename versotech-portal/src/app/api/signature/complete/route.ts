@@ -109,6 +109,11 @@ export async function POST(request: NextRequest) {
     await handlePlacementAgreementCompletion(supabase, signature_request_id)
   }
 
+  // Handle introducer agreement signature completion
+  if (document_type === 'introducer_agreement') {
+    await handleIntroducerAgreementCompletion(supabase, signature_request_id)
+  }
+
   return NextResponse.json({ success: true })
 }
 
@@ -484,7 +489,74 @@ async function handleSubscriptionCompletion(
     }
   }
 
+  // Check if ALL parties (investor + CEO + arranger) have signed the subscription pack
+  // If so, publish the document so it's visible to investors
+  await checkAndPublishSubscriptionDocument(supabase, subscriptionId)
+
   console.log('🎉 [SUBSCRIPTION] Subscription completion processing finished')
+}
+
+/**
+ * Check if ALL signature requests for a subscription are complete
+ * If so, publish the document (is_published=true, status='published')
+ *
+ * This is called after EVERY signature completion to check if the pack is fully signed.
+ * For subscription packs, we need ALL parties to sign:
+ * - party_a (investor/authorized_signatory)
+ * - party_b (CEO/admin)
+ * - party_c (arranger)
+ */
+async function checkAndPublishSubscriptionDocument(
+  supabase: ReturnType<typeof createServiceClient>,
+  subscriptionId: string
+) {
+  console.log('📋 [PUBLISH CHECK] Checking if subscription pack is fully signed:', subscriptionId)
+
+  // Get ALL signature requests for this subscription (all roles, all parties)
+  const { data: allSignatures, error: sigError } = await supabase
+    .from('signature_requests')
+    .select('id, status, signer_role, signature_position, document_id')
+    .eq('subscription_id', subscriptionId)
+    .eq('document_type', 'subscription')
+
+  if (sigError || !allSignatures || allSignatures.length === 0) {
+    console.log('⏭️ [PUBLISH CHECK] No signature requests found for subscription')
+    return
+  }
+
+  // Check if ALL signatures are complete
+  const allComplete = allSignatures.every(sig => sig.status === 'signed')
+  const signedCount = allSignatures.filter(sig => sig.status === 'signed').length
+
+  console.log(`📊 [PUBLISH CHECK] Signature status: ${signedCount}/${allSignatures.length} signed, all_complete=${allComplete}`)
+
+  if (!allComplete) {
+    console.log('⏳ [PUBLISH CHECK] Not all parties have signed yet')
+    return
+  }
+
+  // Get the document_id from any signature request (they all reference the same document)
+  const documentId = allSignatures[0]?.document_id
+  if (!documentId) {
+    console.warn('⚠️ [PUBLISH CHECK] No document_id found on signature requests')
+    return
+  }
+
+  // Update the document to be published
+  const { error: updateError } = await supabase
+    .from('documents')
+    .update({
+      is_published: true,
+      status: 'published',
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', documentId)
+
+  if (updateError) {
+    console.error('❌ [PUBLISH CHECK] Failed to publish document:', updateError)
+  } else {
+    console.log('✅ [PUBLISH CHECK] Document published! Investors can now see the signed subscription pack:', documentId)
+  }
 }
 
 /**
@@ -647,4 +719,401 @@ async function handlePlacementAgreementCompletion(
   }
 
   console.log('🎉 [PLACEMENT AGREEMENT] Completion processing finished')
+}
+
+/**
+ * Handle introducer agreement signature completion
+ * Supports multi-party signature chain: Arranger (optional) → CEO → Introducer
+ * Updates agreement status to active when all parties have signed
+ */
+async function handleIntroducerAgreementCompletion(
+  supabase: ReturnType<typeof createServiceClient>,
+  signatureRequestId: string
+) {
+  console.log('🔵 [INTRODUCER AGREEMENT] Handling completion for signature:', signatureRequestId)
+
+  // Get the signature request with introducer agreement details
+  const { data: sigRequest } = await supabase
+    .from('signature_requests')
+    .select('id, introducer_agreement_id, introducer_id, signer_role, signature_position, status, signed_pdf_path')
+    .eq('id', signatureRequestId)
+    .single()
+
+  if (!sigRequest?.introducer_agreement_id) {
+    console.log('⏭️ [INTRODUCER AGREEMENT] No introducer_agreement_id - skipping')
+    return
+  }
+
+  const agreementId = sigRequest.introducer_agreement_id
+  console.log('📋 [INTRODUCER AGREEMENT] Processing for agreement:', agreementId, 'signer_role:', sigRequest.signer_role)
+
+  // Get the introducer agreement with introducer, arranger, and deal info
+  const { data: agreement } = await supabase
+    .from('introducer_agreements')
+    .select(`
+      *,
+      introducer:introducer_id (
+        id,
+        legal_name,
+        email
+      ),
+      arranger:arranger_id (
+        id,
+        legal_name
+      ),
+      deal:deal_id (
+        id,
+        name,
+        company_name
+      )
+    `)
+    .eq('id', agreementId)
+    .single()
+
+  if (!agreement) {
+    console.error('❌ [INTRODUCER AGREEMENT] Agreement not found:', agreementId)
+    return
+  }
+
+  const now = new Date().toISOString()
+  const introducerName = (agreement.introducer as any)?.legal_name || 'Introducer'
+  const introducerEmail = (agreement.introducer as any)?.email || null
+  const arrangerName = (agreement.arranger as any)?.legal_name || 'Arranger'
+  const dealName = (agreement.deal as any)?.company_name || (agreement.deal as any)?.name || 'Investment Opportunity'
+  const hasArranger = !!agreement.arranger_id
+  const isArrangerSigner = sigRequest.signer_role === 'arranger'
+
+  // Handle based on who signed
+  // Flow: Either (Arranger → Introducer) OR (CEO → Introducer), NOT both
+  if (sigRequest.signer_role === 'arranger' || sigRequest.signer_role === 'admin') {
+    // Party A signed (either Arranger or CEO) - move to pending introducer signature
+    const signerType = isArrangerSigner ? 'Arranger' : 'CEO/Admin'
+    console.log(`👔 [INTRODUCER AGREEMENT] ${signerType} (party_a) signed`)
+
+    const updateData: Record<string, any> = {
+      status: 'pending_introducer_signature',
+      updated_at: now
+    }
+
+    if (isArrangerSigner) {
+      updateData.arranger_signature_request_id = signatureRequestId
+    } else {
+      updateData.ceo_signature_request_id = signatureRequestId
+    }
+
+    const { error: updateError } = await supabase
+      .from('introducer_agreements')
+      .update(updateData)
+      .eq('id', agreementId)
+
+    if (updateError) {
+      console.error('❌ [INTRODUCER AGREEMENT] Failed to update agreement status:', updateError)
+    } else {
+      console.log('✅ [INTRODUCER AGREEMENT] Agreement status updated to pending_introducer_signature')
+    }
+
+    // Mark the CEO/Arranger task as completed
+    const { error: taskCompleteError } = await supabase
+      .from('tasks')
+      .update({
+        status: 'completed',
+        completed_at: now,
+      })
+      .eq('related_entity_type', 'signature_request')
+      .eq('related_entity_id', signatureRequestId)
+
+    if (taskCompleteError) {
+      console.warn('⚠️ [INTRODUCER AGREEMENT] Failed to complete CEO/Arranger task:', taskCompleteError)
+    } else {
+      console.log('✅ [INTRODUCER AGREEMENT] CEO/Arranger task marked as completed')
+    }
+
+    // Get introducer users for signature request and task creation (include user email as fallback)
+    const { data: introducerUsers } = await supabase
+      .from('introducer_users')
+      .select('user_id, user:user_id(email)')
+      .eq('introducer_id', agreement.introducer_id)
+
+    if (introducerUsers && introducerUsers.length > 0) {
+      const signerLabel = isArrangerSigner ? arrangerName : 'VERSO'
+      const primaryIntroducerUserId = introducerUsers[0].user_id
+      // Use entity email, or fall back to the primary user's email
+      const primaryUserEmail = (introducerUsers[0] as any).user?.email
+      const finalSignerEmail = introducerEmail || primaryUserEmail || 'no-email@placeholder.com'
+
+      // Create signature request for introducer
+      const signingToken = crypto.randomUUID()
+      const expiresAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000) // 14 days
+
+      const { data: introducerSignatureRequest, error: sigReqError } = await supabase
+        .from('signature_requests')
+        .insert({
+          introducer_id: agreement.introducer_id,
+          introducer_agreement_id: agreementId,
+          deal_id: agreement.deal_id,
+          signer_email: finalSignerEmail,
+          signer_name: introducerName,
+          document_type: 'introducer_agreement',
+          signer_role: 'introducer',
+          signature_position: 'party_b',
+          signing_token: signingToken,
+          token_expires_at: expiresAt.toISOString(),
+          // IMPORTANT: Use CEO-signed PDF as the base for introducer to sign
+          // This ensures the final PDF has both signatures
+          unsigned_pdf_path: sigRequest.signed_pdf_path,
+          status: 'pending',
+        })
+        .select('id')
+        .single()
+
+      if (sigReqError || !introducerSignatureRequest) {
+        console.error('❌ [INTRODUCER AGREEMENT] Failed to create introducer signature request:', sigReqError)
+      } else {
+        console.log('✅ [INTRODUCER AGREEMENT] Introducer signature request created:', introducerSignatureRequest.id)
+
+        // Update agreement with introducer signature request ID
+        await supabase
+          .from('introducer_agreements')
+          .update({
+            introducer_signature_request_id: introducerSignatureRequest.id,
+          })
+          .eq('id', agreementId)
+
+        // Build fee description for task
+        const subscriptionFeePercent = agreement.default_commission_bps ? (agreement.default_commission_bps / 100).toFixed(2) : '0'
+        const performanceFeePercent = agreement.performance_fee_bps ? (agreement.performance_fee_bps / 100).toFixed(2) : null
+        const feeDescription = performanceFeePercent
+          ? `${subscriptionFeePercent}% subscription fee, ${performanceFeePercent}% performance fee`
+          : `${subscriptionFeePercent}% subscription fee`
+
+        // Create VERSOSign task for introducer with detailed info
+        const signingUrl = `/sign/${signingToken}`
+        const { error: taskError } = await supabase.from('tasks').insert({
+          owner_user_id: primaryIntroducerUserId,
+          kind: 'countersignature',
+          category: 'compliance',
+          title: `Sign Your Introducer Agreement: ${dealName}`,
+          description: `Please review and sign your introducer fee agreement.\n\n` +
+            `• Deal: ${dealName}\n` +
+            `• Your Commission: ${feeDescription}\n` +
+            `• Reference: ${agreement.reference_number || 'N/A'}\n\n` +
+            `${signerLabel} has already signed. After you sign, the agreement becomes active.`,
+          status: 'pending',
+          priority: 'high',
+          related_entity_type: 'signature_request',
+          related_entity_id: introducerSignatureRequest.id,
+          related_deal_id: agreement.deal_id,
+          due_at: expiresAt.toISOString(),
+          action_url: signingUrl,
+          instructions: {
+            type: 'signature',
+            action_url: signingUrl,
+            signature_request_id: introducerSignatureRequest.id,
+            document_type: 'introducer_agreement',
+            introducer_id: agreement.introducer_id,
+            introducer_name: introducerName,
+            deal_name: dealName,
+            agreement_id: agreementId,
+            reference_number: agreement.reference_number,
+            fee_summary: feeDescription,
+          },
+        })
+
+        if (taskError) {
+          console.error('⚠️ [INTRODUCER AGREEMENT] Failed to create introducer task:', taskError)
+        } else {
+          console.log('✅ [INTRODUCER AGREEMENT] Introducer task created in VERSOSign')
+        }
+      }
+
+      // Also send notification
+      const notifications = introducerUsers.map((iu: any) => ({
+        user_id: iu.user_id,
+        investor_id: null,
+        title: 'Introducer Agreement Ready for Your Signature',
+        message: `Your introducer agreement for ${dealName} has been signed by ${signerLabel} and is ready for your signature.`,
+        link: `/versotech_main/versosign`,
+        type: 'action_required'
+      }))
+
+      await supabase.from('investor_notifications').insert(notifications)
+      console.log('✅ [INTRODUCER AGREEMENT] Notified introducer users')
+    }
+
+  } else if (sigRequest.signer_role === 'introducer') {
+    // Introducer signed - agreement is now active!
+    console.log('🎉 [INTRODUCER AGREEMENT] Introducer signed - activating agreement:', agreementId)
+
+    const { error: activateError } = await supabase
+      .from('introducer_agreements')
+      .update({
+        status: 'active',
+        introducer_signature_request_id: signatureRequestId,
+        signed_date: now.split('T')[0], // date type
+        signed_pdf_url: sigRequest.signed_pdf_path,
+        updated_at: now
+      })
+      .eq('id', agreementId)
+
+    if (activateError) {
+      console.error('❌ [INTRODUCER AGREEMENT] Failed to activate agreement:', activateError)
+    } else {
+      console.log('✅ [INTRODUCER AGREEMENT] Agreement activated successfully')
+    }
+
+    // Mark linked fee plan as accepted when agreement becomes active
+    if (agreement.fee_plan_id) {
+      console.log('📋 [INTRODUCER AGREEMENT] Updating linked fee plan to accepted:', agreement.fee_plan_id)
+
+      const { data: feePlan, error: feePlanFetchError } = await supabase
+        .from('fee_plans')
+        .select('id, status')
+        .eq('id', agreement.fee_plan_id)
+        .maybeSingle()
+
+      if (feePlanFetchError) {
+        console.error('❌ [INTRODUCER AGREEMENT] Failed to fetch fee plan:', feePlanFetchError)
+      } else if (feePlan && feePlan.status !== 'accepted') {
+        // Get introducer user for accepted_by field
+        const { data: introducerUser } = await supabase
+          .from('introducer_users')
+          .select('user_id')
+          .eq('introducer_id', agreement.introducer_id)
+          .limit(1)
+          .maybeSingle()
+
+        const { error: feePlanUpdateError } = await supabase
+          .from('fee_plans')
+          .update({
+            status: 'accepted',
+            accepted_at: now,
+            accepted_by: introducerUser?.user_id || null,
+            updated_at: now
+          })
+          .eq('id', agreement.fee_plan_id)
+
+        if (feePlanUpdateError) {
+          console.error('❌ [INTRODUCER AGREEMENT] Failed to update fee plan status:', feePlanUpdateError)
+        } else {
+          console.log('✅ [INTRODUCER AGREEMENT] Fee plan marked as accepted')
+
+          // Create audit log for fee plan acceptance
+          await supabase.from('audit_logs').insert({
+            event_type: 'fee_plan',
+            action: 'accepted',
+            entity_type: 'fee_plans',
+            entity_id: agreement.fee_plan_id,
+            actor_id: introducerUser?.user_id || null,
+            action_details: {
+              description: 'Fee plan accepted via introducer agreement signature',
+              introducer_id: agreement.introducer_id,
+              agreement_id: agreementId
+            },
+            timestamp: now
+          })
+        }
+      } else if (feePlan) {
+        console.log('ℹ️ [INTRODUCER AGREEMENT] Fee plan already accepted, skipping update')
+      }
+    }
+
+    // Mark the introducer's task as completed
+    const { error: taskCompleteError } = await supabase
+      .from('tasks')
+      .update({
+        status: 'completed',
+        completed_at: now,
+      })
+      .eq('related_entity_type', 'signature_request')
+      .eq('related_entity_id', signatureRequestId)
+
+    if (taskCompleteError) {
+      console.warn('⚠️ [INTRODUCER AGREEMENT] Failed to complete introducer task:', taskCompleteError)
+    } else {
+      console.log('✅ [INTRODUCER AGREEMENT] Introducer task marked as completed')
+    }
+
+    // Notify introducer users that agreement is active
+    const { data: introducerUsers } = await supabase
+      .from('introducer_users')
+      .select('user_id')
+      .eq('introducer_id', agreement.introducer_id)
+
+    if (introducerUsers && introducerUsers.length > 0) {
+      const notifications = introducerUsers.map((iu: any) => ({
+        user_id: iu.user_id,
+        investor_id: null,
+        title: 'Introducer Agreement Active',
+        message: 'Your introducer agreement is now fully executed and active. You can now receive investor referrals.',
+        link: `/versotech_main/introducer-agreements/${agreementId}`,
+        type: 'success'
+      }))
+
+      await supabase.from('investor_notifications').insert(notifications)
+      console.log('✅ [INTRODUCER AGREEMENT] Notified introducer users of activation')
+    }
+
+    // Notify arranger users (if arranger exists)
+    if (agreement.arranger_id) {
+      const { data: arrangerUsers } = await supabase
+        .from('arranger_users')
+        .select('user_id')
+        .eq('arranger_id', agreement.arranger_id)
+
+      if (arrangerUsers && arrangerUsers.length > 0) {
+        const arrangerNotifications = arrangerUsers.map((au: any) => ({
+          user_id: au.user_id,
+          investor_id: null,
+          title: 'Introducer Agreement Executed',
+          message: `Introducer agreement with ${introducerName} is now fully executed and active.`,
+          link: `/versotech_main/my-introducers`,
+          type: 'success'
+        }))
+
+        await supabase.from('investor_notifications').insert(arrangerNotifications)
+        console.log('✅ [INTRODUCER AGREEMENT] Notified arranger users')
+      }
+    }
+
+    // Notify staff_admin/CEO users
+    const { data: staffUsers } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('role', 'staff_admin')
+      .limit(5)
+
+    if (staffUsers && staffUsers.length > 0) {
+      const staffNotifications = staffUsers.map((staff: any) => ({
+        user_id: staff.id,
+        investor_id: null,
+        title: 'Introducer Agreement Executed',
+        message: `Introducer agreement with ${introducerName} has been fully executed and is now active.`,
+        link: `/versotech_main/staff/introducers`,
+        type: 'info'
+      }))
+
+      await supabase.from('investor_notifications').insert(staffNotifications)
+      console.log('✅ [INTRODUCER AGREEMENT] Notified staff users')
+    }
+
+    // Create audit log
+    await supabase.from('audit_logs').insert({
+      event_type: 'introducer',
+      action: 'agreement_activated',
+      entity_type: 'introducer_agreement',
+      entity_id: agreementId,
+      actor_id: null,
+      action_details: {
+        description: 'Introducer agreement fully executed and activated',
+        introducer_id: agreement.introducer_id,
+        introducer_name: introducerName,
+        arranger_id: agreement.arranger_id,
+        agreement_id: agreementId,
+        signature_request_id: signatureRequestId
+      },
+      timestamp: now
+    })
+  }
+
+  console.log('🎉 [INTRODUCER AGREEMENT] Completion processing finished')
 }

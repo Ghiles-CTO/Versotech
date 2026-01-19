@@ -2742,7 +2742,9 @@ export type Database = {
           opportunity_summary: string | null
           payment_deadline_days: number | null
           performance_fee_clause: string | null
+          price_per_share: number | null
           price_per_share_text: string | null
+          cost_per_share: number | null
           published_at: string | null
           purchaser: string | null
           recital_b_html: string | null
@@ -2801,7 +2803,9 @@ export type Database = {
           opportunity_summary?: string | null
           payment_deadline_days?: number | null
           performance_fee_clause?: string | null
+          price_per_share?: number | null
           price_per_share_text?: string | null
+          cost_per_share?: number | null
           published_at?: string | null
           purchaser?: string | null
           recital_b_html?: string | null
@@ -2860,7 +2864,9 @@ export type Database = {
           opportunity_summary?: string | null
           payment_deadline_days?: number | null
           performance_fee_clause?: string | null
+          price_per_share?: number | null
           price_per_share_text?: string | null
+          cost_per_share?: number | null
           published_at?: string | null
           purchaser?: string | null
           recital_b_html?: string | null

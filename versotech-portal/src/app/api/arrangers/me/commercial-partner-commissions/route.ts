@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { z } from 'zod'
+import { auditLogger, AuditActions, AuditEntities } from '@/lib/audit'
 
 // Schema for creating a commercial partner commission
 const createCommissionSchema = z.object({
@@ -215,6 +216,26 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Commercial partner not found' }, { status: 404 })
     }
 
+    // GAP-9 FIX: Verify commercial partner has a valid signed placement agreement
+    // NOTE: Commercial partners use placement_agreements table (not commercial_partner_agreements which doesn't exist)
+    const today = new Date().toISOString().split('T')[0]
+    const { data: validAgreement } = await serviceSupabase
+      .from('placement_agreements')
+      .select('id, status, signed_date, expiry_date')
+      .eq('commercial_partner_id', data.commercial_partner_id)
+      .eq('status', 'active')
+      .not('signed_date', 'is', null)
+      .or(`expiry_date.is.null,expiry_date.gte.${today}`)
+      .limit(1)
+      .maybeSingle()
+
+    if (!validAgreement) {
+      return NextResponse.json({
+        error: 'No valid commercial partner agreement',
+        message: 'Cannot create commission without an active signed placement agreement'
+      }, { status: 400 })
+    }
+
     // If deal_id provided, verify it belongs to this arranger
     if (data.deal_id) {
       const { data: deal, error: dealError } = await serviceSupabase
@@ -229,6 +250,26 @@ export async function POST(request: NextRequest) {
 
       if (deal.arranger_entity_id !== arrangerId) {
         return NextResponse.json({ error: 'Deal does not belong to your entity' }, { status: 403 })
+      }
+    }
+
+    // GAP-9 FIX: Check for duplicate commission
+    // Prevent creating multiple commissions for the same (commercial_partner, deal, investor, basis_type)
+    if (data.deal_id && data.investor_id) {
+      const { data: existingCommission } = await serviceSupabase
+        .from('commercial_partner_commissions')
+        .select('id')
+        .eq('commercial_partner_id', data.commercial_partner_id)
+        .eq('deal_id', data.deal_id)
+        .eq('investor_id', data.investor_id)
+        .eq('basis_type', data.basis_type)
+        .maybeSingle()
+
+      if (existingCommission) {
+        return NextResponse.json({
+          error: 'Duplicate commission',
+          message: 'A commission already exists for this commercial partner, deal, investor, and basis type combination'
+        }, { status: 400 })
       }
     }
 
@@ -261,6 +302,23 @@ export async function POST(request: NextRequest) {
       console.error('[arranger/commercial-partner-commissions] Error creating:', createError)
       return NextResponse.json({ error: 'Failed to create commission' }, { status: 500 })
     }
+
+    // GAP-7 FIX: Audit log commission creation
+    await auditLogger.log({
+      actor_user_id: user.id,
+      action: AuditActions.COMMISSION_CREATED,
+      entity: AuditEntities.COMMERCIAL_PARTNER_COMMISSIONS,
+      entity_id: commission.id,
+      metadata: {
+        commercial_partner_id: data.commercial_partner_id,
+        deal_id: data.deal_id,
+        investor_id: data.investor_id,
+        basis_type: data.basis_type,
+        accrual_amount: data.accrual_amount,
+        currency: data.currency,
+        created_by: 'arranger',
+      },
+    })
 
     // Transform response
     const transformed = {

@@ -71,7 +71,16 @@ const EMAIL_NOTIFICATION_TYPES: NotificationType[] = [
   'capital_call',
   'escrow_confirmed',
   'deal_invite',
-  'kyc_status'
+  'kyc_status',
+  // GAP-13 FIX: Add introducer notification types for email delivery
+  'introducer_agreement_signed',
+  'introducer_agreement_pending',
+  'introducer_commission_accrued',
+  'introducer_invoice_sent',
+  'introducer_payment_confirmed',
+  // Partner notification types
+  'partner_commission_accrued',
+  'partner_paid',
 ]
 
 /**

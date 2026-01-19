@@ -199,11 +199,11 @@ export function ModernHoldingsFilters({
           )}
         </div>
 
-        {/* Quick Filters */}
+        {/* Quick Filters - responsive: full width on mobile, fixed on desktop */}
         <div className="flex flex-wrap gap-2">
           {/* Type Filter */}
           <Select value={filters.type} onValueChange={(value) => handleFilterChange('type', value)}>
-            <SelectTrigger className="w-[160px]">
+            <SelectTrigger className="w-full sm:w-[160px]">
               <SelectValue placeholder="Vehicle Type" />
             </SelectTrigger>
             <SelectContent>
@@ -217,7 +217,7 @@ export function ModernHoldingsFilters({
 
           {/* Performance Filter */}
           <Select value={filters.performance} onValueChange={(value) => handleFilterChange('performance', value)}>
-            <SelectTrigger className="w-[160px]">
+            <SelectTrigger className="w-full sm:w-[160px]">
               <SelectValue placeholder="Performance" />
             </SelectTrigger>
             <SelectContent>
@@ -231,7 +231,7 @@ export function ModernHoldingsFilters({
 
           {/* Size Filter */}
           <Select value={filters.size} onValueChange={(value) => handleFilterChange('size', value)}>
-            <SelectTrigger className="w-[140px]">
+            <SelectTrigger className="w-full sm:w-[140px]">
               <SelectValue placeholder="Size" />
             </SelectTrigger>
             <SelectContent>

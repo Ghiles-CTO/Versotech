@@ -19,6 +19,8 @@ const termSheetFieldsSchema = z.object({
   structure: z.string().optional().nullable(),
   allocation_up_to: z.number().nullable().optional(),
   price_per_share_text: z.string().optional().nullable(),
+  price_per_share: z.number().nullable().optional(),
+  cost_per_share: z.number().nullable().optional(),
   minimum_ticket: z.number().nullable().optional(),
   maximum_ticket: z.number().nullable().optional(),
   subscription_fee_percent: z.number().nullable().optional(),
@@ -159,7 +161,7 @@ export async function POST(
 
   const normalizedFields = Object.fromEntries(
     Object.entries(fields).map(([key, value]) => {
-      if (['allocation_up_to', 'minimum_ticket', 'maximum_ticket'].includes(key)) {
+      if (['allocation_up_to', 'minimum_ticket', 'maximum_ticket', 'price_per_share', 'cost_per_share'].includes(key)) {
         return [key, typeof value === 'number' ? value : null]
       }
       if (['subscription_fee_percent', 'management_fee_percent', 'carried_interest_percent'].includes(key)) {
@@ -278,7 +280,7 @@ export async function PATCH(
       updatePayload[key] = parseDate(value as string | null | undefined)
       return
     }
-    if (['allocation_up_to', 'minimum_ticket', 'maximum_ticket'].includes(key)) {
+    if (['allocation_up_to', 'minimum_ticket', 'maximum_ticket', 'price_per_share', 'cost_per_share'].includes(key)) {
       updatePayload[key] = typeof value === 'number' ? value : null
       return
     }

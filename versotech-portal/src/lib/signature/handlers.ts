@@ -1325,6 +1325,7 @@ export async function handleIntroducerAgreementSignature(
           title: 'Fee Agreement Ready for Signature',
           message: notificationMessage,
           link: `/versotech_main/versosign`, // Direct to VERSOSign page
+          type: 'introducer_agreement_pending', // GAP-6 FIX: Add proper notification type
         })
 
         console.log(`✅ [INTRODUCER AGREEMENT HANDLER] Notification sent to ${signatory.email}`)
@@ -1455,6 +1456,7 @@ export async function handleIntroducerAgreementSignature(
           title: 'Introducer Agreement Fully Signed',
           message: `${introducer?.legal_name || 'Introducer'}'s fee agreement has been fully executed and is now active.`,
           link: `/versotech_main/my-introducers`,
+          type: 'introducer_agreement_signed', // GAP-6 FIX: Add proper notification type
         }))
 
         await supabase.from('investor_notifications').insert(notifications)
@@ -1476,6 +1478,7 @@ export async function handleIntroducerAgreementSignature(
         title: 'Introducer Agreement Fully Signed',
         message: `${introducer?.legal_name || 'Introducer'}'s fee agreement has been fully executed and is now active.`,
         link: `/versotech_main/introducers/${agreement.introducer_id}?tab=agreements`,
+        type: 'introducer_agreement_signed', // GAP-6 FIX: Add proper notification type
       }))
 
       await supabase.from('investor_notifications').insert(notifications)
@@ -1666,6 +1669,7 @@ export async function handlePlacementAgreementSignature(
           title: 'Placement Agreement Ready for Signature',
           message: `Your placement agreement has been signed by the ${signerLabel} and is ready for your signature.`,
           link: `/versotech_main/placement-agreements/${agreementId}`,
+          type: 'introducer_agreement_pending', // GAP-6 FIX: Placement agreements use same type as introducer agreements
         }))
 
         await supabase.from('investor_notifications').insert(notifications)
@@ -1711,6 +1715,7 @@ export async function handlePlacementAgreementSignature(
         title: 'Placement Agreement Fully Signed',
         message: `${cp?.display_name || cp?.legal_name || 'Commercial Partner'}'s placement agreement has been fully executed and is now active.`,
         link: `/versotech_main/commercial-partners/${agreement.commercial_partner_id}?tab=agreements`,
+        type: 'introducer_agreement_signed', // GAP-6 FIX: Placement agreements use same type as introducer agreements
       }))
 
       await supabase.from('investor_notifications').insert(notifications)
@@ -1731,6 +1736,7 @@ export async function handlePlacementAgreementSignature(
           title: 'Placement Agreement Fully Signed',
           message: `${cp?.display_name || cp?.legal_name || 'Commercial Partner'}'s placement agreement for your mandate is now active.`,
           link: `/versotech_main/my-commercial-partners`,
+          type: 'introducer_agreement_signed', // GAP-6 FIX: Placement agreements use same type as introducer agreements
         }))
 
         await supabase.from('investor_notifications').insert(arrangerNotifications)

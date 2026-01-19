@@ -14,9 +14,7 @@ import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Label } from '@/components/ui/label'
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { UserCheck, Users, Loader2, AlertCircle, Send, Mail, Briefcase, Building2, Check } from 'lucide-react'
-import { cn } from '@/lib/utils'
 
 interface Signatory {
   id: string
@@ -32,6 +30,12 @@ interface Arranger {
   id: string
   company_name: string
   legal_name: string
+}
+
+interface DocumentCountersigner {
+  countersigner_type: 'ceo' | 'arranger' | null
+  countersigner_name: string | null
+  countersigner_title: string | null
 }
 
 interface SignatorySelectionDialogProps {
@@ -58,6 +62,7 @@ export function SignatorySelectionDialog({
   const [investorType, setInvestorType] = useState<string>('individual')
   const [arranger, setArranger] = useState<Arranger | null>(null)
   const [countersignerType, setCountersignerType] = useState<'ceo' | 'arranger'>('ceo')
+  const [documentCountersigner, setDocumentCountersigner] = useState<DocumentCountersigner | null>(null)
 
   useEffect(() => {
     if (open) {
@@ -69,11 +74,16 @@ export function SignatorySelectionDialog({
     setLoading(true)
     setError(null)
     try {
-      const response = await fetch(`/api/subscriptions/${subscriptionId}/signatories`)
-      if (!response.ok) {
+      // Fetch signatories and document countersigner in parallel
+      const [signatoriesResponse, documentResponse] = await Promise.all([
+        fetch(`/api/subscriptions/${subscriptionId}/signatories`),
+        fetch(`/api/documents/${documentId}`)
+      ])
+
+      if (!signatoriesResponse.ok) {
         throw new Error('Failed to fetch signatories')
       }
-      const data = await response.json()
+      const data = await signatoriesResponse.json()
 
       // Get all designated signatories (is_signatory = true or is_primary for individuals)
       const allSignatories = data.signatories || []
@@ -84,11 +94,27 @@ export function SignatorySelectionDialog({
       setSignatories(designatedSignatories)
       setInvestorType(data.investor_type || 'individual')
 
-      // Check if deal has an arranger
+      // Check if deal has an arranger - auto-select arranger as countersigner
       if (data.arranger) {
         setArranger(data.arranger)
+        setCountersignerType('arranger') // Auto-select arranger when present
       } else {
         setArranger(null)
+        setCountersignerType('ceo') // Default to CEO when no arranger
+      }
+
+      // Check if document already has countersigner info stored
+      if (documentResponse.ok) {
+        const docData = await documentResponse.json()
+        if (docData.countersigner_type) {
+          setDocumentCountersigner({
+            countersigner_type: docData.countersigner_type,
+            countersigner_name: docData.countersigner_name,
+            countersigner_title: docData.countersigner_title
+          })
+          // Use the stored countersigner type
+          setCountersignerType(docData.countersigner_type)
+        }
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error')
@@ -201,68 +227,58 @@ export function SignatorySelectionDialog({
                 ))}
               </div>
 
-              {/* Countersigner Selection */}
-              {arranger && (
-                <div className="space-y-3 pt-4 border-t border-white/10">
-                  <Label className="text-sm font-medium text-foreground">
-                    Countersigner (VERSO Side)
-                  </Label>
-                  <RadioGroup
-                    value={countersignerType}
-                    onValueChange={(value) => setCountersignerType(value as 'ceo' | 'arranger')}
-                    className="space-y-2"
-                  >
-                    <label
-                      className={cn(
-                        "flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors",
-                        countersignerType === 'ceo'
-                          ? "border-blue-500/50 bg-blue-500/10"
-                          : "border-white/10 bg-white/5 hover:bg-white/10"
-                      )}
-                    >
-                      <RadioGroupItem value="ceo" id="ceo" />
+              {/* VERSO Signatories Section - Issuer + Arranger */}
+              <div className="space-y-3 pt-4 border-t border-white/10">
+                <Label className="text-sm font-medium text-foreground">
+                  VERSO Signatories (Added Automatically)
+                </Label>
+
+                {/* Issuer - CEO always signs as party_b */}
+                <div className="flex items-start gap-3 p-3 rounded-lg border border-blue-500/30 bg-blue-500/10">
+                  <Check className="h-5 w-5 text-blue-500 mt-0.5 flex-shrink-0" />
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
                       <Building2 className="h-4 w-4 text-blue-400" />
-                      <div className="flex-1">
-                        <span className="font-medium text-foreground">VERSO CEO</span>
-                        <p className="text-xs text-muted-foreground">
-                          Standard countersignature by VERSO Holdings
-                        </p>
-                      </div>
-                    </label>
-                    <label
-                      className={cn(
-                        "flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors",
-                        countersignerType === 'arranger'
-                          ? "border-emerald-500/50 bg-emerald-500/10"
-                          : "border-white/10 bg-white/5 hover:bg-white/10"
-                      )}
-                    >
-                      <RadioGroupItem value="arranger" id="arranger" />
-                      <Briefcase className="h-4 w-4 text-emerald-400" />
-                      <div className="flex-1">
-                        <span className="font-medium text-foreground">Arranger</span>
-                        <p className="text-xs text-muted-foreground">
-                          {arranger.company_name || arranger.legal_name}
-                        </p>
-                      </div>
-                    </label>
-                  </RadioGroup>
+                      <span className="font-medium text-foreground">VERSO Capital 2 GP SARL</span>
+                      <Badge variant="outline" className="text-xs border-blue-500/50 text-blue-400 bg-blue-500/10">
+                        Issuer
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Signed by CEO on behalf of the Issuer
+                    </p>
+                  </div>
                 </div>
-              )}
+
+                {/* Arranger - signs as party_c if present */}
+                {arranger && (
+                  <div className="flex items-start gap-3 p-3 rounded-lg border border-emerald-500/30 bg-emerald-500/10">
+                    <Check className="h-5 w-5 text-emerald-500 mt-0.5 flex-shrink-0" />
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <Briefcase className="h-4 w-4 text-emerald-400" />
+                        <span className="font-medium text-foreground">
+                          {arranger.company_name || arranger.legal_name}
+                        </span>
+                        <Badge variant="outline" className="text-xs border-emerald-500/50 text-emerald-400 bg-emerald-500/10">
+                          Arranger
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Signed as Attorney under Clause 6
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
 
               {/* Info Note */}
-              {signatories.length > 1 && (
-                <Alert className="bg-blue-500/10 border-blue-500/30">
-                  <Users className="h-4 w-4 text-blue-500" />
-                  <AlertDescription className="text-blue-200 text-sm">
-                    Each signatory will receive a separate signature request. The document will be marked complete after all parties have signed.
-                  </AlertDescription>
-                </Alert>
-              )}
-
-              <p className="text-xs text-muted-foreground">
-                Staff countersignature will be added automatically.
-              </p>
+              <Alert className="bg-blue-500/10 border-blue-500/30">
+                <Users className="h-4 w-4 text-blue-500" />
+                <AlertDescription className="text-blue-200 text-sm">
+                  {signatories.length + 1 + (arranger ? 1 : 0)} signature requests will be created. The document will be marked complete after all parties have signed.
+                </AlertDescription>
+              </Alert>
             </>
           )}
         </div>

@@ -18,8 +18,10 @@ export const SIGNATURE_CONFIG = {
   },
   pdf: {
     signature: {
-      width: 180,
-      height: 70
+      // Reduced from 180x70 to fit better in subscription pack signature fields
+      // and prevent overlap with surrounding text
+      width: 150,
+      height: 50
     },
     table: {
       // Y position calibrated from actual NDA template (Page 5, US Letter 612×792pt)
@@ -38,8 +40,10 @@ export const SIGNATURE_CONFIG = {
     },
     metadata: {
       timestampFontSize: 7,
-      timestampOffsetY: 15,
-      signerNameOffsetY: 27,
+      // Reduced offsets to keep metadata closer to signature
+      // and prevent overlap with content below
+      timestampOffsetY: 12,  // was 15
+      signerNameOffsetY: 22, // was 27
       textColor: { r: 0.3, g: 0.3, b: 0.3 }
     }
   },

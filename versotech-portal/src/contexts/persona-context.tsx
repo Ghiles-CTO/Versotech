@@ -119,23 +119,36 @@ export function PersonaProvider({ children, initialPersonas = [] }: PersonaProvi
           'investor': 8, // Investor is lowest priority for dual-persona users
         }
 
-        // Find the primary persona with highest priority (lowest number)
-        const primaryPersonas = fetchedPersonas.filter(p => p.is_primary)
-        if (primaryPersonas.length > 0) {
-          selectedPersona = primaryPersonas.reduce((best, current) => {
+        // ALWAYS apply priority order to select highest-priority persona
+        // This ensures CEO users always default to CEO view
+        if (fetchedPersonas.length > 0) {
+          selectedPersona = fetchedPersonas.reduce((best, current) => {
             const bestPriority = personaPriority[best.persona_type] ?? 99
             const currentPriority = personaPriority[current.persona_type] ?? 99
             return currentPriority < bestPriority ? current : best
           })
-        } else {
-          selectedPersona = fetchedPersonas[0] || null
         }
       }
 
       setActivePersona(selectedPersona)
       // Set cookie for server-side persona detection on initial load
       if (selectedPersona) {
+        // Check if the current cookie is stale (from a different user/session)
+        const currentCookie = document.cookie
+          .split('; ')
+          .find(row => row.startsWith(ACTIVE_PERSONA_TYPE_COOKIE))
+          ?.split('=')[1]
+
+        const cookieWasStale = currentCookie && currentCookie !== selectedPersona.persona_type
+
         setPersonaCookie(selectedPersona.persona_type)
+
+        // If cookie was stale, the server rendered the wrong dashboard
+        // Force a refresh to get the correct server-side render
+        if (cookieWasStale && window.location.pathname.includes('/dashboard')) {
+          window.location.reload()
+          return
+        }
       }
 
     } catch (err) {
@@ -183,19 +196,18 @@ export function PersonaProvider({ children, initialPersonas = [] }: PersonaProvi
           'investor': 8,
         }
 
-        const primaryPersonas = initialPersonas.filter(p => p.is_primary)
-        if (primaryPersonas.length > 0) {
-          selectedPersona = primaryPersonas.reduce((best, current) => {
+        // ALWAYS apply priority order to select highest-priority persona
+        // This ensures CEO users always default to CEO view
+        if (initialPersonas.length > 0) {
+          selectedPersona = initialPersonas.reduce((best, current) => {
             const bestPriority = personaPriority[best.persona_type] ?? 99
             const currentPriority = personaPriority[current.persona_type] ?? 99
             return currentPriority < bestPriority ? current : best
           })
-        } else {
-          selectedPersona = initialPersonas[0] || null
         }
       }
 
-      setActivePersona(selectedPersona)
+      setActivePersona(selectedPersona ?? null)
       setIsLoading(false)
     }
   }, [initialPersonas, refreshPersonas])

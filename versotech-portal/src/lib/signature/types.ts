@@ -5,9 +5,11 @@
 export type DocumentType = 'nda' | 'subscription' | 'amendment' | 'introducer_agreement' | 'placement_agreement' | 'certificate' | 'other'
 export type SignerRole = 'investor' | 'admin' | 'arranger' | 'introducer' | 'commercial_partner' | 'lawyer' | 'ceo'
 // Supports multiple signatories: party_a, party_a_2, party_a_3, etc.
+// party_c is for arranger signatures (appears on page 12 and 39)
 export type SignaturePosition =
   | 'party_a' | 'party_a_1' | 'party_a_2' | 'party_a_3' | 'party_a_4' | 'party_a_5'
   | 'party_b' | 'party_b_1' | 'party_b_2' | 'party_b_3' | 'party_b_4' | 'party_b_5'
+  | 'party_c'
 export type SignatureStatus = 'pending' | 'signed' | 'expired' | 'cancelled'
 
 export interface SignatureRequestRecord {
@@ -41,6 +43,7 @@ export interface SignatureRequestRecord {
   placement_id?: string // For placement agreement signing (commercial partner ID)
   placement_agreement_id?: string // For placement agreement signing
   total_party_a_signatories?: number // For multi-signatory: total Party A signers
+  signature_placements?: SignaturePlacementRecord[] // Pre-calculated positions for multi-page signing
   created_at: string
   updated_at: string
   created_by?: string
@@ -106,6 +109,29 @@ export interface EmbedSignatureParams {
   signaturePosition: SignaturePosition
   timestamp?: Date
   totalPartyASignatories?: number // For multi-signatory: how many Party A signers total
+  documentType?: DocumentType // For document-type-specific signature positioning
+  pageNumber?: number // Specific page for signature (1-indexed, -1 = last page)
+  xPercent?: number // Override X position as percentage of page width
+  yFromBottom?: number // Override Y position in points from page bottom
+}
+
+/**
+ * Parameters for multi-page signature embedding
+ * Used for subscription packs where signatures appear on multiple pages
+ */
+export interface SignaturePlacementRecord {
+  page: number     // 1-indexed page number
+  x: number        // percentage from left (0-1)
+  y: number        // points from bottom of page
+  label: string    // for debugging/logging
+}
+
+export interface EmbedSignatureMultipleParams {
+  pdfBytes: Uint8Array
+  signatureDataUrl: string
+  placements: SignaturePlacementRecord[]
+  signerName: string
+  timestamp?: Date
 }
 
 export interface PostSignatureHandlerParams {

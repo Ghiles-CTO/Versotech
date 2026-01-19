@@ -299,11 +299,11 @@ export function DealsListClient({ deals, summary, basePath = '/versotech/staff' 
               {paginatedDeals.map((deal) => (
                 <div
                   key={deal.id}
-                  className="border border-white/10 rounded-lg p-5 bg-white/5 hover:bg-white/10 transition-colors"
+                  className="border border-white/10 rounded-lg p-4 sm:p-5 bg-white/5 hover:bg-white/10 transition-colors"
                 >
-                  {/* Deal Header Row */}
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                  {/* Deal Header Row - stacks on mobile */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-3 flex-1 min-w-0">
                       <Link
                         href={`${basePath}/deals/${deal.id}`}
                         className="text-lg font-semibold text-sky-200 hover:text-sky-100 truncate"
@@ -336,8 +336,8 @@ export function DealsListClient({ deals, summary, basePath = '/versotech/staff' 
                     </div>
                   )}
 
-                  {/* Metadata Row - Aligned Icons */}
-                  <div className="flex items-center gap-6 text-sm text-muted-foreground">
+                  {/* Metadata Row - Aligned Icons (tighter gaps on mobile) */}
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-4 md:gap-6 text-xs sm:text-sm text-muted-foreground">
                     <div className="flex items-center gap-1.5">
                       <Users className="h-4 w-4 flex-shrink-0" />
                       <span>{deal.deal_memberships.length} participants</span>

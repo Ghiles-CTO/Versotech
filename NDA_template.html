@@ -4,9 +4,22 @@
   <meta charset="UTF-8">
   <title>VERSO Capital - NDA-NDNC Agreement</title>
   <style>
+    /* Embed League Spartan font subset (bold 700 only) */
+    @font-face {
+      font-family: 'League Spartan';
+      font-style: normal;
+      font-weight: 700;
+      font-display: swap;
+      src: url(data:font/woff2;base64,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/Q/QP8H9G/Qf4D+Bfon6D9A/wb9E/QfoP8E/Qv0T9B/gf4H6J+gf4D+A/Qv0D9B/wP0T9B/gv4H6H+C+h30f0D/A/R/QP8C/Qv0f0D/AP0P0H+B/gX6P6D/BP0f0H+B/gX6F+j/gP4J+ifof4D+Bfon6D9B/wT9H9C/QP8B+h+gf4P+A/RP0P8A/Qv0X6D/A/on6J+g/wT9D9C/QP8C/QfgP0H/B/RP0L9A/wT9C/Q/QP8D9B+g/wL9B+h/gP4F+h+gf4H+A/R/QP8G/RP0T9C/QP8E/Q/Q/wH9E/R/Qf8H9D9A/wL9E/Qv0D9B/wP0b9B/gP4H6P+A/gX6J+g/Qf8E/Q/Qv0D/Bfo/oH+C/gPoX6B/gv4H6F+g/wP6F+h/gP4J+h+g/wT9C/Q/QP0J+i/Q/wT9F+g/Qf8C/Qfof4D+Bfo36J+g/wL9B+j/gP4N+j+g/wL9F+g/QP8B+j+gf4P+A/RP0H+A/g36F+ifoP8E/Qv0T9B/gf4J+jfof4B+Bfo/oP8B+hfoP0H/A/Q/Qf8E/Qv0P0D/Av0X6F+g/wH6P6B/gf4F+h+gf4L+D+hfoH+C/gfof4H+Bfon6J+gf4H+D+ifoP8B+h+gf4L+CfonqL9A/wT9G/Qv0L9A/wH6H6D/Av0L9E/Qv0D/Afon6H+A/g/o/4D+BfpP0D9B/wf0H6D/Av0T9D9A/wP0P0D/B/R/QP8F+g/Qv0H/A/Qv0P8B/Qfof4D+D+g/Qf8D9E/Qf4H+Cfon6H+A/gX6F+h/gH4J+j+g/wT9F+hfgP8B/Qv0X6B/gn4J+ifov0D/Av0b9E/Q/wD9D9D/Av0P0H+B/gfoX6D/A/on6F+g/wT9E/Qv0P8B/Q/Q/wD9G/Q/Qf8F+h+gf4L+Bfo/oH+C/gX6L9C/QP8E/R/Q/wL9C/RfoH+C/gP0P0D/A/Q/QP8H9B+g/wL9E/Qv0P8A/Qv0b9D/AP0T9D9A/wP0P0D/Av0X6P+A/gX6F+h/gv4F+j+gf4L+A/Qv0H+A/g36L9A/Qf8E/R/Q/wD9D9C/QP8F+j+gf4H+Bfo/oP8C/RP0L9B/gf4F+h+gf4H+C/Q/QP8J+hfoX6D/Av0P0H+B/gn6F+h/gv4P6J+gf4H+Cfon6H+A/gf4H6B/gf4P6F+g/wH6N+g/QP8C/R/Qv0D/BP0P0L9A/wX6J+hfoP8E/Qv0f0D/BP0P0D9B/wP0P0D/Av0T9E/Q/wH9F+i/QP8D9B+gf4H+C/RP0D9B/wX6H6B/gv4F+i/Qf4H+Cfon6N+g/wH6F+g/QP8D9E/QP0H/Av0T9E/Q/wD9G/Q/QP8E/Rf4f4D+BfofYH+D/gv0P0D/BP0f0P8A/Qv0P0D/BP0H6J+g/wT9E/R/QP8D9F+g/wX6D9A/Qf8C/Q/QP0H/Bv0P0P8A/Qv0X6D/Av0X6P+A/gfof4D+D+h/gP4J+h+gf4L+A/RP0L9A/wH6J+h/gP4T9E/Q/wL9C/Q/QP8E/RP0T9C/QP8E/Qv0X6D/Av0L9D9A/wT9D9C/QP8C/Q/Qf4H+B+h/gH4J+h+g/wT9E/Qv0H+B/gn6F+h/gP4F+h+gf4H+B+j/gP4P6F+g/wL9F+h/gP4H6J+gf4P+B+hfof4D9E/Qv0D/BP0L9G/Qf4D+B+h/gH4J+i/Q/wD9D9C/Qf8F+j+g/wL9C/Q/QP8E/Qv0P0D/BP0f0L9A/wX6J+hfoP8B+ifof4D+Bfo/oH+C/gn6H6B/gf4H6J+g/wL9E/Q/Qf8C/Qv0H6B/gv4F+ifon6D/Av0T9D9A/wT9B+h/gP4F+h+gf4L+B+ifoP8B+h+gf4L+B+ifoH+C/g/oP0H/A/Qv0P8A/Qv0b9B/gP4J+i/Q/wD9E/Q/Qf8F+ifo36D/Av0L9E/Qf4D+B+h/gP4N+hfoX6B/gf4H6J+g/wP6J+hfoH+C/gX6P6D/BP0L9E/Qf4H+Cfon6J+gf4L+A/RP0L9A/wH6J+g/QP8D9E/QP0H/Av0T9E/Q/wH9D9A/Qf8D9B+gf4L+B+ifof4B+h+gf4L+C/Q/QP8C/Qv0T9A/QP8D9D9A/wH6D9D/Av0L9E/Q/wT9C/RP0P8A/Qv0L9D/AP0L9E/Qf4D+B+ifon6D/gP0X6B/gv4J+hfo/4D+Cfon6F+g/wT9C/Q/Qf8E/Qv0T9A/Qf8D9E/Qv0H/BPo/oH+B/gX6F+j/gP4P6N+g/wH6H6B/g/4F+h+g/wP6H6D/Afo/oH+C/gX6F+h/gP4J+h+gf4L+Bfo/oH+B/gX6J+j/gP4F+h+gf4P+B+ifoH+C/gX6D9D/AP0P0D9B/wT9F+h/gP4H6J+g/wL9D9B/gf4F+i/Q/wD9F+i/QP8D9D9A/wP0P0D/B/Q/QP8F+hfov0D/A/Qv0H+B/gn6J+hfof8B+hfo/4D+B+ifoH+C/gX6H6B/gv4H6J+gf4L+B+j/gP4F+h+g/wH6J+ifoH+C/gn6J+h/gP4J+h+gf4L+Bfon6N+g/wH6F+h/gP4D9E/Qf4H+A/RP0D9B/wf0P0D/Av0L9D9A/wL9D9C/Qf8C/Q/Q/wD9E/Q/Qf8C/QfYe6D/Av0T9H9A/wT9E/Q/QP8D9D9B/wT9E/Q/QP8C/RP0T9C/QP8D9E/Qv0D/A/Q/Qf8E/R/Qv0H/Afo36J+g/wD9F+h/gP4P6J+g/wL9E/QfoH+D/gn6J+h/gP4J+j+gf4L+C/Q/QP8E/QfoX6D/Av0P0D9B/wT9D9B/gP4H6J+g/wD9C/Qv0P8B/Qv0P0D/BP0T9C/Q/wH9G/Qv0L9A/wL9B+h/gP4D9C/Q/wD9E/Q/QP8E/R/Qv0D/A/Q/Qf8C/Qv0X6D/Av0P0D9B/wL9D9C/QP8E/Qv0L9A/Qf8H9E/Qf4H+B+h/gP4D9D9A/wL9E/Qv0D9B/wT9D9D/AP0P0D9B/wT9D9C/QP8B+j+gf4P+A/Q/QP8D9E/Qf4D+A/Q/QP8B+g/Qv0H/A/Q/Qf8C/Qv0L9D/Av0P0D9B/wT9D9D/AP0L9D9A/wH6J+hfoH+B/gX6N+h/gP4F+h+gf4H+B+j/gP4P6D9A/wL9E/RP0D9B/wP0P0D/Av0P0D9B/wT9E/Q/QP8C/Qv0P0D/A/Q/Qf8E/RP0H6B/gv4J+ifon6B/gP4J+h+gf4H+Bfon6J+gf4H+Bfo/oH+C/g/on6D/Av0T9C/Q/wD9D9B/gP4J+ifof4D+Bfon6F+g/wP6J+h/gP4J+h+gf4L+B+j/gP4F+i/Q/wD9C/Qv0L9A/wH6J+hfoH+B/gX6J+hfoH+C/gX6J+hfoP8D+ifoX6D/Av0P0P8A/Qv0L9D/AP0P0P8B/Q/Qv0H/BP0T9H9A/wT9H9C/QP8C/Qv0T9D/AP0L9E/Qf4H+B+j/gP4H6J+gf4H+Bfon6F+gf4L+Bfon6J+gf4J+Cfon6F+gf4P+D+h/gP4J+j+gf4J+Cfon6F+gf4L+Bfon6J+gf4J+CfoX6J+gf4L+Dfov0P8A/Qv0L9D/AP0L9C/Q/wH9E/Qv0D9B/wT9H9A/Qf8C/Q/Q/wD9E/R/Qf8C/QfoX6D/A/oX6J+g/wL9F+h/gP4F+h+gf4P+D+h/gP4F+h+gf4P+C/Q/QP8E/Qv0L9D/AP0L9E/Q/wH9D9C/Qf8E/Qv0P0D/BP0P0H+A/g/of4D+A/Qv0L9A/wf0L9C/QP8E/Q/Q/wH9E/Qv0L9A/wP0X6D/A/on6F+gf4H+Cfon6D9A/wT9C/Qv0H+B/gn6F+h/gP4H6J+gf4H+B+j/gP4H6J+gf4L+Bfon6J+gf4H+D+h/gP4F+ifoX6B/gn4J+ifof4D+Bfo/oH+C/gn6F+hfoP8D+jfon6D/Av0L9E/Q/wH9C/Q/Qf8E/QfoX6D/Av0P0P8A/Qv0L9C/QP8D9E/Q/wD9D9A/Qf8E/Qv0T9A/Qf8H9E/Q/wL9D9B/gP4D9D9A/wL9B+g/QP8E/Qv0L9A/Qf8H9E/Qv0D/Av0X6H+A/gX6J+hfoP8C/RP0T9A/QP8D9D9A/wT9E/Q/QP8C/RP0T9C/QP8B+h+gf4L+B+h/gP4J+hfoX6D/Av0T9D9A/wP0P0D/Av0L9E/Q/wH9D9B/gf4F+h+gf4L+A/Q/QP8B+h+gf4H+A/Q/QP8C/Qv0T9D/AP0L9E/Q/wH9E/RP0L9A/wP0P0D/Af4foH+B/gX6F+h/gP4J+h+gf4L+B+hfon6D/gP0L9A/Qf8F+h+g/wP6D9D/AP0H6J+gf4H+B+hfoPrA0CAA) format('woff2');
+    }
+
     @page {
       size: A4;
-      margin: 2cm 2cm 3cm 2cm;
+      margin: 2cm 2cm 2.5cm 2cm;
+    }
+
+    * {
+      box-sizing: border-box;
     }
 
     body {
@@ -14,20 +27,34 @@
       font-size: 10pt;
       line-height: 1.3;
       color: #000;
+      margin: 0;
+      padding: 0;
+    }
+
+    .page {
+      position: relative;
+      min-height: 100%;
+      padding-bottom: 1.5cm;
+    }
+
+    .page-header {
+      text-align: center;
+      margin-bottom: 0.5cm;
     }
 
     .zoho-header {
       font-size: 8pt;
       color: #666;
-      margin-bottom: 0.8cm;
+      margin-bottom: 0.3cm;
     }
 
     .verso-logo {
-      text-align: center;
+      font-family: 'League Spartan', Arial, sans-serif;
       font-size: 22pt;
-      font-weight: bold;
-      letter-spacing: 10px;
-      margin: 1cm 0 0.4cm 0;
+      font-weight: 700;
+      letter-spacing: 8px;
+      text-align: center;
+      margin: 0;
     }
 
     .main-title {
@@ -53,7 +80,6 @@
       border-collapse: collapse;
       margin: 0.4cm 0;
       border: 1px solid #bfbfbf;
-      page-break-inside: avoid;
     }
 
     table.section-table td {
@@ -108,12 +134,12 @@
     }
 
     p.clause {
-      margin: 0.3cm 0;
+      margin: 0.25cm 0;
       text-align: justify;
     }
 
     p.sub-clause {
-      margin: 0.2cm 0 0.2cm 1cm;
+      margin: 0.15cm 0 0.15cm 1cm;
       text-align: justify;
     }
 
@@ -129,15 +155,14 @@
       text-align: center;
       font-size: 14pt;
       letter-spacing: 6px;
-      margin: 1.2cm 0 0.8cm 0;
+      margin: 1cm 0 0.6cm 0;
     }
 
     table.signature-table {
       width: 100%;
       border-collapse: collapse;
       border: 1px solid #bfbfbf;
-      margin-top: 0.8cm;
-      page-break-inside: avoid;
+      margin-top: 0.6cm;
     }
 
     table.signature-table td {
@@ -159,14 +184,14 @@
     }
 
     table.signature-table .sig-space {
-      height: 180px;
+      height: 160px;
       vertical-align: bottom;
     }
 
     .page-footer {
       text-align: center;
-      margin-top: 1.2cm;
-      margin-bottom: 0.4cm;
+      margin-top: 0.8cm;
+      padding-top: 0.3cm;
     }
 
     .page-number {
@@ -176,13 +201,15 @@
     }
 
     .verso-footer {
-      font-weight: bold;
+      font-family: 'League Spartan', Arial, sans-serif;
+      font-weight: 700;
       font-size: 11pt;
       letter-spacing: 3px;
     }
 
-    .page-break {
-      page-break-after: always;
+    /* Page breaks - applied to content sections */
+    .page-break-before {
+      page-break-before: always;
     }
 
     @media print {
@@ -195,109 +222,117 @@
 </head>
 <body>
 
-<div class="zoho-header">Zoho Sign Document ID: {{ $json.zoho_sign_document_id }}</div>
+<!-- ==================== PAGE 1 ==================== -->
+<div class="page">
+  <div class="page-header">
+    <div class="zoho-header">Zoho Sign Document ID: {{ $json.zoho_sign_document_id }}</div>
+    <div class="verso-logo">VERSO</div>
+  </div>
 
-<div class="verso-logo">VERSO</div>
+  <div class="main-title">
+    <div class="title-line">Non-Disclosure &amp; Non-Circumvention Agreement</div>
+    <div class="title-subline">VERSO CAPITAL {{ $json.series_entity_code }}</div>
+  </div>
 
-<div class="main-title">
-  <div class="title-line">Non-Disclosure &amp; Non-Circumvention Agreement</div>
-  <div class="title-subline">VERSO CAPITAL {{ $json.series_entity_code }}</div>
+  <table class="section-table">
+    <tr>
+      <td class="section-header">Project ("Project")</td>
+      <td class="section-header"></td>
+    </tr>
+    <tr>
+      <td class="section-subheader" colspan="2">This NDA-NDNC Agreement applies to the following Project:</td>
+    </tr>
+    <tr>
+      <td class="section-content" colspan="2">
+        VERSO Capital 2 SCSP {{ $json.vehicle_name }} Series {{ $json.series_code }} {{ $json.series_numeric }} ("{{ $json.series_entity_code }}")
+      </td>
+    </tr>
+  </table>
+
+  <table class="section-table">
+    <tr>
+      <td class="section-header">Investment ("Investment")</td>
+      <td class="section-header"></td>
+    </tr>
+    <tr>
+      <td class="section-subheader" colspan="2">This NDA-NDNC Agreement covers the following Investment:</td>
+    </tr>
+    <tr>
+      <td class="section-content" colspan="2">{{ $json.investment_name }}</td>
+    </tr>
+  </table>
+
+  <table class="section-table">
+    <tr>
+      <td class="section-header">Parties ("Parties")</td>
+    </tr>
+    <tr>
+      <td class="section-subheader">PARTY A ("Receiving Party")</td>
+    </tr>
+    <tr>
+      <td class="section-content">
+        <table class="party-details">
+          <tr>
+            <td class="label-cell">Name:</td>
+            <td>{{ $json.party_a_name }}</td>
+          </tr>
+          <tr>
+            <td class="label-cell">Registered Address:</td>
+            <td>{{ $json.party_a_registered_address }}</td>
+          </tr>
+          <tr>
+            <td class="label-cell">City / Country:</td>
+            <td>{{ $json.party_a_city_country }}</td>
+          </tr>
+          <tr>
+            <td class="label-cell">Represented by:</td>
+            <td>{{ $json.party_a_representative_name }}, {{ $json.party_a_representative_title }}</td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    <tr>
+      <td class="section-subheader">PARTY B ("Disclosing Party")</td>
+    </tr>
+    <tr>
+      <td class="section-content">
+        <table class="party-details">
+          <tr>
+            <td class="label-cell">Name:</td>
+            <td>{{ $json.party_b_name }}</td>
+          </tr>
+          <tr>
+            <td class="label-cell">Registered Address:</td>
+            <td>{{ $json.party_b_registered_address }}</td>
+          </tr>
+          <tr>
+            <td class="label-cell">City / Country:</td>
+            <td>{{ $json.party_b_city_country }}</td>
+          </tr>
+          <tr>
+            <td class="label-cell">Represented by:</td>
+            <td>{{ $json.vehicle_managing_partner_name }}, {{ $json.vehicle_managing_partner_title }}</td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+
+  <p class="intro">This NDA-NDNC Agreement ("NDA-NDNC" or "Agreement") is by and between the Parties, herein identified, in regard to all information related the Project ("Project") and its investment ("Investment") here mentioned. Party A is the Receiving Party ("Receiving Party") and Party B is the Disclosing Party ("Disclosing Party").</p>
+
+  <div class="page-footer">
+    <div class="page-number">1</div>
+    <div class="verso-footer">VERSO</div>
+  </div>
 </div>
 
-<table class="section-table">
-  <tr>
-    <td class="section-header">Project ("Project")</td>
-    <td class="section-header"></td>
-  </tr>
-  <tr>
-    <td class="section-subheader" colspan="2">This NDA-NDNC Agreement applies to the following Project:</td>
-  </tr>
-  <tr>
-    <td class="section-content" colspan="2">
-      VERSO Capital 2 SCSP {{ $json.vehicle_name }} Series {{ $json.series_code }} {{ $json.series_numeric }} ("{{ $json.series_entity_code }}")
-    </td>
-  </tr>
-</table>
-
-<table class="section-table">
-  <tr>
-    <td class="section-header">Investment ("Investment")</td>
-    <td class="section-header"></td>
-  </tr>
-  <tr>
-    <td class="section-subheader" colspan="2">This NDA-NDNC Agreement covers the following Investment:</td>
-  </tr>
-  <tr>
-    <td class="section-content" colspan="2">{{ $json.investment_name }}</td>
-  </tr>
-</table>
-
-<table class="section-table">
-  <tr>
-    <td class="section-header">Parties ("Parties")</td>
-  </tr>
-  <tr>
-    <td class="section-subheader">PARTY A ("Receiving Party")</td>
-  </tr>
-  <tr>
-    <td class="section-content">
-      <table class="party-details">
-        <tr>
-          <td class="label-cell">Name:</td>
-          <td>{{ $json.party_a_name }}</td>
-        </tr>
-        <tr>
-          <td class="label-cell">Registered Address:</td>
-          <td>{{ $json.party_a_registered_address }}</td>
-        </tr>
-        <tr>
-          <td class="label-cell">City / Country:</td>
-          <td>{{ $json.party_a_city_country }}</td>
-        </tr>
-        <tr>
-          <td class="label-cell">Represented by:</td>
-          <td>{{ $json.party_a_representative_name }}, {{ $json.party_a_representative_title }}</td>
-        </tr>
-      </table>
-    </td>
-  </tr>
-  <tr>
-    <td class="section-subheader">PARTY B ("Disclosing Party")</td>
-  </tr>
-  <tr>
-    <td class="section-content">
-      <table class="party-details">
-        <tr>
-          <td class="label-cell">Name:</td>
-          <td>{{ $json.party_b_name }}</td>
-        </tr>
-        <tr>
-          <td class="label-cell">Registered Address:</td>
-          <td>{{ $json.party_b_registered_address }}</td>
-        </tr>
-        <tr>
-          <td class="label-cell">City / Country:</td>
-          <td>{{ $json.party_b_city_country }}</td>
-        </tr>
-        <tr>
-          <td class="label-cell">Represented by:</td>
-          <td>{{ $json.vehicle_managing_partner_name }}, {{ $json.vehicle_managing_partner_title }}</td>
-        </tr>
-      </table>
-    </td>
-  </tr>
-</table>
-
-<p class="intro">This NDA-NDNC Agreement ("NDA-NDNC" or "Agreement") is by and between the Parties, herein identified, in regard to all information related the Project ("Project") and its investment ("Investment") here mentioned. Party A is the Receiving Party ("Receiving Party") and Party B is the Disclosing Party ("Disclosing Party").</p>
-
-<div class="page-footer">
-  <div class="page-number">1</div>
-  <div class="verso-footer">VERSO</div>
+<!-- ==================== PAGE 2+ (Clauses - flows naturally) ==================== -->
+<div class="page-break-before">
+  <div class="page-header">
+    <div class="zoho-header">Zoho Sign Document ID: {{ $json.zoho_sign_document_id }}</div>
+    <div class="verso-logo">VERSO</div>
+  </div>
 </div>
-
-<div class="page-break"></div>
-
-<div class="zoho-header">Zoho Sign Document ID: {{ $json.zoho_sign_document_id }}</div>
 
 <p>Whereas the Parties indicated above desire to explore a possible exchange of certain Information (as defined below) related to business operations, research, development, marketing and financial matters, the Parties agree as follows:</p>
 
@@ -341,7 +376,7 @@
     <td class="section-header"></td>
   </tr>
   <tr>
-    <td class="section-subheader" colspan="2">The Disclosing Party will access the Secured Dataroom with the email below:</td>
+    <td class="section-subheader" colspan="2">The Receiving Party will access the Secured Dataroom with the email below:</td>
   </tr>
   <tr>
     <td class="section-content" colspan="2">
@@ -350,43 +385,41 @@
   </tr>
 </table>
 
-<div class="page-footer">
-  <div class="page-number">2</div>
-  <div class="verso-footer">VERSO</div>
-</div>
+<!-- ==================== SIGNATURE PAGE ==================== -->
+<div class="page-break-before">
+  <div class="page-header">
+    <div class="zoho-header">Zoho Sign Document ID: {{ $json.zoho_sign_document_id }}</div>
+    <div class="verso-logo">VERSO</div>
+  </div>
 
-<div class="page-break"></div>
+  <div class="divider">*****</div>
 
-<div class="zoho-header">Zoho Sign Document ID: {{ $json.zoho_sign_document_id }}</div>
+  <p style="text-align: center; margin: 0.6cm 0;">Confirmed and irrevocably accepted by the Receiving and Disclosing Parties:</p>
 
-<div class="divider">*****</div>
+  <table class="signature-table">
+    <tr>
+      <td colspan="2" class="sig-header">Execution</td>
+    </tr>
+    <tr>
+      <td colspan="2" class="sig-date"><strong>DATE:</strong>&nbsp;&nbsp;&nbsp;{{ $json.execution_date }}</td>
+    </tr>
+    <tr>
+      <td style="width: 50%;"><strong>PARTY A</strong></td>
+      <td style="width: 50%;"><strong>PARTY B</strong></td>
+    </tr>
+    <tr class="sig-space">
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+    </tr>
+    <tr>
+      <td>Executed by Authorized Signatory.</td>
+      <td>Executed by Authorized Signatory.</td>
+    </tr>
+  </table>
 
-<p style="text-align: center; margin: 0.8cm 0;">Confirmed and irrevocably accepted by the Receiving and Disclosing Parties:</p>
-
-<table class="signature-table">
-  <tr>
-    <td colspan="2" class="sig-header">Execution</td>
-  </tr>
-  <tr>
-    <td colspan="2" class="sig-date"><strong>DATE:</strong>&nbsp;&nbsp;&nbsp;{{ $json.execution_date }}</td>
-  </tr>
-  <tr>
-    <td style="width: 50%;"><strong>PARTY A</strong></td>
-    <td style="width: 50%;"><strong>PARTY B</strong></td>
-  </tr>
-  <tr class="sig-space">
-    <td>&nbsp;</td>
-    <td>&nbsp;</td>
-  </tr>
-  <tr>
-    <td>Executed by Authorized Signatory.</td>
-    <td>Executed by Authorized Signatory.</td>
-  </tr>
-</table>
-
-<div class="page-footer">
-  <div class="page-number">3</div>
-  <div class="verso-footer">VERSO</div>
+  <div class="page-footer">
+    <div class="verso-footer">VERSO</div>
+  </div>
 </div>
 
 </body>

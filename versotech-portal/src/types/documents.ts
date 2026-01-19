@@ -45,6 +45,7 @@ export interface Document {
   file_name: string
   file_key: string
   file_size_bytes?: number
+  mime_type?: string
   created_at: string
   created_by?: {
     display_name: string

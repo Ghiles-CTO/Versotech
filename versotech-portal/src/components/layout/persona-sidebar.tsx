@@ -64,7 +64,8 @@ const PERSONA_NAV_ITEMS: Record<string, NavItem[]> = {
     { name: 'Vehicles', href: '/versotech_main/entities', icon: Building2, description: 'Investment vehicles' },
     { name: 'Subscriptions', href: '/versotech_main/subscriptions', icon: FileText, description: 'Subscription tracking' },
     // People
-    { name: 'Users', href: '/versotech_main/users', icon: Users, description: 'All user types' },
+    { name: 'Users', href: '/versotech_main/users', icon: Users, description: 'Platform users' },
+    { name: 'Accounts', href: '/versotech_main/accounts', icon: Building2, description: 'Business entities' },
     { name: 'Investors', href: '/versotech_main/investors', icon: Users, description: 'Investor relations' },
     { name: 'Introducers', href: '/versotech_main/introducers', icon: HandHeart, description: 'Partners' },
     { name: 'Arrangers', href: '/versotech_main/arrangers', icon: Briefcase, description: 'Regulated entities' },
@@ -101,7 +102,8 @@ const PERSONA_NAV_ITEMS: Record<string, NavItem[]> = {
     { name: 'Introducers', href: '/versotech_main/introducers', icon: HandHeart, description: 'Partners' },
     { name: 'Introducer Agreements', href: '/versotech_main/introducer-agreements', icon: FileText, description: 'Fee agreements' },
     { name: 'Arrangers', href: '/versotech_main/arrangers', icon: Briefcase, description: 'Regulated entities' },
-    { name: 'Users', href: '/versotech_main/users', icon: Users, description: 'All user types' },
+    { name: 'Users', href: '/versotech_main/users', icon: Users, description: 'Platform users' },
+    { name: 'Accounts', href: '/versotech_main/accounts', icon: Building2, description: 'Business entities' },
     { name: 'Calendar', href: '/versotech_main/calendar', icon: Calendar, description: 'Schedule' },
   ],
 
@@ -210,6 +212,7 @@ function mergeNavItems(personas: Persona[]): NavItem[] {
 }
 
 export function PersonaSidebar() {
+  // Default expanded on desktop - mobile uses separate Sheet drawer via MobileSidebarContent
   const [collapsed, setCollapsed] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [mounted, setMounted] = useState(false)
@@ -223,6 +226,9 @@ export function PersonaSidebar() {
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  // REMOVED: resize useEffect that caused desktop flash
+  // Mobile now uses Sheet drawer via MobileSidebarContent, desktop always shows sidebar
 
   // Determine if dark mode based on ACTIVE persona only
   // Use mounted check to prevent hydration mismatch (server renders light, client may have dark)
@@ -258,8 +264,11 @@ export function PersonaSidebar() {
 
   return (
     <div className={cn(
-      "flex flex-col h-screen transition-all duration-300 border-r relative z-50",
+      // Hidden on mobile, flex on desktop - CSS-first responsive (no JS flash)
+      "hidden md:flex flex-col h-screen border-r relative z-50",
       collapsed ? "w-[80px]" : "w-[280px]",
+      // Only animate width AFTER mount to prevent flash on initial render
+      mounted && "transition-[width] duration-300",
       isDark
         ? "bg-zinc-950 border-white/5 text-zinc-400"
         : "bg-white border-gray-100 text-gray-600"
@@ -304,14 +313,18 @@ export function PersonaSidebar() {
           variant="ghost"
           size="icon"
           onClick={() => setCollapsed(!collapsed)}
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          aria-expanded={!collapsed}
           className={cn(
-            "absolute -right-3 top-8 h-6 w-6 rounded-full border shadow-sm z-50 hidden md:flex items-center justify-center transition-colors",
+            // Touch target: 40px on mobile (near 44px guideline), 24px on desktop
+            // Position adjusted for larger mobile button
+            "absolute -right-4 md:-right-3 top-8 h-10 w-10 md:h-6 md:w-6 rounded-full border shadow-sm z-50 flex items-center justify-center transition-colors",
             isDark
               ? "bg-zinc-900 border-white/10 text-zinc-400 hover:text-white hover:bg-white/5"
               : "bg-white border-gray-200 text-gray-500 hover:text-gray-900 hover:bg-gray-50"
           )}
         >
-          {collapsed ? <ChevronRight className="h-3 w-3" /> : <ChevronLeft className="h-3 w-3" />}
+          {collapsed ? <ChevronRight className="h-4 w-4 md:h-3 md:w-3" /> : <ChevronLeft className="h-4 w-4 md:h-3 md:w-3" />}
         </Button>
       </div>
 
@@ -415,6 +428,105 @@ export function PersonaSidebar() {
         >
           <LogOut className="h-5 w-5" />
           {!collapsed && <span>Sign Out</span>}
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+/**
+ * Mobile sidebar content for Sheet drawer - separate from desktop PersonaSidebar
+ * This is displayed in a Sheet component when the mobile hamburger menu is tapped
+ */
+export function MobileSidebarContent({ onClose }: { onClose: () => void }) {
+  const pathname = usePathname()
+  const router = useRouter()
+  const { personas, activePersona } = usePersona()
+  const { theme } = useTheme()
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => { setMounted(true) }, [])
+
+  const isDark = mounted && theme === 'staff-dark'
+
+  const navItems = useMemo(() => {
+    if (activePersona) return getNavForPersona(activePersona)
+    return mergeNavItems(personas)
+  }, [activePersona, personas])
+
+  const handleSignOut = async () => {
+    const supabase = createClient()
+    await supabase.auth.signOut()
+    router.push('/versotech_main/login')
+  }
+
+  return (
+    <div className={cn(
+      "flex flex-col h-full",
+      isDark ? "bg-zinc-950 text-zinc-400" : "bg-white text-gray-600"
+    )}>
+      {/* Logo */}
+      <div className="p-6 h-20">
+        <div className="relative h-10 w-32">
+          <Image
+            src="/versotech-logo.jpg"
+            alt="Logo"
+            fill
+            className={cn("object-contain object-left", isDark && "invert")}
+            priority
+          />
+        </div>
+      </div>
+
+      {/* Navigation */}
+      <div className="flex-1 overflow-y-auto scrollbar-hide px-3 py-2 space-y-1">
+        {navItems.map((item) => {
+          const isActive = item.name === 'Dashboard'
+            ? pathname === item.href
+            : pathname === item.href || pathname.startsWith(`${item.href}/`)
+          const Icon = item.icon
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              onClick={onClose}
+              className="block group relative"
+            >
+              <div className={cn(
+                "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200",
+                isActive
+                  ? isDark
+                    ? "bg-gradient-to-r from-blue-600/20 to-blue-600/5 text-blue-400"
+                    : "bg-blue-50 text-blue-700"
+                  : isDark
+                    ? "text-gray-400 hover:text-white hover:bg-white/5"
+                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+              )}>
+                <Icon className={cn(
+                  "h-5 w-5",
+                  isActive ? (isDark ? "text-blue-400" : "text-blue-600") : ""
+                )} />
+                <span className="flex-1 text-sm font-medium">{item.name}</span>
+              </div>
+            </Link>
+          )
+        })}
+      </div>
+
+      {/* Sign Out */}
+      <div className={cn("p-4 border-t mt-auto", isDark ? "border-white/5" : "border-gray-100")}>
+        <Button
+          variant="ghost"
+          onClick={handleSignOut}
+          className={cn(
+            "w-full justify-start gap-3",
+            isDark
+              ? "text-gray-400 hover:text-red-400 hover:bg-white/5"
+              : "text-gray-600 hover:text-red-600 hover:bg-red-50"
+          )}
+        >
+          <LogOut className="h-5 w-5" />
+          <span>Sign Out</span>
         </Button>
       </div>
     </div>
