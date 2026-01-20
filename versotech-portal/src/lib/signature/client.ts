@@ -17,6 +17,7 @@ import { SignatureStorageManager, downloadPDFFromUrl } from './storage'
 import { embedSignatureInPDF, embedSignatureMultipleLocations } from './pdf-processor'
 import { routeSignatureHandler } from './handlers'
 import { detectAnchors, getPlacementsFromAnchors } from './anchor-detector'
+import { calculateSubscriptionFeeEvents, createFeeEvents } from '../fees/subscription-fee-calculator'
 import type { SignaturePlacementRecord } from './types'
 import { sendSignatureRequestEmail } from '@/lib/email/resend-service'
 import type {
@@ -927,8 +928,9 @@ export async function getSignatureRequest(
  * 4. Embeds signature using pdf-lib
  * 5. Uploads signed PDF
  * 6. Updates database with optimistic locking
- * 7. Checks if all signatures complete
- * 8. Executes post-signature handler if fully signed
+ * 7. Commits subscription once investor signers complete (subscription packs)
+ * 8. Checks if all signatures complete
+ * 9. Executes post-signature handler if fully signed
  */
 export async function submitSignature(
   params: SubmitSignatureParams,
@@ -1452,6 +1454,12 @@ export async function submitSignature(
       }
     }
 
+    // If this is a subscription pack, commit once ALL investor signers have signed
+    await checkAndCommitSubscriptionIfInvestorComplete(
+      signatureRequest as SignatureRequestRecord,
+      supabase
+    )
+
     // Check if all signatures for this document/workflow are complete
     console.log('🔍 [SIGNATURE] Checking if all signatures are complete')
     await checkAndCompleteSignatures(
@@ -1501,6 +1509,293 @@ export async function submitSignature(
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Internal server error'
+    }
+  }
+}
+
+/**
+ * Commit subscription once all investor signatories have signed.
+ * This runs after EVERY signature and is idempotent.
+ */
+async function checkAndCommitSubscriptionIfInvestorComplete(
+  signatureRequest: SignatureRequestRecord,
+  supabase: SupabaseClient
+): Promise<void> {
+  if (signatureRequest.document_type !== 'subscription') {
+    return
+  }
+
+  const subscriptionId = signatureRequest.subscription_id || null
+  let resolvedSubscriptionId = subscriptionId
+
+  if (!resolvedSubscriptionId) {
+    const documentLookupId = signatureRequest.document_id || signatureRequest.workflow_run_id || null
+
+    if (!documentLookupId) {
+      console.warn('⚠️ [SIGNATURE] No subscription_id or document_id for subscription commit check')
+      return
+    }
+
+    const { data: document } = await supabase
+      .from('documents')
+      .select('id, subscription_id')
+      .eq('id', documentLookupId)
+      .single()
+
+    resolvedSubscriptionId = document?.subscription_id || null
+  }
+
+  if (!resolvedSubscriptionId) {
+    console.warn('⚠️ [SIGNATURE] Unable to resolve subscription_id for commit check')
+    return
+  }
+
+  const investorRoles = ['investor', 'authorized_signatory']
+  const { data: investorSignatures, error: signaturesError } = await supabase
+    .from('signature_requests')
+    .select('id, status, signer_role')
+    .eq('subscription_id', resolvedSubscriptionId)
+    .eq('document_type', 'subscription')
+    .in('signer_role', investorRoles)
+
+  if (signaturesError) {
+    console.error('❌ [SIGNATURE] Failed to fetch investor signatures for commit check:', signaturesError)
+    return
+  }
+
+  if (!investorSignatures || investorSignatures.length === 0) {
+    console.warn('⚠️ [SIGNATURE] No investor signatures found for subscription commit check')
+    return
+  }
+
+  const allInvestorsSigned = investorSignatures.every(sig => sig.status === 'signed')
+  if (!allInvestorsSigned) {
+    console.log('⏳ [SIGNATURE] Not all investor signers have signed - skipping commit')
+    return
+  }
+
+  const { data: subscription, error: subscriptionError } = await supabase
+    .from('subscriptions')
+    .select(`
+      id,
+      status,
+      commitment,
+      currency,
+      committed_at,
+      signed_at,
+      investor_id,
+      vehicle_id,
+      deal_id,
+      fee_plan_id,
+      investor:investors(
+        id,
+        legal_name,
+        display_name,
+        email,
+        investor_users(user_id)
+      ),
+      vehicle:vehicles(id, name),
+      deal:deals(id, name)
+    `)
+    .eq('id', resolvedSubscriptionId)
+    .single()
+
+  if (subscriptionError || !subscription) {
+    console.error('❌ [SIGNATURE] Failed to fetch subscription for commit:', subscriptionError)
+    return
+  }
+
+  const committedStatuses = ['committed', 'active', 'partially_funded', 'funded']
+  const blockedStatuses = ['cancelled', 'closed']
+  const commitEligibleStatuses = ['pending', 'draft', 'pending_signature']
+
+  if (committedStatuses.includes(subscription.status)) {
+    console.log('ℹ️ [SIGNATURE] Subscription already committed - skipping commit step')
+    return
+  }
+
+  if (blockedStatuses.includes(subscription.status)) {
+    console.warn(`⚠️ [SIGNATURE] Subscription ${resolvedSubscriptionId} is ${subscription.status} - skipping commit`)
+    return
+  }
+
+  if (!commitEligibleStatuses.includes(subscription.status)) {
+    console.warn(`⚠️ [SIGNATURE] Subscription ${resolvedSubscriptionId} has status '${subscription.status}' - skipping commit`)
+    return
+  }
+
+  const now = new Date().toISOString()
+  const contractDate = now.split('T')[0]
+  const documentId = signatureRequest.document_id || signatureRequest.workflow_run_id || null
+
+  const updatePayload: Record<string, string> = {
+    status: 'committed',
+    committed_at: now,
+    signed_at: now,
+    contract_date: contractDate,
+    acknowledgement_notes: 'Subscription agreement signed by investor(s). Countersignature pending.'
+  }
+
+  if (documentId) {
+    updatePayload.signed_doc_id = documentId
+  }
+
+  const { data: updatedSubscription, error: updateError } = await supabase
+    .from('subscriptions')
+    .update(updatePayload)
+    .eq('id', resolvedSubscriptionId)
+    .eq('status', subscription.status)
+    .select()
+    .single()
+
+  if (!updatedSubscription && !updateError) {
+    console.warn('⚠️ [SIGNATURE] Commit update skipped due to status change (race condition)')
+    return
+  }
+
+  if (updateError) {
+    console.error('❌ [SIGNATURE] Failed to commit subscription:', updateError)
+    return
+  }
+
+  console.log('✅ [SIGNATURE] Subscription committed after investor signatures:', {
+    subscription_id: resolvedSubscriptionId,
+    previous_status: subscription.status,
+    new_status: 'committed'
+  })
+
+  // Create fee events for committed subscription
+  try {
+    const { data: existingFeeEvents } = await supabase
+      .from('fee_events')
+      .select('id, fee_type, status, computed_amount')
+      .eq('allocation_id', resolvedSubscriptionId)
+      .in('status', ['accrued', 'invoiced', 'paid'])
+
+    if (existingFeeEvents && existingFeeEvents.length > 0) {
+      console.log('✅ [SIGNATURE] Fee events already exist, skipping creation:', {
+        count: existingFeeEvents.length,
+        types: existingFeeEvents.map((fe: { fee_type: string }) => fe.fee_type).join(', ')
+      })
+    } else {
+      const feeCalcResult = await calculateSubscriptionFeeEvents(supabase, resolvedSubscriptionId)
+
+      if (!feeCalcResult.success || !feeCalcResult.feeEvents || feeCalcResult.feeEvents.length === 0) {
+        console.warn('⚠️ [SIGNATURE] No fee events calculated:', feeCalcResult.error)
+      } else {
+        const createResult = await createFeeEvents(
+          supabase,
+          resolvedSubscriptionId,
+          subscription.investor_id,
+          subscription.deal_id || null,
+          subscription.fee_plan_id || null,
+          feeCalcResult.feeEvents
+        )
+
+        if (createResult.success) {
+          console.log('✅ [SIGNATURE] Fee events created:', {
+            count: createResult.feeEventIds?.length,
+            ids: createResult.feeEventIds
+          })
+        } else {
+          console.error('❌ [SIGNATURE] Failed to create fee events:', createResult.error)
+        }
+      }
+    }
+  } catch (feeError) {
+    console.error('❌ [SIGNATURE] Error creating fee events:', feeError)
+  }
+
+  // Complete investor signature task (subscription_pack_signature)
+  const { data: investorTasks } = await supabase
+    .from('tasks')
+    .select('id')
+    .eq('owner_investor_id', subscription.investor_id)
+    .eq('kind', 'subscription_pack_signature')
+    .eq('related_entity_id', resolvedSubscriptionId)
+    .in('status', ['pending', 'in_progress'])
+
+  if (investorTasks && investorTasks.length > 0) {
+    for (const task of investorTasks) {
+      const { error: taskError } = await supabase
+        .from('tasks')
+        .update({
+          status: 'completed',
+          completed_at: now,
+          completion_notes: 'Subscription agreement signed by investor(s). Countersignature pending.'
+        })
+        .eq('id', task.id)
+
+      if (taskError) {
+        console.error('❌ [SIGNATURE] Failed to complete investor task:', task.id, taskError)
+      } else {
+        console.log('✅ [SIGNATURE] Investor signature task completed:', task.id)
+      }
+    }
+  }
+
+  // Notify investor users about commitment
+  const investorUserId = subscription.investor?.investor_users?.[0]?.user_id
+  if (investorUserId) {
+    const vehicleName = subscription.vehicle?.name || 'the investment'
+    const { error: notifError } = await supabase
+      .from('investor_notifications')
+      .insert({
+        user_id: investorUserId,
+        investor_id: subscription.investor_id,
+        title: 'Investment Commitment Confirmed',
+        message: `Your subscription agreement for ${vehicleName} has been signed. Your commitment of ${subscription.commitment} ${subscription.currency} is now confirmed; countersignature is in progress.`,
+        link: '/versotech_main/portfolio',
+      })
+
+    if (notifError) {
+      console.error('❌ [SIGNATURE] Failed to create investor notification:', notifError)
+    } else {
+      console.log('✅ [SIGNATURE] Investor notification created')
+    }
+  } else {
+    console.warn('⚠️ [SIGNATURE] No investor user found - skipping commitment notification')
+  }
+
+  // Audit log entry for commitment
+  await supabase.from('audit_logs').insert({
+    event_type: 'subscription',
+    action: 'subscription_committed',
+    entity_type: 'subscription',
+    entity_id: resolvedSubscriptionId,
+    actor_id: null,
+    action_details: {
+      description: 'Subscription agreement signed by investor(s) and status changed to committed',
+      subscription_id: resolvedSubscriptionId,
+      investor_id: subscription.investor_id,
+      vehicle_id: subscription.vehicle_id,
+      commitment: subscription.commitment,
+      document_id: documentId,
+      previous_status: subscription.status,
+      new_status: 'committed'
+    },
+    timestamp: now
+  })
+
+  // Analytics event for commitment
+  if (subscription.deal_id) {
+    try {
+      await supabase.from('deal_activity_events').insert({
+        deal_id: subscription.deal_id,
+        investor_id: subscription.investor_id,
+        event_type: 'subscription_completed',
+        payload: {
+          subscription_id: resolvedSubscriptionId,
+          signature_request_id: signatureRequest.id,
+          commitment: subscription.commitment,
+          currency: subscription.currency,
+          document_id: documentId,
+          vehicle_id: subscription.vehicle_id
+        }
+      })
+      console.log('✅ [SIGNATURE] Analytics event logged: subscription_completed')
+    } catch (eventError) {
+      console.error('❌ [SIGNATURE] Failed to log analytics event:', eventError)
     }
   }
 }

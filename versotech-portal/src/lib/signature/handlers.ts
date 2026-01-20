@@ -498,10 +498,11 @@ export async function handleNDASignature(
  *
  * Executes when a subscription agreement is fully signed. This handler:
  * 1. Copies the signed PDF to documents bucket
- * 2. Creates a document record
- * 3. Updates subscription status to 'committed' (triggers automatic fee event creation)
- * 4. Completes the investor's signature task
- * 5. Creates notifications
+ * 2. Publishes the document record (fully executed)
+ * 3. Commits the subscription IF it has not already been committed
+ * 4. Creates fee events + investor task/notification only on first commit
+ * 5. Completes staff countersignature tasks
+ * 6. Notifies lawyers/arrangers that the pack is fully executed
  */
 export async function handleSubscriptionSignature(
   params: PostSignatureHandlerParams
@@ -667,187 +668,192 @@ export async function handleSubscriptionSignature(
 
   console.log('✅ [SUBSCRIPTION HANDLER] Document record updated to executed status with vehicle_id:', subscription.vehicle_id)
 
-  // 3. UPDATE SUBSCRIPTION STATUS TO 'COMMITTED'
-  // This will automatically trigger fee event creation due to existing logic
-  console.log('\n💼 [SUBSCRIPTION HANDLER] Step 3: Updating subscription status to committed')
+  // 3. UPDATE SUBSCRIPTION STATUS TO 'COMMITTED' (ONLY IF NOT ALREADY COMMITTED)
+  console.log('\n💼 [SUBSCRIPTION HANDLER] Step 3: Evaluating subscription commit status')
   const previousStatus = subscription.status
+  const commitEligibleStatuses = ['pending', 'draft', 'pending_signature']
+  const advancedStatuses = ['committed', 'active', 'partially_funded', 'funded']
+  let committedNow = false
+  let activeSubscription = subscription
 
-  // Validate current status before updating
-  const validStatusesForCommit = ['pending', 'draft']
-  if (!validStatusesForCommit.includes(subscription.status)) {
-    console.warn(`⚠️ [SUBSCRIPTION HANDLER] Subscription ${subscriptionId} has status '${subscription.status}' - cannot transition to 'committed'`)
+  if (commitEligibleStatuses.includes(subscription.status)) {
+    const now = new Date().toISOString()
+    const { data: updatedSubscription, error: subUpdateError } = await supabase
+      .from('subscriptions')
+      .update({
+        status: 'committed',
+        committed_at: now,
+        signed_at: now, // Set signed_at for journey stage tracking
+        contract_date: now.split('T')[0], // Set contract date when signed
+        signed_doc_id: document.id,
+        acknowledgement_notes: 'Subscription agreement signed by investor(s). Countersignature pending.'
+      })
+      .eq('id', subscriptionId)
+      .eq('status', subscription.status) // Only update if status hasn't changed
+      .select()
+      .single()
 
-    // If already committed or active, just update the signed doc reference
-    if (['committed', 'active', 'partially_funded', 'funded'].includes(subscription.status)) {
-      const { error: docUpdateError } = await supabase
+    if (!updatedSubscription && !subUpdateError) {
+      console.error('⚠️ [SUBSCRIPTION HANDLER] Race condition detected - status changed during update')
+
+      const { data: currentSub } = await supabase
         .from('subscriptions')
-        .update({
-          signed_doc_id: document.id,
-          acknowledgement_notes: `Subscription agreement re-signed. Previous status maintained: ${subscription.status}`
-        })
+        .select('status')
         .eq('id', subscriptionId)
+        .single()
 
-      if (docUpdateError) {
-        console.error('❌ [SUBSCRIPTION HANDLER] Failed to update signed doc reference:', docUpdateError)
-      } else {
-        console.log('✅ [SUBSCRIPTION HANDLER] Updated signed doc reference, status unchanged')
+      if (currentSub) {
+        const errorMsg = `Cannot commit subscription: status changed from '${subscription.status}' to '${currentSub.status}' during processing`
+        console.error('❌ [SUBSCRIPTION HANDLER]', errorMsg)
+        throw new Error(errorMsg)
       }
-
-      // Skip the rest of the handler - subscription already processed
-      console.log('ℹ️ [SUBSCRIPTION HANDLER] Subscription already in advanced status, skipping further processing')
-      return
     }
 
-    // For cancelled or closed subscriptions, throw error
+    if (subUpdateError) {
+      console.error('❌ [SUBSCRIPTION HANDLER] Failed to update subscription status:', subUpdateError)
+      throw subUpdateError
+    }
+
+    if (!updatedSubscription) {
+      throw new Error('Failed to update subscription status - unknown error')
+    }
+
+    committedNow = true
+    activeSubscription = {
+      ...subscription,
+      status: 'committed',
+      committed_at: now,
+      signed_at: now,
+      contract_date: now.split('T')[0],
+      signed_doc_id: document.id
+    }
+
+    console.log('✅ [SUBSCRIPTION HANDLER] Subscription status updated:', {
+      subscription_id: subscriptionId,
+      previous_status: previousStatus,
+      new_status: 'committed'
+    })
+  } else if (advancedStatuses.includes(subscription.status)) {
+    const { error: docUpdateError } = await supabase
+      .from('subscriptions')
+      .update({
+        signed_doc_id: document.id,
+        acknowledgement_notes: 'Subscription agreement fully executed by all parties.'
+      })
+      .eq('id', subscriptionId)
+
+    if (docUpdateError) {
+      console.error('❌ [SUBSCRIPTION HANDLER] Failed to update signed doc reference:', docUpdateError)
+    } else {
+      console.log('✅ [SUBSCRIPTION HANDLER] Updated signed doc reference for fully executed subscription')
+    }
+  } else {
+    console.warn(`⚠️ [SUBSCRIPTION HANDLER] Subscription ${subscriptionId} has status '${subscription.status}' - cannot transition to 'committed'`)
     throw new Error(`Cannot commit subscription with status '${subscription.status}'`)
   }
 
-  // Update with race condition detection
-  const now = new Date().toISOString()
-  const { data: updatedSubscription, error: subUpdateError } = await supabase
-    .from('subscriptions')
-    .update({
-      status: 'committed',
-      committed_at: now,
-      signed_at: now, // Set signed_at for journey stage tracking
-      contract_date: now.split('T')[0], // Set contract date when signed
-      signed_doc_id: document.id,
-      acknowledgement_notes: 'Subscription agreement fully executed by both parties.'
-    })
-    .eq('id', subscriptionId)
-    .eq('status', subscription.status) // Only update if status hasn't changed
-    .select()
-    .single()
-
-  // Check for race condition
-  if (!updatedSubscription && !subUpdateError) {
-    // No rows matched - status must have changed
-    console.error('⚠️ [SUBSCRIPTION HANDLER] Race condition detected - status changed during update')
-
-    // Get current status
-    const { data: currentSub } = await supabase
-      .from('subscriptions')
-      .select('status')
-      .eq('id', subscriptionId)
-      .single()
-
-    if (currentSub) {
-      const errorMsg = `Cannot commit subscription: status changed from '${subscription.status}' to '${currentSub.status}' during processing`
-      console.error('❌ [SUBSCRIPTION HANDLER]', errorMsg)
-      throw new Error(errorMsg)
-    }
-  }
-
-  if (subUpdateError) {
-    console.error('❌ [SUBSCRIPTION HANDLER] Failed to update subscription status:', subUpdateError)
-    throw subUpdateError
-  }
-
-  if (!updatedSubscription) {
-    throw new Error('Failed to update subscription status - unknown error')
-  }
-
-  console.log('✅ [SUBSCRIPTION HANDLER] Subscription status updated:', {
-    subscription_id: subscriptionId,
-    previous_status: previousStatus,
-    new_status: 'committed'
-  })
-
   // 4. CREATE FEE EVENTS FOR COMMITTED SUBSCRIPTION
-  console.log('\n💰 [SUBSCRIPTION HANDLER] Step 4: Creating fee events for committed subscription')
+  if (committedNow) {
+    console.log('\n💰 [SUBSCRIPTION HANDLER] Step 4: Creating fee events for committed subscription')
 
-  try {
-    // IDEMPOTENCY CHECK: Verify fee events don't already exist for this subscription commitment
-    // Check for any fee events that are NOT cancelled/deleted
-    const { data: existingFeeEvents } = await supabase
-      .from('fee_events')
-      .select('id, fee_type, status, computed_amount')
-      .eq('allocation_id', subscriptionId)
-      .in('status', ['accrued', 'invoiced', 'paid'])  // Only count active fee events
+    try {
+      // IDEMPOTENCY CHECK: Verify fee events don't already exist for this subscription commitment
+      // Check for any fee events that are NOT cancelled/deleted
+      const { data: existingFeeEvents } = await supabase
+        .from('fee_events')
+        .select('id, fee_type, status, computed_amount')
+        .eq('allocation_id', subscriptionId)
+        .in('status', ['accrued', 'invoiced', 'paid'])  // Only count active fee events
 
-    if (existingFeeEvents && existingFeeEvents.length > 0) {
-      console.log('✅ [SUBSCRIPTION HANDLER] Active fee events already exist for this subscription, skipping creation:', {
-        count: existingFeeEvents.length,
-        types: existingFeeEvents.map((fe: any) => fe.fee_type).join(', ')
-      })
-    } else {
-      // Check if subscription was previously committed
-      if (subscription.committed_at && new Date(subscription.committed_at) < new Date(Date.now() - 60000)) {
-        console.warn('⚠️ [SUBSCRIPTION HANDLER] Subscription was previously committed but has no active fee events')
-        console.warn('⚠️ [SUBSCRIPTION HANDLER] This may indicate deleted or cancelled fee events')
-        console.warn('⚠️ [SUBSCRIPTION HANDLER] Proceeding with fee event creation, but review may be needed')
-      }
-      // Calculate fee events based on subscription commitment
-      const feeCalcResult = await calculateSubscriptionFeeEvents(supabase, subscriptionId)
-
-      if (!feeCalcResult.success || !feeCalcResult.feeEvents || feeCalcResult.feeEvents.length === 0) {
-        console.warn('⚠️ [SUBSCRIPTION HANDLER] No fee events calculated:', feeCalcResult.error)
-      } else {
-        console.log('📊 [SUBSCRIPTION HANDLER] Calculated fee events:', {
-          count: feeCalcResult.feeEvents.length,
-          types: feeCalcResult.feeEvents.map(fe => fe.fee_type).join(', '),
-          total: feeCalcResult.feeEvents.reduce((sum, fe) => sum + fe.computed_amount, 0)
+      if (existingFeeEvents && existingFeeEvents.length > 0) {
+        console.log('✅ [SUBSCRIPTION HANDLER] Active fee events already exist for this subscription, skipping creation:', {
+          count: existingFeeEvents.length,
+          types: existingFeeEvents.map((fe: any) => fe.fee_type).join(', ')
         })
+      } else {
+        // Check if subscription was previously committed
+        if (subscription.committed_at && new Date(subscription.committed_at) < new Date(Date.now() - 60000)) {
+          console.warn('⚠️ [SUBSCRIPTION HANDLER] Subscription was previously committed but has no active fee events')
+          console.warn('⚠️ [SUBSCRIPTION HANDLER] This may indicate deleted or cancelled fee events')
+          console.warn('⚠️ [SUBSCRIPTION HANDLER] Proceeding with fee event creation, but review may be needed')
+        }
+        // Calculate fee events based on subscription commitment
+        const feeCalcResult = await calculateSubscriptionFeeEvents(supabase, subscriptionId)
 
-        // Create the fee events in the database
-        const createResult = await createFeeEvents(
-          supabase,
-          subscriptionId,
-          subscription.investor_id,
-          subscription.deal_id || null,
-          subscription.fee_plan_id || null,
-          feeCalcResult.feeEvents
-        )
-
-        if (createResult.success) {
-          console.log('✅ [SUBSCRIPTION HANDLER] Fee events created successfully:', {
-            count: createResult.feeEventIds?.length,
-            ids: createResult.feeEventIds
-          })
+        if (!feeCalcResult.success || !feeCalcResult.feeEvents || feeCalcResult.feeEvents.length === 0) {
+          console.warn('⚠️ [SUBSCRIPTION HANDLER] No fee events calculated:', feeCalcResult.error)
         } else {
-          console.error('❌ [SUBSCRIPTION HANDLER] Failed to create fee events:', createResult.error)
-          // Don't throw - fee event creation failure shouldn't fail signature completion
+          console.log('📊 [SUBSCRIPTION HANDLER] Calculated fee events:', {
+            count: feeCalcResult.feeEvents.length,
+            types: feeCalcResult.feeEvents.map(fe => fe.fee_type).join(', '),
+            total: feeCalcResult.feeEvents.reduce((sum, fe) => sum + fe.computed_amount, 0)
+          })
+
+          // Create the fee events in the database
+          const createResult = await createFeeEvents(
+            supabase,
+            subscriptionId,
+            activeSubscription.investor_id,
+            activeSubscription.deal_id || null,
+            activeSubscription.fee_plan_id || null,
+            feeCalcResult.feeEvents
+          )
+
+          if (createResult.success) {
+            console.log('✅ [SUBSCRIPTION HANDLER] Fee events created successfully:', {
+              count: createResult.feeEventIds?.length,
+              ids: createResult.feeEventIds
+            })
+          } else {
+            console.error('❌ [SUBSCRIPTION HANDLER] Failed to create fee events:', createResult.error)
+            // Don't throw - fee event creation failure shouldn't fail signature completion
+          }
         }
       }
+    } catch (feeError) {
+      console.error('❌ [SUBSCRIPTION HANDLER] Error creating fee events:', feeError)
+      // Don't throw - continue with rest of process even if fee creation fails
     }
-  } catch (feeError) {
-    console.error('❌ [SUBSCRIPTION HANDLER] Error creating fee events:', feeError)
-    // Don't throw - continue with rest of process even if fee creation fails
+  } else {
+    console.log('ℹ️ [SUBSCRIPTION HANDLER] Subscription already committed - skipping fee event creation')
   }
 
   // 5. COMPLETE INVESTOR'S SIGNATURE TASK
-  console.log('\n✅ [SUBSCRIPTION HANDLER] Step 5: Completing investor signature task')
+  if (committedNow) {
+    console.log('\n✅ [SUBSCRIPTION HANDLER] Step 5: Completing investor signature task')
 
-  // Find the task related to this subscription signature
-  const { data: tasks } = await supabase
-    .from('tasks')
-    .select('id')
-    .eq('owner_investor_id', subscription.investor_id)
-    .eq('kind', 'subscription_pack_signature')
-    .eq('related_entity_id', subscriptionId)
-    .in('status', ['pending', 'in_progress'])
+    const { data: tasks } = await supabase
+      .from('tasks')
+      .select('id')
+      .eq('owner_investor_id', activeSubscription.investor_id)
+      .eq('kind', 'subscription_pack_signature')
+      .eq('related_entity_id', subscriptionId)
+      .in('status', ['pending', 'in_progress'])
 
-  if (tasks && tasks.length > 0) {
-    console.log('📝 [SUBSCRIPTION HANDLER] Found signature task(s) to complete:', tasks.length)
+    if (tasks && tasks.length > 0) {
+      console.log('📝 [SUBSCRIPTION HANDLER] Found signature task(s) to complete:', tasks.length)
 
-    for (const task of tasks) {
-      const { error: taskError } = await supabase
-        .from('tasks')
-        .update({
-          status: 'completed',
-          completed_at: new Date().toISOString(),
-          completion_notes: 'Subscription agreement signed by both parties.'
-        })
-        .eq('id', task.id)
+      for (const task of tasks) {
+        const { error: taskError } = await supabase
+          .from('tasks')
+          .update({
+            status: 'completed',
+            completed_at: new Date().toISOString(),
+            completion_notes: 'Subscription agreement signed by investor(s). Countersignature pending.'
+          })
+          .eq('id', task.id)
 
-      if (taskError) {
-        console.error('❌ [SUBSCRIPTION HANDLER] Failed to complete task:', task.id, taskError)
-      } else {
-        console.log('✅ [SUBSCRIPTION HANDLER] Task completed:', task.id)
+        if (taskError) {
+          console.error('❌ [SUBSCRIPTION HANDLER] Failed to complete task:', task.id, taskError)
+        } else {
+          console.log('✅ [SUBSCRIPTION HANDLER] Task completed:', task.id)
+        }
       }
+    } else {
+      console.log('ℹ️ [SUBSCRIPTION HANDLER] No pending signature tasks found for investor')
     }
   } else {
-    console.log('ℹ️ [SUBSCRIPTION HANDLER] No pending signature tasks found for investor')
+    console.log('ℹ️ [SUBSCRIPTION HANDLER] Subscription already committed - skipping investor task completion')
   }
 
   // 5.5. COMPLETE STAFF SIGNATURE TASK
@@ -885,46 +891,46 @@ export async function handleSubscriptionSignature(
   }
 
   // 6. CREATE NOTIFICATIONS
-  console.log('\n📬 [SUBSCRIPTION HANDLER] Step 6: Creating notifications')
+  if (committedNow) {
+    console.log('\n📬 [SUBSCRIPTION HANDLER] Step 6: Creating commitment notification')
 
-  // Get investor user_id from investor_users join table
-  const investorUserId = subscription.investor?.investor_users?.[0]?.user_id
+    const investorUserId = activeSubscription.investor?.investor_users?.[0]?.user_id
 
-  if (!investorUserId) {
-    console.warn('⚠️ [SUBSCRIPTION HANDLER] No user_id found for investor - skipping notification')
-  } else {
-    // Notification for investor
-    const { error: notifError } = await supabase
-      .from('investor_notifications')
-      .insert({
-        user_id: investorUserId,
-        investor_id: subscription.investor_id,
-        title: 'Investment Commitment Confirmed',
-        message: `Your subscription agreement for ${subscription.vehicle?.name || 'the investment'} has been fully executed. Your commitment of ${subscription.commitment} ${subscription.currency} is now confirmed.`,
-        link: `/versotech_main/portfolio`,
-      })
-
-    if (notifError) {
-      console.error('❌ [SUBSCRIPTION HANDLER] Failed to create notification:', notifError)
-      // Don't throw - notification failure shouldn't fail the whole process
+    if (!investorUserId) {
+      console.warn('⚠️ [SUBSCRIPTION HANDLER] No user_id found for investor - skipping notification')
     } else {
-      console.log('✅ [SUBSCRIPTION HANDLER] Created notification for investor')
+      const { error: notifError } = await supabase
+        .from('investor_notifications')
+        .insert({
+          user_id: investorUserId,
+          investor_id: activeSubscription.investor_id,
+          title: 'Investment Commitment Confirmed',
+          message: `Your subscription agreement for ${activeSubscription.vehicle?.name || 'the investment'} has been signed. Your commitment of ${activeSubscription.commitment} ${activeSubscription.currency} is now confirmed; countersignature is in progress.`,
+          link: `/versotech_main/portfolio`,
+        })
+
+      if (notifError) {
+        console.error('❌ [SUBSCRIPTION HANDLER] Failed to create notification:', notifError)
+      } else {
+        console.log('✅ [SUBSCRIPTION HANDLER] Created notification for investor')
+      }
     }
+  } else {
+    console.log('ℹ️ [SUBSCRIPTION HANDLER] Subscription already committed - skipping commitment notification')
   }
 
-  // 6b. NOTIFY ASSIGNED LAWYERS
+  // 6b. NOTIFY ASSIGNED LAWYERS (FULLY EXECUTED)
   console.log('\n👨‍⚖️ [SUBSCRIPTION HANDLER] Step 6b: Notifying assigned lawyers')
 
-  if (subscription.deal_id) {
-    const signerRole = signatureRequest.signer_role as string
-    const isAdminSigner = signerRole === 'admin' || signerRole === 'arranger'
-    const signerLabel = signerRole === 'arranger' ? 'Arranger' : 'CEO/Admin'
+  if (activeSubscription.deal_id) {
+    const investorName = activeSubscription.investor?.display_name || activeSubscription.investor?.legal_name || 'Investor'
+    const dealName = activeSubscription.vehicle?.name || 'the deal'
 
     // Get lawyers assigned to this deal via deal_lawyer_assignments
     const { data: assignments } = await supabase
       .from('deal_lawyer_assignments')
       .select('lawyer_id')
-      .eq('deal_id', subscription.deal_id)
+      .eq('deal_id', activeSubscription.deal_id)
 
     const lawyerIds = (assignments || []).map((a: { lawyer_id: string }) => a.lawyer_id).filter(Boolean)
 
@@ -939,10 +945,8 @@ export async function handleSubscriptionSignature(
         const lawyerNotifications = lawyerUsers.map((lu: { user_id: string; lawyer_id: string }) => ({
           user_id: lu.user_id,
           investor_id: null,
-          title: isAdminSigner ? 'Subscription Pack Countersigned' : 'Subscription Pack Signed',
-          message: isAdminSigner
-            ? `${signerLabel} countersigned the subscription pack for ${subscription.investor?.display_name || subscription.investor?.legal_name || 'Investor'} (${subscription.vehicle?.name || 'the deal'}).`
-            : `${subscription.investor?.display_name || subscription.investor?.legal_name || 'Investor'} has signed the subscription pack for ${subscription.vehicle?.name || 'the deal'}.`,
+          title: 'Subscription Pack Fully Executed',
+          message: `Subscription pack for ${investorName} (${dealName}) is fully executed and ready for review.`,
           link: '/versotech_main/subscription-packs'
         }))
 
@@ -968,12 +972,12 @@ export async function handleSubscriptionSignature(
   // 6c. NOTIFY ARRANGER USERS (if deal has an arranger)
   console.log('\n👔 [SUBSCRIPTION HANDLER] Step 6c: Notifying arranger users')
 
-  if (subscription.deal_id) {
+  if (activeSubscription.deal_id) {
     // Get the deal's arranger_entity_id
     const { data: deal } = await supabase
       .from('deals')
       .select('arranger_entity_id')
-      .eq('id', subscription.deal_id)
+      .eq('id', activeSubscription.deal_id)
       .single()
 
     if (deal?.arranger_entity_id) {
@@ -984,16 +988,11 @@ export async function handleSubscriptionSignature(
         .eq('arranger_id', deal.arranger_entity_id)
 
       if (arrangerUsers && arrangerUsers.length > 0) {
-        const signerRole = signatureRequest.signer_role as string
-        const isAdminSigner = signerRole === 'admin' || signerRole === 'arranger'
-
         const arrangerNotifications = arrangerUsers.map((au: { user_id: string }) => ({
           user_id: au.user_id,
           investor_id: null,
-          title: isAdminSigner ? 'Subscription Pack Fully Executed' : 'Subscription Pack Signed by Investor',
-          message: isAdminSigner
-            ? `The subscription pack for ${subscription.investor?.display_name || subscription.investor?.legal_name || 'Investor'} (${subscription.vehicle?.name || 'your mandate'}) is now fully executed.`
-            : `${subscription.investor?.display_name || subscription.investor?.legal_name || 'Investor'} has signed the subscription pack for ${subscription.vehicle?.name || 'your mandate'}.`,
+          title: 'Subscription Pack Fully Executed',
+          message: `The subscription pack for ${activeSubscription.investor?.display_name || activeSubscription.investor?.legal_name || 'Investor'} (${activeSubscription.vehicle?.name || 'your mandate'}) is now fully executed.`,
           link: '/versotech_main/versosign'
         }))
 
@@ -1018,67 +1017,72 @@ export async function handleSubscriptionSignature(
 
   // 7. CREATE AUDIT LOG ENTRY
   console.log('\n📝 [SUBSCRIPTION HANDLER] Step 7: Creating audit log entry')
-  await supabase.from('audit_logs').insert({
-    event_type: 'subscription',
-    action: 'subscription_committed',
-    entity_type: 'subscription',
-    entity_id: subscriptionId,
-    actor_id: null, // System-generated
-    action_details: {
-      description: 'Subscription agreement fully executed and status changed to committed',
-      subscription_id: subscriptionId,
-      investor_id: subscription.investor_id,
-      vehicle_id: subscription.vehicle_id,
-      commitment: subscription.commitment,
-      document_id: document.id,
-      workflow_run_id: signatureRequest.workflow_run_id,
-      previous_status: previousStatus,
-      new_status: 'committed'
-    },
-    timestamp: new Date().toISOString()
-  })
+  if (committedNow) {
+    await supabase.from('audit_logs').insert({
+      event_type: 'subscription',
+      action: 'subscription_committed',
+      entity_type: 'subscription',
+      entity_id: subscriptionId,
+      actor_id: null, // System-generated
+      action_details: {
+        description: 'Subscription agreement signed by investor(s) and status changed to committed',
+        subscription_id: subscriptionId,
+        investor_id: activeSubscription.investor_id,
+        vehicle_id: activeSubscription.vehicle_id,
+        commitment: activeSubscription.commitment,
+        document_id: document.id,
+        workflow_run_id: signatureRequest.workflow_run_id,
+        previous_status: previousStatus,
+        new_status: 'committed'
+      },
+      timestamp: new Date().toISOString()
+    })
 
-  console.log('✅ [SUBSCRIPTION HANDLER] Audit log entry created')
+    console.log('✅ [SUBSCRIPTION HANDLER] Audit log entry created')
 
-  // Log subscription completion event for analytics KPIs
-  if (subscription.deal_id) {
-    try {
-      await supabase.from('deal_activity_events').insert({
-        deal_id: subscription.deal_id,
-        investor_id: subscription.investor_id,
-        event_type: 'subscription_completed',
-        payload: {
-          subscription_id: subscriptionId,
-          signature_request_id: signatureRequest.id,
-          commitment: subscription.commitment,
-          currency: subscription.currency,
-          document_id: document.id,
-          vehicle_id: subscription.vehicle_id
-        }
-      })
-      console.log('✅ [SUBSCRIPTION HANDLER] Analytics event logged: subscription_completed')
-    } catch (eventError) {
-      console.error('❌ [SUBSCRIPTION HANDLER] Failed to log analytics event:', eventError)
-      // Non-blocking - don't fail subscription completion if analytics fails
+    // Log subscription completion event for analytics KPIs
+    if (activeSubscription.deal_id) {
+      try {
+        await supabase.from('deal_activity_events').insert({
+          deal_id: activeSubscription.deal_id,
+          investor_id: activeSubscription.investor_id,
+          event_type: 'subscription_completed',
+          payload: {
+            subscription_id: subscriptionId,
+            signature_request_id: signatureRequest.id,
+            commitment: activeSubscription.commitment,
+            currency: activeSubscription.currency,
+            document_id: document.id,
+            vehicle_id: activeSubscription.vehicle_id
+          }
+        })
+        console.log('✅ [SUBSCRIPTION HANDLER] Analytics event logged: subscription_completed')
+      } catch (eventError) {
+        console.error('❌ [SUBSCRIPTION HANDLER] Failed to log analytics event:', eventError)
+      }
+    } else {
+      console.warn('⚠️ [SUBSCRIPTION HANDLER] Skipping analytics event - no deal_id on subscription')
     }
   } else {
-    console.warn('⚠️ [SUBSCRIPTION HANDLER] Skipping analytics event - no deal_id on subscription')
+    console.log('ℹ️ [SUBSCRIPTION HANDLER] Subscription already committed - skipping audit log + analytics event')
   }
 
   console.log('\n🎉 [SUBSCRIPTION HANDLER] handleSubscriptionSignature() completed successfully')
   console.log('📊 [SUBSCRIPTION HANDLER] Final summary:', {
     signature_request_id: signatureRequest.id,
     subscription_id: subscriptionId,
-    investor_id: subscription.investor_id,
-    vehicle_id: subscription.vehicle_id,
-    commitment: subscription.commitment,
+    investor_id: activeSubscription.investor_id,
+    vehicle_id: activeSubscription.vehicle_id,
+    commitment: activeSubscription.commitment,
     document_id: document.id,
     signed_pdf_path: signedPdfPath,
-    status_changed: `${previousStatus} → committed`,
-    fee_events_will_auto_create: true
+    status_changed: committedNow ? `${previousStatus} → committed` : `${previousStatus} (unchanged)`,
+    fee_events_will_auto_create: committedNow
   })
 
-  console.log('💡 [SUBSCRIPTION HANDLER] Note: Fee events will be automatically created by the subscription status change trigger')
+  if (committedNow) {
+    console.log('💡 [SUBSCRIPTION HANDLER] Note: Fee events will be automatically created by the subscription status change trigger')
+  }
 }
 
 /**

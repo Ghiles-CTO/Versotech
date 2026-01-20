@@ -1,6 +1,6 @@
 # Subscription Pack - Complete End-to-End Documentation
 
-> **Last Updated**: 2026-01-19 (Rounds 1-6)
+> **Last Updated**: 2026-01-20 (Rounds 1-7)
 > **Author**: Claude (AI Assistant)
 > **Purpose**: Complete documentation of EVERYTHING related to subscription pack generation and signing.
 
@@ -931,6 +931,14 @@ Note: line numbers above reflect the 2025-01-18 snapshot; current ANCHOR_CSS lin
 | Anchor visibility tuning | `subscription_pack_template.html`, `regenerate/route.ts`, `action/route.ts` | Added `opacity:0.01` to anchor CSS |
 | VC215 alignment + appendix removal | `subscription_pack_template.html`, `anchor-detector.ts`, `client.ts`, `regenerate/route.ts`, `action/route.ts` | Removed appendix signatures; updated X mapping |
 
+### Summary of Changes Made on 2026-01-20 (Round 7)
+
+| Change | File | Notes |
+|--------|------|-------|
+| Commit on investor signatures (internal flow) | `src/lib/signature/client.ts` | Added commit check after each signature; commits when all investor signers are signed |
+| Fully-signed handling is now commit-aware | `src/lib/signature/handlers.ts` | Full execution no longer re-commits; still publishes doc + completes staff tasks |
+| Notifications aligned to commit vs full execution | `src/lib/signature/handlers.ts`, `src/lib/signature/client.ts` | Investor notified on commit; lawyers/arrangers notified on full execution |
+
 ### How These Changes Were Made
 
 1. **Read** `regenerate/route.ts` and `action/route.ts` to confirm ANCHOR_CSS
@@ -941,6 +949,8 @@ Note: line numbers above reflect the 2025-01-18 snapshot; current ANCHOR_CSS lin
 6. **Tune** anchor visibility with `opacity:0.01` in template + routes
 7. **Remove** appendix signature blocks and anchors from template + payload
 8. **Align** X positions to VC215 and adjust wire/T&Cs line alignment in the template
+9. **Add** investor-only commit logic in `submitSignature` to enforce `committed` after investor signers
+10. **Update** full-signature handler to publish without re-committing and to emit full-execution notifications
 
 ---
 
@@ -1406,6 +1416,7 @@ console.log('ALL ANCHORS:', anchors.map(a => ({
 | 2025-01-19 | - | Updated diagnostics + legacy position helper to remove appendix anchors | subscription-positions.ts, diagnose-pdf-text.ts, simple-pdf-diagnose.ts | Claude |
 | 2026-01-19 | - | Round 6: Added automated signature placement validation script | scripts/validate-subscription-pack-signatures.mjs | Claude |
 | 2026-01-19 | - | Round 6: Fixed validator anchor regex + validated signed/unsigned pack (10/10 pass) | scripts/validate-subscription-pack-signatures.mjs, SUBSCRIPTION_PACK_E2E.md | Claude |
+| 2026-01-20 | - | Round 7: Commit subscription on investor signatures; publish on full execution | src/lib/signature/client.ts, src/lib/signature/handlers.ts | Claude |
 
 ---
 
