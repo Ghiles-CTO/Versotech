@@ -20,6 +20,13 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -78,6 +85,11 @@ import {
   Trash2,
   Search,
   X,
+  Download,
+  FileText,
+  Filter,
+  ChevronDown,
+  History,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
@@ -94,6 +106,7 @@ import {
 // Types
 import type { UserRow, EntityAssociation } from '@/app/api/admin/users/route'
 import type { SingleUserResponse } from '@/app/api/admin/users/[id]/route'
+import type { ActivityLogItem, ActivityResponse } from '@/app/api/admin/users/[id]/activity/route'
 
 // Entity type to icon mapping
 const entityTypeIcons: Record<EntityAssociation['type'], LucideIcon> = {
@@ -229,6 +242,16 @@ export default function UserDetailPage() {
   const [isRemovingEntity, setIsRemovingEntity] = useState(false)
   const [addEntityDialogOpen, setAddEntityDialogOpen] = useState(false)
 
+  // Activity tab state
+  const [activityLogs, setActivityLogs] = useState<ActivityLogItem[]>([])
+  const [activityLoading, setActivityLoading] = useState(false)
+  const [activityHasMore, setActivityHasMore] = useState(false)
+  const [activityTotal, setActivityTotal] = useState(0)
+  const [activityOffset, setActivityOffset] = useState(0)
+  const [activityActionTypes, setActivityActionTypes] = useState<string[]>([])
+  const [activityFilter, setActivityFilter] = useState<string>('all')
+  const [activityInitialized, setActivityInitialized] = useState(false)
+
   // Edit form
   const {
     register,
@@ -271,6 +294,124 @@ export default function UserDetailPage() {
       fetchUser()
     }
   }, [userId, fetchUser])
+
+  // Fetch activity logs
+  const fetchActivity = useCallback(async (reset: boolean = false) => {
+    try {
+      setActivityLoading(true)
+      const currentOffset = reset ? 0 : activityOffset
+      const filterParam = activityFilter !== 'all' ? `&action=${encodeURIComponent(activityFilter)}` : ''
+
+      const response = await fetch(
+        `/api/admin/users/${userId}/activity?offset=${currentOffset}&limit=20${filterParam}`
+      )
+      const data: ActivityResponse = await response.json()
+
+      if (!data.success || !data.data) {
+        throw new Error(data.error || 'Failed to fetch activity')
+      }
+
+      if (reset) {
+        setActivityLogs(data.data.logs)
+        setActivityOffset(20)
+      } else {
+        setActivityLogs(prev => [...prev, ...data.data!.logs])
+        setActivityOffset(prev => prev + 20)
+      }
+
+      setActivityHasMore(data.data.hasMore)
+      setActivityTotal(data.data.total)
+      setActivityActionTypes(data.data.actionTypes)
+      setActivityInitialized(true)
+    } catch (err) {
+      console.error('Failed to fetch activity:', err)
+      toast.error('Failed to load activity', {
+        description: err instanceof Error ? err.message : 'An error occurred',
+      })
+    } finally {
+      setActivityLoading(false)
+    }
+  }, [userId, activityOffset, activityFilter])
+
+  // Format action for display
+  const formatActionDescription = (log: ActivityLogItem): string => {
+    // Create human-readable descriptions based on action type
+    const actionMap: Record<string, string> = {
+      'LOGIN': 'Logged in',
+      'LOGOUT': 'Logged out',
+      'VIEW': 'Viewed',
+      'CREATE': 'Created',
+      'UPDATE': 'Updated',
+      'DELETE': 'Deleted',
+      'APPROVE': 'Approved',
+      'REJECT': 'Rejected',
+      'SUBMIT': 'Submitted',
+      'DOWNLOAD': 'Downloaded',
+      'UPLOAD': 'Uploaded',
+      'SIGN': 'Signed',
+      'INVITE': 'Invited',
+    }
+
+    // Try to match action parts
+    const parts = log.rawAction.split('_')
+    const verb = parts[0]
+    const subject = parts.slice(1).join(' ').toLowerCase()
+
+    const mappedVerb = actionMap[verb] || log.action
+
+    if (log.entity_type) {
+      return `${mappedVerb} ${log.entity_type.replace(/_/g, ' ')}`
+    }
+
+    return subject ? `${mappedVerb} ${subject}` : mappedVerb
+  }
+
+  // Export activity as CSV
+  const handleExportActivityCSV = () => {
+    if (activityLogs.length === 0) return
+
+    const headers = ['Timestamp', 'Action', 'Entity Type', 'Entity ID', 'IP Address']
+    const rows = activityLogs.map(log => [
+      new Date(log.timestamp).toISOString(),
+      log.action,
+      log.entity_type || '',
+      log.entity_id || '',
+      log.ip_address || '',
+    ])
+
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+    ].join('\n')
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `${user?.displayName || 'user'}_activity_${new Date().toISOString().split('T')[0]}.csv`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+
+    toast.success('Activity exported', {
+      description: `${activityLogs.length} activities exported to CSV`,
+    })
+  }
+
+  // Handle activity filter change
+  const handleActivityFilterChange = (value: string) => {
+    setActivityFilter(value)
+    setActivityOffset(0)
+  }
+
+  // Re-fetch activity when filter changes
+  useEffect(() => {
+    if (activityInitialized) {
+      fetchActivity(true)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activityFilter])
 
   // Action handlers
   const handleDeactivate = async () => {
@@ -869,14 +1010,190 @@ export default function UserDetailPage() {
             </Card>
           </TabsContent>
 
-          {/* Activity Tab (placeholder for US-016) */}
+          {/* Activity Tab */}
           <TabsContent value="activity" className="mt-6">
             <Card>
-              <CardContent className="p-6">
-                <p className="text-muted-foreground text-center py-8">
-                  <Activity className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                  User activity history will be displayed here.
-                </p>
+              <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between space-y-4 sm:space-y-0 pb-4">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <History className="h-5 w-5" />
+                  Activity History
+                  {activityTotal > 0 && (
+                    <Badge variant="secondary" className="ml-2">
+                      {activityTotal} {activityTotal === 1 ? 'event' : 'events'}
+                    </Badge>
+                  )}
+                </CardTitle>
+                <div className="flex items-center gap-2">
+                  {/* Action Type Filter */}
+                  <Select
+                    value={activityFilter}
+                    onValueChange={handleActivityFilterChange}
+                  >
+                    <SelectTrigger className="w-[180px]">
+                      <Filter className="h-4 w-4 mr-2" />
+                      <SelectValue placeholder="Filter by action" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Actions</SelectItem>
+                      {activityActionTypes.map((action) => (
+                        <SelectItem key={action} value={action}>
+                          {action.replace(/_/g, ' ')}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  {/* Export CSV Button */}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleExportActivityCSV}
+                    disabled={activityLogs.length === 0}
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Export
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {/* Initial Loading State - Load activity on first view */}
+                {!activityInitialized && !activityLoading && (
+                  <div className="flex flex-col items-center justify-center py-12">
+                    <Button
+                      variant="outline"
+                      onClick={() => fetchActivity(true)}
+                    >
+                      <Activity className="h-4 w-4 mr-2" />
+                      Load Activity
+                    </Button>
+                  </div>
+                )}
+
+                {/* Loading State */}
+                {activityLoading && activityLogs.length === 0 && (
+                  <div className="space-y-4 py-4">
+                    {[...Array(5)].map((_, i) => (
+                      <div key={i} className="flex items-start gap-4">
+                        <Skeleton className="h-10 w-10 rounded-full" />
+                        <div className="flex-1 space-y-2">
+                          <Skeleton className="h-4 w-3/4" />
+                          <Skeleton className="h-3 w-1/2" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Empty State */}
+                {activityInitialized && activityLogs.length === 0 && !activityLoading && (
+                  <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <div className="rounded-full bg-muted p-4 mb-4">
+                      <FileText className="h-8 w-8 text-muted-foreground" />
+                    </div>
+                    <h3 className="text-lg font-medium mb-1">No activity recorded</h3>
+                    <p className="text-sm text-muted-foreground max-w-sm">
+                      {activityFilter !== 'all'
+                        ? `No "${activityFilter.replace(/_/g, ' ')}" actions found. Try selecting a different filter.`
+                        : 'This user has no recorded activity in the system.'}
+                    </p>
+                    {activityFilter !== 'all' && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="mt-4"
+                        onClick={() => setActivityFilter('all')}
+                      >
+                        Clear Filter
+                      </Button>
+                    )}
+                  </div>
+                )}
+
+                {/* Activity Timeline */}
+                {activityLogs.length > 0 && (
+                  <div className="space-y-1">
+                    {/* Timeline */}
+                    <div className="relative">
+                      {/* Timeline line */}
+                      <div className="absolute left-5 top-0 bottom-0 w-px bg-border" />
+
+                      {activityLogs.map((log, index) => (
+                        <div
+                          key={log.id}
+                          className="relative flex items-start gap-4 py-4 first:pt-0"
+                        >
+                          {/* Timeline dot */}
+                          <div className="relative z-10 flex h-10 w-10 items-center justify-center rounded-full bg-background border-2 border-border">
+                            <Activity className="h-4 w-4 text-muted-foreground" />
+                          </div>
+
+                          {/* Content */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+                              <p className="font-medium text-sm">
+                                {formatActionDescription(log)}
+                              </p>
+                              <span className="text-xs text-muted-foreground whitespace-nowrap">
+                                {formatDistanceToNow(new Date(log.timestamp), { addSuffix: true })}
+                              </span>
+                            </div>
+
+                            {/* Entity affected */}
+                            {log.entity_type && (
+                              <p className="text-sm text-muted-foreground mt-1">
+                                <Badge variant="outline" className="text-xs font-normal mr-2">
+                                  {log.entity_type.replace(/_/g, ' ')}
+                                </Badge>
+                                {log.entity_id && (
+                                  <span className="text-xs font-mono">
+                                    ID: {log.entity_id.slice(0, 8)}...
+                                  </span>
+                                )}
+                              </p>
+                            )}
+
+                            {/* Additional details */}
+                            {log.ip_address && (
+                              <p className="text-xs text-muted-foreground mt-1">
+                                IP: {log.ip_address}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Load More Button */}
+                    {activityHasMore && (
+                      <div className="flex justify-center pt-4 mt-4 border-t">
+                        <Button
+                          variant="outline"
+                          onClick={() => fetchActivity(false)}
+                          disabled={activityLoading}
+                        >
+                          {activityLoading ? (
+                            <>
+                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                              Loading...
+                            </>
+                          ) : (
+                            <>
+                              <ChevronDown className="h-4 w-4 mr-2" />
+                              Load More
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    )}
+
+                    {/* End of list indicator */}
+                    {!activityHasMore && activityLogs.length > 0 && (
+                      <p className="text-center text-xs text-muted-foreground pt-4 mt-4 border-t">
+                        Showing all {activityTotal} {activityTotal === 1 ? 'activity' : 'activities'}
+                      </p>
+                    )}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
