@@ -145,7 +145,7 @@ export async function embedSignatureInPDF(
  * Embed signature into PDF document on MULTIPLE pages
  *
  * Used for subscription packs where each signer needs their signature on multiple pages:
- * - Subscribers: page 12 (main agreement) + page 40 (appendix)
+ * - Subscribers: page 12 (main agreement)
  * - Issuer/Arranger: page 12 (main agreement) + page 39 (T&Cs)
  *
  * This function:

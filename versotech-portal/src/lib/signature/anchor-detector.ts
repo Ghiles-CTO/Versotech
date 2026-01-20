@@ -11,6 +11,7 @@
  */
 
 import type { SignaturePlacementRecord } from './types'
+import { SIGNATURE_CONFIG } from './config'
 
 export interface DetectedAnchor {
   anchorId: string       // e.g., 'party_a', 'party_b_tcs', 'party_a_2_form'
@@ -162,7 +163,7 @@ export function validateRequiredAnchors(anchors: DetectedAnchor[], required: str
  * - Anchors match the database convention exactly
  *
  * WHICH PAGES EACH PARTY SIGNS:
- * - Subscribers (party_a*): Page 2 (form), Page 12 (main), Page 40 (appendix)
+ * - Subscribers (party_a*): Page 2 (form), Page 12 (main)
  * - Issuer (party_b): Page 2 (form), Page 3 (wire), Page 12 (main), Page 39 (T&Cs)
  * - Arranger (party_c): Page 12 (main), Page 39 (T&Cs)
  *
@@ -170,15 +171,14 @@ export function validateRequiredAnchors(anchors: DetectedAnchor[], required: str
  * @returns Array of anchor patterns with their labels
  */
 function getAnchorPatternsForPosition(position: string): { anchorId: string; label: string }[] {
-  // Subscribers sign on: Page 2 (form), Page 12 (main), Page 40 (appendix)
+  // Subscribers sign on: Page 2 (form), Page 12 (main)
   if (position.startsWith('party_a')) {
     // position is 'party_a', 'party_a_2', 'party_a_3', etc.
     // Anchors use SAME base: 'party_a', 'party_a_2', 'party_a_3'
     const base = position
     return [
       { anchorId: `${base}_form`, label: 'subscription_form' },
-      { anchorId: base, label: 'main_agreement' },
-      { anchorId: `${base}_appendix`, label: 'appendix' }
+      { anchorId: base, label: 'main_agreement' }
     ]
   }
 
@@ -213,70 +213,60 @@ function getAnchorPatternsForPosition(position: string): { anchorId: string; lab
  * the known column layout of the subscription pack template:
  *
  * COLUMN POSITIONS:
- * - Left column (Issuer): 25% of page width
- * - Center (Subscriber on most pages): 50% of page width
- * - Right column (Arranger, Subscriber on form): 70% of page width
+ * - Form page: Issuer left column, Subscriber right column
+ * - Main agreement: All parties stacked on the left
+ * - T&Cs: Issuer/Arranger centered on signature page
  *
  * @param signaturePosition - The database signature_position value (party_a, party_b, party_c)
  * @param label - The page/section label (subscription_form, main_agreement, etc.)
  * @returns X position as percentage of page width (0-1)
  */
 function getSignatureXPosition(signaturePosition: string, label: string): number {
-  // Party A (Subscribers): Right column on form page, center elsewhere
+  // Party A (Subscribers): Right column on form page, stacked-left on main agreement
   if (signaturePosition.startsWith('party_a')) {
-    if (label === 'subscription_form') return 0.70  // Right column (page 2)
-    return 0.50  // Center (pages 12, 40)
+    if (label === 'subscription_form') return 0.63  // Right column (form table)
+    return 0.29  // Stacked left (main agreement)
   }
 
-  // Party B (Issuer): Left column everywhere
+  // Party B (Issuer): Left on form/wire/main, centered on T&Cs signature page
   if (signaturePosition === 'party_b') {
-    return 0.25  // Left column (pages 2, 3, 12, 39)
+    if (label === 'tcs') return 0.43
+    if (label === 'main_agreement') return 0.29
+    if (label === 'subscription_form') return 0.20
+    return 0.25
   }
 
-  // Party C (Arranger): Right column
+  // Party C (Arranger): Stacked left on main, centered on T&Cs signature page
   if (signaturePosition === 'party_c') {
-    return 0.70  // Right column (pages 12, 39)
+    if (label === 'tcs') return 0.43
+    return 0.29
   }
 
-  return 0.50  // Default center
+  return 0.29  // Default to stacked-left alignment
 }
 
 /**
- * Get FIXED Y position for signature placement
+ * Get signature Y position from the anchor position
  *
- * WHY FIXED POSITIONS INSTEAD OF ANCHOR-RELATIVE:
- * The HTML template places anchors at the END of signature blocks (below the signature line).
- * When we calculated signatureY = anchorY - Y_OFFSET, we got NEGATIVE values because
- * the anchor is already near the page bottom. This caused signatures to be clamped to
- * minimum values and placed incorrectly.
+ * Anchors are now placed ON the signature line. This function shifts the signature
+ * image ABOVE the line so that the metadata (timestamp + signer name) sits just
+ * above the line and does not overlap Name/Title text below.
  *
- * SOLUTION: Use calibrated fixed Y positions based on visual inspection of the PDF template.
- * Anchors are now used ONLY for page detection (which page needs a signature), not for
- * vertical positioning.
- *
- * Y POSITIONS (in points from bottom of page, Letter = 792pt tall):
- * - Higher values = closer to top of page
- * - Lower values = closer to bottom of page
- *
- * CALIBRATION NOTES (from visual analysis of signed PDF):
- * - Page 2-3 (forms): Signature areas are in lower portion, ~180-260pt from bottom
- * - Page 14 (main agreement): Signature areas are ~180pt from bottom
- * - Page 39 (T&Cs): Same layout as main agreement
- * - Page 42 (appendix): Same layout as main agreement
- *
- * @param label - The page/section label
- * @returns Fixed Y position in points from bottom of page
+ * @param anchor - Detected anchor with rawY (line position)
+ * @param label - Page/section label (used for compact layout offsets)
+ * @returns Signature Y position in points from bottom of page
  */
-function getFixedYPosition(label: string): number {
-  // Y positions calibrated by visual inspection of PDF template
-  switch (label) {
-    case 'subscription_form':     return 180  // Page 2: subscription form signature
-    case 'wire_instructions':     return 260  // Page 3: wire transfer form (higher up due to compact layout)
-    case 'main_agreement':        return 180  // Page 14: main signature page
-    case 'tcs':                   return 180  // Page 39: T&Cs page
-    case 'appendix':              return 180  // Page 42: appendix page
-    default:                      return 180  // Default fallback
-  }
+function getSignatureYFromAnchor(anchor: DetectedAnchor, label: string): number {
+  const { metadata } = SIGNATURE_CONFIG.pdf
+
+  // Keep in sync with embedSignatureMultipleLocations() compact layout offsets
+  const compactSignerOffset = 14
+  const signerOffset = label === 'wire_instructions'
+    ? compactSignerOffset
+    : metadata.signerNameOffsetY
+
+  const lineGap = 4
+  return anchor.rawY + signerOffset + lineGap
 }
 
 /**
@@ -285,26 +275,18 @@ function getFixedYPosition(label: string): number {
  * This is the main function used during signature request creation to
  * calculate where signatures should be placed based on detected anchors.
  *
- * POSITIONING STRATEGY (v4 - FIXED Y POSITIONS):
+ * POSITIONING STRATEGY (v5 - ANCHOR-BASED Y):
  * - X: Uses FIXED column positions based on party type and page label
- * - Y: Uses FIXED positions calibrated by visual inspection (NOT anchor-relative)
+ * - Y: Uses anchor position + offset (anchor is on the signature line)
  *
- * WHY FIXED Y POSITIONS:
- * The HTML template places SIG_ANCHOR markers at the END of signature blocks,
- * BELOW the signature line. This means anchor.yFromBottom is near the page bottom.
- * Calculating signatureY = anchorY - Y_OFFSET yielded NEGATIVE values that got
- * clamped, placing signatures incorrectly at the page bottom.
+ * WHY ANCHOR-BASED Y:
+ * Anchors are placed directly on the signature line, so anchor.yFromBottom is the
+ * line position. We then offset upward so the signature image sits above the line.
  *
- * SOLUTION: Anchors are used ONLY for:
- * 1. PAGE DETECTION - which page needs a signature
- * 2. ANCHOR ID MATCHING - mapping signature positions to their required pages
- *
- * Y positions are now FIXED values calibrated from the PDF template layout.
- *
- * X POSITIONING (unchanged):
- * - Party A (Subscribers): 70% on form, 50% elsewhere
- * - Party B (Issuer): 25% (left column)
- * - Party C (Arranger): 70% (right column)
+ * X POSITIONING (VC215-aligned):
+ * - Party A (Subscribers): 63% on form, 29% on main agreement
+ * - Party B (Issuer): 20% on form, 25% on wire, 29% on main, 43% on T&Cs
+ * - Party C (Arranger): 29% on main, 43% on T&Cs
  *
  * @param anchors - All detected anchors from PDF
  * @param signaturePosition - The signer's position (e.g., 'party_a', 'party_b')
@@ -318,7 +300,7 @@ export function getPlacementsFromAnchors(
   const anchorPatterns = getAnchorPatternsForPosition(signaturePosition)
   const placements: SignaturePlacementRecord[] = []
 
-  console.log(`📍 [PLACEMENT] Calculating placements for ${signaturePosition} (using FIXED Y positions)...`)
+  console.log(`📍 [PLACEMENT] Calculating placements for ${signaturePosition} (anchor-based Y)...`)
 
   for (const pattern of anchorPatterns) {
     const anchor = anchors.find(a => a.anchorId === pattern.anchorId)
@@ -326,23 +308,23 @@ export function getPlacementsFromAnchors(
       // Get FIXED X position based on party and page type
       const fixedX = getSignatureXPosition(signaturePosition, pattern.label)
 
-      // Get FIXED Y position based on page label (NOT anchor-relative!)
-      const fixedY = getFixedYPosition(pattern.label)
+      // Get signature Y position based on anchor line + offset
+      const signatureY = getSignatureYFromAnchor(anchor, pattern.label)
 
       // Debug logging
       console.log(`   🔍 [ANCHOR] ${pattern.anchorId} on page ${anchor.pageNumber}`)
       console.log(`      Anchor position (for reference): (${anchor.rawX.toFixed(0)}pt, ${anchor.rawY.toFixed(0)}pt)`)
       console.log(`   📍 [PLACEMENT] ${signaturePosition} -> page ${anchor.pageNumber}`)
-      console.log(`      FIXED X: ${(fixedX * 100).toFixed(0)}% | FIXED Y: ${fixedY}pt (${pattern.label})`)
+      console.log(`      FIXED X: ${(fixedX * 100).toFixed(0)}% | ANCHOR Y: ${signatureY.toFixed(0)}pt (${pattern.label})`)
 
       placements.push({
         page: anchor.pageNumber,
         x: fixedX,  // FIXED X position based on party/page
-        y: fixedY,  // FIXED Y position based on page label
+        y: signatureY,  // Anchor-based Y position
         label: pattern.label
       })
 
-      console.log(`   ✓ ${pattern.anchorId} -> page ${anchor.pageNumber}, x=${(fixedX * 100).toFixed(0)}%, y=${fixedY}pt (${pattern.label})`)
+      console.log(`   ✓ ${pattern.anchorId} -> page ${anchor.pageNumber}, x=${(fixedX * 100).toFixed(0)}%, y=${signatureY.toFixed(0)}pt (${pattern.label})`)
     } else {
       console.warn(`   ⚠️ Anchor not found: ${pattern.anchorId} (expected for ${signaturePosition})`)
     }
@@ -366,7 +348,6 @@ export function getRequiredAnchorsForSubscriptionPack(subscriberCount: number): 
     const base = i === 1 ? 'party_a' : `party_a_${i}`
     required.push(`${base}_form`)   // Page 2
     required.push(base)              // Page 12
-    required.push(`${base}_appendix`) // Page 40
   }
 
   // Issuer anchors (party_b)
@@ -387,7 +368,7 @@ export function getRequiredAnchorsForSubscriptionPack(subscriberCount: number): 
  * First subscriber is 'party_a', subsequent are 'party_a_2', 'party_a_3', etc.
  *
  * @param number - 1-based signatory number
- * @param suffix - Optional suffix like 'form' or 'appendix'
+ * @param suffix - Optional suffix like 'form'
  * @returns Anchor ID string
  */
 export function getSignatoryAnchorId(number: number, suffix?: string): string {

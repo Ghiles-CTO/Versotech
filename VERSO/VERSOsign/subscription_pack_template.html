@@ -144,12 +144,45 @@
         .signature-block {
             margin-top: 1.5cm;
             page-break-inside: avoid;
+            break-inside: avoid;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .signature-block-inline {
+            page-break-inside: avoid;
+            break-inside: avoid;
+            display: inline-block;
+            width: 100%;
         }
 
         .signature-line {
+            position: relative;
             border-top: 1px solid #000;
             width: 60%;
             margin: 3cm 0 0.2cm 0;  /* Increased top margin from 0.8cm to 3cm for signature space */
+        }
+
+        .signature-line.wire-line {
+            width: 42%;
+        }
+
+        .signature-line.main-line {
+            width: 50%;
+        }
+
+        .signature-line.tcs-line {
+            margin-left: 12%;
+        }
+
+        .sig-anchor {
+            position: absolute;
+            left: 0;
+            top: 0;
+            font-size: 1px;
+            line-height: 1px;
+            color: #ffffff;
+            opacity: 0.01;
         }
 
         /* Wire instructions box */
@@ -190,6 +223,7 @@
             }
 
             .signature-block,
+            .signature-block-inline,
             .wire-box {
                 page-break-inside: avoid;
             }
@@ -284,8 +318,7 @@
             <strong>VERSO Capital 2 SCSP Series {{ $json.series_number }}</strong><br>
             duly represented by its general partner<br>
             <strong>VERSO Capital 2 GP SARL</strong><br><br>
-            <span style="font-size:1px;line-height:0;color:#ffffff;">SIG_ANCHOR:party_b_form</span>
-            <div class="signature-line"></div>
+            <div class="signature-line"><span class="sig-anchor">SIG_ANCHOR:party_b_form</span></div>
             Name: {{ $json.issuer_name }}<br>
             Title: {{ $json.issuer_title }}
         </td>
@@ -337,8 +370,7 @@
 <p style="margin-top: 1cm;">Thank you for your consideration,</p>
 
 <div class="signature-block">
-    <span style="font-size:1px;line-height:0;color:#ffffff;">SIG_ANCHOR:party_b_wire</span>
-    <div class="signature-line"></div>
+    <div class="signature-line wire-line"><span class="sig-anchor">SIG_ANCHOR:party_b_wire</span></div>
     <p>Name: {{ $json.issuer_name }}<br>
     Title: {{ $json.issuer_title }}</p>
 </div>
@@ -1311,17 +1343,15 @@ c/o Julien MACHOT, Director</p>
 <p style="text-align: center; font-size: 12pt; font-weight: bold; margin-top: 2cm;">SIGNATURE PAGE TO SCHEDULE 1</p>
 
 <div class="signature-block">
-    <span style="font-size:1px;line-height:0;color:#ffffff;">SIG_ANCHOR:party_b_tcs</span>
     <p><strong>VERSO Capital 2 SCSP</strong> duly represented by its general partner <strong>VERSO Capital 2 GP SARL</strong>, as Issuer</p>
-    <div class="signature-line"></div>
+    <div class="signature-line tcs-line"><span class="sig-anchor">SIG_ANCHOR:party_b_tcs</span></div>
     <p>Name: {{ $json.issuer_name }}<br>
     Title: {{ $json.issuer_title }}</p>
 </div>
 
 <div class="signature-block">
-    <span style="font-size:1px;line-height:0;color:#ffffff;">SIG_ANCHOR:party_c_tcs</span>
     <p><strong>Verso Management Ltd.</strong>, for the purposes of acknowledging and accepting the powers and responsibilities attributed to it under these Terms and Conditions</p>
-    <div class="signature-line"></div>
+    <div class="signature-line tcs-line"><span class="sig-anchor">SIG_ANCHOR:party_c_tcs</span></div>
     <p>Name: {{ $json.arranger_name }}<br>
     Title: {{ $json.arranger_title }}</p>
 </div>
@@ -1348,11 +1378,6 @@ c/o Julien MACHOT, Director</p>
 </ul>
 
 <p>This Accession Undertaking and any non-contractual obligations arising out of or in connection with it are governed by the laws of the Grand Duchy of Luxembourg. This Accession Undertaking has been entered into on the date stated above and is delivered on the date stated above.</p>
-
-<div class="signature-block" style="margin-top: 2cm;">
-    <p><strong>{{ $json.subscriber_name }}</strong></p>
-    {{ $json.signatories_appendix_html }}
-</div>
 
 </body>
 </html>

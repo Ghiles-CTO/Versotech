@@ -66,7 +66,7 @@ const subscriptionPayload = {
   // N8N doesn't support Handlebars {{#each}}, so we pre-render HTML
   signatories_table_html: '<div>...pre-rendered signatory table...</div>',
   signatories_signature_html: '<div>...pre-rendered signature blocks...</div>',
-  signatories_appendix_html: '<div>...pre-rendered appendix signatures...</div>',
+  // Appendix signatures removed (no appendix signing)
 
   // Metadata
   is_regeneration: true,

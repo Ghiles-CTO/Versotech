@@ -34,6 +34,7 @@ import { ActivityTimelineTab } from '@/components/shared/activity-timeline-tab'
 import { IndividualKycDisplay, EntityKYCEditDialog } from '@/components/shared'
 import { StaffEntityMembersTab } from '@/components/staff/shared/staff-entity-members-tab'
 import { EditPartnerDialog } from '@/components/staff/partners/edit-partner-dialog'
+import { DispatchPartnerInvestorDialog } from '@/components/staff/partners/dispatch-partner-investor-dialog'
 import { InviteUserDialog } from '@/components/users/invite-user-dialog'
 import { formatCurrency, formatDate } from '@/lib/format'
 import { statusStyles, kycStyles, getStatusStyle } from '@/lib/status-styles'
@@ -172,6 +173,7 @@ export function PartnerDetailClient({ partner, metrics }: PartnerDetailClientPro
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false)
   const [kycDialogOpen, setKycDialogOpen] = useState(false)
+  const [dispatchDialogOpen, setDispatchDialogOpen] = useState(false)
 
   // Fee Plans and Referred Investors state
   const [feePlans, setFeePlans] = useState<PartnerFeePlan[]>([])
@@ -285,6 +287,10 @@ export function PartnerDetailClient({ partner, metrics }: PartnerDetailClientPro
           <Button variant="outline" size="sm" onClick={() => setEditDialogOpen(true)}>
             <Edit className="h-4 w-4 mr-2" />
             Edit
+          </Button>
+          <Button variant="default" size="sm" onClick={() => setDispatchDialogOpen(true)}>
+            <UserPlus className="h-4 w-4 mr-2" />
+            Dispatch Investor
           </Button>
         </div>
       </div>
@@ -878,6 +884,15 @@ export function PartnerDetailClient({ partner, metrics }: PartnerDetailClientPro
           onSuccess={() => router.refresh()}
         />
       )}
+
+      {/* Dispatch Investor Dialog */}
+      <DispatchPartnerInvestorDialog
+        open={dispatchDialogOpen}
+        onOpenChange={setDispatchDialogOpen}
+        partnerId={partner.id}
+        partnerName={partner.name}
+        feePlans={feePlans}
+      />
     </div>
   )
 }

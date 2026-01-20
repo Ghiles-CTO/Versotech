@@ -16,7 +16,6 @@ import {
 import { SignatureStorageManager, downloadPDFFromUrl } from './storage'
 import { embedSignatureInPDF, embedSignatureMultipleLocations } from './pdf-processor'
 import { routeSignatureHandler } from './handlers'
-import { getPlacementsForPosition } from './subscription-positions'
 import { detectAnchors, getPlacementsFromAnchors } from './anchor-detector'
 import type { SignaturePlacementRecord } from './types'
 import { sendSignatureRequestEmail } from '@/lib/email/resend-service'
@@ -389,11 +388,11 @@ export async function createSignatureRequest(
       // Validate expected placement counts for multi-page signatures
       // party_c (arranger) should have 2 placements: page 12 (main agreement) + page 39 (T&Cs)
       // party_b (issuer) should have 4 placements: page 2 (form) + page 3 (wire) + page 12 (main) + page 39 (T&Cs)
-      // party_a (subscriber) should have 3 placements: page 2 (form) + page 12 (main) + page 40 (appendix)
+      // party_a (subscriber) should have 2 placements: page 2 (form) + page 12 (main)
       const expectedCounts: Record<string, number> = {
         'party_c': 2,  // Page 12 + Page 39
         'party_b': 4,  // Page 2 form + Page 3 wire + Page 12 main + Page 39 T&Cs
-        'party_a': 3,  // Page 2 form + Page 12 main + Page 40 appendix
+        'party_a': 2,  // Page 2 form + Page 12 main
       }
       const basePosition = signature_position.replace(/_\d+$/, '') as string
       const expectedCount = expectedCounts[basePosition] || 1

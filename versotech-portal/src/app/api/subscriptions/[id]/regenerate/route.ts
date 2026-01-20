@@ -238,29 +238,22 @@ export async function POST(
       return suffix ? `${base}_${suffix}` : base
     }
 
-    // ANCHOR CSS: Invisible anchors for PDF signature positioning
+    // ANCHOR CSS: Invisible anchors placed ON the signature line
     //
-    // APPROACH: Use off-page positioning to completely hide anchor text
-    // - position:absolute;left:-9999px moves anchor off-page (invisible)
-    // - font-size:1px ensures minimal space even if positioning fails
+    // APPROACH:
+    // - Keep anchors in the PDF text layer (for PDF.js extraction)
+    // - Position anchors at the signature line using absolute positioning
+    // - Use tiny white text so anchors remain invisible
     //
-    // WHY THIS APPROACH:
-    // Previous approach using color:#ffffff (white text) didn't work because:
-    // 1. PDF renderer may not use pure white backgrounds
-    // 2. Anchor text in table cells with slight gray backgrounds was visible
-    // 3. The white text still appeared as visual artifacts in the PDF
-    //
-    // IMPORTANT: Anchors are now used ONLY for page detection (which page needs a signature).
-    // Y positions are FIXED values in anchor-detector.ts getFixedYPosition().
-    // This means anchor extraction accuracy is less critical - we mainly need page numbers.
-    const ANCHOR_CSS = 'position:absolute;left:-9999px;font-size:1px;'
+    // IMPORTANT: Anchors are now used for PAGE + Y placement (anchor-based Y).
+    // Avoid off-page positioning so anchor Y is accurate.
+    const ANCHOR_CSS = 'position:absolute;left:0;top:0;font-size:1px;line-height:1px;color:#ffffff;opacity:0.01;'
 
     // Page 2 - Subscription Form: Subscriber signatures with anchors (right column)
     // Parent div needs position:relative for anchor's position:absolute to work
     const signatoriesFormHtml = signatories.map(s => `
-            <div style="position:relative;margin-bottom: 0.5cm;">
-                <span style="${ANCHOR_CSS}">SIG_ANCHOR:${getAnchorId(s.number, 'form')}</span>
-                <div class="signature-line"></div>
+            <div class="signature-block-inline" style="position:relative;margin-bottom: 0.5cm;">
+                <div class="signature-line" style="position:relative;"><span style="${ANCHOR_CSS}">SIG_ANCHOR:${getAnchorId(s.number, 'form')}</span></div>
                 Name: ${s.name}<br>
                 Title: ${s.title}
             </div>`).join('')
@@ -271,22 +264,11 @@ export async function POST(
     // Parent div needs position:relative for anchor's position:absolute to work
     const signatoriesSignatureHtml = signatories.map(s => `
 <div class="signature-block" style="position:relative;margin-bottom: 1.5cm; min-height: 4cm;">
-    <span style="${ANCHOR_CSS}">SIG_ANCHOR:${getAnchorId(s.number)}</span>
     <p><strong>The Subscriber</strong>, represented by Authorized Signatory ${s.number}</p>
-    <div class="signature-line" style="margin-top: 3cm;"></div>
+    <div class="signature-line main-line" style="margin-top: 3cm; position:relative;"><span style="${ANCHOR_CSS}">SIG_ANCHOR:${getAnchorId(s.number)}</span></div>
     <p style="margin-top: 0.3cm;">Name: ${s.name}<br>
     Title: ${s.title}</p>
 </div>`).join('')
-
-    // Page 40 - Appendix: Subscriber signatures with anchors
-    // Parent div needs position:relative for anchor's position:absolute to work
-    const signatoriesAppendixHtml = signatories.map(s => `
-    <div style="position:relative;margin-bottom: 0.5cm;">
-        <span style="${ANCHOR_CSS}">SIG_ANCHOR:${getAnchorId(s.number, 'appendix')}</span>
-        <div class="signature-line"></div>
-        <p>Name: ${s.name}<br>
-        Title: ${s.title}</p>
-    </div>`).join('')
 
     // Legacy: Keep signatoriesTableHtml for backwards compatibility (no anchors)
     const signatoriesTableHtml = signatories.map(s => `
@@ -378,9 +360,8 @@ export async function POST(
     // Parent div needs position:relative for anchor's position:absolute to work
     const issuerSignatureHtml = `
 <div class="signature-block" style="position:relative;margin-bottom: 1.5cm; min-height: 4cm;">
-    <span style="${ANCHOR_CSS}">SIG_ANCHOR:party_b</span>
     <p><strong>The Issuer, VERSO Capital 2 SCSP</strong>, duly represented by its general partner <strong>VERSO Capital 2 GP SARL</strong></p>
-    <div class="signature-line" style="margin-top: 3cm;"></div>
+    <div class="signature-line main-line" style="margin-top: 3cm; position:relative;"><span style="${ANCHOR_CSS}">SIG_ANCHOR:party_b</span></div>
     <p style="margin-top: 0.3cm;">Name: ${issuerName}<br>
     Title: ${issuerTitle}</p>
 </div>`
@@ -390,9 +371,8 @@ export async function POST(
     // Parent div needs position:relative for anchor's position:absolute to work
     const arrangerSignatureHtml = `
 <div class="signature-block" style="position:relative;margin-bottom: 1.5cm; min-height: 4cm;">
-    <span style="${ANCHOR_CSS}">SIG_ANCHOR:party_c</span>
     <p><strong>The Attorney, Verso Management Ltd.</strong>, for the purpose of the powers granted under Clause 6</p>
-    <div class="signature-line" style="margin-top: 3cm;"></div>
+    <div class="signature-line main-line" style="margin-top: 3cm; position:relative;"><span style="${ANCHOR_CSS}">SIG_ANCHOR:party_c</span></div>
     <p style="margin-top: 0.3cm;">Name: ${arrangerName}<br>
     Title: ${arrangerTitle}</p>
 </div>`
@@ -567,7 +547,6 @@ export async function POST(
       signatories_table_html: signatoriesTableHtml,  // Legacy: no anchors
       signatories_form_html: signatoriesFormHtml,    // Page 2: subscriber form signatures with anchors
       signatories_signature_html: signatoriesSignatureHtml, // Page 12: subscriber main agreement signatures
-      signatories_appendix_html: signatoriesAppendixHtml,   // Page 40: subscriber appendix signatures
       issuer_signature_html: issuerSignatureHtml,    // Page 12: issuer main agreement signature
       arranger_signature_html: arrangerSignatureHtml, // Page 12: arranger main agreement signature
 

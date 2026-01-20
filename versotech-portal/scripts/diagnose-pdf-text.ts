@@ -90,8 +90,8 @@ async function diagnosePdfText() {
 
   // Check for missing expected anchors
   const expected = [
-    'party_a', 'party_a_form', 'party_a_appendix',
-    'party_a_2', 'party_a_2_form', 'party_a_2_appendix',
+    'party_a', 'party_a_form',
+    'party_a_2', 'party_a_2_form',
     'party_b', 'party_b_form', 'party_b_wire', 'party_b_tcs',
     'party_c', 'party_c_tcs'
   ]

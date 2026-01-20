@@ -1,9 +1,12 @@
 /**
  * Subscription Pack Signature Position Calculator
  *
- * Calculates EXACT signature positions for subscription pack documents.
+ * Calculates legacy fixed signature positions for subscription pack documents.
+ * NOTE: Anchor-based placement is the source of truth; this file is kept
+ * for backwards compatibility and only covers main agreement + T&Cs.
+ *
  * Each signer needs their signature on MULTIPLE pages:
- * - Subscribers: page 12 (main agreement) + page 40 (appendix)
+ * - Subscribers: page 12 (main agreement)
  * - Issuer (CEO): page 12 (main agreement) + page 39 (T&Cs)
  * - Arranger: page 12 (main agreement) + page 39 (T&Cs)
  *
@@ -28,14 +31,14 @@ export interface SignerPositions {
  * CALIBRATION NOTES:
  * - X must be > 0.25 to prevent clipping (signature width=180, page width=595)
  * - Formula: signatureX = pageWidth * x - signatureWidth/2
- * - At x=0.30: signatureX = 595 * 0.30 - 90 = 88.5pt from left edge
+ * - At x=0.29: signatureX = 595 * 0.29 - 90 = 82.6pt from left edge
  * - Y values place signature ABOVE the signature line (not on text below it)
  * - Signature height is 70pt, so we add ~80pt to put it above the line
  */
 const PAGE_12 = {
   FIRST_SUBSCRIBER_Y: 660,    // Y position for first subscriber (ABOVE the signature line)
   SUBSCRIBER_SPACING: 100,    // Vertical spacing between signature blocks
-  X_POSITION: 0.30            // 30% from left edge (centered on signature line)
+  X_POSITION: 0.29            // 29% from left edge (centered on signature line)
 }
 
 /**
@@ -45,17 +48,7 @@ const PAGE_12 = {
 const PAGE_39 = {
   ISSUER_Y: 600,              // Y position for Issuer signature (ABOVE the line)
   ARRANGER_Y: 480,            // Y position for Arranger signature (ABOVE the line)
-  X_POSITION: 0.30            // 30% from left edge
-}
-
-/**
- * Page 40 layout constants (Appendix signature page)
- * Only Subscribers sign here
- */
-const PAGE_40 = {
-  FIRST_SUBSCRIBER_Y: 560,    // Y position for first subscriber (ABOVE the line)
-  SUBSCRIBER_SPACING: 80,     // Tighter spacing on this page
-  X_POSITION: 0.30            // 30% from left edge
+  X_POSITION: 0.43            // 43% from left edge (centered for schedule signature page)
 }
 
 /**
@@ -69,8 +62,8 @@ const PAGE_40 = {
  * const positions = calculateSubscriptionPackPositions(2)
  * // Returns:
  * // [
- * //   { position: 'party_a', placements: [{page: 12, ...}, {page: 40, ...}] },
- * //   { position: 'party_a_2', placements: [{page: 12, ...}, {page: 40, ...}] },
+ * //   { position: 'party_a', placements: [{page: 12, ...}] },
+ * //   { position: 'party_a_2', placements: [{page: 12, ...}] },
  * //   { position: 'party_b', placements: [{page: 12, ...}, {page: 39, ...}] },
  * //   { position: 'party_c', placements: [{page: 12, ...}, {page: 39, ...}] }
  * // ]
@@ -82,7 +75,7 @@ export function calculateSubscriptionPackPositions(
 
   // =============================================
   // SUBSCRIBER POSITIONS (party_a, party_a_2, ...)
-  // Sign on page 12 (main) AND page 40 (appendix)
+  // Sign on page 12 (main agreement)
   // =============================================
   for (let i = 0; i < subscriberCount; i++) {
     const positionName = i === 0 ? 'party_a' : `party_a_${i + 1}`
@@ -95,12 +88,6 @@ export function calculateSubscriptionPackPositions(
           x: PAGE_12.X_POSITION,
           y: PAGE_12.FIRST_SUBSCRIBER_Y - (i * PAGE_12.SUBSCRIBER_SPACING),
           label: 'main_agreement'
-        },
-        {
-          page: 40,
-          x: PAGE_40.X_POSITION,
-          y: PAGE_40.FIRST_SUBSCRIBER_Y - (i * PAGE_40.SUBSCRIBER_SPACING),
-          label: 'appendix'
         }
       ]
     })
