@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/select'
 import { DashboardSkeleton } from './dashboard-skeleton'
 import { DashboardKPICards } from './components/dashboard-kpi-cards'
+import { DashboardActivityChart } from './components/dashboard-activity-chart'
 
 type DateRange = '7' | '30' | '90'
 
@@ -58,17 +59,22 @@ function DashboardContent() {
       {/* KPI Cards - US-005 */}
       <DashboardKPICards days={days} />
 
-      {/* Placeholder for charts and widgets - US-006 to US-009 */}
+      {/* Charts and widgets - US-006 to US-009 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="h-80 rounded-lg border border-border bg-card p-4">
-          <p className="text-sm text-muted-foreground">Activity chart coming in US-006</p>
-        </div>
+        {/* Activity Chart - US-006 */}
+        <DashboardActivityChart days={days} />
+
+        {/* Placeholder for approval queue - US-007 */}
         <div className="h-80 rounded-lg border border-border bg-card p-4">
           <p className="text-sm text-muted-foreground">Approval queue coming in US-007</p>
         </div>
+
+        {/* Placeholder for activity feed - US-008 */}
         <div className="h-80 rounded-lg border border-border bg-card p-4">
           <p className="text-sm text-muted-foreground">Activity feed coming in US-008</p>
         </div>
+
+        {/* Placeholder for compliance alerts - US-009 */}
         <div className="h-80 rounded-lg border border-border bg-card p-4">
           <p className="text-sm text-muted-foreground">Compliance alerts coming in US-009</p>
         </div>

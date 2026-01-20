@@ -2,12 +2,16 @@ import { NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { getCurrentUser } from '@/lib/auth'
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const user = await getCurrentUser()
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+
+    // Parse query parameters
+    const { searchParams } = new URL(request.url)
+    const days = Math.min(Math.max(parseInt(searchParams.get('days') || '30', 10), 7), 90)
 
     const supabase = createServiceClient()
 
@@ -39,6 +43,7 @@ export async function GET() {
       approvalQueueResult,
       workflowTrendResult,
       complianceForecastResult,
+      userActivityTrendResult,
     ] = await Promise.all([
       // Subscriptions for AUM and Revenue metrics (limit to prevent billing spikes)
       supabase
@@ -117,6 +122,9 @@ export async function GET() {
 
       // Admin-only: KYC expiry forecast
       fetchComplianceForecast(supabase),
+
+      // Admin-only: User activity trend for the specified time period
+      fetchUserActivityTrend(supabase, days),
     ])
 
     // Calculate AUM and Revenue from ACTUAL subscription data
@@ -384,6 +392,7 @@ export async function GET() {
           approvalQueue: approvalQueueResult,
           workflowTrend: workflowTrendResult,
           complianceForecast: complianceForecastResult,
+          userActivityTrend: userActivityTrendResult,
         },
       },
     })
@@ -596,4 +605,43 @@ async function fetchComplianceForecast(supabase: any) {
     next_90_days,
     total: investors?.length || 0,
   }
+}
+
+async function fetchUserActivityTrend(supabase: any, days: number) {
+  const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString()
+
+  // Get audit logs grouped by date and count unique users per day
+  const { data: activityLogs } = await supabase
+    .from('audit_logs')
+    .select('actor_id, created_at')
+    .gte('created_at', startDate)
+    .not('actor_id', 'is', null)
+    .order('created_at', { ascending: true })
+    .limit(100000)
+
+  // Group by date and count unique users
+  const byDate: Record<string, Set<string>> = {}
+
+  // Initialize all dates in range with empty sets
+  for (let i = 0; i < days; i++) {
+    const date = new Date(Date.now() - (days - 1 - i) * 24 * 60 * 60 * 1000)
+    const dateKey = date.toISOString().split('T')[0]
+    byDate[dateKey] = new Set()
+  }
+
+  // Populate with actual data
+  activityLogs?.forEach((log: any) => {
+    const dateKey = log.created_at.split('T')[0]
+    if (byDate[dateKey] && log.actor_id) {
+      byDate[dateKey].add(log.actor_id)
+    }
+  })
+
+  // Convert to array format for the chart
+  return Object.entries(byDate).map(([date, userSet]) => ({
+    date,
+    activeUsers: userSet.size,
+    // Format date for display (e.g., "Jan 15")
+    label: new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+  }))
 }
