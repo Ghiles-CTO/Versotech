@@ -13,6 +13,7 @@ import { DashboardSkeleton } from './dashboard-skeleton'
 import { DashboardKPICards } from './components/dashboard-kpi-cards'
 import { DashboardActivityChart } from './components/dashboard-activity-chart'
 import { DashboardApprovalQueue } from './components/dashboard-approval-queue'
+import { DashboardActivityFeed } from './components/dashboard-activity-feed'
 
 type DateRange = '7' | '30' | '90'
 
@@ -68,10 +69,8 @@ function DashboardContent() {
         {/* Approval Queue - US-007 */}
         <DashboardApprovalQueue days={days} />
 
-        {/* Placeholder for activity feed - US-008 */}
-        <div className="h-80 rounded-lg border border-border bg-card p-4">
-          <p className="text-sm text-muted-foreground">Activity feed coming in US-008</p>
-        </div>
+        {/* Activity Feed - US-008 */}
+        <DashboardActivityFeed days={days} />
 
         {/* Placeholder for compliance alerts - US-009 */}
         <div className="h-80 rounded-lg border border-border bg-card p-4">
