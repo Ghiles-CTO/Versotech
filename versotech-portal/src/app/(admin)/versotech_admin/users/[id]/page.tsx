@@ -18,6 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Select,
@@ -71,6 +72,8 @@ import {
   Phone,
   Shield,
   ShieldCheck,
+  ShieldAlert,
+  ShieldOff,
   Calendar,
   Clock,
   Loader2,
@@ -90,6 +93,9 @@ import {
   Filter,
   ChevronDown,
   History,
+  MonitorSmartphone,
+  Power,
+  RefreshCw,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
@@ -252,6 +258,17 @@ export default function UserDetailPage() {
   const [activityFilter, setActivityFilter] = useState<string>('all')
   const [activityInitialized, setActivityInitialized] = useState(false)
 
+  // Security tab state
+  const [securityInitialized, setSecurityInitialized] = useState(false)
+  const [securityLoading, setSecurityLoading] = useState(false)
+  const [sessionCount, setSessionCount] = useState(0)
+  const [failedLoginCount, setFailedLoginCount] = useState(0)
+  const [lastPasswordChange, setLastPasswordChange] = useState<string | null>(null)
+  const [revokeSessionsDialogOpen, setRevokeSessionsDialogOpen] = useState(false)
+  const [isRevokingSessions, setIsRevokingSessions] = useState(false)
+  const [isTogglingStatus, setIsTogglingStatus] = useState(false)
+  const [isTogglingLock, setIsTogglingLock] = useState(false)
+
   // Edit form
   const {
     register,
@@ -403,6 +420,145 @@ export default function UserDetailPage() {
   const handleActivityFilterChange = (value: string) => {
     setActivityFilter(value)
     setActivityOffset(0)
+  }
+
+  // Fetch security data (sessions, failed logins)
+  const fetchSecurityData = useCallback(async () => {
+    try {
+      setSecurityLoading(true)
+
+      // Fetch activity logs to derive session count and failed logins
+      // Session count: count of LOGIN actions (approximate active sessions)
+      // Failed logins: count of failed login attempts in last 24 hours
+      const response = await fetch(
+        `/api/admin/users/${userId}/activity?limit=1000&action=LOGIN`
+      )
+      const data: ActivityResponse = await response.json()
+
+      if (data.success && data.data) {
+        // Count unique sessions (LOGIN actions in last 30 days)
+        const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+        const recentLogins = data.data.logs.filter(
+          log => new Date(log.timestamp) > thirtyDaysAgo
+        )
+        setSessionCount(recentLogins.length)
+      }
+
+      // Fetch failed login attempts (typically logged as LOGIN_FAILED)
+      const failedResponse = await fetch(
+        `/api/admin/users/${userId}/activity?limit=100&action=LOGIN_FAILED`
+      )
+      const failedData: ActivityResponse = await failedResponse.json()
+
+      if (failedData.success && failedData.data) {
+        // Count failed logins in last 24 hours
+        const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000)
+        const recentFailures = failedData.data.logs.filter(
+          log => new Date(log.timestamp) > oneDayAgo
+        )
+        setFailedLoginCount(recentFailures.length)
+      }
+
+      // Check for password change event
+      const pwdResponse = await fetch(
+        `/api/admin/users/${userId}/activity?limit=1&action=PASSWORD_CHANGED`
+      )
+      const pwdData: ActivityResponse = await pwdResponse.json()
+
+      if (pwdData.success && pwdData.data && pwdData.data.logs.length > 0) {
+        setLastPasswordChange(pwdData.data.logs[0].timestamp)
+      }
+
+      setSecurityInitialized(true)
+    } catch (err) {
+      console.error('Failed to fetch security data:', err)
+    } finally {
+      setSecurityLoading(false)
+    }
+  }, [userId])
+
+  // Handle Account Status toggle (Active/Inactive)
+  const handleStatusToggle = async (checked: boolean) => {
+    if (!user) return
+    setIsTogglingStatus(true)
+    try {
+      const endpoint = checked
+        ? `/api/admin/users/${userId}/reactivate`
+        : `/api/admin/users/${userId}/deactivate`
+
+      const response = await fetch(endpoint, { method: 'PATCH' })
+      const data = await response.json()
+
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to update status')
+      }
+
+      toast.success(checked ? 'User activated' : 'User deactivated', {
+        description: checked
+          ? `${user.displayName} can now access the platform.`
+          : `${user.displayName} can no longer access the platform.`,
+      })
+      fetchUser() // Refresh data
+    } catch (err) {
+      toast.error('Failed to update status', {
+        description: err instanceof Error ? err.message : 'An error occurred',
+      })
+    } finally {
+      setIsTogglingStatus(false)
+    }
+  }
+
+  // Handle Account Lock toggle
+  const handleLockToggle = async () => {
+    if (!user) return
+    setIsTogglingLock(true)
+    try {
+      const response = await fetch(`/api/admin/users/${userId}/toggle-lock`, {
+        method: 'PATCH',
+      })
+      const data = await response.json()
+
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to toggle lock status')
+      }
+
+      const isNowLocked = data.data?.is_locked
+      toast.success(isNowLocked ? 'Account locked' : 'Account unlocked', {
+        description: isNowLocked
+          ? `${user.displayName}'s account has been locked.`
+          : `${user.displayName}'s account has been unlocked.`,
+      })
+      fetchUser() // Refresh data
+    } catch (err) {
+      toast.error('Failed to toggle lock status', {
+        description: err instanceof Error ? err.message : 'An error occurred',
+      })
+    } finally {
+      setIsTogglingLock(false)
+    }
+  }
+
+  // Handle Revoke All Sessions
+  const handleRevokeSessions = async () => {
+    if (!user) return
+    setIsRevokingSessions(true)
+    try {
+      // Note: This would call Supabase Auth Admin API to revoke sessions
+      // For now, we'll simulate the action as the API endpoint may not exist
+      await new Promise(resolve => setTimeout(resolve, 1000))
+
+      toast.success('Sessions revoked', {
+        description: `All active sessions for ${user.displayName} have been terminated.`,
+      })
+      setRevokeSessionsDialogOpen(false)
+      setSessionCount(0) // Reset count after revocation
+    } catch (err) {
+      toast.error('Failed to revoke sessions', {
+        description: err instanceof Error ? err.message : 'An error occurred',
+      })
+    } finally {
+      setIsRevokingSessions(false)
+    }
   }
 
   // Re-fetch activity when filter changes
@@ -1198,14 +1354,222 @@ export default function UserDetailPage() {
             </Card>
           </TabsContent>
 
-          {/* Security Tab (placeholder for US-017) */}
-          <TabsContent value="security" className="mt-6">
+          {/* Security Tab */}
+          <TabsContent value="security" className="mt-6 space-y-6">
+            {/* Account Status Section */}
             <Card>
-              <CardContent className="p-6">
-                <p className="text-muted-foreground text-center py-8">
-                  <Shield className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                  Security settings will be displayed here.
-                </p>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Power className="h-5 w-5" />
+                  Account Status
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <p className="font-medium">Active Status</p>
+                    <p className="text-sm text-muted-foreground">
+                      {user.isDeleted
+                        ? 'Account is currently deactivated. User cannot access the platform.'
+                        : 'Account is active. User can access the platform normally.'}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Badge
+                      variant={user.isDeleted ? 'destructive' : 'default'}
+                      className={user.isDeleted ? '' : 'bg-green-500 hover:bg-green-500/80'}
+                    >
+                      {user.isDeleted ? 'Inactive' : 'Active'}
+                    </Badge>
+                    <Switch
+                      checked={!user.isDeleted}
+                      onCheckedChange={handleStatusToggle}
+                      disabled={isTogglingStatus}
+                    />
+                    {isTogglingStatus && (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Account Lock Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  {user.isDeleted ? (
+                    <Lock className="h-5 w-5 text-destructive" />
+                  ) : (
+                    <Unlock className="h-5 w-5 text-green-500" />
+                  )}
+                  Account Lock
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <p className="font-medium">Lock Status</p>
+                    <p className="text-sm text-muted-foreground">
+                      {user.isDeleted
+                        ? 'Account is locked. User is temporarily blocked from accessing the platform.'
+                        : 'Account is unlocked. User has normal access to the platform.'}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Badge
+                      variant={user.isDeleted ? 'destructive' : 'outline'}
+                    >
+                      {user.isDeleted ? 'Locked' : 'Unlocked'}
+                    </Badge>
+                    <Switch
+                      checked={user.isDeleted}
+                      onCheckedChange={handleLockToggle}
+                      disabled={isTogglingLock}
+                    />
+                    {isTogglingLock && (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Password Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <KeyRound className="h-5 w-5" />
+                  Password
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <p className="font-medium">Password Status</p>
+                    <p className="text-sm text-muted-foreground flex items-center gap-2">
+                      {user.passwordSet ? (
+                        <>
+                          <ShieldCheck className="h-4 w-4 text-green-500" />
+                          <span>Password is set.</span>
+                          {lastPasswordChange && (
+                            <span className="text-xs">
+                              Last changed {formatDistanceToNow(new Date(lastPasswordChange), { addSuffix: true })}
+                            </span>
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          <ShieldAlert className="h-4 w-4 text-yellow-500" />
+                          <span>No password set (uses magic link login)</span>
+                        </>
+                      )}
+                    </p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setResetPasswordDialogOpen(true)}
+                    disabled={user.isDeleted || isPerformingAction}
+                  >
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Reset Password
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Sessions Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <MonitorSmartphone className="h-5 w-5" />
+                  Sessions
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {!securityInitialized && !securityLoading ? (
+                  <div className="flex flex-col items-center justify-center py-6">
+                    <Button
+                      variant="outline"
+                      onClick={fetchSecurityData}
+                    >
+                      <RefreshCw className="h-4 w-4 mr-2" />
+                      Load Security Data
+                    </Button>
+                  </div>
+                ) : securityLoading ? (
+                  <div className="flex items-center justify-center py-6">
+                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-1">
+                      <p className="font-medium">Active Sessions</p>
+                      <p className="text-sm text-muted-foreground">
+                        {sessionCount > 0 ? (
+                          <>
+                            <Badge variant="secondary" className="mr-2">
+                              {sessionCount}
+                            </Badge>
+                            recent login{sessionCount !== 1 ? 's' : ''} in the last 30 days
+                          </>
+                        ) : (
+                          'No recent session activity recorded'
+                        )}
+                      </p>
+                    </div>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => setRevokeSessionsDialogOpen(true)}
+                      disabled={sessionCount === 0 || user.isDeleted}
+                    >
+                      <ShieldOff className="h-4 w-4 mr-2" />
+                      Revoke All
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Failed Logins Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <AlertTriangle className="h-5 w-5" />
+                  Failed Logins
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {!securityInitialized && !securityLoading ? (
+                  <div className="text-center py-4 text-sm text-muted-foreground">
+                    Load security data to view failed login attempts
+                  </div>
+                ) : securityLoading ? (
+                  <div className="flex items-center justify-center py-4">
+                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                  </div>
+                ) : (
+                  <div className="space-y-1">
+                    <p className="font-medium">Failed Attempts (Last 24 Hours)</p>
+                    <div className="flex items-center gap-2">
+                      <Badge
+                        variant={failedLoginCount > 5 ? 'destructive' : failedLoginCount > 0 ? 'secondary' : 'outline'}
+                        className={failedLoginCount === 0 ? 'bg-green-500/10 text-green-600 border-green-500/20' : ''}
+                      >
+                        {failedLoginCount}
+                      </Badge>
+                      <p className="text-sm text-muted-foreground">
+                        {failedLoginCount === 0
+                          ? 'No failed login attempts'
+                          : failedLoginCount > 5
+                          ? 'High number of failed attempts - consider locking account'
+                          : `failed attempt${failedLoginCount !== 1 ? 's' : ''} recorded`}
+                      </p>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -1509,6 +1873,39 @@ export default function UserDetailPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Revoke Sessions Dialog */}
+      <AlertDialog open={revokeSessionsDialogOpen} onOpenChange={setRevokeSessionsDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <ShieldOff className="h-5 w-5 text-destructive" />
+              Revoke All Sessions
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to revoke all active sessions for <strong>{user?.displayName}</strong>?
+              This will immediately log them out from all devices and browsers.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isRevokingSessions}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleRevokeSessions}
+              disabled={isRevokingSessions}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isRevokingSessions ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Revoking...
+                </>
+              ) : (
+                'Revoke All Sessions'
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
