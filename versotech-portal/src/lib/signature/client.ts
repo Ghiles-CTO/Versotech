@@ -1735,9 +1735,9 @@ async function checkAndCommitSubscriptionIfInvestorComplete(
   }
 
   // Notify investor users about commitment
-  const investorUserId = subscription.investor?.investor_users?.[0]?.user_id
+  const investorUserId = subscription.investor?.[0]?.investor_users?.[0]?.user_id
   if (investorUserId) {
-    const vehicleName = subscription.vehicle?.name || 'the investment'
+    const vehicleName = subscription.vehicle?.[0]?.name || 'the investment'
     const { error: notifError } = await supabase
       .from('investor_notifications')
       .insert({
