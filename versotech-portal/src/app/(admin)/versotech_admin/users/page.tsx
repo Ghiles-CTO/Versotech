@@ -1,7 +1,8 @@
 'use client'
 
 import * as React from 'react'
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useMemo } from 'react'
+import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import {
   ColumnDef,
   SortingState,
@@ -23,6 +24,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Input } from '@/components/ui/input'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,7 +33,22 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  CommandSeparator,
+} from '@/components/ui/command'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Separator } from '@/components/ui/separator'
 import {
   ChevronLeft,
   ChevronRight,
@@ -43,10 +60,153 @@ import {
   KeyRound,
   ArrowUpDown,
   Users as UsersIcon,
+  Search,
+  X,
+  Check,
+  ChevronsUpDown,
+  Filter,
 } from 'lucide-react'
 import Link from 'next/link'
 import { formatDistanceToNow, format } from 'date-fns'
+import { cn } from '@/lib/utils'
 import type { UserRow, UsersResponse } from '@/app/api/admin/users/route'
+
+// Filter option types
+interface FilterOption {
+  value: string
+  label: string
+}
+
+// Filter options
+const roleOptions: FilterOption[] = [
+  { value: 'investor', label: 'Investor' },
+  { value: 'staff_admin', label: 'Staff Admin' },
+  { value: 'staff_ops', label: 'Staff Ops' },
+  { value: 'staff_rm', label: 'Staff RM' },
+  { value: 'ceo', label: 'CEO' },
+]
+
+const statusOptions: FilterOption[] = [
+  { value: 'active', label: 'Active' },
+  { value: 'pending', label: 'Pending' },
+  { value: 'inactive', label: 'Inactive' },
+  { value: 'deactivated', label: 'Deactivated' },
+]
+
+const entityTypeOptions: FilterOption[] = [
+  { value: 'investor', label: 'Investor' },
+  { value: 'arranger', label: 'Arranger' },
+  { value: 'introducer', label: 'Introducer' },
+  { value: 'partner', label: 'Partner' },
+  { value: 'lawyer', label: 'Lawyer' },
+]
+
+// Multi-select filter component
+interface MultiSelectFilterProps {
+  title: string
+  options: FilterOption[]
+  selected: string[]
+  onSelect: (values: string[]) => void
+  className?: string
+}
+
+function MultiSelectFilter({
+  title,
+  options,
+  selected,
+  onSelect,
+  className,
+}: MultiSelectFilterProps) {
+  const [open, setOpen] = useState(false)
+
+  const toggleOption = (value: string) => {
+    if (selected.includes(value)) {
+      onSelect(selected.filter(v => v !== value))
+    } else {
+      onSelect([...selected, value])
+    }
+  }
+
+  const clearSelection = () => {
+    onSelect([])
+    setOpen(false)
+  }
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          size="sm"
+          className={cn(
+            'h-9 border-dashed',
+            selected.length > 0 && 'border-primary',
+            className
+          )}
+        >
+          <Filter className="mr-2 h-4 w-4" />
+          {title}
+          {selected.length > 0 && (
+            <>
+              <Separator orientation="vertical" className="mx-2 h-4" />
+              <Badge
+                variant="secondary"
+                className="rounded-sm px-1 font-normal"
+              >
+                {selected.length}
+              </Badge>
+            </>
+          )}
+          <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-52 p-0" align="start">
+        <Command>
+          <CommandInput placeholder={`Search ${title.toLowerCase()}...`} />
+          <CommandList>
+            <CommandEmpty>No results found.</CommandEmpty>
+            <CommandGroup>
+              {options.map((option) => {
+                const isSelected = selected.includes(option.value)
+                return (
+                  <CommandItem
+                    key={option.value}
+                    onSelect={() => toggleOption(option.value)}
+                  >
+                    <div
+                      className={cn(
+                        'mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary',
+                        isSelected
+                          ? 'bg-primary text-primary-foreground'
+                          : 'opacity-50 [&_svg]:invisible'
+                      )}
+                    >
+                      <Check className="h-3 w-3" />
+                    </div>
+                    <span>{option.label}</span>
+                  </CommandItem>
+                )
+              })}
+            </CommandGroup>
+            {selected.length > 0 && (
+              <>
+                <CommandSeparator />
+                <CommandGroup>
+                  <CommandItem
+                    onSelect={clearSelection}
+                    className="justify-center text-center"
+                  >
+                    Clear selection
+                  </CommandItem>
+                </CommandGroup>
+              </>
+            )}
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  )
+}
 
 // Status badge color mapping
 const statusBadgeVariant = (user: UserRow): { variant: 'default' | 'secondary' | 'destructive' | 'outline'; className?: string } => {
@@ -356,7 +516,40 @@ function EmptyState() {
   )
 }
 
+// Debounce hook
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value)
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value)
+    }, delay)
+
+    return () => {
+      clearTimeout(handler)
+    }
+  }, [value, delay])
+
+  return debouncedValue
+}
+
 export default function UsersPage() {
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+
+  // Initialize state from URL params
+  const [searchInput, setSearchInput] = useState(searchParams.get('search') || '')
+  const [roleFilters, setRoleFilters] = useState<string[]>(
+    searchParams.get('role')?.split(',').filter(Boolean) || []
+  )
+  const [statusFilters, setStatusFilters] = useState<string[]>(
+    searchParams.get('status')?.split(',').filter(Boolean) || []
+  )
+  const [entityTypeFilters, setEntityTypeFilters] = useState<string[]>(
+    searchParams.get('entityType')?.split(',').filter(Boolean) || []
+  )
+
   const [users, setUsers] = useState<UserRow[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -371,6 +564,79 @@ export default function UsersPage() {
   ])
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
 
+  // Debounce search input
+  const debouncedSearch = useDebounce(searchInput, 300)
+
+  // Check if any filters are active
+  const hasActiveFilters = useMemo(() => {
+    return (
+      debouncedSearch.length > 0 ||
+      roleFilters.length > 0 ||
+      statusFilters.length > 0 ||
+      entityTypeFilters.length > 0
+    )
+  }, [debouncedSearch, roleFilters, statusFilters, entityTypeFilters])
+
+  // Update URL params when filters change
+  const updateUrlParams = useCallback((params: {
+    search?: string
+    role?: string[]
+    status?: string[]
+    entityType?: string[]
+    page?: number
+  }) => {
+    const newParams = new URLSearchParams(searchParams.toString())
+
+    // Handle search
+    if (params.search !== undefined) {
+      if (params.search) {
+        newParams.set('search', params.search)
+      } else {
+        newParams.delete('search')
+      }
+    }
+
+    // Handle role filter
+    if (params.role !== undefined) {
+      if (params.role.length > 0) {
+        newParams.set('role', params.role.join(','))
+      } else {
+        newParams.delete('role')
+      }
+    }
+
+    // Handle status filter
+    if (params.status !== undefined) {
+      if (params.status.length > 0) {
+        newParams.set('status', params.status.join(','))
+      } else {
+        newParams.delete('status')
+      }
+    }
+
+    // Handle entity type filter
+    if (params.entityType !== undefined) {
+      if (params.entityType.length > 0) {
+        newParams.set('entityType', params.entityType.join(','))
+      } else {
+        newParams.delete('entityType')
+      }
+    }
+
+    // Handle page
+    if (params.page !== undefined) {
+      if (params.page > 1) {
+        newParams.set('page', params.page.toString())
+      } else {
+        newParams.delete('page')
+      }
+    }
+
+    const queryString = newParams.toString()
+    router.push(`${pathname}${queryString ? `?${queryString}` : ''}`)
+  }, [pathname, router, searchParams])
+
+  // Fetch users with filters
   const fetchUsers = useCallback(async (page: number = 1) => {
     try {
       setLoading(true)
@@ -382,6 +648,20 @@ export default function UsersPage() {
         sortBy: 'createdAt',
         sortOrder: 'desc',
       })
+
+      // Add filters to API request
+      if (debouncedSearch) {
+        params.set('search', debouncedSearch)
+      }
+      if (roleFilters.length > 0) {
+        params.set('role', roleFilters.join(','))
+      }
+      if (statusFilters.length > 0) {
+        params.set('status', statusFilters.join(','))
+      }
+      if (entityTypeFilters.length > 0) {
+        params.set('entityType', entityTypeFilters.join(','))
+      }
 
       const response = await fetch(`/api/admin/users?${params}`)
       const data: UsersResponse = await response.json()
@@ -399,11 +679,29 @@ export default function UsersPage() {
     } finally {
       setLoading(false)
     }
-  }, [pagination.pageSize])
+  }, [pagination.pageSize, debouncedSearch, roleFilters, statusFilters, entityTypeFilters])
 
+  // Fetch when filters change
   useEffect(() => {
-    fetchUsers()
-  }, [fetchUsers])
+    fetchUsers(1)
+    // Reset to page 1 when filters change
+    updateUrlParams({
+      search: debouncedSearch,
+      role: roleFilters,
+      status: statusFilters,
+      entityType: entityTypeFilters,
+      page: 1
+    })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedSearch, roleFilters, statusFilters, entityTypeFilters])
+
+  // Clear all filters
+  const clearAllFilters = () => {
+    setSearchInput('')
+    setRoleFilters([])
+    setStatusFilters([])
+    setEntityTypeFilters([])
+  }
 
   const table = useReactTable({
     data: users,
@@ -421,13 +719,17 @@ export default function UsersPage() {
 
   const handlePreviousPage = () => {
     if (pagination.page > 1) {
-      fetchUsers(pagination.page - 1)
+      const newPage = pagination.page - 1
+      fetchUsers(newPage)
+      updateUrlParams({ page: newPage })
     }
   }
 
   const handleNextPage = () => {
     if (pagination.page < pagination.totalPages) {
-      fetchUsers(pagination.page + 1)
+      const newPage = pagination.page + 1
+      fetchUsers(newPage)
+      updateUrlParams({ page: newPage })
     }
   }
 
@@ -465,6 +767,118 @@ export default function UsersPage() {
           </p>
         </div>
       </div>
+
+      {/* Search and Filters */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-1 items-center gap-2">
+          {/* Search Input */}
+          <div className="relative flex-1 max-w-sm">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Search by name or email..."
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              className="pl-9 h-9"
+            />
+            {searchInput && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2 p-0"
+                onClick={() => setSearchInput('')}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+
+          {/* Filter Dropdowns */}
+          <div className="flex items-center gap-2">
+            <MultiSelectFilter
+              title="Role"
+              options={roleOptions}
+              selected={roleFilters}
+              onSelect={setRoleFilters}
+            />
+            <MultiSelectFilter
+              title="Status"
+              options={statusOptions}
+              selected={statusFilters}
+              onSelect={setStatusFilters}
+            />
+            <MultiSelectFilter
+              title="Entity Type"
+              options={entityTypeOptions}
+              selected={entityTypeFilters}
+              onSelect={setEntityTypeFilters}
+            />
+          </div>
+        </div>
+
+        {/* Clear All Filters */}
+        {hasActiveFilters && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={clearAllFilters}
+            className="h-9"
+          >
+            <X className="mr-2 h-4 w-4" />
+            Clear filters
+          </Button>
+        )}
+      </div>
+
+      {/* Active Filters Display */}
+      {hasActiveFilters && (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-sm text-muted-foreground">Active filters:</span>
+          {debouncedSearch && (
+            <Badge variant="secondary" className="rounded-sm px-2 py-1">
+              Search: &quot;{debouncedSearch}&quot;
+              <button
+                className="ml-1.5 ring-offset-background rounded-full outline-none hover:bg-muted-foreground/20"
+                onClick={() => setSearchInput('')}
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </Badge>
+          )}
+          {roleFilters.map((role) => (
+            <Badge key={role} variant="secondary" className="rounded-sm px-2 py-1">
+              Role: {roleOptions.find(o => o.value === role)?.label || role}
+              <button
+                className="ml-1.5 ring-offset-background rounded-full outline-none hover:bg-muted-foreground/20"
+                onClick={() => setRoleFilters(roleFilters.filter(r => r !== role))}
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </Badge>
+          ))}
+          {statusFilters.map((status) => (
+            <Badge key={status} variant="secondary" className="rounded-sm px-2 py-1">
+              Status: {statusOptions.find(o => o.value === status)?.label || status}
+              <button
+                className="ml-1.5 ring-offset-background rounded-full outline-none hover:bg-muted-foreground/20"
+                onClick={() => setStatusFilters(statusFilters.filter(s => s !== status))}
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </Badge>
+          ))}
+          {entityTypeFilters.map((entityType) => (
+            <Badge key={entityType} variant="secondary" className="rounded-sm px-2 py-1">
+              Entity: {entityTypeOptions.find(o => o.value === entityType)?.label || entityType}
+              <button
+                className="ml-1.5 ring-offset-background rounded-full outline-none hover:bg-muted-foreground/20"
+                onClick={() => setEntityTypeFilters(entityTypeFilters.filter(e => e !== entityType))}
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </Badge>
+          ))}
+        </div>
+      )}
 
       {/* Table Content */}
       {loading ? (

@@ -142,8 +142,13 @@ export async function GET(request: NextRequest): Promise<NextResponse<UsersRespo
     const page = parseInt(searchParams.get('page') || '1')
     const pageSize = parseInt(searchParams.get('pageSize') || '50')
     const search = searchParams.get('search') || ''
+    // Support multiple values (comma-separated) for filters
     const roleFilter = searchParams.get('role') || ''
+    const roleFilters = roleFilter ? roleFilter.split(',').filter(Boolean) : []
     const entityTypeFilter = searchParams.get('entityType') || ''
+    const entityTypeFilters = entityTypeFilter ? entityTypeFilter.split(',').filter(Boolean) : []
+    const statusFilter = searchParams.get('status') || ''
+    const statusFilters = statusFilter ? statusFilter.split(',').filter(Boolean) : []
     const kycStatusFilter = searchParams.get('kycStatus') || ''
     const hasEntitiesFilter = searchParams.get('hasEntities')
     const sortBy = searchParams.get('sortBy') || 'createdAt'
@@ -402,14 +407,35 @@ export async function GET(request: NextRequest): Promise<NextResponse<UsersRespo
       )
     }
 
-    if (roleFilter && roleFilter !== 'all') {
-      userRows = userRows.filter(u => u.systemRole === roleFilter)
+    // Multi-select role filter
+    if (roleFilters.length > 0) {
+      userRows = userRows.filter(u => roleFilters.includes(u.systemRole))
     }
 
-    if (entityTypeFilter && entityTypeFilter !== 'all') {
+    // Multi-select entity type filter
+    if (entityTypeFilters.length > 0) {
       userRows = userRows.filter(u =>
-        u.entities.some(e => e.type === entityTypeFilter)
+        u.entities.some(e => entityTypeFilters.includes(e.type))
       )
+    }
+
+    // Status filter (derived from user data)
+    // Status: active, pending, inactive, deactivated
+    if (statusFilters.length > 0) {
+      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+      userRows = userRows.filter(u => {
+        let status: string
+        if (u.isDeleted) {
+          status = 'deactivated'
+        } else if (!u.lastLoginAt) {
+          status = 'pending'
+        } else if (new Date(u.lastLoginAt) > thirtyDaysAgo) {
+          status = 'active'
+        } else {
+          status = 'inactive'
+        }
+        return statusFilters.includes(status)
+      })
     }
 
     if (kycStatusFilter && kycStatusFilter !== 'all') {
