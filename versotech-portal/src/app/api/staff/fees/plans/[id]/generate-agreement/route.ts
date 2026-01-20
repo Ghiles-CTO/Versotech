@@ -29,6 +29,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { triggerWorkflow } from '@/lib/trigger-workflow';
+import { detectAnchors, getPlacementsFromAnchors, getRequiredAnchorsForIntroducerAgreement, validateRequiredAnchors } from '@/lib/signature/anchor-detector';
 
 // Helper functions for formatting
 function formatCurrency(amount: number | null | undefined): string {
@@ -277,6 +278,96 @@ export async function POST(
     const isEntity = introducerType === 'entity';
     const isIndividual = introducerType === 'individual';
 
+    const introducer = feePlan.introducer as any;
+
+    // Fetch introducer signatories (multi-signatory support)
+    const maxSignatories = 5;
+    const { data: introducerUsers, error: introducerUsersError } = await supabase
+      .from('introducer_users')
+      .select(`
+        user_id,
+        role,
+        is_primary,
+        can_sign,
+        profiles:user_id (
+          display_name,
+          email
+        )
+      `)
+      .eq('introducer_id', feePlan.introducer_id)
+      .eq('can_sign', true)
+      .order('is_primary', { ascending: false });
+
+    if (introducerUsersError) {
+      console.error('Error fetching introducer signatories:', introducerUsersError);
+    }
+
+    const introducerSignatories = (introducerUsers || [])
+      .map((user, index) => {
+        // Handle both array and object cases for profiles join
+        const profile = Array.isArray(user.profiles) ? user.profiles[0] : user.profiles;
+        return {
+          name: profile?.display_name || introducer?.contact_name || introducer?.legal_name || `Signatory ${index + 1}`,
+        };
+      })
+      .slice(0, maxSignatories);
+
+    if ((introducerUsers || []).length > maxSignatories) {
+      console.warn(`⚠️ Introducer has more than ${maxSignatories} signatories; extra signers will not be included in the agreement.`);
+    }
+
+    if (introducerSignatories.length === 0) {
+      introducerSignatories.push({
+        name: introducer?.contact_name || introducer?.legal_name || 'Introducer',
+      });
+    }
+
+    const getIntroducerAnchorId = (number: number): string => {
+      return number === 1 ? 'party_b' : `party_b_${number}`;
+    };
+
+    const ANCHOR_CSS = 'position:absolute;left:0;top:0;font-size:1px;line-height:1px;color:#ffffff;opacity:0.01;';
+
+    const entitySignatureHtml = isEntity
+      ? introducerSignatories.map((signatory, index) => {
+          const number = index + 1;
+          const anchorId = getIntroducerAnchorId(number);
+          return `
+      <tr>
+        <td colspan="2" style="text-align:center;">
+          <div style="position:relative;margin-bottom: 1.5cm; min-height: 4cm;">
+            <div class="signature-line" style="max-width:300px; margin:0 auto; margin-top:3cm; position:relative;">
+              <span style="${ANCHOR_CSS}">SIG_ANCHOR:${anchorId}</span>
+            </div>
+            <div class="signature-name">${signatory.name}</div>
+            <div class="signature-title">Authorised Signatory ${number}</div>
+          </div>
+        </td>
+      </tr>
+      `;
+        }).join('')
+      : '';
+
+    const individualSigner = introducerSignatories[0]
+      ? introducerSignatories[0]
+      : { name: introducer?.contact_name || introducer?.legal_name || 'Introducer' };
+
+    const individualSignatureHtml = isIndividual
+      ? `
+      <tr>
+        <td colspan="2" style="text-align:center;">
+          <div style="position:relative;margin-bottom: 1.5cm; min-height: 4cm;">
+            <div class="signature-line" style="max-width:300px; margin:0 auto; margin-top:3cm; position:relative;">
+              <span style="${ANCHOR_CSS}">SIG_ANCHOR:party_b</span>
+            </div>
+            <div class="signature-name">${individualSigner.name}</div>
+            <div class="signature-title">Introducer</div>
+          </div>
+        </td>
+      </tr>
+      `
+      : '';
+
     // Create the introducer agreement with ALL fields
     const { data: agreement, error: agreementError } = await supabase
       .from('introducer_agreements')
@@ -336,7 +427,6 @@ export async function POST(
 
     // === TRIGGER n8n WORKFLOW TO GENERATE PDF ===
     // Build the complete payload for document generation
-    const introducer = feePlan.introducer as any;
     const deal = feePlan.deal as any;
 
     // Build introducer address from components
@@ -424,33 +514,6 @@ export async function POST(
     // Performance fee payment terms HTML (only if performance fee > 0)
     const performanceFeePaymentHtml = hasPerformanceFee ? `
       <p>The performance fee is payable by the Arranger no later than <span class="bold">${performancePaymentDays} business days</span> post redemption ("Redemption") or exit, defined by default as the end of any regulatory lock-up period (typically 6 to 9 months post IPO, on NASDAQ or NYSE, United States).</p>
-    ` : '';
-
-    // Entity signature HTML (2 signature blocks for entities)
-    const entitySignatureHtml = isEntity ? `
-      <tr>
-        <td>
-          <div class="signature-line"></div>
-          <div class="signature-name">${introducer?.legal_name || 'Introducer Entity'}</div>
-          <div class="signature-title">Authorised Signatory 1</div>
-        </td>
-        <td>
-          <div class="signature-line"></div>
-          <div class="signature-name">${introducer?.legal_name || 'Introducer Entity'}</div>
-          <div class="signature-title">Authorised Signatory 2</div>
-        </td>
-      </tr>
-    ` : '';
-
-    // Individual signature HTML (1 signature block for individuals)
-    const individualSignatureHtml = isIndividual ? `
-      <tr>
-        <td colspan="2" style="text-align:center;">
-          <div class="signature-line" style="max-width:300px; margin:0 auto;"></div>
-          <div class="signature-name">${introducer?.contact_name || introducer?.legal_name || 'Introducer'}</div>
-          <div class="signature-title">Introducer</div>
-        </td>
-      </tr>
     ` : '';
 
     // Trigger n8n workflow with all data needed for HTML template
@@ -677,6 +740,25 @@ export async function POST(
                   const signingToken = crypto.randomUUID();
                   const expiresAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000); // 14 days
 
+                  let signaturePlacements: any[] | null = null;
+                  try {
+                    const anchors = await detectAnchors(new Uint8Array(pdfBuffer));
+                    if (anchors.length > 0) {
+                      const requiredAnchors = getRequiredAnchorsForIntroducerAgreement(introducerSignatories.length);
+                      validateRequiredAnchors(anchors, requiredAnchors);
+                      const placements = getPlacementsFromAnchors(anchors, 'party_a', 'introducer_agreement');
+                      if (placements.length > 0) {
+                        signaturePlacements = placements;
+                      } else {
+                        console.warn('⚠️ No signature placements found for CEO anchor (party_a)');
+                      }
+                    } else {
+                      console.warn('⚠️ No anchors detected in introducer agreement PDF');
+                    }
+                  } catch (anchorError) {
+                    console.error('❌ Failed to detect anchors for introducer agreement:', anchorError);
+                  }
+
                   // Create signature request for CEO (use service client to bypass RLS)
                   const { data: signatureRequest, error: sigReqError } = await serviceSupabase
                     .from('signature_requests')
@@ -693,16 +775,19 @@ export async function POST(
                       signing_token: signingToken,
                       token_expires_at: expiresAt.toISOString(),
                       unsigned_pdf_path: fileKey,
+                      ...(signaturePlacements && signaturePlacements.length > 0
+                        ? { signature_placements: signaturePlacements }
+                        : {}),
                       status: 'pending',
                       created_by: user.id,
                     })
                     .select('id')
                     .single();
 
-                  if (sigReqError || !signatureRequest) {
-                    console.error('❌ Failed to create CEO signature request:', sigReqError);
-                  } else {
-                    console.log('✅ CEO signature request created:', signatureRequest.id);
+            if (sigReqError || !signatureRequest) {
+              console.error('❌ Failed to create CEO signature request:', sigReqError);
+            } else {
+              console.log('✅ CEO signature request created:', signatureRequest.id);
 
                     // Update agreement with CEO signature request ID and status
                     await serviceSupabase
