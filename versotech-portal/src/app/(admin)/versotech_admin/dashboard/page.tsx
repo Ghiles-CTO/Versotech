@@ -14,6 +14,7 @@ import { DashboardKPICards } from './components/dashboard-kpi-cards'
 import { DashboardActivityChart } from './components/dashboard-activity-chart'
 import { DashboardApprovalQueue } from './components/dashboard-approval-queue'
 import { DashboardActivityFeed } from './components/dashboard-activity-feed'
+import { DashboardComplianceAlerts } from './components/dashboard-compliance-alerts'
 
 type DateRange = '7' | '30' | '90'
 
@@ -72,10 +73,8 @@ function DashboardContent() {
         {/* Activity Feed - US-008 */}
         <DashboardActivityFeed days={days} />
 
-        {/* Placeholder for compliance alerts - US-009 */}
-        <div className="h-80 rounded-lg border border-border bg-card p-4">
-          <p className="text-sm text-muted-foreground">Compliance alerts coming in US-009</p>
-        </div>
+        {/* Compliance Alerts - US-009 */}
+        <DashboardComplianceAlerts days={days} />
       </div>
     </div>
   )
