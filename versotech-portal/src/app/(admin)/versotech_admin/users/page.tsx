@@ -34,6 +34,16 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import {
   Popover,
   PopoverContent,
   PopoverTrigger,
@@ -65,6 +75,8 @@ import {
   Check,
   ChevronsUpDown,
   Filter,
+  Download,
+  AlertTriangle,
 } from 'lucide-react'
 import Link from 'next/link'
 import { formatDistanceToNow, format } from 'date-fns'
@@ -563,6 +575,44 @@ export default function UsersPage() {
     { id: 'createdAt', desc: true }
   ])
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
+  const [deactivateDialogOpen, setDeactivateDialogOpen] = useState(false)
+  const [isDeactivating, setIsDeactivating] = useState(false)
+
+  // Get selected users
+  const selectedUsers = useMemo(() => {
+    const selectedIds = Object.keys(rowSelection)
+    return users.filter(user => selectedIds.includes(user.id))
+  }, [rowSelection, users])
+
+  // Export selected users as CSV
+  const handleExportCSV = useCallback(() => {
+    if (selectedUsers.length === 0) return
+
+    const headers = ['ID', 'Name', 'Email', 'Role', 'Status']
+    const rows = selectedUsers.map(user => [
+      user.id,
+      user.displayName,
+      user.email,
+      formatRole(user.systemRole),
+      getStatusLabel(user),
+    ])
+
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => `"${cell}"`).join(',')),
+    ].join('\n')
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const link = document.createElement('a')
+    const url = URL.createObjectURL(blob)
+    link.setAttribute('href', url)
+    link.setAttribute('download', `users-export-${format(new Date(), 'yyyy-MM-dd')}.csv`)
+    link.style.visibility = 'hidden'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+  }, [selectedUsers])
 
   // Debounce search input
   const debouncedSearch = useDebounce(searchInput, 300)
@@ -680,6 +730,29 @@ export default function UsersPage() {
       setLoading(false)
     }
   }, [pagination.pageSize, debouncedSearch, roleFilters, statusFilters, entityTypeFilters])
+
+  // Deactivate selected users (placeholder - would call API in production)
+  const handleDeactivateUsers = useCallback(async () => {
+    if (selectedUsers.length === 0) return
+
+    setIsDeactivating(true)
+    try {
+      // In production, this would call: POST /api/admin/users/batch-deactivate
+      // For now, we'll simulate the action
+      await new Promise(resolve => setTimeout(resolve, 1000))
+
+      // Clear selection after successful deactivation
+      setRowSelection({})
+      setDeactivateDialogOpen(false)
+
+      // Refresh the users list
+      fetchUsers(pagination.page)
+    } catch (error) {
+      console.error('Failed to deactivate users:', error)
+    } finally {
+      setIsDeactivating(false)
+    }
+  }, [selectedUsers, fetchUsers, pagination.page])
 
   // Fetch when filters change
   useEffect(() => {
@@ -886,24 +959,7 @@ export default function UsersPage() {
       ) : users.length === 0 ? (
         <EmptyState />
       ) : (
-        <div className="space-y-4">
-          {/* Selection Info */}
-          {Object.keys(rowSelection).length > 0 && (
-            <div className="flex items-center gap-4 p-3 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800">
-              <span className="text-sm font-medium text-blue-900 dark:text-blue-100">
-                {Object.keys(rowSelection).length} of {users.length} row(s) selected
-              </span>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setRowSelection({})}
-                className="ml-auto"
-              >
-                Clear Selection
-              </Button>
-            </div>
-          )}
-
+        <div className={cn("space-y-4", selectedUsers.length > 0 && "pb-20")}>
           {/* Table */}
           <div className="rounded-md border">
             <Table>
@@ -990,6 +1046,89 @@ export default function UsersPage() {
           </div>
         </div>
       )}
+
+      {/* Fixed Batch Action Bar */}
+      {selectedUsers.length > 0 && (
+        <div className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t shadow-lg">
+          <div className="flex items-center justify-between px-6 py-3 max-w-[calc(100%-var(--sidebar-width,16rem))] ml-auto">
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-medium">
+                {selectedUsers.length} user{selectedUsers.length > 1 ? 's' : ''} selected
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setRowSelection({})}
+              >
+                Clear
+              </Button>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleExportCSV}
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Export CSV
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => setDeactivateDialogOpen(true)}
+              >
+                <UserX className="h-4 w-4 mr-2" />
+                Deactivate
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Deactivate Confirmation Dialog */}
+      <AlertDialog open={deactivateDialogOpen} onOpenChange={setDeactivateDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-destructive" />
+              Deactivate Users
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3">
+                <p>
+                  Are you sure you want to deactivate {selectedUsers.length} user{selectedUsers.length > 1 ? 's' : ''}?
+                  They will no longer be able to access the platform.
+                </p>
+                <div className="rounded-md bg-muted p-3 max-h-32 overflow-y-auto">
+                  <ul className="text-sm space-y-1">
+                    {selectedUsers.slice(0, 10).map(user => (
+                      <li key={user.id} className="flex items-center gap-2">
+                        <span className="font-medium">{user.displayName}</span>
+                        <span className="text-muted-foreground">({user.email})</span>
+                      </li>
+                    ))}
+                    {selectedUsers.length > 10 && (
+                      <li className="text-muted-foreground">
+                        ...and {selectedUsers.length - 10} more
+                      </li>
+                    )}
+                  </ul>
+                </div>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeactivating}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeactivateUsers}
+              disabled={isDeactivating}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeactivating ? 'Deactivating...' : 'Deactivate'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
