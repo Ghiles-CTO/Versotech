@@ -10,6 +10,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { DashboardSkeleton } from './dashboard-skeleton'
+import { DashboardKPICards } from './components/dashboard-kpi-cards'
 
 type DateRange = '7' | '30' | '90'
 
@@ -54,21 +55,8 @@ function DashboardContent() {
 
   return (
     <div className="space-y-6">
-      {/* Placeholder for KPI cards - US-005 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="h-32 rounded-lg border border-border bg-card p-4">
-          <p className="text-sm text-muted-foreground">KPI cards coming in US-005</p>
-        </div>
-        <div className="h-32 rounded-lg border border-border bg-card p-4">
-          <p className="text-sm text-muted-foreground">Selected range: {days} days</p>
-        </div>
-        <div className="h-32 rounded-lg border border-border bg-card p-4">
-          <p className="text-sm text-muted-foreground">Placeholder</p>
-        </div>
-        <div className="h-32 rounded-lg border border-border bg-card p-4">
-          <p className="text-sm text-muted-foreground">Placeholder</p>
-        </div>
-      </div>
+      {/* KPI Cards - US-005 */}
+      <DashboardKPICards days={days} />
 
       {/* Placeholder for charts and widgets - US-006 to US-009 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
