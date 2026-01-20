@@ -3,7 +3,7 @@ import { getProfile } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { PersonaProvider, Persona } from '@/contexts/persona-context'
-import { UnifiedAppLayout } from '@/components/layout/unified-app-layout'
+import { AdminLayoutContent } from './components/admin-layout-content'
 
 export const dynamic = 'force-dynamic'
 
@@ -47,9 +47,9 @@ export default async function AdminPortalLayout({ children }: LayoutProps) {
 
   return (
     <PersonaProvider initialPersonas={userPersonas}>
-      <UnifiedAppLayout profile={profile}>
+      <AdminLayoutContent profile={profile}>
         {children}
-      </UnifiedAppLayout>
+      </AdminLayoutContent>
     </PersonaProvider>
   )
 }
