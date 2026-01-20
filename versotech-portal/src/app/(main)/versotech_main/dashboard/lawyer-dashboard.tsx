@@ -162,7 +162,7 @@ export function LawyerDashboard({ lawyerId, userId, persona }: LawyerDashboardPr
               investors (id, display_name, legal_name)
             `)
             .in('deal_id', dealIds)
-            .in('status', ['committed', 'partially_funded', 'active'])
+            .in('status', ['committed', 'partially_funded', 'funded', 'active'])
             .order('committed_at', { ascending: false })
 
           const subs = subscriptions || []
@@ -179,7 +179,7 @@ export function LawyerDashboard({ lawyerId, userId, persona }: LawyerDashboardPr
           // Calculate metrics
           const committed = subs.filter((s: any) => s.status === 'committed')
           const partiallyFunded = subs.filter((s: any) => s.status === 'partially_funded')
-          const fullyFunded = subs.filter((s: any) => s.status === 'active')
+          const fullyFunded = subs.filter((s: any) => s.status === 'funded' || s.status === 'active')
 
           // Group totals by currency to avoid mixing USD/EUR/GBP
           const commitmentMap = new Map<string, number>()
@@ -284,13 +284,15 @@ export function LawyerDashboard({ lawyerId, userId, persona }: LawyerDashboardPr
   const statusStyles: Record<string, string> = {
     committed: 'bg-blue-500/20 text-blue-400',
     partially_funded: 'bg-amber-500/20 text-amber-400',
+    funded: 'bg-emerald-500/20 text-emerald-400',
     active: 'bg-green-500/20 text-green-400',
   }
 
   const statusLabels: Record<string, string> = {
     committed: 'Awaiting Funding',
     partially_funded: 'Partial',
-    active: 'Fully Funded',
+    funded: 'Fully Funded',
+    active: 'Active',
   }
 
   const dealStatusStyles: Record<string, string> = {

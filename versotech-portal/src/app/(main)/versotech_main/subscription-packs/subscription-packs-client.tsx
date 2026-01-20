@@ -93,20 +93,23 @@ type SubscriptionPacksClientProps = {
 const STATUS_STYLES: Record<string, string> = {
   committed: 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800',
   partially_funded: 'bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800',
-  active: 'bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-800',
+  funded: 'bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-800',
+  active: 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800',
 }
 
 const STATUS_LABELS: Record<string, string> = {
   committed: 'Signed',
   partially_funded: 'Partially Funded',
-  active: 'Fully Funded',
+  funded: 'Fully Funded',
+  active: 'Active',
 }
 
 const STATUS_FILTERS = [
   { label: 'All Statuses', value: 'all' },
   { label: 'Signed (Awaiting Funding)', value: 'committed' },
   { label: 'Partially Funded', value: 'partially_funded' },
-  { label: 'Fully Funded', value: 'active' },
+  { label: 'Fully Funded', value: 'funded' },
+  { label: 'Active', value: 'active' },
 ]
 
 // Pagination constants
@@ -180,7 +183,7 @@ export function SubscriptionPacksClient({ entityInfo, subscriptions }: Subscript
   const totalSummary = useMemo(() => {
     const committed = subscriptions.filter(s => s.status === 'committed').length
     const partiallyFunded = subscriptions.filter(s => s.status === 'partially_funded').length
-    const fullyFunded = subscriptions.filter(s => s.status === 'active').length
+    const fullyFunded = subscriptions.filter(s => s.status === 'funded' || s.status === 'active').length
 
     const totalCommitment = subscriptions.reduce((sum, s) => sum + s.commitment, 0)
     const totalFunded = subscriptions.reduce((sum, s) => sum + s.funded_amount, 0)
@@ -270,7 +273,7 @@ export function SubscriptionPacksClient({ entityInfo, subscriptions }: Subscript
   const filteredSummary = useMemo(() => {
     const committed = filteredSubscriptions.filter(s => s.status === 'committed').length
     const partiallyFunded = filteredSubscriptions.filter(s => s.status === 'partially_funded').length
-    const fullyFunded = filteredSubscriptions.filter(s => s.status === 'active').length
+    const fullyFunded = filteredSubscriptions.filter(s => s.status === 'funded' || s.status === 'active').length
 
     return {
       total: filteredSubscriptions.length,

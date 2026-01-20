@@ -131,13 +131,15 @@ function formatCurrency(amount: number, currency: string = 'USD'): string {
 const SUBSCRIPTION_STATUS_STYLES: Record<string, string> = {
   committed: 'bg-blue-100 text-blue-800 border-blue-200',
   partially_funded: 'bg-amber-100 text-amber-800 border-amber-200',
-  active: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+  funded: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+  active: 'bg-green-100 text-green-800 border-green-200',
 }
 
 const SUBSCRIPTION_STATUS_LABELS: Record<string, string> = {
   committed: 'Awaiting Funding',
   partially_funded: 'Partial',
-  active: 'Funded',
+  funded: 'Fully Funded',
+  active: 'Active',
 }
 
 const FEE_STATUS_STYLES: Record<string, string> = {
@@ -187,7 +189,7 @@ export function LawyerReconciliationClient({
 
     const awaitingFunding = subscriptions.filter(s => s.status === 'committed').length
     const partiallyFunded = subscriptions.filter(s => s.status === 'partially_funded').length
-    const fullyFunded = subscriptions.filter(s => s.status === 'active').length
+    const fullyFunded = subscriptions.filter(s => s.status === 'funded' || s.status === 'active').length
 
     // Group fee totals by currency
     const feesPaidByCurrency = new Map<string, number>()
@@ -393,7 +395,7 @@ export function LawyerReconciliationClient({
               </div>
             )}
             <p className="text-xs text-muted-foreground mt-1">
-              {summary.partiallyFunded} partially funded
+              {summary.partiallyFunded} partially funded • {summary.fullyFunded} fully funded
             </p>
           </CardContent>
         </Card>

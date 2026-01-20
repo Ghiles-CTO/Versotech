@@ -94,13 +94,15 @@ interface OverviewTabProps {
 const SUBSCRIPTION_STATUS_STYLES: Record<string, string> = {
   committed: 'bg-blue-100 text-blue-800 border-blue-200',
   partially_funded: 'bg-amber-100 text-amber-800 border-amber-200',
-  active: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+  funded: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+  active: 'bg-green-100 text-green-800 border-green-200',
 }
 
 const SUBSCRIPTION_STATUS_LABELS: Record<string, string> = {
   committed: 'Awaiting Funding',
   partially_funded: 'Partial',
-  active: 'Funded',
+  funded: 'Fully Funded',
+  active: 'Active',
 }
 
 const FEE_STATUS_STYLES: Record<string, string> = {
@@ -162,7 +164,7 @@ export function OverviewTab({ deals }: OverviewTabProps) {
             investors (id, legal_name, display_name)
           `)
           .in('deal_id', dealIds)
-          .in('status', ['committed', 'partially_funded', 'active'])
+          .in('status', ['committed', 'partially_funded', 'funded', 'active'])
           .order('committed_at', { ascending: false })
 
         if (subsError) throw subsError
@@ -257,7 +259,7 @@ export function OverviewTab({ deals }: OverviewTabProps) {
     const totalOutstanding = subscriptions.reduce((sum, s) => sum + s.outstanding_amount, 0)
     const awaitingFunding = subscriptions.filter(s => s.status === 'committed').length
     const partiallyFunded = subscriptions.filter(s => s.status === 'partially_funded').length
-    const fullyFunded = subscriptions.filter(s => s.status === 'active').length
+    const fullyFunded = subscriptions.filter(s => s.status === 'funded' || s.status === 'active').length
 
     const totalFeesAccrued = feeEvents.reduce((sum, f) => sum + (f.computed_amount || 0), 0)
     const feesPaid = feeEvents.filter(f => f.status === 'paid')
@@ -401,7 +403,7 @@ export function OverviewTab({ deals }: OverviewTabProps) {
           <CardContent>
             <div className="text-2xl font-bold text-emerald-600">{summary.fullyFunded}</div>
             <p className="text-xs text-muted-foreground mt-1">
-              {summary.awaitingFunding} awaiting • {summary.partiallyFunded} partial
+              {summary.awaitingFunding} awaiting • {summary.partiallyFunded} partial • {summary.fullyFunded} fully funded
             </p>
           </CardContent>
         </Card>

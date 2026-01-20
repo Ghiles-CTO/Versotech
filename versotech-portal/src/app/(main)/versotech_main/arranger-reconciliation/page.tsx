@@ -199,7 +199,7 @@ export default async function ArrangerReconciliationPage({
         .from('deals')
         .select('id')
         .eq('arranger_entity_id', arrangerId)).data?.map((d: any) => d.id) || [])
-      .in('status', ['committed', 'partially_funded', 'active']),
+      .in('status', ['committed', 'partially_funded', 'funded', 'active']),
 
     // Count fee events
     serviceSupabase

@@ -11,7 +11,7 @@
   },
   {
     "entity_code": "VC106",
-    "introducer": "Anand Sethia",
+    "introducer": "Setcap",
     "investor": "Bahama Global Towers Limited",
     "fee_type": "spread",
     "rate_bps": 287,
@@ -21,7 +21,7 @@
   },
   {
     "entity_code": "VC106",
-    "introducer": "Anand Sethia",
+    "introducer": "Setcap",
     "investor": "JIMENEZ TRADING INC",
     "fee_type": "spread",
     "rate_bps": 468,
@@ -2811,7 +2811,7 @@
   },
   {
     "entity_code": "VC111",
-    "introducer": "Anand Sethia",
+    "introducer": "Setcap",
     "investor": "HASSBRO Investments Limited",
     "fee_type": "performance_fee",
     "rate_bps": 750,
@@ -2821,7 +2821,7 @@
   },
   {
     "entity_code": "VC111",
-    "introducer": "Anand Sethia",
+    "introducer": "Setcap",
     "investor": "Wymo Finance Limited",
     "fee_type": "performance_fee",
     "rate_bps": 750,
@@ -3301,7 +3301,7 @@
   },
   {
     "entity_code": "VC111",
-    "introducer": "Rick + Andrew",
+    "introducer": "Altras Capital Financing Broker",
     "investor": "Zandera (Finco) Limited",
     "fee_type": "invested_amount",
     "rate_bps": 200,
@@ -3311,7 +3311,7 @@
   },
   {
     "entity_code": "VC111",
-    "introducer": "Rick + Andrew",
+    "introducer": "Altras Capital Financing Broker",
     "investor": "Zandera (Finco) Limited",
     "fee_type": "spread",
     "rate_bps": 286,
@@ -3761,7 +3761,7 @@
   },
   {
     "entity_code": "VC113",
-    "introducer": "Anand",
+    "introducer": "Setcap",
     "investor": "Mark HAYWARD",
     "fee_type": "invested_amount",
     "rate_bps": 200,
@@ -3771,7 +3771,7 @@
   },
   {
     "entity_code": "VC113",
-    "introducer": "Anand",
+    "introducer": "Setcap",
     "investor": "Mark HAYWARD",
     "fee_type": "spread",
     "rate_bps": 813,
@@ -3781,7 +3781,7 @@
   },
   {
     "entity_code": "VC113",
-    "introducer": "Anand",
+    "introducer": "Setcap",
     "investor": "Mark HAYWARD",
     "fee_type": "spread",
     "rate_bps": 813,
@@ -3791,7 +3791,7 @@
   },
   {
     "entity_code": "VC113",
-    "introducer": "Anand",
+    "introducer": "Setcap",
     "investor": "Scott TOMMEY",
     "fee_type": "invested_amount",
     "rate_bps": 200,
@@ -3801,7 +3801,7 @@
   },
   {
     "entity_code": "VC113",
-    "introducer": "Anand",
+    "introducer": "Setcap",
     "investor": "Scott TOMMEY",
     "fee_type": "spread",
     "rate_bps": 813,
@@ -3811,7 +3811,7 @@
   },
   {
     "entity_code": "VC113",
-    "introducer": "Anand",
+    "introducer": "Setcap",
     "investor": "SHEILA and KAMLESH MADHVANI",
     "fee_type": "invested_amount",
     "rate_bps": 200,
@@ -3821,7 +3821,7 @@
   },
   {
     "entity_code": "VC113",
-    "introducer": "Anand",
+    "introducer": "Setcap",
     "investor": "SHEILA and KAMLESH MADHVANI",
     "fee_type": "spread",
     "rate_bps": 813,
@@ -3831,7 +3831,7 @@
   },
   {
     "entity_code": "VC113",
-    "introducer": "Anand",
+    "introducer": "Setcap",
     "investor": "Shrai and Aparna MADHVANI",
     "fee_type": "invested_amount",
     "rate_bps": 200,
@@ -3841,7 +3841,7 @@
   },
   {
     "entity_code": "VC113",
-    "introducer": "Anand",
+    "introducer": "Setcap",
     "investor": "Shrai and Aparna MADHVANI",
     "fee_type": "spread",
     "rate_bps": 813,
@@ -3851,7 +3851,7 @@
   },
   {
     "entity_code": "VC113",
-    "introducer": "Anand",
+    "introducer": "Setcap",
     "investor": "Zandera (Finco) Limited",
     "fee_type": "invested_amount",
     "rate_bps": 200,
@@ -3861,7 +3861,7 @@
   },
   {
     "entity_code": "VC113",
-    "introducer": "Anand",
+    "introducer": "Setcap",
     "investor": "Zandera (Finco) Limited",
     "fee_type": "invested_amount",
     "rate_bps": 200,
@@ -3871,7 +3871,7 @@
   },
   {
     "entity_code": "VC113",
-    "introducer": "Anand",
+    "introducer": "Setcap",
     "investor": "Zandera (Finco) Limited",
     "fee_type": "spread",
     "rate_bps": 813,
@@ -3881,7 +3881,7 @@
   },
   {
     "entity_code": "VC113",
-    "introducer": "Anand",
+    "introducer": "Setcap",
     "investor": "Zandera (Finco) Limited",
     "fee_type": "spread",
     "rate_bps": 774,
@@ -3891,7 +3891,7 @@
   },
   {
     "entity_code": "VC113",
-    "introducer": "Anand",
+    "introducer": "Setcap",
     "investor": "Zandera (Holdco) Limited",
     "fee_type": "spread",
     "rate_bps": 813,
@@ -3901,7 +3901,7 @@
   },
   {
     "entity_code": "VC113",
-    "introducer": "Anand",
+    "introducer": "Setcap",
     "investor": "Zandera (Holdco) Limited",
     "fee_type": "spread",
     "rate_bps": 793,
@@ -3911,7 +3911,7 @@
   },
   {
     "entity_code": "VC113",
-    "introducer": "Dan",
+    "introducer": "Daniel Baumslag",
     "investor": "Andrey GORYAINOV",
     "fee_type": "invested_amount",
     "rate_bps": 100,
@@ -3921,7 +3921,7 @@
   },
   {
     "entity_code": "VC113",
-    "introducer": "Dan",
+    "introducer": "Daniel Baumslag",
     "investor": "Barbara and Heinz WINZ",
     "fee_type": "invested_amount",
     "rate_bps": 100,
@@ -3931,7 +3931,7 @@
   },
   {
     "entity_code": "VC113",
-    "introducer": "Dan",
+    "introducer": "Daniel Baumslag",
     "investor": "Beatrice and Marcel KNOPF",
     "fee_type": "invested_amount",
     "rate_bps": 100,
@@ -3941,7 +3941,7 @@
   },
   {
     "entity_code": "VC113",
-    "introducer": "Dan",
+    "introducer": "Daniel Baumslag",
     "investor": "Bright Phoenix Holdings LTD",
     "fee_type": "invested_amount",
     "rate_bps": 100,
@@ -3951,7 +3951,7 @@
   },
   {
     "entity_code": "VC113",
-    "introducer": "Dan",
+    "introducer": "Daniel Baumslag",
     "investor": "Dalinga AG",
     "fee_type": "invested_amount",
     "rate_bps": 100,
@@ -3961,7 +3961,7 @@
   },
   {
     "entity_code": "VC113",
-    "introducer": "Dan",
+    "introducer": "Daniel Baumslag",
     "investor": "Dalinga AG",
     "fee_type": "invested_amount",
     "rate_bps": 100,
@@ -3971,7 +3971,7 @@
   },
   {
     "entity_code": "VC113",
-    "introducer": "Dan",
+    "introducer": "Daniel Baumslag",
     "investor": "Erich GRAF",
     "fee_type": "invested_amount",
     "rate_bps": 100,
@@ -3981,7 +3981,7 @@
   },
   {
     "entity_code": "VC113",
-    "introducer": "Dan",
+    "introducer": "Daniel Baumslag",
     "investor": "Ivan DE",
     "fee_type": "invested_amount",
     "rate_bps": 100,
@@ -3991,7 +3991,7 @@
   },
   {
     "entity_code": "VC113",
-    "introducer": "Dan",
+    "introducer": "Daniel Baumslag",
     "investor": "Liubov and Igor ZINKEVICH",
     "fee_type": "invested_amount",
     "rate_bps": 100,
@@ -4001,7 +4001,7 @@
   },
   {
     "entity_code": "VC113",
-    "introducer": "Dan",
+    "introducer": "Daniel Baumslag",
     "investor": "Liudmila and Alexey ROMANOV",
     "fee_type": "invested_amount",
     "rate_bps": 100,
@@ -4011,7 +4011,7 @@
   },
   {
     "entity_code": "VC113",
-    "introducer": "Dan",
+    "introducer": "Daniel Baumslag",
     "investor": "Markus AKERMANN",
     "fee_type": "invested_amount",
     "rate_bps": 50,
@@ -4021,7 +4021,7 @@
   },
   {
     "entity_code": "VC113",
-    "introducer": "Dan",
+    "introducer": "Daniel Baumslag",
     "investor": "Mrs Nilakantan & Mr Subbiah MAHESWARI & SUBRAMANIAN",
     "fee_type": "invested_amount",
     "rate_bps": 100,
@@ -4031,7 +4031,7 @@
   },
   {
     "entity_code": "VC113",
-    "introducer": "Dan",
+    "introducer": "Daniel Baumslag",
     "investor": "Mrs Rosario Teresa & Mr Deepak HIQUIANA-TANEJA & TANEJA",
     "fee_type": "invested_amount",
     "rate_bps": 100,
@@ -4041,7 +4041,7 @@
   },
   {
     "entity_code": "VC113",
-    "introducer": "Dan",
+    "introducer": "Daniel Baumslag",
     "investor": "Philip ALGAR",
     "fee_type": "invested_amount",
     "rate_bps": 100,
@@ -4051,7 +4051,7 @@
   },
   {
     "entity_code": "VC113",
-    "introducer": "Dan",
+    "introducer": "Daniel Baumslag",
     "investor": "ROSEN INVEST HOLDINGS Inc",
     "fee_type": "invested_amount",
     "rate_bps": 200,
@@ -4061,7 +4061,7 @@
   },
   {
     "entity_code": "VC113",
-    "introducer": "Dan",
+    "introducer": "Daniel Baumslag",
     "investor": "SAFE",
     "fee_type": "invested_amount",
     "rate_bps": 200,
@@ -4071,7 +4071,7 @@
   },
   {
     "entity_code": "VC113",
-    "introducer": "Dan",
+    "introducer": "Daniel Baumslag",
     "investor": "Sandra KOHLER CABIAN",
     "fee_type": "invested_amount",
     "rate_bps": 100,
@@ -4081,7 +4081,7 @@
   },
   {
     "entity_code": "VC113",
-    "introducer": "Dan",
+    "introducer": "Daniel Baumslag",
     "investor": "Signet Logistics Ltd",
     "fee_type": "invested_amount",
     "rate_bps": 100,
@@ -4091,7 +4091,7 @@
   },
   {
     "entity_code": "VC113",
-    "introducer": "Dan",
+    "introducer": "Daniel Baumslag",
     "investor": "TEKAPO Group Limited",
     "fee_type": "invested_amount",
     "rate_bps": 100,
@@ -4651,7 +4651,7 @@
   },
   {
     "entity_code": "VC118",
-    "introducer": "Dan",
+    "introducer": "Daniel Baumslag",
     "investor": "Liudmila and Alexey ROMANOV",
     "fee_type": "invested_amount",
     "rate_bps": 100,
@@ -4661,7 +4661,7 @@
   },
   {
     "entity_code": "VC118",
-    "introducer": "Dan",
+    "introducer": "Daniel Baumslag",
     "investor": "Liudmila and Alexey ROMANOV",
     "fee_type": "performance_fee",
     "rate_bps": 750,
@@ -4671,7 +4671,7 @@
   },
   {
     "entity_code": "VC118",
-    "introducer": "Dan",
+    "introducer": "Daniel Baumslag",
     "investor": "Liudmila and Alexey ROMANOV",
     "fee_type": "spread",
     "rate_bps": 0,
@@ -4681,7 +4681,7 @@
   },
   {
     "entity_code": "VC118",
-    "introducer": "Dan",
+    "introducer": "Daniel Baumslag",
     "investor": "Markus AKERMANN",
     "fee_type": "invested_amount",
     "rate_bps": 100,
@@ -4691,7 +4691,7 @@
   },
   {
     "entity_code": "VC118",
-    "introducer": "Dan",
+    "introducer": "Daniel Baumslag",
     "investor": "Markus AKERMANN",
     "fee_type": "performance_fee",
     "rate_bps": 750,
@@ -4701,7 +4701,7 @@
   },
   {
     "entity_code": "VC118",
-    "introducer": "Dan",
+    "introducer": "Daniel Baumslag",
     "investor": "Markus AKERMANN",
     "fee_type": "spread",
     "rate_bps": 0,
@@ -4711,7 +4711,7 @@
   },
   {
     "entity_code": "VC118",
-    "introducer": "Dan",
+    "introducer": "Daniel Baumslag",
     "investor": "Signet Logistics Ltd",
     "fee_type": "invested_amount",
     "rate_bps": 100,
@@ -4721,7 +4721,7 @@
   },
   {
     "entity_code": "VC118",
-    "introducer": "Dan",
+    "introducer": "Daniel Baumslag",
     "investor": "Signet Logistics Ltd",
     "fee_type": "performance_fee",
     "rate_bps": 750,
@@ -4731,7 +4731,7 @@
   },
   {
     "entity_code": "VC118",
-    "introducer": "Dan",
+    "introducer": "Daniel Baumslag",
     "investor": "Signet Logistics Ltd",
     "fee_type": "spread",
     "rate_bps": 225,
@@ -4741,7 +4741,7 @@
   },
   {
     "entity_code": "VC118",
-    "introducer": "Dan",
+    "introducer": "Daniel Baumslag",
     "investor": "VOLF Trust",
     "fee_type": "invested_amount",
     "rate_bps": 100,
@@ -4751,7 +4751,7 @@
   },
   {
     "entity_code": "VC118",
-    "introducer": "Dan",
+    "introducer": "Daniel Baumslag",
     "investor": "VOLF Trust",
     "fee_type": "performance_fee",
     "rate_bps": 750,
@@ -4761,7 +4761,7 @@
   },
   {
     "entity_code": "VC118",
-    "introducer": "Dan",
+    "introducer": "Daniel Baumslag",
     "investor": "VOLF Trust",
     "fee_type": "spread",
     "rate_bps": 225,
@@ -4851,7 +4851,7 @@
   },
   {
     "entity_code": "VC125",
-    "introducer": "Dan",
+    "introducer": "Daniel Baumslag",
     "investor": "DALINGA HOLDING AG",
     "fee_type": "invested_amount",
     "rate_bps": 200,
@@ -4861,7 +4861,7 @@
   },
   {
     "entity_code": "VC125",
-    "introducer": "Dan",
+    "introducer": "Daniel Baumslag",
     "investor": "DALINGA HOLDING AG",
     "fee_type": "invested_amount",
     "rate_bps": 200,
@@ -4871,7 +4871,7 @@
   },
   {
     "entity_code": "VC125",
-    "introducer": "Dan",
+    "introducer": "Daniel Baumslag",
     "investor": "DALINGA HOLDING AG",
     "fee_type": "performance_fee",
     "rate_bps": 500,
@@ -4881,7 +4881,7 @@
   },
   {
     "entity_code": "VC125",
-    "introducer": "Dan",
+    "introducer": "Daniel Baumslag",
     "investor": "DALINGA HOLDING AG",
     "fee_type": "performance_fee",
     "rate_bps": 500,
@@ -4891,7 +4891,7 @@
   },
   {
     "entity_code": "VC125",
-    "introducer": "Dan",
+    "introducer": "Daniel Baumslag",
     "investor": "Eric SARASIN",
     "fee_type": "performance_fee",
     "rate_bps": 500,
@@ -4901,7 +4901,7 @@
   },
   {
     "entity_code": "VC125",
-    "introducer": "Dan",
+    "introducer": "Daniel Baumslag",
     "investor": "MA GROUP AG",
     "fee_type": "invested_amount",
     "rate_bps": 200,
@@ -4911,7 +4911,7 @@
   },
   {
     "entity_code": "VC125",
-    "introducer": "Dan",
+    "introducer": "Daniel Baumslag",
     "investor": "MA GROUP AG",
     "fee_type": "performance_fee",
     "rate_bps": 500,
@@ -5031,7 +5031,7 @@
   },
   {
     "entity_code": "VC126",
-    "introducer": "Anand",
+    "introducer": "Setcap",
     "investor": "Anand RATHI",
     "fee_type": "performance_fee",
     "rate_bps": 150,
@@ -5041,7 +5041,7 @@
   },
   {
     "entity_code": "VC126",
-    "introducer": "Anand",
+    "introducer": "Setcap",
     "investor": "Anand RATHI",
     "fee_type": "spread",
     "rate_bps": 0,
@@ -5051,7 +5051,7 @@
   },
   {
     "entity_code": "VC126",
-    "introducer": "Anand",
+    "introducer": "Setcap",
     "investor": "AS ADVISORY DWC-LLC",
     "fee_type": "spread",
     "rate_bps": 0,
@@ -5061,7 +5061,7 @@
   },
   {
     "entity_code": "VC126",
-    "introducer": "Anand",
+    "introducer": "Setcap",
     "investor": "GESTIO CAPITAL LTD",
     "fee_type": "spread",
     "rate_bps": 0,
@@ -5071,7 +5071,7 @@
   },
   {
     "entity_code": "VC126",
-    "introducer": "Anand",
+    "introducer": "Setcap",
     "investor": "Julien MACHOT",
     "fee_type": "spread",
     "rate_bps": 0,
@@ -5081,7 +5081,7 @@
   },
   {
     "entity_code": "VC126",
-    "introducer": "Anand",
+    "introducer": "Setcap",
     "investor": "ODIN (ANIM X II LP)",
     "fee_type": "spread",
     "rate_bps": 0,
@@ -5091,7 +5091,7 @@
   },
   {
     "entity_code": "VC126",
-    "introducer": "Anand",
+    "introducer": "Setcap",
     "investor": "ODIN (ANIM X II LP)",
     "fee_type": "spread",
     "rate_bps": 0,
@@ -5101,7 +5101,7 @@
   },
   {
     "entity_code": "VC126",
-    "introducer": "Anand",
+    "introducer": "Setcap",
     "investor": "OEP Ltd",
     "fee_type": "spread",
     "rate_bps": 0,
@@ -5111,7 +5111,7 @@
   },
   {
     "entity_code": "VC126",
-    "introducer": "Anand",
+    "introducer": "Setcap",
     "investor": "SC TBC INVEST 3",
     "fee_type": "spread",
     "rate_bps": 0,
@@ -5121,7 +5121,7 @@
   },
   {
     "entity_code": "VC126",
-    "introducer": "Anand",
+    "introducer": "Setcap",
     "investor": "Scott FLETCHER",
     "fee_type": "performance_fee",
     "rate_bps": 200,
@@ -5131,7 +5131,7 @@
   },
   {
     "entity_code": "VC126",
-    "introducer": "Anand",
+    "introducer": "Setcap",
     "investor": "Scott FLETCHER",
     "fee_type": "performance_fee",
     "rate_bps": 200,
@@ -5141,7 +5141,7 @@
   },
   {
     "entity_code": "VC126",
-    "introducer": "Anand",
+    "introducer": "Setcap",
     "investor": "Scott FLETCHER",
     "fee_type": "spread",
     "rate_bps": 0,
@@ -5151,7 +5151,7 @@
   },
   {
     "entity_code": "VC126",
-    "introducer": "Anand",
+    "introducer": "Setcap",
     "investor": "Scott FLETCHER",
     "fee_type": "spread",
     "rate_bps": 0,
@@ -5161,7 +5161,7 @@
   },
   {
     "entity_code": "VC126",
-    "introducer": "Anand",
+    "introducer": "Setcap",
     "investor": "Tuygan GOKER",
     "fee_type": "performance_fee",
     "rate_bps": 200,
@@ -5171,7 +5171,7 @@
   },
   {
     "entity_code": "VC126",
-    "introducer": "Anand",
+    "introducer": "Setcap",
     "investor": "Tuygan GOKER",
     "fee_type": "spread",
     "rate_bps": 0,
@@ -5181,7 +5181,7 @@
   },
   {
     "entity_code": "VC126",
-    "introducer": "Anand+Dan",
+    "introducer": "Setcap+Daniel Baumslag",
     "investor": "CLOUDSAFE HOLDINGS LIMITED",
     "fee_type": "performance_fee",
     "rate_bps": 350,
@@ -5191,7 +5191,7 @@
   },
   {
     "entity_code": "VC126",
-    "introducer": "Anand+Dan",
+    "introducer": "Setcap+Daniel Baumslag",
     "investor": "CLOUDSAFE HOLDINGS LIMITED",
     "fee_type": "spread",
     "rate_bps": 2375,
@@ -5604,9 +5604,9 @@
     "introducer": "Altras Capital Financing Broker",
     "investor": "ZANDERA (Holdco) Ltd",
     "fee_type": "invested_amount",
-    "rate_bps": 25,
-    "rate_pct": "0.25",
-    "commission_amount": "2500.00",
+    "rate_bps": 500,
+    "rate_pct": "5.00",
+    "commission_amount": "50000.00",
     "currency": "USD"
   },
   {

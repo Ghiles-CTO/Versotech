@@ -180,7 +180,7 @@ async function renderReconciliationPage(
       )
     `)
     .in('deal_id', dealIds)
-    .in('status', ['committed', 'partially_funded', 'active'])
+    .in('status', ['committed', 'partially_funded', 'funded', 'active'])
     .order('committed_at', { ascending: false })
 
   // Fetch fee events for assigned deals

@@ -678,7 +678,7 @@ export async function handleSubscriptionSignature(
     console.warn(`⚠️ [SUBSCRIPTION HANDLER] Subscription ${subscriptionId} has status '${subscription.status}' - cannot transition to 'committed'`)
 
     // If already committed or active, just update the signed doc reference
-    if (['committed', 'active', 'partially_funded'].includes(subscription.status)) {
+    if (['committed', 'active', 'partially_funded', 'funded'].includes(subscription.status)) {
       const { error: docUpdateError } = await supabase
         .from('subscriptions')
         .update({

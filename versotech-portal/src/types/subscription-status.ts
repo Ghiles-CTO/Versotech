@@ -73,13 +73,14 @@ export const PACK_STATUS_COLORS: Record<PackStatusType, string> = {
 // ============================================================================
 // SUBSCRIPTION STATUS
 // Used in: subscriptions table
-// Flow: pending → committed → partially_funded → active → closed/cancelled
+// Flow: pending → committed → partially_funded → funded → active → closed/cancelled
 // ============================================================================
 
 export const SubscriptionStatus = {
   PENDING: 'pending',
   COMMITTED: 'committed',
   PARTIALLY_FUNDED: 'partially_funded',
+  FUNDED: 'funded',
   ACTIVE: 'active',
   CLOSED: 'closed',
   CANCELLED: 'cancelled',
@@ -91,6 +92,7 @@ export const SUBSCRIPTION_STATUS_LABELS: Record<SubscriptionStatusType, string> 
   [SubscriptionStatus.PENDING]: 'Pending',
   [SubscriptionStatus.COMMITTED]: 'Committed',
   [SubscriptionStatus.PARTIALLY_FUNDED]: 'Partially Funded',
+  [SubscriptionStatus.FUNDED]: 'Funded',
   [SubscriptionStatus.ACTIVE]: 'Active',
   [SubscriptionStatus.CLOSED]: 'Closed',
   [SubscriptionStatus.CANCELLED]: 'Cancelled',
@@ -100,6 +102,7 @@ export const SUBSCRIPTION_STATUS_COLORS: Record<SubscriptionStatusType, string> 
   [SubscriptionStatus.PENDING]: 'bg-yellow-900 text-yellow-200',
   [SubscriptionStatus.COMMITTED]: 'bg-blue-900 text-blue-200',
   [SubscriptionStatus.PARTIALLY_FUNDED]: 'bg-indigo-900 text-indigo-200',
+  [SubscriptionStatus.FUNDED]: 'bg-emerald-900 text-emerald-200',
   [SubscriptionStatus.ACTIVE]: 'bg-green-900 text-green-200',
   [SubscriptionStatus.CLOSED]: 'bg-gray-900 text-gray-200',
   [SubscriptionStatus.CANCELLED]: 'bg-red-900 text-red-200',
@@ -111,8 +114,9 @@ export const SUBSCRIPTION_STATUS_COLORS: Record<SubscriptionStatusType, string> 
 
 export const VALID_SUBSCRIPTION_TRANSITIONS: Record<SubscriptionStatusType, SubscriptionStatusType[]> = {
   [SubscriptionStatus.PENDING]: [SubscriptionStatus.COMMITTED, SubscriptionStatus.CANCELLED],
-  [SubscriptionStatus.COMMITTED]: [SubscriptionStatus.PARTIALLY_FUNDED, SubscriptionStatus.ACTIVE, SubscriptionStatus.CANCELLED],
-  [SubscriptionStatus.PARTIALLY_FUNDED]: [SubscriptionStatus.ACTIVE, SubscriptionStatus.CANCELLED],
+  [SubscriptionStatus.COMMITTED]: [SubscriptionStatus.PARTIALLY_FUNDED, SubscriptionStatus.FUNDED, SubscriptionStatus.ACTIVE, SubscriptionStatus.CANCELLED],
+  [SubscriptionStatus.PARTIALLY_FUNDED]: [SubscriptionStatus.FUNDED, SubscriptionStatus.ACTIVE, SubscriptionStatus.CANCELLED],
+  [SubscriptionStatus.FUNDED]: [SubscriptionStatus.ACTIVE, SubscriptionStatus.CANCELLED],
   [SubscriptionStatus.ACTIVE]: [SubscriptionStatus.CLOSED, SubscriptionStatus.CANCELLED],
   [SubscriptionStatus.CLOSED]: [], // Terminal state
   [SubscriptionStatus.CANCELLED]: [], // Terminal state

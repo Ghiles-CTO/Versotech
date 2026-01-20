@@ -72,13 +72,13 @@ export async function loadInvestorDocuments(
 
   const documentsMap = new Map<string, Document & { name?: string; folder?: RawDocument['folder'] }>()
 
-  // Include active, committed, and partially_funded subscriptions
-  // (committed = signed but not yet funded, partially_funded = some capital called)
+  // Include active, committed, funded, and partially_funded subscriptions
+  // (committed = signed but not yet funded, funded = fully paid, partially_funded = some capital called)
   const { data: subscriptionData } = await supabase
     .from('subscriptions')
     .select('vehicle_id, vehicles!inner(id, name, type, investment_name, logo_url)')
     .in('investor_id', investorIds)
-    .in('status', ['active', 'committed', 'partially_funded'])
+    .in('status', ['active', 'committed', 'funded', 'partially_funded'])
 
   const vehicles = Array.from(
     new Map(

@@ -301,7 +301,7 @@ export function ArrangerDashboard({ arrangerId, userId, persona }: ArrangerDashb
             .from('subscriptions')
             .select('commitment, funded_amount, outstanding_amount, status, investor_id')
             .in('deal_id', dealIds)
-            .in('status', ['committed', 'partially_funded', 'active', 'signed'])
+            .in('status', ['committed', 'partially_funded', 'funded', 'active', 'signed'])
 
           const totalExpected = (fundingData || []).reduce((sum: number, s: any) => sum + (s.commitment || 0), 0)
           const totalFunded = (fundingData || []).reduce((sum: number, s: any) => sum + (s.funded_amount || 0), 0)

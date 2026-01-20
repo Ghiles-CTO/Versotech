@@ -44,7 +44,7 @@ export async function GET(
       .from('subscriptions')
       .select('id, commitment, status')
       .eq('deal_id', dealId)
-      .in('status', ['pending', 'committed', 'partially_funded', 'active'])
+      .in('status', ['pending', 'committed', 'partially_funded', 'funded', 'active'])
 
     const totalFromSubscriptions = subscriptions?.reduce((sum, sub) => {
       return sum + (sub.commitment || 0)

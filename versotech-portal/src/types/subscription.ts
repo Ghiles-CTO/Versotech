@@ -2,6 +2,7 @@ export type SubscriptionStatus =
   | 'pending'
   | 'committed'
   | 'partially_funded'
+  | 'funded'
   | 'active'
   | 'closed'
   | 'cancelled'

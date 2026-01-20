@@ -366,7 +366,7 @@ export async function POST(req: Request) {
 
           if (subscription) {
             // Validate subscription can receive funding
-            const validFundingStatuses = ['pending', 'committed', 'partially_funded', 'active']
+            const validFundingStatuses = ['pending', 'committed', 'partially_funded', 'funded', 'active']
             if (!validFundingStatuses.includes(subscription.status)) {
               console.warn(`⚠️ Cannot fund subscription ${subscriptionId} with status '${subscription.status}' - skipping`)
               continue // Skip this subscription

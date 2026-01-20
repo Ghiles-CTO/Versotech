@@ -218,6 +218,7 @@ export function SubscriptionEditDialog({
                         <SelectItem value="pending" className="text-white">Pending</SelectItem>
                         <SelectItem value="committed" className="text-white">Committed</SelectItem>
                         <SelectItem value="partially_funded" className="text-white">Partially Funded</SelectItem>
+                        <SelectItem value="funded" className="text-white">Funded</SelectItem>
                         <SelectItem value="active" className="text-white">Active</SelectItem>
                         <SelectItem value="closed" className="text-white">Closed</SelectItem>
                         <SelectItem value="cancelled" className="text-white">Cancelled</SelectItem>

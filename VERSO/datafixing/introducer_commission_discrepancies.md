@@ -13,25 +13,23 @@ Method
 
 Notes
 - The left-side investor columns vary across sheets (columns shift), so per‑investor reconciliation is unreliable without manual review.
-- Name mapping ambiguities: `Sandro` vs `Sandro Lang`, `Anand` vs `Anand Sethia`/`Sitcap`.
-- Elevation+Rick special rule applied in DB: spread set to 150 per share for ZANDERA (VC133), so DB is intentionally lower than dashboard (dashboard still shows 175 per share).
+- Name mapping updated per client rules: `Anand` → `Setcap`, `Dan` → `Daniel Baumslag`, `Anand+Dan` → `Setcap+Daniel Baumslag`.
+- Elevation+Rick rule enforced: only Rick (Altras) as introducer with 5% subscription fee and $150 spread for the VC133 opportunity.
 
 Resolved
 - VC106 Manna Capital: fixed missing spread commissions and reassigned CHANG from Moore & Moore to Manna. DB totals now match dashboard (spread 40,000).
+- Rick + Andrew: commissions reassigned to Altras Capital Financing Broker; introducer record removed.
+- VC133 ZANDERA (Elevation+Rick): sub-fee corrected to 5% ($50,000) and spread set to $150 per share (DB amount $96,750).
+- VC133 subscriptions + introductions: introducer_id aligned to Rick (Altras) per rule.
+- Subscription introducer alignment: for investor+vehicle pairs with a single introducer in commissions, subscriptions were updated to match.
 
 Open discrepancies (dashboard vs DB)
-- VC106 VERSO BI: sub_fee 409,788.9488 vs 404,038.90 (diff -5,750.0488); spread 3,175,841.192 vs 3,138,330.13 (diff -37,511.062).
-- VC111 Julien: sub_fee 9,000 vs 11,000 (diff +2,000).
-- VC111 Terra Financial & Management Services SA: sub_fee 13,300 vs 12,300 (diff -1,000).
-- VC113 Altras Capital Financing Broker: sub_fee 47,200 vs 46,200 (diff -1,000).
-- VC113 Terra Financial & Management Services SA: sub_fee 26,050 vs 23,050 (diff -3,000).
-- VC126 Alpha Gaia: sub_fee 6,000 vs 5,000 (diff -1,000).
-- VC126 Giovanni SALADINO: spread 28.09453 vs 0.
-- VC126 Moore & Moore Investments Ltd: spread 27.5 vs 0.
-- VC126 Simone: spread 20 vs 0.
-- VC133 Altras Capital Financing Broker: spread 112,875 vs 96,750 (intentional due to 150/spread rule).
-- VC133 Anand vs DB Anand Sethia: dashboard sub_fee 5,000 / spread 76,267.5 vs DB sub_fee 5,000 / spread 52,080 (mapping ambiguity + spread mismatch).
-- VC113 Sandro Lang vs DB Sandro: name mapping mismatch only (DB uses display_name `Sandro`; amounts are present).
+- VC133: dashboard still splits totals across Elevation/Setcap/Elevation+Rick, but DB consolidates to Rick (Altras) per rule; mismatch is expected and not a data error.
+- Minor rounding deltas in aggregate comparison (e.g., VC113 Setcap spread +0.0125; VC125 sub-fee +0.0012; VC126 Setcap spread -0.00776).
+
+Commissions vs subscriptions
+- 39 commission records have no matching subscription (investor+vehicle). Requires manual review against dashboard/contract refs.
+- 109 commission records belong to investor+vehicle pairs with multiple introducers, so subscriptions cannot represent all introducers (single introducer_id limit).
 
 Partner/Introducer overlap
-- `partners` table contains `Dan` and `Anand+Dan` while matching introducers also exist. This may be intentional but is a potential duplication risk.
+- Partner entries are treated as introducers in this workflow; duplicate identities were merged (Dan → Daniel Baumslag, Anand → Setcap).

@@ -9,7 +9,7 @@ const subscriptionSchema = z
   .object({
     commitment: z.number().nonnegative().optional(),
     currency: z.string().length(3).optional(),
-    status: z.enum(['pending', 'committed', 'active', 'closed', 'cancelled']).optional(),
+    status: z.enum(['pending', 'committed', 'partially_funded', 'funded', 'active', 'closed', 'cancelled']).optional(),
     effective_date: z.string().optional(),
     funding_due_at: z.string().optional(),
     units: z.number().nonnegative().optional(),

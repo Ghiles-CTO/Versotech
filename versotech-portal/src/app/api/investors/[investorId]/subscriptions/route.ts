@@ -12,7 +12,7 @@ const createSubscriptionSchema = z.object({
   vehicle_id: z.string().uuid('Vehicle ID must be a valid UUID'),
   commitment: z.number().positive('Commitment must be positive'),
   currency: z.string().length(3, 'Currency must be 3 letters').toUpperCase(),
-  status: z.enum(['pending', 'committed', 'active', 'closed', 'cancelled']),
+  status: z.enum(['pending', 'committed', 'partially_funded', 'funded', 'active', 'closed', 'cancelled']),
 
   // Date fields (optional)
   effective_date: z.string().optional().nullable(),

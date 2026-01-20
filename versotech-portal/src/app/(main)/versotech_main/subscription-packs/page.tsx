@@ -205,7 +205,7 @@ export default async function SubscriptionPacksPage() {
     )
   }
 
-  // Fetch SIGNED subscriptions (committed, partially_funded, active) for relevant deals
+  // Fetch SIGNED subscriptions (committed, partially_funded, funded, active) for relevant deals
   // Note: signed_at is the actual signature date, committed_at may be null
   const { data: subscriptionsData } = await serviceSupabase
     .from('subscriptions')
@@ -238,7 +238,7 @@ export default async function SubscriptionPacksPage() {
       )
     `)
     .in('deal_id', dealIds)
-    .in('status', ['committed', 'partially_funded', 'active'])
+    .in('status', ['committed', 'partially_funded', 'funded', 'active'])
     .order('signed_at', { ascending: false, nullsFirst: false })
 
   const subscriptionIds = (subscriptionsData || []).map((s: any) => s.id)

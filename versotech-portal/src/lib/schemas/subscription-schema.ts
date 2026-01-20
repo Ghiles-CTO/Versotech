@@ -12,7 +12,7 @@ export const subscriptionFormSchema = z
       .length(3, 'Currency must be 3 letters')
       .transform((val) => val.toUpperCase()),
 
-    status: z.enum(['pending', 'committed', 'active', 'closed', 'cancelled']),
+    status: z.enum(['pending', 'committed', 'partially_funded', 'funded', 'active', 'closed', 'cancelled']),
 
     // Date fields (optional)
     effective_date: z.string().optional().nullable(),
