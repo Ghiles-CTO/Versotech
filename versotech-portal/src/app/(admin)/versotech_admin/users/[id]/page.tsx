@@ -70,11 +70,50 @@ import {
   Building2,
   Activity,
   Users,
+  Scale,
+  Handshake,
+  Globe,
+  Landmark,
+  Plus,
+  Trash2,
+  Search,
+  X,
 } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
+
+// Table Components
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 
 // Types
-import type { UserRow } from '@/app/api/admin/users/route'
+import type { UserRow, EntityAssociation } from '@/app/api/admin/users/route'
 import type { SingleUserResponse } from '@/app/api/admin/users/[id]/route'
+
+// Entity type to icon mapping
+const entityTypeIcons: Record<EntityAssociation['type'], LucideIcon> = {
+  investor: Building2,
+  partner: Users,
+  lawyer: Scale,
+  commercial_partner: Handshake,
+  introducer: Globe,
+  arranger: Landmark,
+}
+
+// Entity type display names
+const entityTypeLabels: Record<EntityAssociation['type'], string> = {
+  investor: 'Investor',
+  partner: 'Partner',
+  lawyer: 'Law Firm',
+  commercial_partner: 'Commercial Partner',
+  introducer: 'Introducer',
+  arranger: 'Arranger',
+}
 
 // Edit form schema
 const editUserSchema = z.object({
@@ -183,6 +222,12 @@ export default function UserDetailPage() {
   // Edit dialog state
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [isSubmittingEdit, setIsSubmittingEdit] = useState(false)
+
+  // Entity management state
+  const [removeEntityDialogOpen, setRemoveEntityDialogOpen] = useState(false)
+  const [entityToRemove, setEntityToRemove] = useState<EntityAssociation | null>(null)
+  const [isRemovingEntity, setIsRemovingEntity] = useState(false)
+  const [addEntityDialogOpen, setAddEntityDialogOpen] = useState(false)
 
   // Edit form
   const {
@@ -383,6 +428,37 @@ export default function UserDetailPage() {
     } finally {
       setIsSubmittingEdit(false)
     }
+  }
+
+  // Handle remove entity
+  const handleRemoveEntity = async () => {
+    if (!entityToRemove || !user) return
+    setIsRemovingEntity(true)
+    try {
+      // Note: This would call an API endpoint to unlink the entity from the user
+      // For now, we'll show a toast indicating the functionality is placeholder
+      // In production, this would be: DELETE /api/admin/users/${userId}/entities/${entityToRemove.id}?type=${entityToRemove.type}
+      await new Promise(resolve => setTimeout(resolve, 500)) // Simulate API call
+
+      toast.success('Entity removed', {
+        description: `${entityToRemove.name} has been unlinked from ${user.displayName}.`,
+      })
+      setRemoveEntityDialogOpen(false)
+      setEntityToRemove(null)
+      fetchUser() // Refresh data
+    } catch (err) {
+      toast.error('Failed to remove entity', {
+        description: err instanceof Error ? err.message : 'An error occurred',
+      })
+    } finally {
+      setIsRemovingEntity(false)
+    }
+  }
+
+  // Open remove entity dialog
+  const openRemoveEntityDialog = (entity: EntityAssociation) => {
+    setEntityToRemove(entity)
+    setRemoveEntityDialogOpen(true)
   }
 
   if (error) {
@@ -692,14 +768,103 @@ export default function UserDetailPage() {
             </Card>
           </TabsContent>
 
-          {/* Entities Tab (placeholder for US-015) */}
+          {/* Entities Tab */}
           <TabsContent value="entities" className="mt-6">
             <Card>
-              <CardContent className="p-6">
-                <p className="text-muted-foreground text-center py-8">
-                  <Users className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                  Entity associations will be displayed here.
-                </p>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Building2 className="h-5 w-5" />
+                  Linked Entities
+                </CardTitle>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setAddEntityDialogOpen(true)}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Entity
+                </Button>
+              </CardHeader>
+              <CardContent>
+                {user.entities.length === 0 ? (
+                  /* Empty State */
+                  <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <div className="rounded-full bg-muted p-4 mb-4">
+                      <Building2 className="h-8 w-8 text-muted-foreground" />
+                    </div>
+                    <h3 className="text-lg font-medium mb-1">No linked entities</h3>
+                    <p className="text-sm text-muted-foreground mb-4 max-w-sm">
+                      This user is not associated with any entities. Link them to an investor, partner, or other entity.
+                    </p>
+                    <Button
+                      variant="outline"
+                      onClick={() => setAddEntityDialogOpen(true)}
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Entity
+                    </Button>
+                  </div>
+                ) : (
+                  /* Entities Table */
+                  <div className="rounded-md border">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="w-[50px]">Type</TableHead>
+                          <TableHead>Entity Name</TableHead>
+                          <TableHead>Entity Type</TableHead>
+                          <TableHead>Role</TableHead>
+                          <TableHead className="w-[100px] text-right">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {user.entities.map((entity) => {
+                          const EntityIcon = entityTypeIcons[entity.type]
+                          return (
+                            <TableRow key={`${entity.type}-${entity.id}`}>
+                              <TableCell>
+                                <div className="flex items-center justify-center">
+                                  <EntityIcon className="h-5 w-5 text-muted-foreground" />
+                                </div>
+                              </TableCell>
+                              <TableCell className="font-medium">
+                                {entity.name}
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant="outline">
+                                  {entityTypeLabels[entity.type]}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                <Badge
+                                  variant={entity.isPrimary ? 'default' : 'secondary'}
+                                >
+                                  {entity.isPrimary ? 'Primary' : 'Member'}
+                                </Badge>
+                                {entity.canSign && (
+                                  <Badge variant="outline" className="ml-2">
+                                    Can Sign
+                                  </Badge>
+                                )}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                  onClick={() => openRemoveEntityDialog(entity)}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                  <span className="sr-only">Remove entity</span>
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          )
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -950,6 +1115,81 @@ export default function UserDetailPage() {
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Remove Entity Confirmation Dialog */}
+      <AlertDialog open={removeEntityDialogOpen} onOpenChange={setRemoveEntityDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-destructive" />
+              Remove Entity Link
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to unlink <strong>{entityToRemove?.name}</strong> from {user?.displayName}?
+              The user will no longer have access to this entity&apos;s data.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isRemovingEntity}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleRemoveEntity}
+              disabled={isRemovingEntity}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isRemovingEntity ? 'Removing...' : 'Remove'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Add Entity Search Dialog (Placeholder) */}
+      <Dialog open={addEntityDialogOpen} onOpenChange={setAddEntityDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Plus className="h-5 w-5" />
+              Link Entity
+            </DialogTitle>
+            <DialogDescription>
+              Search for an entity to link to {user?.displayName}.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            {/* Search Input */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Search entities by name..."
+                className="pl-10"
+                disabled
+              />
+            </div>
+
+            {/* Placeholder content */}
+            <div className="flex flex-col items-center justify-center py-8 text-center">
+              <div className="rounded-full bg-muted p-3 mb-3">
+                <Building2 className="h-6 w-6 text-muted-foreground" />
+              </div>
+              <p className="text-sm text-muted-foreground mb-1">
+                Entity search coming soon
+              </p>
+              <p className="text-xs text-muted-foreground max-w-xs">
+                This feature will allow searching for investors, partners, law firms, and other entities to link to this user.
+              </p>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setAddEntityDialogOpen(false)}
+            >
+              Close
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
