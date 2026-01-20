@@ -50,6 +50,44 @@ export async function GET(request: NextRequest) {
       .select('user_id, permission')
       .in('user_id', staffMembers?.map(s => s.id) || [])
 
+    // Get assigned investor counts (primary + secondary RM)
+    const staffIds = staffMembers?.map(s => s.id) || []
+
+    const { data: primaryAssignments } = await supabase
+      .from('investors')
+      .select('primary_rm')
+      .in('primary_rm', staffIds)
+
+    const { data: secondaryAssignments } = await supabase
+      .from('investors')
+      .select('secondary_rm')
+      .in('secondary_rm', staffIds)
+
+    // Count assignments per staff member
+    const assignmentCounts: Record<string, number> = {}
+    staffIds.forEach(id => { assignmentCounts[id] = 0 })
+    primaryAssignments?.forEach(a => {
+      if (a.primary_rm) assignmentCounts[a.primary_rm] = (assignmentCounts[a.primary_rm] || 0) + 1
+    })
+    secondaryAssignments?.forEach(a => {
+      if (a.secondary_rm) assignmentCounts[a.secondary_rm] = (assignmentCounts[a.secondary_rm] || 0) + 1
+    })
+
+    // Get 7-day activity counts for activity score
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+    const { data: activityCounts } = await supabase
+      .from('audit_logs')
+      .select('actor_id')
+      .in('actor_id', staffIds)
+      .gte('created_at', sevenDaysAgo)
+
+    // Count activities per staff member
+    const activityScores: Record<string, number> = {}
+    staffIds.forEach(id => { activityScores[id] = 0 })
+    activityCounts?.forEach(a => {
+      if (a.actor_id) activityScores[a.actor_id] = (activityScores[a.actor_id] || 0) + 1
+    })
+
     // Get activity stats for each staff member
     const staffWithStats = await Promise.all(
       (staffMembers || []).map(async (staff) => {
@@ -82,6 +120,8 @@ export async function GET(request: NextRequest) {
           last_action: lastActivity?.action || null,
           recent_login_count: 0, // Would need to track successful logins in audit_logs
           recent_failed_logins: failedLogins?.length || 0,
+          assigned_investors: assignmentCounts[staff.id] || 0,
+          activity_score_7d: activityScores[staff.id] || 0,
         }
       })
     )
