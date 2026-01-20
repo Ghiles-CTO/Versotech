@@ -4,15 +4,21 @@ import * as React from 'react'
 import { useEffect, useState, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { formatDistanceToNow } from 'date-fns'
+import { formatDistanceToNow, format } from 'date-fns'
 import { toast } from 'sonner'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
 
 // UI Components
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Card, CardContent } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,6 +37,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 
 // Icons
 import {
@@ -44,11 +58,33 @@ import {
   KeyRound,
   AlertTriangle,
   Mail,
+  User,
+  Briefcase,
+  MapPin,
+  Phone,
+  Shield,
+  ShieldCheck,
+  Calendar,
+  Clock,
+  Loader2,
+  Building2,
+  Activity,
+  Users,
 } from 'lucide-react'
 
 // Types
 import type { UserRow } from '@/app/api/admin/users/route'
 import type { SingleUserResponse } from '@/app/api/admin/users/[id]/route'
+
+// Edit form schema
+const editUserSchema = z.object({
+  display_name: z.string().min(1, 'Display name is required').max(100, 'Display name must be less than 100 characters'),
+  title: z.string().max(100, 'Title must be less than 100 characters').optional().or(z.literal('')),
+  phone: z.string().max(50, 'Phone must be less than 50 characters').optional().or(z.literal('')),
+  office_location: z.string().max(100, 'Office location must be less than 100 characters').optional().or(z.literal('')),
+})
+
+type EditUserFormData = z.infer<typeof editUserSchema>
 
 // Helper functions for badges (same as users list)
 const getStatusLabel = (user: UserRow): string => {
@@ -143,6 +179,26 @@ export default function UserDetailPage() {
   const [reactivateDialogOpen, setReactivateDialogOpen] = useState(false)
   const [lockDialogOpen, setLockDialogOpen] = useState(false)
   const [resetPasswordDialogOpen, setResetPasswordDialogOpen] = useState(false)
+
+  // Edit dialog state
+  const [editDialogOpen, setEditDialogOpen] = useState(false)
+  const [isSubmittingEdit, setIsSubmittingEdit] = useState(false)
+
+  // Edit form
+  const {
+    register,
+    handleSubmit,
+    reset: resetForm,
+    formState: { errors },
+  } = useForm<EditUserFormData>({
+    resolver: zodResolver(editUserSchema),
+    defaultValues: {
+      display_name: '',
+      title: '',
+      phone: '',
+      office_location: '',
+    },
+  })
 
   // Fetch user data
   const fetchUser = useCallback(async () => {
@@ -282,6 +338,53 @@ export default function UserDetailPage() {
     }
   }
 
+  // Open edit dialog and populate form
+  const handleOpenEditDialog = () => {
+    if (user) {
+      resetForm({
+        display_name: user.displayName || '',
+        title: user.title || '',
+        phone: user.phone || '',
+        office_location: user.officeLocation || '',
+      })
+      setEditDialogOpen(true)
+    }
+  }
+
+  // Submit edit form
+  const handleEditSubmit = async (data: EditUserFormData) => {
+    setIsSubmittingEdit(true)
+    try {
+      const response = await fetch(`/api/admin/users/${userId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          display_name: data.display_name,
+          title: data.title || null,
+          phone: data.phone || null,
+          office_location: data.office_location || null,
+        }),
+      })
+      const result = await response.json()
+
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to update user')
+      }
+
+      toast.success('Profile updated', {
+        description: 'User profile has been updated successfully.',
+      })
+      setEditDialogOpen(false)
+      fetchUser() // Refresh data
+    } catch (err) {
+      toast.error('Failed to update profile', {
+        description: err instanceof Error ? err.message : 'An error occurred',
+      })
+    } finally {
+      setIsSubmittingEdit(false)
+    }
+  }
+
   if (error) {
     return (
       <div className="p-6">
@@ -385,7 +488,7 @@ export default function UserDetailPage() {
 
               {/* Actions */}
               <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" onClick={handleOpenEditDialog}>
                   <Pencil className="h-4 w-4 mr-2" />
                   Edit
                 </Button>
@@ -456,15 +559,175 @@ export default function UserDetailPage() {
         </Card>
       ) : null}
 
-      {/* Placeholder for tabs (US-014 onwards) */}
+      {/* Tab Navigation */}
       {user && !loading && (
-        <Card>
-          <CardContent className="p-6">
-            <p className="text-muted-foreground text-center py-8">
-              User profile tabs will be implemented in the next stories (US-014 onwards).
-            </p>
-          </CardContent>
-        </Card>
+        <Tabs defaultValue="profile" className="w-full">
+          <TabsList className="grid w-full grid-cols-4 md:w-auto md:inline-grid">
+            <TabsTrigger value="profile" className="flex items-center gap-2">
+              <User className="h-4 w-4" />
+              <span className="hidden sm:inline">Profile</span>
+            </TabsTrigger>
+            <TabsTrigger value="entities" className="flex items-center gap-2">
+              <Building2 className="h-4 w-4" />
+              <span className="hidden sm:inline">Entities</span>
+            </TabsTrigger>
+            <TabsTrigger value="activity" className="flex items-center gap-2">
+              <Activity className="h-4 w-4" />
+              <span className="hidden sm:inline">Activity</span>
+            </TabsTrigger>
+            <TabsTrigger value="security" className="flex items-center gap-2">
+              <Shield className="h-4 w-4" />
+              <span className="hidden sm:inline">Security</span>
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Profile Tab */}
+          <TabsContent value="profile" className="mt-6 space-y-6">
+            {/* Personal Information Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <User className="h-5 w-5" />
+                  Personal Information
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-1">
+                  <p className="text-sm text-muted-foreground">Display Name</p>
+                  <p className="font-medium">{user.displayName || '—'}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm text-muted-foreground">Email</p>
+                  <p className="font-medium flex items-center gap-2">
+                    <Mail className="h-4 w-4 text-muted-foreground" />
+                    {user.email || '—'}
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm text-muted-foreground">Phone</p>
+                  <p className="font-medium flex items-center gap-2">
+                    <Phone className="h-4 w-4 text-muted-foreground" />
+                    {user.phone || '—'}
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm text-muted-foreground">Title</p>
+                  <p className="font-medium flex items-center gap-2">
+                    <Briefcase className="h-4 w-4 text-muted-foreground" />
+                    {user.title || '—'}
+                  </p>
+                </div>
+                <div className="space-y-1 md:col-span-2">
+                  <p className="text-sm text-muted-foreground">Office Location</p>
+                  <p className="font-medium flex items-center gap-2">
+                    <MapPin className="h-4 w-4 text-muted-foreground" />
+                    {user.officeLocation || '—'}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Account Settings Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Shield className="h-5 w-5" />
+                  Account Settings
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-1">
+                  <p className="text-sm text-muted-foreground">System Role</p>
+                  <div className="flex items-center gap-2">
+                    <Badge variant={roleBadgeVariant(user.systemRole)}>
+                      {formatRole(user.systemRole)}
+                    </Badge>
+                    {user.isSuperAdmin && (
+                      <Badge variant="default" className="bg-purple-500 hover:bg-purple-500/80">
+                        Super Admin
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm text-muted-foreground">MFA Status</p>
+                  <p className="font-medium flex items-center gap-2">
+                    {user.passwordSet ? (
+                      <>
+                        <ShieldCheck className="h-4 w-4 text-green-500" />
+                        <span className="text-green-600">Enabled</span>
+                      </>
+                    ) : (
+                      <>
+                        <Shield className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-muted-foreground">Not Configured</span>
+                      </>
+                    )}
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm text-muted-foreground">Account Created</p>
+                  <p className="font-medium flex items-center gap-2">
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                    {user.createdAt ? format(new Date(user.createdAt), 'MMM d, yyyy') : '—'}
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm text-muted-foreground">Last Login</p>
+                  <p className="font-medium flex items-center gap-2">
+                    <Clock className="h-4 w-4 text-muted-foreground" />
+                    {user.lastLoginAt ? (
+                      <>
+                        {format(new Date(user.lastLoginAt), 'MMM d, yyyy')}
+                        <span className="text-sm text-muted-foreground">
+                          ({formatDistanceToNow(new Date(user.lastLoginAt), { addSuffix: true })})
+                        </span>
+                      </>
+                    ) : (
+                      'Never logged in'
+                    )}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Entities Tab (placeholder for US-015) */}
+          <TabsContent value="entities" className="mt-6">
+            <Card>
+              <CardContent className="p-6">
+                <p className="text-muted-foreground text-center py-8">
+                  <Users className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                  Entity associations will be displayed here.
+                </p>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Activity Tab (placeholder for US-016) */}
+          <TabsContent value="activity" className="mt-6">
+            <Card>
+              <CardContent className="p-6">
+                <p className="text-muted-foreground text-center py-8">
+                  <Activity className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                  User activity history will be displayed here.
+                </p>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Security Tab (placeholder for US-017) */}
+          <TabsContent value="security" className="mt-6">
+            <Card>
+              <CardContent className="p-6">
+                <p className="text-muted-foreground text-center py-8">
+                  <Shield className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                  Security settings will be displayed here.
+                </p>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       )}
 
       {/* Deactivate Dialog */}
@@ -587,6 +850,108 @@ export default function UserDetailPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Edit Profile Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Pencil className="h-5 w-5" />
+              Edit Profile
+            </DialogTitle>
+            <DialogDescription>
+              Update profile information for {user?.displayName}.
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleSubmit(handleEditSubmit)} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="display_name">Display Name *</Label>
+              <div className="relative">
+                <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  id="display_name"
+                  placeholder="John Smith"
+                  className="pl-10"
+                  {...register('display_name')}
+                />
+              </div>
+              {errors.display_name && (
+                <p className="text-sm text-destructive">{errors.display_name.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="title">Title</Label>
+              <div className="relative">
+                <Briefcase className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  id="title"
+                  placeholder="Managing Director"
+                  className="pl-10"
+                  {...register('title')}
+                />
+              </div>
+              {errors.title && (
+                <p className="text-sm text-destructive">{errors.title.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="phone">Phone</Label>
+              <div className="relative">
+                <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  id="phone"
+                  placeholder="+1 (555) 123-4567"
+                  className="pl-10"
+                  {...register('phone')}
+                />
+              </div>
+              {errors.phone && (
+                <p className="text-sm text-destructive">{errors.phone.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="office_location">Office Location</Label>
+              <div className="relative">
+                <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  id="office_location"
+                  placeholder="New York, NY"
+                  className="pl-10"
+                  {...register('office_location')}
+                />
+              </div>
+              {errors.office_location && (
+                <p className="text-sm text-destructive">{errors.office_location.message}</p>
+              )}
+            </div>
+
+            <DialogFooter className="gap-2 sm:gap-0">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setEditDialogOpen(false)}
+                disabled={isSubmittingEdit}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isSubmittingEdit}>
+                {isSubmittingEdit ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  'Save Changes'
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
