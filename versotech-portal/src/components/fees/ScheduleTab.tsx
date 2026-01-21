@@ -5,16 +5,33 @@
 'use client';
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { formatCurrency } from '@/lib/fees/calculations';
-import { Calendar, DollarSign, Clock, TrendingUp, Users, Building2, ChevronDown, ChevronRight, UserCheck, Handshake, Briefcase } from 'lucide-react';
+import { Calendar, DollarSign, Clock, Users, Building2, ChevronDown, ChevronRight, UserCheck, Handshake, Briefcase, X, Filter, Check, ChevronsUpDown } from 'lucide-react';
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command';
+import { DateRangePicker } from '@/components/ui/date-range-picker';
+import type { DateRange } from 'react-day-picker';
 
 interface UpcomingFee {
   id: string;
@@ -114,7 +131,21 @@ interface ScheduleData {
   }>;
 }
 
+interface Deal {
+  id: string;
+  name: string;
+}
+
+interface Entity {
+  id: string;
+  name: string;
+  type: 'introducer' | 'partner' | 'commercial_partner';
+}
+
 export default function ScheduleTab() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
   const [data, setData] = useState<ScheduleData | null>(null);
   const [loading, setLoading] = useState(true);
   const [daysAhead, setDaysAhead] = useState(60);
@@ -130,6 +161,165 @@ export default function ScheduleTab() {
   const [commercialPartnerCommissions, setCommercialPartnerCommissions] = useState<CommercialPartnerCommission[]>([]);
   const [commercialPartnerCommissionsLoading, setCommercialPartnerCommissionsLoading] = useState(true);
   const [commercialPartnerCommissionsExpanded, setCommercialPartnerCommissionsExpanded] = useState(true);
+
+  // Filter state
+  const [deals, setDeals] = useState<Deal[]>([]);
+  const [entities, setEntities] = useState<Entity[]>([]);
+  const [selectedDealIds, setSelectedDealIds] = useState<string[]>(() => {
+    const dealIds = searchParams.get('deal_ids');
+    return dealIds ? dealIds.split(',') : [];
+  });
+  const [selectedEntityIds, setSelectedEntityIds] = useState<string[]>(() => {
+    const entityIds = searchParams.get('entity_ids');
+    return entityIds ? entityIds.split(',') : [];
+  });
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(() => {
+    const from = searchParams.get('date_from');
+    const to = searchParams.get('date_to');
+    if (from || to) {
+      return {
+        from: from ? new Date(from) : undefined,
+        to: to ? new Date(to) : undefined,
+      };
+    }
+    return undefined;
+  });
+  const [dealPopoverOpen, setDealPopoverOpen] = useState(false);
+  const [entityPopoverOpen, setEntityPopoverOpen] = useState(false);
+
+  // Check if any filters are active
+  const hasActiveFilters = selectedDealIds.length > 0 || selectedEntityIds.length > 0 || dateRange?.from || dateRange?.to;
+
+  // Update URL when filters change
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams.toString());
+
+    if (selectedDealIds.length > 0) {
+      params.set('deal_ids', selectedDealIds.join(','));
+    } else {
+      params.delete('deal_ids');
+    }
+
+    if (selectedEntityIds.length > 0) {
+      params.set('entity_ids', selectedEntityIds.join(','));
+    } else {
+      params.delete('entity_ids');
+    }
+
+    if (dateRange?.from) {
+      params.set('date_from', dateRange.from.toISOString().split('T')[0]);
+    } else {
+      params.delete('date_from');
+    }
+
+    if (dateRange?.to) {
+      params.set('date_to', dateRange.to.toISOString().split('T')[0]);
+    } else {
+      params.delete('date_to');
+    }
+
+    const newUrl = params.toString() ? `?${params.toString()}` : window.location.pathname;
+    router.push(newUrl, { scroll: false });
+  }, [selectedDealIds, selectedEntityIds, dateRange, router, searchParams]);
+
+  // Fetch deals list for filter
+  const fetchDeals = useCallback(async () => {
+    try {
+      const res = await fetch('/api/deals');
+      const json = await res.json();
+      setDeals(json.deals || []);
+    } catch (error) {
+      console.error('Error fetching deals:', error);
+    }
+  }, []);
+
+  // Fetch entities list for filter - uses commissions API to get unique entities
+  const fetchEntities = useCallback(async () => {
+    try {
+      // Fetch all commissions to extract unique entities
+      const res = await fetch('/api/staff/fees/commissions');
+      const json = await res.json();
+
+      // Use by_entity which has already grouped unique entities
+      const byEntity = json.by_entity || [];
+      const allEntities: Entity[] = byEntity.map((group: { entity_type: string; entity: { id: string; name: string } }) => ({
+        id: group.entity.id,
+        name: group.entity.name,
+        type: group.entity_type as 'introducer' | 'partner' | 'commercial_partner',
+      }));
+
+      // Also try to get introducers from dedicated endpoint for completeness
+      try {
+        const introducersRes = await fetch('/api/staff/introducers');
+        const introducersJson = await introducersRes.json();
+        const introducers = (introducersJson.data || []).map((e: { id: string; legal_name?: string; name?: string }) => ({
+          id: e.id,
+          name: e.legal_name || e.name || 'Unknown',
+          type: 'introducer' as const,
+        }));
+
+        // Merge introducers, avoiding duplicates
+        const existingIds = new Set(allEntities.map(e => e.id));
+        for (const introducer of introducers) {
+          if (!existingIds.has(introducer.id)) {
+            allEntities.push(introducer);
+          }
+        }
+      } catch {
+        // Introducers endpoint may not be accessible, that's ok
+      }
+
+      // Sort by name
+      allEntities.sort((a, b) => a.name.localeCompare(b.name));
+
+      setEntities(allEntities);
+    } catch (error) {
+      console.error('Error fetching entities:', error);
+    }
+  }, []);
+
+  // Clear all filters
+  const clearFilters = useCallback(() => {
+    setSelectedDealIds([]);
+    setSelectedEntityIds([]);
+    setDateRange(undefined);
+  }, []);
+
+  // Toggle deal selection
+  const toggleDeal = (dealId: string) => {
+    setSelectedDealIds((prev) =>
+      prev.includes(dealId) ? prev.filter((id) => id !== dealId) : [...prev, dealId]
+    );
+  };
+
+  // Toggle entity selection
+  const toggleEntity = (entityId: string) => {
+    setSelectedEntityIds((prev) =>
+      prev.includes(entityId) ? prev.filter((id) => id !== entityId) : [...prev, entityId]
+    );
+  };
+
+  // Get selected deal names for display
+  const selectedDealNames = useMemo(() => {
+    return selectedDealIds
+      .map((id) => deals.find((d) => d.id === id)?.name)
+      .filter(Boolean)
+      .join(', ');
+  }, [selectedDealIds, deals]);
+
+  // Get selected entity names for display
+  const selectedEntityNames = useMemo(() => {
+    return selectedEntityIds
+      .map((id) => entities.find((e) => e.id === id)?.name)
+      .filter(Boolean)
+      .join(', ');
+  }, [selectedEntityIds, entities]);
+
+  // Load deals and entities on mount
+  useEffect(() => {
+    fetchDeals();
+    fetchEntities();
+  }, [fetchDeals, fetchEntities]);
 
   const fetchSchedules = useCallback(async () => {
     setLoading(true);
@@ -148,32 +338,82 @@ export default function ScheduleTab() {
     setInvestorFeesLoading(true);
     try {
       // Get fee events with status = 'accrued' and future period_start_date
-      const today = new Date().toISOString().split('T')[0];
-      const res = await fetch(
-        `/api/staff/fees/events?status=accrued&period_from=${today}&limit=200`
-      );
+      const params = new URLSearchParams();
+      params.set('status', 'accrued');
+      params.set('limit', '200');
+
+      // Use date range or default to today
+      if (dateRange?.from) {
+        params.set('period_from', dateRange.from.toISOString().split('T')[0]);
+      } else {
+        params.set('period_from', new Date().toISOString().split('T')[0]);
+      }
+      if (dateRange?.to) {
+        params.set('period_to', dateRange.to.toISOString().split('T')[0]);
+      }
+
+      const res = await fetch(`/api/staff/fees/events?${params.toString()}`);
       const json = await res.json();
-      setInvestorFees(json.data || []);
+
+      let feeData = json.data || [];
+
+      // Filter by selected deals (client-side since API doesn't support multiple deal_ids)
+      if (selectedDealIds.length > 0) {
+        feeData = feeData.filter((fee: InvestorFeeEvent) =>
+          fee.deal?.id && selectedDealIds.includes(fee.deal.id)
+        );
+      }
+
+      setInvestorFees(feeData);
     } catch (error) {
       console.error('Error fetching investor fees:', error);
       setInvestorFees([]);
     } finally {
       setInvestorFeesLoading(false);
     }
-  }, []);
+  }, [selectedDealIds, dateRange]);
 
   const fetchIntroducerCommissions = useCallback(async () => {
     setIntroducerCommissionsLoading(true);
     try {
-      // Get introducer commissions with status in ('accrued', 'invoiced') for schedule view
-      const res = await fetch(
-        `/api/staff/fees/commissions?entity_type=introducer&status=accrued`
-      );
+      // Get introducer commissions with status = 'accrued' for schedule view
+      const params = new URLSearchParams();
+      params.set('entity_type', 'introducer');
+      params.set('status', 'accrued');
+
+      const res = await fetch(`/api/staff/fees/commissions?${params.toString()}`);
       const json = await res.json();
-      // Filter to only introducer type from the response
-      const introducerData = (json.data || []).filter(
+
+      let introducerData = (json.data || []).filter(
         (c: IntroducerCommission) => c.entity_type === 'introducer'
       );
+
+      // Filter by selected deals
+      if (selectedDealIds.length > 0) {
+        introducerData = introducerData.filter((c: IntroducerCommission) =>
+          c.deal_id && selectedDealIds.includes(c.deal_id)
+        );
+      }
+
+      // Filter by selected entities (introducers)
+      if (selectedEntityIds.length > 0) {
+        introducerData = introducerData.filter((c: IntroducerCommission) =>
+          selectedEntityIds.includes(c.entity_id)
+        );
+      }
+
+      // Filter by date range (created_at)
+      if (dateRange?.from) {
+        introducerData = introducerData.filter((c: IntroducerCommission) =>
+          new Date(c.created_at) >= dateRange.from!
+        );
+      }
+      if (dateRange?.to) {
+        introducerData = introducerData.filter((c: IntroducerCommission) =>
+          new Date(c.created_at) <= dateRange.to!
+        );
+      }
+
       setIntroducerCommissions(introducerData);
     } catch (error) {
       console.error('Error fetching introducer commissions:', error);
@@ -181,20 +421,49 @@ export default function ScheduleTab() {
     } finally {
       setIntroducerCommissionsLoading(false);
     }
-  }, []);
+  }, [selectedDealIds, selectedEntityIds, dateRange]);
 
   const fetchPartnerCommissions = useCallback(async () => {
     setPartnerCommissionsLoading(true);
     try {
       // Get partner commissions with status = 'accrued' for schedule view
-      const res = await fetch(
-        `/api/staff/fees/commissions?entity_type=partner&status=accrued`
-      );
+      const params = new URLSearchParams();
+      params.set('entity_type', 'partner');
+      params.set('status', 'accrued');
+
+      const res = await fetch(`/api/staff/fees/commissions?${params.toString()}`);
       const json = await res.json();
-      // Filter to only partner type from the response
-      const partnerData = (json.data || []).filter(
+
+      let partnerData = (json.data || []).filter(
         (c: PartnerCommission) => c.entity_type === 'partner'
       );
+
+      // Filter by selected deals
+      if (selectedDealIds.length > 0) {
+        partnerData = partnerData.filter((c: PartnerCommission) =>
+          c.deal_id && selectedDealIds.includes(c.deal_id)
+        );
+      }
+
+      // Filter by selected entities (partners)
+      if (selectedEntityIds.length > 0) {
+        partnerData = partnerData.filter((c: PartnerCommission) =>
+          selectedEntityIds.includes(c.entity_id)
+        );
+      }
+
+      // Filter by date range (created_at)
+      if (dateRange?.from) {
+        partnerData = partnerData.filter((c: PartnerCommission) =>
+          new Date(c.created_at) >= dateRange.from!
+        );
+      }
+      if (dateRange?.to) {
+        partnerData = partnerData.filter((c: PartnerCommission) =>
+          new Date(c.created_at) <= dateRange.to!
+        );
+      }
+
       setPartnerCommissions(partnerData);
     } catch (error) {
       console.error('Error fetching partner commissions:', error);
@@ -202,20 +471,49 @@ export default function ScheduleTab() {
     } finally {
       setPartnerCommissionsLoading(false);
     }
-  }, []);
+  }, [selectedDealIds, selectedEntityIds, dateRange]);
 
   const fetchCommercialPartnerCommissions = useCallback(async () => {
     setCommercialPartnerCommissionsLoading(true);
     try {
       // Get commercial partner commissions with status = 'accrued' for schedule view
-      const res = await fetch(
-        `/api/staff/fees/commissions?entity_type=commercial_partner&status=accrued`
-      );
+      const params = new URLSearchParams();
+      params.set('entity_type', 'commercial_partner');
+      params.set('status', 'accrued');
+
+      const res = await fetch(`/api/staff/fees/commissions?${params.toString()}`);
       const json = await res.json();
-      // Filter to only commercial_partner type from the response
-      const commercialPartnerData = (json.data || []).filter(
+
+      let commercialPartnerData = (json.data || []).filter(
         (c: CommercialPartnerCommission) => c.entity_type === 'commercial_partner'
       );
+
+      // Filter by selected deals
+      if (selectedDealIds.length > 0) {
+        commercialPartnerData = commercialPartnerData.filter((c: CommercialPartnerCommission) =>
+          c.deal_id && selectedDealIds.includes(c.deal_id)
+        );
+      }
+
+      // Filter by selected entities (commercial partners)
+      if (selectedEntityIds.length > 0) {
+        commercialPartnerData = commercialPartnerData.filter((c: CommercialPartnerCommission) =>
+          selectedEntityIds.includes(c.entity_id)
+        );
+      }
+
+      // Filter by date range (created_at)
+      if (dateRange?.from) {
+        commercialPartnerData = commercialPartnerData.filter((c: CommercialPartnerCommission) =>
+          new Date(c.created_at) >= dateRange.from!
+        );
+      }
+      if (dateRange?.to) {
+        commercialPartnerData = commercialPartnerData.filter((c: CommercialPartnerCommission) =>
+          new Date(c.created_at) <= dateRange.to!
+        );
+      }
+
       setCommercialPartnerCommissions(commercialPartnerData);
     } catch (error) {
       console.error('Error fetching commercial partner commissions:', error);
@@ -223,7 +521,7 @@ export default function ScheduleTab() {
     } finally {
       setCommercialPartnerCommissionsLoading(false);
     }
-  }, []);
+  }, [selectedDealIds, selectedEntityIds, dateRange]);
 
   useEffect(() => {
     fetchSchedules();
@@ -552,6 +850,156 @@ export default function ScheduleTab() {
           </Button>
         ))}
       </div>
+
+      {/* Filter Controls */}
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Filter className="h-4 w-4 text-gray-400" />
+              <CardTitle className="text-sm">Filters</CardTitle>
+              {hasActiveFilters && (
+                <Badge variant="secondary" className="text-xs">
+                  {selectedDealIds.length + selectedEntityIds.length + (dateRange ? 1 : 0)} active
+                </Badge>
+              )}
+            </div>
+            {hasActiveFilters && (
+              <Button variant="ghost" size="sm" onClick={clearFilters} className="h-7 text-xs">
+                <X className="h-3 w-3 mr-1" />
+                Clear all
+              </Button>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent className="pt-0">
+          <div className="flex flex-wrap gap-3">
+            {/* Deal Filter */}
+            <Popover open={dealPopoverOpen} onOpenChange={setDealPopoverOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={dealPopoverOpen}
+                  className="min-w-[200px] justify-between text-left font-normal"
+                >
+                  <span className="truncate">
+                    {selectedDealIds.length > 0
+                      ? selectedDealIds.length === 1
+                        ? selectedDealNames
+                        : `${selectedDealIds.length} deals selected`
+                      : 'Select deals...'}
+                  </span>
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[300px] p-0" align="start">
+                <Command>
+                  <CommandInput placeholder="Search deals..." />
+                  <CommandList>
+                    <CommandEmpty>No deals found.</CommandEmpty>
+                    <CommandGroup heading="Deals">
+                      {deals.map((deal) => (
+                        <CommandItem
+                          key={deal.id}
+                          value={deal.name}
+                          onSelect={() => toggleDeal(deal.id)}
+                        >
+                          <div className="flex items-center gap-2 w-full">
+                            <Checkbox
+                              checked={selectedDealIds.includes(deal.id)}
+                              onCheckedChange={() => toggleDeal(deal.id)}
+                              className="h-4 w-4"
+                            />
+                            <span className="truncate">{deal.name}</span>
+                          </div>
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
+
+            {/* Entity Filter */}
+            <Popover open={entityPopoverOpen} onOpenChange={setEntityPopoverOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={entityPopoverOpen}
+                  className="min-w-[200px] justify-between text-left font-normal"
+                >
+                  <span className="truncate">
+                    {selectedEntityIds.length > 0
+                      ? selectedEntityIds.length === 1
+                        ? selectedEntityNames
+                        : `${selectedEntityIds.length} entities selected`
+                      : 'Select entities...'}
+                  </span>
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[300px] p-0" align="start">
+                <Command>
+                  <CommandInput placeholder="Search entities..." />
+                  <CommandList>
+                    <CommandEmpty>No entities found.</CommandEmpty>
+                    {/* Group by entity type */}
+                    {['introducer', 'partner', 'commercial_partner'].map((type) => {
+                      const typeEntities = entities.filter((e) => e.type === type);
+                      if (typeEntities.length === 0) return null;
+
+                      const typeLabels: Record<string, string> = {
+                        introducer: 'Introducers',
+                        partner: 'Partners',
+                        commercial_partner: 'Commercial Partners',
+                      };
+
+                      return (
+                        <CommandGroup key={type} heading={typeLabels[type]}>
+                          {typeEntities.map((entity) => (
+                            <CommandItem
+                              key={entity.id}
+                              value={`${entity.type}-${entity.name}`}
+                              onSelect={() => toggleEntity(entity.id)}
+                            >
+                              <div className="flex items-center gap-2 w-full">
+                                <Checkbox
+                                  checked={selectedEntityIds.includes(entity.id)}
+                                  onCheckedChange={() => toggleEntity(entity.id)}
+                                  className="h-4 w-4"
+                                />
+                                {entity.type === 'introducer' && (
+                                  <UserCheck className="h-3.5 w-3.5 text-blue-400 shrink-0" />
+                                )}
+                                {entity.type === 'partner' && (
+                                  <Handshake className="h-3.5 w-3.5 text-green-400 shrink-0" />
+                                )}
+                                {entity.type === 'commercial_partner' && (
+                                  <Briefcase className="h-3.5 w-3.5 text-purple-400 shrink-0" />
+                                )}
+                                <span className="truncate">{entity.name}</span>
+                              </div>
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      );
+                    })}
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
+
+            {/* Date Range Filter */}
+            <DateRangePicker
+              value={dateRange}
+              onChange={setDateRange}
+              variant="dark"
+            />
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Investor Fees Section */}
       <Collapsible open={investorFeesExpanded} onOpenChange={setInvestorFeesExpanded}>
