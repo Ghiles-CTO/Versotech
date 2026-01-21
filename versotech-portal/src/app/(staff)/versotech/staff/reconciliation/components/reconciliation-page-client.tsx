@@ -15,8 +15,10 @@ import {
   Clock,
   Activity,
   FileText,
-  DollarSign
+  DollarSign,
+  TrendingUp
 } from 'lucide-react'
+import { Progress } from '@/components/ui/progress'
 import { TransactionsDataTable } from './transactions-data-table'
 import { transactionColumns, BankTransactionRow } from './transaction-columns'
 import { InvoicesDataTable } from './invoices-data-table'
@@ -215,6 +217,36 @@ export function ReconciliationPageClient() {
   const currentStats = activeTab === 'transactions' ? stats : invoiceStats
   const currentData = activeTab === 'transactions' ? filteredTransactions : filteredInvoices
 
+  // Summary stats based on filtered data (for the summary section)
+  const filteredSummary = useMemo(() => {
+    const txns = filteredTransactions
+    const total = txns.length
+    const matched = txns.filter(t => t.status === 'matched').length
+    const partiallyMatched = txns.filter(t => t.status === 'partially_matched').length
+    const unmatched = txns.filter(t => t.status === 'unmatched').length
+
+    const totalAmount = txns.reduce((sum, t) => sum + (Number(t.amount) || 0), 0)
+    const matchedAmount = txns.reduce((sum, t) => sum + (Number(t.matched_amount_total) || 0), 0)
+    const unmatchedAmount = txns
+      .filter(t => t.status === 'unmatched')
+      .reduce((sum, t) => sum + (Number(t.amount) || 0), 0)
+    const outstandingAmount = totalAmount - matchedAmount
+
+    const matchPercentage = total > 0 ? Math.round((matched / total) * 100) : 0
+
+    return {
+      total,
+      matched,
+      partiallyMatched,
+      unmatched,
+      totalAmount,
+      matchedAmount,
+      unmatchedAmount,
+      outstandingAmount,
+      matchPercentage
+    }
+  }, [filteredTransactions])
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -238,6 +270,78 @@ export function ReconciliationPageClient() {
           <AutoMatchButton />
         </div>
       </div>
+
+      {/* Reconciliation Summary */}
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <TrendingUp className="h-5 w-5 text-muted-foreground" />
+                Reconciliation Summary
+              </CardTitle>
+              <CardDescription className="mt-1">
+                Overall reconciliation status
+                {(quickSearch || statusFilter) && (
+                  <span className="text-amber-400 ml-2">(filtered view)</span>
+                )}
+              </CardDescription>
+            </div>
+            <div className="text-right">
+              <div className="text-3xl font-bold text-emerald-400">{filteredSummary.matchPercentage}%</div>
+              <div className="text-sm text-muted-foreground">Match Rate</div>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Progress Bar */}
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Matching Progress</span>
+              <span className="text-foreground font-medium">
+                {filteredSummary.matched} of {filteredSummary.total} transactions
+              </span>
+            </div>
+            <Progress value={filteredSummary.matchPercentage} className="h-3" />
+          </div>
+
+          {/* Summary KPIs */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/10">
+              <div className="p-2 rounded-lg bg-amber-500/10">
+                <Clock className="h-5 w-5 text-amber-400" />
+              </div>
+              <div>
+                <div className="text-sm text-muted-foreground">Total Outstanding</div>
+                <div className="text-lg font-bold text-amber-200">{formatCurrency(filteredSummary.outstandingAmount)}</div>
+                <div className="text-xs text-muted-foreground">{filteredSummary.unmatched + filteredSummary.partiallyMatched} transactions</div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/10">
+              <div className="p-2 rounded-lg bg-emerald-500/10">
+                <CheckCircle className="h-5 w-5 text-emerald-400" />
+              </div>
+              <div>
+                <div className="text-sm text-muted-foreground">Total Matched</div>
+                <div className="text-lg font-bold text-emerald-200">{formatCurrency(filteredSummary.matchedAmount)}</div>
+                <div className="text-xs text-muted-foreground">{filteredSummary.matched} transactions</div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/10">
+              <div className="p-2 rounded-lg bg-rose-500/10">
+                <AlertCircle className="h-5 w-5 text-rose-400" />
+              </div>
+              <div>
+                <div className="text-sm text-muted-foreground">Total Unmatched</div>
+                <div className="text-lg font-bold text-rose-200">{formatCurrency(filteredSummary.unmatchedAmount)}</div>
+                <div className="text-xs text-muted-foreground">{filteredSummary.unmatched} transactions</div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val as 'transactions' | 'invoices')}>
