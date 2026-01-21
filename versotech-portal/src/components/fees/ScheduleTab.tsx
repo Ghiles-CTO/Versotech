@@ -4,12 +4,17 @@
 
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { formatCurrency } from '@/lib/fees/calculations';
-import { Calendar, DollarSign, Clock, TrendingUp } from 'lucide-react';
+import { Calendar, DollarSign, Clock, TrendingUp, Users, Building2, ChevronDown, ChevronRight } from 'lucide-react';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 
 interface UpcomingFee {
   id: string;
@@ -32,6 +37,25 @@ interface UpcomingFee {
   status: string;
 }
 
+interface InvestorFeeEvent {
+  id: string;
+  fee_type: string;
+  computed_amount: number;
+  period_start_date: string | null;
+  period_end_date: string | null;
+  status: string;
+  event_date: string;
+  investor: {
+    id: string;
+    legal_name: string;
+    display_name: string;
+  } | null;
+  deal: {
+    id: string;
+    name: string;
+  } | null;
+}
+
 interface ScheduleData {
   data: UpcomingFee[];
   summary: {
@@ -52,6 +76,9 @@ export default function ScheduleTab() {
   const [data, setData] = useState<ScheduleData | null>(null);
   const [loading, setLoading] = useState(true);
   const [daysAhead, setDaysAhead] = useState(60);
+  const [investorFees, setInvestorFees] = useState<InvestorFeeEvent[]>([]);
+  const [investorFeesLoading, setInvestorFeesLoading] = useState(true);
+  const [investorFeesExpanded, setInvestorFeesExpanded] = useState(true);
 
   const fetchSchedules = useCallback(async () => {
     setLoading(true);
@@ -66,9 +93,88 @@ export default function ScheduleTab() {
     }
   }, [daysAhead]);
 
+  const fetchInvestorFees = useCallback(async () => {
+    setInvestorFeesLoading(true);
+    try {
+      // Get fee events with status = 'accrued' and future period_start_date
+      const today = new Date().toISOString().split('T')[0];
+      const res = await fetch(
+        `/api/staff/fees/events?status=accrued&period_from=${today}&limit=200`
+      );
+      const json = await res.json();
+      setInvestorFees(json.data || []);
+    } catch (error) {
+      console.error('Error fetching investor fees:', error);
+      setInvestorFees([]);
+    } finally {
+      setInvestorFeesLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     fetchSchedules();
   }, [daysAhead, fetchSchedules]);
+
+  useEffect(() => {
+    fetchInvestorFees();
+  }, [fetchInvestorFees]);
+
+  // Group investor fees by deal, then by investor
+  const groupedInvestorFees = useMemo(() => {
+    const byDeal: Record<string, {
+      deal: { id: string; name: string };
+      byInvestor: Record<string, {
+        investor: { id: string; name: string };
+        fees: InvestorFeeEvent[];
+        total: number;
+      }>;
+      total: number;
+    }> = {};
+
+    for (const fee of investorFees) {
+      const dealId = fee.deal?.id || 'unknown';
+      const dealName = fee.deal?.name || 'Unknown Deal';
+      const investorId = fee.investor?.id || 'unknown';
+      const investorName = fee.investor?.legal_name || fee.investor?.display_name || 'Unknown Investor';
+
+      if (!byDeal[dealId]) {
+        byDeal[dealId] = {
+          deal: { id: dealId, name: dealName },
+          byInvestor: {},
+          total: 0,
+        };
+      }
+
+      if (!byDeal[dealId].byInvestor[investorId]) {
+        byDeal[dealId].byInvestor[investorId] = {
+          investor: { id: investorId, name: investorName },
+          fees: [],
+          total: 0,
+        };
+      }
+
+      byDeal[dealId].byInvestor[investorId].fees.push(fee);
+      byDeal[dealId].byInvestor[investorId].total += fee.computed_amount;
+      byDeal[dealId].total += fee.computed_amount;
+    }
+
+    // Sort fees by period_start_date within each group
+    Object.values(byDeal).forEach(dealGroup => {
+      Object.values(dealGroup.byInvestor).forEach(investorGroup => {
+        investorGroup.fees.sort((a, b) => {
+          const dateA = a.period_start_date || a.event_date;
+          const dateB = b.period_start_date || b.event_date;
+          return new Date(dateA).getTime() - new Date(dateB).getTime();
+        });
+      });
+    });
+
+    return byDeal;
+  }, [investorFees]);
+
+  const investorFeesTotal = useMemo(() => {
+    return investorFees.reduce((sum, fee) => sum + fee.computed_amount, 0);
+  }, [investorFees]);
 
   if (loading) {
     return <div className="text-white">Loading fee schedules...</div>;
@@ -156,7 +262,130 @@ export default function ScheduleTab() {
         ))}
       </div>
 
-      {/* Grouped by Month */}
+      {/* Investor Fees Section */}
+      <Collapsible open={investorFeesExpanded} onOpenChange={setInvestorFeesExpanded}>
+        <Card>
+          <CardHeader className="pb-3">
+            <CollapsibleTrigger asChild>
+              <button className="flex w-full items-center justify-between text-left">
+                <div className="flex items-center gap-3">
+                  <Users className="h-5 w-5 text-blue-400" />
+                  <div>
+                    <CardTitle className="text-lg">Investor Fees</CardTitle>
+                    <p className="text-sm text-gray-400 mt-0.5">
+                      Accrued fees pending collection
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="text-right">
+                    <div className="text-sm font-medium text-white">
+                      {investorFees.length} fee{investorFees.length !== 1 ? 's' : ''}
+                    </div>
+                    <div className="text-sm text-gray-400">
+                      {formatCurrency(investorFeesTotal)}
+                    </div>
+                  </div>
+                  {investorFeesExpanded ? (
+                    <ChevronDown className="h-5 w-5 text-gray-400" />
+                  ) : (
+                    <ChevronRight className="h-5 w-5 text-gray-400" />
+                  )}
+                </div>
+              </button>
+            </CollapsibleTrigger>
+          </CardHeader>
+          <CollapsibleContent>
+            <CardContent className="pt-0">
+              {investorFeesLoading ? (
+                <p className="text-gray-400 py-4">Loading investor fees...</p>
+              ) : investorFees.length === 0 ? (
+                <p className="text-gray-400 py-4">No accrued investor fees with future periods</p>
+              ) : (
+                <div className="space-y-6">
+                  {Object.entries(groupedInvestorFees).map(([dealId, dealGroup]) => (
+                    <div key={dealId} className="space-y-4">
+                      {/* Deal Header */}
+                      <div className="flex items-center gap-2 border-b border-gray-700 pb-2">
+                        <Building2 className="h-4 w-4 text-purple-400" />
+                        <h4 className="font-semibold text-white">{dealGroup.deal.name}</h4>
+                        <span className="text-sm text-gray-400 ml-auto">
+                          {formatCurrency(dealGroup.total)}
+                        </span>
+                      </div>
+
+                      {/* Investors within Deal */}
+                      {Object.entries(dealGroup.byInvestor).map(([investorId, investorGroup]) => (
+                        <div key={investorId} className="ml-6 space-y-2">
+                          {/* Investor Header */}
+                          <div className="flex items-center gap-2">
+                            <Users className="h-3.5 w-3.5 text-gray-500" />
+                            <h5 className="font-medium text-gray-200">{investorGroup.investor.name}</h5>
+                            <span className="text-sm text-gray-400 ml-auto">
+                              {formatCurrency(investorGroup.total)}
+                            </span>
+                          </div>
+
+                          {/* Fee Events Table */}
+                          <div className="overflow-x-auto">
+                            <table className="w-full text-sm">
+                              <thead>
+                                <tr className="border-b border-gray-700">
+                                  <th className="text-left py-2 px-2 text-gray-400 font-medium">Fee Type</th>
+                                  <th className="text-right py-2 px-2 text-gray-400 font-medium">Amount</th>
+                                  <th className="text-left py-2 px-2 text-gray-400 font-medium">Period Start</th>
+                                  <th className="text-left py-2 px-2 text-gray-400 font-medium">Period End</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {investorGroup.fees.map((fee) => (
+                                  <tr key={fee.id} className="border-b border-gray-800">
+                                    <td className="py-2 px-2">
+                                      <Badge className={feeTypeColors[fee.fee_type] || 'bg-gray-500/20 text-gray-400 border-gray-500/30'}>
+                                        {fee.fee_type}
+                                      </Badge>
+                                    </td>
+                                    <td className="py-2 px-2 text-right text-white font-medium">
+                                      {formatCurrency(fee.computed_amount)}
+                                    </td>
+                                    <td className="py-2 px-2 text-gray-300">
+                                      {fee.period_start_date
+                                        ? new Date(fee.period_start_date).toLocaleDateString('en-US', {
+                                            month: 'short',
+                                            day: 'numeric',
+                                            year: 'numeric',
+                                          })
+                                        : '-'}
+                                    </td>
+                                    <td className="py-2 px-2 text-gray-300">
+                                      {fee.period_end_date
+                                        ? new Date(fee.period_end_date).toLocaleDateString('en-US', {
+                                            month: 'short',
+                                            day: 'numeric',
+                                            year: 'numeric',
+                                          })
+                                        : '-'}
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </CollapsibleContent>
+        </Card>
+      </Collapsible>
+
+      {/* Scheduled Recurring Fees - Grouped by Month */}
+      <div>
+        <h3 className="text-lg font-semibold text-white mb-4">Scheduled Recurring Fees</h3>
+      </div>
       {Object.keys(data.by_month).length === 0 ? (
         <Card>
           <CardContent className="py-10 text-center">

@@ -274,6 +274,8 @@ export const feeEventFiltersSchema = z.object({
   status: feeEventStatusSchema.optional(),
   date_from: z.string().datetime().optional(),
   date_to: z.string().datetime().optional(),
+  period_from: z.string().optional(), // Filter by period_start_date >= period_from
+  period_to: z.string().optional(), // Filter by period_start_date <= period_to
   limit: z.coerce.number().int().positive().max(500).optional().default(50),
   offset: z.coerce.number().int().min(0).optional().default(0),
 });

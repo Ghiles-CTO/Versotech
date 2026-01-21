@@ -64,6 +64,8 @@ export async function GET(request: NextRequest) {
     if (filters.status) query = query.eq('status', filters.status);
     if (filters.date_from) query = query.gte('event_date', filters.date_from);
     if (filters.date_to) query = query.lte('event_date', filters.date_to);
+    if (filters.period_from) query = query.gte('period_start_date', filters.period_from);
+    if (filters.period_to) query = query.lte('period_start_date', filters.period_to);
 
     const { data, error, count } = await query;
 
