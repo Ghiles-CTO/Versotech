@@ -5,8 +5,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { DollarSign, FileText, AlertCircle, TrendingUp, Users, UserCheck, Handshake, Briefcase } from 'lucide-react';
+import { DollarSign, FileText, AlertCircle, TrendingUp, Users, UserCheck, Handshake, Briefcase, ExternalLink } from 'lucide-react';
 import { formatCurrency } from '@/lib/fees/calculations';
 
 interface CommissionSummary {
@@ -74,6 +75,7 @@ interface ProjectedFees {
 }
 
 export default function OverviewTab() {
+  const router = useRouter();
   const [data, setData] = useState<DashboardData | null>(null);
   const [projectedFees, setProjectedFees] = useState<ProjectedFees | null>(null);
   const [loading, setLoading] = useState(true);
@@ -222,10 +224,16 @@ export default function OverviewTab() {
               <div>
                 <h4 className="text-sm font-semibold mb-3 text-gray-300">Breakdown by Entity Type</h4>
                 <div className="grid gap-3 md:grid-cols-3">
-                  <div className="p-3 bg-gray-900 rounded border border-gray-700 flex items-start gap-3">
+                  <button
+                    onClick={() => router.push('/versotech_main/arranger-reconciliation?tab=introducers')}
+                    className="p-3 bg-gray-900 rounded border border-gray-700 flex items-start gap-3 hover:bg-gray-800 hover:border-blue-600 transition-colors cursor-pointer text-left"
+                  >
                     <UserCheck className="h-5 w-5 text-blue-400 mt-0.5" />
                     <div className="flex-1">
-                      <p className="text-sm font-medium text-white">Introducers</p>
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm font-medium text-white">Introducers</p>
+                        <ExternalLink className="h-3.5 w-3.5 text-gray-500" />
+                      </div>
                       <div className="mt-2 space-y-1 text-sm">
                         <div className="flex justify-between">
                           <span className="text-gray-400">Owed:</span>
@@ -241,11 +249,17 @@ export default function OverviewTab() {
                         </div>
                       </div>
                     </div>
-                  </div>
-                  <div className="p-3 bg-gray-900 rounded border border-gray-700 flex items-start gap-3">
+                  </button>
+                  <button
+                    onClick={() => router.push('/versotech_main/arranger-reconciliation?tab=partners')}
+                    className="p-3 bg-gray-900 rounded border border-gray-700 flex items-start gap-3 hover:bg-gray-800 hover:border-green-600 transition-colors cursor-pointer text-left"
+                  >
                     <Handshake className="h-5 w-5 text-green-400 mt-0.5" />
                     <div className="flex-1">
-                      <p className="text-sm font-medium text-white">Partners</p>
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm font-medium text-white">Partners</p>
+                        <ExternalLink className="h-3.5 w-3.5 text-gray-500" />
+                      </div>
                       <div className="mt-2 space-y-1 text-sm">
                         <div className="flex justify-between">
                           <span className="text-gray-400">Owed:</span>
@@ -261,11 +275,17 @@ export default function OverviewTab() {
                         </div>
                       </div>
                     </div>
-                  </div>
-                  <div className="p-3 bg-gray-900 rounded border border-gray-700 flex items-start gap-3">
+                  </button>
+                  <button
+                    onClick={() => router.push('/versotech_main/arranger-reconciliation?tab=commercialPartners')}
+                    className="p-3 bg-gray-900 rounded border border-gray-700 flex items-start gap-3 hover:bg-gray-800 hover:border-purple-600 transition-colors cursor-pointer text-left"
+                  >
                     <Briefcase className="h-5 w-5 text-purple-400 mt-0.5" />
                     <div className="flex-1">
-                      <p className="text-sm font-medium text-white">Commercial Partners</p>
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm font-medium text-white">Commercial Partners</p>
+                        <ExternalLink className="h-3.5 w-3.5 text-gray-500" />
+                      </div>
                       <div className="mt-2 space-y-1 text-sm">
                         <div className="flex justify-between">
                           <span className="text-gray-400">Owed:</span>
@@ -281,7 +301,7 @@ export default function OverviewTab() {
                         </div>
                       </div>
                     </div>
-                  </div>
+                  </button>
                 </div>
               </div>
             </div>
