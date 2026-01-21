@@ -5,6 +5,11 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
+import {
+  calculateManagementFeePeriod,
+  calculatePeriodEndDate,
+  bpsToPercent,
+} from '@/lib/fees/calculations';
 
 export const dynamic = 'force-dynamic'
 
@@ -61,9 +66,30 @@ async function handleCronRequest(request: NextRequest) {
         // Calculate fee amount
         const baseAmount = allocation?.commitment || allocation?.funded_amount || 0;
         const rateBps = feeComponent?.rate_bps || 0;
-        const computedAmount = (baseAmount * rateBps) / 10000;
+        const frequency = feeComponent?.frequency as 'annual' | 'quarterly' | 'monthly';
 
-        // Create fee event
+        // Calculate period dates
+        const periodStartDate = new Date(schedule.next_due_date!);
+        const periodEndDate = calculatePeriodEndDate(periodStartDate, frequency);
+
+        // Calculate fee with pro-rata adjustment based on period days
+        // Formula: base_amount × (rate_bps / 10000) × (period_days / 365)
+        let computedAmount: number;
+
+        if (feeComponent.kind === 'management') {
+          // Use period-based calculation for management fees
+          computedAmount = calculateManagementFeePeriod({
+            baseAmount,
+            rateBps,
+            periodStartDate,
+            periodEndDate,
+          });
+        } else {
+          // For other fee types, use simple percentage calculation
+          computedAmount = baseAmount * bpsToPercent(rateBps);
+        }
+
+        // Create fee event with both period dates
         const { data: feeEvent, error: eventError } = await supabase
           .from('fee_events')
           .insert({
@@ -73,7 +99,8 @@ async function handleCronRequest(request: NextRequest) {
             fee_component_id: schedule.fee_component_id,
             fee_type: feeComponent.kind,
             event_date: today,
-            period_start_date: schedule.next_due_date,
+            period_start_date: periodStartDate.toISOString().split('T')[0],
+            period_end_date: periodEndDate.toISOString().split('T')[0],
             base_amount: baseAmount,
             computed_amount: computedAmount,
             rate_bps: rateBps,
@@ -91,22 +118,9 @@ async function handleCronRequest(request: NextRequest) {
 
         results.feeEvents.push(feeEvent.id);
 
-        // Calculate next due date
-        const currentDue = new Date(schedule.next_due_date!);
-        const nextDue = new Date(currentDue);
-
-        // Increment based on frequency
-        switch (feeComponent.frequency) {
-          case 'annual':
-            nextDue.setFullYear(nextDue.getFullYear() + 1);
-            break;
-          case 'quarterly':
-            nextDue.setMonth(nextDue.getMonth() + 3);
-            break;
-          case 'monthly':
-            nextDue.setMonth(nextDue.getMonth() + 1);
-            break;
-        }
+        // Calculate next due date (day after period end date)
+        const nextDue = new Date(periodEndDate);
+        nextDue.setDate(nextDue.getDate() + 1);
 
         const completedPeriods = schedule.completed_periods + 1;
         const isComplete = completedPeriods >= schedule.total_periods;

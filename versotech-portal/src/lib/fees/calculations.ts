@@ -83,6 +83,82 @@ export function calculateManagementFee(
   return baseFee;
 }
 
+export interface ManagementFeePeriodInput {
+  baseAmount: number;
+  rateBps: number;
+  periodStartDate: Date;
+  periodEndDate: Date;
+}
+
+/**
+ * Calculate management fee for a specific period with pro-rata adjustment
+ * Formula: base_amount × (rate_bps / 10000) × (period_days / 365)
+ * @param input - Period-based fee calculation input
+ * @returns Calculated management fee prorated for the period
+ */
+export function calculateManagementFeePeriod(input: ManagementFeePeriodInput): number {
+  if (!input.rateBps || input.rateBps <= 0) {
+    return 0;
+  }
+
+  if (!input.baseAmount || input.baseAmount <= 0) {
+    return 0;
+  }
+
+  const periodDays = calculateDaysBetween(input.periodStartDate, input.periodEndDate);
+  if (periodDays <= 0) {
+    return 0;
+  }
+
+  const feePercent = bpsToPercent(input.rateBps);
+  const annualizedFraction = periodDays / 365;
+
+  return input.baseAmount * feePercent * annualizedFraction;
+}
+
+/**
+ * Calculate the number of days between two dates (inclusive of end date)
+ * @param startDate - Period start date
+ * @param endDate - Period end date
+ * @returns Number of days in the period
+ */
+export function calculateDaysBetween(startDate: Date, endDate: Date): number {
+  const msPerDay = 24 * 60 * 60 * 1000;
+  const diffMs = endDate.getTime() - startDate.getTime();
+  // Add 1 to include the end date in the count (both start and end are inclusive)
+  return Math.floor(diffMs / msPerDay) + 1;
+}
+
+/**
+ * Calculate the end date for a fee period based on frequency
+ * @param startDate - Period start date
+ * @param frequency - Fee frequency (annual, quarterly, monthly)
+ * @returns Period end date (day before next period starts)
+ */
+export function calculatePeriodEndDate(
+  startDate: Date,
+  frequency: 'annual' | 'quarterly' | 'monthly'
+): Date {
+  const endDate = new Date(startDate);
+
+  switch (frequency) {
+    case 'annual':
+      endDate.setFullYear(endDate.getFullYear() + 1);
+      break;
+    case 'quarterly':
+      endDate.setMonth(endDate.getMonth() + 3);
+      break;
+    case 'monthly':
+      endDate.setMonth(endDate.getMonth() + 1);
+      break;
+  }
+
+  // Subtract 1 day to get the last day of the current period
+  endDate.setDate(endDate.getDate() - 1);
+
+  return endDate;
+}
+
 /**
  * Calculate simple performance fee (no tiers)
  * Formula: (exit_price - entry_price) × num_shares × performance_fee_percent
