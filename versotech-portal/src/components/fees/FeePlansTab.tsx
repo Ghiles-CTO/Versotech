@@ -109,7 +109,11 @@ const feePlanStatusStyles: Record<string, string> = {
   rejected: 'bg-red-500/20 text-red-400',
 };
 
-export default function FeePlansTab() {
+interface FeePlansTabProps {
+  dealId?: string;
+}
+
+export default function FeePlansTab({ dealId }: FeePlansTabProps) {
   const [plans, setPlans] = useState<FeePlanWithDeal[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
@@ -122,13 +126,19 @@ export default function FeePlansTab() {
 
   useEffect(() => {
     fetchPlans();
-  }, []);
+  }, [dealId]);
 
   const fetchPlans = async () => {
+    setLoading(true);
     try {
+      // Build API URL with deal filter if provided
+      const plansUrl = dealId
+        ? `/api/staff/fees/plans?include_components=true&deal_id=${dealId}`
+        : '/api/staff/fees/plans?include_components=true';
+
       // Fetch plans and deals in parallel
       const [plansRes, dealsRes] = await Promise.all([
-        fetch('/api/staff/fees/plans?include_components=true'),
+        fetch(plansUrl),
         fetch('/api/deals')
       ]);
 
@@ -137,9 +147,14 @@ export default function FeePlansTab() {
         dealsRes.json()
       ]);
 
-      const plans = plansJson.data || [];
+      let plans = plansJson.data || [];
       const allDeals = dealsJson.deals || [];
       const dealsMap = new Map(allDeals.map((d: any) => [d.id, d]));
+
+      // Filter plans by deal_id on client side as fallback (if API doesn't support filtering)
+      if (dealId) {
+        plans = plans.filter((plan: any) => plan.deal_id === dealId);
+      }
 
       // Map deals to plans
       const plansWithDeals = plans.map((plan: any) => ({
@@ -230,13 +245,38 @@ export default function FeePlansTab() {
     return <div className="text-white">Loading fee plans...</div>;
   }
 
+  // Show prompt if no deal is selected
+  if (!dealId) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold text-white">Fee Plans</h2>
+            <p className="text-gray-400">
+              Manage fee structure templates for a specific deal
+            </p>
+          </div>
+        </div>
+        <Card>
+          <CardContent className="py-10 text-center">
+            <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-foreground mb-2">Select a deal to view fee plans</h3>
+            <p className="text-muted-foreground">
+              Use the deal selector above to choose a deal and view its associated fee plans.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-white">Fee Plans</h2>
           <p className="text-gray-400">
-            Manage fee structure templates across all deals
+            Manage fee structure templates for this deal
           </p>
         </div>
         <div className="flex gap-2">
