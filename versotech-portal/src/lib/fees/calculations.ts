@@ -21,6 +21,27 @@ export interface PerformanceFeeTier {
   nextTierComponentId?: string;
 }
 
+export interface PerformanceFeeWithHurdleInput {
+  contributedCapital: number;
+  exitProceeds: number;
+  carryRateBps: number; // Carried interest rate in basis points (e.g., 2000 = 20%)
+  hurdleRateBps: number; // Hurdle rate in basis points (e.g., 800 = 8% annual)
+  yearsHeld: number; // Investment holding period in years
+}
+
+export interface TieredPerformanceFeeInput {
+  contributedCapital: number;
+  exitProceeds: number;
+  yearsHeld: number;
+  hurdleRateBps: number;
+  // Tier 1: Base carry rate applies until threshold
+  tier1RateBps: number;
+  tier1ThresholdMultiplier?: number; // e.g., 2.0 for "up to 2x return"
+  // Tier 2: Higher carry rate above threshold
+  tier2RateBps?: number;
+  tier2ThresholdMultiplier?: number; // e.g., 3.0 for "up to 3x return"
+}
+
 /**
  * Convert basis points to decimal percentage
  * @param bps - Basis points (e.g., 200 for 2%)
@@ -236,6 +257,124 @@ export function calculateTieredPerformanceFee(
   }
 
   return totalFee;
+}
+
+/**
+ * Calculate performance fee with hurdle rate (carried interest)
+ * Formula:
+ *   profit = exit_proceeds - contributed_capital
+ *   hurdle_return = contributed_capital × (hurdle_bps / 10000) × years_held
+ *   profit_above_hurdle = profit - hurdle_return
+ *   performance_fee = profit_above_hurdle × (carry_bps / 10000) if positive, else 0
+ *
+ * This matches the database function calculate_performance_fee()
+ * @param input - Performance fee calculation input
+ * @returns Calculated performance fee (carried interest)
+ */
+export function calculatePerformanceFeeWithHurdle(
+  input: PerformanceFeeWithHurdleInput
+): number {
+  const { contributedCapital, exitProceeds, carryRateBps, hurdleRateBps, yearsHeld } = input;
+
+  // Calculate profit
+  const profit = exitProceeds - contributedCapital;
+
+  // No performance fee if there's no profit
+  if (profit <= 0) {
+    return 0;
+  }
+
+  // Calculate hurdle return (minimum return threshold)
+  const hurdleReturn = contributedCapital * bpsToPercent(hurdleRateBps) * yearsHeld;
+
+  // Calculate profit above the hurdle
+  const profitAboveHurdle = profit - hurdleReturn;
+
+  // No performance fee if profit doesn't exceed hurdle
+  if (profitAboveHurdle <= 0) {
+    return 0;
+  }
+
+  // Calculate and return the performance fee
+  const carryRate = bpsToPercent(carryRateBps);
+  return Math.round(profitAboveHurdle * carryRate * 100) / 100;
+}
+
+/**
+ * Calculate tiered performance fee with hurdle rate
+ * Supports two tiers with different carry rates based on return multiples
+ *
+ * Example: 20% carry up to 2x return, 30% carry above 2x
+ *
+ * @param input - Tiered performance fee calculation input
+ * @returns Calculated tiered performance fee
+ */
+export function calculateTieredPerformanceFeeWithHurdle(
+  input: TieredPerformanceFeeInput
+): number {
+  const {
+    contributedCapital,
+    exitProceeds,
+    yearsHeld,
+    hurdleRateBps,
+    tier1RateBps,
+    tier1ThresholdMultiplier,
+    tier2RateBps,
+    tier2ThresholdMultiplier,
+  } = input;
+
+  // Calculate profit
+  const profit = exitProceeds - contributedCapital;
+
+  // No performance fee if there's no profit
+  if (profit <= 0) {
+    return 0;
+  }
+
+  // Calculate hurdle return
+  const hurdleReturn = contributedCapital * bpsToPercent(hurdleRateBps) * yearsHeld;
+
+  // Calculate profit above hurdle
+  const profitAboveHurdle = profit - hurdleReturn;
+
+  // No performance fee if profit doesn't exceed hurdle
+  if (profitAboveHurdle <= 0) {
+    return 0;
+  }
+
+  // Calculate return multiple: exitProceeds / contributedCapital
+  const returnMultiple = exitProceeds / contributedCapital;
+
+  // If no tier structure, apply single rate
+  if (!tier1ThresholdMultiplier || !tier2RateBps) {
+    const carryRate = bpsToPercent(tier1RateBps);
+    return Math.round(profitAboveHurdle * carryRate * 100) / 100;
+  }
+
+  let totalFee = 0;
+
+  // Tier 1: Profit from hurdle to tier1 threshold (or actual return if lower)
+  // tier1 threshold is expressed as a multiple (e.g., 2.0 = 2x return)
+  const tier1MaxProfit = contributedCapital * (tier1ThresholdMultiplier - 1); // Profit at tier 1 threshold
+  const tier1Profit = Math.min(profitAboveHurdle, Math.max(0, tier1MaxProfit - hurdleReturn));
+  if (tier1Profit > 0) {
+    totalFee += tier1Profit * bpsToPercent(tier1RateBps);
+  }
+
+  // Tier 2: Profit from tier1 threshold to tier2 threshold (or actual return if lower)
+  if (returnMultiple > tier1ThresholdMultiplier) {
+    const tier2Start = contributedCapital * (tier1ThresholdMultiplier - 1);
+    const tier2End = tier2ThresholdMultiplier
+      ? contributedCapital * (tier2ThresholdMultiplier - 1)
+      : profit;
+
+    const tier2Profit = Math.min(profit, tier2End) - tier2Start;
+    if (tier2Profit > 0) {
+      totalFee += tier2Profit * bpsToPercent(tier2RateBps);
+    }
+  }
+
+  return Math.round(totalFee * 100) / 100;
 }
 
 /**

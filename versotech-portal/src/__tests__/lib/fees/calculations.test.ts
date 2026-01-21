@@ -9,6 +9,8 @@ import {
   calculatePeriodEndDate,
   calculateSimplePerformanceFee,
   calculateTieredPerformanceFee,
+  calculatePerformanceFeeWithHurdle,
+  calculateTieredPerformanceFeeWithHurdle,
   calculateSpread,
   calculateIntroducerCommission,
   calculateTotalWireAmount,
@@ -322,6 +324,194 @@ describe('Fee Calculations', () => {
         tiers
       )
       expect(result).toBe(0)
+    })
+  })
+
+  describe('calculatePerformanceFeeWithHurdle', () => {
+    it('calculates performance fee with hurdle rate', () => {
+      // Formula: profit_above_hurdle × carry_rate
+      // contributed_capital = 100,000
+      // exit_proceeds = 150,000
+      // profit = 50,000
+      // hurdle_return = 100,000 × 0.08 × 2 = 16,000
+      // profit_above_hurdle = 50,000 - 16,000 = 34,000
+      // performance_fee = 34,000 × 0.20 = 6,800
+      const result = calculatePerformanceFeeWithHurdle({
+        contributedCapital: 100000,
+        exitProceeds: 150000,
+        carryRateBps: 2000, // 20% carry
+        hurdleRateBps: 800, // 8% annual hurdle
+        yearsHeld: 2,
+      })
+      expect(result).toBe(6800)
+    })
+
+    it('returns 0 if no profit', () => {
+      const result = calculatePerformanceFeeWithHurdle({
+        contributedCapital: 100000,
+        exitProceeds: 90000, // Loss
+        carryRateBps: 2000,
+        hurdleRateBps: 800,
+        yearsHeld: 2,
+      })
+      expect(result).toBe(0)
+    })
+
+    it('returns 0 if profit does not exceed hurdle', () => {
+      // contributed_capital = 100,000
+      // exit_proceeds = 110,000
+      // profit = 10,000
+      // hurdle_return = 100,000 × 0.08 × 2 = 16,000
+      // profit_above_hurdle = 10,000 - 16,000 = -6,000 (negative)
+      const result = calculatePerformanceFeeWithHurdle({
+        contributedCapital: 100000,
+        exitProceeds: 110000,
+        carryRateBps: 2000,
+        hurdleRateBps: 800,
+        yearsHeld: 2,
+      })
+      expect(result).toBe(0)
+    })
+
+    it('handles zero hurdle rate (no hurdle)', () => {
+      // No hurdle means all profit is above hurdle
+      // profit = 50,000
+      // performance_fee = 50,000 × 0.20 = 10,000
+      const result = calculatePerformanceFeeWithHurdle({
+        contributedCapital: 100000,
+        exitProceeds: 150000,
+        carryRateBps: 2000,
+        hurdleRateBps: 0, // No hurdle
+        yearsHeld: 2,
+      })
+      expect(result).toBe(10000)
+    })
+
+    it('handles fractional years', () => {
+      // contributed_capital = 100,000
+      // exit_proceeds = 120,000
+      // profit = 20,000
+      // hurdle_return = 100,000 × 0.08 × 1.5 = 12,000
+      // profit_above_hurdle = 20,000 - 12,000 = 8,000
+      // performance_fee = 8,000 × 0.20 = 1,600
+      const result = calculatePerformanceFeeWithHurdle({
+        contributedCapital: 100000,
+        exitProceeds: 120000,
+        carryRateBps: 2000,
+        hurdleRateBps: 800,
+        yearsHeld: 1.5,
+      })
+      expect(result).toBe(1600)
+    })
+
+    it('matches the database function calculation', () => {
+      // Test case matching DB function: calculate_performance_fee(100000, 200000, 2000, 800, 3)
+      // profit = 100,000
+      // hurdle_return = 100,000 × 0.08 × 3 = 24,000
+      // profit_above_hurdle = 100,000 - 24,000 = 76,000
+      // performance_fee = 76,000 × 0.20 = 15,200
+      const result = calculatePerformanceFeeWithHurdle({
+        contributedCapital: 100000,
+        exitProceeds: 200000,
+        carryRateBps: 2000,
+        hurdleRateBps: 800,
+        yearsHeld: 3,
+      })
+      expect(result).toBe(15200)
+    })
+  })
+
+  describe('calculateTieredPerformanceFeeWithHurdle', () => {
+    it('calculates single tier fee when no tier structure provided', () => {
+      // profit = 50,000
+      // hurdle_return = 100,000 × 0.08 × 2 = 16,000
+      // profit_above_hurdle = 34,000
+      // fee = 34,000 × 0.20 = 6,800
+      const result = calculateTieredPerformanceFeeWithHurdle({
+        contributedCapital: 100000,
+        exitProceeds: 150000,
+        yearsHeld: 2,
+        hurdleRateBps: 800,
+        tier1RateBps: 2000,
+        // No tier thresholds
+      })
+      expect(result).toBe(6800)
+    })
+
+    it('calculates tiered fee with two tiers', () => {
+      // contributed_capital = 100,000
+      // exit_proceeds = 300,000 (3x return)
+      // profit = 200,000
+      // hurdle_return = 100,000 × 0.08 × 2 = 16,000
+      // profit_above_hurdle = 184,000
+      //
+      // Tier 1 (up to 2x = 100,000 profit): profit from hurdle to tier1
+      //   tier1_max_profit = 100,000 (at 2x)
+      //   tier1_profit = 100,000 - 16,000 = 84,000
+      //   tier1_fee = 84,000 × 0.20 = 16,800
+      //
+      // Tier 2 (2x to 3x): profit from 100,000 to 200,000
+      //   tier2_profit = 200,000 - 100,000 = 100,000
+      //   tier2_fee = 100,000 × 0.30 = 30,000
+      //
+      // Total = 46,800
+      const result = calculateTieredPerformanceFeeWithHurdle({
+        contributedCapital: 100000,
+        exitProceeds: 300000,
+        yearsHeld: 2,
+        hurdleRateBps: 800,
+        tier1RateBps: 2000, // 20% up to 2x
+        tier1ThresholdMultiplier: 2.0,
+        tier2RateBps: 3000, // 30% above 2x
+      })
+      expect(result).toBe(46800)
+    })
+
+    it('returns 0 if no profit', () => {
+      const result = calculateTieredPerformanceFeeWithHurdle({
+        contributedCapital: 100000,
+        exitProceeds: 80000, // Loss
+        yearsHeld: 2,
+        hurdleRateBps: 800,
+        tier1RateBps: 2000,
+        tier1ThresholdMultiplier: 2.0,
+        tier2RateBps: 3000,
+      })
+      expect(result).toBe(0)
+    })
+
+    it('returns 0 if profit does not exceed hurdle', () => {
+      const result = calculateTieredPerformanceFeeWithHurdle({
+        contributedCapital: 100000,
+        exitProceeds: 110000, // Only 10% return
+        yearsHeld: 2,
+        hurdleRateBps: 800, // 16% required over 2 years
+        tier1RateBps: 2000,
+        tier1ThresholdMultiplier: 2.0,
+        tier2RateBps: 3000,
+      })
+      expect(result).toBe(0)
+    })
+
+    it('applies only tier 1 rate when return is below tier 1 threshold', () => {
+      // contributed_capital = 100,000
+      // exit_proceeds = 150,000 (1.5x return, below 2x threshold)
+      // profit = 50,000
+      // hurdle_return = 100,000 × 0.08 × 2 = 16,000
+      // profit_above_hurdle = 34,000
+      //
+      // Since return (1.5x) < tier1 threshold (2x), only tier 1 applies
+      // tier1_fee = 34,000 × 0.20 = 6,800
+      const result = calculateTieredPerformanceFeeWithHurdle({
+        contributedCapital: 100000,
+        exitProceeds: 150000,
+        yearsHeld: 2,
+        hurdleRateBps: 800,
+        tier1RateBps: 2000,
+        tier1ThresholdMultiplier: 2.0,
+        tier2RateBps: 3000,
+      })
+      expect(result).toBe(6800)
     })
   })
 
