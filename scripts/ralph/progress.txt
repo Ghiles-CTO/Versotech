@@ -466,3 +466,18 @@ PRD: VERSO Admin Portal (ralph/admin-portal)
   - Mailto link encoding: Use %20 for spaces in subject, standard email format for product feedback links (e.g., `mailto:product@domain.com?subject=Feature%20Request`)
   - Min-height pattern: Use `min-h-[calc(100vh-8rem)]` for centered content that accounts for header/nav height
 ---
+
+## 2026-01-21 - US-030
+- What was implemented: Expanded settings page with 5 organized tabs (General, Security, Notifications, Integrations, Audit)
+- Files changed:
+  - src/app/(admin)/versotech_admin/settings/page.tsx (MODIFIED - replaced placeholder cards with full tab-based layout)
+- **Learnings for future iterations:**
+  - Settings page tab pattern: Use Tabs from shadcn/ui wrapping Radix primitives for accessible tab navigation
+  - Read-only config display: Use `bg-muted/50 border` styling with icon + value for consistent read-only field appearance
+  - API key masking pattern: Store visible key IDs in `Set<string>` state, toggle visibility with show/hide icons (Eye/EyeOff)
+  - Copy to clipboard: Use `navigator.clipboard.writeText()` with toast.success() for feedback
+  - Info banner pattern: Use colored backgrounds (blue-500/10, amber-500/10) with Info icon for contextual help messages
+  - Password policy display: Grid of `CheckCircle` items showing active requirements (min length, uppercase, numbers, special chars)
+  - Data retention table pattern: Simple flex rows with name + Badge for retention period - good for compliance settings
+  - Mock config data: Define typed config object at module level for read-only settings that will eventually come from API/env
+---
