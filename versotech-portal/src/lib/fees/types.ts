@@ -223,6 +223,9 @@ export interface InvoiceWithLines extends Invoice {
     id: string;
     name: string;
   };
+  // Validation fields added by API
+  has_discrepancy?: boolean;
+  discrepancy_amount?: number;
 }
 
 export interface FeeScheduleWithDetails extends FeeSchedule {

@@ -8,7 +8,8 @@ import { useEffect, useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Send, DollarSign, X, FileText, AlertCircle, RefreshCw, Loader2 } from 'lucide-react';
+import { Plus, Send, DollarSign, X, FileText, AlertCircle, AlertTriangle, RefreshCw, Loader2 } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import type { InvoiceWithLines } from '@/lib/fees/types';
 import { formatCurrency } from '@/lib/fees/calculations';
 import { GenerateInvoiceModal } from './GenerateInvoiceModal';
@@ -394,12 +395,61 @@ export default function InvoicesTab() {
                   <Card key={invoice.id}>
                     <CardHeader>
                       <div className="flex items-start justify-between">
-                        <div>
-                          <CardTitle className="text-lg">{invoice.invoice_number}</CardTitle>
-                          <p className="text-sm text-muted-foreground mt-1">
-                            {invoice.investor?.display_name || 'Unknown Investor'}
-                            {invoice.deal && ` • ${invoice.deal.name}`}
-                          </p>
+                        <div className="flex items-start gap-2">
+                          <div>
+                            <CardTitle className="text-lg">{invoice.invoice_number}</CardTitle>
+                            <p className="text-sm text-muted-foreground mt-1">
+                              {invoice.investor?.display_name || 'Unknown Investor'}
+                              {invoice.deal && ` • ${invoice.deal.name}`}
+                            </p>
+                          </div>
+                          {/* Discrepancy Warning Badge */}
+                          {invoice.has_discrepancy && (
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <button
+                                  className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-amber-600 bg-amber-100 dark:bg-amber-900/30 dark:text-amber-400 rounded-md hover:bg-amber-200 dark:hover:bg-amber-900/50 transition-colors cursor-pointer"
+                                >
+                                  <AlertTriangle className="h-3.5 w-3.5" />
+                                  <span>Discrepancy</span>
+                                </button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-80" side="bottom" align="start">
+                                <div className="space-y-3">
+                                  <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400">
+                                    <AlertTriangle className="h-4 w-4" />
+                                    <h4 className="font-medium">Invoice Discrepancy Detected</h4>
+                                  </div>
+                                  <p className="text-sm text-muted-foreground">
+                                    The invoice total does not match the sum of linked fee events.
+                                  </p>
+                                  <div className="space-y-2 p-3 bg-muted/50 rounded-md">
+                                    <div className="flex justify-between text-sm">
+                                      <span className="text-muted-foreground">Invoice Total:</span>
+                                      <span className="font-medium">{formatCurrency(invoice.total)}</span>
+                                    </div>
+                                    <div className="flex justify-between text-sm">
+                                      <span className="text-muted-foreground">Expected Total:</span>
+                                      <span className="font-medium">
+                                        {formatCurrency(invoice.total - (invoice.discrepancy_amount || 0))}
+                                      </span>
+                                    </div>
+                                    <div className="border-t border-border pt-2 mt-2">
+                                      <div className="flex justify-between text-sm">
+                                        <span className="text-amber-600 dark:text-amber-400 font-medium">Discrepancy:</span>
+                                        <span className="text-amber-600 dark:text-amber-400 font-medium">
+                                          {(invoice.discrepancy_amount || 0) > 0 ? '+' : ''}{formatCurrency(invoice.discrepancy_amount || 0)}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <p className="text-xs text-muted-foreground">
+                                    Please review the invoice line items and linked fee events to resolve this discrepancy.
+                                  </p>
+                                </div>
+                              </PopoverContent>
+                            </Popover>
+                          )}
                         </div>
                         <Badge variant={statusColors[invoice.status]}>
                           {invoice.status.replace('_', ' ')}
