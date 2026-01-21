@@ -12,6 +12,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { getCeoSigner } from '@/lib/staff/ceo-signer'
 
 type CommissionType = 'partner' | 'introducer' | 'commercial-partner'
 
@@ -176,7 +177,7 @@ export async function POST(
     // Fetch the commission
     const { data: commissionData, error: fetchError } = await serviceSupabase
       .from(config.table)
-      .select('id, status, arranger_id, ' + config.entityIdField)
+      .select(`id, status, arranger_id, deal_id, investor_id, accrual_amount, currency, ${config.entityIdField}`)
       .eq('id', id)
       .single()
 
@@ -204,10 +205,10 @@ export async function POST(
       return NextResponse.json({ error: 'Not authorized to upload invoice for this commission' }, { status: 403 })
     }
 
-    // Validate status - must be 'invoice_requested'
-    if (commission.status !== 'invoice_requested') {
+    // Validate status - must be 'invoice_requested' or 'rejected' (re-submission)
+    if (!['invoice_requested', 'rejected'].includes(commission.status)) {
       return NextResponse.json(
-        { error: `Cannot upload invoice for commission with status '${commission.status}'. Status must be 'invoice_requested'.` },
+        { error: `Cannot upload invoice for commission with status '${commission.status}'. Status must be 'invoice_requested' or 'rejected'.` },
         { status: 400 }
       )
     }
@@ -266,7 +267,10 @@ export async function POST(
       .from(config.table)
       .update({
         invoice_id: filePath,
-        status: 'invoiced',
+        status: 'invoice_submitted',
+        rejection_reason: null,
+        rejected_by: null,
+        rejected_at: null,
         updated_at: new Date().toISOString(),
       })
       .eq('id', id)
@@ -286,27 +290,70 @@ export async function POST(
       .select('user_id')
       .eq('arranger_id', commission.arranger_id)
 
+    // Get entity name for notifications + approval metadata
+    const { data: entity } = await serviceSupabase
+      .from(config.entityTable)
+      .select('name, legal_name')
+      .eq('id', commission[config.entityIdField as keyof typeof commission])
+      .single()
+
+    const entityName = entity?.name || entity?.legal_name || 'Entity'
+
     if (arrangerUsers && arrangerUsers.length > 0) {
-      // Get entity name for notification
-      const { data: entity } = await serviceSupabase
-        .from(config.entityTable)
-        .select('name, legal_name')
-        .eq('id', commission[config.entityIdField as keyof typeof commission])
-        .single()
-
-      const entityName = entity?.name || entity?.legal_name || 'Entity'
-
       const notifications = arrangerUsers.map((au: { user_id: string }) => ({
         user_id: au.user_id,
         investor_id: null,
         title: 'Invoice Received',
-        message: `${entityName} has submitted their invoice for commission payment.`,
+        message: `${entityName} has submitted their invoice for commission payment (approval required).`,
         link: '/versotech_main/payment-requests',
         type: 'info',
       }))
 
       await serviceSupabase.from('investor_notifications').insert(notifications)
       console.log('[commission-invoice] Sent', notifications.length, 'notifications to arranger users')
+    }
+
+    // Create approval request for CEO/staff
+    const ceoSigner = await getCeoSigner(serviceSupabase)
+    await serviceSupabase
+      .from('approvals')
+      .update({
+        status: 'cancelled',
+        resolved_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .eq('entity_type', 'commission_invoice')
+      .eq('entity_id', id)
+      .eq('status', 'pending')
+
+    const requestReason = `Invoice submitted for ${entityName} (${commissionType}) commission`
+
+    const { error: approvalError } = await serviceSupabase.from('approvals').insert({
+      entity_type: 'commission_invoice',
+      entity_id: id,
+      action: 'approve',
+      requested_by: user.id,
+      assigned_to: ceoSigner?.id || null,
+      status: 'pending',
+      priority: 'medium',
+      request_reason: requestReason,
+      related_deal_id: commission.deal_id || null,
+      related_investor_id: commission.investor_id || null,
+      entity_metadata: {
+        commission_type: commissionType,
+        commission_id: id,
+        entity_id: commission[config.entityIdField as keyof typeof commission],
+        entity_name: entityName,
+        deal_id: commission.deal_id || null,
+        investor_id: commission.investor_id || null,
+        amount: commission.accrual_amount,
+        currency: commission.currency,
+        invoice_id: filePath,
+      },
+    })
+
+    if (approvalError) {
+      console.error('[commission-invoice] Failed to create approval:', approvalError)
     }
 
     // Create audit log
@@ -331,7 +378,7 @@ export async function POST(
       message: 'Invoice uploaded successfully',
       data: {
         invoice_id: filePath,
-        status: 'invoiced',
+        status: 'invoice_submitted',
       },
     })
   } catch (error) {

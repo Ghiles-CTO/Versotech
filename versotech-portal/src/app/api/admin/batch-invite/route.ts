@@ -298,7 +298,10 @@ export async function POST(request: NextRequest) {
               invited_by: user.id,
               invited_by_name: inviterName,
               status: 'pending',
-              expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+              expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+              sent_at: new Date().toISOString(),
+              reminder_count: 0,
+              last_reminded_at: null
             })
             .select()
             .single()
@@ -374,4 +377,4 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
-
+

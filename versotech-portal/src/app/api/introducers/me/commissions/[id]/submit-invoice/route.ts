@@ -8,6 +8,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { getCeoSigner } from '@/lib/staff/ceo-signer'
 import { z } from 'zod'
 
 const submitInvoiceSchema = z.object({
@@ -77,6 +78,7 @@ export async function POST(
         accrual_amount,
         currency,
         introducer_id,
+        investor_id,
         arranger_id,
         deal_id,
         notes,
@@ -90,10 +92,10 @@ export async function POST(
       return NextResponse.json({ error: 'Commission not found' }, { status: 404 })
     }
 
-    // Validate status - must be 'invoice_requested'
-    if (commission.status !== 'invoice_requested') {
+    // Validate status - must be 'invoice_requested' or 'rejected' (re-submission)
+    if (!['invoice_requested', 'rejected'].includes(commission.status)) {
       return NextResponse.json(
-        { error: `Cannot submit invoice for commission with status '${commission.status}'. Must be 'invoice_requested'.` },
+        { error: `Cannot submit invoice for commission with status '${commission.status}'. Must be 'invoice_requested' or 'rejected'.` },
         { status: 400 }
       )
     }
@@ -109,7 +111,7 @@ export async function POST(
       return NextResponse.json({ error: 'Invoice document not found' }, { status: 404 })
     }
 
-    // Update commission status to 'invoiced'
+    // Update commission status to 'invoice_submitted'
     const invoiceNotes = data.notes
       ? `Invoice submitted: ${data.invoice_number || document.file_name}. Notes: ${data.notes}`
       : `Invoice submitted: ${data.invoice_number || document.file_name}`
@@ -117,8 +119,11 @@ export async function POST(
     const { data: updatedCommission, error: updateError } = await serviceSupabase
       .from('introducer_commissions')
       .update({
-        status: 'invoiced',
+        status: 'invoice_submitted',
         invoice_id: data.invoice_document_id,
+        rejection_reason: null,
+        rejected_by: null,
+        rejected_at: null,
         notes: commission.notes
           ? `${commission.notes}\n\n${invoiceNotes}`
           : invoiceNotes,
@@ -153,7 +158,7 @@ export async function POST(
           user_id: au.user_id,
           investor_id: null,
           title: 'Invoice Received',
-          message: `Invoice received from ${introducer?.legal_name || 'Introducer'} for ${formattedAmount}${deal ? ` (${deal.name})` : ''}.`,
+          message: `Invoice received from ${introducer?.legal_name || 'Introducer'} for ${formattedAmount}${deal ? ` (${deal.name})` : ''} (approval required).`,
           link: '/versotech_main/my-introducers',
           type: 'info' as const,
         }))
@@ -161,6 +166,50 @@ export async function POST(
         await serviceSupabase.from('investor_notifications').insert(notifications)
         console.log('[submit-invoice] Sent', notifications.length, 'notifications to arranger users')
       }
+    }
+
+    // Create approval request for CEO/staff
+    const ceoSigner = await getCeoSigner(serviceSupabase)
+    await serviceSupabase
+      .from('approvals')
+      .update({
+        status: 'cancelled',
+        resolved_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .eq('entity_type', 'commission_invoice')
+      .eq('entity_id', id)
+      .eq('status', 'pending')
+
+    const requestReason = `Invoice submitted for ${introducer?.legal_name || 'Introducer'} (introducer commission)`
+
+    const { error: approvalError } = await serviceSupabase.from('approvals').insert({
+      entity_type: 'commission_invoice',
+      entity_id: id,
+      action: 'approve',
+      requested_by: user.id,
+      assigned_to: ceoSigner?.id || null,
+      status: 'pending',
+      priority: 'medium',
+      request_reason: requestReason,
+      related_deal_id: commission.deal_id || null,
+      related_investor_id: commission.investor_id || null,
+      entity_metadata: {
+        commission_type: 'introducer',
+        commission_id: id,
+        entity_id: commission.introducer_id,
+        entity_name: introducer?.legal_name || 'Introducer',
+        deal_id: commission.deal_id || null,
+        investor_id: commission.investor_id || null,
+        amount: commission.accrual_amount,
+        currency: commission.currency,
+        invoice_id: data.invoice_document_id,
+        invoice_number: data.invoice_number || null,
+      },
+    })
+
+    if (approvalError) {
+      console.error('[submit-invoice] Failed to create approval:', approvalError)
     }
 
     // Create audit log

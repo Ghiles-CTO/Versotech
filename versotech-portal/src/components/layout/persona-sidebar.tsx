@@ -162,6 +162,7 @@ const PERSONA_NAV_ITEMS: Record<string, NavItem[]> = {
     { name: 'Dashboard', href: '/versotech_main/dashboard', icon: LayoutDashboard, description: 'Overview' },
     { name: 'Opportunities', href: '/versotech_main/opportunities', icon: TrendingUp, description: 'Investment opportunities' },
     { name: 'Client Transactions', href: '/versotech_main/client-transactions', icon: Users, description: 'Client investors' },
+    { name: 'My Commissions', href: '/versotech_main/my-commissions', icon: Calculator, description: 'Commission tracking & invoices' },
     { name: 'Portfolio', href: '/versotech_main/portfolio', icon: Briefcase, description: 'My investments' },
     { name: 'Agreements', href: '/versotech_main/placement-agreements', icon: FileText, description: 'Placement agreements' },
     { name: 'Profile', href: '/versotech_main/commercial-partner-profile', icon: FileSignature, description: 'Signature & settings' },

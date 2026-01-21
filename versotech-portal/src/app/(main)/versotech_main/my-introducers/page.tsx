@@ -287,6 +287,7 @@ export default function MyIntroducersPage() {
         commissionsByIntroducer.set(id, {
           accrued: 0,
           invoice_requested: 0,
+          invoice_submitted: 0,
           invoiced: 0,
           paid: 0,
           cancelled: 0,
@@ -301,6 +302,7 @@ export default function MyIntroducersPage() {
           const amount = Number(c.accrual_amount) || 0
           if (c.status === 'accrued') summary.accrued += amount
           else if (c.status === 'invoice_requested') summary.invoice_requested += amount
+          else if (c.status === 'invoice_submitted') summary.invoice_submitted = (summary.invoice_submitted || 0) + amount
           else if (c.status === 'invoiced') summary.invoiced += amount
           else if (c.status === 'paid') summary.paid += amount
           else if (c.status === 'cancelled') summary.cancelled += amount
@@ -310,7 +312,7 @@ export default function MyIntroducersPage() {
 
       // Calculate total_owed for each
       commissionsByIntroducer.forEach((summary) => {
-        summary.total_owed = summary.accrued + summary.invoice_requested + summary.invoiced
+        summary.total_owed = summary.accrued + summary.invoice_requested + (summary.invoice_submitted || 0) + summary.invoiced
       })
 
       // Get subscription values for referral value calculation
@@ -338,6 +340,7 @@ export default function MyIntroducersPage() {
         const commissionSummary = commissionsByIntroducer.get(i.id) || {
           accrued: 0,
           invoice_requested: 0,
+          invoice_submitted: 0,
           invoiced: 0,
           paid: 0,
           cancelled: 0,

@@ -1,517 +1,402 @@
 {
-  "project": "VERSO Admin Portal",
-  "branchName": "ralph/admin-portal",
-  "description": "Admin Portal (/versotech_admin) - Platform administration interface with user management, growth analytics dashboard, and real-time KPIs. Most backend APIs exist; primarily frontend implementation.",
+  "project": "VERSO Fee System Redesign",
+  "branchName": "ralph/fee-system-redesign",
+  "description": "Fee System Redesign - Unify Fees page with Deal page structure, fix fee event calculations, add commission schedules, update dashboard with expense metrics, and improve reconciliation views.",
   "userStories": [
     {
       "id": "US-001",
-      "title": "Create admin sidebar navigation component",
-      "description": "As an admin, I want a dedicated sidebar navigation so I can access all admin features from any page.",
+      "title": "Add deal selector to Fees page",
+      "description": "As a staff member, I want to select a deal on the Fees page so that I can view fee plans scoped to that specific deal.",
       "acceptanceCriteria": [
-        "Create admin-sidebar.tsx in /src/app/(admin)/versotech_admin/components/",
-        "Navigation items: Dashboard, Users (sub-items: All Users, Staff), Growth (sub-items: Overview, Engagement, Retention, Funnels, Cohorts), Agents (with 'Soon' badge), Settings",
-        "Use Lucide icons: LayoutDashboard, Users, TrendingUp, Bot, Settings",
-        "Active route highlighting with nested route support (e.g., /users/staff highlights Users)",
-        "Collapsible sub-navigation for Users and Growth sections",
+        "Deal selector dropdown at top of Fees page",
+        "Dropdown shows all deals user has access to (query from deals table)",
+        "Selecting a deal filters all fee plans to that deal",
+        "Default to no selection with prompt 'Select a deal to view fee plans'",
+        "URL updates with deal query param (/fees?deal_id=xxx)",
         "Typecheck passes"
       ],
       "priority": 1,
-      "passes": true,
-      "notes": "Completed: admin-sidebar.tsx created with all nav items, collapsible sections, active route highlighting, and responsive mobile support"
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-002",
-      "title": "Integrate admin sidebar into layout",
-      "description": "As a developer, I need the admin layout to use the new sidebar so all admin pages have consistent navigation.",
+      "title": "Group fee plans by entity type",
+      "description": "As a staff member, I want fee plans grouped by entity type (Introducer, Partner, Commercial Partner) so I can easily find and manage them.",
       "acceptanceCriteria": [
-        "Update /src/app/(admin)/versotech_admin/layout.tsx to include AdminSidebar",
-        "Sidebar on left, main content area on right with proper padding",
-        "Header shows current page title based on route",
-        "Existing auth guard preserved (CEO/staff_admin only)",
-        "Responsive: sidebar collapses to hamburger on mobile",
+        "Fee plans grouped into 3 collapsible sections: Introducers, Partners, Commercial Partners",
+        "Each section shows count of fee plans (e.g., 'Introducers (3)')",
+        "Empty sections show 'No fee plans' message",
+        "Groups match the structure on Deal page's Fee Plans tab",
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
       "priority": 2,
-      "passes": true,
-      "notes": "Completed: admin-layout-content.tsx created with AdminSidebar integration, dynamic page title header, theme toggle, notifications, identity menu. Auth guard preserved."
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-003",
-      "title": "Redirect admin root to dashboard",
-      "description": "As an admin, when I visit /versotech_admin, I should be redirected to the dashboard.",
+      "title": "Add fee plan status badges",
+      "description": "As a staff member, I want consistent status badges on the Fees page so I can quickly see plan states.",
       "acceptanceCriteria": [
-        "Update /src/app/(admin)/versotech_admin/page.tsx",
-        "Use Next.js redirect() to /versotech_admin/dashboard",
-        "Server-side redirect (no client flash)",
-        "Typecheck passes"
+        "Status badge on each fee plan card",
+        "Badge colors match Deal page: Draft (gray), Sent (blue), Pending Signature (yellow), Accepted (green), Rejected (red)",
+        "Badge shows status text (e.g., 'Accepted')",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
       ],
       "priority": 3,
-      "passes": true,
-      "notes": "Completed: Updated redirect from /settings to /dashboard using Next.js server-side redirect"
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-004",
-      "title": "Create dashboard page structure",
-      "description": "As an admin, I want a dashboard page that shows platform health at a glance.",
+      "title": "Port agreement generation to Fees page",
+      "description": "As a staff member, I want to generate introducer/partner agreements from the Fees page so I don't have to navigate to the Deal page.",
       "acceptanceCriteria": [
-        "Create /src/app/(admin)/versotech_admin/dashboard/page.tsx",
-        "Page title 'Platform Overview'",
-        "Date range selector component (Last 7 days, 30 days, 90 days) stored in URL params",
-        "Loading skeleton while data fetches using Suspense",
-        "Error boundary for API failures",
+        "Generate Agreement button on each fee plan card (for plans with entity assigned)",
+        "Button disabled for plans without required entity data",
+        "Clicking button calls existing /api/staff/fees/plans/[id]/generate-agreement endpoint",
+        "Shows loading spinner during generation",
+        "On success, shows toast 'Agreement generated' and refreshes plan status",
+        "On error, shows error toast with message",
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
       "priority": 4,
-      "passes": true,
-      "notes": "Completed: Dashboard page structure with date range selector (URL params), Suspense loading skeleton, error boundary, and placeholder grids for upcoming widgets"
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-005",
-      "title": "Add dashboard KPI cards",
-      "description": "As an admin, I want to see key metrics (Total Users, Active Users, Total AUM, Investors) as cards with trend indicators.",
+      "title": "Port PDF preview/download to Fees page",
+      "description": "As a staff member, I want to preview and download agreement PDFs from the Fees page so I can review terms without navigating away.",
       "acceptanceCriteria": [
-        "Fetch data from GET /api/admin/metrics/dashboard",
-        "Display 4 KPI cards in responsive grid (1 col mobile, 2 col tablet, 4 col desktop)",
-        "Each card shows: metric name, value, percentage change with up/down arrow icon",
-        "Format numbers: 1,247 for counts, $45.2M for currency",
-        "Use shadcn Card component",
+        "Preview PDF button on fee plans with generated agreements (agreement_pdf_url not null)",
+        "Clicking opens PDF in modal viewer (reuse existing PdfViewer component if available)",
+        "Download PDF button downloads the file",
+        "Buttons hidden for plans without generated PDFs",
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
       "priority": 5,
-      "passes": true,
-      "notes": "Completed: DashboardKPICards component created, fetches from /api/admin/metrics/dashboard, responsive grid layout, reuses existing KPICard component"
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-006",
-      "title": "Add dashboard activity chart",
-      "description": "As an admin, I want to see a line chart of user activity over the selected time period.",
+      "title": "Audit subscription fee calculation",
+      "description": "As a developer, I need to verify subscription fees are calculated correctly so investors are charged the right amount.",
       "acceptanceCriteria": [
-        "Line chart showing daily active users using Recharts",
-        "X-axis: dates, Y-axis: user count",
-        "Chart responds to date range selector from US-004",
-        "Tooltip on hover showing exact date and count",
-        "Use existing chart.tsx wrapper if available",
-        "Typecheck passes",
-        "Verify in browser using dev-browser skill"
+        "Review subscription-fee-calculator.ts in /src/lib/ or similar location",
+        "Confirm subscription fee = commitment × (subscription_fee_bps / 10000)",
+        "Fee event created with fee_type = 'subscription'",
+        "base_amount set to commitment value",
+        "rate_bps set to the rate used",
+        "computed_amount set to calculated fee",
+        "Add unit test for subscription fee calculation if test file exists",
+        "Typecheck passes"
       ],
       "priority": 6,
-      "passes": true,
-      "notes": "Completed: DashboardActivityChart component created with Recharts LineChart, custom tooltip, responsive design. API extended with fetchUserActivityTrend to track daily active users from audit_logs."
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-007",
-      "title": "Add dashboard approval queue widget",
-      "description": "As an admin, I want to see pending approvals so I know what needs attention.",
+      "title": "Fix management fee period calculation",
+      "description": "As a developer, I need management fees calculated correctly with proper period dates so quarterly fees are accurate.",
       "acceptanceCriteria": [
-        "Card titled 'Approval Queue'",
-        "List items: KYC Review, Subscriptions, Documents with Badge showing count",
-        "Data from /api/admin/metrics/dashboard (pending items already included)",
-        "Each item clickable (href can be placeholder '#' initially)",
-        "Typecheck passes",
-        "Verify in browser using dev-browser skill"
+        "Management fee formula: base_amount × (rate_bps / 10000) × (period_days / 365)",
+        "period_start_date and period_end_date set correctly for each period",
+        "Pro-rata calculation for partial periods",
+        "Verify formula in accrue_quarterly_management_fees() or equivalent function",
+        "Typecheck passes"
       ],
       "priority": 7,
-      "passes": true,
-      "notes": "Completed: DashboardApprovalQueue component created with KYC Review, Subscriptions, and Documents items. Each shows count badge, is clickable with proper hrefs. Used LucideIcon type for proper TypeScript support."
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-008",
-      "title": "Add dashboard recent activity feed",
-      "description": "As an admin, I want to see recent platform activity so I can monitor operations.",
+      "title": "Fix performance fee hurdle calculation",
+      "description": "As a developer, I need performance fees to respect hurdle rates so carried interest is calculated correctly.",
       "acceptanceCriteria": [
-        "Fetch from GET /api/admin/activity-feed",
-        "Display last 10 activities in scrollable list (max-height with overflow)",
-        "Each item shows: relative timestamp (e.g., '2 hours ago'), actor name, action description",
-        "Use formatDistanceToNow from date-fns for timestamps",
-        "'View All' link at bottom (can be placeholder)",
-        "Typecheck passes",
-        "Verify in browser using dev-browser skill"
+        "profit = exit_proceeds - contributed_capital",
+        "hurdle_return = contributed_capital × (hurdle_bps / 10000) × years_held",
+        "profit_above_hurdle = profit - hurdle_return",
+        "performance_fee = profit_above_hurdle × (carry_bps / 10000) only if positive, else 0",
+        "Support tiered rates if tier1 and tier2 fields exist",
+        "Typecheck passes"
       ],
       "priority": 8,
-      "passes": true,
-      "notes": "Completed: DashboardActivityFeed component created with scrollable list, relative timestamps via date-fns formatDistanceToNow, action description transformation, View All link."
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-009",
-      "title": "Add dashboard compliance alerts widget",
-      "description": "As an admin, I want to see compliance alerts categorized by severity.",
+      "title": "Link fee events to arranger",
+      "description": "As a developer, I need fee events linked to the arranger so revenue flows are properly attributed.",
       "acceptanceCriteria": [
-        "Fetch from GET /api/admin/compliance/alerts",
-        "Group by severity with colored indicators: Critical (red/destructive), Warning (yellow/warning), Clear (green/success)",
-        "Show count for each severity level",
-        "Collapsible/expandable to show individual alert details",
-        "Typecheck passes",
-        "Verify in browser using dev-browser skill"
+        "payee_arranger_id field populated on all new fee events",
+        "Value derived from deals.arranger_entity_id",
+        "Create migration to backfill existing fee events with NULL payee_arranger_id if needed",
+        "Typecheck passes"
       ],
       "priority": 9,
-      "passes": true,
-      "notes": "Completed: DashboardComplianceAlerts component created with severity grouping (Critical/Warning/Low Priority), collapsible sections using Radix Collapsible, colored indicators, and All Clear empty state."
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-010",
-      "title": "Create users list page with data table",
-      "description": "As an admin, I want to see all platform users in a searchable, filterable table.",
+      "title": "Add investor fee schedule section",
+      "description": "As a staff member, I want to see upcoming investor fees (management, performance) so I can forecast revenue.",
       "acceptanceCriteria": [
-        "Create /src/app/(admin)/versotech_admin/users/page.tsx",
-        "Fetch from GET /api/admin/users with pagination (page, limit params)",
-        "Table columns: Checkbox, User (Avatar + name), Email, Role (Badge), Status (colored Badge), Last Active (relative), Created (date), Actions (DropdownMenu)",
-        "Pagination controls at bottom showing 'X-Y of Z'",
-        "Default sort by created_at descending",
-        "Empty state when no users match",
+        "Investor Fees section in Schedule tab (or new schedule page if doesn't exist)",
+        "Shows fee events with status = 'accrued' and future period_start_date",
+        "Columns: Deal, Investor, Fee Type, Amount, Period Start, Period End",
+        "Sortable by date",
+        "Grouped by deal then investor",
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
       "priority": 10,
-      "passes": true,
-      "notes": "Completed: Users list page with @tanstack/react-table, avatar+name, email, role badge, status badge (active/pending/inactive/deactivated), relative last active time, created date, actions dropdown, server-side pagination with 'X-Y of Z' display, empty state"
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-011",
-      "title": "Add users search and filters",
-      "description": "As an admin, I want to search and filter users so I can find specific people quickly.",
+      "title": "Add introducer commission schedule",
+      "description": "As a staff member, I want to see upcoming introducer commission payments so I can forecast expenses.",
       "acceptanceCriteria": [
-        "Search input searching name and email (debounced 300ms)",
-        "Multi-select filter for Role: investor, staff_admin, staff_ops, staff_rm, ceo",
-        "Multi-select filter for Status: active, pending, deactivated, locked",
-        "Multi-select filter for Entity Type: investor, arranger, introducer, partner, lawyer",
-        "Filters update URL search params (shareable links)",
-        "Clear all filters button",
+        "Introducer Commissions section in Schedule tab",
+        "Query introducer_commissions where status IN ('accrued', 'invoice_requested')",
+        "Columns: Introducer Name, Deal, Investor, Amount, Status, Created Date",
+        "Grouped by introducer then deal",
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
       "priority": 11,
-      "passes": true,
-      "notes": "Completed: Search input with 300ms debounce, multi-select filters for Role/Status/Entity Type using Popover+Command pattern, URL param sync for shareable links, clear all filters button, API extended for multi-value filters and status filter"
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-012",
-      "title": "Add users batch actions",
-      "description": "As an admin, I want to perform actions on multiple users at once.",
+      "title": "Add partner commission schedule",
+      "description": "As a staff member, I want to see upcoming partner commission payments so I can forecast partner expenses.",
       "acceptanceCriteria": [
-        "Checkbox in table header selects/deselects all visible rows",
-        "When users selected, show batch action bar fixed at bottom with: 'X selected' count, Deactivate button, Export CSV button",
-        "Deactivate shows AlertDialog confirmation listing selected user names",
-        "Export downloads CSV of selected users (id, name, email, role, status)",
-        "Bar hidden when no selection",
+        "Partner Commissions section in Schedule tab",
+        "Query partner_commissions where status IN ('accrued', 'invoice_requested')",
+        "Columns: Partner Name, Deal, Investor, Amount, Status, Created Date",
+        "Grouped by partner then deal",
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
       "priority": 12,
-      "passes": true,
-      "notes": "Completed: Fixed bottom batch action bar with selection count, Export CSV (downloads id/name/email/role/status), and Deactivate button with AlertDialog confirmation showing selected user names. Uses useMemo for selectedUsers, proper hook ordering to avoid block-scoped variable issues."
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-013",
-      "title": "Create user detail page header",
-      "description": "As an admin, I want to see a user's key info at the top of their detail page.",
+      "title": "Add commercial partner commission schedule",
+      "description": "As a staff member, I want to see upcoming commercial partner commission payments so I can forecast all commission expenses.",
       "acceptanceCriteria": [
-        "Create /src/app/(admin)/versotech_admin/users/[id]/page.tsx",
-        "Fetch from GET /api/admin/users/[id]",
-        "Header card: large Avatar, display_name, email, Status badge, Role badge, 'Last seen: X ago'",
-        "Edit button (functionality in US-014)",
-        "Actions DropdownMenu: Deactivate/Reactivate, Lock/Unlock, Reset Password",
-        "Back link '← Back to Users' to /versotech_admin/users",
+        "Commercial Partner Commissions section in Schedule tab",
+        "Query commercial_partner_commissions where status IN ('accrued', 'invoice_requested')",
+        "Columns: Commercial Partner Name, Deal, Investor, Amount, Status, Created Date",
+        "Grouped by commercial partner then deal",
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
       "priority": 13,
-      "passes": true,
-      "notes": "Completed: User detail page with header card showing large Avatar, display_name, email, Status/Role badges, Last seen timestamp. Actions dropdown with Deactivate/Reactivate, Lock/Unlock, Reset Password with AlertDialog confirmations and toast notifications. Back link to users list. Super Admin badge display. Placeholder for future tabs."
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-014",
-      "title": "Add user detail profile tab with edit",
-      "description": "As an admin, I want to view and edit a user's profile information.",
+      "title": "Add schedule filtering controls",
+      "description": "As a staff member, I want to filter the schedule by deal, entity, and date range so I can focus on relevant data.",
       "acceptanceCriteria": [
-        "Tab navigation with 4 tabs: Profile (default active), Entities, Activity, Security",
-        "Profile tab: 'Personal Information' card (display_name, email, phone, title) and 'Account Settings' card (role, MFA status, created date, last login)",
-        "Edit button opens Dialog with form for: display_name, title, phone, office_location",
-        "Form uses react-hook-form + zod validation",
-        "Save calls PATCH /api/admin/users/[id], shows success/error toast",
+        "Deal filter dropdown (multi-select)",
+        "Entity filter dropdown (multi-select, shows all introducers/partners/commercial partners)",
+        "Date range picker (from/to dates)",
+        "Filters apply to all schedule sections",
+        "Filters persist in URL query params",
+        "Clear filters button",
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
       "priority": 14,
-      "passes": true,
-      "notes": "Completed: Tab navigation with Profile/Entities/Activity/Security tabs. Profile tab has Personal Information card (display_name, email, phone, title, office_location) and Account Settings card (role, MFA status, created date, last login). Edit dialog with react-hook-form + zod validation for display_name, title, phone, office_location. PATCH to /api/admin/users/[id] with toast notifications."
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-015",
-      "title": "Add user detail entities tab",
-      "description": "As an admin, I want to see which entities a user is linked to.",
+      "title": "Add commission KPIs to dashboard",
+      "description": "As a staff member, I want to see commission expense metrics alongside revenue so I have a complete financial picture.",
       "acceptanceCriteria": [
-        "Entities tab shows table of linked entities from GET /api/admin/users/[id] response",
-        "Columns: Entity icon (by type), Entity name, Type (investor/partner/etc), Role (Primary/Member), Remove button",
-        "Add button '+' opens search modal to link new entity (can be placeholder functionality)",
-        "Remove shows AlertDialog confirmation",
-        "Empty state 'No linked entities' with Add button",
+        "New Commissions section on dashboard (can be separate card or section)",
+        "Shows: Total Commissions Owed, Total Paid YTD, Pending Invoice",
+        "Data aggregated from all 3 commission tables (introducer, partner, commercial_partner)",
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
       "priority": 15,
-      "passes": true,
-      "notes": "Completed: Entities tab with table showing entity icon by type (6 types mapped), name, type badge, Primary/Member role badge, Can Sign badge. Remove button with AlertDialog confirmation. Add Entity dialog placeholder with search input and coming soon message. Empty state with centered icon, message, and Add button."
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-016",
-      "title": "Add user detail activity tab",
-      "description": "As an admin, I want to see a user's activity history.",
+      "title": "Show commission breakdown by entity type",
+      "description": "As a staff member, I want to see commission totals broken down by entity type so I know where expenses are going.",
       "acceptanceCriteria": [
-        "Fetch from GET /api/admin/users/[id]/activity",
-        "Timeline view: timestamp (relative), action description, entity affected",
-        "Filter Select for action types",
-        "Export button downloads activity as CSV",
-        "'Load more' button for pagination",
-        "Empty state 'No activity recorded'",
+        "Within Commissions section, show breakdown: Introducers $X, Partners $X, Commercial Partners $X",
+        "Each shows total owed amount",
+        "Clickable to navigate to respective reconciliation view (or placeholder)",
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
       "priority": 16,
-      "passes": true,
-      "notes": "Completed: Activity tab with timeline view showing relative timestamps, action descriptions, and entity affected. API extended to support pagination (offset/limit) and action type filtering. Select filter populated from user's actual action types. CSV export downloads all loaded activities. Load more button with hasMore indicator. Empty state with clear filter option when filtering."
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-017",
-      "title": "Add user detail security tab",
-      "description": "As an admin, I want to manage a user's security settings.",
+      "title": "Update fees dashboard API with commission summary",
+      "description": "As a developer, I need the dashboard API to return commission metrics so the frontend can display them.",
       "acceptanceCriteria": [
-        "Security tab sections: Account Status (Active/Inactive with Switch), Account Lock (Locked/Unlocked with Switch), Password (last changed + Reset Password button), Sessions (count + Revoke All button), Failed Logins (count in 24hrs)",
-        "Status Switch calls PATCH /api/admin/users/[id]/deactivate or /reactivate",
-        "Lock Switch calls PATCH /api/admin/users/[id]/toggle-lock",
-        "Reset Password button shows AlertDialog, calls POST /api/admin/users/[id]/reset-password",
-        "All actions show success/error toast",
-        "Typecheck passes",
-        "Verify in browser using dev-browser skill"
+        "Update /api/staff/fees/dashboard or create new endpoint",
+        "Return commission_summary object with: total_owed, total_accrued, total_invoiced, total_paid_ytd",
+        "Include by_entity_type breakdown: { introducer: {owed, paid}, partner: {owed, paid}, commercial_partner: {owed, paid} }",
+        "Query all 3 commission tables and aggregate",
+        "Typecheck passes"
       ],
       "priority": 17,
-      "passes": true,
-      "notes": "Completed: Security tab with Account Status (Active/Inactive Switch), Account Lock (Locked/Unlocked Switch), Password section with Reset Password button, Sessions section with count and Revoke All button, Failed Logins section with 24hr count and severity indicators. Uses existing API endpoints and lazy-loads security data."
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-018",
-      "title": "Create staff users sub-page",
-      "description": "As an admin, I want a dedicated view for staff members with staff-specific data.",
+      "title": "Add reconciliation navigation links",
+      "description": "As a staff member, I want quick links to reconciliation views from the dashboard so I can investigate discrepancies.",
       "acceptanceCriteria": [
-        "Create /src/app/(admin)/versotech_admin/users/staff/page.tsx",
-        "Fetch from GET /api/admin/staff",
-        "Table columns: User, Email, Role, Permissions (comma-separated list), Assigned Investors (count), Activity Score (7d), Status, Actions",
-        "Reuse table pattern from US-010",
-        "Actions include: View Details, Manage Permissions (placeholder)",
+        "View Reconciliation link in Commissions section",
+        "Link navigates to /arranger-reconciliation or equivalent",
+        "View Invoices link in Revenue section (if exists)",
+        "Link navigates to /reconciliation or equivalent",
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
       "priority": 18,
-      "passes": true,
-      "notes": "Completed: Staff users page at /versotech_admin/users/staff with data table showing User, Email, Role, Permissions (comma-separated), Assigned Investors count, Activity Score (7d), Status, and Actions dropdown. API extended with assigned_investors and activity_score_7d fields. Stats cards at top. Reuses @tanstack/react-table pattern from US-010."
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-019",
-      "title": "Create growth overview API endpoint",
-      "description": "As a developer, I need an API endpoint for growth overview metrics.",
+      "title": "Add commission tracking to lawyer reconciliation",
+      "description": "As a lawyer, I want to see all commission statuses in my reconciliation view so I can track pending payments.",
       "acceptanceCriteria": [
-        "Create /src/app/api/admin/growth/overview/route.ts",
-        "GET returns: dau, wau, mau, stickiness (dau/mau*100), avgSessionDuration, activeUsersTrend (array of {date, count}), featureUsage (array of {feature, count}), userSegments (array of {segment, count})",
-        "Accepts 'days' query param (7, 30, 90) defaulting to 30",
-        "Query audit_logs for activity metrics using SQL from PRD appendix",
-        "Requires super_admin permission check",
-        "Typecheck passes"
+        "Commission Status tab in lawyer reconciliation page (if exists at /lawyer-reconciliation)",
+        "Shows all commissions from all 3 tables (introducer, partner, commercial_partner)",
+        "Columns: Entity Type, Entity Name, Deal, Investor, Amount, Status, Invoice URL",
+        "Filter by status (Accrued, Invoice Requested, Invoiced, Paid)",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
       ],
       "priority": 19,
-      "passes": true,
-      "notes": "Completed: Growth overview API at /api/admin/growth/overview. Returns DAU, WAU, MAU, stickiness ratio, avgSessionDuration (estimated from audit log timestamps), activeUsersTrend (daily unique users), featureUsage (top 10 actions), and userSegments (Power/Regular/Occasional/At Risk based on activity frequency). Uses super_admin permission check and queries audit_logs."
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-020",
-      "title": "Create growth overview page",
-      "description": "As an admin, I want an overview of growth metrics so I can understand platform health.",
+      "title": "Verify arranger reconciliation structure",
+      "description": "As an arranger, I want separate tabs for each entity type so I can manage commissions efficiently.",
       "acceptanceCriteria": [
-        "Create /src/app/(admin)/versotech_admin/growth/page.tsx",
-        "Fetch from GET /api/admin/growth/overview",
-        "KPI cards row: DAU, WAU, MAU, Stickiness (DAU/MAU %), Avg Session Duration",
-        "Active Users Trend line chart (30 days default)",
-        "Feature Usage horizontal bar chart",
-        "User Segments pie/donut chart (Power Users, Regular, Occasional, At Risk)",
-        "Date range selector affects all metrics",
+        "Verify three tabs exist in arranger reconciliation: Introducers, Partners, Commercial Partners",
+        "Each tab queries respective commission table",
+        "Columns: Entity Name, Deal, Investor, Amount, Basis Type, Rate, Status",
+        "Action buttons: Request Invoice, Mark Paid (if not already implemented)",
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
       "priority": 20,
-      "passes": true,
-      "notes": "Completed: Growth overview page with date range selector (URL params), 5 KPI cards (DAU, WAU, MAU, Stickiness, Avg Session), Active Users Trend LineChart, Feature Usage horizontal BarChart, User Segments donut chart with interactive hover. Includes loading.tsx and error.tsx per Next.js conventions."
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-021",
-      "title": "Create engagement API endpoint",
-      "description": "As a developer, I need an API endpoint for engagement metrics.",
+      "title": "Add reconciliation summary view",
+      "description": "As a staff member, I want a summary view showing overall reconciliation status so I can quickly assess financial health.",
       "acceptanceCriteria": [
-        "Create /src/app/api/admin/growth/engagement/route.ts",
-        "GET returns: actionsByType (top 10 actions with counts), engagementByDay (day 0-6, count), peakHours (hour 0-23, count), topEngagedUsers (array of {id, name, actions, sessions})",
-        "Accepts 'days' query param",
-        "Queries audit_logs grouped by action, day of week, hour",
-        "Requires super_admin permission",
-        "Typecheck passes"
-      ],
-      "priority": 21,
-      "passes": true,
-      "notes": "Completed: Engagement API at /api/admin/growth/engagement. Returns actionsByType (top 10 with formatActionName helper), engagementByDay (0-6 with day names), peakHours (0-23), and topEngagedUsers (id, name from profiles, actions count, sessions count based on unique dates). Uses super_admin permission check and queries audit_logs."
-    },
-    {
-      "id": "US-022",
-      "title": "Create engagement page",
-      "description": "As an admin, I want to see detailed engagement metrics.",
-      "acceptanceCriteria": [
-        "Create /src/app/(admin)/versotech_admin/growth/engagement/page.tsx",
-        "Fetch from GET /api/admin/growth/engagement",
-        "Actions by Type horizontal bar chart (top 10)",
-        "Engagement by Day bar chart (Mon-Sun)",
-        "Peak Activity Hours bar chart (0-23 hours)",
-        "Top Engaged Users table: rank, user name, actions count, sessions count",
-        "Date range selector",
+        "Summary section at top of reconciliation page",
+        "Shows: Total Outstanding, Total Matched, Total Unmatched",
+        "Progress indicator (pie chart or progress bar) showing match percentage",
+        "Updates based on current filter selection",
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
+      "priority": 21,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-022",
+      "title": "Audit invoice generation accuracy",
+      "description": "As a developer, I need to verify invoice amounts match fee event totals so investors are billed correctly.",
+      "acceptanceCriteria": [
+        "Review invoice generation flow in /api/staff/invoices or similar",
+        "Verify: invoice.total = SUM(fee_events.computed_amount) for linked events",
+        "Add validation that warns/errors if totals don't match",
+        "Typecheck passes"
+      ],
       "priority": 22,
-      "passes": true,
-      "notes": "Completed: Engagement page at /versotech_admin/growth/engagement with Actions by Type horizontal bar chart, Engagement by Day bar chart (Mon-Sun, weekday vs weekend coloring), Peak Hours bar chart (0-23 with business hours highlighting), Top Engaged Users table with rank icons and link to user details. Includes loading.tsx and error.tsx per Next.js conventions."
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-023",
-      "title": "Create retention API endpoint",
-      "description": "As a developer, I need an API endpoint for retention metrics.",
+      "title": "Add invoice discrepancy warnings",
+      "description": "As a staff member, I want to see warnings when invoice amounts don't match expected fees so I can investigate.",
       "acceptanceCriteria": [
-        "Create /src/app/api/admin/growth/retention/route.ts",
-        "GET returns: retentionRates ({day7, day30, day90}), churnRate (%), cohortMatrix (2D array: cohort_week, week_0 through week_4 percentages), atRiskUsers (array of {id, name, email, lastActive, totalInvested})",
-        "At-risk: users with no audit_log entry in 30+ days",
-        "Requires super_admin permission",
-        "Typecheck passes"
+        "Warning badge/icon on invoices where total != SUM(linked fee_events)",
+        "Clicking badge shows discrepancy details in popover or modal",
+        "Warning appears in invoice list view",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
       ],
       "priority": 23,
-      "passes": true,
-      "notes": "Completed: Retention API at /api/admin/growth/retention. Returns retentionRates (day7, day30, day90), churnRate (%), cohortMatrix (5 weeks × 5 weeks with retention %), and atRiskUsers (id, name, email, lastActive, totalInvested sorted by investment). Uses audit_logs for activity, investor_users + subscriptions for invested amounts. Super_admin permission check."
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-024",
-      "title": "Create retention page",
-      "description": "As an admin, I want to analyze user retention and identify at-risk users.",
+      "title": "Clarify invoice UI labeling",
+      "description": "As a staff member, I want clear labeling that invoices are for investors so there's no confusion with entity invoices.",
       "acceptanceCriteria": [
-        "Create /src/app/(admin)/versotech_admin/growth/retention/page.tsx",
-        "Fetch from GET /api/admin/growth/retention",
-        "Retention KPI cards: 7-Day, 30-Day, 90-Day Retention %, Churn Rate %",
-        "Retention Cohort Matrix: rows=weekly cohorts, cols=week 0-4, cells show retention % with color gradient (green=high, red=low)",
-        "At-Risk Users table: User, Last Active (relative), Total Invested, Contact button (mailto link)",
+        "Page title updated to 'Investor Invoices'",
+        "Add helper text: 'Invoices sent to investors for fee collection'",
+        "Ensure entity invoice uploads are in separate commission flow (not on this page)",
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
       "priority": 24,
-      "passes": true,
-      "notes": "Completed: Retention page at /versotech_admin/growth/retention with 4 KPI cards (7-Day, 30-Day, 90-Day Retention, Churn Rate) with semantic coloring. Cohort Matrix shows 5x5 weekly retention data with color gradient (emerald for high, amber/orange/red for low). At-Risk Users table with avatar, name, email, relative last active time, total invested, and mailto Contact button."
+      "passes": false,
+      "notes": ""
     },
     {
       "id": "US-025",
-      "title": "Create funnel API endpoint",
-      "description": "As a developer, I need an API endpoint for funnel data.",
+      "title": "Verify spread fee calculation",
+      "description": "As a developer, I need spread fees calculated and recorded so secondary trade markups are tracked.",
       "acceptanceCriteria": [
-        "Create /src/app/api/admin/growth/funnel/route.ts",
-        "GET returns: investmentFunnel (array of {stage, count, pctOfTotal, pctOfPrevious}), onboardingFunnel (same structure), biggestDropoff ({fromStage, toStage, dropRate})",
-        "Investment stages: Viewed Deal, Showed Interest, Started Subscription, Completed Subscription, Allocated",
-        "Onboarding stages: Account Created, Profile Completed, KYC Submitted, KYC Approved, First Investment",
-        "Queries deals, deal_commitments, subscriptions, allocations, investors, profiles",
-        "Requires super_admin permission",
+        "Spread fee event created when spread is applied to trade",
+        "fee_type = 'spread_markup' for spread fees",
+        "computed_amount = spread amount from trade data",
+        "Fee event linked to subscription via allocation_id",
         "Typecheck passes"
       ],
       "priority": 25,
-      "passes": true,
-      "notes": "Completed: Funnel API at /api/admin/growth/funnel. Returns investmentFunnel (Viewed Deal, Showed Interest, Started Subscription, Completed Subscription, Allocated) and onboardingFunnel (Account Created, Profile Completed, KYC Submitted, KYC Approved, First Investment). Each stage has count, pctOfTotal, pctOfPrevious. biggestDropoff identifies largest conversion drop. Uses deal_memberships, investor_deal_interest, subscriptions, allocations, profiles, investors tables. Super_admin permission check."
-    },
-    {
-      "id": "US-026",
-      "title": "Create funnel page",
-      "description": "As an admin, I want to visualize conversion funnels.",
-      "acceptanceCriteria": [
-        "Create /src/app/(admin)/versotech_admin/growth/funnel/page.tsx",
-        "Fetch from GET /api/admin/growth/funnel",
-        "Investment Funnel: horizontal bars with decreasing widths, each showing stage name, count, % of previous",
-        "Onboarding Funnel: same visualization pattern",
-        "Drop-off Analysis card: shows biggest drop-off point with stage names and percentage",
-        "Typecheck passes",
-        "Verify in browser using dev-browser skill"
-      ],
-      "priority": 26,
-      "passes": true,
-      "notes": "Completed: Funnel page at /versotech_admin/growth/funnel with Investment and Onboarding funnel visualizations. Horizontal bars with proportional widths, conversion rate badges (color-coded), stage names and counts. Drop-off Analysis card with severity indicators and actionable insights. Includes loading.tsx and error.tsx per Next.js conventions."
-    },
-    {
-      "id": "US-027",
-      "title": "Create cohorts API endpoint",
-      "description": "As a developer, I need an API endpoint for cohort analysis.",
-      "acceptanceCriteria": [
-        "Create /src/app/api/admin/growth/cohorts/route.ts",
-        "GET accepts 'groupBy' param: signup_week, signup_month, first_investment_month",
-        "Returns array of cohorts: {cohortName, size, activationRate, investmentRate, avgInvestment, avgTimeToFirstInvestment (days), retention30d, retention60d, retention90d}",
-        "Activation = completed onboarding, Investment = has subscription",
-        "Requires super_admin permission",
-        "Typecheck passes"
-      ],
-      "priority": 27,
-      "passes": true,
-      "notes": "Completed: Cohorts API at /api/admin/growth/cohorts. Accepts groupBy param (signup_week, signup_month, first_investment_month). Returns cohort metrics: cohortName, size, activationRate (% with display_name), investmentRate (% with subscriptions), avgInvestment, avgTimeToFirstInvestment (days from signup to first subscription), retention30d/60d/90d. Uses reduce pattern for TypeScript type narrowing with forEach callbacks. Super_admin permission check."
-    },
-    {
-      "id": "US-028",
-      "title": "Create cohorts page",
-      "description": "As an admin, I want to analyze user behavior by signup cohort.",
-      "acceptanceCriteria": [
-        "Create /src/app/(admin)/versotech_admin/growth/cohorts/page.tsx",
-        "Fetch from GET /api/admin/growth/cohorts",
-        "Cohort grouping selector: By Signup Week, By Signup Month, By First Investment Month",
-        "Data table: Cohort, Size, Activation Rate, Investment Rate, Avg Investment, Avg Days to First Investment, 30/60/90 Day Retention",
-        "Sortable columns",
-        "Typecheck passes",
-        "Verify in browser using dev-browser skill"
-      ],
-      "priority": 28,
-      "passes": true,
-      "notes": "Completed: Cohorts page at /versotech_admin/growth/cohorts with grouping selector (signup_week, signup_month, first_investment_month via URL params). Summary stats cards showing total users, avg activation rate, avg investment rate. Data table with @tanstack/react-table featuring sortable columns (cohort, size, activation rate, investment rate, avg investment, days to invest, 30/60/90d retention). Color-coded metrics with semantic colors. Handles N/A retention values (-1 from API) gracefully. Includes loading.tsx and error.tsx per Next.js conventions."
-    },
-    {
-      "id": "US-029",
-      "title": "Create agents placeholder page",
-      "description": "As an admin, I want to see a placeholder for upcoming AI/automation features.",
-      "acceptanceCriteria": [
-        "Create /src/app/(admin)/versotech_admin/agents/page.tsx",
-        "Centered layout with Bot icon (Lucide) and 'AI-Powered Automation' heading",
-        "'Coming Soon' subheading text",
-        "4 placeholder cards in grid: KYC Review Bot, Deal Matching, Risk Alerts, Report Generator",
-        "Each card: icon, title, brief description, 'Planned' Badge",
-        "'Contact Product Team' link at bottom",
-        "Typecheck passes",
-        "Verify in browser using dev-browser skill"
-      ],
-      "priority": 29,
-      "passes": true,
-      "notes": "Completed: Agents placeholder page at /versotech_admin/agents with Bot icon hero section, 'AI-Powered Automation' heading, 'Coming Soon' subheading, 4 placeholder cards (KYC Review Bot, Deal Matching, Risk Alerts, Report Generator) each with icon, title, description, and 'Planned' badge. Contact Product Team mailto link at bottom. Extensible status system for future 'in-development' and 'beta' states."
-    },
-    {
-      "id": "US-030",
-      "title": "Expand settings page with tabs",
-      "description": "As an admin, I want the settings page to have organized sections instead of just placeholders.",
-      "acceptanceCriteria": [
-        "Update /src/app/(admin)/versotech_admin/settings/page.tsx",
-        "Tab navigation: General, Security, Notifications, Integrations, Audit",
-        "General tab: Platform name, timezone, default currency (read-only display)",
-        "Security tab: MFA policy status, session timeout display (read-only)",
-        "Notifications tab: Email template list placeholder",
-        "Integrations tab: API keys list (masked), webhook URLs",
-        "Audit tab: Log retention policy display, Export logs button",
-        "Typecheck passes",
-        "Verify in browser using dev-browser skill"
-      ],
-      "priority": 30,
-      "passes": true,
-      "notes": "Completed: Settings page with 5 tabs (General, Security, Notifications, Integrations, Audit). General shows platform name/timezone/currency. Security shows MFA policy (required badge), session timeout (30 min), password policy requirements. Notifications shows email template list with status badges. Integrations shows masked API keys with show/hide/copy, webhook URLs with copy. Audit shows log retention stats (365 days, total logs, storage), Export button with toast, data retention policy table."
+      "passes": false,
+      "notes": ""
     }
   ]
 }

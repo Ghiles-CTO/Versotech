@@ -12,9 +12,11 @@ import { cn } from '@/lib/utils'
 export type CommissionSummary = {
   accrued: number
   invoice_requested: number
+  invoice_submitted?: number
   invoiced: number
   paid: number
   cancelled: number
+  rejected?: number
   total_owed: number
   currency: string
 }
@@ -42,7 +44,9 @@ export function CommissionSummary({
   className,
   title = 'Commission Summary',
 }: CommissionSummaryProps) {
+  const invoiceSubmitted = summary.invoice_submitted ?? 0
   const { accrued, invoice_requested, invoiced, paid, total_owed, currency } = summary
+  const invoicedTotal = invoice_requested + invoiceSubmitted + invoiced
 
   // Inline variant - for table cells
   if (variant === 'inline') {
@@ -78,10 +82,10 @@ export function CommissionSummary({
             {formatCurrency(accrued, currency)} accrued
           </Badge>
         )}
-        {(invoice_requested + invoiced) > 0 && (
+        {invoicedTotal > 0 && (
           <Badge variant="outline" className="bg-yellow-500/10 text-yellow-600 border-yellow-200">
             <FileCheck className="h-3 w-3 mr-1" />
-            {formatCurrency(invoice_requested + invoiced, currency)} invoiced
+            {formatCurrency(invoicedTotal, currency)} invoiced
           </Badge>
         )}
         {paid > 0 && (
@@ -123,7 +127,7 @@ export function CommissionSummary({
               Invoiced
             </div>
             <div className="text-lg font-semibold text-yellow-600">
-              {formatCurrency(invoice_requested + invoiced, currency)}
+            {formatCurrency(invoicedTotal, currency)}
             </div>
           </div>
 

@@ -43,6 +43,7 @@ interface FeeBreakdown {
   bd_fees: number;
   finra_fees: number;
   performance_fees: number;
+  management_fees: number;
   total_fees: number;
   unrealized_gains: number;
 }
@@ -345,7 +346,7 @@ export default function OverviewTab() {
               {/* Fee Type Breakdown - Top Section */}
               <div>
                 <h4 className="text-lg font-semibold mb-4 text-white">Total Fees by Type</h4>
-                <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
+                <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-7">
                   <div className="p-4 bg-blue-900/20 rounded border border-blue-700">
                     <p className="text-xs text-blue-300 mb-1">Subscription Fees</p>
                     <p className="text-xl font-bold text-white">
@@ -375,6 +376,13 @@ export default function OverviewTab() {
                     <p className="text-xl font-bold text-white">
                       {formatCurrency(projectedFees.totals.performance_fees)}
                     </p>
+                  </div>
+                  <div className="p-4 bg-cyan-900/20 rounded border border-cyan-700">
+                    <p className="text-xs text-cyan-300 mb-1">Management Fees</p>
+                    <p className="text-xl font-bold text-white">
+                      {formatCurrency(projectedFees.totals.management_fees)}
+                    </p>
+                    <p className="text-xs text-gray-400 mt-1">(Annual)</p>
                   </div>
                   <div className="p-4 bg-gray-800 rounded border border-gray-600">
                     <p className="text-xs text-gray-300 mb-1 font-semibold">TOTAL ALL FEES</p>
@@ -468,6 +476,10 @@ export default function OverviewTab() {
                             <span className="text-gray-400">Performance:</span>
                             <span className="text-white font-medium">{formatCurrency(statusGroup.performance_fees)}</span>
                           </div>
+                          <div className="flex justify-between">
+                            <span className="text-cyan-400">Management:</span>
+                            <span className="text-white font-medium">{formatCurrency(statusGroup.management_fees)}</span>
+                          </div>
                           <div className="flex justify-between pt-2 border-t border-gray-700">
                             <span className="text-white font-semibold">Total Fees:</span>
                             <span className="text-white font-bold">{formatCurrency(statusGroup.total_fees)}</span>
@@ -516,7 +528,7 @@ export default function OverviewTab() {
                         </div>
 
                         {/* Fee Type Breakdown for this Vehicle */}
-                        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
+                        <div className="grid grid-cols-2 md:grid-cols-6 gap-3 mb-4">
                           <div className="p-2 bg-blue-900/10 rounded">
                             <p className="text-xs text-blue-300">Subscription</p>
                             <p className="text-sm font-bold text-white">{formatCurrency(vehicle.fees.subscription_fees)}</p>
@@ -536,6 +548,10 @@ export default function OverviewTab() {
                           <div className="p-2 bg-pink-900/10 rounded">
                             <p className="text-xs text-pink-300">Performance</p>
                             <p className="text-sm font-bold text-white">{formatCurrency(vehicle.fees.performance_fees)}</p>
+                          </div>
+                          <div className="p-2 bg-cyan-900/10 rounded">
+                            <p className="text-xs text-cyan-300">Management</p>
+                            <p className="text-sm font-bold text-white">{formatCurrency(vehicle.fees.management_fees)}</p>
                           </div>
                         </div>
 
@@ -574,6 +590,10 @@ export default function OverviewTab() {
                                     <div className="flex justify-between">
                                       <span className="text-gray-400">Sub:</span>
                                       <span className="text-white">{formatCurrency(status.subscription_fees)}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span className="text-cyan-400">Mgmt:</span>
+                                      <span className="text-white">{formatCurrency(status.management_fees)}</span>
                                     </div>
                                     <div className="flex justify-between">
                                       <span className="text-gray-400">Total Fees:</span>

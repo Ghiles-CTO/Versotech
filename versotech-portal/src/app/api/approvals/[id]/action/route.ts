@@ -227,7 +227,7 @@ export async function POST(
       }
     } else if (action === 'reject') {
       // Handle rejection
-      await handleEntityRejection(serviceSupabase, approval, rejection_reason || '')
+      await handleEntityRejection(serviceSupabase, approval, rejection_reason || '', user.id)
     }
 
     // Audit log
@@ -1547,6 +1547,54 @@ async function handleEntityApproval(
         }
         break
 
+      case 'commission_invoice': {
+        const commissionType = metadata.commission_type
+        const commissionConfig: Record<string, { table: string }> = {
+          introducer: { table: 'introducer_commissions' },
+          partner: { table: 'partner_commissions' },
+          'commercial-partner': { table: 'commercial_partner_commissions' },
+          commercial_partner: { table: 'commercial_partner_commissions' },
+        }
+
+        const config = commissionConfig[commissionType]
+        if (!config) {
+          return { success: false, error: `Unsupported commission type: ${commissionType}` }
+        }
+
+        const { data: commission, error: commissionError } = await supabase
+          .from(config.table)
+          .select('id, status')
+          .eq('id', entityId)
+          .single()
+
+        if (commissionError || !commission) {
+          return { success: false, error: 'Commission not found' }
+        }
+
+        if (commission.status !== 'invoice_submitted') {
+          return { success: false, error: `Commission status must be invoice_submitted (current: ${commission.status})` }
+        }
+
+        const { error: updateError } = await supabase
+          .from(config.table)
+          .update({
+            status: 'invoiced',
+            approved_by: actorId,
+            approved_at: new Date().toISOString(),
+            rejection_reason: null,
+            rejected_by: null,
+            rejected_at: null,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', entityId)
+
+        if (updateError) {
+          console.error('Error approving commission invoice:', updateError)
+          return { success: false, error: 'Failed to approve commission invoice' }
+        }
+        break
+      }
+
       case 'document':
         // Update document status
         const { error: docError } = await supabase
@@ -1777,12 +1825,16 @@ async function handleEntityApproval(
         // Update invitation status to 'pending' (ready for acceptance)
         // Reset expiry to 7 days from now since approval may have taken time
         const newExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+        const sentAt = new Date().toISOString()
 
         const { error: inviteUpdateError } = await supabase
           .from('member_invitations')
           .update({
             status: 'pending',
-            expires_at: newExpiresAt
+            expires_at: newExpiresAt,
+            sent_at: sentAt,
+            reminder_count: 0,
+            last_reminded_at: null
           })
           .eq('id', invitationId)
 
@@ -1871,7 +1923,8 @@ async function handleEntityApproval(
 async function handleEntityRejection(
   supabase: any,
   approval: any,
-  reason: string
+  reason: string,
+  actorId: string
 ): Promise<void> {
   try {
     const entityType = approval.entity_type
@@ -1997,6 +2050,92 @@ async function handleEntityRejection(
             rejection_reason: reason
           }
         })
+      }
+    }
+
+    if (entityType === 'commission_invoice') {
+      const metadata = approval.entity_metadata || {}
+      const commissionType = metadata.commission_type
+      const commissionConfig: Record<string, { table: string; userTable: string; entityIdField: string; notificationType: string }> = {
+        introducer: {
+          table: 'introducer_commissions',
+          userTable: 'introducer_users',
+          entityIdField: 'introducer_id',
+          notificationType: 'introducer_invoice_rejected',
+        },
+        partner: {
+          table: 'partner_commissions',
+          userTable: 'partner_users',
+          entityIdField: 'partner_id',
+          notificationType: 'partner_rejected',
+        },
+        'commercial-partner': {
+          table: 'commercial_partner_commissions',
+          userTable: 'commercial_partner_users',
+          entityIdField: 'commercial_partner_id',
+          notificationType: 'cp_invoice_rejected',
+        },
+        commercial_partner: {
+          table: 'commercial_partner_commissions',
+          userTable: 'commercial_partner_users',
+          entityIdField: 'commercial_partner_id',
+          notificationType: 'cp_invoice_rejected',
+        },
+      }
+
+      const config = commissionConfig[commissionType]
+      if (!config) {
+        console.error('Unsupported commission type in rejection:', commissionType)
+        return
+      }
+
+      // Update commission status to rejected
+      await supabase
+        .from(config.table)
+        .update({
+          status: 'rejected',
+          rejection_reason: reason || null,
+          rejected_by: actorId,
+          rejected_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', entityId)
+
+      // Send rejection notification to entity users
+      // Fetch commission to get entity_id for user lookup
+      const { data: commission } = await supabase
+        .from(config.table)
+        .select('*')
+        .eq('id', entityId)
+        .single()
+
+      if (commission) {
+        const commissionEntityId = commission[config.entityIdField]
+        const { data: entityUsers } = await supabase
+          .from(config.userTable)
+          .select('user_id')
+          .eq(config.entityIdField, commissionEntityId)
+
+        if (entityUsers && entityUsers.length > 0) {
+          const formattedAmount = metadata.amount && metadata.currency
+            ? new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: metadata.currency,
+              }).format(metadata.amount)
+            : 'your commission'
+
+          const notifications = entityUsers.map((eu: { user_id: string }) => ({
+            user_id: eu.user_id,
+            investor_id: null,
+            title: 'Invoice Requires Changes',
+            message: `Your invoice for ${formattedAmount} was rejected.${reason ? ` Reason: ${reason}` : ''} Please resubmit with corrections.`,
+            link: '/versotech_main/my-commissions',
+            type: config.notificationType,
+          }))
+
+          await supabase.from('investor_notifications').insert(notifications)
+          console.log('[rejection] Sent', notifications.length, 'rejection notifications for', commissionType)
+        }
       }
     }
   } catch (error) {

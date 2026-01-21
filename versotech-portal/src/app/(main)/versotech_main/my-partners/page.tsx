@@ -275,6 +275,7 @@ export default function MyPartnersPage() {
           commissionsByPartner.set(pid, {
             accrued: 0,
             invoice_requested: 0,
+            invoice_submitted: 0,
             invoiced: 0,
             paid: 0,
             cancelled: 0,
@@ -289,10 +290,11 @@ export default function MyPartnersPage() {
           const amount = Number(c.accrual_amount) || 0
           if (c.status === 'accrued') summary.accrued += amount
           else if (c.status === 'invoice_requested') summary.invoice_requested += amount
+          else if (c.status === 'invoice_submitted') summary.invoice_submitted = (summary.invoice_submitted || 0) + amount
           else if (c.status === 'invoiced') summary.invoiced += amount
           else if (c.status === 'paid') summary.paid += amount
           else if (c.status === 'cancelled') summary.cancelled += amount
-          if (['accrued', 'invoice_requested', 'invoiced'].includes(c.status)) {
+          if (['accrued', 'invoice_requested', 'invoice_submitted', 'invoiced'].includes(c.status)) {
             summary.total_owed += amount
           }
           if (c.currency) summary.currency = c.currency
@@ -323,6 +325,7 @@ export default function MyPartnersPage() {
             commission_summary: commissionsByPartner.get(p.id) || {
               accrued: 0,
               invoice_requested: 0,
+              invoice_submitted: 0,
               invoiced: 0,
               paid: 0,
               cancelled: 0,

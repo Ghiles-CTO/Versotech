@@ -24,43 +24,94 @@ export async function GET(request: NextRequest) {
   let uniqueTypes: string[] = []
 
   if (isLawyer) {
-    // Lawyers use the generic 'notifications' table
-    let query = serviceSupabase
+    const maxFetch = offset + limit
+    let notificationsQuery = serviceSupabase
       .from('notifications')
       .select('id, user_id, title, message, link, read, created_at, type')
       .eq('user_id', user.id)
 
-    // Apply type filter if specified
     if (type && type !== 'all') {
-      query = query.eq('type', type)
+      notificationsQuery = notificationsQuery.eq('type', type)
     }
 
-    const { data: notifData, error: notificationsError } = await query
-      .order('created_at', { ascending: false })
-      .range(offset, offset + limit - 1)
+    const notificationsPromise = createdByMe
+      ? Promise.resolve({ data: [] as any[], error: null })
+      : notificationsQuery
+          .order('created_at', { ascending: false })
+          .range(0, maxFetch - 1)
 
-    if (notificationsError) {
-      console.error('Failed to fetch notifications:', notificationsError)
+    let investorQuery = serviceSupabase
+      .from('investor_notifications')
+      .select('id, user_id, investor_id, title, message, link, read_at, created_at, type, created_by, deal_id')
+
+    if (createdByMe) {
+      investorQuery = investorQuery.eq('created_by', user.id)
+    } else {
+      investorQuery = investorQuery.eq('user_id', user.id)
+    }
+
+    if (type && type !== 'all') {
+      investorQuery = investorQuery.eq('type', type)
+    }
+
+    if (dealId) {
+      investorQuery = investorQuery.eq('deal_id', dealId)
+    }
+
+    const [notifResult, investorResult] = await Promise.all([
+      notificationsPromise,
+      investorQuery
+        .order('created_at', { ascending: false })
+        .range(0, maxFetch - 1)
+    ])
+
+    if (notifResult.error) {
+      console.error('Failed to fetch notifications:', notifResult.error)
       return NextResponse.json({ error: 'Failed to fetch notifications' }, { status: 500 })
     }
 
-    // Transform 'read' boolean to 'read_at' format for client compatibility
-    data = (notifData || []).map(n => ({
+    if (investorResult.error) {
+      console.error('Failed to fetch investor notifications:', investorResult.error)
+      return NextResponse.json({ error: 'Failed to fetch notifications' }, { status: 500 })
+    }
+
+    const notificationRows = (notifResult.data || []).map(n => ({
       ...n,
-      read_at: n.read ? n.created_at : null, // If read, use created_at as read_at
+      read_at: n.read ? n.created_at : null,
       investor_id: null,
       created_by: null,
       deal_id: null
     }))
 
-    // Get unique notification types for filter dropdown
-    const { data: typesData } = await serviceSupabase
-      .from('notifications')
+    data = [...notificationRows, ...(investorResult.data || [])]
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      .slice(offset, offset + limit)
+
+    const typeSets = new Set<string>()
+
+    if (!createdByMe) {
+      const { data: typesData } = await serviceSupabase
+        .from('notifications')
+        .select('type')
+        .eq('user_id', user.id)
+        .not('type', 'is', null)
+
+      ;(typesData || []).forEach((t: any) => {
+        if (t.type) typeSets.add(t.type)
+      })
+    }
+
+    const { data: investorTypes } = await serviceSupabase
+      .from('investor_notifications')
       .select('type')
-      .eq('user_id', user.id)
+      .eq(createdByMe ? 'created_by' : 'user_id', user.id)
       .not('type', 'is', null)
 
-    uniqueTypes = [...new Set((typesData || []).map(t => t.type).filter(Boolean))]
+    ;(investorTypes || []).forEach((t: any) => {
+      if (t.type) typeSets.add(t.type)
+    })
+
+    uniqueTypes = Array.from(typeSets)
   } else {
     // Non-lawyers use 'investor_notifications' table
     let query = serviceSupabase
@@ -133,15 +184,22 @@ export async function PATCH(request: NextRequest) {
   const isLawyer = personas?.some((p: { persona_type: string }) => p.persona_type === 'lawyer') || false
 
   if (isLawyer) {
-    // Lawyers use 'notifications' table with 'read' boolean column
-    const { error: updateError } = await serviceSupabase
-      .from('notifications')
-      .update({ read: true, updated_at: new Date().toISOString() })
-      .eq('user_id', user.id)
-      .in('id', ids)
+    // Lawyers can receive both notifications and investor_notifications
+    const [notifUpdate, investorUpdate] = await Promise.all([
+      serviceSupabase
+        .from('notifications')
+        .update({ read: true, updated_at: new Date().toISOString() })
+        .eq('user_id', user.id)
+        .in('id', ids),
+      serviceSupabase
+        .from('investor_notifications')
+        .update({ read_at: new Date().toISOString() })
+        .eq('user_id', user.id)
+        .in('id', ids)
+    ])
 
-    if (updateError) {
-      console.error('Failed to mark notifications read:', updateError)
+    if (notifUpdate.error || investorUpdate.error) {
+      console.error('Failed to mark notifications read:', notifUpdate.error || investorUpdate.error)
       return NextResponse.json({ error: 'Failed to mark notifications read' }, { status: 500 })
     }
   } else {

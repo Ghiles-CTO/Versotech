@@ -49,7 +49,6 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatCurrency, formatDate } from '@/lib/format'
-import { createClient } from '@/lib/supabase/client'
 
 type ClientTransaction = {
   id: string
@@ -132,46 +131,6 @@ const CLIENT_TYPE_LABELS: Record<string, string> = {
   fund: 'Fund',
 }
 
-// Membership progression data from deal_memberships table
-type MembershipProgression = {
-  interest_confirmed_at?: string | null
-  nda_signed_at?: string | null
-  data_room_granted_at?: string | null
-}
-
-// Map subscription status to journey stage
-// Uses membership progression data to accurately track client journey
-function getJourneyStage(
-  subscriptionStatus: string | null,
-  hasSubscription: boolean,
-  membership?: MembershipProgression
-): ClientTransaction['journey_stage'] {
-  if (!hasSubscription) {
-    // Check membership progression for non-subscribed clients
-    if (membership?.data_room_granted_at) return 'interested'
-    if (membership?.nda_signed_at) return 'interested'
-    if (membership?.interest_confirmed_at) return 'interested'
-    return 'new_lead'
-  }
-
-  switch (subscriptionStatus) {
-    case 'funded':
-    case 'active':
-      return 'funded'
-    case 'signed':
-    case 'committed':
-    case 'pending':
-    case 'approved':
-      return 'subscribing'
-    case 'cancelled':
-    case 'rejected':
-    case 'withdrawn':
-      return 'passed'
-    default:
-      return 'interested'
-  }
-}
-
 export default function ClientTransactionsPage() {
   const [partnerInfo, setPartnerInfo] = useState<CommercialPartnerInfo | null>(null)
   const [placementAgreement, setPlacementAgreement] = useState<PlacementAgreement | null>(null)
@@ -194,162 +153,23 @@ export default function ClientTransactionsPage() {
     async function fetchData() {
       try {
         setLoading(true)
-        const supabase = createClient()
-
-        // Get current user
-        const { data: { user } } = await supabase.auth.getUser()
-        if (!user) {
-          setError('Not authenticated')
-          return
+        const response = await fetch('/api/commercial-partners/me/client-transactions')
+        if (!response.ok) {
+          const errorData = await response.json()
+          throw new Error(errorData.error || 'Failed to load client transactions')
         }
 
-        // Check if user is a commercial partner
-        const { data: cpUser, error: cpUserError } = await supabase
-          .from('commercial_partner_users')
-          .select('commercial_partner_id')
-          .eq('user_id', user.id)
-          .single()
-
-        if (cpUserError || !cpUser) {
-          // Maybe they're staff - show all clients as placeholder
-          await fetchAllClients(supabase)
-          return
-        }
-
-        // Fetch commercial partner info
-        const { data: partner, error: partnerError } = await supabase
-          .from('commercial_partners')
-          .select('id, name, legal_name, type, status, logo_url')
-          .eq('id', cpUser.commercial_partner_id)
-          .single()
-
-        if (partnerError) throw partnerError
-        setPartnerInfo(partner)
-
-        // Fetch active placement agreement for commission rate
-        const { data: agreement } = await supabase
-          .from('placement_agreements')
-          .select('id, default_commission_bps, status')
-          .eq('commercial_partner_id', cpUser.commercial_partner_id)
-          .eq('status', 'active')
-          .maybeSingle()
-
-        setPlacementAgreement(agreement)
-
-        // Fetch clients for this commercial partner
-        const { data: clientsData, error: clientsError } = await supabase
-          .from('commercial_partner_clients')
-          .select(`
-            id,
-            client_name,
-            client_email,
-            client_type,
-            is_active,
-            created_at,
-            created_for_deal_id,
-            client_investor_id,
-            deal:created_for_deal_id (
-              id,
-              name,
-              status
-            )
-          `)
-          .eq('commercial_partner_id', cpUser.commercial_partner_id)
-          .order('created_at', { ascending: false })
-
-        if (clientsError) throw clientsError
-
-        // Get subscriptions for these clients if they have investor IDs
-        const investorIds = (clientsData || [])
-          .filter((c: any) => c.client_investor_id)
-          .map((c: any) => c.client_investor_id)
-
-        let subscriptionsMap: Record<string, any> = {}
-        if (investorIds.length > 0) {
-          const { data: subs } = await supabase
-            .from('subscriptions')
-            .select(`
-              id,
-              investor_id,
-              deal_id,
-              commitment,
-              status,
-              subscription_date,
-              deals (
-                id,
-                name,
-                status
-              )
-            `)
-            .in('investor_id', investorIds)
-            .order('created_at', { ascending: false })
-
-          if (subs) {
-            // Group by investor_id, keeping all subscriptions
-            subs.forEach((s: any) => {
-              if (!subscriptionsMap[s.investor_id]) {
-                subscriptionsMap[s.investor_id] = []
-              }
-              subscriptionsMap[s.investor_id].push(s)
-            })
-          }
-        }
-
-        // Query deal_memberships for progression data (interest, NDA, dataroom access timestamps)
-        // This helps accurately determine journey stage for clients without subscriptions
-        let membershipMap: Record<string, MembershipProgression> = {}
-        if (investorIds.length > 0) {
-          const { data: memberships } = await supabase
-            .from('deal_memberships')
-            .select('investor_id, deal_id, interest_confirmed_at, nda_signed_at, data_room_granted_at')
-            .in('investor_id', investorIds)
-
-          if (memberships) {
-            memberships.forEach((m: any) => {
-              // Key by investor_id:deal_id to match specific client-deal relationships
-              const key = `${m.investor_id}:${m.deal_id}`
-              membershipMap[key] = {
-                interest_confirmed_at: m.interest_confirmed_at,
-                nda_signed_at: m.nda_signed_at,
-                data_room_granted_at: m.data_room_granted_at,
-              }
-            })
-          }
-        }
-
-        // Check for actual dataroom access (verified via deal_data_room_access table)
-        const dealIds = (clientsData || [])
-          .filter((c: any) => c.created_for_deal_id)
-          .map((c: any) => c.created_for_deal_id)
-
-        let dataroomAccessMap: Record<string, boolean> = {}
-        if (dealIds.length > 0 && investorIds.length > 0) {
-          // Query actual dataroom access records - only active, non-revoked, non-expired
-          const { data: accessRecords } = await supabase
-            .from('deal_data_room_access')
-            .select('deal_id, investor_id')
-            .in('deal_id', dealIds)
-            .in('investor_id', investorIds)
-            .is('revoked_at', null)
-            .or(`expires_at.is.null,expires_at.gte.${new Date().toISOString()}`)
-
-          // Build access map keyed by "dealId:investorId" for precise matching
-          if (accessRecords) {
-            accessRecords.forEach((record: any) => {
-              // Key by deal_id:investor_id to match specific client access
-              const key = `${record.deal_id}:${record.investor_id}`
-              dataroomAccessMap[key] = true
-            })
-          }
-        }
-
-        processClients(
-          clientsData || [],
-          subscriptionsMap,
-          dataroomAccessMap,
-          membershipMap,
-          agreement?.default_commission_bps || 0
-        )
+        const data = await response.json()
+        setPartnerInfo(data.partner || null)
+        setPlacementAgreement(data.placement_agreement || null)
+        setClients(data.clients || [])
+        setSummary(data.summary || {
+          totalClients: 0,
+          activeClients: 0,
+          totalTransactions: 0,
+          totalValue: 0,
+          estimatedCommission: 0,
+        })
         setError(null)
       } catch (err) {
         console.error('[ClientTransactionsPage] Error:', err)
@@ -357,137 +177,6 @@ export default function ClientTransactionsPage() {
       } finally {
         setLoading(false)
       }
-    }
-
-    async function fetchAllClients(supabase: any) {
-      // Staff view - show all clients with partner info
-      const { data: clientsData, error: clientsError } = await supabase
-        .from('commercial_partner_clients')
-        .select(`
-          id,
-          client_name,
-          client_email,
-          client_type,
-          is_active,
-          created_at,
-          created_for_deal_id,
-          client_investor_id,
-          deal:created_for_deal_id (
-            id,
-            name,
-            status
-          ),
-          commercial_partner:commercial_partner_id (
-            id,
-            name,
-            status
-          )
-        `)
-        .order('created_at', { ascending: false })
-        .limit(100)
-
-      if (clientsError) throw clientsError
-      processClients(clientsData || [], {}, {}, {}, 0)
-    }
-
-    function processClients(
-      data: any[],
-      subscriptionsMap: Record<string, any[]>,
-      dataroomAccessMap: Record<string, boolean>,
-      membershipMap: Record<string, MembershipProgression>,
-      commissionBps: number
-    ) {
-      const processed: ClientTransaction[] = []
-
-      data.forEach((client) => {
-        const subscriptions = client.client_investor_id
-          ? subscriptionsMap[client.client_investor_id] || []
-          : []
-
-        if (subscriptions.length === 0) {
-          // Client without subscription - single entry
-          // Get membership progression for this client-deal pair
-          const membershipKey = client.client_investor_id && client.created_for_deal_id
-            ? `${client.client_investor_id}:${client.created_for_deal_id}`
-            : ''
-          const membership = membershipKey ? membershipMap[membershipKey] : undefined
-
-          processed.push({
-            id: client.id,
-            client_name: client.client_name || 'Unknown Client',
-            client_email: client.client_email,
-            client_type: client.client_type,
-            is_active: client.is_active ?? true,
-            created_at: client.created_at,
-            deal_id: client.created_for_deal_id,
-            deal_name: client.deal?.name || null,
-            deal_status: client.deal?.status || null,
-            investor_id: client.client_investor_id,
-            subscription_id: null,
-            subscription_amount: null,
-            subscription_status: null,
-            subscription_date: null,
-            journey_stage: getJourneyStage(null, false, membership),
-            has_termsheet: !!client.created_for_deal_id,
-            has_dataroom_access: !!(client.created_for_deal_id && client.client_investor_id && dataroomAccessMap[`${client.created_for_deal_id}:${client.client_investor_id}`]),
-            estimated_commission: null,
-            commission_rate_bps: commissionBps,
-          })
-        } else {
-          // Create entry for each subscription
-          subscriptions.forEach((sub: any) => {
-            const commitment = sub.commitment || 0
-            const estimatedComm = commissionBps > 0 ? (commitment * commissionBps) / 10000 : null
-            // Get membership progression for this subscription's deal
-            const subMembershipKey = client.client_investor_id && sub.deal_id
-              ? `${client.client_investor_id}:${sub.deal_id}`
-              : ''
-            const subMembership = subMembershipKey ? membershipMap[subMembershipKey] : undefined
-
-            processed.push({
-              id: `${client.id}-${sub.id}`,
-              client_name: client.client_name || 'Unknown Client',
-              client_email: client.client_email,
-              client_type: client.client_type,
-              is_active: client.is_active ?? true,
-              created_at: sub.subscription_date || client.created_at,
-              deal_id: sub.deal_id,
-              deal_name: sub.deals?.name || client.deal?.name || null,
-              deal_status: sub.deals?.status || client.deal?.status || null,
-              investor_id: client.client_investor_id,
-              subscription_id: sub.id,
-              subscription_amount: commitment,
-              subscription_status: sub.status,
-              subscription_date: sub.subscription_date,
-              journey_stage: getJourneyStage(sub.status, true, subMembership),
-              has_termsheet: true,
-              has_dataroom_access: !!(sub.deal_id && client.client_investor_id && dataroomAccessMap[`${sub.deal_id}:${client.client_investor_id}`]),
-              estimated_commission: estimatedComm,
-              commission_rate_bps: commissionBps,
-            })
-          })
-        }
-      })
-
-      setClients(processed)
-
-      // Calculate summary
-      const uniqueClients = new Set(data.map((c: any) => c.id))
-      const activeClients = data.filter((c: any) => c.is_active).length
-      const withSubscription = processed.filter(c => c.subscription_amount)
-      const totalValue = withSubscription.reduce((sum, c) => sum + (c.subscription_amount || 0), 0)
-      const estimatedCommission = withSubscription.reduce(
-        (sum, c) => sum + (c.estimated_commission || 0),
-        0
-      )
-
-      setSummary({
-        totalClients: uniqueClients.size,
-        activeClients,
-        totalTransactions: withSubscription.length,
-        totalValue,
-        estimatedCommission,
-      })
     }
 
     fetchData()

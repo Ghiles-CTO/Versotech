@@ -39,6 +39,31 @@ type Persona = {
   logo_url?: string | null
 }
 
+type JourneyStage = 'interested' | 'approved' | 'signed' | 'funded' | 'passed'
+
+function getStageFromIntroduction(status: string | null): JourneyStage {
+  switch (status) {
+    case 'allocated':
+      return 'signed'
+    case 'joined':
+      return 'approved'
+    case 'lost':
+    case 'inactive':
+      return 'passed'
+    case 'invited':
+    default:
+      return 'interested'
+  }
+}
+
+function resolveJourneyStage(status: string | null, hasCommission: boolean): JourneyStage {
+  const base = getStageFromIntroduction(status)
+  if (status === 'allocated' && hasCommission) {
+    return 'funded'
+  }
+  return base
+}
+
 interface IntroducerDashboardProps {
   introducerId: string
   userId: string
@@ -47,8 +72,11 @@ interface IntroducerDashboardProps {
 
 type IntroducerMetrics = {
   totalIntroductions: number
-  pendingIntroductions: number
-  allocatedIntroductions: number
+  interestedIntroductions: number
+  approvedIntroductions: number
+  signedIntroductions: number
+  fundedIntroductions: number
+  passedIntroductions: number
   totalCommissionEarned: number
   pendingCommission: number
   conversionRate: number
@@ -128,13 +156,10 @@ export function IntroducerDashboard({ introducerId, userId, persona }: Introduce
           return true
         })
 
-        const pending = intros.filter(i => i.status === 'invited' || i.status === 'joined')
-        const allocated = intros.filter(i => i.status === 'allocated')
-
         // Fetch commissions (using created_at as the date column)
         const { data: commissions } = await supabase
           .from('introducer_commissions')
-          .select('id, accrual_amount, status, created_at')
+          .select('id, accrual_amount, status, created_at, introduction_id')
           .eq('introducer_id', introducerId)
 
         const allComms = commissions || []
@@ -159,20 +184,40 @@ export function IntroducerDashboard({ introducerId, userId, persona }: Introduce
           return true
         })
 
+        const fundedIntroIds = new Set(
+          comms
+            .filter(c => c.introduction_id)
+            .map(c => c.introduction_id)
+        )
+
+        const stagedIntros = intros.map(i => ({
+          ...i,
+          journey_stage: resolveJourneyStage(i.status, fundedIntroIds.has(i.id))
+        }))
+
+        const interested = stagedIntros.filter(i => i.journey_stage === 'interested').length
+        const approved = stagedIntros.filter(i => i.journey_stage === 'approved').length
+        const signed = stagedIntros.filter(i => i.journey_stage === 'signed').length
+        const funded = stagedIntros.filter(i => i.journey_stage === 'funded').length
+        const passed = stagedIntros.filter(i => i.journey_stage === 'passed').length
+
         const totalEarned = comms
           .filter(c => c.status === 'paid')
           .reduce((sum, c) => sum + (c.accrual_amount || 0), 0)
         const pendingComm = comms
-          .filter(c => c.status === 'accrued' || c.status === 'invoiced')
+          .filter(c => ['accrued', 'invoice_requested', 'invoice_submitted', 'invoiced'].includes(c.status))
           .reduce((sum, c) => sum + (c.accrual_amount || 0), 0)
 
         setMetrics({
           totalIntroductions: intros.length,
-          pendingIntroductions: pending.length,
-          allocatedIntroductions: allocated.length,
+          interestedIntroductions: interested,
+          approvedIntroductions: approved,
+          signedIntroductions: signed,
+          fundedIntroductions: funded,
+          passedIntroductions: passed,
           totalCommissionEarned: totalEarned,
           pendingCommission: pendingComm,
-          conversionRate: intros.length > 0 ? (allocated.length / intros.length) * 100 : 0,
+          conversionRate: intros.length > 0 ? (funded / intros.length) * 100 : 0,
         })
 
         // Calculate performance metrics based on date range or default to monthly comparison
@@ -194,8 +239,8 @@ export function IntroducerDashboard({ introducerId, userId, persona }: Introduce
           ? Math.round(((thisMonthIntroductions - lastMonthIntroductions) / lastMonthIntroductions) * 100)
           : thisMonthIntroductions > 0 ? 100 : 0
 
-        const avgCommissionPerIntro = allocated.length > 0
-          ? Math.round(totalEarned / allocated.length)
+        const avgCommissionPerIntro = funded > 0
+          ? Math.round(totalEarned / funded)
           : 0
 
         setPerformance({
@@ -206,10 +251,10 @@ export function IntroducerDashboard({ introducerId, userId, persona }: Introduce
         })
 
         // Map introductions to match expected type (deal is single object, not array)
-        const mappedIntros: RecentIntroduction[] = intros.slice(0, 5).map((intro: any) => ({
+        const mappedIntros: RecentIntroduction[] = stagedIntros.slice(0, 5).map((intro: any) => ({
           id: intro.id,
           prospect_email: intro.prospect_email,
-          status: intro.status,
+          status: intro.journey_stage,
           introduced_at: intro.introduced_at,
           deal: Array.isArray(intro.deal) ? intro.deal[0] || null : intro.deal,
         }))
@@ -250,10 +295,11 @@ export function IntroducerDashboard({ introducerId, userId, persona }: Introduce
   }
 
   const statusStyles: Record<string, string> = {
-    invited: 'bg-blue-500/20 text-blue-400',
-    joined: 'bg-purple-500/20 text-purple-400',
-    allocated: 'bg-green-500/20 text-green-400',
-    lost: 'bg-red-500/20 text-red-400',
+    interested: 'bg-blue-500/20 text-blue-400',
+    approved: 'bg-purple-500/20 text-purple-400',
+    signed: 'bg-amber-500/20 text-amber-400',
+    funded: 'bg-green-500/20 text-green-400',
+    passed: 'bg-gray-500/20 text-gray-400',
   }
 
   return (
@@ -393,7 +439,7 @@ export function IntroducerDashboard({ introducerId, userId, persona }: Introduce
               {metrics?.totalIntroductions || 0}
             </div>
             <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-              {metrics?.pendingIntroductions || 0} pending
+              {metrics?.interestedIntroductions || 0} interested
             </p>
           </CardContent>
         </Card>
@@ -410,7 +456,7 @@ export function IntroducerDashboard({ introducerId, userId, persona }: Introduce
               {metrics?.conversionRate.toFixed(1) || 0}%
             </div>
             <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-              {metrics?.allocatedIntroductions || 0} allocated
+              {metrics?.fundedIntroductions || 0} funded
             </p>
           </CardContent>
         </Card>
@@ -444,7 +490,7 @@ export function IntroducerDashboard({ introducerId, userId, persona }: Introduce
               {formatCurrency(metrics?.pendingCommission || 0)}
             </div>
             <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-              Accrued or invoiced
+              Accrued or awaiting approval
             </p>
           </CardContent>
         </Card>
@@ -491,7 +537,7 @@ export function IntroducerDashboard({ introducerId, userId, persona }: Introduce
                   {metrics?.conversionRate.toFixed(1) || 0}%
                 </div>
                 <p className={`text-xs mt-1 ${isDark ? 'text-gray-500' : 'text-muted-foreground'}`}>
-                  {metrics?.allocatedIntroductions || 0} of {metrics?.totalIntroductions || 0} allocated
+                  {metrics?.fundedIntroductions || 0} of {metrics?.totalIntroductions || 0} funded
                 </p>
               </div>
 

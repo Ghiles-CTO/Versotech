@@ -45,6 +45,8 @@ import {
   ClipboardList,
 } from 'lucide-react'
 import { ConfirmIntroducerPaymentModal } from './confirm-introducer-payment-modal'
+import { ConfirmPartnerPaymentModal } from './confirm-partner-payment-modal'
+import { ConfirmCommercialPartnerPaymentModal } from './confirm-commercial-partner-payment-modal'
 import { cn } from '@/lib/utils'
 import { formatDate } from '@/lib/format'
 
@@ -116,6 +118,30 @@ type IntroducerCommission = {
   created_at: string
 }
 
+type PartnerCommission = {
+  id: string
+  partner_name: string
+  deal_id: string | null
+  deal_name: string | null
+  accrual_amount: number
+  currency: string
+  status: string
+  invoice_id: string | null
+  created_at: string
+}
+
+type CommercialPartnerCommission = {
+  id: string
+  commercial_partner_name: string
+  deal_id: string | null
+  deal_name: string | null
+  accrual_amount: number
+  currency: string
+  status: string
+  invoice_id: string | null
+  created_at: string
+}
+
 type UnifiedCommission = {
   id: string
   entity_type: 'introducer' | 'partner' | 'commercial_partner'
@@ -137,6 +163,8 @@ type LawyerReconciliationClientProps = {
   subscriptions: Subscription[]
   feeEvents: FeeEvent[]
   introducerCommissions: IntroducerCommission[]
+  partnerCommissions: PartnerCommission[]
+  commercialPartnerCommissions: CommercialPartnerCommission[]
   allCommissions: UnifiedCommission[]
 }
 
@@ -187,15 +215,19 @@ const FEE_TYPE_LABELS: Record<string, string> = {
 const COMMISSION_STATUS_STYLES: Record<string, string> = {
   accrued: 'bg-blue-100 text-blue-800 border-blue-200',
   invoice_requested: 'bg-amber-100 text-amber-800 border-amber-200',
+  invoice_submitted: 'bg-indigo-100 text-indigo-800 border-indigo-200',
   invoiced: 'bg-purple-100 text-purple-800 border-purple-200',
   paid: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+  rejected: 'bg-rose-100 text-rose-800 border-rose-200',
 }
 
 const COMMISSION_STATUS_LABELS: Record<string, string> = {
   accrued: 'Accrued',
   invoice_requested: 'Invoice Requested',
+  invoice_submitted: 'Invoice Submitted',
   invoiced: 'Invoiced',
   paid: 'Paid',
+  rejected: 'Rejected',
 }
 
 const ENTITY_TYPE_CONFIG: Record<string, { label: string; icon: typeof UserCheck; color: string }> = {
@@ -210,6 +242,8 @@ export function LawyerReconciliationClient({
   subscriptions,
   feeEvents,
   introducerCommissions,
+  partnerCommissions,
+  commercialPartnerCommissions,
   allCommissions
 }: LawyerReconciliationClientProps) {
   const [search, setSearch] = useState('')
@@ -217,6 +251,10 @@ export function LawyerReconciliationClient({
   const [activeTab, setActiveTab] = useState('subscriptions')
   const [confirmPaymentOpen, setConfirmPaymentOpen] = useState(false)
   const [selectedCommission, setSelectedCommission] = useState<IntroducerCommission | null>(null)
+  const [confirmPartnerPaymentOpen, setConfirmPartnerPaymentOpen] = useState(false)
+  const [selectedPartnerCommission, setSelectedPartnerCommission] = useState<PartnerCommission | null>(null)
+  const [confirmCPPaymentOpen, setConfirmCPPaymentOpen] = useState(false)
+  const [selectedCPCommission, setSelectedCPCommission] = useState<CommercialPartnerCommission | null>(null)
   const [commissionStatusFilter, setCommissionStatusFilter] = useState('all')
 
   // Calculate summary metrics (grouped by currency to avoid mixing USD/EUR/GBP)
@@ -325,6 +363,26 @@ export function LawyerReconciliationClient({
       return matchesDeal && matchesSearch
     })
   }, [introducerCommissions, dealFilter, search])
+
+  const filteredPartnerCommissions = useMemo(() => {
+    return partnerCommissions.filter(pc => {
+      const matchesDeal = dealFilter === 'all' || pc.deal_id === dealFilter
+      const matchesSearch = !search ||
+        pc.partner_name.toLowerCase().includes(search.toLowerCase()) ||
+        (pc.deal_name && pc.deal_name.toLowerCase().includes(search.toLowerCase()))
+      return matchesDeal && matchesSearch
+    })
+  }, [partnerCommissions, dealFilter, search])
+
+  const filteredCommercialPartnerCommissions = useMemo(() => {
+    return commercialPartnerCommissions.filter(cpc => {
+      const matchesDeal = dealFilter === 'all' || cpc.deal_id === dealFilter
+      const matchesSearch = !search ||
+        cpc.commercial_partner_name.toLowerCase().includes(search.toLowerCase()) ||
+        (cpc.deal_name && cpc.deal_name.toLowerCase().includes(search.toLowerCase()))
+      return matchesDeal && matchesSearch
+    })
+  }, [commercialPartnerCommissions, dealFilter, search])
 
   // Filter all commissions (for Commission Status tab)
   const filteredAllCommissions = useMemo(() => {
@@ -553,6 +611,14 @@ export function LawyerReconciliationClient({
               <Users className="h-4 w-4" />
               Introducer Fees ({filteredIntroducerCommissions.length})
             </TabsTrigger>
+            <TabsTrigger value="partner-fees" className="flex items-center gap-2">
+              <Handshake className="h-4 w-4" />
+              Partner Fees ({filteredPartnerCommissions.length})
+            </TabsTrigger>
+            <TabsTrigger value="commercial-partner-fees" className="flex items-center gap-2">
+              <Briefcase className="h-4 w-4" />
+              Commercial Partner Fees ({filteredCommercialPartnerCommissions.length})
+            </TabsTrigger>
             <TabsTrigger value="deals" className="flex items-center gap-2">
               <Building2 className="h-4 w-4" />
               Deal Summary ({deals.length})
@@ -762,8 +828,10 @@ export function LawyerReconciliationClient({
                     <SelectItem value="all">All Statuses</SelectItem>
                     <SelectItem value="accrued">Accrued</SelectItem>
                     <SelectItem value="invoice_requested">Invoice Requested</SelectItem>
+                    <SelectItem value="invoice_submitted">Invoice Submitted</SelectItem>
                     <SelectItem value="invoiced">Invoiced</SelectItem>
                     <SelectItem value="paid">Paid</SelectItem>
+                    <SelectItem value="rejected">Rejected</SelectItem>
                   </SelectContent>
                 </Select>
               </CardHeader>
@@ -922,6 +990,162 @@ export function LawyerReconciliationClient({
             </Card>
           </TabsContent>
 
+          {/* Partner Fees Tab */}
+          <TabsContent value="partner-fees">
+            <Card>
+              <CardHeader>
+                <CardTitle>Partner Fee Payments</CardTitle>
+                <CardDescription>
+                  Partner commissions awaiting payment confirmation
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {filteredPartnerCommissions.length === 0 ? (
+                  <div className="border border-dashed border-muted rounded-lg py-12 flex flex-col items-center justify-center text-center space-y-2">
+                    <Handshake className="h-10 w-10 text-muted-foreground" />
+                    <p className="text-sm text-muted-foreground">
+                      No partner commissions awaiting payment
+                    </p>
+                  </div>
+                ) : (
+                  <div className="rounded-md border">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Partner</TableHead>
+                          <TableHead>Deal</TableHead>
+                          <TableHead>Amount</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Date</TableHead>
+                          <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredPartnerCommissions.map((pc) => (
+                          <TableRow key={pc.id}>
+                            <TableCell>
+                              <div className="font-medium">{pc.partner_name}</div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="text-sm">{pc.deal_name || '—'}</div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="font-medium text-green-600">
+                                {formatCurrency(pc.accrual_amount, pc.currency)}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <Badge
+                                variant="outline"
+                                className="bg-amber-100 text-amber-800 border-amber-200"
+                              >
+                                Awaiting Payment
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <div className="text-sm">{formatDate(pc.created_at)}</div>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <Button
+                                size="sm"
+                                className="bg-green-600 hover:bg-green-700"
+                                onClick={() => {
+                                  setSelectedPartnerCommission(pc)
+                                  setConfirmPartnerPaymentOpen(true)
+                                }}
+                              >
+                                <CheckCircle className="h-4 w-4 mr-1" />
+                                Confirm Payment
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Commercial Partner Fees Tab */}
+          <TabsContent value="commercial-partner-fees">
+            <Card>
+              <CardHeader>
+                <CardTitle>Commercial Partner Fee Payments</CardTitle>
+                <CardDescription>
+                  Commercial partner commissions awaiting payment confirmation
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {filteredCommercialPartnerCommissions.length === 0 ? (
+                  <div className="border border-dashed border-muted rounded-lg py-12 flex flex-col items-center justify-center text-center space-y-2">
+                    <Briefcase className="h-10 w-10 text-muted-foreground" />
+                    <p className="text-sm text-muted-foreground">
+                      No commercial partner commissions awaiting payment
+                    </p>
+                  </div>
+                ) : (
+                  <div className="rounded-md border">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Commercial Partner</TableHead>
+                          <TableHead>Deal</TableHead>
+                          <TableHead>Amount</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Date</TableHead>
+                          <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredCommercialPartnerCommissions.map((cpc) => (
+                          <TableRow key={cpc.id}>
+                            <TableCell>
+                              <div className="font-medium">{cpc.commercial_partner_name}</div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="text-sm">{cpc.deal_name || '—'}</div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="font-medium text-green-600">
+                                {formatCurrency(cpc.accrual_amount, cpc.currency)}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <Badge
+                                variant="outline"
+                                className="bg-amber-100 text-amber-800 border-amber-200"
+                              >
+                                Awaiting Payment
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <div className="text-sm">{formatDate(cpc.created_at)}</div>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <Button
+                                size="sm"
+                                className="bg-green-600 hover:bg-green-700"
+                                onClick={() => {
+                                  setSelectedCPCommission(cpc)
+                                  setConfirmCPPaymentOpen(true)
+                                }}
+                              >
+                                <CheckCircle className="h-4 w-4 mr-1" />
+                                Confirm Payment
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           {/* Deal Summary Tab */}
           <TabsContent value="deals">
             <Card>
@@ -1008,6 +1232,22 @@ export function LawyerReconciliationClient({
         open={confirmPaymentOpen}
         onOpenChange={setConfirmPaymentOpen}
         commission={selectedCommission}
+        onSuccess={() => window.location.reload()}
+      />
+
+      {/* Confirm Partner Payment Modal */}
+      <ConfirmPartnerPaymentModal
+        open={confirmPartnerPaymentOpen}
+        onOpenChange={setConfirmPartnerPaymentOpen}
+        commission={selectedPartnerCommission}
+        onSuccess={() => window.location.reload()}
+      />
+
+      {/* Confirm Commercial Partner Payment Modal */}
+      <ConfirmCommercialPartnerPaymentModal
+        open={confirmCPPaymentOpen}
+        onOpenChange={setConfirmCPPaymentOpen}
+        commission={selectedCPCommission}
         onSuccess={() => window.location.reload()}
       />
     </div>

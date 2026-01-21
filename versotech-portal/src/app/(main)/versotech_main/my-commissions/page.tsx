@@ -94,6 +94,7 @@ type Summary = {
 const STATUS_STYLES: Record<string, string> = {
   accrued: 'bg-blue-100 text-blue-800',
   invoice_requested: 'bg-yellow-100 text-yellow-800',
+  invoice_submitted: 'bg-indigo-100 text-indigo-800',
   invoiced: 'bg-orange-100 text-orange-800',
   paid: 'bg-green-100 text-green-800',
   cancelled: 'bg-red-100 text-red-800',
@@ -103,6 +104,7 @@ const STATUS_STYLES: Record<string, string> = {
 const STATUS_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   accrued: Clock,
   invoice_requested: FileText,
+  invoice_submitted: FileText,
   invoiced: FileText,
   paid: CheckCircle,
   cancelled: XCircle,
@@ -112,6 +114,7 @@ const STATUS_ICONS: Record<string, React.ComponentType<{ className?: string }>> 
 const STATUS_FILTERS = [
   { label: 'All Status', value: 'all' },
   { label: 'Invoice Requested', value: 'invoice_requested' },
+  { label: 'Invoice Submitted', value: 'invoice_submitted' },
   { label: 'Invoiced', value: 'invoiced' },
   { label: 'Paid', value: 'paid' },
   { label: 'Accrued', value: 'accrued' },
@@ -281,14 +284,14 @@ export default function MyCommissionsPage() {
 
         if (c.status === 'paid') {
           summaryData.total_paid += amount
-        } else if (c.status !== 'cancelled') {
+        } else if (!['cancelled', 'rejected'].includes(c.status)) {
           summaryData.total_owed += amount
         }
 
         if (c.status === 'invoice_requested') {
           summaryData.pending_invoice += amount
         }
-        if (c.status === 'invoiced') {
+        if (c.status === 'invoice_submitted' || c.status === 'invoiced') {
           summaryData.invoiced += amount
         }
       })
@@ -666,7 +669,7 @@ export default function MyCommissionsPage() {
                                   Resubmit
                                 </Button>
                               )}
-                              {(commission.status === 'invoiced' || commission.status === 'paid') &&
+                              {(commission.status === 'invoice_submitted' || commission.status === 'invoiced' || commission.status === 'paid') &&
                                 commission.invoice_id && (
                                 <Button
                                   size="sm"

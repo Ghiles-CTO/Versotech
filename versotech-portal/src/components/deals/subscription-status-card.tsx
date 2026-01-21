@@ -4,7 +4,17 @@ import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
+} from '@/components/ui/dialog'
 import { Progress } from '@/components/ui/progress'
+import { Textarea } from '@/components/ui/textarea'
 import {
   FileSignature,
   FileText,
@@ -16,9 +26,11 @@ import {
   Award,
   ChevronDown,
   ExternalLink,
-  Banknote
+  Banknote,
+  MessageSquare
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { toast } from 'sonner'
 
 interface DocumentSignatory {
   name: string
@@ -60,6 +72,8 @@ interface SubscriptionStatusCardProps {
     } | null
   }
   dealCurrency?: string
+  dealId?: string
+  dealName?: string
 }
 
 function formatCurrency(amount: number | null, currency: string = 'USD'): string {
@@ -181,12 +195,20 @@ function DocumentRow({
 
 export function SubscriptionStatusCard({
   subscription,
-  dealCurrency
+  dealCurrency,
+  dealId,
+  dealName
 }: SubscriptionStatusCardProps) {
   const statusConfig = getStatusConfig(subscription.status)
   const StatusIcon = statusConfig.icon
   const currency = subscription.currency || dealCurrency || 'USD'
   const docs = subscription.documents
+  const [clarificationOpen, setClarificationOpen] = useState(false)
+  const [clarificationSubject, setClarificationSubject] = useState(
+    dealName ? `Subscription pack clarification - ${dealName}` : 'Subscription pack clarification'
+  )
+  const [clarificationDetails, setClarificationDetails] = useState('')
+  const [clarificationSubmitting, setClarificationSubmitting] = useState(false)
 
   // Progress calculation
   const steps = [
@@ -267,6 +289,20 @@ export function SubscriptionStatusCard({
           </div>
         )}
 
+        {/* Clarification request */}
+        <div className="pt-1">
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full"
+            onClick={() => setClarificationOpen(true)}
+            disabled={!dealId}
+          >
+            <MessageSquare className="w-4 h-4 mr-2" />
+            Request Clarification
+          </Button>
+        </div>
+
         {/* Active banner */}
         {subscription.is_active && (
           <div className="flex items-center gap-2.5 p-2.5 rounded-lg bg-emerald-50 dark:bg-emerald-900/20">
@@ -286,6 +322,91 @@ export function SubscriptionStatusCard({
           </div>
         )}
       </CardContent>
+
+      <Dialog open={clarificationOpen} onOpenChange={setClarificationOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Request Clarification</DialogTitle>
+            <DialogDescription>
+              Submit questions or clarification requests about the subscription pack.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Subject</label>
+              <Input
+                value={clarificationSubject}
+                onChange={(e) => setClarificationSubject(e.target.value)}
+                placeholder="Subscription pack clarification"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Details</label>
+              <Textarea
+                value={clarificationDetails}
+                onChange={(e) => setClarificationDetails(e.target.value)}
+                placeholder="Share the exact sections or questions you need clarified..."
+                rows={5}
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setClarificationOpen(false)}
+              disabled={clarificationSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={async () => {
+                if (!dealId) return
+                if (!clarificationSubject.trim()) {
+                  toast.error('Please enter a subject for your clarification request.')
+                  return
+                }
+                if (!clarificationDetails.trim()) {
+                  toast.error('Please include details for your clarification request.')
+                  return
+                }
+
+                try {
+                  setClarificationSubmitting(true)
+                  const response = await fetch('/api/requests', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      category: 'communication',
+                      subject: clarificationSubject.trim(),
+                      details: clarificationDetails.trim(),
+                      dealId
+                    })
+                  })
+
+                  if (!response.ok) {
+                    const errorData = await response.json()
+                    throw new Error(errorData.error || 'Failed to submit clarification')
+                  }
+
+                  toast.success('Clarification request submitted.')
+                  setClarificationDetails('')
+                  setClarificationOpen(false)
+                } catch (error) {
+                  console.error('[SubscriptionStatusCard] Clarification error:', error)
+                  toast.error(error instanceof Error ? error.message : 'Failed to submit clarification')
+                } finally {
+                  setClarificationSubmitting(false)
+                }
+              }}
+              disabled={clarificationSubmitting}
+            >
+              {clarificationSubmitting ? 'Submitting...' : 'Submit'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   )
 }

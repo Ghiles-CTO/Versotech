@@ -113,7 +113,7 @@ export async function POST(
         title: 'Invoice Requested',
         message: `Please submit your invoice for commission of ${formattedAmount}${dealText}${arrangerText}.`,
         link: '/versotech_main/my-commissions',
-        type: 'action_required',
+        type: 'cp_invoice_requested',
       }))
 
       await serviceSupabase.from('investor_notifications').insert(notifications)

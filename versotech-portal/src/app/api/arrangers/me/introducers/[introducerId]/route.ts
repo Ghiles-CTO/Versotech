@@ -126,12 +126,13 @@ export async function GET(
       const amount = Number(c.accrual_amount) || 0
       if (c.status === 'accrued') commissionSummary.accrued += amount
       else if (c.status === 'invoice_requested') commissionSummary.invoice_requested += amount
+      else if (c.status === 'invoice_submitted') commissionSummary.invoice_requested += amount
       else if (c.status === 'invoiced') commissionSummary.invoiced += amount
       else if (c.status === 'paid') commissionSummary.paid += amount
       else if (c.status === 'cancelled') commissionSummary.cancelled += amount
 
       // Total owed = accrued + invoice_requested + invoiced (not yet paid)
-      if (['accrued', 'invoice_requested', 'invoiced'].includes(c.status)) {
+      if (['accrued', 'invoice_requested', 'invoice_submitted', 'invoiced'].includes(c.status)) {
         commissionSummary.total_owed += amount
       }
 

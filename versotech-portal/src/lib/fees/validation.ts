@@ -64,7 +64,15 @@ export const invoiceStatusSchema = z.enum([
 
 export const feeScheduleStatusSchema = z.enum(['active', 'completed', 'cancelled', 'paused']);
 
-export const commissionStatusSchema = z.enum(['accrued', 'approved', 'paid']);
+export const commissionStatusSchema = z.enum([
+  'accrued',
+  'invoice_requested',
+  'invoice_submitted',
+  'invoiced',
+  'paid',
+  'cancelled',
+  'rejected',
+]);
 
 // Fee Component schema
 export const feeComponentSchema = z.object({

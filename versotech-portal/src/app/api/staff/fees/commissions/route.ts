@@ -26,7 +26,7 @@ interface NormalizedCommission {
   base_amount: number;
   accrual_amount: number;
   currency: string;
-  status: 'accrued' | 'invoiced' | 'paid';
+  status: 'accrued' | 'invoice_requested' | 'invoice_submitted' | 'invoiced' | 'paid' | 'rejected' | 'cancelled';
   invoice_id: string | null;
   paid_at: string | null;
   payment_due_date: string | null;
@@ -231,10 +231,12 @@ export async function GET(request: NextRequest) {
 
     // Calculate summary stats
     const totalAccrued = allCommissions.filter(c => c.status === 'accrued').reduce((sum, c) => sum + Number(c.accrual_amount), 0);
+    const totalInvoiceRequested = allCommissions.filter(c => c.status === 'invoice_requested').reduce((sum, c) => sum + Number(c.accrual_amount), 0);
+    const totalInvoiceSubmitted = allCommissions.filter(c => c.status === 'invoice_submitted').reduce((sum, c) => sum + Number(c.accrual_amount), 0);
     const totalInvoiced = allCommissions.filter(c => c.status === 'invoiced').reduce((sum, c) => sum + Number(c.accrual_amount), 0);
     const totalPaid = allCommissions.filter(c => c.status === 'paid').reduce((sum, c) => sum + Number(c.accrual_amount), 0);
     const totalOverdue = allCommissions.filter(c =>
-      c.status !== 'paid' &&
+      !['paid', 'cancelled', 'rejected'].includes(c.status) &&
       c.payment_due_date &&
       new Date(c.payment_due_date) < new Date()
     ).reduce((sum, c) => sum + Number(c.accrual_amount), 0);
@@ -267,6 +269,10 @@ export async function GET(request: NextRequest) {
 
       if (comm.status === 'accrued') {
         acc[key].totals.accrued += Number(comm.accrual_amount);
+      } else if (comm.status === 'invoice_requested') {
+        acc[key].totals.accrued += Number(comm.accrual_amount);
+      } else if (comm.status === 'invoice_submitted') {
+        acc[key].totals.accrued += Number(comm.accrual_amount);
       } else if (comm.status === 'invoiced') {
         acc[key].totals.invoiced += Number(comm.accrual_amount);
       } else if (comm.status === 'paid') {
@@ -286,7 +292,7 @@ export async function GET(request: NextRequest) {
         total_invoiced: totalInvoiced,
         total_paid: totalPaid,
         total_overdue: totalOverdue,
-        total_owed: totalAccrued + totalInvoiced,
+        total_owed: totalAccrued + totalInvoiceRequested + totalInvoiceSubmitted + totalInvoiced,
       },
       by_entity: sortedByEntity,
       // Keep legacy field for backward compatibility

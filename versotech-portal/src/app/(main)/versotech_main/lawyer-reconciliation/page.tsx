@@ -141,13 +141,15 @@ async function renderReconciliationPage(
   entityInfo: { id: string; firm_name: string; display_name: string; specializations: string[] | null; is_active: boolean } | null
 ) {
   if (!dealIds.length) {
-    return (
+      return (
       <LawyerReconciliationClient
         lawyerInfo={entityInfo}
         deals={[]}
         subscriptions={[]}
         feeEvents={[]}
         introducerCommissions={[]}
+        partnerCommissions={[]}
+        commercialPartnerCommissions={[]}
         allCommissions={[]}
       />
     )
@@ -230,6 +232,42 @@ async function renderReconciliationPage(
       created_at,
       deal_id,
       introducer:introducers(id, legal_name),
+      deal:deals(id, name)
+    `)
+    .in('deal_id', dealIds)
+    .eq('status', 'invoiced')
+    .order('created_at', { ascending: false })
+
+  // Fetch partner commissions awaiting payment (status = 'invoiced')
+  const { data: partnerCommissionsData } = await serviceSupabase
+    .from('partner_commissions')
+    .select(`
+      id,
+      status,
+      accrual_amount,
+      currency,
+      invoice_id,
+      created_at,
+      deal_id,
+      partner:partners(id, legal_name, name),
+      deal:deals(id, name)
+    `)
+    .in('deal_id', dealIds)
+    .eq('status', 'invoiced')
+    .order('created_at', { ascending: false })
+
+  // Fetch commercial partner commissions awaiting payment (status = 'invoiced')
+  const { data: commercialPartnerCommissionsData } = await serviceSupabase
+    .from('commercial_partner_commissions')
+    .select(`
+      id,
+      status,
+      accrual_amount,
+      currency,
+      invoice_id,
+      created_at,
+      deal_id,
+      commercial_partner:commercial_partners(id, legal_name, name, display_name),
       deal:deals(id, name)
     `)
     .in('deal_id', dealIds)
@@ -371,6 +409,40 @@ async function renderReconciliationPage(
     }
   })
 
+  const partnerCommissions = (partnerCommissionsData || []).map((pc: any) => {
+    const partner = Array.isArray(pc.partner) ? pc.partner[0] : pc.partner
+    const deal = Array.isArray(pc.deal) ? pc.deal[0] : pc.deal
+
+    return {
+      id: pc.id,
+      partner_name: partner?.legal_name || partner?.name || 'Unknown Partner',
+      deal_id: pc.deal_id,
+      deal_name: deal?.name || null,
+      accrual_amount: pc.accrual_amount,
+      currency: pc.currency || 'USD',
+      status: pc.status,
+      invoice_id: pc.invoice_id,
+      created_at: pc.created_at,
+    }
+  })
+
+  const commercialPartnerCommissions = (commercialPartnerCommissionsData || []).map((cpc: any) => {
+    const commercialPartner = Array.isArray(cpc.commercial_partner) ? cpc.commercial_partner[0] : cpc.commercial_partner
+    const deal = Array.isArray(cpc.deal) ? cpc.deal[0] : cpc.deal
+
+    return {
+      id: cpc.id,
+      commercial_partner_name: commercialPartner?.legal_name || commercialPartner?.display_name || commercialPartner?.name || 'Unknown Commercial Partner',
+      deal_id: cpc.deal_id,
+      deal_name: deal?.name || null,
+      accrual_amount: cpc.accrual_amount,
+      currency: cpc.currency || 'USD',
+      status: cpc.status,
+      invoice_id: cpc.invoice_id,
+      created_at: cpc.created_at,
+    }
+  })
+
   // Process ALL commissions for the Commission Status tab (unified format)
   const allCommissions: Array<{
     id: string
@@ -460,6 +532,8 @@ async function renderReconciliationPage(
       subscriptions={subscriptions}
       feeEvents={feeEvents}
       introducerCommissions={introducerCommissions}
+      partnerCommissions={partnerCommissions}
+      commercialPartnerCommissions={commercialPartnerCommissions}
       allCommissions={allCommissions}
     />
   )

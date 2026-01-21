@@ -1462,6 +1462,9 @@ export type Database = {
           payment_due_date: string | null
           payment_reference: string | null
           rate_bps: number
+          rejected_at: string | null
+          rejected_by: string | null
+          rejection_reason: string | null
           status: string | null
           updated_at: string
         }
@@ -1485,6 +1488,9 @@ export type Database = {
           payment_due_date?: string | null
           payment_reference?: string | null
           rate_bps?: number
+          rejected_at?: string | null
+          rejected_by?: string | null
+          rejection_reason?: string | null
           status?: string | null
           updated_at?: string
         }
@@ -1508,6 +1514,9 @@ export type Database = {
           payment_due_date?: string | null
           payment_reference?: string | null
           rate_bps?: number
+          rejected_at?: string | null
+          rejected_by?: string | null
+          rejection_reason?: string | null
           status?: string | null
           updated_at?: string
         }
@@ -2974,6 +2983,8 @@ export type Database = {
         Row: {
           accepted_at: string | null
           assigned_fee_plan_id: string | null
+          co_referrer_entity_id: string | null
+          co_referrer_entity_type: string | null
           data_room_granted_at: string | null
           deal_id: string
           dispatched_at: string | null
@@ -2991,6 +3002,8 @@ export type Database = {
         Insert: {
           accepted_at?: string | null
           assigned_fee_plan_id?: string | null
+          co_referrer_entity_id?: string | null
+          co_referrer_entity_type?: string | null
           data_room_granted_at?: string | null
           deal_id: string
           dispatched_at?: string | null
@@ -3008,6 +3021,8 @@ export type Database = {
         Update: {
           accepted_at?: string | null
           assigned_fee_plan_id?: string | null
+          co_referrer_entity_id?: string | null
+          co_referrer_entity_type?: string | null
           data_room_granted_at?: string | null
           deal_id?: string
           dispatched_at?: string | null
@@ -7742,7 +7757,10 @@ export type Database = {
           invited_by: string
           invited_by_name: string | null
           is_signatory: boolean
+          last_reminded_at: string | null
           role: string
+          reminder_count: number
+          sent_at: string | null
           status: string
         }
         Insert: {
@@ -7759,7 +7777,10 @@ export type Database = {
           invited_by: string
           invited_by_name?: string | null
           is_signatory?: boolean
+          last_reminded_at?: string | null
           role?: string
+          reminder_count?: number
+          sent_at?: string | null
           status?: string
         }
         Update: {
@@ -7776,7 +7797,10 @@ export type Database = {
           invited_by?: string
           invited_by_name?: string | null
           is_signatory?: boolean
+          last_reminded_at?: string | null
           role?: string
+          reminder_count?: number
+          sent_at?: string | null
           status?: string
         }
         Relationships: []

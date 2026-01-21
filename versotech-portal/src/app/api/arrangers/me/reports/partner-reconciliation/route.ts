@@ -182,9 +182,11 @@ export async function GET(request: NextRequest) {
       by_status: {
         accrued: { count: 0, amount: 0 },
         invoice_requested: { count: 0, amount: 0 },
+        invoice_submitted: { count: 0, amount: 0 },
         invoiced: { count: 0, amount: 0 },
         paid: { count: 0, amount: 0 },
         cancelled: { count: 0, amount: 0 },
+        rejected: { count: 0, amount: 0 },
       },
       currency: 'USD',
     }

@@ -31,7 +31,7 @@ const createCommissionSchema = z.object({
  * Query params:
  * - commercial_partner_id: Filter by specific CP
  * - deal_id: Filter by specific deal
- * - status: Filter by status (accrued, invoice_requested, invoiced, paid, cancelled)
+ * - status: Filter by status (accrued, invoice_requested, invoice_submitted, invoiced, paid, cancelled, rejected)
  * - limit: Pagination limit (default 50)
  * - offset: Pagination offset (default 0)
  */
@@ -106,16 +106,20 @@ export async function GET(request: NextRequest) {
     const summary = {
       total_accrued: 0,
       total_invoice_requested: 0,
+      total_invoice_submitted: 0,
       total_invoiced: 0,
       total_paid: 0,
       total_cancelled: 0,
-      total_owed: 0, // accrued + invoice_requested + invoiced
+      total_rejected: 0,
+      total_owed: 0, // accrued + invoice_requested + invoice_submitted + invoiced
       count_by_status: {
         accrued: 0,
         invoice_requested: 0,
+        invoice_submitted: 0,
         invoiced: 0,
         paid: 0,
         cancelled: 0,
+        rejected: 0,
       },
     }
 
@@ -127,6 +131,9 @@ export async function GET(request: NextRequest) {
       } else if (c.status === 'invoice_requested') {
         summary.total_invoice_requested += amount
         summary.count_by_status.invoice_requested++
+      } else if (c.status === 'invoice_submitted') {
+        summary.total_invoice_submitted += amount
+        summary.count_by_status.invoice_submitted++
       } else if (c.status === 'invoiced') {
         summary.total_invoiced += amount
         summary.count_by_status.invoiced++
@@ -136,10 +143,13 @@ export async function GET(request: NextRequest) {
       } else if (c.status === 'cancelled') {
         summary.total_cancelled += amount
         summary.count_by_status.cancelled++
+      } else if (c.status === 'rejected') {
+        summary.total_rejected += amount
+        summary.count_by_status.rejected++
       }
     })
 
-    summary.total_owed = summary.total_accrued + summary.total_invoice_requested + summary.total_invoiced
+    summary.total_owed = summary.total_accrued + summary.total_invoice_requested + summary.total_invoice_submitted + summary.total_invoiced
 
     // Transform response (normalize joined data)
     const transformedCommissions = (commissions || []).map((c: any) => ({

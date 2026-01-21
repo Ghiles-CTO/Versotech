@@ -278,6 +278,13 @@ export async function POST(
       type: string;
     }> = [];
 
+    // Use entity-specific notification type for proper categorization
+    const entityNotificationType = entityType === 'commercial_partner'
+      ? 'cp_payment_confirmed'
+      : entityType === 'partner'
+        ? 'partner_paid'
+        : 'introducer_payment_confirmed';
+
     // 1. Notify entity users (partner/introducer/CP) that payment was made
     const { data: entityUsers } = await serviceSupabase
       .from(config.userTable)
@@ -292,7 +299,7 @@ export async function POST(
           title: 'Payment Confirmed',
           message: `Your commission payment of ${formattedAmount} has been processed.${payment_reference ? ` Reference: ${payment_reference}` : ''}`,
           link: config.commissionLink,
-          type: 'introducer_payment_confirmed', // Use proper notification type from NotificationType
+          type: entityNotificationType,
         });
       }
     }
@@ -311,7 +318,7 @@ export async function POST(
           title: 'Commission Payment Completed',
           message: `Payment of ${formattedAmount} to ${entityName} has been confirmed.${payment_reference ? ` Reference: ${payment_reference}` : ''}`,
           link: config.arrangerLink,
-          type: 'introducer_payment_confirmed', // Use proper notification type from NotificationType
+          type: entityNotificationType, // Use same entity-specific type for consistent categorization
         });
       }
     }

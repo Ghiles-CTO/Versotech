@@ -98,6 +98,9 @@ export async function POST(request: NextRequest) {
         invited_by_name: inviterName,
         status: 'pending', // Auto-approved since CEO/admin is inviting
         expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        sent_at: new Date().toISOString(),
+        reminder_count: 0,
+        last_reminded_at: null,
         // Store extra data in metadata for staff-specific info
         metadata: {
           display_name: validatedData.display_name,

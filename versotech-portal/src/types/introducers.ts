@@ -10,15 +10,17 @@ export type { CommissionSummary }
 
 /**
  * Commission status flow:
- * accrued → invoice_requested → invoiced → paid
- *                            ↘ cancelled
+ * accrued → invoice_requested → invoice_submitted → invoiced → paid
+ *                             ↘ rejected       ↘ cancelled
  */
 export type CommissionStatus =
   | 'accrued'
   | 'invoice_requested'
+  | 'invoice_submitted'
   | 'invoiced'
   | 'paid'
   | 'cancelled'
+  | 'rejected'
 
 /**
  * Basis type for commission calculation

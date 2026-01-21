@@ -354,6 +354,9 @@ export async function handleDealClose(
               if (!canProcess) {
                 // Skip commission creation for this subscription
               } else {
+              // IMPORTANT: Commission basis is ALWAYS 'invested_amount' (funded_amount)
+              // Per PRD: Commission basis NEVER includes management_fee
+              // Commissions are calculated as: funded_amount × (rate_bps / 10000)
               const commissionAmount = (fundedAmount * rateBps) / 10000
               const currency = sub.currency || deal.currency || 'USD'
               const now = new Date().toISOString()
@@ -977,6 +980,9 @@ export async function handleTermsheetClose(
                 const rateBps = subscriptionComponent?.rate_bps || 0
 
                 if (rateBps > 0) {
+                  // IMPORTANT: Commission basis is ALWAYS 'invested_amount' (funded_amount)
+                  // Per PRD: Commission basis NEVER includes management_fee
+                  // Commissions are calculated as: funded_amount × (rate_bps / 10000)
                   const commissionAmount = (fundedAmount * rateBps) / 10000
                   const currency = sub.currency || deal.currency || 'USD'
                   const now = new Date().toISOString()

@@ -4,7 +4,15 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -26,7 +34,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Plus, Edit, Copy, FileText, Building2, Trash2, Users, Briefcase, FileCheck, AlertTriangle, ChevronDown, ChevronRight, CheckCircle, Clock, XCircle, Send, FileSignature, Loader2, Eye, Download } from 'lucide-react';
+import { Plus, Edit, Copy, FileText, Building2, Trash2, Users, Briefcase, FileCheck, AlertTriangle, ChevronDown, ChevronRight, CheckCircle, Clock, XCircle, Send, FileSignature, Loader2, Eye, Download, Building } from 'lucide-react';
 import { toast } from 'sonner';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -165,8 +173,15 @@ function getFeePlanStatusBadge(status: string | undefined) {
   }
 }
 
+interface Deal {
+  id: string;
+  name: string;
+  status: string;
+}
+
+// Props are now optional - the component manages its own deal selection
 interface FeePlansTabProps {
-  dealId?: string;
+  // Intentionally empty - deal selection is now internal
 }
 
 // Entity type configuration for grouping fee plans
@@ -199,7 +214,15 @@ function groupPlansByEntityType(plans: FeePlanWithDeal[]): Record<EntityGroup, F
   return groups;
 }
 
-export default function FeePlansTab({ dealId }: FeePlansTabProps) {
+export default function FeePlansTab({}: FeePlansTabProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Deal selection state (managed internally)
+  const [deals, setDeals] = useState<Deal[]>([]);
+  const [loadingDeals, setLoadingDeals] = useState(true);
+  const dealId = searchParams.get('deal_id') || undefined;
+
   const [plans, setPlans] = useState<FeePlanWithDeal[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
@@ -216,6 +239,36 @@ export default function FeePlansTab({ dealId }: FeePlansTabProps) {
   });
   const [generatingAgreement, setGeneratingAgreement] = useState<string | null>(null);
   const [downloadingPdf, setDownloadingPdf] = useState<string | null>(null);
+
+  // Fetch deals for the selector
+  const fetchDeals = useCallback(async () => {
+    try {
+      const res = await fetch('/api/deals');
+      const data = await res.json();
+      setDeals(data.deals || []);
+    } catch (error) {
+      console.error('Error fetching deals:', error);
+    } finally {
+      setLoadingDeals(false);
+    }
+  }, []);
+
+  // Handle deal selection change - updates URL for deep linking
+  const handleDealChange = (selectedDealId: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+
+    if (selectedDealId === 'none') {
+      params.delete('deal_id');
+    } else {
+      params.set('deal_id', selectedDealId);
+    }
+
+    router.push(`/versotech_main/fees?${params.toString()}`);
+  };
+
+  useEffect(() => {
+    fetchDeals();
+  }, [fetchDeals]);
 
   useEffect(() => {
     fetchPlans();
@@ -490,6 +543,55 @@ export default function FeePlansTab({ dealId }: FeePlansTabProps) {
     return <div className="text-white">Loading fee plans...</div>;
   }
 
+  // Get selected deal info for display
+  const selectedDeal = deals.find((d) => d.id === dealId);
+
+  // Deal selector component (reused in both views)
+  const DealSelector = () => (
+    <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2">
+        <Building2 className="h-5 w-5 text-muted-foreground" />
+        <span className="text-sm font-medium">Deal:</span>
+      </div>
+      <Select
+        value={dealId || 'none'}
+        onValueChange={handleDealChange}
+        disabled={loadingDeals}
+      >
+        <SelectTrigger className="w-[350px]">
+          {loadingDeals ? (
+            <div className="flex items-center gap-2">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span>Loading deals...</span>
+            </div>
+          ) : (
+            <SelectValue placeholder="Select a deal to view fee plans" />
+          )}
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="none">
+            <span className="text-muted-foreground">Select a deal to view fee plans</span>
+          </SelectItem>
+          {deals.map((deal) => (
+            <SelectItem key={deal.id} value={deal.id}>
+              <div className="flex items-center gap-2">
+                <span>{deal.name}</span>
+                <span className="text-xs text-muted-foreground capitalize">
+                  ({deal.status})
+                </span>
+              </div>
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      {selectedDeal && (
+        <span className="text-sm text-muted-foreground">
+          Viewing fee plans for: <strong>{selectedDeal.name}</strong>
+        </span>
+      )}
+    </div>
+  );
+
   // Show prompt if no deal is selected
   if (!dealId) {
     return (
@@ -502,6 +604,10 @@ export default function FeePlansTab({ dealId }: FeePlansTabProps) {
             </p>
           </div>
         </div>
+
+        {/* Deal Selector */}
+        <DealSelector />
+
         <Card>
           <CardContent className="py-10 text-center">
             <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
@@ -534,6 +640,9 @@ export default function FeePlansTab({ dealId }: FeePlansTabProps) {
           </Button>
         </div>
       </div>
+
+      {/* Deal Selector */}
+      <DealSelector />
 
       {/* Explanation Card */}
       <Card className="bg-blue-500/10 border-blue-500/30">

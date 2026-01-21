@@ -159,7 +159,6 @@ export async function POST(request: Request) {
     const now = new Date().toISOString()
 
     // Create deal_membership for each investor user
-    // Note: co_referrer columns don't exist in current schema, so we store introducer_id in metadata if needed
     const membershipsToCreate = investorUsers.map(iu => ({
       deal_id,
       user_id: iu.user_id,
@@ -167,6 +166,8 @@ export async function POST(request: Request) {
       role: 'investor', // Standard investor role
       referred_by_entity_type: 'partner',
       referred_by_entity_id: partnerId,
+      co_referrer_entity_type: introducer_id ? 'introducer' : null,
+      co_referrer_entity_id: introducer_id || null,
       invited_by: user.id,
       invited_at: now,
       dispatched_at: now // Key field - authorizes investor to view the deal

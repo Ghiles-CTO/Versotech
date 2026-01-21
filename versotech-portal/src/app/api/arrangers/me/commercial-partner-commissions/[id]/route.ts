@@ -10,7 +10,7 @@ import { z } from 'zod'
 
 // Schema for updating a commission
 const updateCommissionSchema = z.object({
-  status: z.enum(['accrued', 'invoice_requested', 'invoiced', 'paid', 'cancelled']).optional(),
+  status: z.enum(['accrued', 'invoice_requested', 'invoice_submitted', 'invoiced', 'paid', 'cancelled', 'rejected']).optional(),
   invoice_id: z.string().uuid().optional(),
   payment_reference: z.string().optional(),
   payment_due_date: z.string().optional(),
@@ -140,8 +140,10 @@ export async function PATCH(
     if (data.status) {
       const validTransitions: Record<string, string[]> = {
         accrued: ['invoice_requested', 'cancelled'],
-        invoice_requested: ['invoiced', 'cancelled'],
+        invoice_requested: ['invoice_submitted', 'cancelled'],
+        invoice_submitted: ['invoiced', 'rejected'],
         invoiced: ['paid', 'cancelled'],
+        rejected: ['invoice_submitted', 'cancelled'],
         paid: [], // Cannot transition from paid
         cancelled: [], // Cannot transition from cancelled
       }

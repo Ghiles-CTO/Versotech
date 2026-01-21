@@ -190,6 +190,30 @@ export function NotificationCenter({ className }: NotificationCenterProps) {
           })
         }
 
+        if (personaType === 'lawyer') {
+          const { data: lawyerNotifs } = await supabase
+            .from('notifications')
+            .select('id, title, message, created_at, read, link')
+            .eq('user_id', userId)
+            .eq('read', false)
+            .order('created_at', { ascending: false })
+            .limit(5)
+
+          if (lawyerNotifs) {
+            lawyerNotifs.forEach((notif: any) => {
+              items.push({
+                id: `lawyer-notif-${notif.id}`,
+                type: 'notification',
+                title: notif.title,
+                description: notif.message,
+                href: notif.link || '/versotech_main/notifications',
+                read: !!notif.read,
+                created_at: notif.created_at
+              })
+            })
+          }
+        }
+
         // Sort by date and take top 10
         items.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
         setNotifications(items.slice(0, 10))

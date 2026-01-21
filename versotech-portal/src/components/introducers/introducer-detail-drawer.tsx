@@ -56,9 +56,11 @@ const STATUS_STYLES: Record<string, string> = {
 const COMMISSION_STATUS_ICONS: Record<string, any> = {
   accrued: { icon: Clock, color: 'text-blue-600' },
   invoice_requested: { icon: FileText, color: 'text-yellow-600' },
+  invoice_submitted: { icon: FileText, color: 'text-indigo-600' },
   invoiced: { icon: FileText, color: 'text-orange-600' },
   paid: { icon: CheckCircle, color: 'text-green-600' },
   cancelled: { icon: XCircle, color: 'text-red-600' },
+  rejected: { icon: XCircle, color: 'text-red-600' },
 }
 
 export function IntroducerDetailDrawer({

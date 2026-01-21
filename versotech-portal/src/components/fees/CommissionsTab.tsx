@@ -8,7 +8,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { DollarSign, CheckCircle, Clock, AlertCircle, ExternalLink, FileText, Users, Briefcase, Building2 } from 'lucide-react';
+import { DollarSign, CheckCircle, Clock, AlertCircle, ExternalLink, FileText, Users, Briefcase, Building2, Send } from 'lucide-react';
 import { formatCurrency } from '@/lib/fees/calculations';
 import Link from 'next/link';
 
@@ -31,7 +31,7 @@ interface Commission {
   rate_bps: number;
   accrual_amount: number;
   currency: string;
-  status: 'accrued' | 'invoiced' | 'paid';
+  status: 'accrued' | 'invoice_requested' | 'invoice_submitted' | 'invoiced' | 'paid' | 'rejected' | 'cancelled';
   invoice_id: string | null;
   paid_at: string | null;
   created_at: string;
@@ -72,14 +72,22 @@ interface CommissionsData {
 
 const statusColors = {
   accrued: 'secondary',
+  invoice_requested: 'outline',
+  invoice_submitted: 'default',
   invoiced: 'default',
   paid: 'default',
+  rejected: 'destructive',
+  cancelled: 'secondary',
 } as const;
 
 const statusIcons = {
   accrued: Clock,
+  invoice_requested: Send,
+  invoice_submitted: FileText,
   invoiced: FileText,
   paid: CheckCircle,
+  rejected: AlertCircle,
+  cancelled: AlertCircle,
 };
 
 // Entity type configuration
@@ -112,7 +120,7 @@ const getEntityConfig = (type: EntityType) => {
 export default function CommissionsTab() {
   const [data, setData] = useState<CommissionsData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [statusFilter, setStatusFilter] = useState<'all' | 'accrued' | 'invoiced' | 'paid'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'accrued' | 'invoice_requested' | 'invoice_submitted' | 'invoiced' | 'paid' | 'rejected' | 'cancelled'>('all');
   const [entityTypeFilter, setEntityTypeFilter] = useState<'all' | EntityType>('all');
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
@@ -276,14 +284,18 @@ export default function CommissionsTab() {
         {/* Status Filter */}
         <div className="flex gap-2">
           <span className="text-sm text-gray-400 self-center mr-1">Status:</span>
-          {(['all', 'accrued', 'invoiced', 'paid'] as const).map((status) => (
+          {(['all', 'accrued', 'invoice_requested', 'invoice_submitted', 'invoiced', 'paid', 'rejected', 'cancelled'] as const).map((status) => (
             <Button
               key={status}
               variant={statusFilter === status ? 'default' : 'outline'}
               size="sm"
               onClick={() => setStatusFilter(status)}
             >
-              {status.charAt(0).toUpperCase() + status.slice(1)}
+              {status === 'invoice_requested'
+                ? 'Invoice Requested'
+                : status === 'invoice_submitted'
+                ? 'Invoice Submitted'
+                : status.charAt(0).toUpperCase() + status.slice(1)}
             </Button>
           ))}
         </div>
@@ -385,7 +397,11 @@ export default function CommissionsTab() {
                               <div className="flex items-center gap-2 mb-2">
                                 <Badge variant={statusColors[commission.status]}>
                                   <StatusIcon className="h-3 w-3 mr-1" />
-                                  {commission.status}
+                                  {commission.status === 'invoice_requested'
+                                    ? 'Invoice Requested'
+                                    : commission.status === 'invoice_submitted'
+                                    ? 'Invoice Submitted'
+                                    : commission.status}
                                 </Badge>
                                 {overdue && (
                                   <Badge variant="destructive">
@@ -431,7 +447,7 @@ export default function CommissionsTab() {
                                 </p>
                               </div>
                               <div className="flex flex-col gap-2">
-                                {commission.status === 'accrued' && (
+                                {commission.status === 'invoice_submitted' && (
                                   <Button
                                     size="sm"
                                     onClick={() => handleMarkInvoiced(commission.id, commission.entity_type)}
@@ -440,7 +456,7 @@ export default function CommissionsTab() {
                                     {actionLoading === commission.id ? 'Processing...' : 'Mark Invoiced'}
                                   </Button>
                                 )}
-                                {(commission.status === 'accrued' || commission.status === 'invoiced') && (
+                                {commission.status === 'invoiced' && (
                                   <Button
                                     size="sm"
                                     variant="default"

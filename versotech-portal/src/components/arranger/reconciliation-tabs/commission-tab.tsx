@@ -78,9 +78,11 @@ type Summary = {
   by_status: {
     accrued: { count: number; amount: number }
     invoice_requested: { count: number; amount: number }
+    invoice_submitted: { count: number; amount: number }
     invoiced: { count: number; amount: number }
     paid: { count: number; amount: number }
     cancelled: { count: number; amount: number }
+    rejected: { count: number; amount: number }
   }
   currency: string
 }
@@ -107,9 +109,11 @@ interface CommissionTabProps {
 const STATUS_STYLES: Record<string, string> = {
   accrued: 'bg-blue-100 text-blue-800',
   invoice_requested: 'bg-yellow-100 text-yellow-800',
+  invoice_submitted: 'bg-indigo-100 text-indigo-800',
   invoiced: 'bg-orange-100 text-orange-800',
   paid: 'bg-green-100 text-green-800',
   cancelled: 'bg-red-100 text-red-800',
+  rejected: 'bg-red-100 text-red-800',
 }
 
 const PAGE_SIZE = 50
@@ -417,9 +421,11 @@ export function CommissionTab({
                   <SelectItem value={ALL_VALUE}>All statuses</SelectItem>
                   <SelectItem value="accrued">Accrued</SelectItem>
                   <SelectItem value="invoice_requested">Invoice Requested</SelectItem>
+                  <SelectItem value="invoice_submitted">Invoice Submitted</SelectItem>
                   <SelectItem value="invoiced">Invoiced</SelectItem>
                   <SelectItem value="paid">Paid</SelectItem>
                   <SelectItem value="cancelled">Cancelled</SelectItem>
+                  <SelectItem value="rejected">Rejected</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -449,7 +455,7 @@ export function CommissionTab({
             </div>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-9 gap-4">
               <div className="text-center p-3 rounded-lg bg-muted/50">
                 <div className="text-2xl font-bold">{summary.total_count}</div>
                 <div className="text-xs text-muted-foreground">Total Records</div>
@@ -477,6 +483,14 @@ export function CommissionTab({
                   Invoice Req. ({summary.by_status.invoice_requested.count})
                 </div>
               </div>
+              <div className="text-center p-3 rounded-lg bg-indigo-50">
+                <div className="text-2xl font-bold text-indigo-600">
+                  {formatCurrency(summary.by_status.invoice_submitted.amount, summary.currency)}
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  Invoice Submitted ({summary.by_status.invoice_submitted.count})
+                </div>
+              </div>
               <div className="text-center p-3 rounded-lg bg-orange-50">
                 <div className="text-2xl font-bold text-orange-600">
                   {formatCurrency(summary.by_status.invoiced.amount, summary.currency)}
@@ -499,6 +513,14 @@ export function CommissionTab({
                 </div>
                 <div className="text-xs text-muted-foreground">
                   Cancelled ({summary.by_status.cancelled.count})
+                </div>
+              </div>
+              <div className="text-center p-3 rounded-lg bg-rose-50">
+                <div className="text-2xl font-bold text-rose-600">
+                  {formatCurrency(summary.by_status.rejected.amount, summary.currency)}
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  Rejected ({summary.by_status.rejected.count})
                 </div>
               </div>
             </div>
@@ -635,8 +657,8 @@ export function CommissionTab({
                                 <Mail className="h-4 w-4" />
                               </Button>
                             )}
-                            {/* Mark Paid - for 'accrued', 'invoice_requested', or 'invoiced' statuses */}
-                            {['accrued', 'invoice_requested', 'invoiced'].includes(commission.status) && (
+                            {/* Mark Paid - for 'invoiced' status */}
+                            {commission.status === 'invoiced' && (
                               <Button
                                 variant="ghost"
                                 size="sm"

@@ -22,12 +22,15 @@ import {
   Shield,
   Edit,
   Bell,
+  Sliders,
 } from 'lucide-react'
 import { MembersManagementTab } from '@/components/members/members-management-tab'
 import { PartnerKYCDocumentsTab } from '@/components/profile/partner-kyc-documents-tab'
 import { SignatureSpecimenTab } from '@/components/profile/signature-specimen-tab'
 import { GenericEntityMembersTab } from '@/components/profile/generic-entity-members-tab'
 import { NoticeContactsTab } from '@/components/profile/notice-contacts-tab'
+import { PreferencesEditor } from '@/components/profile/preferences-editor'
+import { GDPRControls } from '@/components/profile/gdpr-controls'
 import { EntityKYCEditDialog, EntityAddressEditDialog, IndividualKycDisplay } from '@/components/shared'
 import { formatDate } from '@/lib/format'
 
@@ -190,6 +193,10 @@ export function PartnerProfileClient({
           <TabsTrigger value="notices" className="flex items-center gap-2">
             <Bell className="h-4 w-4" />
             Notices
+          </TabsTrigger>
+          <TabsTrigger value="preferences" className="flex items-center gap-2">
+            <Sliders className="h-4 w-4" />
+            Preferences
           </TabsTrigger>
         </TabsList>
 
@@ -526,6 +533,12 @@ export function PartnerProfileClient({
         {/* Notices Tab */}
         <TabsContent value="notices" className="space-y-4">
           <NoticeContactsTab apiEndpoint="/api/partners/me/notice-contacts" />
+        </TabsContent>
+
+        {/* Preferences Tab */}
+        <TabsContent value="preferences" className="space-y-4">
+          <PreferencesEditor />
+          <GDPRControls />
         </TabsContent>
       </Tabs>
 

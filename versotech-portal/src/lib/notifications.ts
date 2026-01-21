@@ -25,6 +25,7 @@ export type NotificationType =
   | 'introducer_pack_approved'         // Row 92: Pack approved by referred investor
   | 'introducer_pack_signed'           // Row 93: Pack signed by referred investor
   | 'introducer_escrow_funded'         // Row 94: Escrow funded by referred investor
+  | 'introducer_invoice_requested'     // Invoice requested by arranger
   | 'introducer_invoice_sent'          // Row 95: Invoice submitted
   | 'introducer_payment_sent'          // Row 96: Payment sent
   | 'introducer_commission_accrued'    // Commission accrued
@@ -34,9 +35,17 @@ export type NotificationType =
   // Partner notification types (PRD Section 5.6)
   | 'partner_commission_accrued'
   | 'partner_invoice_requested'
+  | 'partner_invoice_submitted'
   | 'partner_invoiced'
   | 'partner_paid'
   | 'partner_rejected'
+  // Commercial partner notification types
+  | 'cp_commission_accrued'
+  | 'cp_invoice_requested'
+  | 'cp_invoice_submitted'
+  | 'cp_invoice_approved'
+  | 'cp_invoice_rejected'
+  | 'cp_payment_confirmed'
   // Deal share types (PRD Rows 95-96)
   | 'deal_shared'
   | 'partner_deal_share'
@@ -81,6 +90,13 @@ const EMAIL_NOTIFICATION_TYPES: NotificationType[] = [
   // Partner notification types
   'partner_commission_accrued',
   'partner_paid',
+  // Commercial partner notification types
+  'cp_commission_accrued',
+  'cp_invoice_requested',
+  'cp_invoice_submitted',
+  'cp_invoice_approved',
+  'cp_invoice_rejected',
+  'cp_payment_confirmed',
 ]
 
 /**
@@ -204,26 +220,35 @@ function generateNotificationEmail(params: {
     approval: '#10b981',
     nda_complete: '#10b981',
     system: '#6b7280',
-    // Introducer types (PRD Section 6.6)
-    introducer_agreement_signed: '#10b981',
-    introducer_agreement_rejected: '#ef4444',
-    introducer_agreement_pending: '#f59e0b',
-    introducer_pack_sent: '#6366f1',
-    introducer_pack_approved: '#10b981',
-    introducer_pack_signed: '#10b981',
-    introducer_escrow_funded: '#10b981',
-    introducer_invoice_sent: '#6366f1',
-    introducer_payment_sent: '#10b981',
-    introducer_commission_accrued: '#8b5cf6',
-    introducer_invoice_approved: '#10b981',
-    introducer_invoice_rejected: '#ef4444',
-    introducer_payment_confirmed: '#10b981',
-    // Partner types (PRD Section 5.6)
-    partner_commission_accrued: '#8b5cf6',
-    partner_invoice_requested: '#6366f1',
-    partner_invoiced: '#10b981',
-    partner_paid: '#10b981',
-    partner_rejected: '#ef4444',
+  // Introducer types (PRD Section 6.6)
+  introducer_agreement_signed: '#10b981',
+  introducer_agreement_rejected: '#ef4444',
+  introducer_agreement_pending: '#f59e0b',
+  introducer_pack_sent: '#6366f1',
+  introducer_pack_approved: '#10b981',
+  introducer_pack_signed: '#10b981',
+  introducer_escrow_funded: '#10b981',
+  introducer_invoice_requested: '#6366f1',
+  introducer_invoice_sent: '#6366f1',
+  introducer_payment_sent: '#10b981',
+  introducer_commission_accrued: '#8b5cf6',
+  introducer_invoice_approved: '#10b981',
+  introducer_invoice_rejected: '#ef4444',
+  introducer_payment_confirmed: '#10b981',
+  // Partner types (PRD Section 5.6)
+  partner_commission_accrued: '#8b5cf6',
+  partner_invoice_requested: '#6366f1',
+  partner_invoice_submitted: '#6366f1',
+  partner_invoiced: '#10b981',
+  partner_paid: '#10b981',
+  partner_rejected: '#ef4444',
+  // Commercial partner types
+  cp_commission_accrued: '#8b5cf6',
+  cp_invoice_requested: '#6366f1',
+  cp_invoice_submitted: '#6366f1',
+  cp_invoice_approved: '#10b981',
+  cp_invoice_rejected: '#ef4444',
+  cp_payment_confirmed: '#10b981',
     // Deal share types
     deal_shared: '#3b82f6',
     partner_deal_share: '#3b82f6'

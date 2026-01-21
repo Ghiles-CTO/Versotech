@@ -120,9 +120,11 @@ type Commission = {
 const COMMISSION_STATUS_CONFIG: Record<string, { icon: typeof Clock; color: string }> = {
   accrued: { icon: Clock, color: 'text-blue-600' },
   invoice_requested: { icon: Send, color: 'text-yellow-600' },
+  invoice_submitted: { icon: FileText, color: 'text-indigo-600' },
   invoiced: { icon: FileText, color: 'text-orange-600' },
   paid: { icon: CheckCircle2, color: 'text-green-600' },
   cancelled: { icon: AlertCircle, color: 'text-gray-400' },
+  rejected: { icon: AlertCircle, color: 'text-red-600' },
 }
 
 type CPData = {

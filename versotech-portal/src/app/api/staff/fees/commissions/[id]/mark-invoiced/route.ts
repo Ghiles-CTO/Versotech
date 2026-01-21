@@ -71,11 +71,24 @@ export async function POST(
       return NextResponse.json({ error: 'Commission not found' }, { status: 404 });
     }
 
+    if (commission.status !== 'invoice_submitted') {
+      return NextResponse.json(
+        { error: `Commission status must be invoice_submitted (current: ${commission.status})` },
+        { status: 400 }
+      );
+    }
+
     // Update commission status to invoiced
     const { error } = await serviceSupabase
       .from(config.table)
       .update({
         status: 'invoiced',
+        approved_by: user.id,
+        approved_at: new Date().toISOString(),
+        rejection_reason: null,
+        rejected_by: null,
+        rejected_at: null,
+        updated_at: new Date().toISOString(),
       })
       .eq('id', id);
 

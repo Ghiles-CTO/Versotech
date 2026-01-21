@@ -218,9 +218,9 @@ export default function InvoicesTab() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold">Investor Invoices</h2>
+            <h2 className="text-2xl font-bold">Fee Billing</h2>
             <p className="text-sm text-muted-foreground mt-1">
-              Invoices sent to investors for fee collection
+              Manage recurring fee billing and invoices. For initial investment fees, see Subscriptions.
             </p>
           </div>
           <div className="flex gap-2">

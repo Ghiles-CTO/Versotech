@@ -38,9 +38,13 @@ export async function GET() {
       profile?.role ??
       (typeof user.user_metadata?.role === 'string' ? user.user_metadata.role : 'investor')
 
+    const { data: personas } = await serviceSupabase.rpc('get_user_personas', { p_user_id: user.id })
+    const isLawyerPersona = personas?.some((p: { persona_type: string }) => p.persona_type === 'lawyer') || false
+
     const [
       taskResult,
       notificationsResult,
+      lawyerNotificationsResult,
       participantResult,
       membershipResult,
       investorLinksResult
@@ -55,6 +59,13 @@ export async function GET() {
         .select('id', { count: 'exact', head: true })
         .eq('user_id', user.id)
         .is('read_at', null),
+      isLawyerPersona
+        ? serviceSupabase
+            .from('notifications')
+            .select('id', { count: 'exact', head: true })
+            .eq('user_id', user.id)
+            .eq('read', false)
+        : Promise.resolve({ count: 0, error: null }),
       serviceSupabase
         .from('conversation_participants')
         .select('conversation_id')
@@ -75,6 +86,9 @@ export async function GET() {
     if (notificationsResult.error) {
       console.error('[notifications/counts] Notification count error:', notificationsResult.error)
     }
+    if (lawyerNotificationsResult.error) {
+      console.error('[notifications/counts] Lawyer notification count error:', lawyerNotificationsResult.error)
+    }
     if (participantResult.error) {
       console.error('[notifications/counts] Conversation participant error:', participantResult.error)
     }
@@ -86,7 +100,7 @@ export async function GET() {
     }
 
     const taskCount = taskResult.count ?? 0
-    const notificationCount = notificationsResult.count ?? 0
+    const notificationCount = (notificationsResult.count ?? 0) + (lawyerNotificationsResult.count ?? 0)
 
     const conversationIds =
       participantResult.data?.map((row) => row.conversation_id).filter(Boolean) ?? []

@@ -60,13 +60,18 @@ export async function POST(request: NextRequest) {
 
     // Extend expiry by 7 days from now
     const newExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+    const sentAt = new Date().toISOString()
+    const reminderCount = (invitation.reminder_count ?? 0) + 1
 
     // Update invitation
     const { error: updateError } = await serviceSupabase
       .from('member_invitations')
       .update({
         status: 'pending', // Reset to pending if expired
-        expires_at: newExpiresAt
+        expires_at: newExpiresAt,
+        sent_at: sentAt,
+        last_reminded_at: sentAt,
+        reminder_count: reminderCount,
       })
       .eq('id', invitation_id)
 

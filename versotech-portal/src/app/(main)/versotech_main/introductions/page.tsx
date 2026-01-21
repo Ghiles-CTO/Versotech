@@ -108,27 +108,77 @@ type IntroducerInfo = {
 
 type Summary = {
   totalIntroductions: number
-  allocatedCount: number
-  joinedCount: number
-  invitedCount: number
+  interestedCount: number
+  approvedCount: number
+  signedCount: number
+  fundedCount: number
+  passedCount: number
   totalCommissionEarned: number
   pendingCommission: number
 }
 
-const STATUS_STYLES: Record<string, string> = {
-  allocated: 'bg-green-100 text-green-800 border-green-200',
-  joined: 'bg-blue-100 text-blue-800 border-blue-200',
-  invited: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-  lost: 'bg-red-100 text-red-800 border-red-200',
-  inactive: 'bg-gray-100 text-gray-800 border-gray-200',
+type JourneyStage = 'interested' | 'approved' | 'signed' | 'funded' | 'passed'
+
+const JOURNEY_STAGE_RANK: Record<JourneyStage, number> = {
+  passed: 0,
+  interested: 1,
+  approved: 2,
+  signed: 3,
+  funded: 4,
+}
+
+function getStageFromSubscription(status: string | null): JourneyStage {
+  switch (status) {
+    case 'funded':
+    case 'active':
+    case 'completed':
+      return 'funded'
+    case 'signed':
+    case 'committed':
+      return 'signed'
+    case 'approved':
+    case 'pending':
+    case 'pending_review':
+      return 'approved'
+    case 'cancelled':
+    case 'rejected':
+    case 'withdrawn':
+      return 'passed'
+    default:
+      return 'interested'
+  }
+}
+
+function getStageFromIntroduction(status: string | null): JourneyStage {
+  switch (status) {
+    case 'allocated':
+      return 'signed'
+    case 'joined':
+      return 'approved'
+    case 'lost':
+    case 'inactive':
+      return 'passed'
+    case 'invited':
+    default:
+      return 'interested'
+  }
+}
+
+const STATUS_STYLES: Record<JourneyStage, string> = {
+  interested: 'bg-blue-100 text-blue-800 border-blue-200',
+  approved: 'bg-purple-100 text-purple-800 border-purple-200',
+  signed: 'bg-amber-100 text-amber-800 border-amber-200',
+  funded: 'bg-green-100 text-green-800 border-green-200',
+  passed: 'bg-gray-100 text-gray-800 border-gray-200',
 }
 
 const STATUS_FILTERS = [
   { label: 'All Status', value: 'all' },
-  { label: 'Invited', value: 'invited' },
-  { label: 'Joined', value: 'joined' },
-  { label: 'Allocated', value: 'allocated' },
-  { label: 'Lost', value: 'lost' },
+  { label: 'Interested', value: 'interested' },
+  { label: 'Approved', value: 'approved' },
+  { label: 'Signed', value: 'signed' },
+  { label: 'Funded', value: 'funded' },
+  { label: 'Passed', value: 'passed' },
 ]
 
 export default function IntroductionsPage() {
@@ -136,9 +186,11 @@ export default function IntroductionsPage() {
   const [introductions, setIntroductions] = useState<Introduction[]>([])
   const [summary, setSummary] = useState<Summary>({
     totalIntroductions: 0,
-    allocatedCount: 0,
-    joinedCount: 0,
-    invitedCount: 0,
+    interestedCount: 0,
+    approvedCount: 0,
+    signedCount: 0,
+    fundedCount: 0,
+    passedCount: 0,
     totalCommissionEarned: 0,
     pendingCommission: 0,
   })
@@ -298,6 +350,40 @@ export default function IntroductionsPage() {
 
         if (introError) throw introError
 
+        // Fetch subscription statuses for journey stage alignment
+        const investorIds = (introData || [])
+          .map(intro => {
+            const investor = Array.isArray(intro.investor) ? intro.investor[0] : intro.investor
+            return investor?.id || null
+          })
+          .filter(Boolean) as string[]
+
+        const dealIds = (introData || [])
+          .map(intro => {
+            const deal = Array.isArray(intro.deal) ? intro.deal[0] : intro.deal
+            return deal?.id || null
+          })
+          .filter(Boolean) as string[]
+
+        const subscriptionStageMap: Record<string, JourneyStage> = {}
+
+        if (investorIds.length > 0 && dealIds.length > 0) {
+          const { data: subs } = await supabase
+            .from('subscriptions')
+            .select('investor_id, deal_id, status')
+            .in('investor_id', investorIds)
+            .in('deal_id', dealIds)
+
+          for (const sub of subs || []) {
+            const stage = getStageFromSubscription(sub.status || null)
+            const key = `${sub.investor_id}:${sub.deal_id}`
+            const current = subscriptionStageMap[key]
+            if (!current || JOURNEY_STAGE_RANK[stage] > JOURNEY_STAGE_RANK[current]) {
+              subscriptionStageMap[key] = stage
+            }
+          }
+        }
+
         // Fetch commissions for these introductions
         const introIds = (introData || []).map(i => i.id)
         let commissionsMap: Record<string, { accrual_amount: number; currency: string; status: string }> = {}
@@ -320,24 +406,37 @@ export default function IntroductionsPage() {
         }
 
         // Combine data
-        const processedIntroductions: Introduction[] = (introData || []).map(intro => ({
-          id: intro.id,
-          prospect_email: intro.prospect_email || '',
-          status: intro.status || 'invited',
-          introduced_at: intro.introduced_at,
-          commission_rate_override_bps: intro.commission_rate_override_bps,
-          notes: intro.notes,
-          deal: (Array.isArray(intro.deal) ? intro.deal[0] : intro.deal) as Introduction['deal'],
-          investor: (Array.isArray(intro.investor) ? intro.investor[0] : intro.investor) as Introduction['investor'],
-          commission: commissionsMap[intro.id] || null,
-        }))
+        const processedIntroductions: Introduction[] = (introData || []).map(intro => {
+          const deal = (Array.isArray(intro.deal) ? intro.deal[0] : intro.deal) as Introduction['deal']
+          const investor = (Array.isArray(intro.investor) ? intro.investor[0] : intro.investor) as Introduction['investor']
+          const stageKey = investor?.id && deal?.id ? `${investor.id}:${deal.id}` : null
+          const stageFromSubscription = stageKey ? subscriptionStageMap[stageKey] : null
+          let journeyStage = stageFromSubscription || getStageFromIntroduction(intro.status || null)
+          if (!stageFromSubscription && intro.status === 'allocated' && commissionsMap[intro.id]) {
+            journeyStage = 'funded'
+          }
+
+          return {
+            id: intro.id,
+            prospect_email: intro.prospect_email || '',
+            status: journeyStage,
+            introduced_at: intro.introduced_at,
+            commission_rate_override_bps: intro.commission_rate_override_bps,
+            notes: intro.notes,
+            deal,
+            investor,
+            commission: commissionsMap[intro.id] || null,
+          }
+        })
 
         setIntroductions(processedIntroductions)
 
         // Calculate summary
-        const allocated = processedIntroductions.filter(i => i.status === 'allocated').length
-        const joined = processedIntroductions.filter(i => i.status === 'joined').length
-        const invited = processedIntroductions.filter(i => i.status === 'invited').length
+        const interested = processedIntroductions.filter(i => i.status === 'interested').length
+        const approved = processedIntroductions.filter(i => i.status === 'approved').length
+        const signed = processedIntroductions.filter(i => i.status === 'signed').length
+        const funded = processedIntroductions.filter(i => i.status === 'funded').length
+        const passed = processedIntroductions.filter(i => i.status === 'passed').length
 
         let totalEarned = 0
         let pending = 0
@@ -353,9 +452,11 @@ export default function IntroductionsPage() {
 
         setSummary({
           totalIntroductions: processedIntroductions.length,
-          allocatedCount: allocated,
-          joinedCount: joined,
-          invitedCount: invited,
+          interestedCount: interested,
+          approvedCount: approved,
+          signedCount: signed,
+          fundedCount: funded,
+          passedCount: passed,
           totalCommissionEarned: totalEarned,
           pendingCommission: pending,
         })
@@ -398,7 +499,7 @@ export default function IntroductionsPage() {
       const processedIntroductions: Introduction[] = (introData || []).map((intro: any) => ({
         id: intro.id,
         prospect_email: intro.prospect_email || '',
-        status: intro.status || 'invited',
+        status: getStageFromIntroduction(intro.status || null),
         introduced_at: intro.introduced_at,
         commission_rate_override_bps: intro.commission_rate_override_bps,
         notes: intro.notes,
@@ -409,15 +510,19 @@ export default function IntroductionsPage() {
 
       setIntroductions(processedIntroductions)
 
-      const allocated = processedIntroductions.filter(i => i.status === 'allocated').length
-      const joined = processedIntroductions.filter(i => i.status === 'joined').length
-      const invited = processedIntroductions.filter(i => i.status === 'invited').length
+      const interested = processedIntroductions.filter(i => i.status === 'interested').length
+      const approved = processedIntroductions.filter(i => i.status === 'approved').length
+      const signed = processedIntroductions.filter(i => i.status === 'signed').length
+      const funded = processedIntroductions.filter(i => i.status === 'funded').length
+      const passed = processedIntroductions.filter(i => i.status === 'passed').length
 
       setSummary({
         totalIntroductions: processedIntroductions.length,
-        allocatedCount: allocated,
-        joinedCount: joined,
-        invitedCount: invited,
+        interestedCount: interested,
+        approvedCount: approved,
+        signedCount: signed,
+        fundedCount: funded,
+        passedCount: passed,
         totalCommissionEarned: 0,
         pendingCommission: 0,
       })
@@ -512,7 +617,7 @@ export default function IntroductionsPage() {
           <CardContent>
             <div className="text-2xl font-bold">{summary.totalIntroductions}</div>
             <p className="text-xs text-muted-foreground mt-1">
-              {summary.invitedCount} invited, {summary.joinedCount} joined
+              {summary.interestedCount} interested, {summary.approvedCount} approved
             </p>
           </CardContent>
         </Card>
@@ -521,13 +626,13 @@ export default function IntroductionsPage() {
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
               <CheckCircle2 className="h-4 w-4" />
-              Allocated
+              Funded
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{summary.allocatedCount}</div>
+            <div className="text-2xl font-bold text-green-600">{summary.fundedCount}</div>
             <p className="text-xs text-muted-foreground mt-1">
-              Successfully converted
+              {summary.signedCount} signed
             </p>
           </CardContent>
         </Card>
@@ -695,7 +800,7 @@ export default function IntroductionsPage() {
                       <TableCell>
                         <Badge
                           variant="outline"
-                          className={cn('capitalize', STATUS_STYLES[intro.status] || STATUS_STYLES.inactive)}
+                          className={cn('capitalize', STATUS_STYLES[intro.status as JourneyStage] || STATUS_STYLES.passed)}
                         >
                           {intro.status}
                         </Badge>

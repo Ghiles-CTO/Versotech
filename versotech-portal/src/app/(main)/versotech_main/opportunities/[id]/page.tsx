@@ -55,6 +55,7 @@ import {
 import { DocumentViewerFullscreen } from '@/components/documents/DocumentViewerFullscreen'
 import type { DocumentReference } from '@/types/document-viewer.types'
 import { usePersona } from '@/contexts/persona-context'
+import { useProxyMode } from '@/components/commercial-partner'
 
 interface Document {
   id: string
@@ -302,6 +303,7 @@ export default function OpportunityDetailPage() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [previewError, setPreviewError] = useState<string | null>(null)
   const [previewDocument, setPreviewDocument] = useState<DocumentReference | null>(null)
+  const { isProxyMode, selectedClient } = useProxyMode()
 
   useEffect(() => {
     // CRITICAL: AbortController prevents race conditions when navigating between deals
@@ -329,7 +331,10 @@ export default function OpportunityDetailPage() {
 
         // Fetch opportunity data with abort signal
         const timestamp = Date.now()
-        const response = await fetch(`/api/investors/me/opportunities/${dealId}?_t=${timestamp}`, {
+        const proxyParam = isProxyMode && selectedClient?.id
+          ? `&client_investor_id=${selectedClient.id}`
+          : ''
+        const response = await fetch(`/api/investors/me/opportunities/${dealId}?_t=${timestamp}${proxyParam}`, {
           cache: 'no-store',
           signal: abortController.signal,
           headers: {
@@ -393,7 +398,7 @@ export default function OpportunityDetailPage() {
       isCancelled = true
       abortController.abort()
     }
-  }, [hasAnyPersona, dealId, actionParam, isPartnerPersona])
+  }, [hasAnyPersona, dealId, actionParam, isPartnerPersona, isProxyMode, selectedClient?.id])
 
   const handleExpressInterest = async () => {
     try {
@@ -410,7 +415,10 @@ export default function OpportunityDetailPage() {
       }
 
       // Refresh data
-      const refreshResponse = await fetch(`/api/investors/me/opportunities/${dealId}`)
+      const proxyParam = isProxyMode && selectedClient?.id
+        ? `?client_investor_id=${selectedClient.id}`
+        : ''
+      const refreshResponse = await fetch(`/api/investors/me/opportunities/${dealId}${proxyParam}`)
       const data = await refreshResponse.json()
       setOpportunity(data.opportunity)
       setShowInterestDialog(false)
@@ -431,19 +439,34 @@ export default function OpportunityDetailPage() {
     try {
       setActionLoading(true)
 
-      // Submit subscription for review (creates CEO approval)
-      const response = await fetch(`/api/deals/${dealId}/subscriptions`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          payload: {
-            amount: parseFloat(subscribeAmount),
-            currency: opportunity.currency,
-            bank_confirmation: false
-          },
-          subscription_type: 'personal'
+      let response: Response
+      if (isProxyMode && selectedClient?.id) {
+        response = await fetch('/api/commercial-partners/proxy-subscribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            deal_id: dealId,
+            client_investor_id: selectedClient.id,
+            commitment: parseFloat(subscribeAmount),
+            stock_type: opportunity.stock_type || 'common',
+            notes: `Submitted in proxy mode by commercial partner`
+          })
         })
-      })
+      } else {
+        // Submit subscription for review (creates CEO approval)
+        response = await fetch(`/api/deals/${dealId}/subscriptions`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            payload: {
+              amount: parseFloat(subscribeAmount),
+              currency: opportunity.currency,
+              bank_confirmation: false
+            },
+            subscription_type: 'personal'
+          })
+        })
+      }
 
       if (!response.ok) {
         const err = await response.json()
@@ -453,7 +476,10 @@ export default function OpportunityDetailPage() {
       await response.json()
 
       // Refresh data
-      const refreshResponse = await fetch(`/api/investors/me/opportunities/${dealId}`)
+      const proxyParam = isProxyMode && selectedClient?.id
+        ? `?client_investor_id=${selectedClient.id}`
+        : ''
+      const refreshResponse = await fetch(`/api/investors/me/opportunities/${dealId}${proxyParam}`)
       const data = await refreshResponse.json()
       setOpportunity(data.opportunity)
       setShowSubscribeDialog(false)
@@ -749,6 +775,8 @@ export default function OpportunityDetailPage() {
               <SubscriptionStatusCard
                 subscription={opportunity.subscription}
                 dealCurrency={opportunity.currency}
+                dealId={opportunity.id}
+                dealName={opportunity.name}
               />
             ) : opportunity.subscription_submission ? (
               <Card className="border-2 border-dashed border-amber-200 bg-amber-50">

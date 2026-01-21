@@ -54,7 +54,14 @@ export type InvoiceStatus =
 
 export type FeeScheduleStatus = 'active' | 'completed' | 'cancelled' | 'paused';
 
-export type CommissionStatus = 'accrued' | 'approved' | 'paid';
+export type CommissionStatus =
+  | 'accrued'
+  | 'invoice_requested'
+  | 'invoice_submitted'
+  | 'invoiced'
+  | 'paid'
+  | 'cancelled'
+  | 'rejected';
 
 // Core entity interfaces
 export interface FeePlan {

@@ -34,6 +34,7 @@ import { MembersManagementTab } from '@/components/members/members-management-ta
 import { SignatureSpecimenTab } from '@/components/profile/signature-specimen-tab'
 import { PasswordChangeForm } from '@/components/profile/password-change-form'
 import { PreferencesEditor } from '@/components/profile/preferences-editor'
+import { GDPRControls } from '@/components/profile/gdpr-controls'
 import { LawyerKYCDocumentsTab } from '@/components/profile/lawyer-kyc-documents-tab'
 import { EntityAddressEditDialog, EntityKYCEditDialog, IndividualKycDisplay } from '@/components/shared'
 import { GenericEntityMembersTab } from '@/components/profile/generic-entity-members-tab'
@@ -772,6 +773,7 @@ export function LawyerProfileClient({
         {/* Preferences Tab */}
         <TabsContent value="preferences" className="space-y-4">
           <PreferencesEditor variant="investor" />
+          <GDPRControls />
         </TabsContent>
 
         {/* Notices Tab */}

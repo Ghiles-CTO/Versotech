@@ -42,6 +42,9 @@ export async function GET(request: NextRequest) {
         cost_per_share,
         num_shares,
         spread_per_share,
+        management_fee_percent,
+        management_fee_amount,
+        management_fee_frequency,
         investor:investors(id, display_name)
       `
       );
@@ -93,6 +96,7 @@ export async function GET(request: NextRequest) {
     let totalBDFees = 0;
     let totalFINRAFees = 0;
     let totalPerformanceFees = 0;
+    let totalManagementFees = 0;
     let totalAllFees = 0;
     let totalCommittedCapital = 0;
     let totalCurrentNAV = 0;
@@ -106,6 +110,7 @@ export async function GET(request: NextRequest) {
       bd_fees: number;
       finra_fees: number;
       performance_fees: number;
+      management_fees: number;
       total_fees: number;
       unrealized_gains: number;
     }
@@ -183,7 +188,25 @@ export async function GET(request: NextRequest) {
         }
       }
 
-      // 6. Unrealized Gains (price_per_share - cost_per_share) × num_shares
+      // 6. Management Fee (can be percent or fixed amount, recurring)
+      // Management fees are calculated on an annual basis here for projection
+      let managementFee = 0;
+      if (sub.management_fee_amount) {
+        // Fixed management fee amount (annualized if needed based on frequency)
+        const frequency = sub.management_fee_frequency || 'annual';
+        if (frequency === 'monthly') {
+          managementFee = sub.management_fee_amount * 12;
+        } else if (frequency === 'quarterly') {
+          managementFee = sub.management_fee_amount * 4;
+        } else {
+          managementFee = sub.management_fee_amount; // annual
+        }
+      } else if (sub.management_fee_percent) {
+        // Percentage-based management fee (on committed capital)
+        managementFee = commitment * (sub.management_fee_percent / 100);
+      }
+
+      // 7. Unrealized Gains (price_per_share - cost_per_share) × num_shares
       let unrealizedGain = 0;
       const pricePerShare = sub.price_per_share || 0;
       const costPerShare = sub.cost_per_share || 0;
@@ -193,7 +216,7 @@ export async function GET(request: NextRequest) {
         unrealizedGain = (pricePerShare - costPerShare) * numShares;
       }
 
-      const totalFees = subscriptionFee + spreadFee + bdFee + finraFee + performanceFee;
+      const totalFees = subscriptionFee + spreadFee + bdFee + finraFee + performanceFee + managementFee;
 
       // Update grand totals
       totalSubscriptionFees += subscriptionFee;
@@ -201,6 +224,7 @@ export async function GET(request: NextRequest) {
       totalBDFees += bdFee;
       totalFINRAFees += finraFee;
       totalPerformanceFees += performanceFee;
+      totalManagementFees += managementFee;
       totalAllFees += totalFees;
       totalCommittedCapital += commitment;
       totalCurrentNAV += nav;
@@ -214,6 +238,7 @@ export async function GET(request: NextRequest) {
           bd_fees: 0,
           finra_fees: 0,
           performance_fees: 0,
+          management_fees: 0,
           total_fees: 0,
           unrealized_gains: 0,
           committed_capital: 0,
@@ -227,6 +252,7 @@ export async function GET(request: NextRequest) {
       statusGroup.bd_fees += bdFee;
       statusGroup.finra_fees += finraFee;
       statusGroup.performance_fees += performanceFee;
+      statusGroup.management_fees += managementFee;
       statusGroup.total_fees += totalFees;
       statusGroup.unrealized_gains += unrealizedGain;
       statusGroup.committed_capital += commitment;
@@ -247,6 +273,7 @@ export async function GET(request: NextRequest) {
             bd_fees: 0,
             finra_fees: 0,
             performance_fees: 0,
+            management_fees: 0,
             total_fees: 0,
             unrealized_gains: 0,
           },
@@ -263,6 +290,7 @@ export async function GET(request: NextRequest) {
       vehicleGroup.fees.bd_fees += bdFee;
       vehicleGroup.fees.finra_fees += finraFee;
       vehicleGroup.fees.performance_fees += performanceFee;
+      vehicleGroup.fees.management_fees += managementFee;
       vehicleGroup.fees.total_fees += totalFees;
       vehicleGroup.fees.unrealized_gains += unrealizedGain;
       vehicleGroup.committed_capital += commitment;
@@ -277,6 +305,7 @@ export async function GET(request: NextRequest) {
           bd_fees: 0,
           finra_fees: 0,
           performance_fees: 0,
+          management_fees: 0,
           total_fees: 0,
           unrealized_gains: 0,
           committed_capital: 0,
@@ -290,6 +319,7 @@ export async function GET(request: NextRequest) {
       vehicleStatus.bd_fees += bdFee;
       vehicleStatus.finra_fees += finraFee;
       vehicleStatus.performance_fees += performanceFee;
+      vehicleStatus.management_fees += managementFee;
       vehicleStatus.total_fees += totalFees;
       vehicleStatus.unrealized_gains += unrealizedGain;
       vehicleStatus.committed_capital += commitment;
@@ -328,7 +358,8 @@ export async function GET(request: NextRequest) {
           bd_fees: totalBDFees,
           finra_fees: totalFINRAFees,
           performance_fees: totalPerformanceFees,
-          total_all_fees: totalAllFees,
+          management_fees: totalManagementFees,
+          total_fees: totalAllFees, // Match FeeBreakdown interface
           unrealized_gains: totalUnrealizedGains,
           committed_capital: totalCommittedCapital,
           current_nav: totalCurrentNAV,
