@@ -26,7 +26,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Plus, Edit, Copy, FileText, Building2, Trash2, Users, Briefcase, FileCheck, AlertTriangle, ChevronDown, ChevronRight, CheckCircle, Clock, XCircle, Send } from 'lucide-react';
+import { Plus, Edit, Copy, FileText, Building2, Trash2, Users, Briefcase, FileCheck, AlertTriangle, ChevronDown, ChevronRight, CheckCircle, Clock, XCircle, Send, FileSignature, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import type { FeePlanWithComponents } from '@/lib/fees/types';
@@ -201,6 +202,7 @@ export default function FeePlansTab({ dealId }: FeePlansTabProps) {
     partners: true,
     commercial_partners: true,
   });
+  const [generatingAgreement, setGeneratingAgreement] = useState<string | null>(null);
 
   useEffect(() => {
     fetchPlans();
@@ -321,6 +323,90 @@ export default function FeePlansTab({ dealId }: FeePlansTabProps) {
 
   const toggleGroup = (group: EntityGroup) => {
     setExpandedGroups((prev) => ({ ...prev, [group]: !prev[group] }));
+  };
+
+  // Check if agreement has been generated for this plan
+  const hasGeneratedAgreement = (plan: FeePlanWithDeal) => {
+    if (plan.introducer && (plan as any).generated_agreement_id) return true;
+    if (plan.partner && (plan as any).generated_placement_agreement_id) return true;
+    return false;
+  };
+
+  // Check if this plan can have an agreement generated
+  const canGenerateAgreement = (plan: FeePlanWithDeal) => {
+    // Introducers: need introducer and no existing agreement
+    if (plan.introducer && !(plan as any).generated_agreement_id) return true;
+    // Partners: need partner and no existing placement agreement
+    if (plan.partner && !(plan as any).generated_placement_agreement_id) return true;
+    return false;
+  };
+
+  // Get appropriate tooltip for generate button
+  const getGenerateTooltip = (plan: FeePlanWithDeal) => {
+    if (plan.introducer) return 'Generate Introducer Agreement';
+    if (plan.partner) return 'Generate Placement Agreement';
+    return '';
+  };
+
+  // Generate Introducer Agreement
+  const handleGenerateIntroducerAgreement = async (plan: FeePlanWithDeal) => {
+    if (!plan.introducer) return;
+
+    setGeneratingAgreement(plan.id);
+    try {
+      const res = await fetch(`/api/staff/fees/plans/${plan.id}/generate-agreement`, {
+        method: 'POST',
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        toast.error(`Failed to generate agreement: ${data.error || 'Unknown error'}`);
+        return;
+      }
+
+      toast.success('Introducer Agreement generated successfully!');
+      fetchPlans();
+    } catch (error) {
+      console.error('Error generating introducer agreement:', error);
+      toast.error('Failed to generate agreement');
+    } finally {
+      setGeneratingAgreement(null);
+    }
+  };
+
+  // Generate Partner Placement Agreement
+  const handleGeneratePartnerAgreement = async (plan: FeePlanWithDeal) => {
+    if (!plan.partner) return;
+
+    setGeneratingAgreement(plan.id);
+    try {
+      const res = await fetch(`/api/staff/fees/plans/${plan.id}/generate-placement-agreement`, {
+        method: 'POST',
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        toast.error(`Failed to generate placement agreement: ${data.error || 'Unknown error'}`);
+        return;
+      }
+
+      toast.success('Placement Agreement generated successfully!');
+      fetchPlans();
+    } catch (error) {
+      console.error('Error generating placement agreement:', error);
+      toast.error('Failed to generate placement agreement');
+    } finally {
+      setGeneratingAgreement(null);
+    }
+  };
+
+  // Unified handler that routes to correct agreement type
+  const handleGenerateAgreement = async (plan: FeePlanWithDeal) => {
+    if (plan.introducer) {
+      await handleGenerateIntroducerAgreement(plan);
+    } else if (plan.partner) {
+      await handleGeneratePartnerAgreement(plan);
+    }
   };
 
   // Group plans by entity type for the grouped view
@@ -536,7 +622,29 @@ export default function FeePlansTab({ dealId }: FeePlansTabProps) {
                                     </div>
                                   </TableCell>
                                   <TableCell className="text-right">
-                                    <div className="flex gap-1 justify-end">
+                                    <div className="flex gap-1 justify-end items-center">
+                                      {/* Generate Agreement button */}
+                                      {canGenerateAgreement(plan) && (
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={() => handleGenerateAgreement(plan)}
+                                          disabled={generatingAgreement === plan.id}
+                                          className="text-green-400 hover:text-green-300"
+                                          title={getGenerateTooltip(plan)}
+                                        >
+                                          {generatingAgreement === plan.id ? (
+                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                          ) : (
+                                            <FileSignature className="h-4 w-4" />
+                                          )}
+                                        </Button>
+                                      )}
+                                      {hasGeneratedAgreement(plan) && (
+                                        <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs">
+                                          Agreement
+                                        </Badge>
+                                      )}
                                       <Button
                                         variant="ghost"
                                         size="sm"
@@ -584,7 +692,29 @@ export default function FeePlansTab({ dealId }: FeePlansTabProps) {
                                         </span>
                                       </div>
                                     </div>
-                                    <div className="flex gap-1">
+                                    <div className="flex gap-1 items-center">
+                                      {/* Generate Agreement button */}
+                                      {canGenerateAgreement(plan) && (
+                                        <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          onClick={() => handleGenerateAgreement(plan)}
+                                          disabled={generatingAgreement === plan.id}
+                                          className="text-green-400 hover:text-green-300"
+                                          title={getGenerateTooltip(plan)}
+                                        >
+                                          {generatingAgreement === plan.id ? (
+                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                          ) : (
+                                            <FileSignature className="h-4 w-4" />
+                                          )}
+                                        </Button>
+                                      )}
+                                      {hasGeneratedAgreement(plan) && (
+                                        <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs">
+                                          Agreement
+                                        </Badge>
+                                      )}
                                       <Button
                                         variant="ghost"
                                         size="icon"
