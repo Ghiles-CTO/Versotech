@@ -246,7 +246,6 @@ export default function UserDetailPage() {
   const [removeEntityDialogOpen, setRemoveEntityDialogOpen] = useState(false)
   const [entityToRemove, setEntityToRemove] = useState<EntityAssociation | null>(null)
   const [isRemovingEntity, setIsRemovingEntity] = useState(false)
-  const [addEntityDialogOpen, setAddEntityDialogOpen] = useState(false)
 
   // Activity tab state
   const [activityLogs, setActivityLogs] = useState<ActivityLogItem[]>([])
@@ -268,6 +267,9 @@ export default function UserDetailPage() {
   const [isRevokingSessions, setIsRevokingSessions] = useState(false)
   const [isTogglingStatus, setIsTogglingStatus] = useState(false)
   const [isTogglingLock, setIsTogglingLock] = useState(false)
+
+  // Active tab state for auto-loading
+  const [activeTab, setActiveTab] = useState('profile')
 
   // Edit form
   const {
@@ -543,9 +545,15 @@ export default function UserDetailPage() {
     if (!user) return
     setIsRevokingSessions(true)
     try {
-      // Note: This would call Supabase Auth Admin API to revoke sessions
-      // For now, we'll simulate the action as the API endpoint may not exist
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      const response = await fetch(`/api/admin/users/${userId}/revoke-sessions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      })
+      const data = await response.json()
+
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to revoke sessions')
+      }
 
       toast.success('Sessions revoked', {
         description: `All active sessions for ${user.displayName} have been terminated.`,
@@ -568,6 +576,21 @@ export default function UserDetailPage() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activityFilter])
+
+  // Handle tab change with auto-loading
+  const handleTabChange = useCallback((value: string) => {
+    setActiveTab(value)
+
+    // Auto-load activity data when switching to activity tab
+    if (value === 'activity' && !activityInitialized && !activityLoading) {
+      fetchActivity(true)
+    }
+
+    // Auto-load security data when switching to security tab
+    if (value === 'security' && !securityInitialized && !securityLoading) {
+      fetchSecurityData()
+    }
+  }, [activityInitialized, activityLoading, fetchActivity, securityInitialized, securityLoading, fetchSecurityData])
 
   // Action handlers
   const handleDeactivate = async () => {
@@ -732,10 +755,15 @@ export default function UserDetailPage() {
     if (!entityToRemove || !user) return
     setIsRemovingEntity(true)
     try {
-      // Note: This would call an API endpoint to unlink the entity from the user
-      // For now, we'll show a toast indicating the functionality is placeholder
-      // In production, this would be: DELETE /api/admin/users/${userId}/entities/${entityToRemove.id}?type=${entityToRemove.type}
-      await new Promise(resolve => setTimeout(resolve, 500)) // Simulate API call
+      const response = await fetch(
+        `/api/admin/users/${userId}/entities/${entityToRemove.id}?type=${entityToRemove.type}`,
+        { method: 'DELETE' }
+      )
+      const data = await response.json()
+
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to remove entity')
+      }
 
       toast.success('Entity removed', {
         description: `${entityToRemove.name} has been unlinked from ${user.displayName}.`,
@@ -934,7 +962,7 @@ export default function UserDetailPage() {
 
       {/* Tab Navigation */}
       {user && !loading && (
-        <Tabs defaultValue="profile" className="w-full">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
           <TabsList className="grid w-full grid-cols-4 md:w-auto md:inline-grid">
             <TabsTrigger value="profile" className="flex items-center gap-2">
               <User className="h-4 w-4" />
@@ -1068,19 +1096,11 @@ export default function UserDetailPage() {
           {/* Entities Tab */}
           <TabsContent value="entities" className="mt-6">
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+              <CardHeader className="pb-4">
                 <CardTitle className="text-lg flex items-center gap-2">
                   <Building2 className="h-5 w-5" />
                   Linked Entities
                 </CardTitle>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setAddEntityDialogOpen(true)}
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Entity
-                </Button>
               </CardHeader>
               <CardContent>
                 {user.entities.length === 0 ? (
@@ -1090,16 +1110,9 @@ export default function UserDetailPage() {
                       <Building2 className="h-8 w-8 text-muted-foreground" />
                     </div>
                     <h3 className="text-lg font-medium mb-1">No linked entities</h3>
-                    <p className="text-sm text-muted-foreground mb-4 max-w-sm">
-                      This user is not associated with any entities. Link them to an investor, partner, or other entity.
+                    <p className="text-sm text-muted-foreground max-w-sm">
+                      This user is not associated with any entities. Entity associations are created during the invitation process.
                     </p>
-                    <Button
-                      variant="outline"
-                      onClick={() => setAddEntityDialogOpen(true)}
-                    >
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add Entity
-                    </Button>
                   </div>
                 ) : (
                   /* Entities Table */
@@ -1824,55 +1837,6 @@ export default function UserDetailPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      {/* Add Entity Search Dialog (Placeholder) */}
-      <Dialog open={addEntityDialogOpen} onOpenChange={setAddEntityDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Plus className="h-5 w-5" />
-              Link Entity
-            </DialogTitle>
-            <DialogDescription>
-              Search for an entity to link to {user?.displayName}.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4 py-4">
-            {/* Search Input */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                placeholder="Search entities by name..."
-                className="pl-10"
-                disabled
-              />
-            </div>
-
-            {/* Placeholder content */}
-            <div className="flex flex-col items-center justify-center py-8 text-center">
-              <div className="rounded-full bg-muted p-3 mb-3">
-                <Building2 className="h-6 w-6 text-muted-foreground" />
-              </div>
-              <p className="text-sm text-muted-foreground mb-1">
-                Entity search coming soon
-              </p>
-              <p className="text-xs text-muted-foreground max-w-xs">
-                This feature will allow searching for investors, partners, law firms, and other entities to link to this user.
-              </p>
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setAddEntityDialogOpen(false)}
-            >
-              Close
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       {/* Revoke Sessions Dialog */}
       <AlertDialog open={revokeSessionsDialogOpen} onOpenChange={setRevokeSessionsDialogOpen}>

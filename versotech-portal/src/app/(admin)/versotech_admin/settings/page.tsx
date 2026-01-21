@@ -328,10 +328,10 @@ export default function AdminSettingsPage() {
                   </div>
                 ))}
               </div>
-              <div className="mt-4 flex items-center gap-2 p-3 rounded-md bg-amber-500/10 border border-amber-500/20">
-                <Info className="h-4 w-4 text-amber-400 shrink-0" />
+              <div className="mt-4 flex items-center gap-2 p-3 rounded-md bg-blue-500/10 border border-blue-500/20">
+                <Info className="h-4 w-4 text-blue-400 shrink-0" />
                 <p className="text-sm text-muted-foreground">
-                  Email template editing is coming soon. Templates are currently managed through Resend.
+                  Email templates are managed through the Resend dashboard. Contact your administrator for template modifications.
                 </p>
               </div>
             </CardContent>

@@ -77,16 +77,21 @@ import {
   Filter,
   Download,
   AlertTriangle,
-  UserPlus,
   Building2,
-  Loader2,
 } from 'lucide-react'
-import { toast } from 'sonner'
 import Link from 'next/link'
 import { formatDistanceToNow, format } from 'date-fns'
 import { cn } from '@/lib/utils'
+import { toast } from 'sonner'
 import type { UserRow, UsersResponse } from '@/app/api/admin/users/route'
-import { BatchInviteDialog } from '@/components/users/batch-invite-dialog'
+
+// Action handlers type
+interface InvestorActionHandlers {
+  onEdit: (user: UserRow) => void
+  onLock: (user: UserRow) => void
+  onResetPassword: (user: UserRow) => void
+  onDeactivate: (user: UserRow) => void
+}
 
 // Filter option types
 interface FilterOption {
@@ -94,13 +99,12 @@ interface FilterOption {
   label: string
 }
 
-// Filter options
-const roleOptions: FilterOption[] = [
-  { value: 'investor', label: 'Investor' },
-  { value: 'staff_admin', label: 'Staff Admin' },
-  { value: 'staff_ops', label: 'Staff Ops' },
-  { value: 'staff_rm', label: 'Staff RM' },
-  { value: 'ceo', label: 'CEO' },
+// KYC status options (investor-specific)
+const kycStatusOptions: FilterOption[] = [
+  { value: 'pending', label: 'Pending' },
+  { value: 'in_review', label: 'In Review' },
+  { value: 'completed', label: 'Completed' },
+  { value: 'rejected', label: 'Rejected' },
 ]
 
 const statusOptions: FilterOption[] = [
@@ -110,23 +114,6 @@ const statusOptions: FilterOption[] = [
   { value: 'deactivated', label: 'Deactivated' },
 ]
 
-const entityTypeOptions: FilterOption[] = [
-  { value: 'investor', label: 'Investor' },
-  { value: 'arranger', label: 'Arranger' },
-  { value: 'introducer', label: 'Introducer' },
-  { value: 'partner', label: 'Partner' },
-  { value: 'lawyer', label: 'Lawyer' },
-]
-
-// KYC Status options (PRD 3.2.3)
-const kycStatusOptions: FilterOption[] = [
-  { value: 'pending', label: 'Pending' },
-  { value: 'in_review', label: 'In Review' },
-  { value: 'completed', label: 'Completed' },
-  { value: 'rejected', label: 'Rejected' },
-]
-
-// Has Entities toggle options (PRD 3.2.3)
 const hasEntitiesOptions: FilterOption[] = [
   { value: 'yes', label: 'Has Entities' },
   { value: 'no', label: 'No Entities' },
@@ -239,23 +226,20 @@ function MultiSelectFilter({
   )
 }
 
-// Status badge color mapping (with dark mode support)
+// Status badge color mapping
 const statusBadgeVariant = (user: UserRow): { variant: 'default' | 'secondary' | 'destructive' | 'outline'; className?: string } => {
   if (user.isDeleted) {
     return { variant: 'destructive' }
   }
-  // Active = logged in within last 30 days
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
   const isActive = user.lastLoginAt && new Date(user.lastLoginAt) > thirtyDaysAgo
 
   if (isActive) {
     return { variant: 'default', className: 'bg-green-500 dark:bg-green-600 hover:bg-green-500/80 dark:hover:bg-green-600/80' }
   }
-  // Pending = never logged in
   if (!user.lastLoginAt) {
     return { variant: 'secondary', className: 'bg-yellow-500 dark:bg-yellow-600 text-white hover:bg-yellow-500/80 dark:hover:bg-yellow-600/80' }
   }
-  // Inactive = not active recently
   return { variant: 'outline' }
 }
 
@@ -268,24 +252,6 @@ const getStatusLabel = (user: UserRow): string => {
   return 'Inactive'
 }
 
-// Role badge variant
-const roleBadgeVariant = (role: string): 'default' | 'secondary' | 'outline' => {
-  if (role === 'ceo') return 'default'
-  if (role.startsWith('staff_')) return 'secondary'
-  return 'outline'
-}
-
-const formatRole = (role: string): string => {
-  const roleMap: Record<string, string> = {
-    ceo: 'CEO',
-    staff_admin: 'Staff Admin',
-    staff_ops: 'Staff Ops',
-    staff_rm: 'Staff RM',
-    investor: 'Investor',
-  }
-  return roleMap[role] || role
-}
-
 // Get initials from display name
 const getInitials = (name: string): string => {
   return name
@@ -296,16 +262,8 @@ const getInitials = (name: string): string => {
     .slice(0, 2)
 }
 
-// Action handlers type
-interface UserActionHandlers {
-  onEdit: (user: UserRow) => void
-  onLock: (user: UserRow) => void
-  onResetPassword: (user: UserRow) => void
-  onDeactivate: (user: UserRow) => void
-}
-
-// Column definitions factory
-const createColumns = (handlers: UserActionHandlers): ColumnDef<UserRow>[] => [
+// Column definitions factory for investors
+const createColumns = (handlers: InvestorActionHandlers): ColumnDef<UserRow>[] => [
   {
     id: 'select',
     header: ({ table }) => (
@@ -336,7 +294,7 @@ const createColumns = (handlers: UserActionHandlers): ColumnDef<UserRow>[] => [
         onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
         className="-ml-4"
       >
-        User
+        Investor
         <ArrowUpDown className="ml-2 h-4 w-4" />
       </Button>
     ),
@@ -357,9 +315,6 @@ const createColumns = (handlers: UserActionHandlers): ColumnDef<UserRow>[] => [
             >
               {user.displayName}
             </Link>
-            {user.isSuperAdmin && (
-              <span className="text-xs text-muted-foreground">Super Admin</span>
-            )}
           </div>
         </div>
       )
@@ -398,19 +353,7 @@ const createColumns = (handlers: UserActionHandlers): ColumnDef<UserRow>[] => [
       const count = row.original.entityCount
       return (
         <Badge variant={count > 0 ? 'secondary' : 'outline'}>
-          {count}
-        </Badge>
-      )
-    },
-  },
-  {
-    accessorKey: 'systemRole',
-    header: 'Role',
-    cell: ({ row }) => {
-      const role = row.original.systemRole
-      return (
-        <Badge variant={roleBadgeVariant(role)}>
-          {formatRole(role)}
+          {count} {count === 1 ? 'entity' : 'entities'}
         </Badge>
       )
     },
@@ -526,7 +469,7 @@ const createColumns = (handlers: UserActionHandlers): ColumnDef<UserRow>[] => [
 ]
 
 // Loading skeleton
-function UsersTableSkeleton() {
+function InvestorsTableSkeleton() {
   return (
     <div className="space-y-4">
       <div className="rounded-md border">
@@ -575,9 +518,9 @@ function EmptyState() {
       <div className="rounded-full bg-muted p-4 mb-4">
         <UsersIcon className="h-8 w-8 text-muted-foreground" />
       </div>
-      <h3 className="text-lg font-medium mb-1">No users found</h3>
+      <h3 className="text-lg font-medium mb-1">No investors found</h3>
       <p className="text-sm text-muted-foreground text-center max-w-sm">
-        No users match the current filters. Try adjusting your search or filter criteria.
+        No investors match the current filters. Try adjusting your search or filter criteria.
       </p>
     </div>
   )
@@ -600,23 +543,16 @@ function useDebounce<T>(value: T, delay: number): T {
   return debouncedValue
 }
 
-export default function UsersPage() {
+export default function InvestorsPage() {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
 
   // Initialize state from URL params
   const [searchInput, setSearchInput] = useState(searchParams.get('search') || '')
-  const [roleFilters, setRoleFilters] = useState<string[]>(
-    searchParams.get('role')?.split(',').filter(Boolean) || []
-  )
   const [statusFilters, setStatusFilters] = useState<string[]>(
     searchParams.get('status')?.split(',').filter(Boolean) || []
   )
-  const [entityTypeFilters, setEntityTypeFilters] = useState<string[]>(
-    searchParams.get('entityType')?.split(',').filter(Boolean) || []
-  )
-  // New filters (PRD 3.2.3)
   const [kycStatusFilters, setKycStatusFilters] = useState<string[]>(
     searchParams.get('kycStatus')?.split(',').filter(Boolean) || []
   )
@@ -640,9 +576,6 @@ export default function UsersPage() {
   const [deactivateDialogOpen, setDeactivateDialogOpen] = useState(false)
   const [isDeactivating, setIsDeactivating] = useState(false)
 
-  // Invite dialog state (uses BatchInviteDialog component)
-  const [inviteDialogOpen, setInviteDialogOpen] = useState(false)
-
   // Single user action states
   const [userToAction, setUserToAction] = useState<UserRow | null>(null)
   const [lockDialogOpen, setLockDialogOpen] = useState(false)
@@ -660,13 +593,15 @@ export default function UsersPage() {
   const handleExportCSV = useCallback(() => {
     if (selectedUsers.length === 0) return
 
-    const headers = ['ID', 'Name', 'Email', 'Role', 'Status']
+    const headers = ['ID', 'Name', 'Email', 'Entities', 'Status', 'Last Login', 'Created']
     const rows = selectedUsers.map(user => [
       user.id,
       user.displayName,
       user.email,
-      formatRole(user.systemRole),
+      user.entityCount,
       getStatusLabel(user),
+      user.lastLoginAt || 'Never',
+      user.createdAt,
     ])
 
     const csvContent = [
@@ -678,7 +613,7 @@ export default function UsersPage() {
     const link = document.createElement('a')
     const url = URL.createObjectURL(blob)
     link.setAttribute('href', url)
-    link.setAttribute('download', `users-export-${format(new Date(), 'yyyy-MM-dd')}.csv`)
+    link.setAttribute('download', `investors-export-${format(new Date(), 'yyyy-MM-dd')}.csv`)
     link.style.visibility = 'hidden'
     document.body.appendChild(link)
     link.click()
@@ -693,25 +628,22 @@ export default function UsersPage() {
   const hasActiveFilters = useMemo(() => {
     return (
       debouncedSearch.length > 0 ||
-      roleFilters.length > 0 ||
       statusFilters.length > 0 ||
-      entityTypeFilters.length > 0 ||
       kycStatusFilters.length > 0 ||
       hasEntitiesFilter.length > 0
     )
-  }, [debouncedSearch, roleFilters, statusFilters, entityTypeFilters, kycStatusFilters, hasEntitiesFilter])
+  }, [debouncedSearch, statusFilters, kycStatusFilters, hasEntitiesFilter])
 
   // Update URL params when filters change
   const updateUrlParams = useCallback((params: {
     search?: string
-    role?: string[]
     status?: string[]
-    entityType?: string[]
+    kycStatus?: string[]
+    hasEntities?: string[]
     page?: number
   }) => {
     const newParams = new URLSearchParams(searchParams.toString())
 
-    // Handle search
     if (params.search !== undefined) {
       if (params.search) {
         newParams.set('search', params.search)
@@ -720,16 +652,6 @@ export default function UsersPage() {
       }
     }
 
-    // Handle role filter
-    if (params.role !== undefined) {
-      if (params.role.length > 0) {
-        newParams.set('role', params.role.join(','))
-      } else {
-        newParams.delete('role')
-      }
-    }
-
-    // Handle status filter
     if (params.status !== undefined) {
       if (params.status.length > 0) {
         newParams.set('status', params.status.join(','))
@@ -738,16 +660,22 @@ export default function UsersPage() {
       }
     }
 
-    // Handle entity type filter
-    if (params.entityType !== undefined) {
-      if (params.entityType.length > 0) {
-        newParams.set('entityType', params.entityType.join(','))
+    if (params.kycStatus !== undefined) {
+      if (params.kycStatus.length > 0) {
+        newParams.set('kycStatus', params.kycStatus.join(','))
       } else {
-        newParams.delete('entityType')
+        newParams.delete('kycStatus')
       }
     }
 
-    // Handle page
+    if (params.hasEntities !== undefined) {
+      if (params.hasEntities.length > 0) {
+        newParams.set('hasEntities', params.hasEntities.join(','))
+      } else {
+        newParams.delete('hasEntities')
+      }
+    }
+
     if (params.page !== undefined) {
       if (params.page > 1) {
         newParams.set('page', params.page.toString())
@@ -760,7 +688,7 @@ export default function UsersPage() {
     router.push(`${pathname}${queryString ? `?${queryString}` : ''}`)
   }, [pathname, router, searchParams])
 
-  // Fetch users with filters
+  // Fetch users with investor filter
   const fetchUsers = useCallback(async (page: number = 1) => {
     try {
       setLoading(true)
@@ -771,30 +699,34 @@ export default function UsersPage() {
         pageSize: pagination.pageSize.toString(),
         sortBy: 'createdAt',
         sortOrder: 'desc',
+        role: 'investor', // Pre-filter for investors only
       })
 
-      // Add filters to API request
       if (debouncedSearch) {
         params.set('search', debouncedSearch)
-      }
-      if (roleFilters.length > 0) {
-        params.set('role', roleFilters.join(','))
       }
       if (statusFilters.length > 0) {
         params.set('status', statusFilters.join(','))
       }
-      if (entityTypeFilters.length > 0) {
-        params.set('entityType', entityTypeFilters.join(','))
-      }
+      // Note: KYC status and hasEntities filters would need API support
+      // For now, they're UI-ready for when the API is extended
 
       const response = await fetch(`/api/admin/users?${params}`)
       const data: UsersResponse = await response.json()
 
       if (!data.success) {
-        throw new Error(data.error || 'Failed to fetch users')
+        throw new Error(data.error || 'Failed to fetch investors')
       }
 
-      setUsers(data.data || [])
+      // Apply client-side filtering for hasEntities (until API supports it)
+      let filteredUsers = data.data || []
+      if (hasEntitiesFilter.includes('yes') && !hasEntitiesFilter.includes('no')) {
+        filteredUsers = filteredUsers.filter(u => u.entityCount > 0)
+      } else if (hasEntitiesFilter.includes('no') && !hasEntitiesFilter.includes('yes')) {
+        filteredUsers = filteredUsers.filter(u => u.entityCount === 0)
+      }
+
+      setUsers(filteredUsers)
       if (data.pagination) {
         setPagination(data.pagination)
       }
@@ -803,9 +735,9 @@ export default function UsersPage() {
     } finally {
       setLoading(false)
     }
-  }, [pagination.pageSize, debouncedSearch, roleFilters, statusFilters, entityTypeFilters])
+  }, [pagination.pageSize, debouncedSearch, statusFilters, hasEntitiesFilter])
 
-  // Deactivate selected users (calls actual API)
+  // Deactivate selected users
   const handleDeactivateUsers = useCallback(async () => {
     if (selectedUsers.length === 0) return
 
@@ -822,35 +754,21 @@ export default function UsersPage() {
         throw new Error(data.error || 'Failed to deactivate users')
       }
 
-      toast.success('Users deactivated', {
-        description: `${selectedUsers.length} user${selectedUsers.length > 1 ? 's' : ''} deactivated successfully.`,
-      })
-
-      // Clear selection after successful deactivation
       setRowSelection({})
       setDeactivateDialogOpen(false)
-
-      // Refresh the users list
       fetchUsers(pagination.page)
     } catch (error) {
-      toast.error('Failed to deactivate users', {
-        description: error instanceof Error ? error.message : 'An error occurred',
-      })
+      console.error('Failed to deactivate users:', error)
     } finally {
       setIsDeactivating(false)
     }
   }, [selectedUsers, fetchUsers, pagination.page])
 
-  // Handle invite dialog success
-  const handleInviteSuccess = useCallback(() => {
-    fetchUsers(pagination.page)
-  }, [fetchUsers, pagination.page])
-
   // Single user action handlers (wired to dropdown menu)
   const handleEditUser = useCallback((user: UserRow) => {
     // Navigate to user detail page for editing
-    router.push(`/versotech_admin/users/${user.id}`)
-  }, [router])
+    window.location.href = `/versotech_admin/users/${user.id}`
+  }, [])
 
   const handleLockUser = useCallback((user: UserRow) => {
     setUserToAction(user)
@@ -926,14 +844,14 @@ export default function UsersPage() {
       })
       const data = await response.json()
       if (!data.success) throw new Error(data.error || 'Failed to deactivate user')
-      toast.success('User deactivated', {
+      toast.success('Investor deactivated', {
         description: `${userToAction.displayName} has been deactivated.`,
       })
       setSingleDeactivateDialogOpen(false)
       setUserToAction(null)
       fetchUsers(pagination.page)
     } catch (error) {
-      toast.error('Failed to deactivate user', {
+      toast.error('Failed to deactivate investor', {
         description: error instanceof Error ? error.message : 'An error occurred',
       })
     } finally {
@@ -952,23 +870,20 @@ export default function UsersPage() {
   // Fetch when filters change
   useEffect(() => {
     fetchUsers(1)
-    // Reset to page 1 when filters change
     updateUrlParams({
       search: debouncedSearch,
-      role: roleFilters,
       status: statusFilters,
-      entityType: entityTypeFilters,
+      kycStatus: kycStatusFilters,
+      hasEntities: hasEntitiesFilter,
       page: 1
     })
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [debouncedSearch, roleFilters, statusFilters, entityTypeFilters])
+  }, [debouncedSearch, statusFilters, kycStatusFilters, hasEntitiesFilter])
 
   // Clear all filters
   const clearAllFilters = () => {
     setSearchInput('')
-    setRoleFilters([])
     setStatusFilters([])
-    setEntityTypeFilters([])
     setKycStatusFilters([])
     setHasEntitiesFilter([])
   }
@@ -1003,7 +918,6 @@ export default function UsersPage() {
     }
   }
 
-  // Calculate display range
   const startIndex = (pagination.page - 1) * pagination.pageSize + 1
   const endIndex = Math.min(pagination.page * pagination.pageSize, pagination.totalCount)
 
@@ -1011,7 +925,7 @@ export default function UsersPage() {
     return (
       <div className="p-6">
         <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-4">
-          <h3 className="font-medium text-destructive">Error loading users</h3>
+          <h3 className="font-medium text-destructive">Error loading investors</h3>
           <p className="text-sm text-destructive/80 mt-1">{error}</p>
           <Button
             variant="outline"
@@ -1031,15 +945,11 @@ export default function UsersPage() {
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold">All Users</h1>
+          <h1 className="text-2xl font-semibold">Investors</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Manage platform users and their access
+            Manage investor accounts and their entity associations
           </p>
         </div>
-        <Button onClick={() => setInviteDialogOpen(true)}>
-          <UserPlus className="h-4 w-4 mr-2" />
-          Invite
-        </Button>
       </div>
 
       {/* Search and Filters */}
@@ -1049,7 +959,7 @@ export default function UsersPage() {
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="Search by name or email..."
+              placeholder="Search investors..."
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               className="pl-9 h-9"
@@ -1067,13 +977,7 @@ export default function UsersPage() {
           </div>
 
           {/* Filter Dropdowns */}
-          <div className="flex items-center gap-2 flex-wrap">
-            <MultiSelectFilter
-              title="Role"
-              options={roleOptions}
-              selected={roleFilters}
-              onSelect={setRoleFilters}
-            />
+          <div className="flex items-center gap-2">
             <MultiSelectFilter
               title="Status"
               options={statusOptions}
@@ -1091,12 +995,6 @@ export default function UsersPage() {
               options={hasEntitiesOptions}
               selected={hasEntitiesFilter}
               onSelect={setHasEntitiesFilter}
-            />
-            <MultiSelectFilter
-              title="Entity Type"
-              options={entityTypeOptions}
-              selected={entityTypeFilters}
-              onSelect={setEntityTypeFilters}
             />
           </div>
         </div>
@@ -1130,34 +1028,12 @@ export default function UsersPage() {
               </button>
             </Badge>
           )}
-          {roleFilters.map((role) => (
-            <Badge key={role} variant="secondary" className="rounded-sm px-2 py-1">
-              Role: {roleOptions.find(o => o.value === role)?.label || role}
-              <button
-                className="ml-1.5 ring-offset-background rounded-full outline-none hover:bg-muted-foreground/20"
-                onClick={() => setRoleFilters(roleFilters.filter(r => r !== role))}
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </Badge>
-          ))}
           {statusFilters.map((status) => (
             <Badge key={status} variant="secondary" className="rounded-sm px-2 py-1">
               Status: {statusOptions.find(o => o.value === status)?.label || status}
               <button
                 className="ml-1.5 ring-offset-background rounded-full outline-none hover:bg-muted-foreground/20"
                 onClick={() => setStatusFilters(statusFilters.filter(s => s !== status))}
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </Badge>
-          ))}
-          {entityTypeFilters.map((entityType) => (
-            <Badge key={entityType} variant="secondary" className="rounded-sm px-2 py-1">
-              Entity: {entityTypeOptions.find(o => o.value === entityType)?.label || entityType}
-              <button
-                className="ml-1.5 ring-offset-background rounded-full outline-none hover:bg-muted-foreground/20"
-                onClick={() => setEntityTypeFilters(entityTypeFilters.filter(e => e !== entityType))}
               >
                 <X className="h-3 w-3" />
               </button>
@@ -1190,7 +1066,7 @@ export default function UsersPage() {
 
       {/* Table Content */}
       {loading ? (
-        <UsersTableSkeleton />
+        <InvestorsTableSkeleton />
       ) : users.length === 0 ? (
         <EmptyState />
       ) : (
@@ -1238,7 +1114,7 @@ export default function UsersPage() {
                       colSpan={columns.length}
                       className="h-24 text-center"
                     >
-                      No users found.
+                      No investors found.
                     </TableCell>
                   </TableRow>
                 )}
@@ -1250,9 +1126,9 @@ export default function UsersPage() {
           <div className="flex items-center justify-between">
             <div className="text-sm text-muted-foreground">
               {pagination.totalCount > 0 ? (
-                <>Showing {startIndex}-{endIndex} of {pagination.totalCount} users</>
+                <>Showing {startIndex}-{endIndex} of {pagination.totalCount} investors</>
               ) : (
-                <>No users found</>
+                <>No investors found</>
               )}
             </div>
             <div className="flex items-center space-x-2">
@@ -1288,7 +1164,7 @@ export default function UsersPage() {
           <div className="flex items-center justify-between px-6 py-3 max-w-[calc(100%-var(--sidebar-width,16rem))] ml-auto">
             <div className="flex items-center gap-3">
               <span className="text-sm font-medium">
-                {selectedUsers.length} user{selectedUsers.length > 1 ? 's' : ''} selected
+                {selectedUsers.length} investor{selectedUsers.length > 1 ? 's' : ''} selected
               </span>
               <Button
                 variant="ghost"
@@ -1320,18 +1196,18 @@ export default function UsersPage() {
         </div>
       )}
 
-      {/* Deactivate Confirmation Dialog */}
+      {/* Batch Deactivate Confirmation Dialog */}
       <AlertDialog open={deactivateDialogOpen} onOpenChange={setDeactivateDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-destructive" />
-              Deactivate Users
+              Deactivate Investors
             </AlertDialogTitle>
             <AlertDialogDescription asChild>
               <div className="space-y-3">
                 <p>
-                  Are you sure you want to deactivate {selectedUsers.length} user{selectedUsers.length > 1 ? 's' : ''}?
+                  Are you sure you want to deactivate {selectedUsers.length} investor{selectedUsers.length > 1 ? 's' : ''}?
                   They will no longer be able to access the platform.
                 </p>
                 <div className="rounded-md bg-muted p-3 max-h-32 overflow-y-auto">
@@ -1365,19 +1241,12 @@ export default function UsersPage() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Batch Invite Dialog (uses production-ready component) */}
-      <BatchInviteDialog
-        open={inviteDialogOpen}
-        onOpenChange={setInviteDialogOpen}
-        onSuccess={handleInviteSuccess}
-      />
-
       {/* Lock User Dialog */}
       <AlertDialog open={lockDialogOpen} onOpenChange={setLockDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
-              <Lock className="h-5 w-5 text-yellow-600 dark:text-yellow-500" />
+              <Lock className="h-5 w-5 text-yellow-600" />
               Lock Account
             </AlertDialogTitle>
             <AlertDialogDescription>
@@ -1413,7 +1282,10 @@ export default function UsersPage() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isPerformingAction}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={executeResetPassword} disabled={isPerformingAction}>
+            <AlertDialogAction
+              onClick={executeResetPassword}
+              disabled={isPerformingAction}
+            >
               {isPerformingAction ? 'Sending...' : 'Send Reset Email'}
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -1426,7 +1298,7 @@ export default function UsersPage() {
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-destructive" />
-              Deactivate User
+              Deactivate Investor
             </AlertDialogTitle>
             <AlertDialogDescription>
               Are you sure you want to deactivate <strong>{userToAction?.displayName}</strong>?

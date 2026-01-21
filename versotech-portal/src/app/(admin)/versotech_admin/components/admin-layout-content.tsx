@@ -126,10 +126,18 @@ function ThemeToggle() {
 
 // Inner layout component that uses theme context
 function AdminLayoutInner({ children, profile }: AdminLayoutContentProps) {
+  const [mounted, setMounted] = useState(false)
   const pathname = usePathname()
   const pageTitle = getPageTitle(pathname)
   const { theme } = useTheme()
-  const isDark = theme === 'staff-dark'
+
+  // Wait for client-side hydration to apply theme-specific classes
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  // Use light theme styles during SSR to match server render
+  const isDark = mounted && theme === 'staff-dark'
 
   return (
     <div className="flex h-screen min-h-screen overflow-hidden app-main-bg">

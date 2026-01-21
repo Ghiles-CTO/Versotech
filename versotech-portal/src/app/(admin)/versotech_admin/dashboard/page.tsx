@@ -1,6 +1,6 @@
 'use client'
 
-import { Suspense } from 'react'
+import { Suspense, useState, useEffect } from 'react'
 import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import {
   Select,
@@ -25,16 +25,34 @@ const DATE_RANGE_OPTIONS: { value: DateRange; label: string }[] = [
 ]
 
 function DateRangeSelector() {
+  const [mounted, setMounted] = useState(false)
   const searchParams = useSearchParams()
   const router = useRouter()
   const pathname = usePathname()
 
   const currentRange = (searchParams.get('days') as DateRange) || '30'
 
+  // Wait for client-side hydration before rendering Radix Select
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
   const handleRangeChange = (value: DateRange) => {
     const params = new URLSearchParams(searchParams.toString())
     params.set('days', value)
     router.push(`${pathname}?${params.toString()}`)
+  }
+
+  // Render a static placeholder during SSR to avoid Radix ID mismatches
+  if (!mounted) {
+    return (
+      <div className="h-10 w-[160px] rounded-md border border-input bg-background px-3 py-2 text-sm flex items-center justify-between">
+        <span>{DATE_RANGE_OPTIONS.find(o => o.value === currentRange)?.label || 'Select range'}</span>
+        <svg className="h-4 w-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </div>
+    )
   }
 
   return (

@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useMemo } from 'react'
 import {
   ColumnDef,
   SortingState,
@@ -29,19 +29,38 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Card, CardContent } from '@/components/ui/card'
 import {
   MoreHorizontal,
   Eye,
-  Shield,
   ArrowUpDown,
   Users as UsersIcon,
   Activity,
   UserCheck,
+  ArrowRightLeft,
+  Loader2,
 } from 'lucide-react'
 import Link from 'next/link'
 import { formatDistanceToNow } from 'date-fns'
 import { cn } from '@/lib/utils'
+import { toast } from 'sonner'
 
 // Staff member type based on API response
 interface StaffMember {
@@ -97,13 +116,13 @@ const formatRole = (role: string): string => {
   return roleMap[role] || role
 }
 
-// Status badge styling
+// Status badge styling (with dark mode support)
 const statusBadgeStyle = (status: string): { variant: 'default' | 'secondary' | 'outline'; className?: string } => {
   if (status === 'active') {
-    return { variant: 'default', className: 'bg-green-500 hover:bg-green-500/80' }
+    return { variant: 'default', className: 'bg-green-500 dark:bg-green-600 hover:bg-green-500/80 dark:hover:bg-green-600/80' }
   }
   // Invited
-  return { variant: 'secondary', className: 'bg-yellow-500 text-white hover:bg-yellow-500/80' }
+  return { variant: 'secondary', className: 'bg-yellow-500 dark:bg-yellow-600 text-white hover:bg-yellow-500/80 dark:hover:bg-yellow-600/80' }
 }
 
 // Get initials from display name
@@ -126,16 +145,22 @@ const formatPermissions = (permissions: string[]): string => {
   return displayPermissions.slice(0, 3).join(', ') + (displayPermissions.length > 3 ? ` +${displayPermissions.length - 3}` : '')
 }
 
-// Activity score color based on value
+// Activity score color based on value (with dark mode support)
 const getActivityScoreColor = (score: number): string => {
   if (score === 0) return 'text-muted-foreground'
-  if (score < 10) return 'text-yellow-600'
-  if (score < 50) return 'text-blue-600'
-  return 'text-green-600'
+  if (score < 10) return 'text-yellow-600 dark:text-yellow-500'
+  if (score < 50) return 'text-blue-600 dark:text-blue-400'
+  return 'text-green-600 dark:text-green-500'
 }
 
-// Column definitions
-const columns: ColumnDef<StaffMember>[] = [
+// Staff action handlers type
+interface StaffActionHandlers {
+  onViewAssigned: (staff: StaffMember) => void
+  onTransfer: (staff: StaffMember) => void
+}
+
+// Column definitions factory
+const createColumns = (handlers: StaffActionHandlers): ColumnDef<StaffMember>[] => [
   {
     accessorKey: 'display_name',
     header: ({ column }) => (
@@ -297,9 +322,13 @@ const columns: ColumnDef<StaffMember>[] = [
                 View Details
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem>
-              <Shield className="mr-2 h-4 w-4" />
-              Manage Permissions
+            <DropdownMenuItem onClick={() => handlers.onViewAssigned(staff)}>
+              <UserCheck className="mr-2 h-4 w-4" />
+              View Assigned Investors
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handlers.onTransfer(staff)}>
+              <ArrowRightLeft className="mr-2 h-4 w-4" />
+              Transfer Assignments
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -366,6 +395,13 @@ function EmptyState() {
   )
 }
 
+// Assigned investors type
+interface AssignedInvestor {
+  id: string
+  name: string
+  email: string
+}
+
 export default function StaffUsersPage() {
   const [staff, setStaff] = useState<StaffMember[]>([])
   const [loading, setLoading] = useState(true)
@@ -374,6 +410,15 @@ export default function StaffUsersPage() {
     { id: 'display_name', desc: false }
   ])
   const [statistics, setStatistics] = useState<StaffResponse['data']>()
+
+  // Dialog states
+  const [selectedStaff, setSelectedStaff] = useState<StaffMember | null>(null)
+  const [viewAssignedDialogOpen, setViewAssignedDialogOpen] = useState(false)
+  const [transferDialogOpen, setTransferDialogOpen] = useState(false)
+  const [assignedInvestors, setAssignedInvestors] = useState<AssignedInvestor[]>([])
+  const [loadingInvestors, setLoadingInvestors] = useState(false)
+  const [targetStaffId, setTargetStaffId] = useState<string>('')
+  const [isTransferring, setIsTransferring] = useState(false)
 
   // Fetch staff members
   const fetchStaff = useCallback(async () => {
@@ -401,6 +446,76 @@ export default function StaffUsersPage() {
     fetchStaff()
   }, [fetchStaff])
 
+  // Handler: View assigned investors
+  const handleViewAssigned = useCallback(async (staffMember: StaffMember) => {
+    setSelectedStaff(staffMember)
+    setViewAssignedDialogOpen(true)
+    setLoadingInvestors(true)
+
+    try {
+      const response = await fetch(`/api/admin/staff/${staffMember.id}/assigned-investors`)
+      const data = await response.json()
+
+      if (data.success && data.data) {
+        setAssignedInvestors(data.data)
+      } else {
+        // If API doesn't exist yet, show empty list with message
+        setAssignedInvestors([])
+      }
+    } catch (err) {
+      setAssignedInvestors([])
+    } finally {
+      setLoadingInvestors(false)
+    }
+  }, [])
+
+  // Handler: Open transfer dialog
+  const handleTransfer = useCallback((staffMember: StaffMember) => {
+    setSelectedStaff(staffMember)
+    setTargetStaffId('')
+    setTransferDialogOpen(true)
+  }, [])
+
+  // Execute transfer
+  const executeTransfer = useCallback(async () => {
+    if (!selectedStaff || !targetStaffId) return
+
+    setIsTransferring(true)
+    try {
+      const response = await fetch('/api/admin/staff/transfer-assignments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fromStaffId: selectedStaff.id,
+          toStaffId: targetStaffId,
+        }),
+      })
+      const data = await response.json()
+
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to transfer assignments')
+      }
+
+      toast.success('Assignments transferred', {
+        description: `Investors reassigned from ${selectedStaff.display_name} successfully.`,
+      })
+      setTransferDialogOpen(false)
+      fetchStaff() // Refresh data
+    } catch (err) {
+      toast.error('Failed to transfer', {
+        description: err instanceof Error ? err.message : 'An error occurred',
+      })
+    } finally {
+      setIsTransferring(false)
+    }
+  }, [selectedStaff, targetStaffId, fetchStaff])
+
+  // Create columns with handlers
+  const columns = useMemo(() => createColumns({
+    onViewAssigned: handleViewAssigned,
+    onTransfer: handleTransfer,
+  }), [handleViewAssigned, handleTransfer])
+
   const table = useReactTable({
     data: staff,
     columns,
@@ -412,6 +527,11 @@ export default function StaffUsersPage() {
     },
     getRowId: (row) => row.id,
   })
+
+  // Get other staff members for transfer dropdown
+  const otherStaffMembers = useMemo(() => {
+    return staff.filter(s => s.id !== selectedStaff?.id && s.role.startsWith('staff_'))
+  }, [staff, selectedStaff])
 
   if (error) {
     return (
@@ -529,6 +649,110 @@ export default function StaffUsersPage() {
           </div>
         </div>
       )}
+
+      {/* View Assigned Investors Dialog */}
+      <Dialog open={viewAssignedDialogOpen} onOpenChange={setViewAssignedDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Assigned Investors</DialogTitle>
+            <DialogDescription>
+              Investors assigned to {selectedStaff?.display_name}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            {loadingInvestors ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : assignedInvestors.length === 0 ? (
+              <div className="text-center py-8">
+                <UsersIcon className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
+                <p className="text-sm text-muted-foreground">
+                  No investors currently assigned
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                {assignedInvestors.map((investor) => (
+                  <Card key={investor.id} className="p-3">
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-8 w-8">
+                        <AvatarFallback className="text-xs">
+                          {investor.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{investor.name}</p>
+                        <p className="text-xs text-muted-foreground truncate">{investor.email}</p>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setViewAssignedDialogOpen(false)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Transfer Assignments Dialog */}
+      <Dialog open={transferDialogOpen} onOpenChange={setTransferDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Transfer Assignments</DialogTitle>
+            <DialogDescription>
+              Transfer all investor assignments from {selectedStaff?.display_name} to another staff member.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4 space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="target-staff">Transfer to</Label>
+              <Select value={targetStaffId} onValueChange={setTargetStaffId}>
+                <SelectTrigger id="target-staff">
+                  <SelectValue placeholder="Select staff member" />
+                </SelectTrigger>
+                <SelectContent>
+                  {otherStaffMembers.length === 0 ? (
+                    <SelectItem value="_none" disabled>
+                      No other staff members available
+                    </SelectItem>
+                  ) : (
+                    otherStaffMembers.map((member) => (
+                      <SelectItem key={member.id} value={member.id}>
+                        <div className="flex items-center gap-2">
+                          <span>{member.display_name}</span>
+                          <span className="text-muted-foreground">({member.assigned_investors} assigned)</span>
+                        </div>
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 p-3">
+              <p className="text-sm text-amber-800 dark:text-amber-200">
+                <strong>Note:</strong> This will transfer all {selectedStaff?.assigned_investors || 0} investor assignments to the selected staff member.
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setTransferDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={executeTransfer}
+              disabled={!targetStaffId || isTransferring}
+            >
+              {isTransferring && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Transfer Assignments
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

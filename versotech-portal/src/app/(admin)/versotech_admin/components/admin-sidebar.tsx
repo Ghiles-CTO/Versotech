@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import Image from 'next/image'
@@ -46,6 +46,7 @@ const adminNavItems: NavItem[] = [
     icon: Users,
     children: [
       { name: 'All Users', href: '/versotech_admin/users', icon: Users },
+      { name: 'Investors', href: '/versotech_admin/users/investors', icon: Users },
       { name: 'Staff', href: '/versotech_admin/users/staff', icon: Users },
     ],
   },
@@ -79,10 +80,16 @@ interface AdminSidebarProps {
 }
 
 export function AdminSidebar({ className }: AdminSidebarProps) {
+  const [mounted, setMounted] = useState(false)
   const [collapsed, setCollapsed] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [expandedSections, setExpandedSections] = useState<string[]>(['Users', 'Growth'])
   const pathname = usePathname()
+
+  // Wait for client-side hydration before rendering interactive Radix components
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // Check if a route is active (exact match or nested)
   const isRouteActive = (href: string, hasChildren: boolean = false) => {
@@ -157,6 +164,54 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
           const isExpanded = isSectionExpanded(item)
 
           if (hasChildren && !collapsed) {
+            // Before hydration, render static content to avoid Radix ID mismatches
+            if (!mounted) {
+              return (
+                <div key={item.name}>
+                  <button
+                    className={cn(
+                      "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 text-left",
+                      isActive
+                        ? "bg-blue-50 dark:bg-blue-600/10 text-blue-700 dark:text-blue-400"
+                        : "text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-white/5"
+                    )}
+                  >
+                    <Icon className={cn(
+                      "h-5 w-5 flex-shrink-0",
+                      isActive ? "text-blue-600 dark:text-blue-400" : "text-gray-400 dark:text-zinc-500"
+                    )} />
+                    <span className="flex-1 text-sm font-medium">{item.name}</span>
+                    <ChevronDown className={cn(
+                      "h-4 w-4 transition-transform duration-200",
+                      isExpanded && "rotate-180"
+                    )} />
+                  </button>
+                  {isExpanded && (
+                    <div className="ml-4 pl-4 border-l border-gray-100 dark:border-white/10 mt-1 space-y-1">
+                      {item.children?.map((child) => {
+                        const childActive = pathname === child.href
+                        return (
+                          <Link
+                            key={child.href}
+                            href={child.href}
+                            className={cn(
+                              "block px-3 py-2 rounded-lg text-sm transition-colors",
+                              childActive
+                                ? "bg-blue-50 dark:bg-blue-600/10 text-blue-700 dark:text-blue-400 font-medium"
+                                : "text-gray-500 dark:text-zinc-500 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-white/5"
+                            )}
+                          >
+                            {child.name}
+                          </Link>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
+              )
+            }
+
+            // After hydration, render interactive Collapsible component
             return (
               <Collapsible
                 key={item.name}
