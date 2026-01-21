@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { formatCurrency } from '@/lib/fees/calculations';
-import { Calendar, DollarSign, Clock, TrendingUp, Users, Building2, ChevronDown, ChevronRight, UserCheck, Handshake } from 'lucide-react';
+import { Calendar, DollarSign, Clock, TrendingUp, Users, Building2, ChevronDown, ChevronRight, UserCheck, Handshake, Briefcase } from 'lucide-react';
 import {
   Collapsible,
   CollapsibleContent,
@@ -84,6 +84,20 @@ interface PartnerCommission {
   created_at: string;
 }
 
+interface CommercialPartnerCommission {
+  id: string;
+  entity_type: 'commercial_partner';
+  entity_id: string;
+  entity_name: string;
+  deal_id: string | null;
+  deal_name?: string;
+  investor_id: string | null;
+  investor_name?: string;
+  accrual_amount: number;
+  status: string;
+  created_at: string;
+}
+
 interface ScheduleData {
   data: UpcomingFee[];
   summary: {
@@ -113,6 +127,9 @@ export default function ScheduleTab() {
   const [partnerCommissions, setPartnerCommissions] = useState<PartnerCommission[]>([]);
   const [partnerCommissionsLoading, setPartnerCommissionsLoading] = useState(true);
   const [partnerCommissionsExpanded, setPartnerCommissionsExpanded] = useState(true);
+  const [commercialPartnerCommissions, setCommercialPartnerCommissions] = useState<CommercialPartnerCommission[]>([]);
+  const [commercialPartnerCommissionsLoading, setCommercialPartnerCommissionsLoading] = useState(true);
+  const [commercialPartnerCommissionsExpanded, setCommercialPartnerCommissionsExpanded] = useState(true);
 
   const fetchSchedules = useCallback(async () => {
     setLoading(true);
@@ -187,6 +204,27 @@ export default function ScheduleTab() {
     }
   }, []);
 
+  const fetchCommercialPartnerCommissions = useCallback(async () => {
+    setCommercialPartnerCommissionsLoading(true);
+    try {
+      // Get commercial partner commissions with status = 'accrued' for schedule view
+      const res = await fetch(
+        `/api/staff/fees/commissions?entity_type=commercial_partner&status=accrued`
+      );
+      const json = await res.json();
+      // Filter to only commercial_partner type from the response
+      const commercialPartnerData = (json.data || []).filter(
+        (c: CommercialPartnerCommission) => c.entity_type === 'commercial_partner'
+      );
+      setCommercialPartnerCommissions(commercialPartnerData);
+    } catch (error) {
+      console.error('Error fetching commercial partner commissions:', error);
+      setCommercialPartnerCommissions([]);
+    } finally {
+      setCommercialPartnerCommissionsLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     fetchSchedules();
   }, [daysAhead, fetchSchedules]);
@@ -202,6 +240,10 @@ export default function ScheduleTab() {
   useEffect(() => {
     fetchPartnerCommissions();
   }, [fetchPartnerCommissions]);
+
+  useEffect(() => {
+    fetchCommercialPartnerCommissions();
+  }, [fetchCommercialPartnerCommissions]);
 
   // Group investor fees by deal, then by investor
   const groupedInvestorFees = useMemo(() => {
@@ -369,6 +411,61 @@ export default function ScheduleTab() {
   const partnerCommissionsTotal = useMemo(() => {
     return partnerCommissions.reduce((sum, c) => sum + Number(c.accrual_amount), 0);
   }, [partnerCommissions]);
+
+  // Group commercial partner commissions by commercial partner, then by deal
+  const groupedCommercialPartnerCommissions = useMemo(() => {
+    const byCommercialPartner: Record<string, {
+      commercialPartner: { id: string; name: string };
+      byDeal: Record<string, {
+        deal: { id: string; name: string };
+        commissions: CommercialPartnerCommission[];
+        total: number;
+      }>;
+      total: number;
+    }> = {};
+
+    for (const commission of commercialPartnerCommissions) {
+      const commercialPartnerId = commission.entity_id || 'unknown';
+      const commercialPartnerName = commission.entity_name || 'Unknown Commercial Partner';
+      const dealId = commission.deal_id || 'unknown';
+      const dealName = commission.deal_name || 'Unknown Deal';
+
+      if (!byCommercialPartner[commercialPartnerId]) {
+        byCommercialPartner[commercialPartnerId] = {
+          commercialPartner: { id: commercialPartnerId, name: commercialPartnerName },
+          byDeal: {},
+          total: 0,
+        };
+      }
+
+      if (!byCommercialPartner[commercialPartnerId].byDeal[dealId]) {
+        byCommercialPartner[commercialPartnerId].byDeal[dealId] = {
+          deal: { id: dealId, name: dealName },
+          commissions: [],
+          total: 0,
+        };
+      }
+
+      byCommercialPartner[commercialPartnerId].byDeal[dealId].commissions.push(commission);
+      byCommercialPartner[commercialPartnerId].byDeal[dealId].total += Number(commission.accrual_amount);
+      byCommercialPartner[commercialPartnerId].total += Number(commission.accrual_amount);
+    }
+
+    // Sort commissions by created_at within each group
+    Object.values(byCommercialPartner).forEach(commercialPartnerGroup => {
+      Object.values(commercialPartnerGroup.byDeal).forEach(dealGroup => {
+        dealGroup.commissions.sort((a, b) => {
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        });
+      });
+    });
+
+    return byCommercialPartner;
+  }, [commercialPartnerCommissions]);
+
+  const commercialPartnerCommissionsTotal = useMemo(() => {
+    return commercialPartnerCommissions.reduce((sum, c) => sum + Number(c.accrual_amount), 0);
+  }, [commercialPartnerCommissions]);
 
   if (loading) {
     return <div className="text-white">Loading fee schedules...</div>;
@@ -742,6 +839,118 @@ export default function ScheduleTab() {
 
                       {/* Deals within Partner */}
                       {Object.entries(partnerGroup.byDeal).map(([dealId, dealGroup]) => (
+                        <div key={dealId} className="ml-6 space-y-2">
+                          {/* Deal Header */}
+                          <div className="flex items-center gap-2">
+                            <Building2 className="h-3.5 w-3.5 text-purple-400" />
+                            <h5 className="font-medium text-gray-200">{dealGroup.deal.name}</h5>
+                            <span className="text-sm text-gray-400 ml-auto">
+                              {formatCurrency(dealGroup.total)}
+                            </span>
+                          </div>
+
+                          {/* Commissions Table */}
+                          <div className="overflow-x-auto">
+                            <table className="w-full text-sm">
+                              <thead>
+                                <tr className="border-b border-gray-700">
+                                  <th className="text-left py-2 px-2 text-gray-400 font-medium">Investor</th>
+                                  <th className="text-right py-2 px-2 text-gray-400 font-medium">Amount</th>
+                                  <th className="text-left py-2 px-2 text-gray-400 font-medium">Status</th>
+                                  <th className="text-left py-2 px-2 text-gray-400 font-medium">Created Date</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {dealGroup.commissions.map((commission) => (
+                                  <tr key={commission.id} className="border-b border-gray-800">
+                                    <td className="py-2 px-2 text-gray-300">
+                                      {commission.investor_name || '-'}
+                                    </td>
+                                    <td className="py-2 px-2 text-right text-white font-medium">
+                                      {formatCurrency(Number(commission.accrual_amount))}
+                                    </td>
+                                    <td className="py-2 px-2">
+                                      <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30">
+                                        {commission.status}
+                                      </Badge>
+                                    </td>
+                                    <td className="py-2 px-2 text-gray-300">
+                                      {new Date(commission.created_at).toLocaleDateString('en-US', {
+                                        month: 'short',
+                                        day: 'numeric',
+                                        year: 'numeric',
+                                      })}
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </CollapsibleContent>
+        </Card>
+      </Collapsible>
+
+      {/* Commercial Partner Commissions Section */}
+      <Collapsible open={commercialPartnerCommissionsExpanded} onOpenChange={setCommercialPartnerCommissionsExpanded}>
+        <Card>
+          <CardHeader className="pb-3">
+            <CollapsibleTrigger asChild>
+              <button className="flex w-full items-center justify-between text-left">
+                <div className="flex items-center gap-3">
+                  <Briefcase className="h-5 w-5 text-purple-400" />
+                  <div>
+                    <CardTitle className="text-lg">Commercial Partner Commissions</CardTitle>
+                    <p className="text-sm text-gray-400 mt-0.5">
+                      Pending commission payments to commercial partners
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="text-right">
+                    <div className="text-sm font-medium text-white">
+                      {commercialPartnerCommissions.length} commission{commercialPartnerCommissions.length !== 1 ? 's' : ''}
+                    </div>
+                    <div className="text-sm text-gray-400">
+                      {formatCurrency(commercialPartnerCommissionsTotal)}
+                    </div>
+                  </div>
+                  {commercialPartnerCommissionsExpanded ? (
+                    <ChevronDown className="h-5 w-5 text-gray-400" />
+                  ) : (
+                    <ChevronRight className="h-5 w-5 text-gray-400" />
+                  )}
+                </div>
+              </button>
+            </CollapsibleTrigger>
+          </CardHeader>
+          <CollapsibleContent>
+            <CardContent className="pt-0">
+              {commercialPartnerCommissionsLoading ? (
+                <p className="text-gray-400 py-4">Loading commercial partner commissions...</p>
+              ) : commercialPartnerCommissions.length === 0 ? (
+                <p className="text-gray-400 py-4">No pending commercial partner commissions</p>
+              ) : (
+                <div className="space-y-6">
+                  {Object.entries(groupedCommercialPartnerCommissions).map(([commercialPartnerId, commercialPartnerGroup]) => (
+                    <div key={commercialPartnerId} className="space-y-4">
+                      {/* Commercial Partner Header */}
+                      <div className="flex items-center gap-2 border-b border-gray-700 pb-2">
+                        <Briefcase className="h-4 w-4 text-purple-400" />
+                        <h4 className="font-semibold text-white">{commercialPartnerGroup.commercialPartner.name}</h4>
+                        <span className="text-sm text-gray-400 ml-auto">
+                          {formatCurrency(commercialPartnerGroup.total)}
+                        </span>
+                      </div>
+
+                      {/* Deals within Commercial Partner */}
+                      {Object.entries(commercialPartnerGroup.byDeal).map(([dealId, dealGroup]) => (
                         <div key={dealId} className="ml-6 space-y-2">
                           {/* Deal Header */}
                           <div className="flex items-center gap-2">
