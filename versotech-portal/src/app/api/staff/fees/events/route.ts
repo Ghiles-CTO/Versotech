@@ -164,11 +164,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Determine payee_arranger_id from deal if provided
+    let payeeArrangerId: string | null = null;
+    if (validation.data.deal_id) {
+      const { data: deal } = await supabase
+        .from('deals')
+        .select('arranger_entity_id')
+        .eq('id', validation.data.deal_id)
+        .single();
+
+      if (deal?.arranger_entity_id) {
+        payeeArrangerId = deal.arranger_entity_id;
+      }
+    }
+
     const { data: feeEvent, error } = await supabase
       .from('fee_events')
       .insert({
         ...validation.data,
         status: 'accrued',
+        payee_arranger_id: payeeArrangerId,
       })
       .select()
       .single();

@@ -28,13 +28,18 @@ async function handleCronRequest(request: NextRequest) {
     const today = new Date().toISOString().split('T')[0];
 
     // Find all active schedules due today or earlier
+    // Include fee_plan and deal data to derive payee_arranger_id
     const { data: dueSchedules, error: schedError } = await supabase
       .from('fee_schedules')
       .select(`
         *,
-        fee_component:fee_components(*),
+        fee_component:fee_components(
+          *,
+          fee_plan:fee_plans(id, created_by_arranger_id)
+        ),
         investor:investors(id, email),
-        allocation:subscriptions(commitment, funded_amount)
+        allocation:subscriptions(commitment, funded_amount),
+        deal:deals(id, arranger_entity_id)
       `)
       .eq('status', 'active')
       .lte('next_due_date', today);
@@ -62,6 +67,16 @@ async function handleCronRequest(request: NextRequest) {
       try {
         const allocation = schedule.allocation as any;
         const feeComponent = schedule.fee_component as any;
+        const deal = schedule.deal as any;
+        const feePlan = feeComponent?.fee_plan as any;
+
+        // Determine payee_arranger_id - fee_plan takes precedence, then deal
+        let payeeArrangerId: string | null = null;
+        if (feePlan?.created_by_arranger_id) {
+          payeeArrangerId = feePlan.created_by_arranger_id;
+        } else if (deal?.arranger_entity_id) {
+          payeeArrangerId = deal.arranger_entity_id;
+        }
 
         // Calculate fee amount
         const baseAmount = allocation?.commitment || allocation?.funded_amount || 0;
@@ -89,7 +104,7 @@ async function handleCronRequest(request: NextRequest) {
           computedAmount = baseAmount * bpsToPercent(rateBps);
         }
 
-        // Create fee event with both period dates
+        // Create fee event with both period dates and arranger link
         const { data: feeEvent, error: eventError } = await supabase
           .from('fee_events')
           .insert({
@@ -106,6 +121,7 @@ async function handleCronRequest(request: NextRequest) {
             rate_bps: rateBps,
             currency: 'USD',
             status: 'accrued',
+            payee_arranger_id: payeeArrangerId,
           })
           .select('id')
           .single();
