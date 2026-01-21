@@ -38,6 +38,11 @@ import {
   CreditCard,
   Users,
   CheckCircle,
+  UserCheck,
+  Handshake,
+  Briefcase,
+  ExternalLink,
+  ClipboardList,
 } from 'lucide-react'
 import { ConfirmIntroducerPaymentModal } from './confirm-introducer-payment-modal'
 import { cn } from '@/lib/utils'
@@ -111,12 +116,28 @@ type IntroducerCommission = {
   created_at: string
 }
 
+type UnifiedCommission = {
+  id: string
+  entity_type: 'introducer' | 'partner' | 'commercial_partner'
+  entity_name: string
+  deal_id: string | null
+  deal_name: string | null
+  investor_id: string | null
+  investor_name: string | null
+  accrual_amount: number
+  currency: string
+  status: string
+  invoice_id: string | null
+  created_at: string
+}
+
 type LawyerReconciliationClientProps = {
   lawyerInfo: LawyerInfo | null
   deals: Deal[]
   subscriptions: Subscription[]
   feeEvents: FeeEvent[]
   introducerCommissions: IntroducerCommission[]
+  allCommissions: UnifiedCommission[]
 }
 
 function formatCurrency(amount: number, currency: string = 'USD'): string {
@@ -162,18 +183,41 @@ const FEE_TYPE_LABELS: Record<string, string> = {
   admin: 'Admin Fee',
 }
 
+// Commission status configuration
+const COMMISSION_STATUS_STYLES: Record<string, string> = {
+  accrued: 'bg-blue-100 text-blue-800 border-blue-200',
+  invoice_requested: 'bg-amber-100 text-amber-800 border-amber-200',
+  invoiced: 'bg-purple-100 text-purple-800 border-purple-200',
+  paid: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+}
+
+const COMMISSION_STATUS_LABELS: Record<string, string> = {
+  accrued: 'Accrued',
+  invoice_requested: 'Invoice Requested',
+  invoiced: 'Invoiced',
+  paid: 'Paid',
+}
+
+const ENTITY_TYPE_CONFIG: Record<string, { label: string; icon: typeof UserCheck; color: string }> = {
+  introducer: { label: 'Introducer', icon: UserCheck, color: 'text-blue-600' },
+  partner: { label: 'Partner', icon: Handshake, color: 'text-green-600' },
+  commercial_partner: { label: 'Commercial Partner', icon: Briefcase, color: 'text-purple-600' },
+}
+
 export function LawyerReconciliationClient({
   lawyerInfo,
   deals,
   subscriptions,
   feeEvents,
-  introducerCommissions
+  introducerCommissions,
+  allCommissions
 }: LawyerReconciliationClientProps) {
   const [search, setSearch] = useState('')
   const [dealFilter, setDealFilter] = useState('all')
   const [activeTab, setActiveTab] = useState('subscriptions')
   const [confirmPaymentOpen, setConfirmPaymentOpen] = useState(false)
   const [selectedCommission, setSelectedCommission] = useState<IntroducerCommission | null>(null)
+  const [commissionStatusFilter, setCommissionStatusFilter] = useState('all')
 
   // Calculate summary metrics (grouped by currency to avoid mixing USD/EUR/GBP)
   const summary = useMemo(() => {
@@ -281,6 +325,19 @@ export function LawyerReconciliationClient({
       return matchesDeal && matchesSearch
     })
   }, [introducerCommissions, dealFilter, search])
+
+  // Filter all commissions (for Commission Status tab)
+  const filteredAllCommissions = useMemo(() => {
+    return allCommissions.filter(c => {
+      const matchesDeal = dealFilter === 'all' || c.deal_id === dealFilter
+      const matchesStatus = commissionStatusFilter === 'all' || c.status === commissionStatusFilter
+      const matchesSearch = !search ||
+        c.entity_name.toLowerCase().includes(search.toLowerCase()) ||
+        (c.deal_name && c.deal_name.toLowerCase().includes(search.toLowerCase())) ||
+        (c.investor_name && c.investor_name.toLowerCase().includes(search.toLowerCase()))
+      return matchesDeal && matchesStatus && matchesSearch
+    })
+  }, [allCommissions, dealFilter, commissionStatusFilter, search])
 
   // Deal summary by deal
   const dealSummaries = useMemo(() => {
@@ -488,6 +545,10 @@ export function LawyerReconciliationClient({
               <DollarSign className="h-4 w-4" />
               Fee Payments ({filteredFeeEvents.length})
             </TabsTrigger>
+            <TabsTrigger value="commission-status" className="flex items-center gap-2">
+              <ClipboardList className="h-4 w-4" />
+              Commission Status ({filteredAllCommissions.length})
+            </TabsTrigger>
             <TabsTrigger value="introducer-fees" className="flex items-center gap-2">
               <Users className="h-4 w-4" />
               Introducer Fees ({filteredIntroducerCommissions.length})
@@ -675,6 +736,106 @@ export function LawyerReconciliationClient({
                             </TableCell>
                           </TableRow>
                         ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Commission Status Tab */}
+          <TabsContent value="commission-status">
+            <Card>
+              <CardHeader className="flex flex-row items-start justify-between">
+                <div>
+                  <CardTitle>Commission Status</CardTitle>
+                  <CardDescription>
+                    All commission statuses across introducers, partners, and commercial partners
+                  </CardDescription>
+                </div>
+                <Select value={commissionStatusFilter} onValueChange={setCommissionStatusFilter}>
+                  <SelectTrigger className="w-48">
+                    <SelectValue placeholder="Filter by status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Statuses</SelectItem>
+                    <SelectItem value="accrued">Accrued</SelectItem>
+                    <SelectItem value="invoice_requested">Invoice Requested</SelectItem>
+                    <SelectItem value="invoiced">Invoiced</SelectItem>
+                    <SelectItem value="paid">Paid</SelectItem>
+                  </SelectContent>
+                </Select>
+              </CardHeader>
+              <CardContent>
+                {filteredAllCommissions.length === 0 ? (
+                  <div className="border border-dashed border-muted rounded-lg py-12 flex flex-col items-center justify-center text-center space-y-2">
+                    <ClipboardList className="h-10 w-10 text-muted-foreground" />
+                    <p className="text-sm text-muted-foreground">
+                      No commissions match your filters
+                    </p>
+                  </div>
+                ) : (
+                  <div className="rounded-md border">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Entity Type</TableHead>
+                          <TableHead>Entity Name</TableHead>
+                          <TableHead>Deal</TableHead>
+                          <TableHead>Investor</TableHead>
+                          <TableHead>Amount</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Invoice</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredAllCommissions.map((commission) => {
+                          const entityConfig = ENTITY_TYPE_CONFIG[commission.entity_type]
+                          const EntityIcon = entityConfig?.icon || Users
+                          return (
+                            <TableRow key={`${commission.entity_type}-${commission.id}`}>
+                              <TableCell>
+                                <div className="flex items-center gap-2">
+                                  <EntityIcon className={cn('h-4 w-4', entityConfig?.color)} />
+                                  <span className="text-sm">{entityConfig?.label || commission.entity_type}</span>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <div className="font-medium">{commission.entity_name}</div>
+                              </TableCell>
+                              <TableCell>
+                                <div className="text-sm">{commission.deal_name || '—'}</div>
+                              </TableCell>
+                              <TableCell>
+                                <div className="text-sm">{commission.investor_name || '—'}</div>
+                              </TableCell>
+                              <TableCell>
+                                <div className="font-medium text-green-600">
+                                  {formatCurrency(commission.accrual_amount, commission.currency)}
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <Badge
+                                  variant="outline"
+                                  className={cn('capitalize', COMMISSION_STATUS_STYLES[commission.status])}
+                                >
+                                  {COMMISSION_STATUS_LABELS[commission.status] || commission.status}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                {commission.invoice_id ? (
+                                  <div className="flex items-center gap-1 text-sm text-blue-600">
+                                    <ExternalLink className="h-3 w-3" />
+                                    <span>View</span>
+                                  </div>
+                                ) : (
+                                  <span className="text-muted-foreground text-xs">—</span>
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          )
+                        })}
                       </TableBody>
                     </Table>
                   </div>

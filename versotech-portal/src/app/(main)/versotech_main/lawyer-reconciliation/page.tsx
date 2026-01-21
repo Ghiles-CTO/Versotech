@@ -148,6 +148,7 @@ async function renderReconciliationPage(
         subscriptions={[]}
         feeEvents={[]}
         introducerCommissions={[]}
+        allCommissions={[]}
       />
     )
   }
@@ -235,6 +236,61 @@ async function renderReconciliationPage(
     .eq('status', 'invoiced')
     .order('created_at', { ascending: false })
 
+  // Fetch ALL commissions for Commission Status tab (all 3 types, all statuses)
+  const { data: allIntroducerCommissions } = await serviceSupabase
+    .from('introducer_commissions')
+    .select(`
+      id,
+      status,
+      accrual_amount,
+      currency,
+      invoice_id,
+      created_at,
+      deal_id,
+      investor_id,
+      introducer:introducers(id, legal_name),
+      deal:deals(id, name),
+      investor:investors(id, legal_name, display_name)
+    `)
+    .in('deal_id', dealIds)
+    .order('created_at', { ascending: false })
+
+  const { data: allPartnerCommissions } = await serviceSupabase
+    .from('partner_commissions')
+    .select(`
+      id,
+      status,
+      accrual_amount,
+      currency,
+      invoice_id,
+      created_at,
+      deal_id,
+      investor_id,
+      partner:partners(id, legal_name),
+      deal:deals(id, name),
+      investor:investors(id, legal_name, display_name)
+    `)
+    .in('deal_id', dealIds)
+    .order('created_at', { ascending: false })
+
+  const { data: allCommercialPartnerCommissions } = await serviceSupabase
+    .from('commercial_partner_commissions')
+    .select(`
+      id,
+      status,
+      accrual_amount,
+      currency,
+      invoice_id,
+      created_at,
+      deal_id,
+      investor_id,
+      commercial_partner:commercial_partners(id, legal_name),
+      deal:deals(id, name),
+      investor:investors(id, legal_name, display_name)
+    `)
+    .in('deal_id', dealIds)
+    .order('created_at', { ascending: false })
+
   // Process deals data
   const deals = (dealsData || []).map((deal: any) => ({
     id: deal.id,
@@ -315,6 +371,88 @@ async function renderReconciliationPage(
     }
   })
 
+  // Process ALL commissions for the Commission Status tab (unified format)
+  const allCommissions: Array<{
+    id: string
+    entity_type: 'introducer' | 'partner' | 'commercial_partner'
+    entity_name: string
+    deal_id: string | null
+    deal_name: string | null
+    investor_id: string | null
+    investor_name: string | null
+    accrual_amount: number
+    currency: string
+    status: string
+    invoice_id: string | null
+    created_at: string
+  }> = []
+
+  // Add introducer commissions
+  ;(allIntroducerCommissions || []).forEach((ic: any) => {
+    const introducer = Array.isArray(ic.introducer) ? ic.introducer[0] : ic.introducer
+    const deal = Array.isArray(ic.deal) ? ic.deal[0] : ic.deal
+    const investor = Array.isArray(ic.investor) ? ic.investor[0] : ic.investor
+    allCommissions.push({
+      id: ic.id,
+      entity_type: 'introducer',
+      entity_name: introducer?.legal_name || 'Unknown Introducer',
+      deal_id: ic.deal_id,
+      deal_name: deal?.name || null,
+      investor_id: ic.investor_id,
+      investor_name: investor?.display_name || investor?.legal_name || null,
+      accrual_amount: Number(ic.accrual_amount) || 0,
+      currency: ic.currency || 'USD',
+      status: ic.status,
+      invoice_id: ic.invoice_id,
+      created_at: ic.created_at,
+    })
+  })
+
+  // Add partner commissions
+  ;(allPartnerCommissions || []).forEach((pc: any) => {
+    const partner = Array.isArray(pc.partner) ? pc.partner[0] : pc.partner
+    const deal = Array.isArray(pc.deal) ? pc.deal[0] : pc.deal
+    const investor = Array.isArray(pc.investor) ? pc.investor[0] : pc.investor
+    allCommissions.push({
+      id: pc.id,
+      entity_type: 'partner',
+      entity_name: partner?.legal_name || 'Unknown Partner',
+      deal_id: pc.deal_id,
+      deal_name: deal?.name || null,
+      investor_id: pc.investor_id,
+      investor_name: investor?.display_name || investor?.legal_name || null,
+      accrual_amount: Number(pc.accrual_amount) || 0,
+      currency: pc.currency || 'USD',
+      status: pc.status,
+      invoice_id: pc.invoice_id,
+      created_at: pc.created_at,
+    })
+  })
+
+  // Add commercial partner commissions
+  ;(allCommercialPartnerCommissions || []).forEach((cpc: any) => {
+    const commercialPartner = Array.isArray(cpc.commercial_partner) ? cpc.commercial_partner[0] : cpc.commercial_partner
+    const deal = Array.isArray(cpc.deal) ? cpc.deal[0] : cpc.deal
+    const investor = Array.isArray(cpc.investor) ? cpc.investor[0] : cpc.investor
+    allCommissions.push({
+      id: cpc.id,
+      entity_type: 'commercial_partner',
+      entity_name: commercialPartner?.legal_name || 'Unknown Commercial Partner',
+      deal_id: cpc.deal_id,
+      deal_name: deal?.name || null,
+      investor_id: cpc.investor_id,
+      investor_name: investor?.display_name || investor?.legal_name || null,
+      accrual_amount: Number(cpc.accrual_amount) || 0,
+      currency: cpc.currency || 'USD',
+      status: cpc.status,
+      invoice_id: cpc.invoice_id,
+      created_at: cpc.created_at,
+    })
+  })
+
+  // Sort all commissions by created_at descending
+  allCommissions.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+
   return (
     <LawyerReconciliationClient
       lawyerInfo={entityInfo}
@@ -322,6 +460,7 @@ async function renderReconciliationPage(
       subscriptions={subscriptions}
       feeEvents={feeEvents}
       introducerCommissions={introducerCommissions}
+      allCommissions={allCommissions}
     />
   )
 }
