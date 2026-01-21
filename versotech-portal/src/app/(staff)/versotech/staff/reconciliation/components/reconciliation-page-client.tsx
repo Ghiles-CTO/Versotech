@@ -254,7 +254,7 @@ export function ReconciliationPageClient() {
         <div>
           <h1 className="text-2xl font-bold text-foreground">Bank Reconciliation</h1>
           <p className="text-muted-foreground mt-1">
-            Import bank transactions and allocate payments to investor invoices
+            Import bank transactions and match payments to fee invoices
           </p>
         </div>
         <div className="flex gap-2">
@@ -352,7 +352,7 @@ export function ReconciliationPageClient() {
           </TabsTrigger>
           <TabsTrigger value="invoices" className="flex items-center gap-2">
             <FileText className="h-4 w-4" />
-            Invoices ({invoices.length})
+            Fee Invoices ({invoices.length})
           </TabsTrigger>
         </TabsList>
 
@@ -506,7 +506,7 @@ export function ReconciliationPageClient() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle>All Invoices</CardTitle>
+                  <CardTitle>All Fee Invoices</CardTitle>
                   <CardDescription>
                     {filteredInvoices.length} invoice{filteredInvoices.length !== 1 ? 's' : ''}
                     {filteredInvoices.length !== invoices.length && ` (filtered from ${invoices.length})`}
