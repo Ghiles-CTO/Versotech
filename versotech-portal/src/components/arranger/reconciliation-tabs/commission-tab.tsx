@@ -29,9 +29,13 @@ import {
   AlertCircle,
   ChevronLeft,
   ChevronRight,
+  Mail,
+  CheckCircle,
 } from 'lucide-react'
 import { formatCurrency, formatDate } from '@/lib/format'
 import { cn } from '@/lib/utils'
+import { RequestInvoiceDialog, CommissionType } from '@/components/commissions/request-invoice-dialog'
+import { toast } from 'sonner'
 
 // Types
 type Commission = {
@@ -59,6 +63,13 @@ type Commission = {
   investor_name: string | null
   fee_plan_id: string | null
   fee_plan_name: string | null
+}
+
+// Map commission type to CommissionType for the dialog
+const typeToCommissionType: Record<string, CommissionType> = {
+  'introducer': 'introducer',
+  'partner': 'partner',
+  'commercial_partner': 'commercial-partner',
 }
 
 type Summary = {
@@ -132,6 +143,13 @@ export function CommissionTab({
 
   // Active filters count
   const activeFiltersCount = [fromDate, toDate, entityId, dealId, status].filter(Boolean).length
+
+  // Request Invoice Dialog state
+  const [requestInvoiceDialogOpen, setRequestInvoiceDialogOpen] = useState(false)
+  const [selectedCommission, setSelectedCommission] = useState<Commission | null>(null)
+
+  // Mark Paid loading state
+  const [markingPaidId, setMarkingPaidId] = useState<string | null>(null)
 
   // Fetch report
   const fetchReport = useCallback(async (resetPage = false) => {
@@ -220,6 +238,46 @@ export function CommissionTab({
     setDealId('')
     setStatus('')
     setPage(1)
+  }
+
+  // Handle Request Invoice click
+  const handleRequestInvoice = (commission: Commission) => {
+    setSelectedCommission(commission)
+    setRequestInvoiceDialogOpen(true)
+  }
+
+  // Handle Request Invoice success
+  const handleRequestInvoiceSuccess = () => {
+    toast.success('Invoice request sent')
+    fetchReport(false) // Refresh data
+  }
+
+  // Handle Mark Paid click
+  const handleMarkPaid = async (commission: Commission) => {
+    if (markingPaidId) return // Prevent double-click
+
+    setMarkingPaidId(commission.id)
+
+    try {
+      const response = await fetch(`/api/staff/fees/commissions/${commission.id}/mark-paid`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ entity_type: type }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to mark commission as paid')
+      }
+
+      toast.success('Commission marked as paid')
+      fetchReport(false) // Refresh data
+    } catch (err) {
+      console.error('[CommissionTab] Error marking paid:', err)
+      toast.error(err instanceof Error ? err.message : 'Failed to mark commission as paid')
+    } finally {
+      setMarkingPaidId(null)
+    }
   }
 
   // Date validation
@@ -505,12 +563,14 @@ export function CommissionTab({
                       <TableHead>Status</TableHead>
                       <TableHead>{entityLabel}</TableHead>
                       <TableHead>Deal</TableHead>
+                      <TableHead>Investor</TableHead>
                       <TableHead>Basis</TableHead>
                       <TableHead className="text-right">Rate (%)</TableHead>
                       <TableHead className="text-right">Amount</TableHead>
                       <TableHead>Due Date</TableHead>
                       <TableHead>Paid At</TableHead>
                       <TableHead>Created</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -540,6 +600,9 @@ export function CommissionTab({
                             )}
                           </div>
                         </TableCell>
+                        <TableCell className="text-sm">
+                          {commission.investor_name || '-'}
+                        </TableCell>
                         <TableCell className="capitalize text-sm">
                           {commission.basis_type?.replace('_', ' ') || '-'}
                         </TableCell>
@@ -557,6 +620,39 @@ export function CommissionTab({
                         </TableCell>
                         <TableCell className="text-sm text-muted-foreground">
                           {formatDate(commission.created_at)}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-1">
+                            {/* Request Invoice - only for 'accrued' status */}
+                            {commission.status === 'accrued' && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleRequestInvoice(commission)}
+                                title="Request Invoice"
+                                className="h-8 w-8 p-0 text-blue-500 hover:text-blue-600 hover:bg-blue-50"
+                              >
+                                <Mail className="h-4 w-4" />
+                              </Button>
+                            )}
+                            {/* Mark Paid - for 'accrued', 'invoice_requested', or 'invoiced' statuses */}
+                            {['accrued', 'invoice_requested', 'invoiced'].includes(commission.status) && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleMarkPaid(commission)}
+                                disabled={markingPaidId === commission.id}
+                                title="Mark as Paid"
+                                className="h-8 w-8 p-0 text-green-500 hover:text-green-600 hover:bg-green-50"
+                              >
+                                {markingPaidId === commission.id ? (
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : (
+                                  <CheckCircle className="h-4 w-4" />
+                                )}
+                              </Button>
+                            )}
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -600,6 +696,21 @@ export function CommissionTab({
           )}
         </CardContent>
       </Card>
+
+      {/* Request Invoice Dialog */}
+      <RequestInvoiceDialog
+        open={requestInvoiceDialogOpen}
+        onOpenChange={setRequestInvoiceDialogOpen}
+        commission={selectedCommission ? {
+          id: selectedCommission.id,
+          accrual_amount: selectedCommission.accrual_amount,
+          currency: selectedCommission.currency,
+          entity_name: selectedCommission.entity_name,
+          deal: selectedCommission.deal_name ? { name: selectedCommission.deal_name } : undefined,
+        } : null}
+        commissionType={typeToCommissionType[type]}
+        onSuccess={handleRequestInvoiceSuccess}
+      />
     </div>
   )
 }
