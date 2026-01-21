@@ -14,6 +14,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { z } from 'zod';
 import crypto from 'crypto';
+import { validateInvoiceTotal, formatCurrency } from '@/lib/fees/calculations';
 
 // Relaxed UUID regex that accepts test UUIDs
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -220,6 +221,14 @@ export async function POST(request: NextRequest) {
       .from('fee_events')
       .update({ status: 'invoiced', invoice_id: invoice.id })
       .in('id', fee_event_ids);
+
+    // Validate invoice total matches expected (warn if mismatch)
+    const expectedTotal = feeEventsTotal + customTotal;
+    if (Math.abs(total - expectedTotal) > 0.01) {
+      console.warn(
+        `[Invoice Generate API] Invoice total mismatch! Invoice total: ${formatCurrency(total)}, Expected: ${formatCurrency(expectedTotal)}`
+      );
+    }
 
     // Prepare webhook payload for n8n
     const webhookPayload = {

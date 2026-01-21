@@ -469,3 +469,115 @@ export function formatBps(bps: number): string {
   const percent = bpsToPercent(bps) * 100;
   return `${percent.toFixed(2)}%`;
 }
+
+/**
+ * Invoice validation types and functions
+ */
+
+export interface InvoiceLineWithFeeEvent {
+  id?: string;
+  fee_event_id?: string | null;
+  kind?: string;
+  amount: number;
+  fee_event?: {
+    id: string;
+    computed_amount: number;
+  } | null;
+}
+
+export interface InvoiceValidationInput {
+  invoiceTotal: number;
+  invoiceSubtotal: number;
+  lines: InvoiceLineWithFeeEvent[];
+}
+
+export interface InvoiceValidationResult {
+  isValid: boolean;
+  hasDiscrepancy: boolean;
+  expectedTotal: number;
+  actualTotal: number;
+  discrepancyAmount: number;
+  discrepancyPercent: number;
+  feeEventsTotal: number;
+  customItemsTotal: number;
+  lineItemsTotal: number;
+  details: string[];
+}
+
+/**
+ * Validate that an invoice total matches the sum of its linked fee events
+ *
+ * Invoice total should equal:
+ *   SUM(fee_events.computed_amount for linked events) + SUM(custom_line_items.amount)
+ *
+ * @param input - Invoice validation input
+ * @returns Validation result with discrepancy details
+ */
+export function validateInvoiceTotal(input: InvoiceValidationInput): InvoiceValidationResult {
+  const { invoiceTotal, invoiceSubtotal, lines } = input;
+  const details: string[] = [];
+
+  // Calculate totals from line items
+  let feeEventsTotal = 0;
+  let customItemsTotal = 0;
+  let lineItemsTotal = 0;
+
+  for (const line of lines) {
+    const lineAmount = Number(line.amount) || 0;
+    lineItemsTotal += lineAmount;
+
+    if (line.fee_event_id && line.fee_event) {
+      // Fee event line - check if line amount matches fee event computed_amount
+      const eventAmount = Number(line.fee_event.computed_amount) || 0;
+      feeEventsTotal += eventAmount;
+
+      // Check for line-level discrepancy
+      if (Math.abs(lineAmount - eventAmount) > 0.01) {
+        details.push(
+          `Line for fee event ${line.fee_event_id}: line amount ${formatCurrency(lineAmount)} differs from fee event computed_amount ${formatCurrency(eventAmount)}`
+        );
+      }
+    } else {
+      // Custom line item
+      customItemsTotal += lineAmount;
+    }
+  }
+
+  // Expected total = sum of all line items
+  const expectedTotal = lineItemsTotal;
+  const discrepancyAmount = Math.abs(invoiceTotal - expectedTotal);
+  const discrepancyPercent = expectedTotal > 0
+    ? (discrepancyAmount / expectedTotal) * 100
+    : (invoiceTotal > 0 ? 100 : 0);
+
+  // Allow for small rounding differences (within 1 cent)
+  const hasDiscrepancy = discrepancyAmount > 0.01;
+  const isValid = !hasDiscrepancy;
+
+  // Add summary details
+  if (hasDiscrepancy) {
+    details.unshift(
+      `Invoice total (${formatCurrency(invoiceTotal)}) does not match sum of line items (${formatCurrency(expectedTotal)}). Discrepancy: ${formatCurrency(discrepancyAmount)} (${discrepancyPercent.toFixed(2)}%)`
+    );
+  }
+
+  // Check subtotal vs total (in case tax is applied later)
+  if (Math.abs(invoiceTotal - invoiceSubtotal) > 0.01) {
+    details.push(
+      `Invoice total (${formatCurrency(invoiceTotal)}) differs from subtotal (${formatCurrency(invoiceSubtotal)}) - verify tax calculation if applicable`
+    );
+  }
+
+  return {
+    isValid,
+    hasDiscrepancy,
+    expectedTotal,
+    actualTotal: invoiceTotal,
+    discrepancyAmount,
+    discrepancyPercent,
+    feeEventsTotal,
+    customItemsTotal,
+    lineItemsTotal,
+    details,
+  };
+}

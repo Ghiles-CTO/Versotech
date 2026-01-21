@@ -5,6 +5,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { updateInvoiceSchema, markInvoicePaidSchema } from '@/lib/fees/validation';
+import { validateInvoiceTotal, InvoiceLineWithFeeEvent } from '@/lib/fees/calculations';
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -29,7 +30,17 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json({ error: 'Failed to fetch invoice' }, { status: 500 });
     }
 
-    return NextResponse.json({ data: invoice });
+    // Validate invoice total matches sum of linked fee events
+    const validation = validateInvoiceTotal({
+      invoiceTotal: Number(invoice.total) || 0,
+      invoiceSubtotal: Number(invoice.subtotal) || 0,
+      lines: (invoice.lines || []) as InvoiceLineWithFeeEvent[],
+    });
+
+    return NextResponse.json({
+      data: invoice,
+      validation,
+    });
   } catch (error) {
     console.error('Error in GET /api/staff/fees/invoices/[id]:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

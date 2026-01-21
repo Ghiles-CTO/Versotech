@@ -5,6 +5,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createInvoiceSchema, invoiceFiltersSchema } from '@/lib/fees/validation';
+import { validateInvoiceTotal, InvoiceLineWithFeeEvent } from '@/lib/fees/calculations';
 
 export async function GET(request: NextRequest) {
   try {
@@ -42,7 +43,22 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to fetch invoices' }, { status: 500 });
     }
 
-    return NextResponse.json({ data, count });
+    // Add validation info to each invoice
+    const invoicesWithValidation = (data || []).map((invoice: any) => {
+      const validation = validateInvoiceTotal({
+        invoiceTotal: Number(invoice.total) || 0,
+        invoiceSubtotal: Number(invoice.subtotal) || 0,
+        lines: (invoice.lines || []) as InvoiceLineWithFeeEvent[],
+      });
+
+      return {
+        ...invoice,
+        has_discrepancy: validation.hasDiscrepancy,
+        discrepancy_amount: validation.discrepancyAmount,
+      };
+    });
+
+    return NextResponse.json({ data: invoicesWithValidation, count });
   } catch (error) {
     console.error('Error in GET /api/staff/fees/invoices:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
