@@ -47,8 +47,8 @@
         "Verify in browser using dev-browser skill"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Added getFeePlanStatusBadge helper function with consistent styling. Status badges shown in both table and card views with icons."
     },
     {
       "id": "US-004",
@@ -65,8 +65,8 @@
         "Verify in browser using dev-browser skill"
       ],
       "priority": 4,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Added Generate Agreement button with loading spinner, toast notifications, and proper API calls. Button shows for introducers/partners without existing agreements. Shows 'Agreement' badge for plans with generated agreements."
     },
     {
       "id": "US-005",
@@ -81,8 +81,8 @@
         "Verify in browser using dev-browser skill"
       ],
       "priority": 5,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Added Preview (Eye icon) and Download buttons to both table and card views. API now includes introducer_agreement and placement_agreement data with pdf_url. Follows same pattern as deal-fee-plans-tab.tsx."
     },
     {
       "id": "US-006",
@@ -99,8 +99,8 @@
         "Typecheck passes"
       ],
       "priority": 6,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Audited subscription-fee-calculator.ts and calculations.ts. Formula confirmed: subscription fee = commitment × (rate_bps / 10000). Added comprehensive unit tests (21 tests) covering subscription fee, management fee, performance fee, spread, and commission calculations."
     },
     {
       "id": "US-007",
@@ -114,8 +114,8 @@
         "Typecheck passes"
       ],
       "priority": 7,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Added calculateManagementFeePeriod() with pro-rata formula. Updated cron job to set both period dates and use period-based calculation. Added unit tests."
     },
     {
       "id": "US-008",
@@ -130,8 +130,8 @@
         "Typecheck passes"
       ],
       "priority": 8,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Added calculatePerformanceFeeWithHurdle() and calculateTieredPerformanceFeeWithHurdle() functions. Both match the database function formula. Added 11 unit tests for the new functions."
     },
     {
       "id": "US-009",
@@ -144,8 +144,8 @@
         "Typecheck passes"
       ],
       "priority": 9,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Updated cron job and manual fee event API to populate payee_arranger_id. Fee plan's created_by_arranger_id takes precedence over deal's arranger_entity_id. Backfill migration already exists at 20251227200000_backfill_fee_events_payee_arranger.sql."
     },
     {
       "id": "US-010",
@@ -161,8 +161,8 @@
         "Verify in browser using dev-browser skill"
       ],
       "priority": 10,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Added Investor Fees collapsible section in ScheduleTab. Uses fee events API with period_from filter. Grouped by deal then investor with table showing Fee Type, Amount, Period Start, Period End."
     },
     {
       "id": "US-011",
@@ -177,8 +177,8 @@
         "Verify in browser using dev-browser skill"
       ],
       "priority": 11,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Added Introducer Commissions collapsible section to ScheduleTab. Uses existing /api/staff/fees/commissions endpoint with entity_type=introducer&status=accrued filter. Grouped by introducer then deal with table showing Investor, Amount, Status, Created Date columns."
     },
     {
       "id": "US-012",
@@ -193,8 +193,8 @@
         "Verify in browser using dev-browser skill"
       ],
       "priority": 12,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Added Partner Commissions collapsible section to ScheduleTab. Uses existing /api/staff/fees/commissions endpoint with entity_type=partner&status=accrued filter. Grouped by partner then deal with table showing Investor, Amount, Status, Created Date columns. Uses Handshake icon for partners."
     },
     {
       "id": "US-013",
@@ -209,8 +209,8 @@
         "Verify in browser using dev-browser skill"
       ],
       "priority": 13,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Added Commercial Partner Commissions collapsible section to ScheduleTab. Uses /api/staff/fees/commissions endpoint with entity_type=commercial_partner&status=accrued filter. Grouped by commercial partner then deal with table showing Investor, Amount, Status, Created Date columns. Uses Briefcase icon (purple color) for commercial partner visual distinction."
     },
     {
       "id": "US-014",
@@ -227,8 +227,8 @@
         "Verify in browser using dev-browser skill"
       ],
       "priority": 14,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Added filter controls Card with Deal multi-select (Popover + Command + Checkbox), Entity multi-select (grouped by type with icons), and DateRangePicker. Filters persist in URL (deal_ids, entity_ids, date_from, date_to). Added Clear all button. All schedule sections (Investor Fees, Introducer/Partner/Commercial Partner Commissions) now filter by selected deals, entities, and date range."
     },
     {
       "id": "US-015",
@@ -242,8 +242,8 @@
         "Verify in browser using dev-browser skill"
       ],
       "priority": 15,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Added Commissions card to OverviewTab with KPIs (Total Owed, Paid YTD, Pending Invoice) and breakdown by entity type. Updated dashboard API to return commission_summary with data aggregated from all 3 commission tables."
     },
     {
       "id": "US-016",
@@ -257,8 +257,8 @@
         "Verify in browser using dev-browser skill"
       ],
       "priority": 16,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Made entity type breakdown cards clickable with navigation to arranger-reconciliation page. Each card navigates to the appropriate tab (introducers, partners, commercialPartners). Added ExternalLink icon and hover states with entity-specific border colors."
     },
     {
       "id": "US-017",
@@ -272,8 +272,8 @@
         "Typecheck passes"
       ],
       "priority": 17,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Dashboard API already had commission_summary implemented from US-015/US-016. Standardized by_entity_type to use 'paid' instead of 'paid_ytd' to match acceptance criteria. Updated OverviewTab interface and UI to match."
     },
     {
       "id": "US-018",
@@ -288,8 +288,8 @@
         "Verify in browser using dev-browser skill"
       ],
       "priority": 18,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Added View Reconciliation button in Commissions section header navigating to /arranger-reconciliation. Made Outstanding Invoices KPI card clickable with View Invoices link navigating to /reconciliation. Added ArrowRight icons and hover states for visual feedback."
     },
     {
       "id": "US-019",
@@ -304,8 +304,8 @@
         "Verify in browser using dev-browser skill"
       ],
       "priority": 19,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Added Commission Status tab to lawyer-reconciliation-client.tsx. Server page fetches all 3 commission types with investor data. Tab shows unified commission list with entity type icons/colors (Introducer blue, Partner green, Commercial Partner purple). Status filter dropdown with Accrued, Invoice Requested, Invoiced, Paid options."
     },
     {
       "id": "US-020",
@@ -320,8 +320,8 @@
         "Verify in browser using dev-browser skill"
       ],
       "priority": 20,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Verified three tabs exist (Introducers, Partners, Commercial Partners). Added Investor column and Action buttons (Request Invoice, Mark Paid) to commission-tab.tsx. Uses existing API endpoints and RequestInvoiceDialog component."
     },
     {
       "id": "US-021",
@@ -336,8 +336,8 @@
         "Verify in browser using dev-browser skill"
       ],
       "priority": 21,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Added Reconciliation Summary Card with Progress bar showing match percentage, and 3 KPIs: Total Outstanding (amber), Total Matched (green), Total Unmatched (red). Summary updates based on filter selection (quickSearch and statusFilter) via useMemo on filteredTransactions."
     },
     {
       "id": "US-022",
@@ -350,8 +350,8 @@
         "Typecheck passes"
       ],
       "priority": 22,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Reviewed invoice generation flow. Verified formula: invoice.total = SUM(fee_events.computed_amount) + SUM(custom_line_items.amount). Added validateInvoiceTotal() function in calculations.ts. Updated GET /api/staff/fees/invoices/[id] to return validation result. Updated GET /api/staff/fees/invoices to include has_discrepancy and discrepancy_amount on each invoice. Added console warning in generate endpoint for mismatches."
     },
     {
       "id": "US-023",
@@ -365,8 +365,8 @@
         "Verify in browser using dev-browser skill"
       ],
       "priority": 23,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Added amber 'Discrepancy' badge with AlertTriangle icon to invoice cards. Clicking shows Popover with Invoice Total, Expected Total, and Discrepancy Amount. Updated InvoiceWithLines type to include has_discrepancy and discrepancy_amount fields from API."
     },
     {
       "id": "US-024",
@@ -380,8 +380,8 @@
         "Verify in browser using dev-browser skill"
       ],
       "priority": 24,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Updated page title to 'Investor Invoices' with helper text. Entity invoice uploads confirmed to be in separate /components/commissions/ flow (submit-invoice-dialog.tsx, view-invoice-dialog.tsx)."
     },
     {
       "id": "US-025",
@@ -395,8 +395,8 @@
         "Typecheck passes"
       ],
       "priority": 25,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Audited existing spread fee implementation. Verified: (1) subscription-fee-calculator.ts lines 191-203 creates fee events with fee_type='spread_markup', (2) computed_amount set from subscription.spread_fee_amount which is calculated as (price_per_share - cost_per_share) × num_shares in deal-close-handler.ts, (3) createFeeEvents() links fee events to subscriptions via allocation_id field. calculateSpread() utility exists in calculations.ts with unit tests."
     }
   ]
 }

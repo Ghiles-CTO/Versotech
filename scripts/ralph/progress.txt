@@ -8,6 +8,14 @@ Started: Wed Jan 21 15:53:56 CET 2026
 - Fee plans are managed via `/api/staff/fees/plans` endpoint
 - Deals are fetched via `/api/deals` endpoint, returns `{ deals: [...] }`
 - Select components use value "none" for unselected state (empty string doesn't work with Radix)
+- Fee plan statuses: draft, sent, pending_signature, accepted, rejected - use badge colors: gray, blue, amber, green, red
+- Reference `deal-fee-plans-tab.tsx` for status badge patterns used throughout the app
+- Fee calculations: use `bpsToPercent(bps)` to convert basis points to decimal (200 → 0.02)
+- Run tests with `npx vitest run <path>` (no "test" script in package.json)
+- Management fee pro-rata formula: `base_amount × (rate_bps / 10000) × (period_days / 365)`
+- Fee events must include both `period_start_date` and `period_end_date` for time-based fees
+- Use Popover from `@/components/ui/popover` for click-to-reveal details/tooltips
+- AlertTriangle icon (lucide-react) with amber color scheme for warnings (amber-600, amber-100, dark:amber-900/30)
 
 ---
 
@@ -46,4 +54,485 @@ Started: Wed Jan 21 15:53:56 CET 2026
   - When grouping by entity type, fee plans have `introducer`, `partner`, `commercial_partner` fields
   - Plans without any entity assigned won't appear in the grouped view
   - Use `Object.entries()` with type assertion for iterating over typed config objects
+---
+
+## 2026-01-21 ~16:10 - US-003
+- What was implemented: Added fee plan status badges with consistent styling
+  - Created `getFeePlanStatusBadge()` helper function for status rendering
+  - Status badges with icons: Draft (gray outline), Sent (blue + Send icon), Pending Signature (amber + Clock icon), Accepted (green + CheckCircle icon), Rejected (red + XCircle icon)
+  - Updated table view Status column to show fee plan status badge
+  - Updated card view to show status badge next to plan name
+  - Added `status` field to `FeePlanWithDeal` interface
+- Files changed:
+  - `versotech-portal/src/components/fees/FeePlansTab.tsx`
+- **Learnings for future iterations:**
+  - Fee plans have a `status` field with values: draft, sent, pending_signature, accepted, rejected
+  - The Deal page's `deal-fee-plans-tab.tsx` uses the same status badge pattern - good reference
+  - Status badges use Lucide icons: CheckCircle, Clock, XCircle, Send
+  - Badge color scheme: green for success, blue for sent, amber for pending, red for rejected, gray outline for draft
+- Agreement generation endpoints: `/api/staff/fees/plans/[id]/generate-agreement` for introducers, `/api/staff/fees/plans/[id]/generate-placement-agreement` for partners
+- Use `toast` from `sonner` for success/error notifications
+- Use Loader2 icon with `animate-spin` class for loading spinners
+
+---
+
+## 2026-01-21 ~16:15 - US-004
+- What was implemented: Ported agreement generation functionality to Fees page
+  - Added Generate Agreement button (FileSignature icon) to fee plan cards
+  - Button shows for introducers/partners without existing agreements
+  - Shows loading spinner (Loader2 with animate-spin) during generation
+  - Toast notifications for success/error feedback
+  - Shows "Agreement" badge for plans that have already generated agreements
+  - Works in both table view and card view
+- Files changed:
+  - `versotech-portal/src/components/fees/FeePlansTab.tsx`
+- **Learnings for future iterations:**
+  - Fee plans have `generated_agreement_id` (for introducers) and `generated_placement_agreement_id` (for partners) fields
+  - Pattern from `deal-fee-plans-tab.tsx` is the reference for agreement generation UI
+  - Use `(plan as any).field` for fields not in the TypeScript interface but returned by API
+  - The API returns all columns via `*` select, so generated_agreement_id is available
+  - Button color convention: green for generation/success actions (text-green-400 hover:text-green-300)
+- PDF download via `/api/storage/download?path=...&bucket=deal-documents` endpoint
+- Preview opens blob URL in new tab; download creates temp anchor with blob URL
+- Agreement PDF URL stored in `introducer_agreement.pdf_url` or `placement_agreement.pdf_url`
+
+---
+
+## 2026-01-21 ~16:20 - US-005
+- What was implemented: Ported PDF preview/download functionality to Fees page
+  - Updated API to include `introducer_agreement:generated_agreement_id` and `placement_agreement:generated_placement_agreement_id` with pdf_url fields
+  - Added `getAgreementPdfInfo()` helper to extract PDF URL from either agreement type
+  - Added `handlePreviewPdf()` - fetches PDF blob and opens in new tab
+  - Added `handleDownloadPdf()` - fetches PDF blob and triggers download with correct filename
+  - Preview button (Eye icon) in blue, Download button (Download icon) in green
+  - In table view: buttons appear in actions column after Agreement badge
+  - In card view: full Agreement Document section with icon, name, reference number, and Preview/Download buttons
+  - Loading state tracked via `downloadingPdf` state variable
+- Files changed:
+  - `versotech-portal/src/app/api/staff/fees/plans/route.ts`
+  - `versotech-portal/src/components/fees/FeePlansTab.tsx`
+- **Learnings for future iterations:**
+  - PDF files stored in Supabase storage under `deal-documents` bucket
+  - Use `/api/storage/download` endpoint with `path` and `bucket` query params to download files
+  - Pattern from `deal-fee-plans-tab.tsx` for PDF preview/download is the reference
+  - Create blob URL from response for preview/download, revoke after use
+  - Use `window.open(url, '_blank')` for preview, temporary anchor element for download
+---
+
+## 2026-01-21 ~16:25 - US-006
+- What was implemented: Audited subscription fee calculation and added unit tests
+  - Reviewed `subscription-fee-calculator.ts` at `/src/lib/fees/subscription-fee-calculator.ts`
+  - Reviewed `calculations.ts` at `/src/lib/fees/calculations.ts`
+  - Verified subscription fee formula: `commitment × (subscription_fee_bps / 10000)`
+  - Confirmed fee events created with: `fee_type='subscription'`, `base_amount=commitment`, `rate_bps`, `computed_amount`
+  - Created comprehensive unit test file with 21 tests covering all fee calculation functions
+- Files changed:
+  - `versotech-portal/src/__tests__/lib/fees/calculations.test.ts` (new file)
+- **Learnings for future iterations:**
+  - Fee calculation functions are in `/src/lib/fees/calculations.ts` (pure functions, easily testable)
+  - Complex fee event creation is in `/src/lib/fees/subscription-fee-calculator.ts` (async, requires Supabase)
+  - Vitest is configured but no "test" script in package.json - run directly via `npx vitest run`
+  - Tests directory structure: `/src/__tests__/lib/fees/` for fee-related tests
+  - `bpsToPercent(bps)` converts basis points to decimal (200 bps → 0.02)
+  - `calculateSubscriptionFee()` accepts `flatAmount` override or calculates from `rateBps`
+  - Fee events include `payee_arranger_id` derived from fee_plan.created_by_arranger_id or deals.arranger_entity_id
+---
+
+## 2026-01-21 ~16:25 - US-007
+- What was implemented: Fixed management fee period calculation with pro-rata support
+  - Added `calculateManagementFeePeriod()` function implementing formula: `base_amount × (rate_bps / 10000) × (period_days / 365)`
+  - Added `calculateDaysBetween()` helper to compute days between two dates (inclusive)
+  - Added `calculatePeriodEndDate()` helper to calculate period end based on frequency (annual, quarterly, monthly)
+  - Updated cron job `/api/cron/fees/generate-scheduled` to:
+    - Calculate and set both `period_start_date` and `period_end_date` on fee events
+    - Use period-based calculation for management fees
+    - Calculate next due date as day after period end
+  - Added comprehensive unit tests (14 new tests) for the period calculation functions
+- Files changed:
+  - `versotech-portal/src/lib/fees/calculations.ts` (added 3 new functions + interface)
+  - `versotech-portal/src/app/api/cron/fees/generate-scheduled/route.ts`
+  - `versotech-portal/src/__tests__/lib/fees/calculations.test.ts`
+- **Learnings for future iterations:**
+  - Management fee uses pro-rata calculation: `base_amount × (rate_bps / 10000) × (period_days / 365)`
+  - Period dates: `period_start_date` is schedule's next_due_date; `period_end_date` is day before next period starts
+  - Cron job at `/api/cron/fees/generate-scheduled/route.ts` handles scheduled fee event generation
+  - Fee events table has both `period_start_date` and `period_end_date` columns
+  - JavaScript Date month rollover: Jan 31 + 1 month = Mar 2 (not Feb 28) - be aware of this behavior
+- Performance fee with hurdle formula: `profit_above_hurdle = profit - (contributed_capital × hurdle_rate × years_held)`, then `fee = profit_above_hurdle × carry_rate`
+- DB has `calculate_performance_fee()` function with same formula - TS functions match DB behavior
+---
+
+## 2026-01-21 ~16:30 - US-008
+- What was implemented: Added hurdle-aware performance fee calculation functions
+  - `calculatePerformanceFeeWithHurdle()` - single carry rate with hurdle rate
+    - Formula: profit_above_hurdle × carry_rate, where profit_above_hurdle = profit - hurdle_return
+    - Returns 0 if no profit or profit doesn't exceed hurdle
+    - Matches database function `calculate_performance_fee()`
+  - `calculateTieredPerformanceFeeWithHurdle()` - supports two tiers with different carry rates
+    - Tier 1 applies from hurdle to tier1 threshold (e.g., 20% up to 2x return)
+    - Tier 2 applies above tier1 threshold (e.g., 30% above 2x return)
+    - Falls back to single-tier calculation if no tier structure provided
+  - Added TypeScript interfaces: `PerformanceFeeWithHurdleInput`, `TieredPerformanceFeeInput`
+  - Added 11 new unit tests covering various scenarios:
+    - Basic hurdle calculation
+    - No profit scenarios (returns 0)
+    - Profit below hurdle (returns 0)
+    - Zero hurdle rate (no minimum return)
+    - Fractional years holding period
+    - Tiered fee calculations
+- Files changed:
+  - `versotech-portal/src/lib/fees/calculations.ts` (added 2 new functions + 2 interfaces)
+  - `versotech-portal/src/__tests__/lib/fees/calculations.test.ts` (added 11 new tests)
+- **Learnings for future iterations:**
+  - Database already has `calculate_performance_fee()` PostgreSQL function - TS implementation should match its formula
+  - Performance fee hurdle formula: profit - (contributed_capital × hurdle_rate_bps / 10000 × years_held)
+  - FeeComponent interface has `hurdle_rate_bps`, `has_catchup`, `catchup_rate_bps` fields for performance fees
+  - Tiered rates use tier1/tier2 fields from subscriptions table: `performance_fee_tier1_percent`, `performance_fee_tier1_threshold`, etc.
+  - Use `Math.round(value * 100) / 100` for 2 decimal place rounding (matches DB's round())
+---
+
+## 2026-01-21 ~17:00 - US-009
+- What was implemented: Ensured all fee event creation points populate payee_arranger_id
+  - Updated cron job `/api/cron/fees/generate-scheduled/route.ts`:
+    - Added fee_plan and deal data to schedule query
+    - Added logic to derive payee_arranger_id (fee_plan.created_by_arranger_id → deal.arranger_entity_id)
+    - Added payee_arranger_id to fee event insert
+  - Updated manual fee event creation `/api/staff/fees/events/route.ts`:
+    - Added logic to fetch deal.arranger_entity_id when deal_id is provided
+    - Added payee_arranger_id to fee event insert
+  - Verified existing backfill migration at `20251227200000_backfill_fee_events_payee_arranger.sql`
+  - Verified `subscription-fee-calculator.ts` already handles payee_arranger_id
+- Files changed:
+  - `versotech-portal/src/app/api/cron/fees/generate-scheduled/route.ts`
+  - `versotech-portal/src/app/api/staff/fees/events/route.ts`
+- **Learnings for future iterations:**
+  - Fee events have `payee_arranger_id` column linking to arranger_entities
+  - Priority for arranger: fee_plan.created_by_arranger_id > deal.arranger_entity_id
+  - Main fee event creation in `subscription-fee-calculator.ts` already handled arranger linking
+  - Cron job for scheduled fees was missing arranger link - now fixed
+  - Manual fee event creation API was missing arranger link - now fixed
+---
+
+## 2026-01-21 ~17:10 - US-010
+- What was implemented: Added Investor Fees section to Schedule tab
+  - Added `period_from` and `period_to` filters to feeEventFiltersSchema
+  - Updated fee events API to support period_start_date filtering
+  - Added InvestorFeeEvent interface and state management in ScheduleTab
+  - Added Investor Fees collapsible section showing accrued fees with future period_start_date
+  - Section grouped by deal, then by investor, with table columns: Fee Type, Amount, Period Start, Period End
+  - Fees sorted by period_start_date within each investor group
+  - Collapsible header shows count and total amount
+- Files changed:
+  - `versotech-portal/src/lib/fees/validation.ts` (added period_from/period_to filters)
+  - `versotech-portal/src/app/api/staff/fees/events/route.ts` (added period filter support)
+  - `versotech-portal/src/components/fees/ScheduleTab.tsx` (added Investor Fees section)
+- **Learnings for future iterations:**
+  - Fee events API at `/api/staff/fees/events` supports status, period_from, period_to filters
+  - Use Collapsible component for expandable/collapsible sections with header summaries
+  - Group data using `useMemo` with nested objects (byDeal -> byInvestor -> fees)
+  - Fee events have `period_start_date` and `period_end_date` for time-based fees
+  - ScheduleTab now has both "Scheduled Recurring Fees" (from schedules API) and "Investor Fees" (from fee events API)
+---
+
+## 2026-01-21 ~17:15 - US-011
+- What was implemented: Added Introducer Commissions section to Schedule tab
+  - Added IntroducerCommission interface for type safety
+  - Added state and useEffect for fetching introducer commissions
+  - Fetches from `/api/staff/fees/commissions?entity_type=introducer&status=accrued`
+  - Added groupedIntroducerCommissions useMemo to group by introducer, then by deal
+  - Added Collapsible section with header showing count and total amount
+  - Table columns: Investor, Amount, Status, Created Date
+  - Section placed after Investor Fees section in the Schedule tab
+- Files changed:
+  - `versotech-portal/src/components/fees/ScheduleTab.tsx`
+- **Learnings for future iterations:**
+  - Commissions API at `/api/staff/fees/commissions` supports entity_type filter (introducer, partner, commercial_partner)
+  - Commissions have entity_type, entity_id, entity_name fields for normalized access
+  - accrual_amount is the commission amount (stored as numeric, needs Number() conversion)
+  - Same grouping pattern as Investor Fees: useMemo with nested Record objects
+  - UserCheck icon from lucide-react is good for introducer/referral context
+---
+
+## 2026-01-21 ~17:20 - US-012
+- What was implemented: Added Partner Commissions section to Schedule tab
+  - Added PartnerCommission interface for type safety
+  - Added state and useEffect for fetching partner commissions
+  - Fetches from `/api/staff/fees/commissions?entity_type=partner&status=accrued`
+  - Added groupedPartnerCommissions useMemo to group by partner, then by deal
+  - Added Collapsible section with header showing count and total amount
+  - Table columns: Investor, Amount, Status, Created Date
+  - Section placed after Introducer Commissions section in the Schedule tab
+  - Uses Handshake icon (green color) for partner visual distinction
+- Files changed:
+  - `versotech-portal/src/components/fees/ScheduleTab.tsx`
+- **Learnings for future iterations:**
+  - Same pattern as Introducer Commissions - copy interface, state, fetch callback, grouping logic, and UI section
+  - Handshake icon from lucide-react is good for partner context (green color scheme)
+  - entity_type values: 'introducer', 'partner', 'commercial_partner'
+  - The commission sections (Introducer, Partner, Commercial Partner) follow identical patterns - easy to replicate
+---
+
+## 2026-01-21 ~17:25 - US-013
+- What was implemented: Added Commercial Partner Commissions section to Schedule tab
+  - Added CommercialPartnerCommission interface for type safety
+  - Added state and useEffect for fetching commercial partner commissions
+  - Fetches from `/api/staff/fees/commissions?entity_type=commercial_partner&status=accrued`
+  - Added groupedCommercialPartnerCommissions useMemo to group by commercial partner, then by deal
+  - Added Collapsible section with header showing count and total amount
+  - Table columns: Investor, Amount, Status, Created Date
+  - Section placed after Partner Commissions section in the Schedule tab
+  - Uses Briefcase icon (purple color) for commercial partner visual distinction
+- Files changed:
+  - `versotech-portal/src/components/fees/ScheduleTab.tsx`
+- **Learnings for future iterations:**
+  - All three commission sections (Introducer, Partner, Commercial Partner) use identical patterns
+  - Icon choices: UserCheck (blue) for introducers, Handshake (green) for partners, Briefcase (purple) for commercial partners
+  - entity_type filter values match exactly: 'introducer', 'partner', 'commercial_partner'
+  - Commission API returns unified structure with entity_type, entity_id, entity_name for all types
+---
+
+## 2026-01-21 ~17:30 - US-014
+- What was implemented: Added schedule filtering controls to ScheduleTab
+  - Added filter controls Card with Filters header and active filter count badge
+  - Deal filter: multi-select Popover with Command (searchable) + Checkbox for each deal
+  - Entity filter: multi-select Popover with Command, grouped by entity type (Introducers, Partners, Commercial Partners) with type-specific icons
+  - Date range filter: DateRangePicker component (dark variant)
+  - Clear all button appears when any filter is active
+  - Filters persist in URL query params: deal_ids, entity_ids, date_from, date_to
+  - All schedule sections now filter by selected values:
+    - Investor Fees: filters by deal_id and period_start_date range
+    - Commission sections: filter by deal_id, entity_id, and created_at date range
+  - Entity list populated from commissions API's by_entity data (no separate partners/commercial-partners list APIs exist)
+- Files changed:
+  - `versotech-portal/src/components/fees/ScheduleTab.tsx`
+- **Learnings for future iterations:**
+  - Use Popover + Command + Checkbox pattern for multi-select filters
+  - Radix Command provides built-in search functionality via CommandInput
+  - No dedicated /api/staff/partners or /api/staff/commercial-partners list endpoints exist - use commissions API by_entity for entity list
+  - DateRangePicker supports 'dark' variant for consistent styling
+  - ChevronsUpDown icon is standard for combobox/multi-select triggers
+  - Filter state can be initialized from searchParams in useState initial value function
+---
+
+## 2026-01-21 ~17:45 - US-015
+- What was implemented: Added commission KPIs to dashboard (OverviewTab)
+  - Updated dashboard API (`/api/staff/fees/dashboard`) to fetch from all 3 commission tables
+  - Added `commission_summary` object to API response with:
+    - `total_owed`: accrued + invoiced (expenses to be paid)
+    - `total_accrued`: pending invoice
+    - `total_invoiced`: invoiced but not paid
+    - `total_paid_ytd`: paid commissions in current year
+    - `by_entity_type`: breakdown for introducer, partner, commercial_partner
+  - Added Commissions Card to OverviewTab with:
+    - Three KPI cards: Total Commissions Owed (red), Total Paid YTD (green), Pending Invoice (amber)
+    - Breakdown by Entity Type section with cards for Introducers, Partners, Commercial Partners
+    - Each entity type shows owed and paid YTD amounts
+    - Uses appropriate icons: Users, UserCheck (blue), Handshake (green), Briefcase (purple)
+- Files changed:
+  - `versotech-portal/src/app/api/staff/fees/dashboard/route.ts`
+  - `versotech-portal/src/components/fees/OverviewTab.tsx`
+- **Learnings for future iterations:**
+  - Dashboard API at `/api/staff/fees/dashboard` is the central data source for OverviewTab
+  - Commission status values: 'accrued', 'invoiced', 'paid' (from NormalizedCommission interface)
+  - Use Promise.all for parallel fetching from multiple commission tables
+  - Commission tables have consistent structure: accrual_amount, status, paid_at
+  - DashboardData interface in OverviewTab needs optional commission_summary to handle backward compatibility
+---
+
+## 2026-01-21 ~17:50 - US-016
+- What was implemented: Made commission breakdown by entity type cards clickable with navigation
+  - Converted entity type breakdown cards (Introducers, Partners, Commercial Partners) from divs to buttons
+  - Added onClick handlers with router.push() to navigate to arranger-reconciliation page
+  - Navigation URLs: `/versotech_main/arranger-reconciliation?tab=introducers`, `?tab=partners`, `?tab=commercialPartners`
+  - Added ExternalLink icon (small, gray-500) to each card to indicate clickability
+  - Added hover states with entity-specific border colors: blue for introducers, green for partners, purple for commercial partners
+  - Maintained text-left alignment for proper content display in buttons
+- Files changed:
+  - `versotech-portal/src/components/fees/OverviewTab.tsx`
+- **Learnings for future iterations:**
+  - Arranger reconciliation page accepts `tab` query param to set initial tab (overview, introducers, partners, commercialPartners)
+  - Convert divs to buttons for clickable cards to maintain accessibility
+  - Use `text-left` class on buttons to preserve left-aligned content layout
+  - ExternalLink icon from lucide-react is good for indicating navigation/links
+  - Hover border colors provide good visual feedback for interactive cards
+---
+
+## 2026-01-21 ~18:00 - US-017
+- What was implemented: Updated fees dashboard API commission_summary to match exact acceptance criteria
+  - Dashboard API already had commission_summary from US-015/US-016 with most fields
+  - Changed by_entity_type structure to use `paid` instead of `paid_ytd` to match acceptance criteria exactly
+  - Updated OverviewTab's CommissionSummary interface to reflect API change
+  - Updated all 3 entity type card UI references from `.paid_ytd` to `.paid`
+- Files changed:
+  - `versotech-portal/src/app/api/staff/fees/dashboard/route.ts`
+  - `versotech-portal/src/components/fees/OverviewTab.tsx`
+- **Learnings for future iterations:**
+  - API structure should exactly match acceptance criteria for consistency
+  - When API response shape changes, update both the interface definition and all UI references
+  - US-015/US-016 had already implemented most of the commission_summary logic - US-017 was mostly verification and standardization
+---
+
+## 2026-01-21 ~18:10 - US-018
+- What was implemented: Added reconciliation navigation links to dashboard
+  - Added "View Reconciliation" button in Commissions section CardHeader, navigates to `/versotech_main/arranger-reconciliation`
+  - Made Outstanding Invoices KPI card clickable with "View Invoices" link, navigates to `/versotech_main/reconciliation`
+  - Added ArrowRight icon to both links for visual consistency
+  - Added hover states with `hover:bg-accent/50` for Outstanding Invoices card
+  - Restructured Commissions CardHeader to `flex flex-row items-start justify-between` layout for button placement
+- Files changed:
+  - `versotech-portal/src/components/fees/OverviewTab.tsx`
+- **Learnings for future iterations:**
+  - Main reconciliation page at `/versotech_main/reconciliation` handles invoice matching (staff page)
+  - Arranger reconciliation at `/versotech_main/arranger-reconciliation` handles commission reconciliation
+  - Button component with variant="outline" and size="sm" works well for CardHeader action buttons
+  - ArrowRight icon from lucide-react is good for navigation links within cards
+  - Clicking KPI cards can navigate to detailed views - use cursor-pointer and hover states
+---
+
+## 2026-01-21 ~18:30 - US-019
+- What was implemented: Added Commission Status tab to lawyer reconciliation page
+  - Updated server page to fetch all 3 commission types (introducer, partner, commercial_partner) with investor data
+  - Added UnifiedCommission type with entity_type discriminator for normalized commission data
+  - Added Commission Status tab showing all commissions across entity types
+  - Table columns: Entity Type (with icon), Entity Name, Deal, Investor, Amount, Status, Invoice
+  - Status filter dropdown (All, Accrued, Invoice Requested, Invoiced, Paid)
+  - Entity type icons/colors: UserCheck (blue) for introducers, Handshake (green) for partners, Briefcase (purple) for commercial partners
+  - Commission status badges with appropriate colors: blue for accrued, amber for invoice_requested, purple for invoiced, green for paid
+- Files changed:
+  - `versotech-portal/src/app/(main)/versotech_main/lawyer-reconciliation/page.tsx`
+  - `versotech-portal/src/components/lawyer/lawyer-reconciliation-client.tsx`
+- **Learnings for future iterations:**
+  - Lawyer reconciliation page at `/versotech_main/lawyer-reconciliation` supports both lawyer and arranger personas
+  - Commission tables have consistent structure across all 3 types (introducer_commissions, partner_commissions, commercial_partner_commissions)
+  - Use discriminated union type (entity_type field) for unified commission objects
+  - Server page processes commission data into unified format before passing to client
+  - Entity type config pattern: Record<string, { label, icon, color }> for consistent rendering
+---
+
+## 2026-01-21 ~19:00 - US-020
+- What was implemented: Verified and enhanced arranger reconciliation structure
+  - Verified three tabs exist: Introducers, Partners, Commercial Partners (already present in unified-reconciliation-client.tsx)
+  - Each tab uses CommissionTab component with respective API endpoint
+  - Added Investor column to data table (using investor_name from API response)
+  - Added Actions column with Request Invoice and Mark Paid buttons
+  - Request Invoice button (Mail icon, blue) - shown for 'accrued' status commissions
+  - Mark Paid button (CheckCircle icon, green) - shown for 'accrued', 'invoice_requested', 'invoiced' statuses
+  - Integrated RequestInvoiceDialog component from @/components/commissions/request-invoice-dialog
+  - Added toast notifications for action feedback using sonner
+  - Added typeToCommissionType mapping for dialog commission type
+- Files changed:
+  - `versotech-portal/src/components/arranger/reconciliation-tabs/commission-tab.tsx`
+- **Learnings for future iterations:**
+  - Arranger reconciliation uses reusable CommissionTab component for all 3 entity types
+  - API endpoints: introducer-reconciliation, partner-reconciliation, commercial-partner-reconciliation all return investor_name field
+  - Request Invoice API: `/api/arrangers/me/{type}-commissions/{id}/request-invoice` (type: introducer, partner, commercial-partner)
+  - Mark Paid API: `/api/staff/fees/commissions/{id}/mark-paid` with entity_type body param
+  - CommissionType for dialog maps: introducer -> 'introducer', partner -> 'partner', commercial_partner -> 'commercial-partner' (hyphenated)
+  - Action buttons show conditionally based on commission status
+---
+
+## 2026-01-21 ~19:30 - US-021
+- What was implemented: Added reconciliation summary view to reconciliation page
+  - Added Reconciliation Summary Card at top of page (before tabs)
+  - Summary includes: Match Rate percentage (large display), Progress bar (Radix Progress component)
+  - Three KPIs: Total Outstanding (amber), Total Matched (green), Total Unmatched (red)
+  - Each KPI shows amount and transaction count
+  - Summary updates based on current filter selection via useMemo on filteredTransactions
+  - Shows "(filtered view)" indicator when filters are active
+  - Imported Progress component from @/components/ui/progress and TrendingUp icon from lucide-react
+- Files changed:
+  - `versotech-portal/src/app/(staff)/versotech/staff/reconciliation/components/reconciliation-page-client.tsx`
+- **Learnings for future iterations:**
+  - Radix Progress component available at @/components/ui/progress, accepts value prop (0-100)
+  - Reconciliation page has dual data sources: rawData (bank transactions) and invoices
+  - filteredTransactions is already computed via useMemo - can derive additional stats from it
+  - Stats API returns: total, matched, partiallyMatched, unmatched, totalAmount, matchedAmount, unmatchedAmount
+  - Use useMemo for derived summary stats to update when filters change
+  - Color convention: emerald for matched/success, amber for outstanding/pending, rose for unmatched/error
+---
+
+## 2026-01-21 ~20:00 - US-022
+- What was implemented: Audited invoice generation accuracy and added validation
+  - Reviewed invoice generation endpoints: `/api/staff/fees/invoices/generate/route.ts`, `/api/staff/fees/invoices/route.ts`
+  - Verified formula: invoice.total = SUM(fee_events.computed_amount) + SUM(custom_line_items.amount)
+  - Added `validateInvoiceTotal()` function in calculations.ts with comprehensive validation
+  - Added `InvoiceLineWithFeeEvent` interface for type-safe validation input
+  - Updated GET `/api/staff/fees/invoices/[id]` to include validation result in response
+  - Updated GET `/api/staff/fees/invoices` to add `has_discrepancy` and `discrepancy_amount` to each invoice
+  - Added console warning in invoice generation endpoint if total doesn't match expected
+  - Validation includes: line-level checks, subtotal vs total verification, discrepancy percentage
+- Files changed:
+  - `versotech-portal/src/lib/fees/calculations.ts` (added validateInvoiceTotal and InvoiceLineWithFeeEvent)
+  - `versotech-portal/src/app/api/staff/fees/invoices/[id]/route.ts` (added validation to GET response)
+  - `versotech-portal/src/app/api/staff/fees/invoices/route.ts` (added has_discrepancy to list response)
+  - `versotech-portal/src/app/api/staff/fees/invoices/generate/route.ts` (added console warning)
+- **Learnings for future iterations:**
+  - Invoice generation endpoints are in `/api/staff/fees/invoices/` directory
+  - InvoiceLine type already exists in `/lib/fees/types.ts` - created InvoiceLineWithFeeEvent to avoid conflict
+  - Invoice list API fetches invoice lines via nested select, so validation can run on response
+  - formatCurrency() helper in calculations.ts for consistent currency formatting in logs/messages
+  - Allow 0.01 tolerance for rounding differences in validation
+---
+
+## 2026-01-21 ~18:15 - US-023
+- What was implemented: Added invoice discrepancy warning badge with popover details
+  - Added AlertTriangle icon import and Popover component import to InvoicesTab
+  - Added amber "Discrepancy" badge next to invoice number in card header
+  - Badge only shows when invoice.has_discrepancy is true (API already returns this from US-022)
+  - Clicking badge opens Popover showing:
+    - "Invoice Discrepancy Detected" header with warning icon
+    - Explanation text about total mismatch
+    - Invoice Total amount
+    - Expected Total amount (calculated as total - discrepancy_amount)
+    - Discrepancy amount highlighted in amber
+    - Help text to review line items
+  - Updated InvoiceWithLines interface in types.ts to include has_discrepancy and discrepancy_amount optional fields
+- Files changed:
+  - `versotech-portal/src/components/fees/InvoicesTab.tsx`
+  - `versotech-portal/src/lib/fees/types.ts`
+- **Learnings for future iterations:**
+  - API already returns has_discrepancy and discrepancy_amount from US-022 validateInvoiceTotal() call
+  - Use Popover from @/components/ui/popover for click-to-reveal details
+  - AlertTriangle icon from lucide-react is standard for warnings
+  - Amber color scheme (amber-600, amber-100, dark:amber-900/30) for warning badges
+  - When API adds new fields, remember to update TypeScript interfaces in types.ts
+---
+
+## 2026-01-21 ~20:30 - US-024
+- What was implemented: Clarified invoice UI labeling to distinguish investor invoices from entity invoices
+  - Updated page title from "Invoices" to "Investor Invoices"
+  - Added helper text: "Invoices sent to investors for fee collection"
+  - Wrapped title in a div to accommodate the new helper text below it
+  - Verified entity invoice uploads are in separate commission flow (/components/commissions/)
+- Files changed:
+  - `versotech-portal/src/components/fees/InvoicesTab.tsx`
+- **Learnings for future iterations:**
+  - Entity invoices are handled in `/components/commissions/` directory: submit-invoice-dialog.tsx, view-invoice-dialog.tsx
+  - The Fees > Invoices tab is specifically for investor fee collection (subscription fees, management fees, etc.)
+  - Commission invoice uploads go through `/api/commissions/[type]/[id]/invoice` endpoint (separate from staff fee invoices)
+  - Keep UI labeling clear to distinguish different invoice flows in the system
+---
+
+## 2026-01-21 ~21:00 - US-025
+- What was implemented: Audited and verified existing spread fee calculation implementation
+  - Reviewed subscription-fee-calculator.ts (lines 191-203): spread fee events created with fee_type='spread_markup'
+  - Verified computed_amount = spread_fee_amount from subscription data
+  - Spread calculation in deal-close-handler.ts: spreadFeeAmount = (pricePerShare - costPerShare) × numShares
+  - Also set in approvals/[id]/action/route.ts during subscription creation
+  - createFeeEvents() function links fee events to subscription via allocation_id field (line 364)
+  - calculateSpread() utility function exists in calculations.ts with unit tests (lines 518-539 in test file)
+  - All acceptance criteria already satisfied by existing implementation - audit confirms correctness
+- Files reviewed (no changes made - audit only):
+  - `versotech-portal/src/lib/fees/subscription-fee-calculator.ts`
+  - `versotech-portal/src/lib/fees/calculations.ts`
+  - `versotech-portal/src/lib/deals/deal-close-handler.ts`
+  - `versotech-portal/src/app/api/approvals/[id]/action/route.ts`
+  - `versotech-portal/src/__tests__/lib/fees/calculations.test.ts`
+- **Learnings for future iterations:**
+  - Spread fees come from secondary trades where investor price > cost price
+  - spread_fee_amount is calculated at deal close or subscription approval time
+  - Formula: spreadFeeAmount = (pricePerShare - costPerShare) × numShares
+  - subscription-fee-calculator.ts reads spread_fee_amount from subscription and creates corresponding fee event
+  - Spread fee events use fee_type='spread_markup' (not 'spread')
+  - calculateSpread() in calculations.ts is a pure utility for price-based spread calculation
 ---
