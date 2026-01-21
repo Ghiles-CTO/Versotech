@@ -26,7 +26,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Plus, Edit, Copy, FileText, Building2, Trash2, Users, Briefcase, FileCheck, AlertTriangle, ChevronDown, ChevronRight } from 'lucide-react';
+import { Plus, Edit, Copy, FileText, Building2, Trash2, Users, Briefcase, FileCheck, AlertTriangle, ChevronDown, ChevronRight, CheckCircle, Clock, XCircle, Send } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import type { FeePlanWithComponents } from '@/lib/fees/types';
@@ -59,6 +59,7 @@ interface FeePlanWithDeal extends FeePlanWithComponents {
     name: string;
   } | null;
   subscription_count?: number;
+  status?: string;
 }
 
 // Map fee component kinds to term sheet fields
@@ -109,6 +110,47 @@ const feePlanStatusStyles: Record<string, string> = {
   accepted: 'bg-green-500/20 text-green-400',
   rejected: 'bg-red-500/20 text-red-400',
 };
+
+// Helper function to render fee plan status badge with consistent styling
+function getFeePlanStatusBadge(status: string | undefined) {
+  const planStatus = status || 'draft';
+  switch (planStatus) {
+    case 'accepted':
+      return (
+        <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
+          <CheckCircle className="h-3 w-3 mr-1" />
+          Accepted
+        </Badge>
+      );
+    case 'sent':
+      return (
+        <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30">
+          <Send className="h-3 w-3 mr-1" />
+          Sent
+        </Badge>
+      );
+    case 'pending_signature':
+      return (
+        <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30">
+          <Clock className="h-3 w-3 mr-1" />
+          Pending Signature
+        </Badge>
+      );
+    case 'rejected':
+      return (
+        <Badge className="bg-red-500/20 text-red-400 border-red-500/30">
+          <XCircle className="h-3 w-3 mr-1" />
+          Rejected
+        </Badge>
+      );
+    default:
+      return (
+        <Badge variant="outline" className="border-gray-500/30 text-gray-400">
+          Draft
+        </Badge>
+      );
+  }
+}
 
 interface FeePlansTabProps {
   dealId?: string;
@@ -490,28 +532,7 @@ export default function FeePlansTab({ dealId }: FeePlansTabProps) {
                                   </TableCell>
                                   <TableCell>
                                     <div className="flex flex-wrap gap-1">
-                                      {plan.term_sheet?.status && (
-                                        <Badge
-                                          className={
-                                            feePlanStatusStyles[plan.term_sheet.status] ||
-                                            'bg-gray-500/20 text-gray-400'
-                                          }
-                                        >
-                                          {plan.term_sheet.status}
-                                        </Badge>
-                                      )}
-                                      {plan.is_active ? (
-                                        <Badge
-                                          variant="outline"
-                                          className="bg-green-500/10 text-green-500 border-green-500"
-                                        >
-                                          Active
-                                        </Badge>
-                                      ) : (
-                                        <Badge variant="outline" className="bg-gray-500/10">
-                                          Inactive
-                                        </Badge>
-                                      )}
+                                      {getFeePlanStatusBadge(plan.status)}
                                     </div>
                                   </TableCell>
                                   <TableCell className="text-right">
@@ -550,8 +571,11 @@ export default function FeePlansTab({ dealId }: FeePlansTabProps) {
                                 <CardHeader className="pb-2">
                                   <div className="flex items-start justify-between">
                                     <div className="flex-1">
-                                      <CardTitle className="text-lg">{plan.name}</CardTitle>
-                                      <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
+                                      <div className="flex items-center gap-2 mb-1">
+                                        <CardTitle className="text-lg">{plan.name}</CardTitle>
+                                        {getFeePlanStatusBadge(plan.status)}
+                                      </div>
+                                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                         <GroupIcon className={`h-4 w-4 ${config.iconColor}`} />
                                         <span>
                                           {plan.introducer?.legal_name ||
