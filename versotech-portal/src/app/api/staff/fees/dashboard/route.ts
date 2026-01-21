@@ -103,9 +103,9 @@ export async function GET(request: NextRequest) {
       total_invoiced: introducerTotals.invoiced + partnerTotals.invoiced + commercialPartnerTotals.invoiced,
       total_paid_ytd: introducerTotals.paidYtd + partnerTotals.paidYtd + commercialPartnerTotals.paidYtd,
       by_entity_type: {
-        introducer: { owed: introducerTotals.owed, paid_ytd: introducerTotals.paidYtd },
-        partner: { owed: partnerTotals.owed, paid_ytd: partnerTotals.paidYtd },
-        commercial_partner: { owed: commercialPartnerTotals.owed, paid_ytd: commercialPartnerTotals.paidYtd },
+        introducer: { owed: introducerTotals.owed, paid: introducerTotals.paidYtd },
+        partner: { owed: partnerTotals.owed, paid: partnerTotals.paidYtd },
+        commercial_partner: { owed: commercialPartnerTotals.owed, paid: commercialPartnerTotals.paidYtd },
       },
     };
 

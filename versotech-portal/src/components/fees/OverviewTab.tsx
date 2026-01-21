@@ -16,9 +16,9 @@ interface CommissionSummary {
   total_invoiced: number;
   total_paid_ytd: number;
   by_entity_type: {
-    introducer: { owed: number; paid_ytd: number };
-    partner: { owed: number; paid_ytd: number };
-    commercial_partner: { owed: number; paid_ytd: number };
+    introducer: { owed: number; paid: number };
+    partner: { owed: number; paid: number };
+    commercial_partner: { owed: number; paid: number };
   };
 }
 
@@ -244,7 +244,7 @@ export default function OverviewTab() {
                         <div className="flex justify-between">
                           <span className="text-gray-400">Paid YTD:</span>
                           <span className="text-green-400 font-medium">
-                            {formatCurrency(data.commission_summary.by_entity_type.introducer.paid_ytd)}
+                            {formatCurrency(data.commission_summary.by_entity_type.introducer.paid)}
                           </span>
                         </div>
                       </div>
@@ -270,7 +270,7 @@ export default function OverviewTab() {
                         <div className="flex justify-between">
                           <span className="text-gray-400">Paid YTD:</span>
                           <span className="text-green-400 font-medium">
-                            {formatCurrency(data.commission_summary.by_entity_type.partner.paid_ytd)}
+                            {formatCurrency(data.commission_summary.by_entity_type.partner.paid)}
                           </span>
                         </div>
                       </div>
@@ -296,7 +296,7 @@ export default function OverviewTab() {
                         <div className="flex justify-between">
                           <span className="text-gray-400">Paid YTD:</span>
                           <span className="text-green-400 font-medium">
-                            {formatCurrency(data.commission_summary.by_entity_type.commercial_partner.paid_ytd)}
+                            {formatCurrency(data.commission_summary.by_entity_type.commercial_partner.paid)}
                           </span>
                         </div>
                       </div>
