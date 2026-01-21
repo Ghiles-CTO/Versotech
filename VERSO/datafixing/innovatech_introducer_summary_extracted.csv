@@ -1,0 +1,18 @@
+vc_code,sheet,group_label,raw_name,introducer_name_mapped,sub_fee_amt,spread_fee_amt,sub_fee_pct,spread_pps,investor_last,investor_first,investor_entity,amount_invested,price_per_share,num_shares,ownership_position
+IN103,IN3,PARTNERS,Anand,Setcap,5000.0,74999.58342,0.01,1.24077,,,Zandera (Holdco) Limited,500000.0,8.2718,60446.0,
+IN103,IN3,INTRODUCERS,Altras+Andrew,Altras+Andrew Stewart,15000.0,174999.028,0.03,2.89513,,,Zandera (Holdco) Limited,500000.0,8.2718,60446.0,
+IN103,IN3,PARTNERS,Anand,Setcap,5000.0,0.0,0.01,0.0,,,Wymo Finance Limited,500000.0,4.1359,120892.0,
+IN103,IN3,INTRODUCERS,Andrew,Andrew Stewart,5000.0,0.0,0.01,0.0,,,Wymo Finance Limited,500000.0,4.1359,120892.0,
+IN103,IN3,PARTNERS,Anand,Setcap,5000.0,0.0,0.01,0.0,,,HASSBRO Investments Limited,500000.0,4.1359,120892.0,
+IN103,IN3,INTRODUCERS,Andrew,Andrew Stewart,5000.0,0.0,0.01,0.0,,,HASSBRO Investments Limited,500000.0,4.1359,120892.0,
+IN103,IN3,PARTNERS,Anand,Setcap,1000.0,0.0,0.01,0.0,,,N SQUARE PATEL LLC,100000.0,4.1359,24178.0,
+IN103,IN3,INTRODUCERS,Andrew,Andrew Stewart,1000.0,0.0,0.01,0.0,,,N SQUARE PATEL LLC,100000.0,4.1359,24178.0,
+IN103,IN3,PARTNERS,Anand,Setcap,500.0,0.0,0.01,0.0,GRACE,Elizabeth,,50000.0,4.1359,12089.0,
+IN103,IN3,INTRODUCERS,Andrew,Andrew Stewart,500.0,0.0,0.01,0.0,GRACE,Elizabeth,,50000.0,4.1359,12089.0,
+IN103,IN3,PARTNERS,Anand,Setcap,500.0,0.0,0.01,0.0,GRACE,John,Sherri Lipton Grace 2020 Irrevocable Family Trust,50000.0,4.1359,12089.0,
+IN103,IN3,INTRODUCERS,Andrew,Andrew Stewart,500.0,0.0,0.01,0.0,GRACE,John,Sherri Lipton Grace 2020 Irrevocable Family Trust,50000.0,4.1359,12089.0,
+IN103,IN3,PARTNERS,Anand,Setcap,5000.0,74999.58342,0.01,1.24077,,,Zandera (Holdco) Limited,500000.0,8.2718,60446.0,
+IN103,IN3,INTRODUCERS,Altras+Andrew,Altras+Andrew Stewart,15000.0,174999.028,0.03,2.89513,,,Zandera (Holdco) Limited,500000.0,8.2718,60446.0,
+IN103,IN3,PARTNERS,Anand,Setcap,500.0,0.0,0.01,0.0,LOWY,Jeremy,,50000.0,4.1359,12089.0,
+IN103,IN3,INTRODUCERS,Andrew,Andrew Stewart,500.0,0.0,0.01,0.0,LOWY,Jeremy,,50000.0,4.1359,12089.0,
+IN106,IN6,INTRODUCERS,SET CAP,Setcap,3300.0,0.0,0.01,0.0,,,Wymo Finance Limited,330000.0,4.9879,66160.0,0.0

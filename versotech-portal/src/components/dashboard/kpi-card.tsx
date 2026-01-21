@@ -67,7 +67,7 @@ export function KPICard({
       aria-label={isClickable ? `${title}: ${displayValue}` : undefined}
     >
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground group-hover:text-gray-700 transition-colors">
+        <CardTitle className="text-sm font-medium text-muted-foreground group-hover:text-gray-700 dark:group-hover:text-gray-200 transition-colors">
           {title}
         </CardTitle>
         <div className="flex items-center gap-2">
@@ -78,7 +78,7 @@ export function KPICard({
         </div>
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent group-hover:from-blue-900 group-hover:to-blue-700 transition-all duration-300">
+        <div className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent group-hover:from-blue-900 group-hover:to-blue-700 dark:group-hover:from-blue-400 dark:group-hover:to-blue-300 transition-all duration-300">
           {displayValue}
         </div>
         {(subtitle || description) && (
@@ -92,7 +92,7 @@ export function KPICard({
               <>
                 <span className={cn(
                   "font-medium",
-                  trend.isPositive ? "text-green-600" : "text-red-600"
+                  trend.isPositive ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"
                 )}>
                   {trend.isPositive ? '+' : ''}{trend.value}%
                 </span>
@@ -103,8 +103,8 @@ export function KPICard({
               <>
                 <span className={cn(
                   "font-medium",
-                  trend === 'up' ? "text-green-600" :
-                  trend === 'down' ? "text-red-600" : "text-gray-600"
+                  trend === 'up' ? "text-green-600 dark:text-green-400" :
+                  trend === 'down' ? "text-red-600 dark:text-red-400" : "text-gray-600 dark:text-gray-400"
                 )}>
                   {trendValue}
                 </span>
@@ -118,13 +118,13 @@ export function KPICard({
         {additionalInfo && isClickable && (
           <div className="mt-3 pt-3 border-t opacity-0 group-hover:opacity-100 transition-opacity duration-300">
             {additionalInfo.change && (
-              <div className="text-xs text-gray-500 mb-2">
+              <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">
                 <span className="font-medium">{additionalInfo.change.period}:</span> {additionalInfo.change.value}
               </div>
             )}
 
             {additionalInfo.benchmark && (
-              <div className="text-xs text-gray-500 mb-2">
+              <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">
                 <span className="font-medium">{additionalInfo.benchmark.label}:</span> {additionalInfo.benchmark.value}
               </div>
             )}
@@ -133,7 +133,7 @@ export function KPICard({
               <div className="space-y-1">
                 {additionalInfo.breakdown.slice(0, 2).map((item, index) => (
                   <div key={index} className="flex justify-between text-xs">
-                    <span className="text-gray-500">{item.label}</span>
+                    <span className="text-gray-500 dark:text-gray-400">{item.label}</span>
                     <span className="font-medium">{item.value}</span>
                   </div>
                 ))}
@@ -141,7 +141,7 @@ export function KPICard({
             )}
 
             {hasDetails && (
-              <div className="text-xs text-blue-600 font-medium mt-2 opacity-0 group-hover:opacity-100 transition-opacity delay-150">
+              <div className="text-xs text-blue-600 dark:text-blue-400 font-medium mt-2 opacity-0 group-hover:opacity-100 transition-opacity delay-150">
                 Click for details →
               </div>
             )}

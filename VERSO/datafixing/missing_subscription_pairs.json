@@ -1,0 +1,189 @@
+[
+  {
+    "vehicle_code": "VC106",
+    "vehicle_name": "VERSO Capital 1 SCSP Series 106",
+    "investor_legal_name": "Global Custody & Clearing Limited",
+    "investor_display_name": "Global Custody & Clearing Limited",
+    "first_name": null,
+    "last_name": null,
+    "investor_id": "35af0245-05fb-4d6c-b17e-64d0d6b180f0",
+    "vehicle_id": "ba584abd-ea2b-4a3f-893a-c7e0999f4039",
+    "deal_id": "07eff085-9f1d-4e02-b1e2-d717817503f1"
+  },
+  {
+    "vehicle_code": "VC106",
+    "vehicle_name": "VERSO Capital 1 SCSP Series 106",
+    "investor_legal_name": "GORILLA PE Inc",
+    "investor_display_name": "GORILLA PE Inc",
+    "first_name": null,
+    "last_name": null,
+    "investor_id": "9cb830ec-9a56-49bc-a6ef-3732b8e354d4",
+    "vehicle_id": "ba584abd-ea2b-4a3f-893a-c7e0999f4039",
+    "deal_id": "07eff085-9f1d-4e02-b1e2-d717817503f1"
+  },
+  {
+    "vehicle_code": "VC106",
+    "vehicle_name": "VERSO Capital 1 SCSP Series 106",
+    "investor_legal_name": "GREENLEAF",
+    "investor_display_name": "GREENLEAF",
+    "first_name": null,
+    "last_name": null,
+    "investor_id": "8618f750-f156-4c86-a554-5905443e08fb",
+    "vehicle_id": "ba584abd-ea2b-4a3f-893a-c7e0999f4039",
+    "deal_id": "07eff085-9f1d-4e02-b1e2-d717817503f1"
+  },
+  {
+    "vehicle_code": "VC106",
+    "vehicle_name": "VERSO Capital 1 SCSP Series 106",
+    "investor_legal_name": "JIMENEZ TRADING INC",
+    "investor_display_name": "JIMENEZ TRADING INC",
+    "first_name": null,
+    "last_name": null,
+    "investor_id": "971d7d29-fed0-43b0-960b-6f30e70cf086",
+    "vehicle_id": "ba584abd-ea2b-4a3f-893a-c7e0999f4039",
+    "deal_id": "07eff085-9f1d-4e02-b1e2-d717817503f1"
+  },
+  {
+    "vehicle_code": "VC106",
+    "vehicle_name": "VERSO Capital 1 SCSP Series 106",
+    "investor_legal_name": "OEP Ltd",
+    "investor_display_name": "OEP Ltd",
+    "first_name": null,
+    "last_name": null,
+    "investor_id": "5ee17648-dd9d-4351-a450-f57119440739",
+    "vehicle_id": "ba584abd-ea2b-4a3f-893a-c7e0999f4039",
+    "deal_id": "07eff085-9f1d-4e02-b1e2-d717817503f1"
+  },
+  {
+    "vehicle_code": "VC111",
+    "vehicle_name": "VERSO Capital 1 SCSP Series 111",
+    "investor_legal_name": "Zandera (Finco) Limited",
+    "investor_display_name": "Zandera (Finco) Limited",
+    "first_name": null,
+    "last_name": null,
+    "investor_id": "53b54fb5-b965-4bcd-888a-8bfb98791ba5",
+    "vehicle_id": "ccc0bfd0-2c76-4b80-bcb9-12702cfb60bd",
+    "deal_id": "9a8c133e-fad0-4e5a-8118-24225a0bef68"
+  },
+  {
+    "vehicle_code": "VC113",
+    "vehicle_name": "VERSO Capital 1 SCSP Series 113",
+    "investor_legal_name": "PETRATECH",
+    "investor_display_name": "PETRATECH",
+    "first_name": null,
+    "last_name": null,
+    "investor_id": "30dcc335-6e6e-4644-8bc8-c04e386eef1e",
+    "vehicle_id": "8d4db38a-0119-4eef-bb1a-d9f266aef1e7",
+    "deal_id": "1e4061bd-6e36-4298-8e98-9fd55ab6a448"
+  },
+  {
+    "vehicle_code": "VC113",
+    "vehicle_name": "VERSO Capital 1 SCSP Series 113",
+    "investor_legal_name": "Zandera (Finco) Limited",
+    "investor_display_name": "Zandera (Finco) Limited",
+    "first_name": null,
+    "last_name": null,
+    "investor_id": "53b54fb5-b965-4bcd-888a-8bfb98791ba5",
+    "vehicle_id": "8d4db38a-0119-4eef-bb1a-d9f266aef1e7",
+    "deal_id": "1e4061bd-6e36-4298-8e98-9fd55ab6a448"
+  },
+  {
+    "vehicle_code": "VC113",
+    "vehicle_name": "VERSO Capital 1 SCSP Series 113",
+    "investor_legal_name": "Zandera (Holdco) Limited",
+    "investor_display_name": "Zandera (Holdco) Limited",
+    "first_name": null,
+    "last_name": null,
+    "investor_id": "02e7a81c-d5bf-4839-9776-f89ae320b586",
+    "vehicle_id": "8d4db38a-0119-4eef-bb1a-d9f266aef1e7",
+    "deal_id": "1e4061bd-6e36-4298-8e98-9fd55ab6a448"
+  },
+  {
+    "vehicle_code": "VC126",
+    "vehicle_name": "VERSO Capital 1 SCSP Series 126",
+    "investor_legal_name": "Anisha Bansal and Rahul KARKUN",
+    "investor_display_name": "Mrs Anisha Bansal and Mr Rahul KARKUN",
+    "first_name": "Mrs Anisha Bansal and Mr Rahul",
+    "last_name": "KARKUN",
+    "investor_id": "a7a6b0b9-538c-44d6-b8c6-3df69b5a5212",
+    "vehicle_id": "060cf007-0671-4854-9eea-88d2b1497c53",
+    "deal_id": "e2d649da-f1e9-49ca-b426-dd8ade244f12"
+  },
+  {
+    "vehicle_code": "VC126",
+    "vehicle_name": "VERSO Capital 1 SCSP Series 126",
+    "investor_legal_name": "DRussell Goman RD LLC",
+    "investor_display_name": "DRussell Goman RD LLC",
+    "first_name": "(Dacia)",
+    "last_name": "(RUSSELL)",
+    "investor_id": "7ef0fd55-1269-4bbb-b72e-0405a64e18bc",
+    "vehicle_id": "060cf007-0671-4854-9eea-88d2b1497c53",
+    "deal_id": "e2d649da-f1e9-49ca-b426-dd8ade244f12"
+  },
+  {
+    "vehicle_code": "VC126",
+    "vehicle_name": "VERSO Capital 1 SCSP Series 126",
+    "investor_legal_name": "John BARROWMAN",
+    "investor_display_name": "John BARROWMAN",
+    "first_name": "John",
+    "last_name": "BARROWMAN",
+    "investor_id": "43b6a41c-ef4c-4de0-ae3b-d70d0d9e4b43",
+    "vehicle_id": "060cf007-0671-4854-9eea-88d2b1497c53",
+    "deal_id": "e2d649da-f1e9-49ca-b426-dd8ade244f12"
+  },
+  {
+    "vehicle_code": "VC126",
+    "vehicle_name": "VERSO Capital 1 SCSP Series 126",
+    "investor_legal_name": "LF GROUP SARL",
+    "investor_display_name": "LF GROUP SARL",
+    "first_name": null,
+    "last_name": null,
+    "investor_id": "938db8aa-ce0c-47e9-b0f7-23ba9c20e7a1",
+    "vehicle_id": "060cf007-0671-4854-9eea-88d2b1497c53",
+    "deal_id": "e2d649da-f1e9-49ca-b426-dd8ade244f12"
+  },
+  {
+    "vehicle_code": "VC126",
+    "vehicle_name": "VERSO Capital 1 SCSP Series 126",
+    "investor_legal_name": "ODIN (ANIM X II LP)",
+    "investor_display_name": "ODIN (ANIM X II LP)",
+    "first_name": null,
+    "last_name": null,
+    "investor_id": "c433f598-149f-4748-9cc9-60b756a6f159",
+    "vehicle_id": "060cf007-0671-4854-9eea-88d2b1497c53",
+    "deal_id": "e2d649da-f1e9-49ca-b426-dd8ade244f12"
+  },
+  {
+    "vehicle_code": "VC126",
+    "vehicle_name": "VERSO Capital 1 SCSP Series 126",
+    "investor_legal_name": "OEP Ltd",
+    "investor_display_name": "OEP Ltd",
+    "first_name": null,
+    "last_name": null,
+    "investor_id": "5ee17648-dd9d-4351-a450-f57119440739",
+    "vehicle_id": "060cf007-0671-4854-9eea-88d2b1497c53",
+    "deal_id": "e2d649da-f1e9-49ca-b426-dd8ade244f12"
+  },
+  {
+    "vehicle_code": "VC126",
+    "vehicle_name": "VERSO Capital 1 SCSP Series 126",
+    "investor_legal_name": "Scott FLETCHER",
+    "investor_display_name": "Scott FLETCHER",
+    "first_name": "Scott",
+    "last_name": "FLETCHER",
+    "investor_id": "69075b7c-5dfd-4bd5-b8f7-e0757fe28d64",
+    "vehicle_id": "060cf007-0671-4854-9eea-88d2b1497c53",
+    "deal_id": "e2d649da-f1e9-49ca-b426-dd8ade244f12"
+  },
+  {
+    "vehicle_code": "VC126",
+    "vehicle_name": "VERSO Capital 1 SCSP Series 126",
+    "investor_legal_name": "Serge AURIER",
+    "investor_display_name": "Serge AURIER",
+    "first_name": "Serge",
+    "last_name": "AURIER",
+    "investor_id": "a4fd57c5-202c-44d5-b5c9-c970fe97f66a",
+    "vehicle_id": "060cf007-0671-4854-9eea-88d2b1497c53",
+    "deal_id": "e2d649da-f1e9-49ca-b426-dd8ade244f12"
+  }
+]

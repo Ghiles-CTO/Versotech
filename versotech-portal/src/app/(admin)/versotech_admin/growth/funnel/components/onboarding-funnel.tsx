@@ -159,7 +159,7 @@ export function OnboardingFunnel({ data }: OnboardingFunnelProps) {
                       style={{ width: `${widthPercent}%` }}
                     >
                       {/* Inner gradient overlay for depth */}
-                      <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent rounded" />
+                      <div className="absolute inset-0 bg-gradient-to-b from-white/20 dark:from-white/10 to-transparent rounded" />
                     </div>
 
                     {/* Connection arrow to next stage */}

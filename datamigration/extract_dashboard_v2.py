@@ -60,6 +60,10 @@ INTRODUCER_MAPPINGS = {
     "Pierre Paumier": "Pierre Paumier",
     "Omar": "Omar ADI",
     "Aboud": "Aboud Khaddam",
+    "Denis": "Denis Matthey",
+    "Robin": "Robin Doble",
+    "Sandro": "GEMERA Consulting Pte Ltd",
+    "Simone": "Manna Capital",
 }
 
 

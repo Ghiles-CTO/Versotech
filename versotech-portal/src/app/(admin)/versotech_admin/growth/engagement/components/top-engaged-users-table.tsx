@@ -32,7 +32,7 @@ function RankIcon({ rank }: { rank: number }) {
     case 1:
       return <Trophy className="h-4 w-4 text-yellow-500" />
     case 2:
-      return <Medal className="h-4 w-4 text-gray-400" />
+      return <Medal className="h-4 w-4 text-gray-400 dark:text-gray-300" />
     case 3:
       return <Award className="h-4 w-4 text-amber-600" />
     default:
@@ -182,9 +182,9 @@ export function TopEngagedUsersTable({ days }: TopEngagedUsersTableProps) {
                         <Badge
                           variant={rank === 1 ? 'default' : 'secondary'}
                           className={
-                            rank === 1 ? 'bg-yellow-500 hover:bg-yellow-600' :
-                            rank === 2 ? 'bg-gray-400 hover:bg-gray-500' :
-                            'bg-amber-600 hover:bg-amber-700'
+                            rank === 1 ? 'bg-yellow-500 hover:bg-yellow-600 dark:bg-yellow-500 dark:hover:bg-yellow-600' :
+                            rank === 2 ? 'bg-gray-400 hover:bg-gray-500 dark:bg-gray-500 dark:hover:bg-gray-600' :
+                            'bg-amber-600 hover:bg-amber-700 dark:bg-amber-600 dark:hover:bg-amber-700'
                           }
                         >
                           #{rank}

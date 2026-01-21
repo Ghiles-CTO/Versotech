@@ -1,0 +1,54 @@
+# =========================
+# RALPH + CLAUDE CHEAT SHEET
+# =========================
+
+# --- GLOBAL SETUP (ONCE) ---
+brew install jq git
+npm install -g @anthropic-ai/claude-code
+
+mkdir -p ~/tools && cd ~/tools
+git clone https://github.com/snarktank/ralph.git
+
+mkdir -p ~/.claude/skills
+cp -R ~/tools/ralph/skills/prd ~/.claude/skills/
+cp -R ~/tools/ralph/skills/ralph ~/.claude/skills/
+
+# --- ENABLE RALPH IN A PROJECT (ONCE PER REPO) ---
+cd ~/Desktop/Versotech
+mkdir -p scripts/ralph
+cp ~/tools/ralph/ralph.sh scripts/ralph/ralph.sh
+chmod +x scripts/ralph/ralph.sh
+mkdir -p tasks
+
+# --- PRD -> prd.json (IN CLAUDE CODE) ---
+claude
+# Tell Claude:
+# "Load the ralph skill and convert tasks/<PRD_FILE>.md to scripts/ralph/prd.json"
+
+# --- RUN RALPH (CLAUDE) ---
+./scripts/ralph/ralph.sh --tool claude 10
+./scripts/ralph/ralph.sh --tool claude 50
+
+# --- CHECK STATUS ---
+cat scripts/ralph/prd.json | jq '[.userStories[] | select(.passes==false)] | length'
+cat scripts/ralph/prd.json | jq -r '.userStories[] | select(.passes==false) | "\(.id)  \(.title)"'
+
+# --- ARCHIVE A COMPLETED RUN (NO OVERWRITE) ---
+FEATURE="admin-portal"
+RUN="archive/$(date +%F)-$FEATURE"
+mkdir -p "$RUN"
+cp scripts/ralph/prd.json "$RUN/prd.json"
+cp scripts/ralph/progress.txt "$RUN/progress.txt" 2>/dev/null || true
+cp tasks/prd-*.md "$RUN/" 2>/dev/null || true
+
+# --- DELETE TASKMASTER (YOU SAID YOU WANT IT GONE) ---
+rm -rf .taskmaster
+echo ".taskmaster/" >> .gitignore
+git add .gitignore
+git commit -m "chore: ignore taskmaster folder"
+
+# --- FIND WHERE prd.json IS (IF YOU LOSE IT AGAIN) ---
+find . -name "prd.json"
+
+# --- VIEW WHAT RALPH CHANGED ---
+git log --oneline -30

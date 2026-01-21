@@ -28,8 +28,11 @@ Open discrepancies (dashboard vs DB)
 - Minor rounding deltas in aggregate comparison (e.g., VC113 Setcap spread +0.0125; VC125 sub-fee +0.0012; VC126 Setcap spread -0.00776).
 
 Commissions vs subscriptions
-- 39 commission records have no matching subscription (investor+vehicle). Requires manual review against dashboard/contract refs.
-- 109 commission records belong to investor+vehicle pairs with multiple introducers, so subscriptions cannot represent all introducers (single introducer_id limit).
+- All introducer_commissions now have a matching subscription (investor+vehicle).
+- Multi‑introducer investor+vehicle pairs still exist; subscriptions keep a single introducer_id only when there is exactly one introducer for that pair.
+
+Commissions vs introductions
+- Introductions were backfilled for all unique introducer+investor+deal pairs, and commissions now link to introduction_id.
 
 Partner/Introducer overlap
 - Partner entries are treated as introducers in this workflow; duplicate identities were merged (Dan → Daniel Baumslag, Anand → Setcap).

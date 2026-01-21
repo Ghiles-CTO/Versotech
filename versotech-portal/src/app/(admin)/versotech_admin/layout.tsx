@@ -31,13 +31,13 @@ export default async function AdminPortalLayout({ children }: LayoutProps) {
 
   const userPersonas: Persona[] = (personas || []) as Persona[]
 
-  // Check if user has CEO-level access (staff persona with ceo or staff_admin role)
-  // DESIGN DECISION: Both 'ceo' AND 'staff_admin' roles get admin portal access.
-  // This is intentional - staff_admin users are system administrators who need
-  // full platform access. See middleware.ts for the same check.
+  // Check if user has CEO-level access
+  // DESIGN DECISION: Access granted if user has:
+  // 1. 'ceo' persona type, OR
+  // 2. 'staff' persona with 'ceo' or 'staff_admin' role
   const isCEO = userPersonas.some(
-    p => p.persona_type === 'staff' &&
-      (p.role_in_entity === 'ceo' || p.role_in_entity === 'staff_admin')
+    p => p.persona_type === 'ceo' ||
+      (p.persona_type === 'staff' && (p.role_in_entity === 'ceo' || p.role_in_entity === 'staff_admin'))
   )
 
   if (!isCEO) {
