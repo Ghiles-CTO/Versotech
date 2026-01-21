@@ -7,7 +7,8 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { DollarSign, FileText, AlertCircle, TrendingUp, Users, UserCheck, Handshake, Briefcase, ExternalLink } from 'lucide-react';
+import { DollarSign, FileText, AlertCircle, TrendingUp, Users, UserCheck, Handshake, Briefcase, ExternalLink, ArrowRight } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { formatCurrency } from '@/lib/fees/calculations';
 
 interface CommissionSummary {
@@ -133,16 +134,24 @@ export default function OverviewTab() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card
+          className="cursor-pointer hover:bg-accent/50 transition-colors"
+          onClick={() => router.push('/versotech_main/reconciliation')}
+        >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Outstanding Invoices</CardTitle>
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-white">{formatCurrency(data.outstanding_invoices_amount)}</div>
-            <p className="text-xs text-gray-400">
-              {data.outstanding_invoices_count} invoices
-            </p>
+            <div className="flex items-center justify-between mt-1">
+              <p className="text-xs text-gray-400">
+                {data.outstanding_invoices_count} invoices
+              </p>
+              <span className="text-xs text-blue-400 flex items-center gap-1">
+                View Invoices <ArrowRight className="h-3 w-3" />
+              </span>
+            </div>
           </CardContent>
         </Card>
 
@@ -178,14 +187,25 @@ export default function OverviewTab() {
       {/* Commissions Section */}
       {data.commission_summary && (
         <Card>
-          <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
-              <Users className="h-5 w-5" />
-              Commissions
-            </CardTitle>
-            <p className="text-sm text-gray-400">
-              Commission expenses across all entity types (Introducers, Partners, Commercial Partners)
-            </p>
+          <CardHeader className="flex flex-row items-start justify-between">
+            <div>
+              <CardTitle className="text-white flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Commissions
+              </CardTitle>
+              <p className="text-sm text-gray-400 mt-1">
+                Commission expenses across all entity types (Introducers, Partners, Commercial Partners)
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => router.push('/versotech_main/arranger-reconciliation')}
+              className="border-gray-600 hover:bg-gray-800"
+            >
+              View Reconciliation
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
           </CardHeader>
           <CardContent>
             <div className="space-y-6">
