@@ -40,19 +40,23 @@ export async function GET(request: NextRequest) {
     const isActive = searchParams.get('is_active');
     const includeComponents = searchParams.get('include_components') === 'true';
 
-    // Build query - include term sheet (with fee limits) and entity relationships
+    // Build query - include term sheet (with fee limits), entity relationships, and generated agreements
     const selectFields = includeComponents
       ? `*,
          components:fee_components(*),
          term_sheet:term_sheet_id (id, version, status, subscription_fee_percent, management_fee_percent, carried_interest_percent),
          introducer:introducer_id (id, legal_name),
          partner:partner_id (id, name),
-         commercial_partner:commercial_partner_id (id, name)`
+         commercial_partner:commercial_partner_id (id, name),
+         introducer_agreement:generated_agreement_id (id, reference_number, status, pdf_url),
+         placement_agreement:generated_placement_agreement_id (id, reference_number, status, pdf_url)`
       : `*,
          term_sheet:term_sheet_id (id, version, status, subscription_fee_percent, management_fee_percent, carried_interest_percent),
          introducer:introducer_id (id, legal_name),
          partner:partner_id (id, name),
-         commercial_partner:commercial_partner_id (id, name)`;
+         commercial_partner:commercial_partner_id (id, name),
+         introducer_agreement:generated_agreement_id (id, reference_number, status, pdf_url),
+         placement_agreement:generated_placement_agreement_id (id, reference_number, status, pdf_url)`;
 
     let query = supabase
       .from('fee_plans')

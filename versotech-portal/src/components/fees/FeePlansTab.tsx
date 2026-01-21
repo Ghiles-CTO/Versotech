@@ -26,7 +26,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Plus, Edit, Copy, FileText, Building2, Trash2, Users, Briefcase, FileCheck, AlertTriangle, ChevronDown, ChevronRight, CheckCircle, Clock, XCircle, Send, FileSignature, Loader2 } from 'lucide-react';
+import { Plus, Edit, Copy, FileText, Building2, Trash2, Users, Briefcase, FileCheck, AlertTriangle, ChevronDown, ChevronRight, CheckCircle, Clock, XCircle, Send, FileSignature, Loader2, Eye, Download } from 'lucide-react';
 import { toast } from 'sonner';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -58,6 +58,18 @@ interface FeePlanWithDeal extends FeePlanWithComponents {
   commercial_partner?: {
     id: string;
     name: string;
+  } | null;
+  introducer_agreement?: {
+    id: string;
+    reference_number: string | null;
+    status: string;
+    pdf_url: string | null;
+  } | null;
+  placement_agreement?: {
+    id: string;
+    reference_number: string | null;
+    status: string;
+    pdf_url: string | null;
   } | null;
   subscription_count?: number;
   status?: string;
@@ -203,6 +215,7 @@ export default function FeePlansTab({ dealId }: FeePlansTabProps) {
     commercial_partners: true,
   });
   const [generatingAgreement, setGeneratingAgreement] = useState<string | null>(null);
+  const [downloadingPdf, setDownloadingPdf] = useState<string | null>(null);
 
   useEffect(() => {
     fetchPlans();
@@ -406,6 +419,67 @@ export default function FeePlansTab({ dealId }: FeePlansTabProps) {
       await handleGenerateIntroducerAgreement(plan);
     } else if (plan.partner) {
       await handleGeneratePartnerAgreement(plan);
+    }
+  };
+
+  // Get PDF URL from agreement (introducer or placement)
+  const getAgreementPdfInfo = (plan: FeePlanWithDeal): { pdfUrl: string | null; referenceNumber: string | null } => {
+    if (plan.introducer_agreement?.pdf_url) {
+      return {
+        pdfUrl: plan.introducer_agreement.pdf_url,
+        referenceNumber: plan.introducer_agreement.reference_number
+      };
+    }
+    if (plan.placement_agreement?.pdf_url) {
+      return {
+        pdfUrl: plan.placement_agreement.pdf_url,
+        referenceNumber: plan.placement_agreement.reference_number
+      };
+    }
+    return { pdfUrl: null, referenceNumber: null };
+  };
+
+  // Handle PDF download from Supabase storage
+  const handleDownloadPdf = async (pdfUrl: string, referenceNumber: string | null) => {
+    setDownloadingPdf(pdfUrl);
+    try {
+      const response = await fetch(`/api/storage/download?path=${encodeURIComponent(pdfUrl)}&bucket=deal-documents`);
+      if (!response.ok) {
+        throw new Error('Failed to download file');
+      }
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      // Extract actual filename from storage path, or fall back to reference number
+      const actualFilename = pdfUrl.split('/').pop() || `${referenceNumber || 'agreement'}.pdf`;
+      link.download = actualFilename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      toast.success('PDF downloaded successfully');
+    } catch (error) {
+      console.error('Error downloading PDF:', error);
+      toast.error('Failed to download PDF');
+    } finally {
+      setDownloadingPdf(null);
+    }
+  };
+
+  // Handle PDF preview in new tab
+  const handlePreviewPdf = async (pdfUrl: string) => {
+    try {
+      const response = await fetch(`/api/storage/download?path=${encodeURIComponent(pdfUrl)}&bucket=deal-documents`);
+      if (!response.ok) {
+        throw new Error('Failed to load file');
+      }
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      window.open(url, '_blank');
+    } catch (error) {
+      console.error('Error previewing PDF:', error);
+      toast.error('Failed to preview PDF');
     }
   };
 
@@ -645,6 +719,38 @@ export default function FeePlansTab({ dealId }: FeePlansTabProps) {
                                           Agreement
                                         </Badge>
                                       )}
+                                      {/* PDF Preview/Download buttons */}
+                                      {(() => {
+                                        const { pdfUrl, referenceNumber } = getAgreementPdfInfo(plan);
+                                        if (!pdfUrl) return null;
+                                        return (
+                                          <>
+                                            <Button
+                                              variant="ghost"
+                                              size="sm"
+                                              onClick={() => handlePreviewPdf(pdfUrl)}
+                                              className="text-blue-400 hover:text-blue-300"
+                                              title="Preview PDF"
+                                            >
+                                              <Eye className="h-4 w-4" />
+                                            </Button>
+                                            <Button
+                                              variant="ghost"
+                                              size="sm"
+                                              onClick={() => handleDownloadPdf(pdfUrl, referenceNumber)}
+                                              disabled={downloadingPdf === pdfUrl}
+                                              className="text-green-400 hover:text-green-300"
+                                              title="Download PDF"
+                                            >
+                                              {downloadingPdf === pdfUrl ? (
+                                                <Loader2 className="h-4 w-4 animate-spin" />
+                                              ) : (
+                                                <Download className="h-4 w-4" />
+                                              )}
+                                            </Button>
+                                          </>
+                                        );
+                                      })()}
                                       <Button
                                         variant="ghost"
                                         size="sm"
@@ -786,6 +892,57 @@ export default function FeePlansTab({ dealId }: FeePlansTabProps) {
                                       })}
                                     </div>
                                   </TooltipProvider>
+
+                                  {/* Agreement Document Section */}
+                                  {(() => {
+                                    const { pdfUrl, referenceNumber } = getAgreementPdfInfo(plan);
+                                    if (!pdfUrl) return null;
+
+                                    return (
+                                      <div className="mt-4 pt-4 border-t border-white/10">
+                                        <div className="flex items-center justify-between">
+                                          <div className="flex items-center gap-3">
+                                            <div className="p-2 rounded-lg bg-green-500/10">
+                                              <FileText className="h-5 w-5 text-green-400" />
+                                            </div>
+                                            <div>
+                                              <p className="text-sm font-medium text-foreground">
+                                                {plan.introducer ? 'Introducer Agreement' : 'Placement Agreement'}
+                                              </p>
+                                              <p className="text-xs text-muted-foreground">
+                                                {referenceNumber || 'Document ready'}
+                                              </p>
+                                            </div>
+                                          </div>
+                                          <div className="flex items-center gap-2">
+                                            <Button
+                                              variant="outline"
+                                              size="sm"
+                                              onClick={() => handlePreviewPdf(pdfUrl)}
+                                              className="text-blue-400 border-blue-400/30 hover:bg-blue-400/10"
+                                            >
+                                              <Eye className="h-4 w-4 mr-1" />
+                                              Preview
+                                            </Button>
+                                            <Button
+                                              variant="outline"
+                                              size="sm"
+                                              onClick={() => handleDownloadPdf(pdfUrl, referenceNumber)}
+                                              disabled={downloadingPdf === pdfUrl}
+                                              className="text-green-400 border-green-400/30 hover:bg-green-400/10"
+                                            >
+                                              {downloadingPdf === pdfUrl ? (
+                                                <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                                              ) : (
+                                                <Download className="h-4 w-4 mr-1" />
+                                              )}
+                                              Download
+                                            </Button>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    );
+                                  })()}
                                 </CardContent>
                               </Card>
                             ))}
