@@ -47,6 +47,16 @@ const TEST_PAYLOAD = {
     example_redemption_total: '500,000',
     example_profit: '264,800',
     example_performance_fee: '52,960',
+    entity_signature_html: `
+      <div style="margin-top: 10px; margin-bottom: 20px; text-align:center;">
+        <div class="signature-line" style="margin:3cm auto 0.2cm; position:relative;">
+          <span style="position:absolute;left:50%;top:0;font-size:1px;line-height:1px;color:#ffffff;opacity:0.01;transform:translateX(-50%);">SIG_ANCHOR:party_b</span>
+        </div>
+        <div class="signature-name">John Smith</div>
+        <div class="signature-title">Authorised Signatory 1</div>
+      </div>
+    `,
+    individual_signature_html: '',
     raw_subscription_fee_bps: 200,
     raw_performance_fee_bps: 2000,
     raw_hurdle_rate_bps: null,

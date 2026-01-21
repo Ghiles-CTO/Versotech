@@ -76,6 +76,7 @@ export default async function VersoSignPage() {
   const shouldShowArrangerTasks = isArranger && activePersonaType === 'arranger'
   const shouldShowInvestorTasks = activePersonaType === 'investor'
   const shouldShowLawyerTasks = isLawyer && activePersonaType === 'lawyer'
+  const shouldShowIntroducerTasks = isIntroducer && activePersonaType === 'introducer'
 
   // Get partner IDs if user has partner persona
   let partnerIds: string[] = []
@@ -267,7 +268,19 @@ export default async function VersoSignPage() {
     addTasksWithDedup(investorTasks || [])
   }
 
-  // 4. Arranger: Tasks for their mandates (deals they arrange)
+  // 4. Introducer: Tasks owned by user (introducer countersignatures)
+  // ONLY runs if active persona is introducer
+  if (shouldShowIntroducerTasks) {
+    const { data: introducerTasks } = await serviceSupabase
+      .from('tasks')
+      .select('*')
+      .in('kind', ['countersignature', 'subscription_pack_signature', 'other'])
+      .eq('owner_user_id', user.id)
+      .order('due_at', { ascending: true, nullsFirst: false })
+    addTasksWithDedup(introducerTasks || [])
+  }
+
+  // 5. Arranger: Tasks for their mandates (deals they arrange)
   // ONLY runs if active persona is arranger
   // IMPORTANT: Exclude CEO-owned tasks (owner_ceo_entity_id IS NOT NULL) to prevent
   // arranger seeing CEO countersign tasks when both are on the same deal
@@ -291,7 +304,7 @@ export default async function VersoSignPage() {
     }
   }
 
-  // 5. Fallback: If no tasks found and no personas matched above, get user's direct tasks
+  // 6. Fallback: If no tasks found and no personas matched above, get user's direct tasks
   if (tasks.length === 0 && !isStaff && !isLawyer && investorIds.length === 0 && !isArranger) {
     const { data: userTasks } = await serviceSupabase
       .from('tasks')

@@ -1015,7 +1015,7 @@ export async function submitSignature(
     // PROGRESSIVE SIGNING ORDER ENFORCEMENT
     // COMPANY SIGNS FIRST: party_a (investors) cannot sign until party_b (company) has signed
     // This ensures the company approves the document before investors sign
-    if (signatureRequest.signature_position?.startsWith('party_a')) {
+    if (signatureRequest.document_type === 'subscription' && signatureRequest.signature_position?.startsWith('party_a')) {
       console.log('🔍 [SIGNATURE] Checking if company (party_b) has signed first (progressive signing)...')
 
       // Find party_b signature request for the same document (company/arranger/CEO)
@@ -1127,26 +1127,34 @@ export async function submitSignature(
       }
     }
 
-    // DEBUG: Log state before document_id chain check
+    const chainSource = signatureRequest.document_id
+      ? { field: 'document_id', value: signatureRequest.document_id, label: 'document_id' }
+      : signatureRequest.document_type === 'introducer_agreement' && signatureRequest.introducer_agreement_id
+        ? { field: 'introducer_agreement_id', value: signatureRequest.introducer_agreement_id, label: 'introducer_agreement_id' }
+        : signatureRequest.document_type === 'placement_agreement' && signatureRequest.placement_agreement_id
+          ? { field: 'placement_agreement_id', value: signatureRequest.placement_agreement_id, label: 'placement_agreement_id' }
+          : null
+
+    // DEBUG: Log state before chain check
     console.log('🔍 [SIGNATURE] Pre-chain check state:', {
       pdfBytes_already_set: !!pdfBytes,
       pdfBytes_size: pdfBytes?.length || 0,
       document_id: signatureRequest.document_id,
       document_id_type: typeof signatureRequest.document_id,
-      will_run_chain_query: !pdfBytes && !!signatureRequest.document_id
+      chain_source: chainSource?.label || null,
+      will_run_chain_query: !pdfBytes && !!chainSource
     })
 
-    // Check for existing signatures by document_id (for subscription packs and manual uploads)
-    // This is critical for multi-signatory subscription packs where multiple investors sign
-    if (!pdfBytes && signatureRequest.document_id) {
-      console.log('🔄 [SIGNATURE] Checking for progressive signing by document_id:', signatureRequest.document_id)
+    // Check for existing signatures by document/agreements (progressive signing)
+    if (!pdfBytes && chainSource) {
+      console.log(`🔄 [SIGNATURE] Checking for progressive signing by ${chainSource.label}:`, chainSource.value)
       console.log('🔍 [SIGNATURE] Current request ID:', signatureRequest.id)
 
       // Get all other signature requests for this document that have been signed
       const { data: otherSignatures, error: chainError } = await supabase
         .from('signature_requests')
         .select('id, status, signed_pdf_path, signer_role, signer_name, signature_position, updated_at')
-        .eq('document_id', signatureRequest.document_id)
+        .eq(chainSource.field, chainSource.value)
         .neq('id', signatureRequest.id)
         .eq('status', 'signed')
         .order('updated_at', { ascending: false }) // Most recently SIGNED first (has all previous signatures)

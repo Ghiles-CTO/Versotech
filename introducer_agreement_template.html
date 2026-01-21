@@ -144,8 +144,8 @@
 
         .signature-line {
             border-bottom: 1px solid #000;
-            min-height: 60px;
-            margin-bottom: 8px;
+            margin: 3cm auto 0.2cm auto;
+            width: 60%;
         }
 
         .signature-name {
@@ -411,70 +411,23 @@
             <p>This agreement is governed by the laws of <span class="bold">{{ $json.governing_law }}</span>.</p>
 
             <p>This agreement shall take effect on <span class="bold">{{ $json.effective_date }}</span>. This agreement is valid for a period of <span class="bold">{{ $json.agreement_duration_months }} months</span> only or for as long as the Project is still not complete and shall be automatically terminated thereafter.</p>
+
+            <p style="margin-top: 20px; margin-bottom: 10px;"><span class="bold">Signed by the parties on this day,</span></p>
+
+            <!-- Introducer Signatures (conditional - entity or individual) -->
+            {{ $json.entity_signature_html }}
+            {{ $json.individual_signature_html }}
+
+            <!-- Arranger/VERSO Signature (always shown) -->
+            <div style="margin-top: 20px; text-align: center;">
+                <div class="signature-line" style="margin: 3cm auto 0.2cm; position:relative;">
+                    <span style="position:absolute;left:50%;top:0;font-size:1px;line-height:1px;color:#ffffff;opacity:0.01;transform:translateX(-50%);">SIG_ANCHOR:party_a</span>
+                </div>
+                <div class="signature-name">{{ $json.arranger_name }}</div>
+                <div class="signature-title">represented by {{ $json.verso_representative_name }}<br>{{ $json.verso_representative_title }}</div>
+            </div>
         </td>
     </tr>
-</table>
-
-<!-- ============================================
-     PAGE 2: SCHEDULE I + SIGNATURES
-     ============================================ -->
-
-<div class="page-break"></div>
-
-<!-- Schedule I Header -->
-<div style="display: table; width: 100%; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #000;">
-    <div style="display: table-cell; width: 33%; vertical-align: middle;">
-        <div class="logo-text" style="font-size: 24pt; letter-spacing: 6px;">VERSO</div>
-    </div>
-    <div style="display: table-cell; width: 34%; text-align: center; vertical-align: middle;">
-        <div style="font-size: 12pt; font-weight: bold;">Fee Sharing & Non-Circumvention Agreement</div>
-    </div>
-    <div style="display: table-cell; width: 33%; text-align: right; vertical-align: middle;">
-        <div style="font-size: 10pt;">{{ $json.introducer_name }}</div>
-    </div>
-</div>
-
-<!-- Schedule I Title -->
-<h3 style="font-size: 14pt; margin-bottom: 10px;">Schedule I</h3>
-<p class="schedule-note">[Schedule to be updated upon the Completion of New Subscriptions]</p>
-
-<!-- Schedule I Table -->
-<table class="schedule-table">
-    <thead>
-        <tr>
-            <th>Subscribers</th>
-            <th>Capital USD</th>
-            <th>BI Fee%</th>
-            <th>Share Count</th>
-            <th>Total BI Fee USD</th>
-        </tr>
-    </thead>
-    <tbody>
-        {{ $json.schedule_table_html }}
-    </tbody>
-</table>
-
-<!-- Signature Section -->
-<p style="margin-top: 40px; margin-bottom: 15px;"><span class="bold">Signed by the parties on this day,</span></p>
-
-<!-- Arranger/VERSO Signature (always shown) -->
-<table class="signature-table">
-    <tr>
-        <td colspan="2" style="text-align: center; padding-bottom: 30px;">
-            <div class="signature-line" style="max-width: 300px; margin: 0 auto;"></div>
-            <div class="signature-name">{{ $json.arranger_name }}</div>
-            <div class="signature-title">represented by {{ $json.verso_representative_name }}<br>{{ $json.verso_representative_title }}</div>
-        </td>
-    </tr>
-</table>
-
-<!-- Introducer Signature (conditional - entity or individual) -->
-<table class="signature-table">
-    <!-- Entity signatures (2 blocks) - pre-rendered HTML -->
-    {{ $json.entity_signature_html }}
-
-    <!-- Individual signature (1 block) - pre-rendered HTML -->
-    {{ $json.individual_signature_html }}
 </table>
 
 </body>

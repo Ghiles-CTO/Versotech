@@ -8,9 +8,12 @@
  * - Subscribers: party_a, party_a_2, party_a_3, ... (first is 'party_a', NOT 'party_a_1')
  * - Issuer: party_b, party_b_form, party_b_wire, party_b_tcs
  * - Arranger: party_c, party_c_tcs
+ * - Introducer agreements: party_a (VERSO/Arranger), party_b, party_b_2, ...
  */
 
-import type { SignaturePlacementRecord } from './types'
+import { existsSync } from 'fs'
+import { fileURLToPath } from 'url'
+import type { DocumentType, SignaturePlacementRecord } from './types'
 import { SIGNATURE_CONFIG } from './config'
 
 export interface DetectedAnchor {
@@ -39,10 +42,24 @@ export async function detectAnchors(pdfBytes: Uint8Array): Promise<DetectedAncho
 
   // CRITICAL: Set worker path for Node.js/server-side usage
   // Must be set BEFORE calling getDocument
-  pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-    'pdfjs-dist/legacy/build/pdf.worker.mjs',
-    import.meta.url
-  ).toString()
+  const workerCandidates = [
+    process.env.PDFJS_WORKER_SRC,
+    new URL('pdfjs-dist/legacy/build/pdf.worker.mjs', import.meta.url).toString(),
+    new URL('../../../node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs', import.meta.url).toString()
+  ].filter(Boolean) as string[]
+
+  const resolvedWorkerSrc = workerCandidates.find((candidate) => {
+    try {
+      const path = candidate.startsWith('file:')
+        ? fileURLToPath(candidate)
+        : candidate
+      return existsSync(path)
+    } catch {
+      return false
+    }
+  }) || workerCandidates[0]
+
+  pdfjsLib.GlobalWorkerOptions.workerSrc = resolvedWorkerSrc
 
   const anchors: DetectedAnchor[] = []
 
@@ -170,7 +187,16 @@ export function validateRequiredAnchors(anchors: DetectedAnchor[], required: str
  * @param position - Database signature_position value
  * @returns Array of anchor patterns with their labels
  */
-function getAnchorPatternsForPosition(position: string): { anchorId: string; label: string }[] {
+function getAnchorPatternsForPosition(
+  position: string,
+  documentType: DocumentType = 'subscription'
+): { anchorId: string; label: string }[] {
+  if (documentType === 'introducer_agreement') {
+    return [
+      { anchorId: position, label: 'introducer_agreement' }
+    ]
+  }
+
   // Subscribers sign on: Page 2 (form), Page 12 (main)
   if (position.startsWith('party_a')) {
     // position is 'party_a', 'party_a_2', 'party_a_3', etc.
@@ -221,7 +247,11 @@ function getAnchorPatternsForPosition(position: string): { anchorId: string; lab
  * @param label - The page/section label (subscription_form, main_agreement, etc.)
  * @returns X position as percentage of page width (0-1)
  */
-function getSignatureXPosition(signaturePosition: string, label: string): number {
+function getSignatureXPosition(
+  signaturePosition: string,
+  label: string,
+  documentType: DocumentType = 'subscription'
+): number {
   // Party A (Subscribers): Right column on form page, stacked-left on main agreement
   if (signaturePosition.startsWith('party_a')) {
     if (label === 'subscription_form') return 0.63  // Right column (form table)
@@ -256,7 +286,11 @@ function getSignatureXPosition(signaturePosition: string, label: string): number
  * @param label - Page/section label (used for compact layout offsets)
  * @returns Signature Y position in points from bottom of page
  */
-function getSignatureYFromAnchor(anchor: DetectedAnchor, label: string): number {
+function getSignatureYFromAnchor(
+  anchor: DetectedAnchor,
+  label: string,
+  documentType: DocumentType = 'subscription'
+): number {
   const { metadata } = SIGNATURE_CONFIG.pdf
 
   // Keep in sync with embedSignatureMultipleLocations() compact layout offsets
@@ -294,22 +328,24 @@ function getSignatureYFromAnchor(anchor: DetectedAnchor, label: string): number 
  */
 export function getPlacementsFromAnchors(
   anchors: DetectedAnchor[],
-  signaturePosition: string
+  signaturePosition: string,
+  documentType: DocumentType = 'subscription'
 ): SignaturePlacementRecord[] {
   // Map signature positions to their anchor patterns
-  const anchorPatterns = getAnchorPatternsForPosition(signaturePosition)
+  const anchorPatterns = getAnchorPatternsForPosition(signaturePosition, documentType)
   const placements: SignaturePlacementRecord[] = []
 
-  console.log(`📍 [PLACEMENT] Calculating placements for ${signaturePosition} (anchor-based Y)...`)
+  console.log(`📍 [PLACEMENT] Calculating placements for ${signaturePosition} (${documentType}, anchor-based Y)...`)
 
   for (const pattern of anchorPatterns) {
     const anchor = anchors.find(a => a.anchorId === pattern.anchorId)
     if (anchor) {
-      // Get FIXED X position based on party and page type
-      const fixedX = getSignatureXPosition(signaturePosition, pattern.label)
+      const fixedX = documentType === 'introducer_agreement'
+        ? anchor.xPercent
+        : getSignatureXPosition(signaturePosition, pattern.label, documentType)
 
       // Get signature Y position based on anchor line + offset
-      const signatureY = getSignatureYFromAnchor(anchor, pattern.label)
+      const signatureY = getSignatureYFromAnchor(anchor, pattern.label, documentType)
 
       // Debug logging
       console.log(`   🔍 [ANCHOR] ${pattern.anchorId} on page ${anchor.pageNumber}`)
@@ -359,6 +395,23 @@ export function getRequiredAnchorsForSubscriptionPack(subscriberCount: number): 
   // Arranger anchors (party_c)
   required.push('party_c')       // Page 12
   required.push('party_c_tcs')   // Page 39
+
+  return required
+}
+
+/**
+ * Get required anchors for an introducer agreement based on signatory count
+ *
+ * @param signatoryCount - Number of introducer signers
+ * @returns Array of anchor IDs that should be present in the PDF
+ */
+export function getRequiredAnchorsForIntroducerAgreement(signatoryCount: number): string[] {
+  const required: string[] = ['party_a']
+
+  for (let i = 1; i <= signatoryCount; i++) {
+    const base = i === 1 ? 'party_b' : `party_b_${i}`
+    required.push(base)
+  }
 
   return required
 }

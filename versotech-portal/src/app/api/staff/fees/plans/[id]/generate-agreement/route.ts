@@ -326,24 +326,20 @@ export async function POST(
       return number === 1 ? 'party_b' : `party_b_${number}`;
     };
 
-    const ANCHOR_CSS = 'position:absolute;left:0;top:0;font-size:1px;line-height:1px;color:#ffffff;opacity:0.01;';
+    const ANCHOR_CSS = 'position:absolute;left:50%;top:0;font-size:1px;line-height:1px;color:#ffffff;opacity:0.01;transform:translateX(-50%);';
 
     const entitySignatureHtml = isEntity
       ? introducerSignatories.map((signatory, index) => {
           const number = index + 1;
           const anchorId = getIntroducerAnchorId(number);
           return `
-      <tr>
-        <td colspan="2" style="text-align:center;">
-          <div style="position:relative;margin-bottom: 1.5cm; min-height: 4cm;">
-            <div class="signature-line" style="max-width:300px; margin:0 auto; margin-top:3cm; position:relative;">
-              <span style="${ANCHOR_CSS}">SIG_ANCHOR:${anchorId}</span>
-            </div>
-            <div class="signature-name">${signatory.name}</div>
-            <div class="signature-title">Authorised Signatory ${number}</div>
-          </div>
-        </td>
-      </tr>
+      <div style="margin-top: 10px; margin-bottom: 20px; text-align:center;">
+        <div class="signature-line" style="margin:3cm auto 0.2cm; position:relative;">
+          <span style="${ANCHOR_CSS}">SIG_ANCHOR:${anchorId}</span>
+        </div>
+        <div class="signature-name">${signatory.name}</div>
+        <div class="signature-title">Authorised Signatory ${number}</div>
+      </div>
       `;
         }).join('')
       : '';
@@ -354,17 +350,13 @@ export async function POST(
 
     const individualSignatureHtml = isIndividual
       ? `
-      <tr>
-        <td colspan="2" style="text-align:center;">
-          <div style="position:relative;margin-bottom: 1.5cm; min-height: 4cm;">
-            <div class="signature-line" style="max-width:300px; margin:0 auto; margin-top:3cm; position:relative;">
-              <span style="${ANCHOR_CSS}">SIG_ANCHOR:party_b</span>
-            </div>
-            <div class="signature-name">${individualSigner.name}</div>
-            <div class="signature-title">Introducer</div>
-          </div>
-        </td>
-      </tr>
+      <div style="margin-top: 10px; margin-bottom: 20px; text-align:center;">
+        <div class="signature-line" style="margin:3cm auto 0.2cm; position:relative;">
+          <span style="${ANCHOR_CSS}">SIG_ANCHOR:party_b</span>
+        </div>
+        <div class="signature-name">${individualSigner.name}</div>
+        <div class="signature-title">Introducer</div>
+      </div>
       `
       : '';
 
@@ -744,7 +736,8 @@ export async function POST(
                   try {
                     const anchors = await detectAnchors(new Uint8Array(pdfBuffer));
                     if (anchors.length > 0) {
-                      const requiredAnchors = getRequiredAnchorsForIntroducerAgreement(introducerSignatories.length);
+                      const introducerAnchorCount = isEntity ? introducerSignatories.length : 1;
+                      const requiredAnchors = getRequiredAnchorsForIntroducerAgreement(introducerAnchorCount);
                       validateRequiredAnchors(anchors, requiredAnchors);
                       const placements = getPlacementsFromAnchors(anchors, 'party_a', 'introducer_agreement');
                       if (placements.length > 0) {

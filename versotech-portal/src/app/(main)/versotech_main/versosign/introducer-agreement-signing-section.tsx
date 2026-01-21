@@ -110,7 +110,7 @@ export function IntroducerAgreementSigningSection({
 
     setIsSubmitting(true)
     try {
-      const response = await fetch('/api/signature/complete', {
+      const response = await fetch('/api/signature/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -6,8 +6,9 @@
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { PostSignatureHandlerParams } from './types'
+import type { PostSignatureHandlerParams, SignaturePosition } from './types'
 import { calculateSubscriptionFeeEvents, createFeeEvents } from '../fees/subscription-fee-calculator'
+import { detectAnchors, getPlacementsFromAnchors, getRequiredAnchorsForIntroducerAgreement, validateRequiredAnchors } from './anchor-detector'
 
 /**
  * NDA Post-Signature Handler
@@ -1216,21 +1217,8 @@ export async function handleIntroducerAgreementSignature(
     }
 
     // Fall back to legacy user_id if no introducer_users found
-    // IMPORTANT: Exclude the party_a signer (CEO/Arranger) from introducer signatories
-    // This prevents the same person from getting both a CEO task and an introducer task
-    const ceoSignerEmail = signatureRequest.signer_email?.toLowerCase()
-
-    const signatoriesToNotify = introducerSignatories && introducerSignatories.length > 0
+    let signatoriesToNotify = introducerSignatories && introducerSignatories.length > 0
       ? introducerSignatories
-          .filter((s: any) => {
-            const introducerEmail = s.profiles?.email?.toLowerCase()
-            // Exclude if this introducer user is the same as the CEO/Arranger who just signed
-            if (introducerEmail && ceoSignerEmail && introducerEmail === ceoSignerEmail) {
-              console.log(`⚠️ [INTRODUCER AGREEMENT HANDLER] Excluding ${introducerEmail} - same as party_a signer`)
-              return false
-            }
-            return true
-          })
           .map((s: any) => ({
             user_id: s.user_id,
             email: s.profiles?.email || introducer?.email || '',
@@ -1241,7 +1229,13 @@ export async function handleIntroducerAgreementSignature(
         ? [{ user_id: introducer.user_id, email: introducer.email || '', name: introducer.legal_name || '', is_primary: true }]
         : []
 
-    console.log(`📝 [INTRODUCER AGREEMENT HANDLER] Found ${signatoriesToNotify.length} signatory(ies) for introducer (after excluding party_a signer)`)
+    const maxSignatories = 5
+    if (signatoriesToNotify.length > maxSignatories) {
+      console.warn(`⚠️ [INTRODUCER AGREEMENT HANDLER] More than ${maxSignatories} introducer signatories found; only the first ${maxSignatories} will be requested.`)
+      signatoriesToNotify = signatoriesToNotify.slice(0, maxSignatories)
+    }
+
+    console.log(`📝 [INTRODUCER AGREEMENT HANDLER] Found ${signatoriesToNotify.length} signatory(ies) for introducer`)
 
     if (signatoriesToNotify.length > 0) {
       const crypto = await import('crypto')
@@ -1249,9 +1243,38 @@ export async function handleIntroducerAgreementSignature(
       expiryDate.setDate(expiryDate.getDate() + 14) // 14 days to sign
 
       let firstSignatureRequestId: string | null = null
+      let detectedAnchors: any[] | null = null
+
+      try {
+        if (signedPdfBytes && signedPdfBytes.length > 0) {
+          detectedAnchors = await detectAnchors(signedPdfBytes)
+          if (detectedAnchors.length > 0) {
+            const requiredAnchors = getRequiredAnchorsForIntroducerAgreement(signatoriesToNotify.length)
+            try {
+              validateRequiredAnchors(detectedAnchors, requiredAnchors)
+            } catch (anchorError) {
+              console.warn('⚠️ [INTRODUCER AGREEMENT HANDLER] Required anchors missing:', anchorError)
+            }
+          } else {
+            console.warn('⚠️ [INTRODUCER AGREEMENT HANDLER] No anchors detected in signed PDF')
+          }
+        }
+      } catch (anchorError) {
+        console.error('❌ [INTRODUCER AGREEMENT HANDLER] Failed to detect anchors:', anchorError)
+        detectedAnchors = null
+      }
 
       // Create signature request and task for each signatory
-      for (const signatory of signatoriesToNotify) {
+      for (const [index, signatory] of signatoriesToNotify.entries()) {
+        const signaturePosition = (index === 0 ? 'party_b' : `party_b_${index + 1}`) as SignaturePosition
+        const signaturePlacements = detectedAnchors && detectedAnchors.length > 0
+          ? getPlacementsFromAnchors(detectedAnchors, signaturePosition, 'introducer_agreement')
+          : []
+
+        if (detectedAnchors && detectedAnchors.length > 0 && signaturePlacements.length === 0) {
+          console.warn(`⚠️ [INTRODUCER AGREEMENT HANDLER] No anchor placements found for ${signaturePosition}`)
+        }
+
         // Generate unique token for each signatory
         const signingToken = crypto.randomBytes(32).toString('hex')
 
@@ -1267,11 +1290,14 @@ export async function handleIntroducerAgreementSignature(
             signer_email: signatory.email,
             signer_name: signatory.name,
             signer_role: 'introducer',
-            signature_position: 'party_b',
+            signature_position: signaturePosition,
             status: 'pending',
             signing_token: signingToken,
             token_expires_at: expiryDate.toISOString(),
             unsigned_pdf_path: signedPdfPath, // CEO-signed PDF becomes unsigned for introducer
+            ...(signaturePlacements.length > 0
+              ? { signature_placements: signaturePlacements }
+              : {})
           })
           .select()
           .single()
@@ -1367,7 +1393,7 @@ export async function handleIntroducerAgreementSignature(
       .select('id, status, signer_email')
       .eq('introducer_agreement_id', agreementId)
       .eq('signer_role', 'introducer')
-      .eq('signature_position', 'party_b')
+      .like('signature_position', 'party_b%')
 
     const pendingSignatures = allIntroducerRequests?.filter((r: any) => r.status === 'pending') || []
     const signedSignatures = allIntroducerRequests?.filter((r: any) => r.status === 'signed') || []

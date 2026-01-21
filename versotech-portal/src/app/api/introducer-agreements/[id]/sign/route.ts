@@ -11,6 +11,32 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import crypto from 'crypto'
 import { auditLogger, AuditActions, AuditEntities } from '@/lib/audit'
+import { SignatureStorageManager } from '@/lib/signature/storage'
+import { detectAnchors, getPlacementsFromAnchors } from '@/lib/signature/anchor-detector'
+
+async function getPartyASignaturePlacements(
+  supabase: ReturnType<typeof createServiceClient>,
+  pdfPath: string | null
+) {
+  if (!pdfPath) return null
+
+  try {
+    const storage = new SignatureStorageManager(supabase)
+    const pdfBytes = await storage.downloadPDF(pdfPath)
+    const anchors = await detectAnchors(pdfBytes)
+
+    if (anchors.length === 0) {
+      console.warn('⚠️ [introducer-agreements/sign] No anchors detected in PDF')
+      return null
+    }
+
+    const placements = getPlacementsFromAnchors(anchors, 'party_a', 'introducer_agreement')
+    return placements.length > 0 ? placements : null
+  } catch (error) {
+    console.error('❌ [introducer-agreements/sign] Failed to detect anchors:', error)
+    return null
+  }
+}
 
 export async function POST(
   request: NextRequest,
@@ -83,6 +109,7 @@ export async function POST(
 
     const introducer = agreement.introducer as any
     const hasArranger = !!agreement.arranger_id
+    const partyAPlacements = await getPartyASignaturePlacements(serviceSupabase, agreement.pdf_url)
 
     // Handle Arranger signing (status = 'approved', agreement has arranger)
     if (isArrangerForAgreement && agreement.status === 'approved' && hasArranger) {
@@ -125,6 +152,9 @@ export async function POST(
           signing_token: signingToken,
           token_expires_at: expiresAt.toISOString(),
           unsigned_pdf_path: agreement.pdf_url,
+          ...(partyAPlacements && partyAPlacements.length > 0
+            ? { signature_placements: partyAPlacements }
+            : {}),
           status: 'pending',
           created_by: user.id,
         })
@@ -209,6 +239,9 @@ export async function POST(
           signing_token: signingToken,
           token_expires_at: expiresAt.toISOString(),
           unsigned_pdf_path: agreement.pdf_url,
+          ...(partyAPlacements && partyAPlacements.length > 0
+            ? { signature_placements: partyAPlacements }
+            : {}),
           status: 'pending',
           created_by: user.id,
         })
