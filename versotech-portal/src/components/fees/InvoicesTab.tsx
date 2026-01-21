@@ -217,7 +217,12 @@ export default function InvoicesTab() {
     <>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold">Invoices</h2>
+          <div>
+            <h2 className="text-2xl font-bold">Investor Invoices</h2>
+            <p className="text-sm text-muted-foreground mt-1">
+              Invoices sent to investors for fee collection
+            </p>
+          </div>
           <div className="flex gap-2">
             <Button
               variant="outline"
