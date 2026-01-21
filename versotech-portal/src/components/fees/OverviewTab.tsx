@@ -6,8 +6,20 @@
 
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { DollarSign, FileText, AlertCircle, TrendingUp } from 'lucide-react';
+import { DollarSign, FileText, AlertCircle, TrendingUp, Users, UserCheck, Handshake, Briefcase } from 'lucide-react';
 import { formatCurrency } from '@/lib/fees/calculations';
+
+interface CommissionSummary {
+  total_owed: number;
+  total_accrued: number;
+  total_invoiced: number;
+  total_paid_ytd: number;
+  by_entity_type: {
+    introducer: { owed: number; paid_ytd: number };
+    partner: { owed: number; paid_ytd: number };
+    commercial_partner: { owed: number; paid_ytd: number };
+  };
+}
 
 interface DashboardData {
   total_fees_ytd: number;
@@ -20,6 +32,7 @@ interface DashboardData {
   upcoming_fees_30days: number;
   upcoming_fees_count: number;
   introducer_commissions_owed: number;
+  commission_summary?: CommissionSummary;
 }
 
 interface FeeBreakdown {
@@ -159,6 +172,122 @@ export default function OverviewTab() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Commissions Section */}
+      {data.commission_summary && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-white flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              Commissions
+            </CardTitle>
+            <p className="text-sm text-gray-400">
+              Commission expenses across all entity types (Introducers, Partners, Commercial Partners)
+            </p>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
+              {/* Commission KPI Cards */}
+              <div className="grid gap-4 md:grid-cols-3">
+                <div className="p-4 bg-red-900/20 rounded border border-red-700">
+                  <p className="text-xs text-red-300 mb-1">Total Commissions Owed</p>
+                  <p className="text-2xl font-bold text-white">
+                    {formatCurrency(data.commission_summary.total_owed)}
+                  </p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Accrued + Invoiced
+                  </p>
+                </div>
+                <div className="p-4 bg-green-900/20 rounded border border-green-700">
+                  <p className="text-xs text-green-300 mb-1">Total Paid YTD</p>
+                  <p className="text-2xl font-bold text-white">
+                    {formatCurrency(data.commission_summary.total_paid_ytd)}
+                  </p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Commissions paid this year
+                  </p>
+                </div>
+                <div className="p-4 bg-amber-900/20 rounded border border-amber-700">
+                  <p className="text-xs text-amber-300 mb-1">Pending Invoice</p>
+                  <p className="text-2xl font-bold text-white">
+                    {formatCurrency(data.commission_summary.total_accrued)}
+                  </p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Accrued, awaiting invoice
+                  </p>
+                </div>
+              </div>
+
+              {/* Breakdown by Entity Type */}
+              <div>
+                <h4 className="text-sm font-semibold mb-3 text-gray-300">Breakdown by Entity Type</h4>
+                <div className="grid gap-3 md:grid-cols-3">
+                  <div className="p-3 bg-gray-900 rounded border border-gray-700 flex items-start gap-3">
+                    <UserCheck className="h-5 w-5 text-blue-400 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-white">Introducers</p>
+                      <div className="mt-2 space-y-1 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">Owed:</span>
+                          <span className="text-white font-medium">
+                            {formatCurrency(data.commission_summary.by_entity_type.introducer.owed)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">Paid YTD:</span>
+                          <span className="text-green-400 font-medium">
+                            {formatCurrency(data.commission_summary.by_entity_type.introducer.paid_ytd)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-3 bg-gray-900 rounded border border-gray-700 flex items-start gap-3">
+                    <Handshake className="h-5 w-5 text-green-400 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-white">Partners</p>
+                      <div className="mt-2 space-y-1 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">Owed:</span>
+                          <span className="text-white font-medium">
+                            {formatCurrency(data.commission_summary.by_entity_type.partner.owed)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">Paid YTD:</span>
+                          <span className="text-green-400 font-medium">
+                            {formatCurrency(data.commission_summary.by_entity_type.partner.paid_ytd)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-3 bg-gray-900 rounded border border-gray-700 flex items-start gap-3">
+                    <Briefcase className="h-5 w-5 text-purple-400 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-white">Commercial Partners</p>
+                      <div className="mt-2 space-y-1 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">Owed:</span>
+                          <span className="text-white font-medium">
+                            {formatCurrency(data.commission_summary.by_entity_type.commercial_partner.owed)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">Paid YTD:</span>
+                          <span className="text-green-400 font-medium">
+                            {formatCurrency(data.commission_summary.by_entity_type.commercial_partner.paid_ytd)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Complete Fee Analysis */}
       <Card>
