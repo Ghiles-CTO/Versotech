@@ -16,8 +16,8 @@
         "Typecheck passes"
       ],
       "priority": 1,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Implemented deal selector with URL params persistence"
     },
     {
       "id": "US-002",
@@ -32,8 +32,8 @@
         "Verify in browser using dev-browser skill"
       ],
       "priority": 2,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Implemented collapsible sections using Collapsible component from Radix UI. Each section shows entity-specific icon and count."
     },
     {
       "id": "US-003",

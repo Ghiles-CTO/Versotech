@@ -26,7 +26,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Plus, Edit, Copy, FileText, Building2, Trash2, Users, Briefcase, FileCheck, AlertTriangle } from 'lucide-react';
+import { Plus, Edit, Copy, FileText, Building2, Trash2, Users, Briefcase, FileCheck, AlertTriangle, ChevronDown, ChevronRight } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import type { FeePlanWithComponents } from '@/lib/fees/types';
 import { formatBps } from '@/lib/fees/calculations';
@@ -113,6 +114,36 @@ interface FeePlansTabProps {
   dealId?: string;
 }
 
+// Entity type configuration for grouping fee plans
+type EntityGroup = 'introducers' | 'partners' | 'commercial_partners';
+const entityGroupConfig: Record<EntityGroup, { label: string; icon: typeof Users; iconColor: string }> = {
+  introducers: { label: 'Introducers', icon: Users, iconColor: 'text-blue-400' },
+  partners: { label: 'Partners', icon: Briefcase, iconColor: 'text-purple-400' },
+  commercial_partners: { label: 'Commercial Partners', icon: Building2, iconColor: 'text-green-400' },
+};
+
+// Helper to group fee plans by entity type
+function groupPlansByEntityType(plans: FeePlanWithDeal[]): Record<EntityGroup, FeePlanWithDeal[]> {
+  const groups: Record<EntityGroup, FeePlanWithDeal[]> = {
+    introducers: [],
+    partners: [],
+    commercial_partners: [],
+  };
+
+  for (const plan of plans) {
+    if (plan.introducer) {
+      groups.introducers.push(plan);
+    } else if (plan.partner) {
+      groups.partners.push(plan);
+    } else if (plan.commercial_partner) {
+      groups.commercial_partners.push(plan);
+    }
+    // Plans without an entity are not shown in grouped view
+  }
+
+  return groups;
+}
+
 export default function FeePlansTab({ dealId }: FeePlansTabProps) {
   const [plans, setPlans] = useState<FeePlanWithDeal[]>([]);
   const [loading, setLoading] = useState(true);
@@ -123,6 +154,11 @@ export default function FeePlansTab({ dealId }: FeePlansTabProps) {
   const [planToDelete, setPlanToDelete] = useState<FeePlanWithDeal | null>(null);
   const [duplicateDialogOpen, setDuplicateDialogOpen] = useState(false);
   const [planToDuplicate, setPlanToDuplicate] = useState<FeePlanWithDeal | null>(null);
+  const [expandedGroups, setExpandedGroups] = useState<Record<EntityGroup, boolean>>({
+    introducers: true,
+    partners: true,
+    commercial_partners: true,
+  });
 
   useEffect(() => {
     fetchPlans();
@@ -241,6 +277,13 @@ export default function FeePlansTab({ dealId }: FeePlansTabProps) {
     }
   };
 
+  const toggleGroup = (group: EntityGroup) => {
+    setExpandedGroups((prev) => ({ ...prev, [group]: !prev[group] }));
+  };
+
+  // Group plans by entity type for the grouped view
+  const groupedPlans = groupPlansByEntityType(plans);
+
   if (loading) {
     return <div className="text-white">Loading fee plans...</div>;
   }
@@ -311,233 +354,296 @@ export default function FeePlansTab({ dealId }: FeePlansTabProps) {
             </Button>
           </CardContent>
         </Card>
-      ) : viewMode === 'table' ? (
-        <Card>
-          <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Plan Name</TableHead>
-                  <TableHead>Deal / Term Sheet</TableHead>
-                  <TableHead>Entity</TableHead>
-                  <TableHead>Fee Components</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {plans.map((plan) => {
-                  const entity = plan.introducer || plan.partner || plan.commercial_partner;
-                  const entityType = plan.introducer ? 'Introducer' : plan.partner ? 'Partner' : plan.commercial_partner ? 'Commercial Partner' : null;
+      ) : (
+        <div className="space-y-4">
+          {/* Grouped Fee Plans by Entity Type */}
+          {(Object.entries(entityGroupConfig) as [EntityGroup, typeof entityGroupConfig[EntityGroup]][]).map(
+            ([groupKey, config]) => {
+              const GroupIcon = config.icon;
+              const groupPlans = groupedPlans[groupKey];
+              const isExpanded = expandedGroups[groupKey];
 
-                  return (
-                  <TableRow key={plan.id}>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <FileText className="h-4 w-4 text-muted-foreground" />
-                        <div>
-                          <div className="font-medium">{plan.name}</div>
-                          {plan.description && (
-                            <div className="text-sm text-muted-foreground">
-                              {plan.description}
-                            </div>
+              return (
+                <Collapsible
+                  key={groupKey}
+                  open={isExpanded}
+                  onOpenChange={() => toggleGroup(groupKey)}
+                >
+                  <Card>
+                    <CollapsibleTrigger asChild>
+                      <CardHeader className="cursor-pointer hover:bg-white/5 transition-colors">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <GroupIcon className={`h-5 w-5 ${config.iconColor}`} />
+                            <CardTitle className="text-lg">
+                              {config.label} ({groupPlans.length})
+                            </CardTitle>
+                          </div>
+                          {isExpanded ? (
+                            <ChevronDown className="h-5 w-5 text-muted-foreground" />
+                          ) : (
+                            <ChevronRight className="h-5 w-5 text-muted-foreground" />
                           )}
                         </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="space-y-1">
-                        {plan.deal ? (
-                          <div className="flex items-center gap-2">
-                            <Building2 className="h-4 w-4 text-muted-foreground" />
-                            <span>{plan.deal.name}</span>
+                      </CardHeader>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <CardContent className="pt-0">
+                        {groupPlans.length === 0 ? (
+                          <div className="py-6 text-center text-muted-foreground">
+                            No fee plans
                           </div>
-                        ) : (
-                          <span className="text-muted-foreground">No deal linked</span>
-                        )}
-                        {plan.term_sheet ? (
-                          <div className="flex items-center gap-2">
-                            <FileCheck className="h-3 w-3 text-muted-foreground" />
-                            <span className="text-xs text-muted-foreground">
-                              Term Sheet v{plan.term_sheet.version}
-                            </span>
-                          </div>
-                        ) : (
-                          <span className="text-xs text-muted-foreground">No term sheet</span>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {entity ? (
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2">
-                            {plan.introducer ? (
-                              <Users className="h-4 w-4 text-blue-400" />
-                            ) : plan.partner ? (
-                              <Briefcase className="h-4 w-4 text-purple-400" />
-                            ) : (
-                              <Building2 className="h-4 w-4 text-green-400" />
-                            )}
-                            <span>{plan.introducer?.legal_name || plan.partner?.name || plan.commercial_partner?.name}</span>
-                          </div>
-                          <div className="text-xs text-muted-foreground">{entityType}</div>
-                        </div>
-                      ) : (
-                        <span className="text-muted-foreground">No entity</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <TooltipProvider>
-                        <div className="flex flex-wrap gap-1">
-                          {plan.components?.map((comp) => {
-                            const validation = getComponentValidation(comp, plan.term_sheet);
-                            return (
-                              <Tooltip key={comp.id}>
-                                <TooltipTrigger asChild>
-                                  <Badge
-                                    variant="outline"
-                                    className={`text-xs ${!validation.isValid ? 'border-red-500/50 bg-red-500/10' : ''}`}
-                                  >
-                                    {!validation.isValid && (
-                                      <AlertTriangle className="h-3 w-3 mr-1 text-red-400" />
+                        ) : viewMode === 'table' ? (
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead>Plan Name</TableHead>
+                                <TableHead>Entity</TableHead>
+                                <TableHead>Term Sheet</TableHead>
+                                <TableHead>Fee Components</TableHead>
+                                <TableHead>Status</TableHead>
+                                <TableHead className="text-right">Actions</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {groupPlans.map((plan) => (
+                                <TableRow key={plan.id}>
+                                  <TableCell>
+                                    <div className="flex items-center gap-2">
+                                      <FileText className="h-4 w-4 text-muted-foreground" />
+                                      <div>
+                                        <div className="font-medium">{plan.name}</div>
+                                        {plan.description && (
+                                          <div className="text-sm text-muted-foreground">
+                                            {plan.description}
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </TableCell>
+                                  <TableCell>
+                                    <div className="flex items-center gap-2">
+                                      <GroupIcon className={`h-4 w-4 ${config.iconColor}`} />
+                                      <span>
+                                        {plan.introducer?.legal_name ||
+                                          plan.partner?.name ||
+                                          plan.commercial_partner?.name}
+                                      </span>
+                                    </div>
+                                  </TableCell>
+                                  <TableCell>
+                                    {plan.term_sheet ? (
+                                      <div className="flex items-center gap-2">
+                                        <FileCheck className="h-3 w-3 text-muted-foreground" />
+                                        <span className="text-sm text-muted-foreground">
+                                          v{plan.term_sheet.version}
+                                        </span>
+                                      </div>
+                                    ) : (
+                                      <span className="text-sm text-muted-foreground">
+                                        No term sheet
+                                      </span>
                                     )}
-                                    {comp.kind}: {comp.rate_bps ? formatBps(comp.rate_bps) :
-                                                  comp.flat_amount ? `$${comp.flat_amount}` : 'N/A'}
-                                  </Badge>
-                                </TooltipTrigger>
-                                {!validation.isValid && (
-                                  <TooltipContent className="bg-red-900 border-red-700">
-                                    <p className="text-red-200">{validation.message}</p>
-                                  </TooltipContent>
-                                )}
-                              </Tooltip>
-                            );
-                          })}
-                        </div>
-                      </TooltipProvider>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-wrap gap-1">
-                        {plan.term_sheet?.status && (
-                          <Badge className={feePlanStatusStyles[plan.term_sheet.status] || 'bg-gray-500/20 text-gray-400'}>
-                            {plan.term_sheet.status}
-                          </Badge>
-                        )}
-                        {plan.is_active ? (
-                          <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500">
-                            Active
-                          </Badge>
+                                  </TableCell>
+                                  <TableCell>
+                                    <TooltipProvider>
+                                      <div className="flex flex-wrap gap-1">
+                                        {plan.components?.map((comp) => {
+                                          const validation = getComponentValidation(
+                                            comp,
+                                            plan.term_sheet
+                                          );
+                                          return (
+                                            <Tooltip key={comp.id}>
+                                              <TooltipTrigger asChild>
+                                                <Badge
+                                                  variant="outline"
+                                                  className={`text-xs ${
+                                                    !validation.isValid
+                                                      ? 'border-red-500/50 bg-red-500/10'
+                                                      : ''
+                                                  }`}
+                                                >
+                                                  {!validation.isValid && (
+                                                    <AlertTriangle className="h-3 w-3 mr-1 text-red-400" />
+                                                  )}
+                                                  {comp.kind}:{' '}
+                                                  {comp.rate_bps
+                                                    ? formatBps(comp.rate_bps)
+                                                    : comp.flat_amount
+                                                    ? `$${comp.flat_amount}`
+                                                    : 'N/A'}
+                                                </Badge>
+                                              </TooltipTrigger>
+                                              {!validation.isValid && (
+                                                <TooltipContent className="bg-red-900 border-red-700">
+                                                  <p className="text-red-200">
+                                                    {validation.message}
+                                                  </p>
+                                                </TooltipContent>
+                                              )}
+                                            </Tooltip>
+                                          );
+                                        })}
+                                      </div>
+                                    </TooltipProvider>
+                                  </TableCell>
+                                  <TableCell>
+                                    <div className="flex flex-wrap gap-1">
+                                      {plan.term_sheet?.status && (
+                                        <Badge
+                                          className={
+                                            feePlanStatusStyles[plan.term_sheet.status] ||
+                                            'bg-gray-500/20 text-gray-400'
+                                          }
+                                        >
+                                          {plan.term_sheet.status}
+                                        </Badge>
+                                      )}
+                                      {plan.is_active ? (
+                                        <Badge
+                                          variant="outline"
+                                          className="bg-green-500/10 text-green-500 border-green-500"
+                                        >
+                                          Active
+                                        </Badge>
+                                      ) : (
+                                        <Badge variant="outline" className="bg-gray-500/10">
+                                          Inactive
+                                        </Badge>
+                                      )}
+                                    </div>
+                                  </TableCell>
+                                  <TableCell className="text-right">
+                                    <div className="flex gap-1 justify-end">
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => handleEdit(plan)}
+                                      >
+                                        <Edit className="h-4 w-4" />
+                                      </Button>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => handleDuplicateClick(plan)}
+                                      >
+                                        <Copy className="h-4 w-4" />
+                                      </Button>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => handleDeleteClick(plan)}
+                                      >
+                                        <Trash2 className="h-4 w-4 text-red-500" />
+                                      </Button>
+                                    </div>
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
                         ) : (
-                          <Badge variant="outline" className="bg-gray-500/10">
-                            Inactive
-                          </Badge>
+                          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                            {groupPlans.map((plan) => (
+                              <Card key={plan.id} className="bg-white/5 border-white/10">
+                                <CardHeader className="pb-2">
+                                  <div className="flex items-start justify-between">
+                                    <div className="flex-1">
+                                      <CardTitle className="text-lg">{plan.name}</CardTitle>
+                                      <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
+                                        <GroupIcon className={`h-4 w-4 ${config.iconColor}`} />
+                                        <span>
+                                          {plan.introducer?.legal_name ||
+                                            plan.partner?.name ||
+                                            plan.commercial_partner?.name}
+                                        </span>
+                                      </div>
+                                    </div>
+                                    <div className="flex gap-1">
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => handleEdit(plan)}
+                                      >
+                                        <Edit className="h-4 w-4" />
+                                      </Button>
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => handleDuplicateClick(plan)}
+                                      >
+                                        <Copy className="h-4 w-4" />
+                                      </Button>
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => handleDeleteClick(plan)}
+                                      >
+                                        <Trash2 className="h-4 w-4 text-red-500" />
+                                      </Button>
+                                    </div>
+                                  </div>
+                                </CardHeader>
+                                <CardContent>
+                                  {plan.description && (
+                                    <p className="text-sm text-muted-foreground mb-3">
+                                      {plan.description}
+                                    </p>
+                                  )}
+                                  <TooltipProvider>
+                                    <div className="space-y-2">
+                                      {plan.components?.map((comp) => {
+                                        const validation = getComponentValidation(
+                                          comp,
+                                          plan.term_sheet
+                                        );
+                                        return (
+                                          <div
+                                            key={comp.id}
+                                            className={`text-sm flex justify-between items-center ${
+                                              !validation.isValid ? 'text-red-400' : ''
+                                            }`}
+                                          >
+                                            <span className="capitalize flex items-center gap-1">
+                                              {!validation.isValid && (
+                                                <Tooltip>
+                                                  <TooltipTrigger>
+                                                    <AlertTriangle className="h-3 w-3 text-red-400" />
+                                                  </TooltipTrigger>
+                                                  <TooltipContent className="bg-red-900 border-red-700">
+                                                    <p className="text-red-200">
+                                                      {validation.message}
+                                                    </p>
+                                                  </TooltipContent>
+                                                </Tooltip>
+                                              )}
+                                              {comp.kind}
+                                            </span>
+                                            <span className="font-medium">
+                                              {comp.rate_bps
+                                                ? formatBps(comp.rate_bps)
+                                                : comp.flat_amount
+                                                ? `$${comp.flat_amount}`
+                                                : 'N/A'}
+                                            </span>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  </TooltipProvider>
+                                </CardContent>
+                              </Card>
+                            ))}
+                          </div>
                         )}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex gap-1 justify-end">
-                        <Button variant="ghost" size="sm" onClick={() => handleEdit(plan)}>
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDuplicateClick(plan)}
-                        >
-                          <Copy className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDeleteClick(plan)}
-                        >
-                          <Trash2 className="h-4 w-4 text-red-500" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {plans.map((plan) => (
-            <Card key={plan.id}>
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <CardTitle className="text-lg">{plan.name}</CardTitle>
-                    <div className="flex gap-2 mt-1 flex-wrap">
-                      {plan.is_default && (
-                        <Badge variant="default" className="text-xs">Default</Badge>
-                      )}
-                      {plan.deal && (
-                        <Badge variant="outline" className="text-xs">{plan.deal.name}</Badge>
-                      )}
-                    </div>
-                    <div className="text-xs text-muted-foreground mt-2">
-                      {plan.subscription_count || 0} subscription{plan.subscription_count !== 1 ? 's' : ''}
-                    </div>
-                  </div>
-                  <div className="flex gap-1">
-                    <Button variant="ghost" size="icon" onClick={() => handleEdit(plan)}>
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDuplicateClick(plan)}
-                    >
-                      <Copy className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDeleteClick(plan)}
-                    >
-                      <Trash2 className="h-4 w-4 text-red-500" />
-                    </Button>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground mb-3">
-                  {plan.description || 'No description'}
-                </p>
-                <TooltipProvider>
-                  <div className="space-y-2">
-                    {plan.components?.map((comp) => {
-                      const validation = getComponentValidation(comp, plan.term_sheet);
-                      return (
-                        <div key={comp.id} className={`text-sm flex justify-between items-center ${!validation.isValid ? 'text-red-400' : ''}`}>
-                          <span className="capitalize flex items-center gap-1">
-                            {!validation.isValid && (
-                              <Tooltip>
-                                <TooltipTrigger>
-                                  <AlertTriangle className="h-3 w-3 text-red-400" />
-                                </TooltipTrigger>
-                                <TooltipContent className="bg-red-900 border-red-700">
-                                  <p className="text-red-200">{validation.message}</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            )}
-                            {comp.kind}
-                          </span>
-                          <span className="font-medium">
-                            {comp.rate_bps ? formatBps(comp.rate_bps) :
-                             comp.flat_amount ? `$${comp.flat_amount}` : 'N/A'}
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </TooltipProvider>
-              </CardContent>
-            </Card>
-          ))}
+                      </CardContent>
+                    </CollapsibleContent>
+                  </Card>
+                </Collapsible>
+              );
+            }
+          )}
         </div>
       )}
 

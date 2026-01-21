@@ -1,27 +1,49 @@
 # Ralph Progress Log
-Started: Tue Jan 21 2026
-PRD: VERSO Fee System Redesign (ralph/fee-system-redesign)
+Started: Wed Jan 21 15:53:56 CET 2026
 ---
 
 ## Codebase Patterns
-- Supabase foreign key joins (e.g., `profiles:user_id (...)`) may return arrays in TypeScript types even for single relationships - use `Array.isArray()` check to handle both cases
-- UI components use shadcn/ui from @/components/ui/ (Badge, Button, Collapsible, etc.)
-- Use cn() utility from @/lib/utils for conditional class names
-- Navigation patterns: use `usePathname()` from next/navigation for active route detection
-- Dark mode support via Tailwind dark: prefix classes
-- ThemeProvider wraps layout and provides `useTheme()` hook for theme-aware styling
-- Next.js file conventions: `loading.tsx` auto-wraps in Suspense, `error.tsx` creates error boundary with `error` and `reset` props
-- URL params for filters/state: use `useSearchParams()` + `useRouter().push()` pattern for shareable links
-- Reusable KPICard component at `@/components/dashboard/kpi-card.tsx` - supports icons, trends, additionalInfo breakdown
-- Number formatting pattern: use toLocaleString() for counts, custom $XM/$XB formatting for large currency values
-- Recharts pattern: Use LineChart with ResponsiveContainer, customize tooltip with a CustomTooltip component
-- Data table pattern: Use @tanstack/react-table with useReactTable hook. Define ColumnDef[] with custom header and cell renderers
-- Multi-select filter pattern: Use Popover + Command + CommandItem with checkbox styling for multi-select
-- Debounce hook pattern: `useDebounce<T>(value: T, delay: number)` using useState + useEffect + setTimeout
-- API multi-value filters: Support comma-separated values in query params, parse with `.split(',').filter(Boolean)`
-- CSV export pattern: Create Blob with text/csv, use temporary anchor element with download attribute
-- Badge variants: shadcn Badge only supports `default`, `secondary`, `destructive`, `outline` - for custom colors, use className override
-- Entity type icon mapping: Use `Record<EntityType, LucideIcon>` with icons like Building2 (investor), Users (partner), Scale (lawyer), Handshake (commercial_partner), Globe (introducer), Landmark (arranger)
+- Use `useSearchParams` from `next/navigation` for URL query params in client components
+- Use `useRouter` with `router.push()` to update URL params
+- Fee plans are managed via `/api/staff/fees/plans` endpoint
+- Deals are fetched via `/api/deals` endpoint, returns `{ deals: [...] }`
+- Select components use value "none" for unselected state (empty string doesn't work with Radix)
 
 ---
 
+## 2026-01-21 ~16:00 - US-001
+- What was implemented: Added deal selector dropdown to Fees page
+  - Deal selector dropdown at top of fees-page-client.tsx
+  - Loads deals from /api/deals endpoint
+  - URL updates with deal_id query param when selection changes
+  - FeePlansTab accepts dealId prop and filters plans accordingly
+  - Shows prompt "Select a deal to view fee plans" when no deal selected
+- Files changed:
+  - `versotech-portal/src/app/(main)/versotech_main/fees/fees-page-client.tsx`
+  - `versotech-portal/src/components/fees/FeePlansTab.tsx`
+- **Learnings for future iterations:**
+  - URL search params in client components: use `useSearchParams()` from `next/navigation`
+  - Radix Select needs a non-empty value for unselected state (use "none" not "")
+  - API endpoints: deals at `/api/deals`, fee plans at `/api/staff/fees/plans`
+  - The fees page has multiple tabs (Overview, Fee Plans, Invoices, Schedule, Commissions)
+- Collapsible component is available at `@/components/ui/collapsible` for expandable/collapsible sections
+- Fee plans can be grouped by entity type: introducer, partner, commercial_partner
+
+---
+
+## 2026-01-21 ~16:05 - US-002
+- What was implemented: Grouped fee plans by entity type into collapsible sections
+  - Added Collapsible component from Radix UI for expandable sections
+  - Created 3 collapsible groups: Introducers, Partners, Commercial Partners
+  - Each section header shows entity icon, label, and count (e.g., "Introducers (3)")
+  - Empty sections display "No fee plans" message
+  - Both table and card views work within each group
+  - All sections start expanded by default
+- Files changed:
+  - `versotech-portal/src/components/fees/FeePlansTab.tsx`
+- **Learnings for future iterations:**
+  - Use Collapsible, CollapsibleTrigger, CollapsibleContent from `@/components/ui/collapsible`
+  - When grouping by entity type, fee plans have `introducer`, `partner`, `commercial_partner` fields
+  - Plans without any entity assigned won't appear in the grouped view
+  - Use `Object.entries()` with type assertion for iterating over typed config objects
+---
