@@ -364,8 +364,11 @@ export function PersonaSidebar() {
             : pathname === item.href || pathname.startsWith(`${item.href}/`)
           const Icon = item.icon
 
+          // Generate data-tour attribute from item name (lowercase, hyphenated)
+          const tourId = `nav-${item.name.toLowerCase().replace(/\s+/g, '-')}`
+
           return (
-            <Link key={item.href} href={item.href} className="block group relative">
+            <Link key={item.href} href={item.href} className="block group relative" data-tour={tourId}>
               <div className={cn(
                 "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200",
                 isActive
@@ -486,12 +489,16 @@ export function MobileSidebarContent({ onClose }: { onClose: () => void }) {
             ? pathname === item.href
             : pathname === item.href || pathname.startsWith(`${item.href}/`)
           const Icon = item.icon
+          // Generate data-tour attribute from item name (lowercase, hyphenated)
+          const tourId = `nav-${item.name.toLowerCase().replace(/\s+/g, '-')}`
+
           return (
             <Link
               key={item.href}
               href={item.href}
               onClick={onClose}
               className="block group relative"
+              data-tour={tourId}
             >
               <div className={cn(
                 "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200",

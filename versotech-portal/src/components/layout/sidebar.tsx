@@ -364,8 +364,11 @@ export function Sidebar({ brand, userProfile }: SidebarProps) {
           const Icon = item.icon
           const badgeCount = item.notificationKey && !notificationsLoading ? counts[item.notificationKey] : item.badge
 
+          // Generate data-tour attribute from item name (lowercase, hyphenated)
+          const tourId = `nav-${item.name.toLowerCase().replace(/\s+/g, '-')}`
+
           return (
-            <Link key={item.name} href={item.href} className="block group relative">
+            <Link key={item.name} href={item.href} className="block group relative" data-tour={tourId}>
               <div className={cn(
                 "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200",
                 isActive
@@ -412,7 +415,7 @@ export function Sidebar({ brand, userProfile }: SidebarProps) {
 
       {/* User Profile / Settings Section */}
       <div className="p-4 border-t mt-auto border-gray-100 dark:border-white/5">
-        <Link href={`/${brand}${brand === 'versotech' ? '/staff' : ''}/profile`}>
+        <Link href={`/${brand}${brand === 'versotech' ? '/staff' : ''}/profile`} data-tour="nav-profile">
           <div className="flex items-center gap-3 p-2 rounded-xl transition-all cursor-pointer group hover:bg-gray-50 dark:hover:bg-white/5">
             <div className="h-9 w-9 rounded-full flex items-center justify-center text-sm font-bold shadow-sm ring-2 bg-white dark:bg-gradient-to-br dark:from-blue-500 dark:to-blue-600 text-blue-600 dark:text-white ring-white dark:ring-black border border-gray-100 dark:border-transparent">
               {userProfile.displayName?.[0]?.toUpperCase() || 'U'}

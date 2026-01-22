@@ -18,7 +18,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
-import { Loader2, Save, Bell, ShieldCheck, Mail, Phone, MessageSquare, Download, Trash2, Shield } from 'lucide-react'
+import { Loader2, Save, Bell, ShieldCheck, Mail, Phone, MessageSquare, Download, Trash2, Shield, PlayCircle } from 'lucide-react'
+import { useTourOptional } from '@/contexts/tour-context'
 import type { LucideIcon } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -28,6 +29,7 @@ interface PreferencesEditorProps {
 }
 
 export function PreferencesEditor({ onUpdate, variant = 'investor' }: PreferencesEditorProps) {
+  const tourContext = useTourOptional()
   const isStaff = variant === 'staff'
   const isArranger = variant === 'arranger'
   const [isLoading, setIsLoading] = useState(!isStaff && !isArranger)
@@ -288,6 +290,39 @@ export function PreferencesEditor({ onUpdate, variant = 'investor' }: Preference
             </div>
           </CardContent>
         </Card>
+
+        {/* Platform Tour Section for Arranger */}
+        {tourContext && (
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <PlayCircle className="h-5 w-5 text-primary" />
+                <CardTitle>Platform Tour</CardTitle>
+              </div>
+              <CardDescription>
+                Take a guided tour of the platform features
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label>Restart Platform Tour</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Walk through the platform features again with an interactive guide
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => tourContext.startTour()}
+                >
+                  <PlayCircle className="mr-2 h-4 w-4" />
+                  Start Tour
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     )
   }
@@ -362,6 +397,40 @@ export function PreferencesEditor({ onUpdate, variant = 'investor' }: Preference
             </Button>
           </CardContent>
         </Card>
+
+        {/* Platform Tour Section for Staff */}
+        {tourContext && (
+          <Card className="bg-white/5 border-white/10">
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <PlayCircle className="h-5 w-5 text-primary" />
+                <CardTitle className="text-white">Platform Tour</CardTitle>
+              </div>
+              <CardDescription className="text-white/70">
+                Take a guided tour of the platform features
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label className="text-white">Restart Platform Tour</Label>
+                  <p className="text-sm text-white/70">
+                    Walk through the platform features again with an interactive guide
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="border-white/20 text-white hover:bg-white/10"
+                  onClick={() => tourContext.startTour()}
+                >
+                  <PlayCircle className="mr-2 h-4 w-4" />
+                  Start Tour
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* GDPR Data & Privacy Section for Staff */}
         <Card className="bg-white/5 border-amber-500/30">
@@ -572,6 +641,39 @@ export function PreferencesEditor({ onUpdate, variant = 'investor' }: Preference
           </div>
         </CardContent>
       </Card>
+
+      {/* Platform Tour Section */}
+      {tourContext && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <PlayCircle className="h-5 w-5" />
+              <CardTitle>Platform Tour</CardTitle>
+            </div>
+            <CardDescription>
+              Take a guided tour of the platform features
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Restart Platform Tour</Label>
+                <p className="text-sm text-muted-foreground">
+                  Walk through the platform features again with an interactive guide
+                </p>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => tourContext.startTour()}
+              >
+                <PlayCircle className="mr-2 h-4 w-4" />
+                Start Tour
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Save Button */}
       <div className="flex justify-end">

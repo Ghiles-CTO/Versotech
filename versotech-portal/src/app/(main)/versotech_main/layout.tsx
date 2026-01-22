@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import { PersonaProvider, Persona } from '@/contexts/persona-context'
 import { UnifiedAppLayout } from '@/components/layout/unified-app-layout'
 import { ProxyModeProvider, ProxyModeBanner } from '@/components/commercial-partner'
+import { PlatformTour } from '@/components/tour'
 
 export const dynamic = 'force-dynamic'
 
@@ -31,6 +32,13 @@ export default async function UnifiedPortalLayout({ children }: LayoutProps) {
   }
 
   let userPersonas: Persona[] = (personas || []) as Persona[]
+
+  // Fetch tour completion status
+  const { data: tourStatus } = await supabase
+    .from('profiles')
+    .select('has_completed_platform_tour')
+    .eq('id', profile.id)
+    .single()
 
   // Staff roles don't have traditional persona entries - create synthetic persona
   // This matches the fallback logic in middleware.ts
@@ -60,13 +68,62 @@ export default async function UnifiedPortalLayout({ children }: LayoutProps) {
     }
   }
 
+  // Determine active persona for tour using priority order
+  // This MUST match the priority order in persona-context.tsx
+  // CEO gets highest priority (1), investor gets lowest (8)
+  const personaPriority: Record<string, number> = {
+    'ceo': 1,
+    'staff': 2,
+    'arranger': 3,
+    'introducer': 4,
+    'partner': 5,
+    'commercial_partner': 6,
+    'lawyer': 7,
+    'investor': 8,
+  }
+
+  // Type as string to allow extended investor types (investor_entity, investor_individual)
+  let activePersonaForTour: string = userPersonas.length > 0
+    ? userPersonas.reduce((best, current) => {
+        const bestPriority = personaPriority[best.persona_type] ?? 99
+        const currentPriority = personaPriority[current.persona_type] ?? 99
+        return currentPriority < bestPriority ? current : best
+      }).persona_type
+    : 'investor'
+
+  // For investor persona, differentiate between entity and individual
+  // Entity investors see more complex tour (member management, entity docs)
+  // Individual investors see simpler tour (personal portfolio focus)
+  if (activePersonaForTour === 'investor') {
+    // Find the investor persona to get the entity_id
+    const investorPersona = userPersonas.find(p => p.persona_type === 'investor')
+    if (investorPersona) {
+      // Query the investors table to check if entity or individual
+      const { data: investor } = await supabase
+        .from('investors')
+        .select('type')
+        .eq('id', investorPersona.entity_id)
+        .maybeSingle()
+
+      // type is 'entity' or 'individual'
+      activePersonaForTour = investor?.type === 'entity'
+        ? 'investor_entity'
+        : 'investor_individual'
+    }
+  }
+
   return (
     <PersonaProvider initialPersonas={userPersonas}>
       <ProxyModeProvider>
         <ProxyModeBanner />
-        <UnifiedAppLayout profile={profile}>
-          {children}
-        </UnifiedAppLayout>
+        <PlatformTour
+          activePersona={activePersonaForTour}
+          hasCompletedTour={tourStatus?.has_completed_platform_tour ?? false}
+        >
+          <UnifiedAppLayout profile={profile}>
+            {children}
+          </UnifiedAppLayout>
+        </PlatformTour>
       </ProxyModeProvider>
     </PersonaProvider>
   )
