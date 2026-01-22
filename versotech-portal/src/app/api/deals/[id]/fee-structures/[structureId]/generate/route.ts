@@ -201,7 +201,9 @@ export async function POST(
       capital_call_timeline:
         feeStructure.capital_call_timeline ||
         'No later than 3 days prior to confirmed Completion Date by Company with effective funds on Escrow Account (T-3)',
-      completion_date_text: feeStructure.completion_date_text || '',
+      completion_date_text: feeStructure.completion_date
+        ? `By ${formatDate(feeStructure.completion_date)}`
+        : (feeStructure.completion_date_text || ''),
 
       // Notes with defaults
       in_principle_approval_text:

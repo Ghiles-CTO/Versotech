@@ -96,6 +96,7 @@ const emptyForm = {
   legal_counsel: '',
   interest_confirmation_deadline: '',
   validity_date: '',
+  completion_date: '',
   completion_date_text: ''
 }
 
@@ -128,6 +129,7 @@ function mapTermSheetToForm(termSheet?: TermSheet): FormState {
       ? termSheet.interest_confirmation_deadline.slice(0, 16)
       : '',
     validity_date: termSheet.validity_date ? termSheet.validity_date.slice(0, 16) : '',
+    completion_date: termSheet.completion_date ? termSheet.completion_date.slice(0, 10) : '',
     completion_date_text: termSheet.completion_date_text ?? ''
   }
 }
@@ -162,6 +164,7 @@ function buildPayload(values: FormState) {
     legal_counsel: values.legal_counsel || null,
     interest_confirmation_deadline: values.interest_confirmation_deadline || null,
     validity_date: values.validity_date || null,
+    completion_date: values.completion_date || null,
     completion_date_text: values.completion_date_text || null
   }
 }
@@ -750,7 +753,11 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
                 </div>
                 <div>
                   <span className="text-muted-foreground block text-xs">Completion Date</span>
-                  <span className="text-foreground font-medium">{published.completion_date_text || '—'}</span>
+                  <span className="text-foreground font-medium">
+                    {published.completion_date
+                      ? format(new Date(published.completion_date), 'dd MMM yyyy')
+                      : published.completion_date_text || '—'}
+                  </span>
                 </div>
                 <div>
                   <span className="text-muted-foreground block text-xs">Validity Date</span>
@@ -1004,7 +1011,11 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
                   </div>
                   <div>
                     <span className="text-muted-foreground block text-xs">Completion Date</span>
-                    <span className="text-foreground font-medium">{termSheet.completion_date_text || '—'}</span>
+                    <span className="text-foreground font-medium">
+                      {termSheet.completion_date
+                        ? format(new Date(termSheet.completion_date), 'dd MMM yyyy')
+                        : termSheet.completion_date_text || '—'}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -1510,12 +1521,16 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="completion_date_text">Completion Date</Label>
+                <Label htmlFor="completion_date">Completion Date</Label>
                 <Input
-                  id="completion_date_text"
-                  value={formValues.completion_date_text}
-                  onChange={event => setFormValues(prev => ({ ...prev, completion_date_text: event.target.value }))}
+                  id="completion_date"
+                  type="date"
+                  value={formValues.completion_date}
+                  onChange={event => setFormValues(prev => ({ ...prev, completion_date: event.target.value }))}
                 />
+                <p className="text-xs text-muted-foreground">
+                  When set, enables automatic CEO approval for deal closing.
+                </p>
               </div>
             </div>
           </div>

@@ -91,6 +91,7 @@ interface FeeStructure {
   performance_fee_clause: string | null
   legal_counsel: string | null
   interest_confirmation_deadline: string | null
+  completion_date: string | null
   completion_date_text: string | null
   validity_date: string | null
   term_sheet_attachment_key: string | null
@@ -303,7 +304,7 @@ export function DealDetailsModal({ deal, investorId, children }: DealDetailsModa
         label: 'Interest Confirmation Deadline',
         value: formatDate(termSheet.interest_confirmation_deadline)
       },
-      { label: 'Completion Date', value: termSheet.completion_date_text ?? '—' },
+      { label: 'Completion Date', value: termSheet.completion_date ? formatDate(termSheet.completion_date) : (termSheet.completion_date_text ?? '—') },
       { label: 'Validity', value: formatDate(termSheet.validity_date, 'Valid until notice') }
     ]
   }, [deal.company_name, deal.currency, deal.offer_unit_price, deal.vehicles?.name, termSheet])
@@ -397,8 +398,8 @@ export function DealDetailsModal({ deal, investorId, children }: DealDetailsModa
                   Closes {formatDate(deal.close_at)}
                 </span>
               )}
-              {termSheet?.completion_date_text && (
-                <span>Completion {termSheet.completion_date_text}</span>
+              {(termSheet?.completion_date || termSheet?.completion_date_text) && (
+                <span>Completion {termSheet.completion_date ? formatDate(termSheet.completion_date) : termSheet.completion_date_text}</span>
               )}
             </div>
           </div>

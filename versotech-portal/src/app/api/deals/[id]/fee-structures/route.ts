@@ -30,6 +30,7 @@ const termSheetFieldsSchema = z.object({
   interest_confirmation_deadline: z.string().optional().nullable(),
   capital_call_timeline: z.string().optional().nullable(),
   completion_date_text: z.string().optional().nullable(),
+  completion_date: z.string().optional().nullable(),
   in_principle_approval_text: z.string().optional().nullable(),
   subscription_pack_note: z.string().optional().nullable(),
   share_certificates_note: z.string().optional().nullable(),
@@ -167,7 +168,7 @@ export async function POST(
       if (['subscription_fee_percent', 'management_fee_percent', 'carried_interest_percent'].includes(key)) {
         return [key, typeof value === 'number' ? value : null]
       }
-      if (['term_sheet_date', 'interest_confirmation_deadline', 'validity_date'].includes(key)) {
+      if (['term_sheet_date', 'interest_confirmation_deadline', 'validity_date', 'completion_date'].includes(key)) {
         return [key, parseDate(value as string | null | undefined)]
       }
       return [key, toNullable(value)]
@@ -276,7 +277,7 @@ export async function PATCH(
     if (['status', 'version', 'effective_at', 'term_sheet_html'].includes(key)) {
       return
     }
-    if (['term_sheet_date', 'interest_confirmation_deadline', 'validity_date'].includes(key)) {
+    if (['term_sheet_date', 'interest_confirmation_deadline', 'validity_date', 'completion_date'].includes(key)) {
       updatePayload[key] = parseDate(value as string | null | undefined)
       return
     }

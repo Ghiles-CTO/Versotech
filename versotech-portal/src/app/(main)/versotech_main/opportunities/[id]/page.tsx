@@ -99,6 +99,7 @@ interface FeeStructure {
   term_sheet_date: string | null
   interest_confirmation_deadline: string | null
   validity_date: string | null
+  completion_date: string | null
   completion_date_text: string | null
   // Legal
   legal_counsel: string | null
@@ -954,7 +955,7 @@ export default function OpportunityDetailPage() {
 
             // Check if any timeline info exists
             const hasTimeline = termSheet.interest_confirmation_deadline || termSheet.validity_date ||
-              termSheet.completion_date_text
+              termSheet.completion_date || termSheet.completion_date_text
 
             // Check if any fees exist
             const hasFees = termSheet.subscription_fee_percent !== null ||
@@ -1132,10 +1133,14 @@ export default function OpportunityDetailPage() {
                             <div className="font-medium mt-1">{formatDate(termSheet.validity_date)}</div>
                           </div>
                         )}
-                        {termSheet.completion_date_text && (
+                        {(termSheet.completion_date || termSheet.completion_date_text) && (
                           <div className="p-3 rounded-lg bg-muted/50">
                             <div className="text-xs text-muted-foreground">Completion</div>
-                            <div className="font-medium mt-1">{termSheet.completion_date_text}</div>
+                            <div className="font-medium mt-1">
+                              {termSheet.completion_date
+                                ? formatDate(termSheet.completion_date)
+                                : termSheet.completion_date_text}
+                            </div>
                           </div>
                         )}
                       </div>

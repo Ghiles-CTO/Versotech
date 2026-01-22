@@ -216,6 +216,7 @@ interface FeeStructure {
   carried_interest_percent: number | null
   legal_counsel: string | null
   interest_confirmation_deadline: string | null
+  completion_date: string | null
   completion_date_text: string | null
   validity_date: string | null
   term_sheet_attachment_key: string | null

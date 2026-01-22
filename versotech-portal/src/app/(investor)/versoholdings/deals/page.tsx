@@ -80,6 +80,7 @@ interface FeeStructure {
   legal_counsel: string | null
   interest_confirmation_deadline: string | null
   capital_call_timeline: string | null
+  completion_date: string | null
   completion_date_text: string | null
   in_principle_approval_text: string | null
   subscription_pack_note: string | null
@@ -260,6 +261,7 @@ export default async function InvestorDealsPage() {
         legal_counsel,
         interest_confirmation_deadline,
         capital_call_timeline,
+        completion_date,
         completion_date_text,
         in_principle_approval_text,
         subscription_pack_note,
