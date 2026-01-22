@@ -301,4 +301,78 @@
   .staff-dark .app-header-text {
     @apply text-white;
   }
+
+  /* ===========================================
+   * Tour Glass Morphism Utilities
+   * Premium tour UI styling with glass effects
+   * =========================================== */
+
+  /* Tour glass card */
+  .tour-glass-card {
+    @apply bg-white/95 border border-border rounded-2xl shadow-2xl;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+  .staff-dark .tour-glass-card,
+  .dark .tour-glass-card {
+    @apply bg-zinc-900/95 border-white/10;
+  }
+
+  /* Tour glass overlay */
+  .tour-glass-overlay {
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+  }
+
+  /* Tour spotlight ring animation */
+  @keyframes tour-spotlight-pulse {
+    0%, 100% {
+      transform: scale(1);
+      box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.3), 0 0 20px rgba(59, 130, 246, 0.3);
+    }
+    50% {
+      transform: scale(1.04);
+      box-shadow: 0 0 0 8px rgba(59, 130, 246, 0.2), 0 0 40px rgba(59, 130, 246, 0.5);
+    }
+  }
+
+  .tour-spotlight-ring {
+    animation: tour-spotlight-pulse 2s ease-in-out infinite;
+  }
+
+  /* Tour progress bar gradient */
+  .tour-progress-bar {
+    @apply h-1.5 rounded-full overflow-hidden;
+    background: linear-gradient(
+      to right,
+      rgba(59, 130, 246, 1),
+      rgba(99, 102, 241, 1)
+    );
+  }
+
+  /* Tour keyboard hint styling */
+  .tour-kbd {
+    @apply inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-mono;
+    @apply bg-muted rounded border border-border;
+  }
+
+  /* Tour bottom sheet (mobile) */
+  .tour-bottom-sheet {
+    @apply fixed bottom-0 left-0 right-0 z-[9999];
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* Tour tooltip arrow SVG styling */
+  .tour-arrow {
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+  }
+  .tour-arrow path {
+    fill: white;
+    stroke: hsl(var(--border));
+    stroke-width: 1;
+  }
+  .staff-dark .tour-arrow path,
+  .dark .tour-arrow path {
+    fill: rgb(24, 24, 27);
+  }
 }
