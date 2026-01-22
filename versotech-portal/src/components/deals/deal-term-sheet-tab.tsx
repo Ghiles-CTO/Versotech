@@ -22,11 +22,12 @@ import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { format } from 'date-fns'
-import { Loader2, Plus, Copy, Rocket, Archive, Pencil, Upload, FileCheck, Users, Building2, Briefcase, Eye, Download, X } from 'lucide-react'
+import { Loader2, Plus, Copy, Rocket, Archive, Pencil, Upload, FileCheck, Users, Building2, Briefcase, Eye, Download, X, SendHorizontal } from 'lucide-react'
 import FeePlanEditModal from '@/components/fees/FeePlanEditModal'
 import { DocumentViewerFullscreen } from '@/components/documents/DocumentViewerFullscreen'
 import type { DocumentReference } from '@/types/document-viewer.types'
 import { usePersona } from '@/contexts/persona-context'
+import { toast } from 'sonner'
 
 type TermSheet = Record<string, any>
 
@@ -197,6 +198,7 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
 
   // PDF generation state
   const [generatingId, setGeneratingId] = useState<string | null>(null)
+  const [requestingCloseId, setRequestingCloseId] = useState<string | null>(null)
 
   // Persona for CEO/staff visibility of cost fields
   const { isCEO, isStaff } = usePersona()
@@ -350,6 +352,33 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
       setErrorMessage(error instanceof Error ? error.message : 'Failed to generate term sheet')
     } finally {
       setGeneratingId(null)
+    }
+  }
+
+  // Request close approval handler - triggers CEO approval creation
+  const handleRequestClose = async (structureId: string) => {
+    setRequestingCloseId(structureId)
+    setErrorMessage(null)
+    try {
+      const response = await fetch(
+        `/api/deals/${dealId}/fee-structures/${structureId}/request-close`,
+        { method: 'POST' }
+      )
+      const data = await response.json()
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to request close approval')
+      }
+      // Show success message
+      toast.success('Close approval created', {
+        description: 'The CEO will review this request in the Approvals queue.'
+      })
+      await refresh()
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to request close approval'
+      setErrorMessage(message)
+      toast.error('Request failed', { description: message })
+    } finally {
+      setRequestingCloseId(null)
     }
   }
 
@@ -609,6 +638,26 @@ export function DealTermSheetTab({ dealId, termSheets }: DealTermSheetTabProps) 
                   <>
                     <FileCheck className="h-4 w-4" />
                     Generate PDF
+                  </>
+                )}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2 border-amber-500/30 hover:bg-amber-500/10"
+                onClick={() => handleRequestClose(published.id)}
+                disabled={requestingCloseId === published.id || !!published.closed_processed_at}
+                title={published.closed_processed_at ? 'Already processed' : 'Request CEO approval to close this termsheet'}
+              >
+                {requestingCloseId === published.id ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Requesting...
+                  </>
+                ) : (
+                  <>
+                    <SendHorizontal className="h-4 w-4" />
+                    Request Close
                   </>
                 )}
               </Button>
