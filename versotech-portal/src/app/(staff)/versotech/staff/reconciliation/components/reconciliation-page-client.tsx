@@ -184,6 +184,37 @@ export function ReconciliationPageClient() {
     return result
   }, [invoices, quickSearch, statusFilter])
 
+  // Summary stats based on filtered data (for the summary section)
+  // NOTE: This hook MUST be called before the loading early return to maintain hook order
+  const filteredSummary = useMemo(() => {
+    const txns = filteredTransactions
+    const total = txns.length
+    const matched = txns.filter(t => t.status === 'matched').length
+    const partiallyMatched = txns.filter(t => t.status === 'partially_matched').length
+    const unmatched = txns.filter(t => t.status === 'unmatched').length
+
+    const totalAmount = txns.reduce((sum, t) => sum + (Number(t.amount) || 0), 0)
+    const matchedAmount = txns.reduce((sum, t) => sum + (Number(t.matched_amount_total) || 0), 0)
+    const unmatchedAmount = txns
+      .filter(t => t.status === 'unmatched')
+      .reduce((sum, t) => sum + (Number(t.amount) || 0), 0)
+    const outstandingAmount = totalAmount - matchedAmount
+
+    const matchPercentage = total > 0 ? Math.round((matched / total) * 100) : 0
+
+    return {
+      total,
+      matched,
+      partiallyMatched,
+      unmatched,
+      totalAmount,
+      matchedAmount,
+      unmatchedAmount,
+      outstandingAmount,
+      matchPercentage
+    }
+  }, [filteredTransactions])
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -216,36 +247,6 @@ export function ReconciliationPageClient() {
 
   const currentStats = activeTab === 'transactions' ? stats : invoiceStats
   const currentData = activeTab === 'transactions' ? filteredTransactions : filteredInvoices
-
-  // Summary stats based on filtered data (for the summary section)
-  const filteredSummary = useMemo(() => {
-    const txns = filteredTransactions
-    const total = txns.length
-    const matched = txns.filter(t => t.status === 'matched').length
-    const partiallyMatched = txns.filter(t => t.status === 'partially_matched').length
-    const unmatched = txns.filter(t => t.status === 'unmatched').length
-
-    const totalAmount = txns.reduce((sum, t) => sum + (Number(t.amount) || 0), 0)
-    const matchedAmount = txns.reduce((sum, t) => sum + (Number(t.matched_amount_total) || 0), 0)
-    const unmatchedAmount = txns
-      .filter(t => t.status === 'unmatched')
-      .reduce((sum, t) => sum + (Number(t.amount) || 0), 0)
-    const outstandingAmount = totalAmount - matchedAmount
-
-    const matchPercentage = total > 0 ? Math.round((matched / total) * 100) : 0
-
-    return {
-      total,
-      matched,
-      partiallyMatched,
-      unmatched,
-      totalAmount,
-      matchedAmount,
-      unmatchedAmount,
-      outstandingAmount,
-      matchPercentage
-    }
-  }, [filteredTransactions])
 
   return (
     <div className="space-y-6">
