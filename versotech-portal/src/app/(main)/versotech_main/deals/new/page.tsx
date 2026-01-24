@@ -42,10 +42,10 @@ export default async function CreateDealPage() {
     )
   }
 
-  // Fetch entities for dropdown
+  // Fetch entities for dropdown (include arranger_entity_id for auto-population)
   const { data: entities } = await serviceClient
     .from('vehicles')
-    .select('id, name, type, currency, legal_jurisdiction, formation_date, logo_url, website_url')
+    .select('id, name, type, currency, legal_jurisdiction, formation_date, logo_url, website_url, arranger_entity_id')
     .order('name')
 
   // Fetch active arranger entities for assignment

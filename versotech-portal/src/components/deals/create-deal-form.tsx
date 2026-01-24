@@ -26,6 +26,7 @@ interface CreateDealFormProps {
     currency: string
     logo_url?: string | null
     website_url?: string | null
+    arranger_entity_id?: string | null
   }>
   /** Arranger entities available for assignment */
   arrangerEntities?: Array<{
@@ -111,6 +112,14 @@ export function CreateDealForm({ entities, arrangerEntities = [], basePath = '/v
   const handleVehicleSelect = (value: string) => {
     const normalized = value === 'none' ? '' : value
     updateField('vehicle_id', normalized)
+
+    // Auto-populate arranger from vehicle if available and arranger not already set
+    if (normalized) {
+      const vehicle = entities.find(e => e.id === normalized)
+      if (vehicle?.arranger_entity_id && !formData.arranger_entity_id) {
+        updateField('arranger_entity_id', vehicle.arranger_entity_id)
+      }
+    }
   }
 
   const handleSubmit = async () => {

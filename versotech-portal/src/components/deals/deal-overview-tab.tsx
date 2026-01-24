@@ -242,19 +242,12 @@ export function DealOverviewTab({ deal, memberships = [], subscriptionsForJourne
         <CardHeader>
           <CardTitle className="text-foreground flex items-center gap-2">
             <DollarSign className="h-5 w-5" />
-            Financial Terms
+            Fundraising Progress
           </CardTitle>
-          <CardDescription>Pricing and investment parameters</CardDescription>
+          <CardDescription>Target and raised amounts. Investment terms (price, min/max) are defined in the Term Sheet.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="text-sm font-medium text-muted-foreground">Offer Price per Unit</label>
-              <p className="text-2xl font-bold text-foreground mt-1">
-                {deal.currency} {deal.offer_unit_price?.toFixed(2) || '—'}
-              </p>
-            </div>
-
             <div>
               <label className="text-sm font-medium text-muted-foreground">Target Amount</label>
               <p className="text-2xl font-bold text-foreground mt-1">
@@ -263,35 +256,30 @@ export function DealOverviewTab({ deal, memberships = [], subscriptionsForJourne
             </div>
 
             <div>
-              <label className="text-sm font-medium text-muted-foreground">Minimum Investment</label>
-              <p className="text-lg text-foreground mt-1">
-                {deal.currency} {deal.minimum_investment?.toLocaleString() || '—'}
-              </p>
-            </div>
-
-            <div>
-              <label className="text-sm font-medium text-muted-foreground">Maximum Investment</label>
-              <p className="text-lg text-foreground mt-1">
-                {deal.currency} {deal.maximum_investment?.toLocaleString() || '—'}
+              <label className="text-sm font-medium text-muted-foreground">Raised Amount</label>
+              <p className="text-2xl font-bold text-emerald-400 mt-1">
+                {deal.currency} {deal.raised_amount?.toLocaleString() || 0}
               </p>
             </div>
           </div>
 
           {/* Progress Bar */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Raised Amount</span>
-              <span className="font-medium text-foreground">
-                {deal.currency} {deal.raised_amount?.toLocaleString() || 0} ({progressPercent}%)
-              </span>
+          {deal.target_amount > 0 && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Progress</span>
+                <span className="font-medium text-foreground">
+                  {progressPercent}% of target
+                </span>
+              </div>
+              <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-emerald-500 transition-all duration-300"
+                  style={{ width: `${Math.min(progressPercent, 100)}%` }}
+                />
+              </div>
             </div>
-            <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-emerald-500 transition-all duration-300"
-                style={{ width: `${Math.min(progressPercent, 100)}%` }}
-              />
-            </div>
-          </div>
+          )}
         </CardContent>
       </Card>
 

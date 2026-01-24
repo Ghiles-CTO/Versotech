@@ -114,10 +114,8 @@ export function DealDetailClient({
     location: deal?.location || '',
     open_at: deal?.open_at ? deal.open_at.slice(0, 16) : '',
     close_at: deal?.close_at ? deal.close_at.slice(0, 16) : '',
-    offer_unit_price: deal?.offer_unit_price || '',
+    // Note: offer_unit_price, minimum_investment, maximum_investment are now ONLY in termsheet
     target_amount: deal?.target_amount || '',
-    minimum_investment: deal?.minimum_investment || '',
-    maximum_investment: deal?.maximum_investment || '',
     currency: deal?.currency || 'USD',
     arranger_entity_id: deal?.arranger_entity_id || ''
   })
@@ -169,10 +167,8 @@ export function DealDetailClient({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...editFormData,
-          offer_unit_price: editFormData.offer_unit_price ? parseFloat(editFormData.offer_unit_price as string) : null,
+          // Note: offer_unit_price, minimum_investment, maximum_investment are now ONLY in termsheet
           target_amount: editFormData.target_amount ? parseFloat(editFormData.target_amount as string) : null,
-          minimum_investment: editFormData.minimum_investment ? parseFloat(editFormData.minimum_investment as string) : null,
-          maximum_investment: editFormData.maximum_investment ? parseFloat(editFormData.maximum_investment as string) : null,
           arranger_entity_id: editFormData.arranger_entity_id === 'none' || !editFormData.arranger_entity_id ? null : editFormData.arranger_entity_id
         })
       })
@@ -622,18 +618,6 @@ export function DealDetailClient({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="edit-offer-unit-price">Offer Unit Price</Label>
-                <Input
-                  id="edit-offer-unit-price"
-                  type="number"
-                  step="0.01"
-                  value={editFormData.offer_unit_price}
-                  onChange={(e) => setEditFormData({ ...editFormData, offer_unit_price: e.target.value })}
-                  placeholder="e.g., 85.00"
-                />
-              </div>
-
-              <div className="space-y-2">
                 <Label htmlFor="edit-target-amount">Target Amount</Label>
                 <Input
                   id="edit-target-amount"
@@ -643,30 +627,9 @@ export function DealDetailClient({
                   onChange={(e) => setEditFormData({ ...editFormData, target_amount: e.target.value })}
                   placeholder="e.g., 5000000"
                 />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="edit-min-investment">Minimum Investment</Label>
-                <Input
-                  id="edit-min-investment"
-                  type="number"
-                  step="1"
-                  value={editFormData.minimum_investment}
-                  onChange={(e) => setEditFormData({ ...editFormData, minimum_investment: e.target.value })}
-                  placeholder="e.g., 10000"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="edit-max-investment">Maximum Investment</Label>
-                <Input
-                  id="edit-max-investment"
-                  type="number"
-                  step="1"
-                  value={editFormData.maximum_investment}
-                  onChange={(e) => setEditFormData({ ...editFormData, maximum_investment: e.target.value })}
-                  placeholder="e.g., 500000"
-                />
+                <p className="text-xs text-muted-foreground">
+                  Investment terms (price, min/max) are set in the Term Sheet
+                </p>
               </div>
 
               <div className="space-y-2 md:col-span-2">
