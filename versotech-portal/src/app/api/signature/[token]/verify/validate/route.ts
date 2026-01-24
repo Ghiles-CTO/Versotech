@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
-import { createHash } from 'crypto'
+import { createHash, timingSafeEqual } from 'crypto'
 
 /**
  * POST /api/signature/[token]/verify/validate
@@ -99,9 +99,13 @@ export async function POST(
       }, { status: 410 })
     }
 
-    // Hash the submitted OTP and compare
+    // Hash the submitted OTP and compare using constant-time comparison
+    // SECURITY: timingSafeEqual prevents timing attacks where response times
+    // could leak information about how many characters matched
     const submittedHash = createHash('sha256').update(otp).digest('hex')
-    const isValid = submittedHash === verification.otp_hash
+    const submittedHashBuffer = Buffer.from(submittedHash, 'hex')
+    const storedHashBuffer = Buffer.from(verification.otp_hash, 'hex')
+    const isValid = timingSafeEqual(submittedHashBuffer, storedHashBuffer)
 
     if (!isValid) {
       // Increment attempt counter
