@@ -17,6 +17,7 @@ export interface SignatureRequestRecord {
   workflow_run_id?: string // Optional - only for n8n generated documents
   investor_id: string
   member_id?: string // For entity investors: specific investor_member who must sign
+  signer_user_id?: string // Platform user ID for signing verification
   signer_email: string
   signer_name: string
   document_type: DocumentType
@@ -44,6 +45,8 @@ export interface SignatureRequestRecord {
   placement_agreement_id?: string // For placement agreement signing
   total_party_a_signatories?: number // For multi-signatory: total Party A signers
   signature_placements?: SignaturePlacementRecord[] // Pre-calculated positions for multi-page signing
+  verification_required?: boolean // Whether OTP verification is needed (external signers)
+  verification_completed_at?: string // When OTP verification was completed
   created_at: string
   updated_at: string
   created_by?: string
@@ -53,6 +56,7 @@ export interface CreateSignatureRequestParams {
   workflow_run_id?: string // Optional - only for n8n generated documents
   investor_id: string
   member_id?: string // For entity investors: specific investor_member who must sign
+  signer_user_id?: string // Platform user ID for signing verification (if known)
   signer_email: string
   signer_name: string
   document_type: DocumentType
@@ -87,6 +91,8 @@ export interface SignatureRequestPublicView {
   google_drive_url: string | null
   status: string
   expires_at: string
+  verification_required?: boolean
+  verification_completed_at?: string
 }
 
 export interface SubmitSignatureParams {

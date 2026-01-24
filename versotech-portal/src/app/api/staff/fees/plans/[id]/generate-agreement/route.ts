@@ -760,6 +760,7 @@ export async function POST(
                       introducer_id: feePlan.introducer_id,
                       introducer_agreement_id: agreement.id,
                       deal_id: feePlan.deal_id,
+                      signer_user_id: ceoUser.id, // User-level signing verification
                       signer_email: ceoUser.email,
                       signer_name: ceoUser.display_name || 'CEO',
                       document_type: 'introducer_agreement',

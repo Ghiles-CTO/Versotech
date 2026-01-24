@@ -1286,7 +1286,7 @@ export async function handleIntroducerAgreementSignature(
             introducer_id: agreement.introducer_id,
             deal_id: agreement.deal_id, // Link to deal for task context
             investor_id: null, // NULL for introducer agreements (no investor involved)
-            // Note: signer_user_id column doesn't exist - user tracked via signer_email
+            signer_user_id: signatory.user_id, // User-level signing verification
             signer_email: signatory.email,
             signer_name: signatory.name,
             signer_role: 'introducer',
@@ -1315,9 +1315,12 @@ export async function handleIntroducerAgreementSignature(
         }
 
         // Create task for this signatory in their portal
+        // Set BOTH owner_user_id (for direct visibility) AND owner_introducer_id (for entity-level visibility)
+        // This allows ALL users in the introducer entity to see the task, not just the designated signer
         const signingUrl = `/sign/${signingToken}`
         const { error: taskError } = await supabase.from('tasks').insert({
           owner_user_id: signatory.user_id,
+          owner_introducer_id: agreement.introducer_id, // Entity-level visibility for all introducer users
           kind: 'countersignature', // Must use valid kind from constraint
           category: 'signatures', // Signature tasks go in 'signatures' category
           title: `Sign Fee Agreement - ${introducer?.legal_name}`,
@@ -1659,7 +1662,7 @@ export async function handlePlacementAgreementSignature(
           investor_id: null, // Not an investor signature
           signer_user_id: primaryCpUser.user_id,
           signer_email: userProfile?.email || cp?.email || '',
-          signer_name: userProfile?.full_name || cp?.display_name || cp?.legal_name || '',
+          signer_name: userProfile?.display_name || cp?.display_name || cp?.legal_name || '',
           signer_role: 'commercial_partner',
           signature_position: 'party_b',
           status: 'pending',
@@ -1691,6 +1694,37 @@ export async function handlePlacementAgreementSignature(
           .update({ cp_signature_request_id: cpSignatureRequest.id })
           .eq('id', agreementId)
 
+        // Create task for the primary CP signer in their portal
+        // Set owner_commercial_partner_id for entity-level visibility
+        const cpSigningUrl = `/sign/${signingToken}`
+        const { error: taskError } = await supabase.from('tasks').insert({
+          owner_user_id: primaryCpUser.user_id,
+          owner_commercial_partner_id: agreement.commercial_partner_id, // Entity-level visibility for all CP users
+          kind: 'countersignature',
+          category: 'signatures',
+          title: `Sign Placement Agreement - ${cp?.display_name || cp?.legal_name}`,
+          description: `Review and sign the placement agreement.`,
+          status: 'pending',
+          priority: 'high',
+          related_entity_type: 'signature_request',
+          related_entity_id: cpSignatureRequest.id,
+          due_at: expiryDate.toISOString(),
+          instructions: {
+            type: 'signature',
+            action_url: cpSigningUrl,
+            signature_request_id: cpSignatureRequest.id,
+            document_type: 'placement_agreement',
+            agreement_id: agreementId,
+            commercial_partner_name: cp?.display_name || cp?.legal_name,
+          },
+        })
+
+        if (taskError) {
+          console.error('⚠️ [PLACEMENT AGREEMENT HANDLER] Failed to create task for CP:', taskError)
+        } else {
+          console.log('✅ [PLACEMENT AGREEMENT HANDLER] Task created for CP')
+        }
+
         // Create notifications for all CP users
         const signerLabel = isArrangerSigner ? 'Arranger' : 'CEO'
         const notifications = cpUsers.map((cpUser: any) => ({
@@ -1698,8 +1732,8 @@ export async function handlePlacementAgreementSignature(
           investor_id: null,
           title: 'Placement Agreement Ready for Signature',
           message: `Your placement agreement has been signed by the ${signerLabel} and is ready for your signature.`,
-          link: `/versotech_main/placement-agreements/${agreementId}`,
-          type: 'introducer_agreement_pending', // GAP-6 FIX: Placement agreements use same type as introducer agreements
+          link: `/versotech_main/versosign`, // Direct to VERSOSign page where task will appear
+          type: 'introducer_agreement_pending',
         }))
 
         await supabase.from('investor_notifications').insert(notifications)

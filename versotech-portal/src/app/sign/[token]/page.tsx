@@ -16,6 +16,8 @@ interface SignatureRequest {
   google_drive_url: string | null
   status: string
   expires_at: string
+  verification_required?: boolean
+  verification_completed_at?: string
 }
 
 export default function SignPage() {
@@ -42,6 +44,14 @@ export default function SignPage() {
       }
 
       const data = await response.json()
+
+      // Check if email verification is required and not yet completed
+      if (data.verification_required && !data.verification_completed_at) {
+        // Redirect to verification page
+        router.replace(`/sign/${token}/verify`)
+        return
+      }
+
       setSignatureRequest(data)
       setLoading(false)
     } catch (err) {
@@ -49,7 +59,7 @@ export default function SignPage() {
       setError('Failed to load signature request')
       setLoading(false)
     }
-  }, [token])
+  }, [token, router])
 
   useEffect(() => {
     if (!token) {

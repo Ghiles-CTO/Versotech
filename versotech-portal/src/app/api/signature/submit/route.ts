@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServiceClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { submitSignature } from '@/lib/signature/client'
 import type { SubmitSignatureParams } from '@/lib/signature/types'
 
@@ -15,6 +15,11 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    // Get current authenticated user (if any) for signer verification
+    const authClient = await createClient()
+    const { data: { user } } = await authClient.auth.getUser()
+    const currentUserId = user?.id || null
+
     const supabase = createServiceClient()
 
     // Get client IP address for audit trail
@@ -23,20 +28,26 @@ export async function POST(req: NextRequest) {
       req.headers.get('x-real-ip') ||
       'unknown'
 
-    // Call main business logic function
-    const result = await submitSignature(body, supabase, ipAddress)
+    // Call main business logic function with current user for verification
+    const result = await submitSignature(body, supabase, ipAddress, currentUserId)
 
     if (!result.success) {
       // Map error messages to appropriate status codes
       let statusCode = 500
 
       if (result.error?.includes('expired')) {
-        statusCode = 410
+        statusCode = 410 // Gone
+      } else if (result.error?.includes('not authorized') || result.error?.includes('assigned to another user')) {
+        statusCode = 403 // Forbidden
+      } else if (result.error?.includes('Please log in')) {
+        statusCode = 401 // Unauthorized
+      } else if (result.error?.includes('verification required')) {
+        statusCode = 428 // Precondition Required (verification needed)
       } else if (
         result.error?.includes('already been signed') ||
         result.error?.includes('not found')
       ) {
-        statusCode = 400
+        statusCode = 400 // Bad Request
       }
 
       return NextResponse.json({ error: result.error }, { status: statusCode })

@@ -66,6 +66,7 @@ export default async function VersoSignPage() {
   const isIntroducer = personas?.some((p: any) => p.persona_type === 'introducer') || false
   const isArranger = personas?.some((p: any) => p.persona_type === 'arranger') || false
   const isPartner = personas?.some((p: any) => p.persona_type === 'partner') || false
+  const isCommercialPartner = personas?.some((p: any) => p.persona_type === 'commercial_partner') || false
 
   // Get ACTIVE persona from cookie - filter tasks by active persona only
   const cookieStore = await cookies()
@@ -77,6 +78,7 @@ export default async function VersoSignPage() {
   const shouldShowInvestorTasks = activePersonaType === 'investor'
   const shouldShowLawyerTasks = isLawyer && activePersonaType === 'lawyer'
   const shouldShowIntroducerTasks = isIntroducer && activePersonaType === 'introducer'
+  const shouldShowCPTasks = isCommercialPartner && activePersonaType === 'commercial_partner'
 
   // Get partner IDs if user has partner persona
   let partnerIds: string[] = []
@@ -106,6 +108,16 @@ export default async function VersoSignPage() {
       .select('introducer_id')
       .eq('user_id', user.id)
     introducerIds = introducerLinks?.map(link => link.introducer_id) || []
+  }
+
+  // Get commercial partner IDs if user has commercial_partner persona
+  let commercialPartnerIds: string[] = []
+  if (isCommercialPartner) {
+    const { data: cpLinks } = await serviceSupabase
+      .from('commercial_partner_users')
+      .select('commercial_partner_id')
+      .eq('user_id', user.id)
+    commercialPartnerIds = cpLinks?.map(link => link.commercial_partner_id) || []
   }
 
   // Get CEO entity ID if user is a CEO member
@@ -268,9 +280,20 @@ export default async function VersoSignPage() {
     addTasksWithDedup(investorTasks || [])
   }
 
-  // 4. Introducer: Tasks owned by user (introducer countersignatures)
+  // 4. Introducer: Tasks owned by user OR by their introducer entities
   // ONLY runs if active persona is introducer
-  if (shouldShowIntroducerTasks) {
+  // This enables entity-level visibility: User A can see tasks for Introducer X
+  // even if those tasks were created for User B (another user at Introducer X)
+  if (shouldShowIntroducerTasks && introducerIds.length > 0) {
+    const { data: introducerTasks } = await serviceSupabase
+      .from('tasks')
+      .select('*')
+      .in('kind', ['countersignature', 'subscription_pack_signature', 'other'])
+      .or(`owner_user_id.eq.${user.id},owner_introducer_id.in.(${introducerIds.join(',')})`)
+      .order('due_at', { ascending: true, nullsFirst: false })
+    addTasksWithDedup(introducerTasks || [])
+  } else if (shouldShowIntroducerTasks) {
+    // Fallback: if no introducer IDs found, just check user-owned tasks
     const { data: introducerTasks } = await serviceSupabase
       .from('tasks')
       .select('*')
@@ -304,8 +327,30 @@ export default async function VersoSignPage() {
     }
   }
 
-  // 6. Fallback: If no tasks found and no personas matched above, get user's direct tasks
-  if (tasks.length === 0 && !isStaff && !isLawyer && investorIds.length === 0 && !isArranger) {
+  // 6. Commercial Partner: Tasks owned by user OR by their commercial partner entities
+  // ONLY runs if active persona is commercial_partner
+  // This enables entity-level visibility similar to introducer visibility
+  if (shouldShowCPTasks && commercialPartnerIds.length > 0) {
+    const { data: cpTasks } = await serviceSupabase
+      .from('tasks')
+      .select('*')
+      .in('kind', ['countersignature', 'subscription_pack_signature', 'other'])
+      .or(`owner_user_id.eq.${user.id},owner_commercial_partner_id.in.(${commercialPartnerIds.join(',')})`)
+      .order('due_at', { ascending: true, nullsFirst: false })
+    addTasksWithDedup(cpTasks || [])
+  } else if (shouldShowCPTasks) {
+    // Fallback: if no CP IDs found, just check user-owned tasks
+    const { data: cpTasks } = await serviceSupabase
+      .from('tasks')
+      .select('*')
+      .in('kind', ['countersignature', 'subscription_pack_signature', 'other'])
+      .eq('owner_user_id', user.id)
+      .order('due_at', { ascending: true, nullsFirst: false })
+    addTasksWithDedup(cpTasks || [])
+  }
+
+  // 7. Fallback: If no tasks found and no personas matched above, get user's direct tasks
+  if (tasks.length === 0 && !isStaff && !isLawyer && investorIds.length === 0 && !isArranger && !isCommercialPartner) {
     const { data: userTasks } = await serviceSupabase
       .from('tasks')
       .select('*')
@@ -366,7 +411,7 @@ export default async function VersoSignPage() {
   // If user has no signature tasks and no agreements to sign and is not staff/lawyer/introducer/arranger/partner, show appropriate message
   const hasTasks = tasks && tasks.length > 0
   const hasAgreementsToSign = placementAgreementsForSigning.length > 0
-  const hasRelevantPersona = isStaff || isLawyer || isIntroducer || isArranger || isPartner
+  const hasRelevantPersona = isStaff || isLawyer || isIntroducer || isArranger || isPartner || isCommercialPartner
 
   if (!hasTasks && !hasAgreementsToSign && !hasRelevantPersona) {
     return (

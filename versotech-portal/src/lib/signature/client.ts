@@ -201,6 +201,23 @@ export async function createSignatureRequest(
 
     // Create signature request record
     console.log('💾 [SIGNATURE] Creating signature_requests database record')
+
+    // Try to look up signer_user_id from email if not provided
+    // This enables user-level signing verification for platform users
+    let signer_user_id = params.signer_user_id
+    if (!signer_user_id && signer_email) {
+      const { data: userProfile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('email', signer_email)
+        .maybeSingle()
+
+      if (userProfile?.id) {
+        signer_user_id = userProfile.id
+        console.log('👤 [SIGNATURE] Resolved signer_user_id from email:', signer_user_id)
+      }
+    }
+
     const insertData: any = {
       investor_id,
       signer_email,
@@ -215,6 +232,12 @@ export async function createSignatureRequest(
       signer_role,
       signature_position,
       status: 'pending'
+    }
+
+    // Include signer_user_id for user-level signing verification
+    if (signer_user_id) {
+      insertData.signer_user_id = signer_user_id
+      console.log('🔐 [SIGNATURE] Setting signer_user_id for verification:', signer_user_id)
     }
 
     // Only include workflow_run_id if provided (not all docs have workflow runs)
@@ -910,7 +933,9 @@ export async function getSignatureRequest(
       unsigned_pdf_url,
       google_drive_url: signatureRequest.google_drive_url,
       status: signatureRequest.status,
-      expires_at: signatureRequest.token_expires_at
+      expires_at: signatureRequest.token_expires_at,
+      verification_required: signatureRequest.verification_required || false,
+      verification_completed_at: signatureRequest.verification_completed_at || null
     }
   } catch (error) {
     console.error('Error fetching signature request:', error)
@@ -935,7 +960,8 @@ export async function getSignatureRequest(
 export async function submitSignature(
   params: SubmitSignatureParams,
   supabase: SupabaseClient,
-  ipAddress: string = 'unknown'
+  ipAddress: string = 'unknown',
+  currentUserId?: string | null
 ): Promise<SubmitSignatureResult> {
   console.log('\n🟢 [SIGNATURE] submitSignature() called')
   console.log('📋 [SIGNATURE] Params:', {
@@ -1009,6 +1035,39 @@ export async function submitSignature(
       return {
         success: false,
         error: 'Document has already been signed'
+      }
+    }
+
+    // USER VERIFICATION: Ensure the authenticated user is the designated signer
+    // This prevents URL sharing attacks where someone shares their signing link
+    if (signatureRequest.signer_user_id) {
+      // This signature request is assigned to a specific platform user
+      if (!currentUserId) {
+        console.log('❌ [SIGNATURE] User verification failed: No authenticated user but signer_user_id is set')
+        return {
+          success: false,
+          error: 'Please log in to sign this document. This signature request is assigned to a specific user.'
+        }
+      }
+      if (currentUserId !== signatureRequest.signer_user_id) {
+        console.log('❌ [SIGNATURE] User verification failed: Current user does not match designated signer', {
+          current_user_id: currentUserId,
+          expected_signer_user_id: signatureRequest.signer_user_id
+        })
+        return {
+          success: false,
+          error: 'You are not authorized to sign this document. It is assigned to another user.'
+        }
+      }
+      console.log('✅ [SIGNATURE] User verification passed - current user matches designated signer')
+    }
+
+    // OTP VERIFICATION: For external signers, require email verification
+    if (signatureRequest.verification_required && !signatureRequest.verification_completed_at) {
+      console.log('❌ [SIGNATURE] OTP verification required but not completed')
+      return {
+        success: false,
+        error: 'Email verification required before signing. Please complete the verification process.'
       }
     }
 
