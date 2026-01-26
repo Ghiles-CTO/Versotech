@@ -5,8 +5,9 @@ import {
   Upload,
   FolderPlus,
   RefreshCw,
-  FolderTree as FolderTreeIcon,
-  ArrowLeft
+  Menu,
+  ArrowLeft,
+  Home
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -18,6 +19,11 @@ import {
 import { FolderBreadcrumbs } from './navigation/FolderBreadcrumbs'
 import { FolderNavigator } from './navigation/FolderNavigator'
 import { FolderTreeDrawer } from './navigation/FolderTreeDrawer'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { Input } from '@/components/ui/input'
+import { Search, X, Folder, FolderOpen, ChevronRight, ChevronDown } from 'lucide-react'
+import { FOLDER_ICON_COLORS } from '@/lib/design-tokens'
+import { cn } from '@/lib/utils'
 import { UploadDestinationBanner } from './upload/UploadDestinationBanner'
 import { DocumentUploadDialog } from './document-upload-dialog'
 import { MoveDocumentDialog } from './move-document-dialog'
@@ -99,6 +105,10 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [sortBy, setSortBy] = useState<'name' | 'date' | 'type'>('name')
+
+  // Tree Sidebar State
+  const [treeSearchQuery, setTreeSearchQuery] = useState('')
+  const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set())
 
   // Document viewer hook
   const {
@@ -185,6 +195,99 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
 
     return result
   }, [documents, searchQuery, sortBy])
+
+  // Build tree structure for sidebar
+  interface TreeNode {
+    folder: DocumentFolder
+    children: TreeNode[]
+  }
+
+  const buildFolderTree = useCallback((folders: DocumentFolder[]): TreeNode[] => {
+    const folderMap = new Map<string | null, TreeNode[]>()
+
+    folders.forEach((folder) => {
+      if (!folderMap.has(folder.parent_folder_id)) {
+        folderMap.set(folder.parent_folder_id, [])
+      }
+      folderMap.get(folder.parent_folder_id)!.push({
+        folder,
+        children: [],
+      })
+    })
+
+    function buildChildren(parentId: string | null): TreeNode[] {
+      const children = folderMap.get(parentId) || []
+      return children.map((node) => ({
+        ...node,
+        children: buildChildren(node.folder.id),
+      }))
+    }
+
+    return buildChildren(null)
+  }, [])
+
+  const folderTree = useMemo(() => {
+    return buildFolderTree(folders)
+  }, [folders, buildFolderTree])
+
+  // Filter tree based on sidebar search
+  const filterTreeBySearch = useCallback((tree: TreeNode[], query: string): TreeNode[] => {
+    return tree
+      .map((node) => {
+        const nameMatches = node.folder.name.toLowerCase().includes(query)
+        const pathMatches = node.folder.path.toLowerCase().includes(query)
+        const filteredChildren = filterTreeBySearch(node.children, query)
+
+        if (nameMatches || pathMatches || filteredChildren.length > 0) {
+          return {
+            ...node,
+            children: filteredChildren,
+          }
+        }
+        return null
+      })
+      .filter((node): node is TreeNode => node !== null)
+  }, [])
+
+  const filteredTree = useMemo(() => {
+    if (!treeSearchQuery.trim()) return folderTree
+    return filterTreeBySearch(folderTree, treeSearchQuery.toLowerCase())
+  }, [folderTree, treeSearchQuery, filterTreeBySearch])
+
+  // Toggle folder expansion in sidebar
+  const toggleSidebarFolder = (folderId: string) => {
+    setExpandedFolders((prev) => {
+      const next = new Set(prev)
+      if (next.has(folderId)) {
+        next.delete(folderId)
+      } else {
+        next.add(folderId)
+      }
+      return next
+    })
+  }
+
+  // Auto-expand current folder's ancestors
+  useEffect(() => {
+    if (currentFolderId && folders.length > 0) {
+      const getAncestorIds = (folder: DocumentFolder): string[] => {
+        const ancestors: string[] = []
+        let currentFolder: DocumentFolder | undefined = folder
+
+        while (currentFolder?.parent_folder_id) {
+          ancestors.push(currentFolder.parent_folder_id)
+          currentFolder = folders.find((f) => f.id === currentFolder!.parent_folder_id)
+        }
+        return ancestors
+      }
+
+      const currentFolder = folders.find((f) => f.id === currentFolderId)
+      if (currentFolder) {
+        const ancestorIds = getAncestorIds(currentFolder)
+        setExpandedFolders((prev) => new Set([...prev, ...ancestorIds]))
+      }
+    }
+  }, [currentFolderId, folders])
 
   const loadFolders = useCallback(async () => {
     try {
@@ -480,15 +583,103 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
     )
   })
 
+  // Recursive tree node renderer for sidebar
+  const renderSidebarTreeNode = (node: TreeNode, level: number = 0) => {
+    const isExpanded = expandedFolders.has(node.folder.id)
+    const hasChildren = node.children.length > 0
+    const isCurrent = currentFolderId === node.folder.id
+
+    return (
+      <div key={node.folder.id}>
+        <div
+          className={cn(
+            'flex items-center gap-1 rounded-md transition-colors',
+            isCurrent ? 'bg-primary/20 border border-primary' : 'hover:bg-muted border border-transparent'
+          )}
+          style={{ paddingLeft: `${level * 16 + 8}px` }}
+        >
+          {hasChildren ? (
+            <button
+              onClick={() => toggleSidebarFolder(node.folder.id)}
+              className="p-1 hover:bg-accent rounded transition-colors"
+              aria-label={isExpanded ? 'Collapse folder' : 'Expand folder'}
+            >
+              {isExpanded ? (
+                <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+              ) : (
+                <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
+              )}
+            </button>
+          ) : (
+            <div className="w-5" />
+          )}
+          <button
+            onClick={() => navigateToFolder(node.folder.id)}
+            className="flex items-center gap-2 flex-1 py-2 pr-3 text-left text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 rounded"
+          >
+            {isExpanded ? (
+              <FolderOpen
+                className={cn(
+                  'w-4 h-4 flex-shrink-0',
+                  node.folder.folder_type === 'vehicle_root' ? 'text-blue-500' :
+                  node.folder.folder_type === 'category' ? 'text-green-500' :
+                  'text-muted-foreground'
+                )}
+              />
+            ) : (
+              <Folder
+                className={cn(
+                  'w-4 h-4 flex-shrink-0',
+                  node.folder.folder_type === 'vehicle_root' ? 'text-blue-500' :
+                  node.folder.folder_type === 'category' ? 'text-green-500' :
+                  'text-muted-foreground'
+                )}
+              />
+            )}
+            <span
+              className={cn(
+                'truncate font-medium',
+                isCurrent ? 'text-foreground' : 'text-muted-foreground'
+              )}
+            >
+              {node.folder.name}
+            </span>
+            {node.folder.document_count !== undefined && node.folder.document_count > 0 && (
+              <span className="text-xs text-muted-foreground ml-auto">({node.folder.document_count})</span>
+            )}
+          </button>
+        </div>
+
+        {isExpanded && hasChildren && (
+          <div className="mt-0.5">
+            {node.children.map((child) => renderSidebarTreeNode(child, level + 1))}
+          </div>
+        )}
+      </div>
+    )
+  }
+
   return (
     <div className="flex flex-col h-full bg-background">
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-4 bg-muted/50 border-b border-border">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Document Management</h1>
-          <p className="text-muted-foreground mt-1">
-            Manage documents with hierarchical folder structure
-          </p>
+        <div className="flex items-center gap-3">
+          {/* Mobile hamburger toggle */}
+          <Button
+            variant="outline"
+            size="icon"
+            className="lg:hidden"
+            onClick={() => setShowTreeDrawer(true)}
+          >
+            <Menu className="h-5 w-5" />
+            <span className="sr-only">Open folder tree</span>
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">Document Management</h1>
+            <p className="text-muted-foreground mt-1 hidden sm:block">
+              Manage documents with hierarchical folder structure
+            </p>
+          </div>
         </div>
         <div className="flex gap-2">
           <Button
@@ -496,103 +687,192 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
             onClick={() => loadDocuments()}
           >
             <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh
+            <span className="hidden sm:inline">Refresh</span>
           </Button>
         </div>
       </div>
 
-      {/* Breadcrumbs */}
-      {currentFolder && (
-        <FolderBreadcrumbs
-          currentFolder={currentFolder}
-          onNavigate={navigateToFolder}
-        />
-      )}
+      {/* Main Grid Layout - Sidebar + Content */}
+      <div className="flex-1 grid grid-cols-1 lg:grid-cols-[280px_1fr] overflow-hidden">
+        {/* Desktop Sidebar - Always Visible */}
+        <aside className="hidden lg:flex flex-col border-r border-border bg-muted/30">
+          {/* Sidebar Header */}
+          <div className="px-4 py-3 border-b border-border">
+            <h2 className="text-sm font-semibold text-foreground">Folders</h2>
+          </div>
 
-      {/* Upload Destination Banner */}
-      {currentFolder && (
-        <UploadDestinationBanner currentFolder={currentFolder} />
-      )}
+          {/* Sidebar Search */}
+          <div className="px-3 py-3 border-b border-border">
+            <div className="relative">
+              <Search
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground"
+              />
+              <Input
+                type="text"
+                placeholder="Search folders..."
+                value={treeSearchQuery}
+                onChange={(e) => setTreeSearchQuery(e.target.value)}
+                className="pl-10 pr-10 h-9 text-sm"
+              />
+              {treeSearchQuery && (
+                <button
+                  onClick={() => setTreeSearchQuery('')}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+          </div>
 
-      {/* Actions Bar */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-muted/50">
-        <div className="flex items-center gap-3">
-          <Button
-            variant="outline"
-            onClick={() => setShowTreeDrawer(true)}
-          >
-            <FolderTreeIcon className="w-4 h-4 mr-2" />
-            Browse All Folders
-          </Button>
-          {navigationHistory.length > 0 && (
-            <Button variant="ghost" onClick={navigateBack}>
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back
-            </Button>
-          )}
+          {/* Sidebar Tree */}
+          <ScrollArea className="flex-1">
+            <div className="px-2 py-2">
+              {/* Root Option */}
+              <button
+                onClick={() => navigateToFolder(null)}
+                className={cn(
+                  'flex items-center gap-2 w-full px-3 py-2 rounded-md text-sm font-medium transition-colors',
+                  currentFolderId === null
+                    ? 'bg-primary/20 text-primary border border-primary'
+                    : 'text-muted-foreground hover:bg-muted border border-transparent'
+                )}
+              >
+                <Home className="w-4 h-4 flex-shrink-0" />
+                <span>All Documents</span>
+              </button>
+
+              {/* Tree Nodes */}
+              <div className="mt-2 space-y-0.5">
+                {filteredTree.map((node) => renderSidebarTreeNode(node, 0))}
+              </div>
+
+              {/* Empty State */}
+              {filteredTree.length === 0 && (
+                <div className="text-center py-8 text-sm text-muted-foreground">
+                  {treeSearchQuery ? 'No folders match your search' : 'No folders found'}
+                </div>
+              )}
+            </div>
+          </ScrollArea>
+
+          {/* Initialize Vehicle Folders (if needed) */}
           {vehiclesWithoutFolders.length > 0 && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="border-amber-500/50 bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20">
-                  <FolderPlus className="h-4 w-4 mr-2" />
-                  Initialize Vehicle Folders ({vehiclesWithoutFolders.length})
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                {vehiclesWithoutFolders.map(vehicle => (
-                  <DropdownMenuItem
-                    key={vehicle.id}
-                    onClick={() => handleInitVehicleFolders(vehicle.id)}
-                  >
-                    {vehicle.name} ({vehicle.type})
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <div className="p-3 border-t border-border">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="w-full border-amber-500/50 bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20">
+                    <FolderPlus className="h-4 w-4 mr-2" />
+                    Init Folders ({vehiclesWithoutFolders.length})
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  {vehiclesWithoutFolders.map(vehicle => (
+                    <DropdownMenuItem
+                      key={vehicle.id}
+                      onClick={() => handleInitVehicleFolders(vehicle.id)}
+                    >
+                      {vehicle.name} ({vehicle.type})
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           )}
-        </div>
-        <div className="flex items-center gap-2">
-          <Button onClick={() => setUploadDialogOpen(true)}>
-            <Upload className="w-4 w-4 mr-2" />
-            Upload Documents
-          </Button>
-          <Button variant="outline" onClick={() => handleCreateFolder()}>
-            <FolderPlus className="w-4 h-4 mr-2" />
-            New Folder
-          </Button>
-        </div>
+        </aside>
+
+        {/* Main Content Area */}
+        <main className="flex flex-col overflow-hidden">
+          {/* Breadcrumbs */}
+          {currentFolder && (
+            <FolderBreadcrumbs
+              currentFolder={currentFolder}
+              onNavigate={navigateToFolder}
+            />
+          )}
+
+          {/* Upload Destination Banner */}
+          {currentFolder && (
+            <UploadDestinationBanner currentFolder={currentFolder} />
+          )}
+
+          {/* Actions Bar */}
+          <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-muted/50">
+            <div className="flex items-center gap-3">
+              {navigationHistory.length > 0 && (
+                <Button variant="ghost" onClick={navigateBack}>
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Back
+                </Button>
+              )}
+              {/* Mobile-only: Initialize Vehicle Folders */}
+              {vehiclesWithoutFolders.length > 0 && (
+                <div className="lg:hidden">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="sm" className="border-amber-500/50 bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20">
+                        <FolderPlus className="h-4 w-4 mr-2" />
+                        Init ({vehiclesWithoutFolders.length})
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                      {vehiclesWithoutFolders.map(vehicle => (
+                        <DropdownMenuItem
+                          key={vehicle.id}
+                          onClick={() => handleInitVehicleFolders(vehicle.id)}
+                        >
+                          {vehicle.name} ({vehicle.type})
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <Button onClick={() => setUploadDialogOpen(true)}>
+                <Upload className="w-4 h-4 mr-2" />
+                <span className="hidden sm:inline">Upload</span>
+              </Button>
+              <Button variant="outline" onClick={() => handleCreateFolder()}>
+                <FolderPlus className="w-4 h-4 mr-2" />
+                <span className="hidden sm:inline">New Folder</span>
+              </Button>
+            </div>
+          </div>
+
+          {/* Main Navigator (Folders + Documents) */}
+          <div className="flex-1 overflow-hidden">
+            <FolderNavigator
+              currentFolderId={currentFolderId}
+              currentFolder={currentFolder}
+              subfolders={getSubfolders}
+              documents={filteredDocuments as any}
+              isLoading={loading}
+              viewMode={viewMode}
+              sortBy={sortBy}
+              searchQuery={searchQuery}
+              onNavigateToFolder={navigateToFolder}
+              onDocumentClick={(docId) => {
+                const doc = documents.find(d => d.id === docId)
+                if (doc) handlePreview(doc)
+              }}
+              onUploadClick={() => setUploadDialogOpen(true)}
+              onCreateFolderClick={() => handleCreateFolder()}
+              onRenameFolder={handleRenameFolder}
+              onDeleteFolder={handleDeleteFolder}
+              onCreateSubfolder={handleCreateFolder}
+              onRenameDocument={handleRenameDocument}
+              onDeleteDocument={handleDeleteDocument}
+              onViewModeChange={setViewMode}
+              onSortChange={setSortBy}
+              onSearchChange={setSearchQuery}
+            />
+          </div>
+        </main>
       </div>
 
-      {/* Main Navigator (Folders + Documents) */}
-      <div className="flex-1 overflow-hidden">
-        <FolderNavigator
-          currentFolderId={currentFolderId}
-          currentFolder={currentFolder}
-          subfolders={getSubfolders}
-          documents={filteredDocuments as any}
-          isLoading={loading}
-          viewMode={viewMode}
-          sortBy={sortBy}
-          searchQuery={searchQuery}
-          onNavigateToFolder={navigateToFolder}
-          onDocumentClick={(docId) => {
-            const doc = documents.find(d => d.id === docId)
-            if (doc) handlePreview(doc)
-          }}
-          onUploadClick={() => setUploadDialogOpen(true)}
-          onCreateFolderClick={() => handleCreateFolder()}
-          onRenameFolder={handleRenameFolder}
-          onDeleteFolder={handleDeleteFolder}
-          onCreateSubfolder={handleCreateFolder}
-          onRenameDocument={handleRenameDocument}
-          onDeleteDocument={handleDeleteDocument}
-          onViewModeChange={setViewMode}
-          onSortChange={setSortBy}
-          onSearchChange={setSearchQuery}
-        />
-      </div>
-
-      {/* Tree Drawer (Optional) */}
+      {/* Mobile Tree Drawer */}
       <FolderTreeDrawer
         open={showTreeDrawer}
         onOpenChange={setShowTreeDrawer}
