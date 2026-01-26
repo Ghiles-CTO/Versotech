@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
       console.error('[API] Folders query error:', foldersError)
       console.error('[API] Error details:', JSON.stringify(foldersError, null, 2))
       return NextResponse.json(
-        { 
+        {
           error: 'Failed to fetch folders',
           details: foldersError.message || 'Unknown database error',
           code: foldersError.code,
@@ -60,29 +60,42 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    // Get document counts for all folders (single query to avoid N+1)
+    const { data: documentCounts, error: docCountError } = await serviceSupabase
+      .from('documents')
+      .select('id, folder_id')
+      .not('folder_id', 'is', null)
+
+    if (docCountError) {
+      console.error('[API] Document counts query error:', docCountError)
+      return NextResponse.json(
+        { error: 'Failed to fetch document counts', details: docCountError.message },
+        { status: 500 }
+      )
+    }
+
+    // Count documents per folder
+    const countsByFolder = new Map<string, number>()
+    documentCounts?.forEach((doc: { id: string; folder_id: string }) => {
+      const folderId = doc.folder_id
+      countsByFolder.set(folderId, (countsByFolder.get(folderId) || 0) + 1)
+    })
+
     // If tree structure is requested, build hierarchy
     if (includeTree) {
-      // Get document counts for all folders
-      const { data: documentCounts, error: docCountError } = await serviceSupabase
-        .from('documents')
-        .select('id, folder_id')
-        .not('folder_id', 'is', null)
-
-      if (docCountError) {
-        console.error('[API] Document counts query error:', docCountError)
-        return NextResponse.json(
-          { error: 'Failed to fetch document counts', details: docCountError.message },
-          { status: 500 }
-        )
-      }
-
       const tree = buildFolderTree(folders || [], documentCounts || [])
       return NextResponse.json({ folders: tree, total: folders?.length || 0 })
     }
 
+    // Add document_count to each folder for flat response
+    const foldersWithCounts = (folders || []).map((folder: { id: string; [key: string]: unknown }) => ({
+      ...folder,
+      document_count: countsByFolder.get(folder.id) || 0
+    }))
+
     return NextResponse.json({
-      folders: folders || [],
-      total: folders?.length || 0
+      folders: foldersWithCounts,
+      total: foldersWithCounts.length
     })
 
   } catch (error) {
