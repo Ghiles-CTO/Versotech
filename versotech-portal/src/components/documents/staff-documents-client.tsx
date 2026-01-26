@@ -114,6 +114,9 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set())
   const [expandedVehicles, setExpandedVehicles] = useState<Set<string>>(new Set())
 
+  // Vehicle Context State (for breadcrumbs)
+  const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null)
+
   // Document viewer hook
   const {
     isOpen: previewOpen,
@@ -126,6 +129,25 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
     downloadDocument: downloadFromPreview
   } = useDocumentViewer()
 
+  // Get vehicle object from ID
+  const getVehicleById = useCallback((vehicleId: string | null): Vehicle | null => {
+    if (!vehicleId) return null
+    return initialVehicles.find(v => v.id === vehicleId) || null
+  }, [initialVehicles])
+
+  // Current vehicle context for breadcrumbs (from folder or explicit selection)
+  const currentVehicle = useMemo(() => {
+    // If folder selected, use folder's vehicle
+    if (currentFolder?.vehicle_id) {
+      return getVehicleById(currentFolder.vehicle_id)
+    }
+    // If vehicle explicitly selected (viewing vehicle root), use that
+    if (selectedVehicleId) {
+      return getVehicleById(selectedVehicleId)
+    }
+    return null
+  }, [currentFolder?.vehicle_id, selectedVehicleId, getVehicleById])
+
   // Navigation Functions (NEW)
   const navigateToFolder = (folderId: string | null) => {
     if (currentFolderId !== null && currentFolderId !== folderId) {
@@ -136,6 +158,36 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
 
     const folder = folders.find(f => f.id === folderId)
     setCurrentFolder(folder || null)
+
+    // Update vehicle context based on folder
+    if (folder?.vehicle_id) {
+      setSelectedVehicleId(folder.vehicle_id)
+    } else if (folderId === null) {
+      // Going to root, clear vehicle context
+      setSelectedVehicleId(null)
+    }
+  }
+
+  // Navigate to vehicle root (shows vehicle in breadcrumbs, clears folder)
+  const navigateToVehicle = (vehicleId: string) => {
+    // Add current location to history if needed
+    if (currentFolderId !== null) {
+      setNavigationHistory(prev => [...prev, currentFolderId])
+    }
+    setCurrentFolderId(null)
+    setCurrentFolder(null)
+    setSelectedVehicleId(vehicleId)
+    // Expand the vehicle in sidebar
+    setExpandedVehicles(prev => new Set([...prev, vehicleId]))
+  }
+
+  // Handler for breadcrumb vehicle click - returns to vehicle root
+  const handleBreadcrumbVehicleClick = () => {
+    if (selectedVehicleId) {
+      setCurrentFolderId(null)
+      setCurrentFolder(null)
+      // Keep selectedVehicleId so breadcrumbs still show vehicle
+    }
   }
 
   const navigateBack = () => {
@@ -662,12 +714,16 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
     // Determine icon based on vehicle type
     const VehicleIcon = vehicle.isParent ? Building2 : Package
 
+    const isVehicleSelected = selectedVehicleId === vehicle.id && !currentFolderId
+
     return (
       <div key={vehicle.id}>
         <div
           className={cn(
             'flex items-center gap-1 rounded-md transition-colors',
-            'hover:bg-muted border border-transparent'
+            isVehicleSelected
+              ? 'bg-primary/20 border border-primary'
+              : 'hover:bg-muted border border-transparent'
           )}
           style={{ paddingLeft: `${level * 16 + 8}px` }}
         >
@@ -686,20 +742,33 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
           ) : (
             <div className="w-5" />
           )}
-          <div className="flex items-center gap-2 flex-1 py-2 pr-3 text-left text-sm">
+          <button
+            onClick={() => navigateToVehicle(vehicle.id)}
+            className={cn(
+              'flex items-center gap-2 flex-1 py-2 pr-3 text-left text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 rounded',
+              selectedVehicleId === vehicle.id && !currentFolderId
+                ? 'text-foreground'
+                : ''
+            )}
+          >
             <VehicleIcon
               className={cn(
                 'w-4 h-4 flex-shrink-0',
                 vehicle.isParent ? 'text-blue-500' : 'text-amber-500'
               )}
             />
-            <span className="truncate font-medium text-muted-foreground">
+            <span className={cn(
+              'truncate font-medium',
+              selectedVehicleId === vehicle.id && !currentFolderId
+                ? 'text-foreground'
+                : 'text-muted-foreground'
+            )}>
               {vehicle.name}
             </span>
             {documentCount > 0 && (
               <span className="text-xs text-muted-foreground ml-auto">({documentCount})</span>
             )}
-          </div>
+          </button>
         </div>
 
         {/* Render child vehicles and folders when expanded */}
@@ -929,11 +998,13 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
 
         {/* Main Content Area */}
         <main className="flex flex-col overflow-hidden">
-          {/* Breadcrumbs */}
-          {currentFolder && (
+          {/* Breadcrumbs - show when vehicle or folder is selected */}
+          {(currentFolder || currentVehicle) && (
             <FolderBreadcrumbs
               currentFolder={currentFolder}
               onNavigate={navigateToFolder}
+              vehicle={currentVehicle ? { id: currentVehicle.id, name: currentVehicle.name } : undefined}
+              onVehicleClick={handleBreadcrumbVehicleClick}
             />
           )}
 
