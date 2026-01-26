@@ -60,11 +60,10 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Get document counts for all folders (single query to avoid N+1)
+    // Get document counts using efficient SQL GROUP BY via database function
+    // This returns only aggregated counts (one row per folder), not all document rows
     const { data: documentCounts, error: docCountError } = await serviceSupabase
-      .from('documents')
-      .select('id, folder_id')
-      .not('folder_id', 'is', null)
+      .rpc('get_folder_document_counts')
 
     if (docCountError) {
       console.error('[API] Document counts query error:', docCountError)
@@ -74,16 +73,15 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Count documents per folder
+    // Build lookup map from SQL aggregated results
     const countsByFolder = new Map<string, number>()
-    documentCounts?.forEach((doc: { id: string; folder_id: string }) => {
-      const folderId = doc.folder_id
-      countsByFolder.set(folderId, (countsByFolder.get(folderId) || 0) + 1)
+    documentCounts?.forEach((row: { folder_id: string; document_count: number }) => {
+      countsByFolder.set(row.folder_id, Number(row.document_count))
     })
 
     // If tree structure is requested, build hierarchy
     if (includeTree) {
-      const tree = buildFolderTree(folders || [], documentCounts || [])
+      const tree = buildFolderTree(folders || [], countsByFolder)
       return NextResponse.json({ folders: tree, total: folders?.length || 0 })
     }
 
@@ -240,18 +238,12 @@ export async function POST(request: NextRequest) {
 }
 
 // Helper function to build folder tree
-function buildFolderTree(folders: any[], documentCounts: any[]): any[] {
+// Takes pre-aggregated document counts from SQL function
+function buildFolderTree(folders: any[], countsByFolder: Map<string, number>): any[] {
   const folderMap = new Map()
   const tree: any[] = []
 
-  // Count documents per folder
-  const countsByFolder = new Map<string, number>()
-  documentCounts.forEach(doc => {
-    const folderId = doc.folder_id
-    countsByFolder.set(folderId, (countsByFolder.get(folderId) || 0) + 1)
-  })
-
-  // Create map of all folders with document counts
+  // Create map of all folders with document counts (already aggregated via SQL)
   folders.forEach(folder => {
     folderMap.set(folder.id, {
       ...folder,
