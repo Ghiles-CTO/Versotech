@@ -7,7 +7,9 @@ import {
   RefreshCw,
   Menu,
   ArrowLeft,
-  Home
+  Home,
+  Building2,
+  Package
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -31,6 +33,7 @@ import { CreateFolderDialog } from './create-folder-dialog'
 import { RenameFolderDialog } from './rename-folder-dialog'
 import { RenameDocumentDialog } from './rename-document-dialog'
 import { DocumentFolder } from '@/types/documents'
+import { parseVehicleHierarchy, VehicleNode } from '@/lib/documents/vehicle-hierarchy'
 import { toast } from 'sonner'
 import { useDocumentViewer } from '@/hooks/useDocumentViewer'
 import { DocumentViewerFullscreen } from './DocumentViewerFullscreen'
@@ -109,6 +112,7 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
   // Tree Sidebar State
   const [treeSearchQuery, setTreeSearchQuery] = useState('')
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set())
+  const [expandedVehicles, setExpandedVehicles] = useState<Set<string>>(new Set())
 
   // Document viewer hook
   const {
@@ -230,6 +234,23 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
     return buildFolderTree(folders)
   }, [folders, buildFolderTree])
 
+  // Parse vehicle hierarchy for sidebar display
+  const vehicleHierarchy = useMemo(() => {
+    return parseVehicleHierarchy(initialVehicles)
+  }, [initialVehicles])
+
+  // Get folders for a specific vehicle
+  const getFoldersForVehicle = useCallback((vehicleId: string): TreeNode[] => {
+    const vehicleFolders = folders.filter(f => f.vehicle_id === vehicleId)
+    return buildFolderTree(vehicleFolders)
+  }, [folders, buildFolderTree])
+
+  // Get document count for a vehicle (sum of all its folders)
+  const getVehicleDocumentCount = useCallback((vehicleId: string): number => {
+    const vehicleFolders = folders.filter(f => f.vehicle_id === vehicleId)
+    return vehicleFolders.reduce((sum, folder) => sum + (folder.document_count || 0), 0)
+  }, [folders])
+
   // Filter tree based on sidebar search
   const filterTreeBySearch = useCallback((tree: TreeNode[], query: string): TreeNode[] => {
     return tree
@@ -254,6 +275,36 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
     return filterTreeBySearch(folderTree, treeSearchQuery.toLowerCase())
   }, [folderTree, treeSearchQuery, filterTreeBySearch])
 
+  // Filter vehicle hierarchy based on search
+  const filterVehicleHierarchy = useCallback((nodes: VehicleNode[], query: string): VehicleNode[] => {
+    return nodes
+      .map((node) => {
+        const nameMatches = node.name.toLowerCase().includes(query)
+        const filteredChildren = filterVehicleHierarchy(node.children, query)
+
+        // Also check if any folders under this vehicle match
+        const vehicleFolders = folders.filter(f => f.vehicle_id === node.id)
+        const folderMatches = vehicleFolders.some(f =>
+          f.name.toLowerCase().includes(query) ||
+          f.path.toLowerCase().includes(query)
+        )
+
+        if (nameMatches || filteredChildren.length > 0 || folderMatches) {
+          return {
+            ...node,
+            children: filteredChildren,
+          }
+        }
+        return null
+      })
+      .filter((node): node is VehicleNode => node !== null)
+  }, [folders])
+
+  const filteredVehicleHierarchy = useMemo(() => {
+    if (!treeSearchQuery.trim()) return vehicleHierarchy
+    return filterVehicleHierarchy(vehicleHierarchy, treeSearchQuery.toLowerCase())
+  }, [vehicleHierarchy, treeSearchQuery, filterVehicleHierarchy])
+
   // Toggle folder expansion in sidebar
   const toggleSidebarFolder = (folderId: string) => {
     setExpandedFolders((prev) => {
@@ -262,6 +313,19 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
         next.delete(folderId)
       } else {
         next.add(folderId)
+      }
+      return next
+    })
+  }
+
+  // Toggle vehicle expansion in sidebar
+  const toggleSidebarVehicle = (vehicleId: string) => {
+    setExpandedVehicles((prev) => {
+      const next = new Set(prev)
+      if (next.has(vehicleId)) {
+        next.delete(vehicleId)
+      } else {
+        next.add(vehicleId)
       }
       return next
     })
@@ -583,6 +647,74 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
     )
   })
 
+  // Render a vehicle node in the sidebar
+  const renderVehicleNode = (vehicle: VehicleNode, level: number = 0) => {
+    const isExpanded = expandedVehicles.has(vehicle.id)
+    const vehicleFolders = getFoldersForVehicle(vehicle.id)
+    const hasChildren = vehicle.children.length > 0 || vehicleFolders.length > 0
+    const documentCount = getVehicleDocumentCount(vehicle.id)
+
+    // Filter vehicle folders based on search query
+    const filteredVehicleFolders = treeSearchQuery
+      ? filterTreeBySearch(vehicleFolders, treeSearchQuery.toLowerCase())
+      : vehicleFolders
+
+    // Determine icon based on vehicle type
+    const VehicleIcon = vehicle.isParent ? Building2 : Package
+
+    return (
+      <div key={vehicle.id}>
+        <div
+          className={cn(
+            'flex items-center gap-1 rounded-md transition-colors',
+            'hover:bg-muted border border-transparent'
+          )}
+          style={{ paddingLeft: `${level * 16 + 8}px` }}
+        >
+          {hasChildren ? (
+            <button
+              onClick={() => toggleSidebarVehicle(vehicle.id)}
+              className="p-1 hover:bg-accent rounded transition-colors"
+              aria-label={isExpanded ? 'Collapse vehicle' : 'Expand vehicle'}
+            >
+              {isExpanded ? (
+                <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+              ) : (
+                <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
+              )}
+            </button>
+          ) : (
+            <div className="w-5" />
+          )}
+          <div className="flex items-center gap-2 flex-1 py-2 pr-3 text-left text-sm">
+            <VehicleIcon
+              className={cn(
+                'w-4 h-4 flex-shrink-0',
+                vehicle.isParent ? 'text-blue-500' : 'text-amber-500'
+              )}
+            />
+            <span className="truncate font-medium text-muted-foreground">
+              {vehicle.name}
+            </span>
+            {documentCount > 0 && (
+              <span className="text-xs text-muted-foreground ml-auto">({documentCount})</span>
+            )}
+          </div>
+        </div>
+
+        {/* Render child vehicles and folders when expanded */}
+        {isExpanded && hasChildren && (
+          <div className="mt-0.5">
+            {/* Render child vehicles (compartments/series) */}
+            {vehicle.children.map((child) => renderVehicleNode(child, level + 1))}
+            {/* Render folders for this vehicle */}
+            {filteredVehicleFolders.map((folderNode) => renderSidebarTreeNode(folderNode, level + 1))}
+          </div>
+        )}
+      </div>
+    )
+  }
+
   // Recursive tree node renderer for sidebar
   const renderSidebarTreeNode = (node: TreeNode, level: number = 0) => {
     const isExpanded = expandedFolders.has(node.folder.id)
@@ -698,7 +830,7 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
         <aside className="hidden lg:flex flex-col border-r border-border bg-muted/30">
           {/* Sidebar Header */}
           <div className="px-4 py-3 border-b border-border">
-            <h2 className="text-sm font-semibold text-foreground">Folders</h2>
+            <h2 className="text-sm font-semibold text-foreground">Vehicles & Folders</h2>
           </div>
 
           {/* Sidebar Search */}
@@ -742,15 +874,29 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
                 <span>All Documents</span>
               </button>
 
-              {/* Tree Nodes */}
+              {/* Vehicle Hierarchy Nodes */}
               <div className="mt-2 space-y-0.5">
-                {filteredTree.map((node) => renderSidebarTreeNode(node, 0))}
+                {filteredVehicleHierarchy.map((vehicle) => renderVehicleNode(vehicle, 0))}
               </div>
 
+              {/* Orphan Folders (folders without vehicle) */}
+              {filteredTree.filter(node => !node.folder.vehicle_id).length > 0 && (
+                <div className="mt-4 pt-2 border-t border-border">
+                  <div className="px-3 py-1 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                    General Folders
+                  </div>
+                  <div className="mt-1 space-y-0.5">
+                    {filteredTree
+                      .filter(node => !node.folder.vehicle_id)
+                      .map((node) => renderSidebarTreeNode(node, 0))}
+                  </div>
+                </div>
+              )}
+
               {/* Empty State */}
-              {filteredTree.length === 0 && (
+              {filteredVehicleHierarchy.length === 0 && filteredTree.filter(node => !node.folder.vehicle_id).length === 0 && (
                 <div className="text-center py-8 text-sm text-muted-foreground">
-                  {treeSearchQuery ? 'No folders match your search' : 'No folders found'}
+                  {treeSearchQuery ? 'No vehicles or folders match your search' : 'No vehicles or folders found'}
                 </div>
               )}
             </div>
