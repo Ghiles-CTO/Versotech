@@ -159,16 +159,16 @@ export function DocumentCard({
         onClick={() => onPreview?.(document)}
         className={cn(
           'group flex items-center gap-3 w-full px-4 py-3 rounded-md',
-          'hover:bg-gray-100 transition-colors duration-150',
-          'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1',
+          'hover:bg-muted transition-colors duration-150',
+          'focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1',
           className
         )}
       >
-        <DocIcon className="w-5 h-5 text-blue-600 flex-shrink-0" strokeWidth={2} />
-        <span className="text-sm font-medium text-gray-900 flex-1 text-left break-words line-clamp-1">
+        <DocIcon className="w-5 h-5 text-primary flex-shrink-0" strokeWidth={2} />
+        <span className="text-sm font-medium text-foreground flex-1 text-left break-words line-clamp-1">
           {displayName}
         </span>
-        <span className="text-sm text-gray-600 flex-shrink-0">{formattedSize}</span>
+        <span className="text-sm text-muted-foreground flex-shrink-0">{formattedSize}</span>
       </button>
     )
   }
@@ -176,8 +176,8 @@ export function DocumentCard({
   return (
     <div
       className={cn(
-        'group relative bg-white border border-gray-200 rounded-lg shadow-sm',
-        'hover:bg-gray-50 hover:border-gray-300 hover:shadow-md',
+        'group relative bg-card border border-border rounded-lg shadow-sm',
+        'hover:bg-muted/50 hover:border-border hover:shadow-md',
         'transition-all duration-200',
         'cursor-pointer',
         className
@@ -189,23 +189,23 @@ export function DocumentCard({
           {/* Document Icon */}
           <div
             className={cn(
-              'w-14 h-14 rounded-lg border border-gray-200 flex items-center justify-center',
+              'w-14 h-14 rounded-lg border border-border flex items-center justify-center',
               'flex-shrink-0 transition-all duration-200',
-              'bg-gray-50'
+              'bg-muted/50'
             )}
           >
-            <DocIcon className="w-6 h-6 text-blue-600" strokeWidth={2} />
+            <DocIcon className="w-6 h-6 text-primary" strokeWidth={2} />
           </div>
 
           {/* Document Info */}
           <div className="flex-1 min-w-0 overflow-hidden">
             {/* File Name - Allow wrapping for long names */}
-            <h3 className="font-semibold text-gray-900 text-sm leading-tight mb-2 break-words line-clamp-2">
+            <h3 className="font-semibold text-foreground text-sm leading-tight mb-2 break-words line-clamp-2">
               {displayName}
             </h3>
 
             {/* Type & Size */}
-            <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
               <span>{formattedType}</span>
               <span>•</span>
               <span>{formattedSize}</span>
@@ -253,25 +253,24 @@ export function DocumentCard({
             <DropdownMenuTrigger
               className={cn(
                 'opacity-0 group-hover:opacity-100 transition-opacity duration-150',
-                'p-1 rounded hover:bg-gray-100',
-                'focus:outline-none focus:ring-2 focus:ring-blue-500',
+                'p-1 rounded hover:bg-muted',
+                'focus:outline-none focus:ring-2 focus:ring-primary',
                 isMenuOpen && 'opacity-100'
               )}
               onClick={(e) => e.stopPropagation()}
             >
-              <MoreVertical className="w-4 h-4 text-gray-500" strokeWidth={2} />
+              <MoreVertical className="w-4 h-4 text-muted-foreground" strokeWidth={2} />
               <span className="sr-only">Document actions</span>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48 bg-white border-gray-200 shadow-lg">
+            <DropdownMenuContent align="end" className="w-48">
               {onPreview && (
                 <DropdownMenuItem
                   onClick={(e) => {
                     e.stopPropagation()
                     onPreview(document)
                   }}
-                  className="text-gray-700 focus:bg-gray-100 focus:text-gray-900"
                 >
-                  <Eye className="w-4 h-4 mr-2 text-blue-600" strokeWidth={2} />
+                  <Eye className="w-4 h-4 mr-2 text-primary" strokeWidth={2} />
                   <span>Preview</span>
                 </DropdownMenuItem>
               )}
@@ -281,16 +280,15 @@ export function DocumentCard({
                   handleDownload()
                 }}
                 disabled={isDownloading}
-                className="text-gray-700 focus:bg-gray-100 focus:text-gray-900"
               >
                 {isDownloading ? (
                   <>
-                    <Clock className="w-4 h-4 mr-2 animate-spin text-gray-500" strokeWidth={2} />
+                    <Clock className="w-4 h-4 mr-2 animate-spin text-muted-foreground" strokeWidth={2} />
                     <span>Generating...</span>
                   </>
                 ) : (
                   <>
-                    <Download className="w-4 h-4 mr-2 text-gray-500" strokeWidth={2} />
+                    <Download className="w-4 h-4 mr-2 text-muted-foreground" strokeWidth={2} />
                     <span>Download</span>
                   </>
                 )}
@@ -301,21 +299,20 @@ export function DocumentCard({
                     e.stopPropagation()
                     onRename(document.id)
                   }}
-                  className="text-gray-700 focus:bg-gray-100 focus:text-gray-900"
                 >
-                  <Edit className="w-4 h-4 mr-2 text-gray-500" strokeWidth={2} />
+                  <Edit className="w-4 h-4 mr-2 text-muted-foreground" strokeWidth={2} />
                   <span>Rename</span>
                 </DropdownMenuItem>
               )}
               {onDelete && (
                 <>
-                  <DropdownMenuSeparator className="bg-gray-200" />
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem
                     onClick={(e) => {
                       e.stopPropagation()
                       onDelete(document.id)
                     }}
-                    className="text-red-600 focus:text-red-700 focus:bg-red-50"
+                    className="text-destructive focus:text-destructive"
                   >
                     <Trash2 className="w-4 h-4 mr-2" strokeWidth={2} />
                     <span>Delete</span>
@@ -330,7 +327,7 @@ export function DocumentCard({
       {/* Hover Indicator (subtle bottom border) */}
       <div
         className={cn(
-          'absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500',
+          'absolute bottom-0 left-0 right-0 h-0.5 bg-primary',
           'transform scale-x-0 group-hover:scale-x-100',
           'transition-transform duration-200 origin-left',
           'rounded-b-lg'
@@ -347,16 +344,16 @@ export function DocumentCardSkeleton({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        'bg-white border border-gray-200 rounded-lg p-4 shadow-sm',
+        'bg-card border border-border rounded-lg p-4 shadow-sm',
         'animate-pulse',
         className
       )}
     >
       <div className="flex items-start gap-3">
-        <div className="w-11 h-11 rounded-lg bg-gray-100 flex-shrink-0" />
+        <div className="w-11 h-11 rounded-lg bg-muted flex-shrink-0" />
         <div className="flex-1 min-w-0">
-          <div className="h-4 bg-gray-100 rounded w-3/4 mb-2" />
-          <div className="h-3 bg-gray-100 rounded w-1/2" />
+          <div className="h-4 bg-muted rounded w-3/4 mb-2" />
+          <div className="h-3 bg-muted rounded w-1/2" />
         </div>
       </div>
     </div>

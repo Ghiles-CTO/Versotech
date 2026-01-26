@@ -481,12 +481,12 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
   })
 
   return (
-    <div className="flex flex-col h-full bg-[#0a0a0a]">
+    <div className="flex flex-col h-full bg-background">
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 bg-black/40 border-b border-white/10">
+      <div className="flex items-center justify-between px-6 py-4 bg-muted/50 border-b border-border">
         <div>
-          <h1 className="text-2xl font-bold text-white">Document Management</h1>
-          <p className="text-gray-400 mt-1">
+          <h1 className="text-2xl font-bold text-foreground">Document Management</h1>
+          <p className="text-muted-foreground mt-1">
             Manage documents with hierarchical folder structure
           </p>
         </div>
@@ -494,7 +494,6 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
           <Button
             variant="outline"
             onClick={() => loadDocuments()}
-            className="border-white/20 text-white hover:bg-white/10"
           >
             <RefreshCw className="h-4 w-4 mr-2" />
             Refresh
@@ -516,18 +515,17 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
       )}
 
       {/* Actions Bar */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-black/40">
+      <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-muted/50">
         <div className="flex items-center gap-3">
           <Button
             variant="outline"
             onClick={() => setShowTreeDrawer(true)}
-            className="border-white/20 text-white hover:bg-white/10"
           >
             <FolderTreeIcon className="w-4 h-4 mr-2" />
             Browse All Folders
           </Button>
           {navigationHistory.length > 0 && (
-            <Button variant="ghost" onClick={navigateBack} className="text-white hover:bg-white/10">
+            <Button variant="ghost" onClick={navigateBack}>
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back
             </Button>
@@ -535,17 +533,16 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
           {vehiclesWithoutFolders.length > 0 && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="border-amber-400/30 bg-amber-500/20 text-amber-200 hover:bg-amber-500/30">
+                <Button variant="outline" className="border-amber-500/50 bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20">
                   <FolderPlus className="h-4 w-4 mr-2" />
                   Initialize Vehicle Folders ({vehiclesWithoutFolders.length})
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="bg-zinc-900 border-white/10">
+              <DropdownMenuContent>
                 {vehiclesWithoutFolders.map(vehicle => (
                   <DropdownMenuItem
                     key={vehicle.id}
                     onClick={() => handleInitVehicleFolders(vehicle.id)}
-                    className="text-white focus:bg-white/10 focus:text-white"
                   >
                     {vehicle.name} ({vehicle.type})
                   </DropdownMenuItem>
@@ -555,11 +552,11 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
           )}
         </div>
         <div className="flex items-center gap-2">
-          <Button onClick={() => setUploadDialogOpen(true)} className="bg-blue-600 hover:bg-blue-700 text-white">
+          <Button onClick={() => setUploadDialogOpen(true)}>
             <Upload className="w-4 w-4 mr-2" />
             Upload Documents
           </Button>
-          <Button variant="outline" onClick={() => handleCreateFolder()} className="border-white/20 text-white hover:bg-white/10">
+          <Button variant="outline" onClick={() => handleCreateFolder()}>
             <FolderPlus className="w-4 h-4 mr-2" />
             New Folder
           </Button>

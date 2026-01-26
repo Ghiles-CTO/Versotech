@@ -89,8 +89,8 @@ export function FolderTree({
         <div
           className={cn(
             'flex items-center gap-1 py-1.5 px-2 rounded-md cursor-pointer transition-colors group',
-            'hover:bg-blue-900/40 hover:border-blue-600',
-            isSelected && 'bg-blue-800/60 border-blue-500 shadow-lg',
+            'hover:bg-accent hover:border-primary/50',
+            isSelected && 'bg-primary/20 border-primary shadow-sm',
             'border border-transparent',
             level > 0 && 'ml-4'
           )}
@@ -100,12 +100,12 @@ export function FolderTree({
           {hasChildren ? (
             <button
               onClick={() => toggleFolder(folder.id)}
-              className="flex-shrink-0 p-0.5 hover:bg-gray-700 rounded"
+              className="flex-shrink-0 p-0.5 hover:bg-muted rounded"
             >
               {expanded ? (
-                <ChevronDown className="h-4 w-4 text-gray-400" />
+                <ChevronDown className="h-4 w-4 text-muted-foreground" />
               ) : (
-                <ChevronRight className="h-4 w-4 text-gray-400" />
+                <ChevronRight className="h-4 w-4 text-muted-foreground" />
               )}
             </button>
           ) : (
@@ -117,16 +117,16 @@ export function FolderTree({
             {expanded ? (
               <FolderOpen className={cn(
                 "h-4 w-4",
-                folder.folder_type === 'vehicle_root' ? 'text-blue-400' :
-                folder.folder_type === 'category' ? 'text-green-400' :
-                'text-gray-400'
+                folder.folder_type === 'vehicle_root' ? 'text-blue-500' :
+                folder.folder_type === 'category' ? 'text-green-500' :
+                'text-muted-foreground'
               )} />
             ) : (
               <Folder className={cn(
                 "h-4 w-4",
-                folder.folder_type === 'vehicle_root' ? 'text-blue-400' :
-                folder.folder_type === 'category' ? 'text-green-400' :
-                'text-gray-400'
+                folder.folder_type === 'vehicle_root' ? 'text-blue-500' :
+                folder.folder_type === 'category' ? 'text-green-500' :
+                'text-muted-foreground'
               )} />
             )}
           </div>
@@ -136,7 +136,7 @@ export function FolderTree({
             onClick={() => onSelectFolder(folder.id, folder)}
             className={cn(
               "flex-1 text-left text-sm font-medium truncate",
-              isSelected ? 'text-white' : 'text-gray-300 hover:text-white'
+              isSelected ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
             )}
           >
             {folder.name}
@@ -148,7 +148,7 @@ export function FolderTree({
               <Button
                 variant="ghost"
                 size="sm"
-                className="opacity-0 group-hover:opacity-100 h-6 w-6 p-0 text-gray-400 hover:text-white hover:bg-gray-700"
+                className="opacity-0 group-hover:opacity-100 h-6 w-6 p-0 text-muted-foreground hover:text-foreground hover:bg-muted"
               >
                 <MoreVertical className="h-4 w-4" />
               </Button>
@@ -192,14 +192,14 @@ export function FolderTree({
   if (folders.length === 0) {
     return (
       <div className="text-center py-8">
-        <FolderTreeIcon className="h-12 w-12 mx-auto mb-2 text-gray-500" />
-        <p className="text-sm text-gray-400">No folders yet</p>
+        <FolderTreeIcon className="h-12 w-12 mx-auto mb-2 text-muted-foreground" />
+        <p className="text-sm text-muted-foreground">No folders yet</p>
         {onCreateFolder && (
           <Button
             variant="outline"
             size="sm"
             onClick={() => onCreateFolder(null)}
-            className="mt-4 border-gray-600 text-gray-300 hover:bg-gray-800 hover:text-white hover:border-blue-500"
+            className="mt-4"
           >
             <FolderPlus className="h-4 w-4 mr-2" />
             Create First Folder
