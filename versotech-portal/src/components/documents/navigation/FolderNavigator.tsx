@@ -984,6 +984,19 @@ function DocumentListRow({
       <div className="flex items-center gap-3 min-w-0">
         <DocIcon className="w-5 h-5 text-primary flex-shrink-0" strokeWidth={2} />
         <span className="text-sm font-medium text-foreground truncate">{displayName}</span>
+        {/* Version Badge - only show for versioned documents */}
+        {document.current_version && document.current_version > 1 && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              onVersionHistory?.(document.id, displayName, document.current_version || 1)
+            }}
+            className="flex-shrink-0 px-1.5 py-0.5 text-xs font-medium rounded bg-muted text-muted-foreground border border-border hover:bg-accent hover:text-accent-foreground transition-colors"
+            title="View version history"
+          >
+            v{document.current_version}
+          </button>
+        )}
       </div>
 
       {/* Tags Column */}

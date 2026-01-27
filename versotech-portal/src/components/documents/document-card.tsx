@@ -253,9 +253,24 @@ export function DocumentCard({
           {/* Document Info */}
           <div className="flex-1 min-w-0 overflow-hidden">
             {/* File Name - Allow wrapping for long names */}
-            <h3 className="font-semibold text-foreground text-sm leading-tight mb-2 break-words line-clamp-2">
-              {displayName}
-            </h3>
+            <div className="flex items-start gap-2 mb-2">
+              <h3 className="font-semibold text-foreground text-sm leading-tight break-words line-clamp-2 flex-1">
+                {displayName}
+              </h3>
+              {/* Version Badge - only show for versioned documents */}
+              {document.current_version && document.current_version > 1 && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onVersionHistory?.(document.id, displayName, document.current_version || 1)
+                  }}
+                  className="flex-shrink-0 px-1.5 py-0.5 text-xs font-medium rounded bg-muted text-muted-foreground border border-border hover:bg-accent hover:text-accent-foreground transition-colors"
+                  title="View version history"
+                >
+                  v{document.current_version}
+                </button>
+              )}
+            </div>
 
             {/* Type & Size */}
             <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
