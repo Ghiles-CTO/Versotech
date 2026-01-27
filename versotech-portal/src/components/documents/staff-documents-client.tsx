@@ -31,6 +31,7 @@ import { cn } from '@/lib/utils'
 import { UploadDestinationBanner } from './upload/UploadDestinationBanner'
 import { DocumentUploadDialog } from './document-upload-dialog'
 import { MoveDocumentDialog } from './move-document-dialog'
+import { BulkMoveDialog } from './bulk-move-dialog'
 import { CreateFolderDialog } from './create-folder-dialog'
 import { RenameFolderDialog } from './rename-folder-dialog'
 import { RenameDocumentDialog } from './rename-document-dialog'
@@ -123,6 +124,9 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
   const [renameDocumentDialogOpen, setRenameDocumentDialogOpen] = useState(false)
   const [renameDocumentId, setRenameDocumentId] = useState<string | null>(null)
   const [renameDocumentName, setRenameDocumentName] = useState<string>('')
+
+  // Bulk Move Dialog State
+  const [bulkMoveDialogOpen, setBulkMoveDialogOpen] = useState(false)
 
   // URL State for sorting
   const searchParams = useSearchParams()
@@ -332,11 +336,10 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
     setSelectedDocuments(new Set())
   }, [])
 
-  // Bulk action handlers (placeholder - will be implemented in US-014, US-015, US-017)
+  // Bulk action handlers
   const handleBulkMove = useCallback(() => {
     if (selectedDocuments.size === 0) return
-    // TODO: US-014 - Open folder picker dialog
-    toast.info(`Move ${selectedDocuments.size} document(s) - coming soon`)
+    setBulkMoveDialogOpen(true)
   }, [selectedDocuments])
 
   const handleBulkDelete = useCallback(() => {
@@ -1586,6 +1589,15 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
         documentId={renameDocumentId}
         currentName={renameDocumentName}
         onSuccess={() => loadDocuments()}
+      />
+
+      {/* Bulk Move Dialog */}
+      <BulkMoveDialog
+        open={bulkMoveDialogOpen}
+        onOpenChange={setBulkMoveDialogOpen}
+        documentIds={Array.from(selectedDocuments)}
+        onSuccess={() => loadDocuments()}
+        onClearSelection={clearSelection}
       />
 
       {/* Document Preview Modal */}
