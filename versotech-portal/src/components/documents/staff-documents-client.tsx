@@ -142,6 +142,10 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
   const [uploadTargetFolderId, setUploadTargetFolderId] = useState<string | null>(null)
   const [uploadTargetFolderName, setUploadTargetFolderName] = useState<string | null>(null)
 
+  // Document drag state (for dragging documents to folders)
+  const [draggingDocumentId, setDraggingDocumentId] = useState<string | null>(null)
+  const [draggingDocumentName, setDraggingDocumentName] = useState<string | null>(null)
+
   // URL State for sorting
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -452,14 +456,15 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
     }
   }, [validateDroppedFiles])
 
-  // Tree folder drag handlers (for dropping files on tree folder nodes)
+  // Tree folder drag handlers (for dropping files or documents on tree folder nodes)
   const handleTreeFolderDragEnter = useCallback((e: React.DragEvent, folderId: string) => {
     e.preventDefault()
     e.stopPropagation()
-    // Check if files are being dragged
+    // Check if files are being dragged OR if a document is being dragged
     const hasFiles = (e.dataTransfer.items && e.dataTransfer.items.length > 0) ||
                      (e.dataTransfer.types && e.dataTransfer.types.includes('Files'))
-    if (hasFiles) {
+    const hasDocument = e.dataTransfer.types && e.dataTransfer.types.includes('application/x-document-id')
+    if (hasFiles || hasDocument) {
       setTreeDragOverFolderId(folderId)
     }
   }, [])
@@ -479,11 +484,44 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
     e.stopPropagation()
   }, [])
 
-  const handleTreeFolderDrop = useCallback((e: React.DragEvent, folderId: string, folderName: string) => {
+  const handleTreeFolderDrop = useCallback(async (e: React.DragEvent, folderId: string, folderName: string) => {
     e.preventDefault()
     e.stopPropagation()
     setTreeDragOverFolderId(null)
 
+    // Check if this is a document drag (move) vs file drag (upload)
+    const documentId = e.dataTransfer.getData('application/x-document-id')
+    const documentName = e.dataTransfer.getData('application/x-document-name')
+
+    if (documentId && documentName) {
+      // This is a document move operation - inline the move logic
+      setDraggingDocumentId(null)
+      setDraggingDocumentName(null)
+
+      // Optimistic update: Remove document from view
+      setDocuments(prev => prev.filter(d => d.id !== documentId))
+
+      try {
+        const response = await fetch(`/api/staff/documents/${documentId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ folder_id: folderId })
+        })
+
+        if (response.ok) {
+          toast.success(`Moved "${documentName}" to ${folderName}`)
+        } else {
+          const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
+          toast.error(`Failed to move document: ${errorData.error || 'Unknown error'}`)
+        }
+      } catch (error) {
+        console.error('Error moving document:', error)
+        toast.error('Failed to move document')
+      }
+      return
+    }
+
+    // Otherwise, this is a file upload operation
     const files = Array.from(e.dataTransfer.files)
     if (files.length === 0) return
 
@@ -521,6 +559,21 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
       setUploadTargetFolderId(null)
       setUploadTargetFolderName(null)
     }
+  }, [])
+
+  // Document drag handlers (for moving documents by dragging to folders)
+  const handleDocumentDragStart = useCallback((e: React.DragEvent, documentId: string, documentName: string) => {
+    setDraggingDocumentId(documentId)
+    setDraggingDocumentName(documentName)
+    // Set data transfer with document info (used to detect document drag vs file drag)
+    e.dataTransfer.setData('application/x-document-id', documentId)
+    e.dataTransfer.setData('application/x-document-name', documentName)
+    e.dataTransfer.effectAllowed = 'move'
+  }, [])
+
+  const handleDocumentDragEnd = useCallback(() => {
+    setDraggingDocumentId(null)
+    setDraggingDocumentName(null)
   }, [])
 
   const handleBulkDownload = useCallback(async () => {
@@ -1799,6 +1852,10 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
               onBulkMove={handleBulkMove}
               onBulkDelete={handleBulkDelete}
               onBulkDownload={handleBulkDownload}
+              // Document drag props
+              draggingDocumentId={draggingDocumentId}
+              onDocumentDragStart={handleDocumentDragStart}
+              onDocumentDragEnd={handleDocumentDragEnd}
             />
           </div>
         </main>

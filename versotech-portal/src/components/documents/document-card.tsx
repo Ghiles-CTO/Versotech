@@ -44,6 +44,10 @@ interface DocumentCardProps {
   // Selection props
   isSelected?: boolean
   onSelectToggle?: () => void
+  // Drag props
+  isDragging?: boolean
+  onDragStart?: (e: React.DragEvent, documentId: string, documentName: string) => void
+  onDragEnd?: (e: React.DragEvent) => void
 }
 
 /**
@@ -103,6 +107,9 @@ export function DocumentCard({
   className,
   isSelected = false,
   onSelectToggle,
+  isDragging = false,
+  onDragStart,
+  onDragEnd,
 }: DocumentCardProps) {
   const [isDownloading, setIsDownloading] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -179,14 +186,26 @@ export function DocumentCard({
     )
   }
 
+  // Handle drag start
+  const handleDragStart = (e: React.DragEvent) => {
+    if (onDragStart) {
+      onDragStart(e, document.id, displayName)
+    }
+  }
+
   return (
     <div
+      draggable={!!onDragStart}
+      onDragStart={handleDragStart}
+      onDragEnd={onDragEnd}
       className={cn(
         'group relative bg-card border border-border rounded-lg shadow-sm',
         'hover:bg-muted/50 hover:border-border hover:shadow-md',
         'transition-all duration-200',
         'cursor-pointer',
         isSelected && 'bg-primary/5 border-primary/50',
+        isDragging && 'opacity-50 ring-2 ring-primary',
+        onDragStart && 'cursor-grab active:cursor-grabbing',
         className
       )}
       onClick={() => onPreview?.(document)}

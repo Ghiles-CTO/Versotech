@@ -118,6 +118,10 @@ interface FolderNavigatorProps {
   onBulkMove?: () => void
   onBulkDelete?: () => void
   onBulkDownload?: () => void
+  // Document drag props
+  draggingDocumentId?: string | null
+  onDocumentDragStart?: (e: React.DragEvent, documentId: string, documentName: string) => void
+  onDocumentDragEnd?: (e: React.DragEvent) => void
 }
 
 /**
@@ -173,6 +177,10 @@ export function FolderNavigator({
   onBulkMove,
   onBulkDelete,
   onBulkDownload,
+  // Document drag props
+  draggingDocumentId = null,
+  onDocumentDragStart,
+  onDocumentDragEnd,
 }: FolderNavigatorProps) {
   const isEmpty = !isLoading && !isSearchMode && subfolders.length === 0 && documents.length === 0
   const hasContent = subfolders.length > 0 || documents.length > 0
@@ -496,6 +504,9 @@ export function FolderNavigator({
                         variant="default"
                         isSelected={selectedDocuments.has(document.id)}
                         onSelectToggle={onToggleSelection ? () => onToggleSelection(document.id) : undefined}
+                        isDragging={draggingDocumentId === document.id}
+                        onDragStart={onDocumentDragStart}
+                        onDragEnd={onDocumentDragEnd}
                       />
                     ))}
                   </div>
@@ -588,6 +599,9 @@ export function FolderNavigator({
                           isSelected={selectedDocuments.has(document.id)}
                           onSelectToggle={onToggleSelection ? () => onToggleSelection(document.id) : undefined}
                           showCheckbox={!!onToggleSelection}
+                          isDragging={draggingDocumentId === document.id}
+                          onDragStart={onDocumentDragStart}
+                          onDragEnd={onDocumentDragEnd}
                         />
                       ))}
                     </div>
@@ -836,6 +850,9 @@ function DocumentListRow({
   isSelected = false,
   onSelectToggle,
   showCheckbox = false,
+  isDragging = false,
+  onDragStart,
+  onDragEnd,
 }: {
   document: Document
   onPreview: () => void
@@ -844,6 +861,9 @@ function DocumentListRow({
   isSelected?: boolean
   onSelectToggle?: () => void
   showCheckbox?: boolean
+  isDragging?: boolean
+  onDragStart?: (e: React.DragEvent, documentId: string, documentName: string) => void
+  onDragEnd?: (e: React.DragEvent) => void
 }) {
   const [isDownloading, setIsDownloading] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -875,12 +895,24 @@ function DocumentListRow({
     }
   }
 
+  // Handle drag start
+  const handleDragStart = (e: React.DragEvent) => {
+    if (onDragStart) {
+      onDragStart(e, document.id, displayName)
+    }
+  }
+
   return (
     <div
+      draggable={!!onDragStart}
+      onDragStart={handleDragStart}
+      onDragEnd={onDragEnd}
       className={cn(
         "gap-4 px-4 py-3 hover:bg-muted/50 transition-colors cursor-pointer items-center grid",
         showCheckbox ? "grid-cols-[40px_1fr_100px_140px_80px]" : "grid-cols-[1fr_100px_140px_80px]",
-        isSelected && "bg-primary/5"
+        isSelected && "bg-primary/5",
+        isDragging && "opacity-50 ring-2 ring-primary",
+        onDragStart && "cursor-grab active:cursor-grabbing"
       )}
       onClick={onPreview}
     >
