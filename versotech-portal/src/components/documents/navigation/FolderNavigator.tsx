@@ -133,6 +133,8 @@ interface FolderNavigatorProps {
   onTagFiltersChange?: (tags: Set<string>) => void
   // Version history props
   onVersionHistory?: (documentId: string, documentName: string, currentVersion: number) => void
+  // Upload new version prop
+  onUploadNewVersion?: (documentId: string, documentName: string) => void
 }
 
 /**
@@ -198,6 +200,8 @@ export function FolderNavigator({
   onTagFiltersChange,
   // Version history props
   onVersionHistory,
+  // Upload new version prop
+  onUploadNewVersion,
 }: FolderNavigatorProps) {
   const isEmpty = !isLoading && !isSearchMode && subfolders.length === 0 && documents.length === 0
   const hasContent = subfolders.length > 0 || documents.length > 0
@@ -528,6 +532,7 @@ export function FolderNavigator({
                         onDelete={onDeleteDocument}
                         onTagsUpdated={onTagsUpdated}
                         onVersionHistory={onVersionHistory}
+                        onUploadNewVersion={onUploadNewVersion}
                         variant="default"
                         isSelected={selectedDocuments.has(document.id)}
                         onSelectToggle={onToggleSelection ? () => onToggleSelection(document.id) : undefined}
@@ -626,6 +631,7 @@ export function FolderNavigator({
                           onDelete={onDeleteDocument}
                           onTagsUpdated={onTagsUpdated}
                           onVersionHistory={onVersionHistory}
+                          onUploadNewVersion={onUploadNewVersion}
                           isSelected={selectedDocuments.has(document.id)}
                           onSelectToggle={onToggleSelection ? () => onToggleSelection(document.id) : undefined}
                           showCheckbox={!!onToggleSelection}
@@ -891,6 +897,7 @@ function DocumentListRow({
   onDelete,
   onTagsUpdated,
   onVersionHistory,
+  onUploadNewVersion,
   isSelected = false,
   onSelectToggle,
   showCheckbox = false,
@@ -904,6 +911,7 @@ function DocumentListRow({
   onDelete?: (id: string) => void
   onTagsUpdated?: (documentId: string, newTags: string[]) => void
   onVersionHistory?: (documentId: string, documentName: string, currentVersion: number) => void
+  onUploadNewVersion?: (documentId: string, documentName: string) => void
   isSelected?: boolean
   onSelectToggle?: () => void
   showCheckbox?: boolean
@@ -1068,6 +1076,17 @@ function DocumentListRow({
               >
                 <History className="w-4 h-4 mr-2 text-muted-foreground" strokeWidth={2} />
                 <span>Version History</span>
+              </DropdownMenuItem>
+            )}
+            {onUploadNewVersion && (
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onUploadNewVersion(document.id, displayName)
+                }}
+              >
+                <Upload className="w-4 h-4 mr-2 text-muted-foreground" strokeWidth={2} />
+                <span>Upload New Version</span>
               </DropdownMenuItem>
             )}
             {onDelete && (

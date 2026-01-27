@@ -24,6 +24,7 @@ import {
   Trash2,
   Tag,
   History,
+  Upload,
 } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
@@ -45,6 +46,7 @@ interface DocumentCardProps {
   onDelete?: (documentId: string) => void
   onTagsUpdated?: (documentId: string, newTags: string[]) => void
   onVersionHistory?: (documentId: string, documentName: string, currentVersion: number) => void
+  onUploadNewVersion?: (documentId: string, documentName: string) => void
   variant?: 'default' | 'compact'
   className?: string
   // Selection props
@@ -111,6 +113,7 @@ export function DocumentCard({
   onDelete,
   onTagsUpdated,
   onVersionHistory,
+  onUploadNewVersion,
   variant = 'default',
   className,
   isSelected = false,
@@ -380,6 +383,17 @@ export function DocumentCard({
                 >
                   <History className="w-4 h-4 mr-2 text-muted-foreground" strokeWidth={2} />
                   <span>Version History</span>
+                </DropdownMenuItem>
+              )}
+              {onUploadNewVersion && (
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onUploadNewVersion(document.id, displayName)
+                  }}
+                >
+                  <Upload className="w-4 h-4 mr-2 text-muted-foreground" strokeWidth={2} />
+                  <span>Upload New Version</span>
                 </DropdownMenuItem>
               )}
               {onDelete && (

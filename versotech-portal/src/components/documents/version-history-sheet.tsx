@@ -46,6 +46,8 @@ interface VersionHistorySheetProps {
   documentId: string | null
   documentName: string
   currentVersion: number
+  /** Increment this to trigger a refetch of versions */
+  refreshKey?: number
 }
 
 function formatFileSize(bytes: number | null): string {
@@ -60,19 +62,20 @@ export function VersionHistorySheet({
   onOpenChange,
   documentId,
   documentName,
-  currentVersion
+  currentVersion,
+  refreshKey = 0
 }: VersionHistorySheetProps) {
   const [versions, setVersions] = useState<DocumentVersion[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [downloadingVersionId, setDownloadingVersionId] = useState<string | null>(null)
 
-  // Fetch versions when sheet opens
+  // Fetch versions when sheet opens or refreshKey changes
   useEffect(() => {
     if (open && documentId) {
       fetchVersions()
     }
-  }, [open, documentId])
+  }, [open, documentId, refreshKey])
 
   const fetchVersions = async () => {
     if (!documentId) return

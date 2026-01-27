@@ -140,6 +140,13 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
   const [versionHistoryDocId, setVersionHistoryDocId] = useState<string | null>(null)
   const [versionHistoryDocName, setVersionHistoryDocName] = useState<string>('')
   const [versionHistoryCurrentVersion, setVersionHistoryCurrentVersion] = useState<number>(1)
+  const [versionHistoryRefreshKey, setVersionHistoryRefreshKey] = useState(0)
+
+  // Upload New Version State
+  const [uploadVersionDocId, setUploadVersionDocId] = useState<string | null>(null)
+  const [uploadVersionDocName, setUploadVersionDocName] = useState<string>('')
+  const [isUploadingVersion, setIsUploadingVersion] = useState(false)
+  const versionFileInputRef = useRef<HTMLInputElement>(null)
 
   // Drag and Drop Upload State
   const [isDragOver, setIsDragOver] = useState(false)
@@ -1287,6 +1294,104 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
     setVersionHistoryOpen(true)
   }, [])
 
+  // Handle upload new version - trigger file input
+  const handleUploadNewVersion = useCallback((documentId: string, documentName: string) => {
+    setUploadVersionDocId(documentId)
+    setUploadVersionDocName(documentName)
+    // Trigger file input click
+    versionFileInputRef.current?.click()
+  }, [])
+
+  // Handle file selected for version upload
+  const handleVersionFileSelected = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !uploadVersionDocId) {
+      // Reset file input
+      if (versionFileInputRef.current) {
+        versionFileInputRef.current.value = ''
+      }
+      return
+    }
+
+    // Validate file type
+    const allowedTypes = [
+      'application/pdf',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'text/plain',
+      'image/jpeg',
+      'image/png'
+    ]
+
+    if (!allowedTypes.includes(file.type)) {
+      toast.error('Invalid file type. Allowed: PDF, DOCX, XLSX, TXT, JPEG, PNG')
+      if (versionFileInputRef.current) {
+        versionFileInputRef.current.value = ''
+      }
+      return
+    }
+
+    // Validate file size (50MB max)
+    const maxSize = 50 * 1024 * 1024
+    if (file.size > maxSize) {
+      toast.error('File too large. Maximum size: 50MB')
+      if (versionFileInputRef.current) {
+        versionFileInputRef.current.value = ''
+      }
+      return
+    }
+
+    setIsUploadingVersion(true)
+    const toastId = toast.loading(`Uploading new version of "${uploadVersionDocName}"...`)
+
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+
+      const response = await fetch(`/api/staff/documents/${uploadVersionDocId}/versions`, {
+        method: 'POST',
+        body: formData
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Upload failed' }))
+        throw new Error(errorData.error || 'Failed to upload version')
+      }
+
+      const { version } = await response.json()
+      const newVersionNumber = version?.version_number || 'new'
+
+      toast.dismiss(toastId)
+      toast.success(`Uploaded version ${newVersionNumber}`)
+
+      // Update local document state with new version number
+      setDocuments(prevDocs => prevDocs.map(doc =>
+        doc.id === uploadVersionDocId
+          ? { ...doc, current_version: version?.version_number } as StaffDocument
+          : doc
+      ))
+
+      // If version history sheet is open for this document, refresh it
+      if (versionHistoryOpen && versionHistoryDocId === uploadVersionDocId) {
+        setVersionHistoryCurrentVersion(version?.version_number || 1)
+        setVersionHistoryRefreshKey(prev => prev + 1)
+      }
+
+    } catch (error) {
+      console.error('Version upload error:', error)
+      toast.dismiss(toastId)
+      toast.error(error instanceof Error ? error.message : 'Failed to upload new version')
+    } finally {
+      setIsUploadingVersion(false)
+      setUploadVersionDocId(null)
+      setUploadVersionDocName('')
+      // Reset file input
+      if (versionFileInputRef.current) {
+        versionFileInputRef.current.value = ''
+      }
+    }
+  }, [uploadVersionDocId, uploadVersionDocName, versionHistoryOpen, versionHistoryDocId])
+
   const handlePublishDocument = async (documentId: string) => {
     try {
       const response = await fetch(`/api/staff/documents/${documentId}/publish`, {
@@ -1915,6 +2020,8 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
               onTagFiltersChange={handleTagFiltersChange}
               // Version history props
               onVersionHistory={handleVersionHistory}
+              // Upload new version prop
+              onUploadNewVersion={handleUploadNewVersion}
             />
           </div>
         </main>
@@ -2002,6 +2109,16 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
         documentId={versionHistoryDocId}
         documentName={versionHistoryDocName}
         currentVersion={versionHistoryCurrentVersion}
+        refreshKey={versionHistoryRefreshKey}
+      />
+
+      {/* Hidden File Input for Version Upload */}
+      <input
+        ref={versionFileInputRef}
+        type="file"
+        className="hidden"
+        accept=".pdf,.docx,.xlsx,.txt,.jpg,.jpeg,.png"
+        onChange={handleVersionFileSelected}
       />
 
       {/* Document Preview Modal */}
