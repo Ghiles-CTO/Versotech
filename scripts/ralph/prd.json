@@ -1,402 +1,571 @@
 {
-  "project": "VERSO Fee System Redesign",
-  "branchName": "ralph/fee-system-redesign",
-  "description": "Fee System Redesign - Unify Fees page with Deal page structure, fix fee event calculations, add commission schedules, update dashboard with expense metrics, and improve reconciliation views.",
+  "project": "Staff Document Management System",
+  "branchName": "ralph/staff-documents-redesign",
+  "description": "Redesign Staff Documents into Google Drive for Versotech - always-visible tree sidebar with business hierarchy, server-side search, drag-and-drop, bulk operations, tagging, versioning.",
   "userStories": [
     {
       "id": "US-001",
-      "title": "Add deal selector to Fees page",
-      "description": "As a staff member, I want to select a deal on the Fees page so that I can view fee plans scoped to that specific deal.",
+      "title": "Fix hardcoded dark theme",
+      "description": "As a staff member, I want the documents page to respect system theme.",
       "acceptanceCriteria": [
-        "Deal selector dropdown at top of Fees page",
-        "Dropdown shows all deals user has access to (query from deals table)",
-        "Selecting a deal filters all fee plans to that deal",
-        "Default to no selection with prompt 'Select a deal to view fee plans'",
-        "URL updates with deal query param (/fees?deal_id=xxx)",
-        "Typecheck passes"
+        "Audit staff-documents-client.tsx for hardcoded dark classes",
+        "Replace bg-gray-900, text-white etc with theme-aware variants",
+        "Use bg-background, text-foreground, border-border from shadcn",
+        "Audit folder-tree.tsx, document-card.tsx for same issues",
+        "Page renders correctly in both light and dark modes",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
       ],
       "priority": 1,
       "passes": true,
-      "notes": "Implemented deal selector with URL params persistence"
+      "notes": "Quick win - fixes broken UI before adding features"
     },
     {
       "id": "US-002",
-      "title": "Group fee plans by entity type",
-      "description": "As a staff member, I want fee plans grouped by entity type (Introducer, Partner, Commercial Partner) so I can easily find and manage them.",
+      "title": "Create permanent tree sidebar layout",
+      "description": "As a staff member, I want the folder tree always visible on the left.",
       "acceptanceCriteria": [
-        "Fee plans grouped into 3 collapsible sections: Introducers, Partners, Commercial Partners",
-        "Each section shows count of fee plans (e.g., 'Introducers (3)')",
-        "Empty sections show 'No fee plans' message",
-        "Groups match the structure on Deal page's Fee Plans tab",
+        "Update staff-documents-client.tsx layout to CSS grid: [280px sidebar] [1fr content]",
+        "Sidebar is always visible on desktop (min-width: 1024px)",
+        "Sidebar has overflow-y-auto for independent scrolling",
+        "Remove FolderTreeDrawer toggle button from header",
+        "Keep drawer for mobile (below 1024px) with hamburger toggle",
+        "Main content fills remaining width",
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
       "priority": 2,
       "passes": true,
-      "notes": "Implemented collapsible sections using Collapsible component from Radix UI. Each section shows entity-specific icon and count."
+      "notes": "Core layout change - FR1 foundation"
     },
     {
       "id": "US-003",
-      "title": "Add fee plan status badges",
-      "description": "As a staff member, I want consistent status badges on the Fees page so I can quickly see plan states.",
+      "title": "Create vehicle hierarchy parser",
+      "description": "As a developer, I need to group vehicles by parent for the tree.",
       "acceptanceCriteria": [
-        "Status badge on each fee plan card",
-        "Badge colors match Deal page: Draft (gray), Sent (blue), Pending Signature (yellow), Accepted (green), Rejected (red)",
-        "Badge shows status text (e.g., 'Accepted')",
-        "Typecheck passes",
-        "Verify in browser using dev-browser skill"
+        "Create src/lib/documents/vehicle-hierarchy.ts",
+        "Export parseVehicleHierarchy(vehicles: Vehicle[]): VehicleNode[]",
+        "Rule: type='fund' or 'securitization' → isParent=true",
+        "Rule: name contains 'Compartment X' → child of matching parent",
+        "Rule: name contains 'Series XXX' → child of SCSP parent",
+        "Return nested structure: { ...vehicle, children: Vehicle[] }",
+        "Standalone vehicles (no parent match) grouped under 'Other'",
+        "Add unit tests in src/__tests__/lib/documents/vehicle-hierarchy.test.ts",
+        "Typecheck passes"
       ],
       "priority": 3,
       "passes": true,
-      "notes": "Added getFeePlanStatusBadge helper function with consistent styling. Status badges shown in both table and card views with icons."
+      "notes": "Pure function - no DB changes. Enables FR1 hierarchy."
     },
     {
       "id": "US-004",
-      "title": "Port agreement generation to Fees page",
-      "description": "As a staff member, I want to generate introducer/partner agreements from the Fees page so I don't have to navigate to the Deal page.",
+      "title": "Add document counts to folders API",
+      "description": "As a developer, I need folder document counts for the tree badges.",
       "acceptanceCriteria": [
-        "Generate Agreement button on each fee plan card (for plans with entity assigned)",
-        "Button disabled for plans without required entity data",
-        "Clicking button calls existing /api/staff/fees/plans/[id]/generate-agreement endpoint",
-        "Shows loading spinner during generation",
-        "On success, shows toast 'Agreement generated' and refreshes plan status",
-        "On error, shows error toast with message",
-        "Typecheck passes",
-        "Verify in browser using dev-browser skill"
+        "Update GET /api/staff/documents/folders to include document_count",
+        "Count documents where folder_id matches",
+        "Use subquery or join, not N+1 queries",
+        "Response shape: { ...folder, document_count: number }",
+        "Typecheck passes"
       ],
       "priority": 4,
       "passes": true,
-      "notes": "Added Generate Agreement button with loading spinner, toast notifications, and proper API calls. Button shows for introducers/partners without existing agreements. Shows 'Agreement' badge for plans with generated agreements."
+      "notes": "Backend change before tree UI needs it"
     },
     {
       "id": "US-005",
-      "title": "Port PDF preview/download to Fees page",
-      "description": "As a staff member, I want to preview and download agreement PDFs from the Fees page so I can review terms without navigating away.",
+      "title": "Render hierarchical tree with icons and counts",
+      "description": "As a staff member, I want to see business hierarchy with icons in the tree.",
       "acceptanceCriteria": [
-        "Preview PDF button on fee plans with generated agreements (agreement_pdf_url not null)",
-        "Clicking opens PDF in modal viewer (reuse existing PdfViewer component if available)",
-        "Download PDF button downloads the file",
-        "Buttons hidden for plans without generated PDFs",
+        "Update FolderTree to use parseVehicleHierarchy for top level",
+        "Icon: Building2 for parent vehicles",
+        "Icon: Package for compartments/series",
+        "Icon: Folder for regular folders",
+        "Show count badge: 'Agreements (12)' using document_count",
+        "Indent children under parents",
+        "Expand/collapse works for all levels",
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
       "priority": 5,
       "passes": true,
-      "notes": "Added Preview (Eye icon) and Download buttons to both table and card views. API now includes introducer_agreement and placement_agreement data with pdf_url. Follows same pattern as deal-fee-plans-tab.tsx."
+      "notes": "Depends on US-003, US-004"
     },
     {
       "id": "US-006",
-      "title": "Audit subscription fee calculation",
-      "description": "As a developer, I need to verify subscription fees are calculated correctly so investors are charged the right amount.",
+      "title": "Add breadcrumb with vehicle context",
+      "description": "As a staff member, I want breadcrumbs showing my full path including vehicle.",
       "acceptanceCriteria": [
-        "Review subscription-fee-calculator.ts in /src/lib/ or similar location",
-        "Confirm subscription fee = commitment × (subscription_fee_bps / 10000)",
-        "Fee event created with fee_type = 'subscription'",
-        "base_amount set to commitment value",
-        "rate_bps set to the rate used",
-        "computed_amount set to calculated fee",
-        "Add unit test for subscription fee calculation if test file exists",
-        "Typecheck passes"
+        "Update FolderBreadcrumbs to include vehicle name as first segment",
+        "Format: Vehicle > Folder > Subfolder",
+        "Each segment clickable except current",
+        "Home icon at start returns to root view",
+        "Use ChevronRight between segments",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
       ],
       "priority": 6,
       "passes": true,
-      "notes": "Audited subscription-fee-calculator.ts and calculations.ts. Formula confirmed: subscription fee = commitment × (rate_bps / 10000). Added comprehensive unit tests (21 tests) covering subscription fee, management fee, performance fee, spread, and commission calculations."
+      "notes": "FR2 - breadcrumb navigation"
     },
     {
       "id": "US-007",
-      "title": "Fix management fee period calculation",
-      "description": "As a developer, I need management fees calculated correctly with proper period dates so quarterly fees are accurate.",
+      "title": "Add grid/list view toggle",
+      "description": "As a staff member, I want to switch between grid and list view.",
       "acceptanceCriteria": [
-        "Management fee formula: base_amount × (rate_bps / 10000) × (period_days / 365)",
-        "period_start_date and period_end_date set correctly for each period",
-        "Pro-rata calculation for partial periods",
-        "Verify formula in accrue_quarterly_management_fees() or equivalent function",
-        "Typecheck passes"
+        "Add toggle button group in content header: LayoutGrid | List icons",
+        "Grid view: existing card layout",
+        "List view: table with columns - name, size, date, actions",
+        "Store preference in localStorage key 'staff-docs-view'",
+        "Load preference on mount",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
       ],
       "priority": 7,
       "passes": true,
-      "notes": "Added calculateManagementFeePeriod() with pro-rata formula. Updated cron job to set both period dates and use period-based calculation. Added unit tests."
+      "notes": "FR3 - folder contents view"
     },
     {
       "id": "US-008",
-      "title": "Fix performance fee hurdle calculation",
-      "description": "As a developer, I need performance fees to respect hurdle rates so carried interest is calculated correctly.",
+      "title": "Add document sorting",
+      "description": "As a staff member, I want to sort documents by name, date, or size.",
       "acceptanceCriteria": [
-        "profit = exit_proceeds - contributed_capital",
-        "hurdle_return = contributed_capital × (hurdle_bps / 10000) × years_held",
-        "profit_above_hurdle = profit - hurdle_return",
-        "performance_fee = profit_above_hurdle × (carry_bps / 10000) only if positive, else 0",
-        "Support tiered rates if tier1 and tier2 fields exist",
-        "Typecheck passes"
+        "Add sort dropdown: Name, Date, Size (asc/desc)",
+        "In list view, clicking column header sorts by that column",
+        "Sort indicator arrow shows current sort direction",
+        "Default sort: date descending (newest first)",
+        "Sort preference stored in URL param: ?sort=name&dir=asc",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
       ],
       "priority": 8,
       "passes": true,
-      "notes": "Added calculatePerformanceFeeWithHurdle() and calculateTieredPerformanceFeeWithHurdle() functions. Both match the database function formula. Added 11 unit tests for the new functions."
+      "notes": "FR3 continuation"
     },
     {
       "id": "US-009",
-      "title": "Link fee events to arranger",
-      "description": "As a developer, I need fee events linked to the arranger so revenue flows are properly attributed.",
+      "title": "Create server-side search API",
+      "description": "As a developer, I need search endpoint that scales to 100k+ docs.",
       "acceptanceCriteria": [
-        "payee_arranger_id field populated on all new fee events",
-        "Value derived from deals.arranger_entity_id",
-        "Create migration to backfill existing fee events with NULL payee_arranger_id if needed",
+        "Create GET /api/staff/documents/search",
+        "Query param: q (search term, required)",
+        "Query param: vehicle_id (optional filter)",
+        "Search documents.name with ILIKE '%q%'",
+        "Join to get vehicle.name, folder.name for context",
+        "Return: { results: Document[], total: number }",
+        "Limit 50 results per page",
         "Typecheck passes"
       ],
       "priority": 9,
       "passes": true,
-      "notes": "Updated cron job and manual fee event API to populate payee_arranger_id. Fee plan's created_by_arranger_id takes precedence over deal's arranger_entity_id. Backfill migration already exists at 20251227200000_backfill_fee_events_payee_arranger.sql."
+      "notes": "FR4 backend - search before UI"
     },
     {
       "id": "US-010",
-      "title": "Add investor fee schedule section",
-      "description": "As a staff member, I want to see upcoming investor fees (management, performance) so I can forecast revenue.",
+      "title": "Implement search UI",
+      "description": "As a staff member, I want to search documents from a search bar.",
       "acceptanceCriteria": [
-        "Investor Fees section in Schedule tab (or new schedule page if doesn't exist)",
-        "Shows fee events with status = 'accrued' and future period_start_date",
-        "Columns: Deal, Investor, Fee Type, Amount, Period Start, Period End",
-        "Sortable by date",
-        "Grouped by deal then investor",
+        "Search input in page header with Search icon",
+        "Debounce input 300ms before calling /search API",
+        "Show Loader2 spinner while loading",
+        "Results replace folder contents in main area",
+        "Each result shows: name, path (Vehicle > Folder), size",
+        "Click result opens document preview",
+        "X button clears search and returns to folder view",
+        "Empty state: 'No results for [query]'",
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
       "priority": 10,
       "passes": true,
-      "notes": "Added Investor Fees collapsible section in ScheduleTab. Uses fee events API with period_from filter. Grouped by deal then investor with table showing Fee Type, Amount, Period Start, Period End."
+      "notes": "FR4 - depends on US-009"
     },
     {
       "id": "US-011",
-      "title": "Add introducer commission schedule",
-      "description": "As a staff member, I want to see upcoming introducer commission payments so I can forecast expenses.",
+      "title": "Add tree search filter",
+      "description": "As a staff member, I want to filter the tree sidebar by typing.",
       "acceptanceCriteria": [
-        "Introducer Commissions section in Schedule tab",
-        "Query introducer_commissions where status IN ('accrued', 'invoice_requested')",
-        "Columns: Introducer Name, Deal, Investor, Amount, Status, Created Date",
-        "Grouped by introducer then deal",
+        "Search input at top of tree sidebar",
+        "Client-side filter as user types (debounce 150ms)",
+        "Filter matches vehicle name, folder name",
+        "Auto-expand parents when child matches",
+        "Highlight matching text with mark element",
+        "Show 'No matches' when nothing found",
+        "X button clears filter",
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
       "priority": 11,
       "passes": true,
-      "notes": "Added Introducer Commissions collapsible section to ScheduleTab. Uses existing /api/staff/fees/commissions endpoint with entity_type=introducer&status=accrued filter. Grouped by introducer then deal with table showing Investor, Amount, Status, Created Date columns."
+      "notes": "FR1 tree search - different from document search"
     },
     {
       "id": "US-012",
-      "title": "Add partner commission schedule",
-      "description": "As a staff member, I want to see upcoming partner commission payments so I can forecast partner expenses.",
+      "title": "Add checkbox selection to documents",
+      "description": "As a staff member, I want to select multiple documents.",
       "acceptanceCriteria": [
-        "Partner Commissions section in Schedule tab",
-        "Query partner_commissions where status IN ('accrued', 'invoice_requested')",
-        "Columns: Partner Name, Deal, Investor, Amount, Status, Created Date",
-        "Grouped by partner then deal",
+        "Checkbox on each document card/row",
+        "Header checkbox for 'Select All' visible documents",
+        "Track selection in state: Set<string> of document IDs",
+        "Show '[N] selected' badge in header when N > 0",
+        "Clear selection when navigating to different folder",
+        "Checkbox click doesn't open document preview",
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
       "priority": 12,
       "passes": true,
-      "notes": "Added Partner Commissions collapsible section to ScheduleTab. Uses existing /api/staff/fees/commissions endpoint with entity_type=partner&status=accrued filter. Grouped by partner then deal with table showing Investor, Amount, Status, Created Date columns. Uses Handshake icon for partners."
+      "notes": "FR7 foundation - bulk ops need selection first"
     },
     {
       "id": "US-013",
-      "title": "Add commercial partner commission schedule",
-      "description": "As a staff member, I want to see upcoming commercial partner commission payments so I can forecast all commission expenses.",
+      "title": "Add bulk actions dropdown",
+      "description": "As a staff member, I want a dropdown menu for bulk actions.",
       "acceptanceCriteria": [
-        "Commercial Partner Commissions section in Schedule tab",
-        "Query commercial_partner_commissions where status IN ('accrued', 'invoice_requested')",
-        "Columns: Commercial Partner Name, Deal, Investor, Amount, Status, Created Date",
-        "Grouped by commercial partner then deal",
+        "Dropdown button appears when documents selected",
+        "Button text: 'Actions' with ChevronDown",
+        "Menu items: Move to..., Delete, Download ZIP",
+        "Dropdown disabled when nothing selected",
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
       "priority": 13,
       "passes": true,
-      "notes": "Added Commercial Partner Commissions collapsible section to ScheduleTab. Uses /api/staff/fees/commissions endpoint with entity_type=commercial_partner&status=accrued filter. Grouped by commercial partner then deal with table showing Investor, Amount, Status, Created Date columns. Uses Briefcase icon (purple color) for commercial partner visual distinction."
+      "notes": "FR7 - depends on US-012"
     },
     {
       "id": "US-014",
-      "title": "Add schedule filtering controls",
-      "description": "As a staff member, I want to filter the schedule by deal, entity, and date range so I can focus on relevant data.",
+      "title": "Implement bulk move",
+      "description": "As a staff member, I want to move multiple documents at once.",
       "acceptanceCriteria": [
-        "Deal filter dropdown (multi-select)",
-        "Entity filter dropdown (multi-select, shows all introducers/partners/commercial partners)",
-        "Date range picker (from/to dates)",
-        "Filters apply to all schedule sections",
-        "Filters persist in URL query params",
-        "Clear filters button",
+        "Click 'Move to...' opens folder picker dialog",
+        "Dialog shows folder tree (reuse FolderTree component)",
+        "Select destination folder, click 'Move [N] documents'",
+        "Call PATCH /api/staff/documents/[id] for each with new folder_id",
+        "Show progress toast during move",
+        "On success: 'Moved [N] documents to [folder]'",
+        "Clear selection after move",
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
       "priority": 14,
       "passes": true,
-      "notes": "Added filter controls Card with Deal multi-select (Popover + Command + Checkbox), Entity multi-select (grouped by type with icons), and DateRangePicker. Filters persist in URL (deal_ids, entity_ids, date_from, date_to). Added Clear all button. All schedule sections (Investor Fees, Introducer/Partner/Commercial Partner Commissions) now filter by selected deals, entities, and date range."
+      "notes": "FR7 bulk move"
     },
     {
       "id": "US-015",
-      "title": "Add commission KPIs to dashboard",
-      "description": "As a staff member, I want to see commission expense metrics alongside revenue so I have a complete financial picture.",
+      "title": "Implement bulk delete",
+      "description": "As a staff member, I want to delete multiple documents at once.",
       "acceptanceCriteria": [
-        "New Commissions section on dashboard (can be separate card or section)",
-        "Shows: Total Commissions Owed, Total Paid YTD, Pending Invoice",
-        "Data aggregated from all 3 commission tables (introducer, partner, commercial_partner)",
+        "Click 'Delete' shows confirmation dialog",
+        "Dialog: 'Delete [N] documents? This cannot be undone.'",
+        "List first 5 document names, then '...and N more'",
+        "Red 'Delete' button, gray 'Cancel' button",
+        "Call DELETE /api/staff/documents/[id] for each",
+        "On success: 'Deleted [N] documents'",
+        "Clear selection after delete",
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
       "priority": 15,
       "passes": true,
-      "notes": "Added Commissions card to OverviewTab with KPIs (Total Owed, Paid YTD, Pending Invoice) and breakdown by entity type. Updated dashboard API to return commission_summary with data aggregated from all 3 commission tables."
+      "notes": "FR7 bulk delete"
     },
     {
       "id": "US-016",
-      "title": "Show commission breakdown by entity type",
-      "description": "As a staff member, I want to see commission totals broken down by entity type so I know where expenses are going.",
+      "title": "Create bulk download ZIP endpoint",
+      "description": "As a developer, I need endpoint to download multiple docs as ZIP.",
       "acceptanceCriteria": [
-        "Within Commissions section, show breakdown: Introducers $X, Partners $X, Commercial Partners $X",
-        "Each shows total owed amount",
-        "Clickable to navigate to respective reconciliation view (or placeholder)",
-        "Typecheck passes",
-        "Verify in browser using dev-browser skill"
+        "Create POST /api/staff/documents/bulk-download",
+        "Body: { document_ids: string[] }",
+        "Fetch files from Supabase storage",
+        "Create ZIP using archiver npm package",
+        "Stream ZIP response (Content-Type: application/zip)",
+        "Filename header: documents-YYYY-MM-DD.zip",
+        "Typecheck passes"
       ],
       "priority": 16,
       "passes": true,
-      "notes": "Made entity type breakdown cards clickable with navigation to arranger-reconciliation page. Each card navigates to the appropriate tab (introducers, partners, commercialPartners). Added ExternalLink icon and hover states with entity-specific border colors."
+      "notes": "FR7 backend for ZIP download"
     },
     {
       "id": "US-017",
-      "title": "Update fees dashboard API with commission summary",
-      "description": "As a developer, I need the dashboard API to return commission metrics so the frontend can display them.",
+      "title": "Implement bulk download ZIP UI",
+      "description": "As a staff member, I want to download selected documents as ZIP.",
       "acceptanceCriteria": [
-        "Update /api/staff/fees/dashboard or create new endpoint",
-        "Return commission_summary object with: total_owed, total_accrued, total_invoiced, total_paid_ytd",
-        "Include by_entity_type breakdown: { introducer: {owed, paid}, partner: {owed, paid}, commercial_partner: {owed, paid} }",
-        "Query all 3 commission tables and aggregate",
-        "Typecheck passes"
+        "Click 'Download ZIP' calls bulk-download endpoint",
+        "Show loading toast: 'Preparing download...'",
+        "Trigger browser download when response arrives",
+        "Clear selection after download starts",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
       ],
       "priority": 17,
       "passes": true,
-      "notes": "Dashboard API already had commission_summary implemented from US-015/US-016. Standardized by_entity_type to use 'paid' instead of 'paid_ytd' to match acceptance criteria. Updated OverviewTab interface and UI to match."
+      "notes": "FR7 - depends on US-016"
     },
     {
       "id": "US-018",
-      "title": "Add reconciliation navigation links",
-      "description": "As a staff member, I want quick links to reconciliation views from the dashboard so I can investigate discrepancies.",
+      "title": "Add drag-and-drop upload zone",
+      "description": "As a staff member, I want to drag files onto the page to upload.",
       "acceptanceCriteria": [
-        "View Reconciliation link in Commissions section",
-        "Link navigates to /arranger-reconciliation or equivalent",
-        "View Invoices link in Revenue section (if exists)",
-        "Link navigates to /reconciliation or equivalent",
+        "Main content area is a drop zone",
+        "On drag over: show blue dashed border and 'Drop files to upload' overlay",
+        "On drop: open DocumentUploadDialog with dropped files",
+        "Reject files > 50MB with toast error",
+        "Accept: PDF, DOCX, XLSX, TXT, JPG, PNG",
+        "Reject other types with toast listing allowed",
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
       "priority": 18,
-      "passes": true,
-      "notes": "Added View Reconciliation button in Commissions section header navigating to /arranger-reconciliation. Made Outstanding Invoices KPI card clickable with View Invoices link navigating to /reconciliation. Added ArrowRight icons and hover states for visual feedback."
+      "passes": false,
+      "notes": "FR5 drag-drop upload"
     },
     {
       "id": "US-019",
-      "title": "Add commission tracking to lawyer reconciliation",
-      "description": "As a lawyer, I want to see all commission statuses in my reconciliation view so I can track pending payments.",
+      "title": "Add drag-drop to tree folders",
+      "description": "As a staff member, I want to drag files onto tree folders to upload there.",
       "acceptanceCriteria": [
-        "Commission Status tab in lawyer reconciliation page (if exists at /lawyer-reconciliation)",
-        "Shows all commissions from all 3 tables (introducer, partner, commercial_partner)",
-        "Columns: Entity Type, Entity Name, Deal, Investor, Amount, Status, Invoice URL",
-        "Filter by status (Accrued, Invoice Requested, Invoiced, Paid)",
+        "Tree folder nodes accept onDragOver, onDrop",
+        "On drag over folder: highlight with ring-2 ring-primary",
+        "On drop: open upload dialog with that folder pre-selected",
+        "Toast: 'Uploading to [folder name]'",
+        "Works even when folder is collapsed",
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
       "priority": 19,
-      "passes": true,
-      "notes": "Added Commission Status tab to lawyer-reconciliation-client.tsx. Server page fetches all 3 commission types with investor data. Tab shows unified commission list with entity type icons/colors (Introducer blue, Partner green, Commercial Partner purple). Status filter dropdown with Accrued, Invoice Requested, Invoiced, Paid options."
+      "passes": false,
+      "notes": "FR5 extension"
     },
     {
       "id": "US-020",
-      "title": "Verify arranger reconciliation structure",
-      "description": "As an arranger, I want separate tabs for each entity type so I can manage commissions efficiently.",
+      "title": "Add document drag to move",
+      "description": "As a staff member, I want to drag documents to folders to move them.",
       "acceptanceCriteria": [
-        "Verify three tabs exist in arranger reconciliation: Introducers, Partners, Commercial Partners",
-        "Each tab queries respective commission table",
-        "Columns: Entity Name, Deal, Investor, Amount, Basis Type, Rate, Status",
-        "Action buttons: Request Invoice, Mark Paid (if not already implemented)",
+        "Add draggable attribute to document cards/rows",
+        "On drag start: set dataTransfer with document ID",
+        "Tree folders highlight as drop targets",
+        "On drop: call move API for that document",
+        "Toast: 'Moved [name] to [folder]'",
+        "Update UI optimistically, revert on error",
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
       "priority": 20,
-      "passes": true,
-      "notes": "Verified three tabs exist (Introducers, Partners, Commercial Partners). Added Investor column and Action buttons (Request Invoice, Mark Paid) to commission-tab.tsx. Uses existing API endpoints and RequestInvoiceDialog component."
+      "passes": false,
+      "notes": "FR8 drag-drop organization"
     },
     {
       "id": "US-021",
-      "title": "Add reconciliation summary view",
-      "description": "As a staff member, I want a summary view showing overall reconciliation status so I can quickly assess financial health.",
+      "title": "Display tags on documents",
+      "description": "As a staff member, I want to see document tags as badges.",
       "acceptanceCriteria": [
-        "Summary section at top of reconciliation page",
-        "Shows: Total Outstanding, Total Matched, Total Unmatched",
-        "Progress indicator (pie chart or progress bar) showing match percentage",
-        "Updates based on current filter selection",
+        "Fetch tags[] field from documents API (already exists)",
+        "Grid view: show tag badges below document name",
+        "List view: tags column with badges",
+        "Max 2 visible tags, '+N' for overflow",
+        "Tooltip on '+N' shows full tag list",
+        "Empty tags = show nothing",
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
       "priority": 21,
-      "passes": true,
-      "notes": "Added Reconciliation Summary Card with Progress bar showing match percentage, and 3 KPIs: Total Outstanding (amber), Total Matched (green), Total Unmatched (red). Summary updates based on filter selection (quickSearch and statusFilter) via useMemo on filteredTransactions."
+      "passes": false,
+      "notes": "FR10 tag display"
     },
     {
       "id": "US-022",
-      "title": "Audit invoice generation accuracy",
-      "description": "As a developer, I need to verify invoice amounts match fee event totals so investors are billed correctly.",
+      "title": "Create tags list API",
+      "description": "As a developer, I need endpoint to list all unique tags.",
       "acceptanceCriteria": [
-        "Review invoice generation flow in /api/staff/invoices or similar",
-        "Verify: invoice.total = SUM(fee_events.computed_amount) for linked events",
-        "Add validation that warns/errors if totals don't match",
+        "Create GET /api/staff/documents/tags",
+        "Query: SELECT DISTINCT unnest(tags) FROM documents",
+        "Return: { tags: string[] } sorted alphabetically",
         "Typecheck passes"
       ],
       "priority": 22,
-      "passes": true,
-      "notes": "Reviewed invoice generation flow. Verified formula: invoice.total = SUM(fee_events.computed_amount) + SUM(custom_line_items.amount). Added validateInvoiceTotal() function in calculations.ts. Updated GET /api/staff/fees/invoices/[id] to return validation result. Updated GET /api/staff/fees/invoices to include has_discrepancy and discrepancy_amount on each invoice. Added console warning in generate endpoint for mismatches."
+      "passes": false,
+      "notes": "FR10 backend for autocomplete"
     },
     {
       "id": "US-023",
-      "title": "Add invoice discrepancy warnings",
-      "description": "As a staff member, I want to see warnings when invoice amounts don't match expected fees so I can investigate.",
+      "title": "Add tag management popover",
+      "description": "As a staff member, I want to add/remove tags from a document.",
       "acceptanceCriteria": [
-        "Warning badge/icon on invoices where total != SUM(linked fee_events)",
-        "Clicking badge shows discrepancy details in popover or modal",
-        "Warning appears in invoice list view",
+        "Document actions menu: 'Manage Tags'",
+        "Opens Popover showing current tags as removable badges",
+        "Input field to add new tag (Enter to add)",
+        "Autocomplete dropdown from /tags API",
+        "X on badge removes tag",
+        "Save via PATCH /api/staff/documents/[id] with updated tags[]",
+        "Toast: 'Tags updated'",
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
       "priority": 23,
-      "passes": true,
-      "notes": "Added amber 'Discrepancy' badge with AlertTriangle icon to invoice cards. Clicking shows Popover with Invoice Total, Expected Total, and Discrepancy Amount. Updated InvoiceWithLines type to include has_discrepancy and discrepancy_amount fields from API."
+      "passes": false,
+      "notes": "FR10 - depends on US-022"
     },
     {
       "id": "US-024",
-      "title": "Clarify invoice UI labeling",
-      "description": "As a staff member, I want clear labeling that invoices are for investors so there's no confusion with entity invoices.",
+      "title": "Add filter by tag",
+      "description": "As a staff member, I want to filter documents by tag.",
       "acceptanceCriteria": [
-        "Page title updated to 'Investor Invoices'",
-        "Add helper text: 'Invoices sent to investors for fee collection'",
-        "Ensure entity invoice uploads are in separate commission flow (not on this page)",
+        "Add tag filter dropdown next to search",
+        "Fetch tags from /tags API for options",
+        "Multi-select with checkboxes",
+        "Filter: documents where tags[] contains ANY selected tag",
+        "Clear button to reset filter",
+        "Persist in URL: ?tags=urgent,review",
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
       "priority": 24,
-      "passes": true,
-      "notes": "Updated page title to 'Investor Invoices' with helper text. Entity invoice uploads confirmed to be in separate /components/commissions/ flow (submit-invoice-dialog.tsx, view-invoice-dialog.tsx)."
+      "passes": false,
+      "notes": "FR10 tag filtering"
     },
     {
       "id": "US-025",
-      "title": "Verify spread fee calculation",
-      "description": "As a developer, I need spread fees calculated and recorded so secondary trade markups are tracked.",
+      "title": "Add version history panel",
+      "description": "As a staff member, I want to view a document's version history.",
       "acceptanceCriteria": [
-        "Spread fee event created when spread is applied to trade",
-        "fee_type = 'spread_markup' for spread fees",
-        "computed_amount = spread amount from trade data",
-        "Fee event linked to subscription via allocation_id",
-        "Typecheck passes"
+        "Document actions menu: 'Version History'",
+        "Opens Sheet (slide-out panel) from right",
+        "Fetch GET /api/staff/documents/[id]/versions",
+        "List: version number, date, uploader, size",
+        "Current version has 'Current' badge",
+        "Download button on each version",
+        "Empty state if only 1 version",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
       ],
       "priority": 25,
-      "passes": true,
-      "notes": "Audited existing spread fee implementation. Verified: (1) subscription-fee-calculator.ts lines 191-203 creates fee events with fee_type='spread_markup', (2) computed_amount set from subscription.spread_fee_amount which is calculated as (price_per_share - cost_per_share) × num_shares in deal-close-handler.ts, (3) createFeeEvents() links fee events to subscriptions via allocation_id field. calculateSpread() utility exists in calculations.ts with unit tests."
+      "passes": false,
+      "notes": "FR11 version history"
+    },
+    {
+      "id": "US-026",
+      "title": "Add upload new version",
+      "description": "As a staff member, I want to upload a new version of a document.",
+      "acceptanceCriteria": [
+        "Document actions menu: 'Upload New Version'",
+        "Opens file picker (single file)",
+        "POST /api/staff/documents/[id]/versions with file",
+        "Toast: 'Uploaded version [N]'",
+        "Refresh version history if panel open",
+        "Document card shows updated version number",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 26,
+      "passes": false,
+      "notes": "FR11 - depends on US-025"
+    },
+    {
+      "id": "US-027",
+      "title": "Show version badge on documents",
+      "description": "As a staff member, I want to see version number on multi-version docs.",
+      "acceptanceCriteria": [
+        "Documents with current_version > 1 show 'v[N]' badge",
+        "Badge is small and gray (not prominent)",
+        "Click badge opens version history panel",
+        "Documents with version 1 show no badge",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 27,
+      "passes": false,
+      "notes": "FR11 version indicator"
+    },
+    {
+      "id": "US-028",
+      "title": "Show expired document warning",
+      "description": "As a staff member, I want warnings on expired documents.",
+      "acceptanceCriteria": [
+        "Check document_expiry_date against new Date()",
+        "If expired: show AlertTriangle icon (amber) on card/row",
+        "Tooltip: 'Expired on [formatted date]'",
+        "In DocumentViewerFullscreen: show amber banner at top",
+        "Banner: 'This document expired on [date]'",
+        "Document still fully accessible",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 28,
+      "passes": false,
+      "notes": "FR13 expired warning"
+    },
+    {
+      "id": "US-029",
+      "title": "Show watermark on confidential docs",
+      "description": "As a staff member, I want watermarks displayed on confidential documents.",
+      "acceptanceCriteria": [
+        "Check documents.watermark JSONB field (truthy = has watermark)",
+        "If watermark: show 'CONFIDENTIAL' badge on card/row",
+        "In PDF preview: overlay diagonal text 'CONFIDENTIAL - VERSO Holdings'",
+        "Watermark at 30% opacity",
+        "Position: center of viewport, rotated -45deg",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 29,
+      "passes": false,
+      "notes": "FR12 watermark display"
+    },
+    {
+      "id": "US-030",
+      "title": "Add folder context menu",
+      "description": "As a staff member, I want to right-click folders for actions.",
+      "acceptanceCriteria": [
+        "Right-click folder in tree opens ContextMenu",
+        "Menu items: New Subfolder, Rename, Delete",
+        "New Subfolder: opens CreateFolderDialog with parent set",
+        "Rename: opens RenameFolderDialog",
+        "Delete: confirmation, disabled if folder has documents",
+        "Only custom folders can be deleted (not category folders)",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 30,
+      "passes": false,
+      "notes": "FR9 folder management"
+    },
+    {
+      "id": "US-031",
+      "title": "Add deals to tree under vehicles",
+      "description": "As a staff member, I want to see deals in the folder tree.",
+      "acceptanceCriteria": [
+        "Under each vehicle, show 'Deals' virtual node with Briefcase icon",
+        "Expand fetches deals from GET /api/deals?vehicle_id=X",
+        "Each deal shown as child node",
+        "Clicking deal filters documents by deal_id",
+        "Lazy load: only fetch when expanded",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 31,
+      "passes": false,
+      "notes": "FR1 hierarchy extension"
+    },
+    {
+      "id": "US-032",
+      "title": "Add data room virtual folder",
+      "description": "As a staff member, I want to see deal data rooms in the tree.",
+      "acceptanceCriteria": [
+        "Under each deal node, show 'Data Room' virtual folder",
+        "Icon: Database or HardDrive",
+        "Clicking queries deal_data_room_documents table instead of documents",
+        "Same grid/list view for data room contents",
+        "Upload to data room inserts into deal_data_room_documents",
+        "Breadcrumb: Vehicle > Deal > Data Room",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 32,
+      "passes": false,
+      "notes": "FR14 data room integration"
     }
   ]
 }

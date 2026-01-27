@@ -351,11 +351,64 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
     setBulkDeleteDialogOpen(true)
   }, [selectedDocuments])
 
-  const handleBulkDownload = useCallback(() => {
+  const handleBulkDownload = useCallback(async () => {
     if (selectedDocuments.size === 0) return
-    // TODO: US-017 - Call bulk download endpoint
-    toast.info(`Download ${selectedDocuments.size} document(s) as ZIP - coming soon`)
-  }, [selectedDocuments])
+
+    const toastId = toast.loading('Preparing download...')
+
+    try {
+      const response = await fetch('/api/staff/documents/bulk-download', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          document_ids: Array.from(selectedDocuments)
+        })
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || 'Download failed')
+      }
+
+      // Get the blob from response
+      const blob = await response.blob()
+
+      // Get filename from Content-Disposition header or use default
+      const contentDisposition = response.headers.get('Content-Disposition')
+      let filename = 'documents.zip'
+      if (contentDisposition) {
+        const match = contentDisposition.match(/filename="([^"]+)"/)
+        if (match) {
+          filename = match[1]
+        }
+      }
+
+      // Create download link and trigger download
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = filename
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(url)
+
+      // Get document count from headers
+      const docCount = response.headers.get('X-Documents-Count') || selectedDocuments.size.toString()
+
+      toast.dismiss(toastId)
+      toast.success(`Downloaded ${docCount} document(s) as ZIP`)
+
+      // Clear selection after successful download
+      clearSelection()
+    } catch (error) {
+      console.error('Bulk download error:', error)
+      toast.dismiss(toastId)
+      toast.error(error instanceof Error ? error.message : 'Failed to download documents')
+    }
+  }, [selectedDocuments, clearSelection])
 
   // Tree Sidebar State
   const [treeSearchQuery, setTreeSearchQuery] = useState('')

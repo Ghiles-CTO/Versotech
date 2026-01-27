@@ -1,538 +1,416 @@
 # Ralph Progress Log
-Started: Wed Jan 21 15:53:56 CET 2026
+Started: Mon Jan 26 22:04:55 CET 2026
 ---
 
 ## Codebase Patterns
-- Use `useSearchParams` from `next/navigation` for URL query params in client components
-- Use `useRouter` with `router.push()` to update URL params
-- Fee plans are managed via `/api/staff/fees/plans` endpoint
-- Deals are fetched via `/api/deals` endpoint, returns `{ deals: [...] }`
-- Select components use value "none" for unselected state (empty string doesn't work with Radix)
-- Fee plan statuses: draft, sent, pending_signature, accepted, rejected - use badge colors: gray, blue, amber, green, red
-- Reference `deal-fee-plans-tab.tsx` for status badge patterns used throughout the app
-- Fee calculations: use `bpsToPercent(bps)` to convert basis points to decimal (200 → 0.02)
-- Run tests with `npx vitest run <path>` (no "test" script in package.json)
-- Management fee pro-rata formula: `base_amount × (rate_bps / 10000) × (period_days / 365)`
-- Fee events must include both `period_start_date` and `period_end_date` for time-based fees
-- Use Popover from `@/components/ui/popover` for click-to-reveal details/tooltips
-- AlertTriangle icon (lucide-react) with amber color scheme for warnings (amber-600, amber-100, dark:amber-900/30)
+- Use shadcn theme variables for theme-aware styling: `bg-background`, `text-foreground`, `text-muted-foreground`, `border-border`, `bg-muted`, `bg-card`, `bg-accent`, `text-primary`, `text-destructive`
+- For hover states use: `hover:bg-muted`, `hover:bg-accent`
+- For selection states use: `bg-primary/20 border-primary`
+- shadcn Button component already handles theme - don't add custom text/border colors
+- DropdownMenuContent doesn't need custom bg/border styling - shadcn handles it
+- Responsive sidebar pattern: `grid-cols-1 lg:grid-cols-[280px_1fr]` with `hidden lg:flex` for desktop-only sidebar
+- Vehicle hierarchy parsing: Use `parseVehicleHierarchy()` from `@/lib/documents/vehicle-hierarchy` to group vehicles by parent (fund/securitization → children) and create virtual SCSP parent nodes for Series vehicles
+- Supabase aggregations: Use RPC functions with SQL `GROUP BY` for count/sum operations on large tables. Example: `serviceSupabase.rpc('get_folder_document_counts')` returns pre-aggregated counts instead of fetching all rows
+- Breadcrumb vehicle context: Track `selectedVehicleId` state alongside `currentFolderId`, derive `currentVehicle` from folder's vehicle_id OR explicit selection. FolderBreadcrumbs accepts `vehicle` and `onVehicleClick` props.
+- SSR-safe localStorage pattern: Initialize useState with default value, then use `useEffect(() => { const saved = localStorage.getItem(key); if (saved) setState(saved) }, [])` to load on client mount. Avoid using localStorage in useState initializer (doesn't work with SSR/hydration).
+- URL state persistence pattern: Use `useSearchParams()` + `useRouter()` + `usePathname()` from next/navigation. Read params on mount with useEffect, update with `router.replace(\`\${pathname}?\${params.toString()}\`, { scroll: false })` to avoid page scroll.
+- Server-side search pattern: Use `.ilike('column', '%${searchTerm}%')` for case-insensitive search. Join related tables in same query with explicit column selection for context (e.g., folder.name, vehicle.name). Limit 50 results with pagination for scalability.
+- Debounce pattern: Use `const timerRef = useRef<NodeJS.Timeout | null>(null)` with `clearTimeout(timerRef.current)` before `timerRef.current = setTimeout(() => action(), 300)`. Clean up on unmount with `useEffect(() => () => clearTimeout(timerRef.current), [])`.
+- Tree search with auto-expand: Separate `inputValue` from `debouncedValue` state. Use effect to find matching nodes and their ancestors, store in `searchExpanded` set. Combine with manual `expanded` set using `effectiveExpanded = new Set([...expanded, ...searchExpanded])`. Clear `searchExpanded` when search is cleared.
+- Text highlighting pattern: Create `highlightText(text, query)` helper that returns `<>{before}<mark className="bg-yellow-300 dark:bg-yellow-500/40">{match}</mark>{after}</>` using case-insensitive indexOf.
+- Bulk actions dropdown pattern: Use DropdownMenu with disabled button when `selectedDocuments.size === 0`. Pass callbacks like `onBulkMove`, `onBulkDelete`, `onBulkDownload`. Destructive items use `className="text-destructive focus:text-destructive"`.
+- Bulk operations with progress: For multi-item operations, use sequential API calls (not Promise.all) to show progress "Processing X/Y...". Track success/fail counts and show appropriate toast (success if all pass, warning if partial, error if all fail).
+- ZIP streaming response pattern: Use `archiver` package - collect chunks via `archive.on('data')`, finalize with `archive.finalize()`, wait for `archive.on('end')`, then return `new NextResponse(buffer, { headers: { 'Content-Type': 'application/zip', 'Content-Disposition': 'attachment; filename="..."' } })`.
 
+## 2026-01-26 22:15 - US-001
+- **What was implemented:** Fixed hardcoded dark theme in staff documents page
+- **Files changed:**
+  - `versotech-portal/src/components/documents/staff-documents-client.tsx` - Replaced bg-[#0a0a0a], bg-black/40, border-white/10, text-white with theme-aware variants
+  - `versotech-portal/src/components/documents/folder-tree.tsx` - Replaced hover:bg-gray-700, text-gray-300/400 with theme-aware variants
+  - `versotech-portal/src/components/documents/document-card.tsx` - Replaced bg-white, text-gray-900, border-gray-200 with theme-aware variants
+- **Learnings for future iterations:**
+  - The staff documents page had fully hardcoded dark theme classes forcing dark mode regardless of system settings
+  - shadcn components (Button, DropdownMenu) handle theming internally - don't override with custom colors
+  - Icon colors can use semantic colors like `text-blue-500` for vehicle roots, `text-green-500` for categories (these are intentional differentiation, not theme colors)
+  - The amber warning button uses `dark:text-amber-400` pattern for colors that need specific dark mode variants
 ---
 
-## 2026-01-21 ~16:00 - US-001
-- What was implemented: Added deal selector dropdown to Fees page
-  - Deal selector dropdown at top of fees-page-client.tsx
-  - Loads deals from /api/deals endpoint
-  - URL updates with deal_id query param when selection changes
-  - FeePlansTab accepts dealId prop and filters plans accordingly
-  - Shows prompt "Select a deal to view fee plans" when no deal selected
-- Files changed:
-  - `versotech-portal/src/app/(main)/versotech_main/fees/fees-page-client.tsx`
-  - `versotech-portal/src/components/fees/FeePlansTab.tsx`
+## 2026-01-26 22:30 - US-002
+- **What was implemented:** Created permanent tree sidebar layout
+- **Files changed:**
+  - `versotech-portal/src/components/documents/staff-documents-client.tsx` - Major layout refactor:
+    - Added CSS grid layout with `grid-cols-1 lg:grid-cols-[280px_1fr]`
+    - Built sidebar tree renderer with folder expand/collapse
+    - Added tree search with auto-expand for matching folders
+    - Integrated document counts display in tree nodes
+    - Added mobile hamburger toggle (Menu icon) for drawer
+    - Moved main content to `<main>` element within grid
+  - `versotech-portal/src/components/documents/navigation/FolderTreeDrawer.tsx` - Fixed hardcoded dark theme:
+    - Replaced `bg-zinc-900`, `bg-black/40`, `border-white/10` with theme-aware variants
+    - Replaced `text-white`, `text-gray-300/400` with `text-foreground`, `text-muted-foreground`
+    - Fixed selection states to use `bg-primary/20 border-primary`
 - **Learnings for future iterations:**
-  - URL search params in client components: use `useSearchParams()` from `next/navigation`
-  - Radix Select needs a non-empty value for unselected state (use "none" not "")
-  - API endpoints: deals at `/api/deals`, fee plans at `/api/staff/fees/plans`
-  - The fees page has multiple tabs (Overview, Fee Plans, Invoices, Schedule, Commissions)
-- Collapsible component is available at `@/components/ui/collapsible` for expandable/collapsible sections
-- Fee plans can be grouped by entity type: introducer, partner, commercial_partner
-
+  - Use `lg:grid-cols-[280px_1fr]` for desktop sidebar + content layouts (1024px breakpoint)
+  - `hidden lg:flex` pattern shows sidebar only on desktop; `lg:hidden` for mobile-only elements
+  - ScrollArea from shadcn provides smooth independent scrolling for sidebars
+  - Tree building pattern: `buildFolderTree()` creates nested structure from flat folder list, `filterTreeBySearch()` filters recursively
+  - Auto-expand ancestors: When navigating to a folder, expand all parent folders using useEffect
 ---
 
-## 2026-01-21 ~16:05 - US-002
-- What was implemented: Grouped fee plans by entity type into collapsible sections
-  - Added Collapsible component from Radix UI for expandable sections
-  - Created 3 collapsible groups: Introducers, Partners, Commercial Partners
-  - Each section header shows entity icon, label, and count (e.g., "Introducers (3)")
-  - Empty sections display "No fee plans" message
-  - Both table and card views work within each group
-  - All sections start expanded by default
-- Files changed:
-  - `versotech-portal/src/components/fees/FeePlansTab.tsx`
+## 2026-01-26 22:40 - US-003
+- **What was implemented:** Created vehicle hierarchy parser for grouping vehicles in tree view
+- **Files changed:**
+  - `versotech-portal/src/lib/documents/vehicle-hierarchy.ts` - New module with:
+    - `parseVehicleHierarchy()` - Main function converting flat vehicle array to nested hierarchy
+    - `isParentVehicle()` - Checks if vehicle type is 'fund' or 'securitization'
+    - `extractSeriesParentName()` - Extracts SCSP/LLC parent name from "Series XXX" vehicles
+    - `extractCompartmentParentName()` - Extracts parent name from "Compartment X" vehicles
+    - `flattenVehicleHierarchy()` - Utility to flatten hierarchy back to array
+    - `findVehicleInHierarchy()` - Find vehicle by ID in nested structure
+  - `versotech-portal/src/__tests__/lib/documents/vehicle-hierarchy.test.ts` - 26 unit tests covering:
+    - Parent detection (fund/securitization types)
+    - Compartment matching to securitization parents
+    - Series grouping under virtual SCSP parents
+    - Sort order (real parents first, then virtual groups)
+    - Edge cases (empty input, mixed hierarchies)
 - **Learnings for future iterations:**
-  - Use Collapsible, CollapsibleTrigger, CollapsibleContent from `@/components/ui/collapsible`
-  - When grouping by entity type, fee plans have `introducer`, `partner`, `commercial_partner` fields
-  - Plans without any entity assigned won't appear in the grouped view
-  - Use `Object.entries()` with type assertion for iterating over typed config objects
+  - Vehicle types: fund, spv, securitization, note, other, real_estate, private_equity, venture_capital
+  - VERSO naming patterns: "VERSO Capital 1 SCSP Series XXX" (SCSP series), "Real Empire Capital Compartment X" (compartments)
+  - Virtual parent nodes need `isVirtual: true` flag and synthetic IDs like `virtual-verso-capital-1-scsp`
+  - Use numeric sorting for series: `localeCompare(a, b, { numeric: true })` ensures Series 101 < Series 102 < Series 200
 ---
 
-## 2026-01-21 ~16:10 - US-003
-- What was implemented: Added fee plan status badges with consistent styling
-  - Created `getFeePlanStatusBadge()` helper function for status rendering
-  - Status badges with icons: Draft (gray outline), Sent (blue + Send icon), Pending Signature (amber + Clock icon), Accepted (green + CheckCircle icon), Rejected (red + XCircle icon)
-  - Updated table view Status column to show fee plan status badge
-  - Updated card view to show status badge next to plan name
-  - Added `status` field to `FeePlanWithDeal` interface
-- Files changed:
-  - `versotech-portal/src/components/fees/FeePlansTab.tsx`
+## 2026-01-26 23:05 - US-004 (Updated 23:30)
+- **What was implemented:** Added document counts to folders API using efficient SQL GROUP BY
+- **Files changed:**
+  - Created `get_folder_document_counts()` PostgreSQL function via Supabase migration:
+    - Uses `SELECT folder_id, COUNT(*) GROUP BY folder_id` for efficient aggregation
+    - Returns only count rows, not all document data (scales to 100k+ docs)
+    - Function marked STABLE and SECURITY DEFINER for performance and RLS bypass
+  - `versotech-portal/src/app/api/staff/documents/folders/route.ts` - Modified GET endpoint:
+    - Replaced client-side counting with `serviceSupabase.rpc('get_folder_document_counts')`
+    - Updated `buildFolderTree()` to accept pre-aggregated Map<folder_id, count>
+    - Response shape: `{ ...folder, document_count: number }` for both flat and tree modes
 - **Learnings for future iterations:**
-  - Fee plans have a `status` field with values: draft, sent, pending_signature, accepted, rejected
-  - The Deal page's `deal-fee-plans-tab.tsx` uses the same status badge pattern - good reference
-  - Status badges use Lucide icons: CheckCircle, Clock, XCircle, Send
-  - Badge color scheme: green for success, blue for sent, amber for pending, red for rejected, gray outline for draft
-- Agreement generation endpoints: `/api/staff/fees/plans/[id]/generate-agreement` for introducers, `/api/staff/fees/plans/[id]/generate-placement-agreement` for partners
-- Use `toast` from `sonner` for success/error notifications
-- Use Loader2 icon with `animate-spin` class for loading spinners
-
+  - Use Supabase RPC functions for aggregations that would fetch too much data client-side
+  - SQL GROUP BY is far more efficient than fetching all rows and counting in JavaScript
+  - Database functions with STABLE modifier allow PostgreSQL query planner optimizations
+  - When passing aggregated data, use Map<string, number> instead of raw query results
 ---
 
-## 2026-01-21 ~16:15 - US-004
-- What was implemented: Ported agreement generation functionality to Fees page
-  - Added Generate Agreement button (FileSignature icon) to fee plan cards
-  - Button shows for introducers/partners without existing agreements
-  - Shows loading spinner (Loader2 with animate-spin) during generation
-  - Toast notifications for success/error feedback
-  - Shows "Agreement" badge for plans that have already generated agreements
-  - Works in both table view and card view
-- Files changed:
-  - `versotech-portal/src/components/fees/FeePlansTab.tsx`
+## 2026-01-27 00:15 - US-005
+- **What was implemented:** Rendered hierarchical tree with icons and document counts in sidebar
+- **Files changed:**
+  - `versotech-portal/src/components/documents/staff-documents-client.tsx` - Major tree rendering updates:
+    - Imported `parseVehicleHierarchy`, `VehicleNode` from vehicle-hierarchy module
+    - Added `Building2`, `Package` icons from lucide-react for vehicle hierarchy
+    - Added `expandedVehicles` state for vehicle expand/collapse tracking
+    - Created `vehicleHierarchy` memo using `parseVehicleHierarchy(initialVehicles)`
+    - Added `getFoldersForVehicle()` to get folders for a specific vehicle
+    - Added `getVehicleDocumentCount()` to sum document counts across vehicle folders
+    - Added `filterVehicleHierarchy()` for sidebar search to filter vehicles
+    - Created `renderVehicleNode()` function with:
+      - Building2 icon (blue) for parent vehicles (fund/securitization)
+      - Package icon (amber) for compartments/series
+      - Document count display in parentheses
+      - Recursive rendering of child vehicles and folders
+    - Updated sidebar tree section to render vehicle hierarchy first
+    - Added "General Folders" section for orphan folders without vehicle_id
+    - Updated sidebar header to "Vehicles & Folders"
 - **Learnings for future iterations:**
-  - Fee plans have `generated_agreement_id` (for introducers) and `generated_placement_agreement_id` (for partners) fields
-  - Pattern from `deal-fee-plans-tab.tsx` is the reference for agreement generation UI
-  - Use `(plan as any).field` for fields not in the TypeScript interface but returned by API
-  - The API returns all columns via `*` select, so generated_agreement_id is available
-  - Button color convention: green for generation/success actions (text-green-400 hover:text-green-300)
-- PDF download via `/api/storage/download?path=...&bucket=deal-documents` endpoint
-- Preview opens blob URL in new tab; download creates temp anchor with blob URL
-- Agreement PDF URL stored in `introducer_agreement.pdf_url` or `placement_agreement.pdf_url`
-
+  - Vehicle hierarchy rendering: Render vehicles first, then their folders as children
+  - Icon differentiation: Use Building2 for parent vehicles, Package for children, Folder for regular folders
+  - Color coding: Blue (text-blue-500) for parent entities, Amber (text-amber-500) for child entities
+  - Separate state for vehicle expansion vs folder expansion (expandedVehicles vs expandedFolders)
+  - Filter both vehicle names AND their folder contents when searching the tree
 ---
 
-## 2026-01-21 ~16:20 - US-005
-- What was implemented: Ported PDF preview/download functionality to Fees page
-  - Updated API to include `introducer_agreement:generated_agreement_id` and `placement_agreement:generated_placement_agreement_id` with pdf_url fields
-  - Added `getAgreementPdfInfo()` helper to extract PDF URL from either agreement type
-  - Added `handlePreviewPdf()` - fetches PDF blob and opens in new tab
-  - Added `handleDownloadPdf()` - fetches PDF blob and triggers download with correct filename
-  - Preview button (Eye icon) in blue, Download button (Download icon) in green
-  - In table view: buttons appear in actions column after Agreement badge
-  - In card view: full Agreement Document section with icon, name, reference number, and Preview/Download buttons
-  - Loading state tracked via `downloadingPdf` state variable
-- Files changed:
-  - `versotech-portal/src/app/api/staff/fees/plans/route.ts`
-  - `versotech-portal/src/components/fees/FeePlansTab.tsx`
+## 2026-01-27 01:30 - US-006
+- **What was implemented:** Added breadcrumb with vehicle context
+- **Files changed:**
+  - `versotech-portal/src/components/documents/staff-documents-client.tsx`:
+    - Added `selectedVehicleId` state to track current vehicle context
+    - Created `getVehicleById()` helper to resolve vehicle object from ID
+    - Created `currentVehicle` memo that derives vehicle from folder or explicit selection
+    - Added `navigateToVehicle()` function for vehicle root navigation
+    - Added `handleBreadcrumbVehicleClick()` for breadcrumb vehicle segment clicks
+    - Made vehicle nodes in sidebar clickable with `navigateToVehicle(vehicle.id)`
+    - Added visual selection state for vehicles (`isVehicleSelected`)
+    - Updated `FolderBreadcrumbs` to pass `vehicle` and `onVehicleClick` props
+    - Show breadcrumbs when either `currentFolder` or `currentVehicle` is set
 - **Learnings for future iterations:**
-  - PDF files stored in Supabase storage under `deal-documents` bucket
-  - Use `/api/storage/download` endpoint with `path` and `bucket` query params to download files
-  - Pattern from `deal-fee-plans-tab.tsx` for PDF preview/download is the reference
-  - Create blob URL from response for preview/download, revoke after use
-  - Use `window.open(url, '_blank')` for preview, temporary anchor element for download
+  - Breadcrumb vehicle context pattern: Track `selectedVehicleId` state separate from folder
+  - Derive currentVehicle from: 1) folder's vehicle_id, 2) explicit selection when viewing vehicle root
+  - FolderBreadcrumbs already had vehicle support - just needed props passed in
+  - Selection highlighting in sidebar: `bg-primary/20 border border-primary` for consistent style
 ---
 
-## 2026-01-21 ~16:25 - US-006
-- What was implemented: Audited subscription fee calculation and added unit tests
-  - Reviewed `subscription-fee-calculator.ts` at `/src/lib/fees/subscription-fee-calculator.ts`
-  - Reviewed `calculations.ts` at `/src/lib/fees/calculations.ts`
-  - Verified subscription fee formula: `commitment × (subscription_fee_bps / 10000)`
-  - Confirmed fee events created with: `fee_type='subscription'`, `base_amount=commitment`, `rate_bps`, `computed_amount`
-  - Created comprehensive unit test file with 21 tests covering all fee calculation functions
-- Files changed:
-  - `versotech-portal/src/__tests__/lib/fees/calculations.test.ts` (new file)
+## 2026-01-27 02:00 - US-007
+- **What was implemented:** Added grid/list view toggle with localStorage persistence
+- **Files changed:**
+  - `versotech-portal/src/components/documents/staff-documents-client.tsx`:
+    - Added useEffect to load viewMode from localStorage on mount (SSR-safe pattern)
+    - Added useEffect to save viewMode to localStorage when it changes
+    - localStorage key: `staff-docs-view`
+  - `versotech-portal/src/components/documents/navigation/FolderNavigator.tsx`:
+    - Fixed hardcoded dark theme in toolbar (replaced bg-[#0a0a0a], bg-black/40, border-white/10, text-gray-400 with theme-aware variants)
+    - Fixed hardcoded dark theme in SelectContent dropdown
+    - Fixed hardcoded dark theme in EmptyState component
+    - Created `DocumentListRow` component for table view with columns (name, size, date, actions)
+    - Added helper functions: `getDocumentIcon()`, `formatFileSize()`
+    - Updated documents section to render either grid or table view based on viewMode
+    - Added DropdownMenu imports and actions for document rows
 - **Learnings for future iterations:**
-  - Fee calculation functions are in `/src/lib/fees/calculations.ts` (pure functions, easily testable)
-  - Complex fee event creation is in `/src/lib/fees/subscription-fee-calculator.ts` (async, requires Supabase)
-  - Vitest is configured but no "test" script in package.json - run directly via `npx vitest run`
-  - Tests directory structure: `/src/__tests__/lib/fees/` for fee-related tests
-  - `bpsToPercent(bps)` converts basis points to decimal (200 bps → 0.02)
-  - `calculateSubscriptionFee()` accepts `flatAmount` override or calculates from `rateBps`
-  - Fee events include `payee_arranger_id` derived from fee_plan.created_by_arranger_id or deals.arranger_entity_id
+  - SSR + localStorage hydration issue: useState initializers run on server where `window` is undefined
+  - Correct pattern: Initialize with default, use useEffect to load from localStorage on mount
+  - View toggle with Grid3x3 and List icons from lucide-react, use `bg-primary/20 text-primary` for selected state
+  - Table view pattern: CSS grid with fixed columns `grid-cols-[1fr_100px_140px_80px]` for responsive table
 ---
 
-## 2026-01-21 ~16:25 - US-007
-- What was implemented: Fixed management fee period calculation with pro-rata support
-  - Added `calculateManagementFeePeriod()` function implementing formula: `base_amount × (rate_bps / 10000) × (period_days / 365)`
-  - Added `calculateDaysBetween()` helper to compute days between two dates (inclusive)
-  - Added `calculatePeriodEndDate()` helper to calculate period end based on frequency (annual, quarterly, monthly)
-  - Updated cron job `/api/cron/fees/generate-scheduled` to:
-    - Calculate and set both `period_start_date` and `period_end_date` on fee events
-    - Use period-based calculation for management fees
-    - Calculate next due date as day after period end
-  - Added comprehensive unit tests (14 new tests) for the period calculation functions
-- Files changed:
-  - `versotech-portal/src/lib/fees/calculations.ts` (added 3 new functions + interface)
-  - `versotech-portal/src/app/api/cron/fees/generate-scheduled/route.ts`
-  - `versotech-portal/src/__tests__/lib/fees/calculations.test.ts`
+## 2026-01-27 01:20 - US-008
+- **What was implemented:** Added document sorting with dropdown, direction toggle, and clickable column headers
+- **Files changed:**
+  - `versotech-portal/src/components/documents/staff-documents-client.tsx`:
+    - Added `useSearchParams`, `useRouter`, `usePathname` from next/navigation for URL state
+    - Changed `sortBy` type from `'name' | 'date' | 'type'` to `'name' | 'date' | 'size'`
+    - Added `sortDir` state with `'asc' | 'desc'` type
+    - Changed default sort to `sortBy='date'`, `sortDir='desc'` (newest first)
+    - Added `updateSortUrl()` to persist sort params in URL
+    - Added `handleSortChange()` with smart direction defaults (date=desc, name/size=asc)
+    - Added `handleSortDirChange()` for direct direction changes from dropdown
+    - Updated `filteredDocuments` memo to handle direction and size sorting
+    - Passed new `sortDir`, `onSortChange`, `onSortDirChange` props to FolderNavigator
+  - `versotech-portal/src/components/documents/navigation/FolderNavigator.tsx`:
+    - Added `ArrowUp`, `ArrowDown` icons from lucide-react
+    - Updated interface to include `sortDir` and `onSortDirChange` props
+    - Changed default `sortBy` to `'date'` and added `sortDir='desc'`
+    - Added sort direction dropdown with Asc/Desc options and arrow icons
+    - Made table column headers (Name, Size, Date) clickable buttons
+    - Added sort indicator arrows on active column header
+    - Headers show hover states and highlight when active
 - **Learnings for future iterations:**
-  - Management fee uses pro-rata calculation: `base_amount × (rate_bps / 10000) × (period_days / 365)`
-  - Period dates: `period_start_date` is schedule's next_due_date; `period_end_date` is day before next period starts
-  - Cron job at `/api/cron/fees/generate-scheduled/route.ts` handles scheduled fee event generation
-  - Fee events table has both `period_start_date` and `period_end_date` columns
-  - JavaScript Date month rollover: Jan 31 + 1 month = Mar 2 (not Feb 28) - be aware of this behavior
-- Performance fee with hurdle formula: `profit_above_hurdle = profit - (contributed_capital × hurdle_rate × years_held)`, then `fee = profit_above_hurdle × carry_rate`
-- DB has `calculate_performance_fee()` function with same formula - TS functions match DB behavior
+  - URL state pattern: Use `useSearchParams` + `useRouter` + `usePathname` to read/write URL params
+  - Smart sort defaults: When clicking a new column, use sensible defaults (date=desc for newest first, name/size=asc for A-Z)
+  - Toggle sort direction: When clicking same column, toggle between asc/desc
+  - Use `router.replace()` with `{ scroll: false }` to update URL without scrolling page
+  - Clickable table headers: Use `<button>` elements with flex layout for icon + text
 ---
 
-## 2026-01-21 ~16:30 - US-008
-- What was implemented: Added hurdle-aware performance fee calculation functions
-  - `calculatePerformanceFeeWithHurdle()` - single carry rate with hurdle rate
-    - Formula: profit_above_hurdle × carry_rate, where profit_above_hurdle = profit - hurdle_return
-    - Returns 0 if no profit or profit doesn't exceed hurdle
-    - Matches database function `calculate_performance_fee()`
-  - `calculateTieredPerformanceFeeWithHurdle()` - supports two tiers with different carry rates
-    - Tier 1 applies from hurdle to tier1 threshold (e.g., 20% up to 2x return)
-    - Tier 2 applies above tier1 threshold (e.g., 30% above 2x return)
-    - Falls back to single-tier calculation if no tier structure provided
-  - Added TypeScript interfaces: `PerformanceFeeWithHurdleInput`, `TieredPerformanceFeeInput`
-  - Added 11 new unit tests covering various scenarios:
-    - Basic hurdle calculation
-    - No profit scenarios (returns 0)
-    - Profit below hurdle (returns 0)
-    - Zero hurdle rate (no minimum return)
-    - Fractional years holding period
-    - Tiered fee calculations
-- Files changed:
-  - `versotech-portal/src/lib/fees/calculations.ts` (added 2 new functions + 2 interfaces)
-  - `versotech-portal/src/__tests__/lib/fees/calculations.test.ts` (added 11 new tests)
+## 2026-01-27 03:00 - US-009
+- **What was implemented:** Created server-side document search API endpoint
+- **Files changed:**
+  - `versotech-portal/src/app/api/staff/documents/search/route.ts` - New endpoint:
+    - GET handler with required `q` query param for search term
+    - Optional `vehicle_id` param for filtering by vehicle
+    - Uses `.ilike('name', '%${searchTerm}%')` for case-insensitive matching
+    - Joins `document_folders` and `vehicles` tables for context (folder.name, vehicle.name)
+    - Returns explicit columns: id, name, type, file_size, status, created_at, updated_at, tags, current_version, document_expiry_date, watermark
+    - Pagination with 50 results per page, supports `page` param
+    - Response: `{ results: Document[], total: number, pagination: {...}, query, vehicle_id }`
 - **Learnings for future iterations:**
-  - Database already has `calculate_performance_fee()` PostgreSQL function - TS implementation should match its formula
-  - Performance fee hurdle formula: profit - (contributed_capital × hurdle_rate_bps / 10000 × years_held)
-  - FeeComponent interface has `hurdle_rate_bps`, `has_catchup`, `catchup_rate_bps` fields for performance fees
-  - Tiered rates use tier1/tier2 fields from subscriptions table: `performance_fee_tier1_percent`, `performance_fee_tier1_threshold`, etc.
-  - Use `Math.round(value * 100) / 100` for 2 decimal place rounding (matches DB's round())
+  - Supabase `.ilike()` is case-insensitive LIKE operator - use for user-friendly search
+  - Always use explicit column selection in search results to avoid leaking sensitive data
+  - Join related tables with foreign key hints: `document_folders!documents_folder_id_fkey`
+  - Include pagination metadata in response: page, limit, total_pages, has_more
+  - Validate required query params early and return 400 with clear error message
 ---
 
-## 2026-01-21 ~17:00 - US-009
-- What was implemented: Ensured all fee event creation points populate payee_arranger_id
-  - Updated cron job `/api/cron/fees/generate-scheduled/route.ts`:
-    - Added fee_plan and deal data to schedule query
-    - Added logic to derive payee_arranger_id (fee_plan.created_by_arranger_id → deal.arranger_entity_id)
-    - Added payee_arranger_id to fee event insert
-  - Updated manual fee event creation `/api/staff/fees/events/route.ts`:
-    - Added logic to fetch deal.arranger_entity_id when deal_id is provided
-    - Added payee_arranger_id to fee event insert
-  - Verified existing backfill migration at `20251227200000_backfill_fee_events_payee_arranger.sql`
-  - Verified `subscription-fee-calculator.ts` already handles payee_arranger_id
-- Files changed:
-  - `versotech-portal/src/app/api/cron/fees/generate-scheduled/route.ts`
-  - `versotech-portal/src/app/api/staff/fees/events/route.ts`
+## 2026-01-27 04:00 - US-010
+- **What was implemented:** Implemented search UI with debounced API calls and result display
+- **Files changed:**
+  - `versotech-portal/src/components/documents/staff-documents-client.tsx`:
+    - Added `SearchResult` interface for server-side search response
+    - Added search state: `globalSearchQuery`, `searchResults`, `isSearching`, `isSearchMode`, `searchTotal`
+    - Added `searchDebounceRef` for debounce timer
+    - Created `performSearch()` function to call `/api/staff/documents/search` endpoint
+    - Created `handleGlobalSearchChange()` with 300ms debounce
+    - Created `clearSearch()` to reset search state and return to folder view
+    - Updated `onDocumentClick` to handle both search results and regular documents
+    - Passed search props to FolderNavigator: `globalSearchQuery`, `onGlobalSearchChange`, `onClearSearch`, `isSearchMode`, `isSearching`, `searchResults`, `searchTotal`
+  - `versotech-portal/src/components/documents/navigation/FolderNavigator.tsx`:
+    - Added `X`, `Loader2`, `ChevronRight` icons from lucide-react
+    - Added `SearchResult` interface matching server response
+    - Extended FolderNavigatorProps with global search props
+    - Updated toolbar search input to use global search with loading spinner and clear button
+    - Created `SearchEmptyState` component: "No results for [query]" with clear button
+    - Created `SearchResultCard` component for grid view with document path context
+    - Created `SearchResultRow` component for list view with location column
+    - Added search mode conditional rendering: when searching, shows search results instead of folders/documents
 - **Learnings for future iterations:**
-  - Fee events have `payee_arranger_id` column linking to arranger_entities
-  - Priority for arranger: fee_plan.created_by_arranger_id > deal.arranger_entity_id
-  - Main fee event creation in `subscription-fee-calculator.ts` already handled arranger linking
-  - Cron job for scheduled fees was missing arranger link - now fixed
-  - Manual fee event creation API was missing arranger link - now fixed
+  - Debounce pattern: Use `useRef<NodeJS.Timeout | null>` for timer, clear with `clearTimeout()` before setting new timeout
+  - Search mode toggle: Use boolean `isSearchMode` state to switch between folder view and search results
+  - Path context in search: Join vehicle_name and folder_name with ` > ` for breadcrumb-style display
+  - Search results can be displayed in same grid/list view as documents - just create matching components
+  - Clear search: Reset all search state (`query`, `results`, `mode`, `total`) in single function
 ---
 
-## 2026-01-21 ~17:10 - US-010
-- What was implemented: Added Investor Fees section to Schedule tab
-  - Added `period_from` and `period_to` filters to feeEventFiltersSchema
-  - Updated fee events API to support period_start_date filtering
-  - Added InvestorFeeEvent interface and state management in ScheduleTab
-  - Added Investor Fees collapsible section showing accrued fees with future period_start_date
-  - Section grouped by deal, then by investor, with table columns: Fee Type, Amount, Period Start, Period End
-  - Fees sorted by period_start_date within each investor group
-  - Collapsible header shows count and total amount
-- Files changed:
-  - `versotech-portal/src/lib/fees/validation.ts` (added period_from/period_to filters)
-  - `versotech-portal/src/app/api/staff/fees/events/route.ts` (added period filter support)
-  - `versotech-portal/src/components/fees/ScheduleTab.tsx` (added Investor Fees section)
+## 2026-01-27 05:30 - US-011
+- **What was implemented:** Added tree search filter with debounce, auto-expand, and text highlighting
+- **Files changed:**
+  - `versotech-portal/src/components/documents/staff-documents-client.tsx`:
+    - Added `debouncedTreeSearch` state for debounced search value
+    - Added `treeSearchDebounceRef` for 150ms debounce timer
+    - Added `searchExpandedVehicles` and `searchExpandedFolders` sets for auto-expansion
+    - Created `handleTreeSearchChange()` with 150ms debounce
+    - Created `clearTreeSearch()` to reset all search state
+    - Added effect to auto-expand parent vehicles/folders when children match
+    - Created `effectiveExpandedVehicles` and `effectiveExpandedFolders` memos combining manual + search expansion
+    - Added `highlightText()` helper that wraps matches in `<mark>` with yellow background
+    - Updated `renderVehicleNode()` and `renderSidebarTreeNode()` to use effective expanded sets
+    - Updated vehicle/folder name rendering to use `highlightText()` when searching
+    - Improved empty state: shows search icon, query text, "Try different search term", clear button
+    - Updated sidebar search input to use new handlers
 - **Learnings for future iterations:**
-  - Fee events API at `/api/staff/fees/events` supports status, period_from, period_to filters
-  - Use Collapsible component for expandable/collapsible sections with header summaries
-  - Group data using `useMemo` with nested objects (byDeal -> byInvestor -> fees)
-  - Fee events have `period_start_date` and `period_end_date` for time-based fees
-  - ScheduleTab now has both "Scheduled Recurring Fees" (from schedules API) and "Investor Fees" (from fee events API)
+  - Separate debounced value from input value: `treeSearchQuery` for UI, `debouncedTreeSearch` for filtering
+  - Auto-expand pattern: Traverse hierarchy collecting IDs of nodes that match or have matching descendants
+  - Keep manual expansion separate from search expansion to restore state when clearing search
+  - `<mark>` element is semantic HTML5 for highlighting - screen readers announce it correctly
+  - Yellow highlight with dark mode support: `bg-yellow-300 dark:bg-yellow-500/40`
 ---
 
-## 2026-01-21 ~17:15 - US-011
-- What was implemented: Added Introducer Commissions section to Schedule tab
-  - Added IntroducerCommission interface for type safety
-  - Added state and useEffect for fetching introducer commissions
-  - Fetches from `/api/staff/fees/commissions?entity_type=introducer&status=accrued`
-  - Added groupedIntroducerCommissions useMemo to group by introducer, then by deal
-  - Added Collapsible section with header showing count and total amount
-  - Table columns: Investor, Amount, Status, Created Date
-  - Section placed after Investor Fees section in the Schedule tab
-- Files changed:
-  - `versotech-portal/src/components/fees/ScheduleTab.tsx`
+## 2026-01-27 02:15 - US-012
+- **What was implemented:** Added checkbox selection to documents for bulk operations
+- **Files changed:**
+  - `versotech-portal/src/components/documents/staff-documents-client.tsx`:
+    - Added `selectedDocuments` state as `Set<string>` of document IDs
+    - Created `toggleDocumentSelection()` handler for individual selection
+    - Created `selectAllDocuments()` handler using `filteredDocuments` IDs
+    - Created `clearSelection()` handler to reset selection
+    - Updated `navigateToFolder()` to clear selection when changing folders
+    - Passed selection props to `FolderNavigator`
+  - `versotech-portal/src/components/documents/navigation/FolderNavigator.tsx`:
+    - Added selection props interface: `selectedDocuments`, `onToggleSelection`, `onSelectAll`, `onClearSelection`
+    - Added "[N] selected" badge in toolbar using shadcn Badge component
+    - Added "Select All" checkbox in Documents section header
+    - Added checkbox column to list view table header with responsive grid columns
+    - Updated `DocumentListRow` with `isSelected`, `onSelectToggle`, `showCheckbox` props
+    - Added checkbox to list rows with `stopPropagation` to prevent preview
+    - Added selection highlighting with `bg-primary/5`
+  - `versotech-portal/src/components/documents/document-card.tsx`:
+    - Added `isSelected` and `onSelectToggle` props to interface
+    - Added checkbox rendering with shadcn Checkbox component
+    - Added selection highlighting with `bg-primary/5 border-primary/50`
+    - Used `stopPropagation` on checkbox wrapper to prevent preview trigger
 - **Learnings for future iterations:**
-  - Commissions API at `/api/staff/fees/commissions` supports entity_type filter (introducer, partner, commercial_partner)
-  - Commissions have entity_type, entity_id, entity_name fields for normalized access
-  - accrual_amount is the commission amount (stored as numeric, needs Number() conversion)
-  - Same grouping pattern as Investor Fees: useMemo with nested Record objects
-  - UserCheck icon from lucide-react is good for introducer/referral context
+  - Selection state as `Set<string>` provides O(1) add/delete/has operations
+  - Use `stopPropagation()` on checkbox click handlers to prevent parent onClick (preview)
+  - Clear selection when navigating folders to avoid stale references
+  - `selectAllDocuments` must be defined after `filteredDocuments` useMemo (variable ordering matters)
+  - Responsive grid columns for checkbox: `grid-cols-[40px_1fr_100px_140px_80px]` vs `grid-cols-[1fr_100px_140px_80px]`
+  - Selection count badge uses `bg-primary/10 text-primary border-primary/20` for subtle emphasis
 ---
 
-## 2026-01-21 ~17:20 - US-012
-- What was implemented: Added Partner Commissions section to Schedule tab
-  - Added PartnerCommission interface for type safety
-  - Added state and useEffect for fetching partner commissions
-  - Fetches from `/api/staff/fees/commissions?entity_type=partner&status=accrued`
-  - Added groupedPartnerCommissions useMemo to group by partner, then by deal
-  - Added Collapsible section with header showing count and total amount
-  - Table columns: Investor, Amount, Status, Created Date
-  - Section placed after Introducer Commissions section in the Schedule tab
-  - Uses Handshake icon (green color) for partner visual distinction
-- Files changed:
-  - `versotech-portal/src/components/fees/ScheduleTab.tsx`
+## 2026-01-27 06:30 - US-013
+- **What was implemented:** Added bulk actions dropdown for selected documents
+- **Files changed:**
+  - `versotech-portal/src/components/documents/navigation/FolderNavigator.tsx`:
+    - Added `ChevronDown`, `FolderInput`, `Archive` icon imports from lucide-react
+    - Added bulk action props to interface: `onBulkMove`, `onBulkDelete`, `onBulkDownload`
+    - Created dropdown menu in toolbar with shadcn DropdownMenu component
+    - Button shows "Actions" with ChevronDown icon, disabled when no selection
+    - Menu items: "Move to..." (FolderInput icon), "Delete" (Trash2 icon, destructive style), "Download ZIP" (Archive icon)
+    - Dropdown uses `asChild` pattern with Button component for proper styling
+  - `versotech-portal/src/components/documents/staff-documents-client.tsx`:
+    - Added `handleBulkMove`, `handleBulkDelete`, `handleBulkDownload` placeholder callbacks
+    - Each shows toast notification: "[Action] X document(s) - coming soon"
+    - Passed bulk action props to FolderNavigator component
 - **Learnings for future iterations:**
-  - Same pattern as Introducer Commissions - copy interface, state, fetch callback, grouping logic, and UI section
-  - Handshake icon from lucide-react is good for partner context (green color scheme)
-  - entity_type values: 'introducer', 'partner', 'commercial_partner'
-  - The commission sections (Introducer, Partner, Commercial Partner) follow identical patterns - easy to replicate
+  - Bulk actions dropdown pattern: Show button always but disable when `selectedDocuments.size === 0`
+  - Use `asChild` prop on DropdownMenuTrigger with Button component for consistent styling
+  - Destructive menu items use `className="text-destructive focus:text-destructive"` pattern
+  - Placeholder handlers with `toast.info()` provide user feedback while functionality is pending
+  - Icon choices: FolderInput for move, Trash2 for delete, Archive for ZIP download
 ---
 
-## 2026-01-21 ~17:25 - US-013
-- What was implemented: Added Commercial Partner Commissions section to Schedule tab
-  - Added CommercialPartnerCommission interface for type safety
-  - Added state and useEffect for fetching commercial partner commissions
-  - Fetches from `/api/staff/fees/commissions?entity_type=commercial_partner&status=accrued`
-  - Added groupedCommercialPartnerCommissions useMemo to group by commercial partner, then by deal
-  - Added Collapsible section with header showing count and total amount
-  - Table columns: Investor, Amount, Status, Created Date
-  - Section placed after Partner Commissions section in the Schedule tab
-  - Uses Briefcase icon (purple color) for commercial partner visual distinction
-- Files changed:
-  - `versotech-portal/src/components/fees/ScheduleTab.tsx`
+## 2026-01-27 08:00 - US-014
+- **What was implemented:** Bulk move dialog with folder tree picker
+- **Files changed:**
+  - `versotech-portal/src/components/documents/bulk-move-dialog.tsx` - New component:
+    - Dialog with vehicle hierarchy and folder tree from parseVehicleHierarchy
+    - Reuses tree rendering pattern from sidebar for consistent UX
+    - Shows progress during move: "Moving X/Y..."
+    - Sequential PATCH calls with progress tracking
+    - Success toast: "Moved N document(s) to [folder]"
+    - Clears selection after move completes
+    - Handles partial failures with warning toast
+  - `versotech-portal/src/components/documents/staff-documents-client.tsx`:
+    - Added `bulkMoveDialogOpen` state
+    - Updated `handleBulkMove` to open dialog instead of placeholder toast
+    - Added `BulkMoveDialog` to component render tree
 - **Learnings for future iterations:**
-  - All three commission sections (Introducer, Partner, Commercial Partner) use identical patterns
-  - Icon choices: UserCheck (blue) for introducers, Handshake (green) for partners, Briefcase (purple) for commercial partners
-  - entity_type filter values match exactly: 'introducer', 'partner', 'commercial_partner'
-  - Commission API returns unified structure with entity_type, entity_id, entity_name for all types
+  - Bulk operations with progress: Use sequential API calls (not Promise.all) to show progress "Moving X/Y"
+  - Folder picker pattern: Reuse vehicle hierarchy + folder tree rendering for consistent UX
+  - Handle partial failures gracefully: Count successes/failures, show appropriate toast (success, warning, or error)
+  - Selection clearing: Clear selection after successful operation via callback prop
 ---
 
-## 2026-01-21 ~17:30 - US-014
-- What was implemented: Added schedule filtering controls to ScheduleTab
-  - Added filter controls Card with Filters header and active filter count badge
-  - Deal filter: multi-select Popover with Command (searchable) + Checkbox for each deal
-  - Entity filter: multi-select Popover with Command, grouped by entity type (Introducers, Partners, Commercial Partners) with type-specific icons
-  - Date range filter: DateRangePicker component (dark variant)
-  - Clear all button appears when any filter is active
-  - Filters persist in URL query params: deal_ids, entity_ids, date_from, date_to
-  - All schedule sections now filter by selected values:
-    - Investor Fees: filters by deal_id and period_start_date range
-    - Commission sections: filter by deal_id, entity_id, and created_at date range
-  - Entity list populated from commissions API's by_entity data (no separate partners/commercial-partners list APIs exist)
-- Files changed:
-  - `versotech-portal/src/components/fees/ScheduleTab.tsx`
+## 2026-01-27 10:30 - US-015
+- **What was implemented:** Bulk delete dialog with confirmation and sequential deletion
+- **Files changed:**
+  - `versotech-portal/src/components/documents/bulk-delete-dialog.tsx` - New component:
+    - AlertDialog with destructive styling (AlertTriangle icon, red delete button)
+    - Shows "Delete [N] documents? This cannot be undone." message
+    - Lists first 5 document names with FileText icons
+    - Shows "...and N more" for additional documents
+    - Sequential DELETE calls with progress tracking ("Deleting X/Y...")
+    - Handles partial failures with appropriate toasts (success, warning, error)
+    - Clears selection after operation completes
+  - `versotech-portal/src/components/documents/staff-documents-client.tsx`:
+    - Added import for `BulkDeleteDialog`
+    - Added `bulkDeleteDialogOpen` state
+    - Added `selectedDocumentNames` memo to get names of selected documents
+    - Updated `handleBulkDelete` to open dialog instead of placeholder toast
+    - Added `BulkDeleteDialog` to component render tree with all required props
 - **Learnings for future iterations:**
-  - Use Popover + Command + Checkbox pattern for multi-select filters
-  - Radix Command provides built-in search functionality via CommandInput
-  - No dedicated /api/staff/partners or /api/staff/commercial-partners list endpoints exist - use commissions API by_entity for entity list
-  - DateRangePicker supports 'dark' variant for consistent styling
-  - ChevronsUpDown icon is standard for combobox/multi-select triggers
-  - Filter state can be initialized from searchParams in useState initial value function
+  - Use AlertDialog (not Dialog) for destructive confirmation dialogs - provides proper a11y semantics
+  - AlertDialogDescription with `asChild` allows complex content (divs) while maintaining semantics
+  - Destructive button styling: Use `variant="destructive"` on Button component
+  - Document name lookup: Create a memo that filters `filteredDocuments` by `selectedDocuments` Set
+  - Reuse patterns from BulkMoveDialog for consistency: sequential operations, progress tracking, partial failure handling
 ---
 
-## 2026-01-21 ~17:45 - US-015
-- What was implemented: Added commission KPIs to dashboard (OverviewTab)
-  - Updated dashboard API (`/api/staff/fees/dashboard`) to fetch from all 3 commission tables
-  - Added `commission_summary` object to API response with:
-    - `total_owed`: accrued + invoiced (expenses to be paid)
-    - `total_accrued`: pending invoice
-    - `total_invoiced`: invoiced but not paid
-    - `total_paid_ytd`: paid commissions in current year
-    - `by_entity_type`: breakdown for introducer, partner, commercial_partner
-  - Added Commissions Card to OverviewTab with:
-    - Three KPI cards: Total Commissions Owed (red), Total Paid YTD (green), Pending Invoice (amber)
-    - Breakdown by Entity Type section with cards for Introducers, Partners, Commercial Partners
-    - Each entity type shows owed and paid YTD amounts
-    - Uses appropriate icons: Users, UserCheck (blue), Handshake (green), Briefcase (purple)
-- Files changed:
-  - `versotech-portal/src/app/api/staff/fees/dashboard/route.ts`
-  - `versotech-portal/src/components/fees/OverviewTab.tsx`
+## 2026-01-27 12:00 - US-016
+- **What was implemented:** Created bulk download ZIP endpoint for downloading multiple documents
+- **Files changed:**
+  - `versotech-portal/src/app/api/staff/documents/bulk-download/route.ts` - New endpoint:
+    - POST handler accepting `{ document_ids: string[] }` (1-100 documents)
+    - Validates staff role (staff_admin, staff_ops, staff_rm, ceo)
+    - Fetches document metadata (id, name, file_key) from documents table
+    - Filters out external links (documents without file_key)
+    - Downloads files from Supabase storage using `serviceSupabase.storage.download()`
+    - Creates ZIP using `archiver` package with zlib level 5 compression
+    - Handles duplicate filenames by adding suffix (e.g., "file (2).pdf")
+    - Returns ZIP with Content-Type: application/zip and Content-Disposition attachment
+    - Filename format: `documents-YYYY-MM-DD.zip`
+    - Includes headers: X-Documents-Count, X-Errors-Count for client feedback
+  - `versotech-portal/package.json` - Added `archiver` dependency
 - **Learnings for future iterations:**
-  - Dashboard API at `/api/staff/fees/dashboard` is the central data source for OverviewTab
-  - Commission status values: 'accrued', 'invoiced', 'paid' (from NormalizedCommission interface)
-  - Use Promise.all for parallel fetching from multiple commission tables
-  - Commission tables have consistent structure: accrual_amount, status, paid_at
-  - DashboardData interface in OverviewTab needs optional commission_summary to handle backward compatibility
+  - Use `archiver('zip', { zlib: { level: 5 } })` for balanced compression speed/size
+  - Supabase storage download: `.storage.from(bucket).download(file_key)` returns Blob data
+  - Convert Blob to Buffer: `Buffer.from(await blob.arrayBuffer())`
+  - Collect archive chunks using `archive.on('data', chunk => chunks.push(new Uint8Array(chunk)))`
+  - Wait for archive completion: `await archive.finalize()` + promise on `archive.on('end')`
+  - Zod v4 uses `.issues` not `.errors` for validation error details
+  - Duplicate filename handling: Track used names in Map, append ` (N)` before extension
 ---
 
-## 2026-01-21 ~17:50 - US-016
-- What was implemented: Made commission breakdown by entity type cards clickable with navigation
-  - Converted entity type breakdown cards (Introducers, Partners, Commercial Partners) from divs to buttons
-  - Added onClick handlers with router.push() to navigate to arranger-reconciliation page
-  - Navigation URLs: `/versotech_main/arranger-reconciliation?tab=introducers`, `?tab=partners`, `?tab=commercialPartners`
-  - Added ExternalLink icon (small, gray-500) to each card to indicate clickability
-  - Added hover states with entity-specific border colors: blue for introducers, green for partners, purple for commercial partners
-  - Maintained text-left alignment for proper content display in buttons
-- Files changed:
-  - `versotech-portal/src/components/fees/OverviewTab.tsx`
+## 2026-01-27 10:45 - US-017
+- **What was implemented:** Implemented bulk download ZIP UI functionality
+- **Files changed:**
+  - `versotech-portal/src/components/documents/staff-documents-client.tsx` - Updated `handleBulkDownload` callback:
+    - Changed from placeholder toast to full async implementation
+    - Shows loading toast "Preparing download..." using `toast.loading()`
+    - Calls POST `/api/staff/documents/bulk-download` with selected document IDs
+    - Handles response blob and extracts filename from Content-Disposition header
+    - Creates temporary URL with `URL.createObjectURL()` and triggers browser download
+    - Cleans up with `URL.revokeObjectURL()` to free memory
+    - Shows success toast with document count from X-Documents-Count header
+    - Clears selection after successful download
+    - Handles errors with appropriate toast messages
 - **Learnings for future iterations:**
-  - Arranger reconciliation page accepts `tab` query param to set initial tab (overview, introducers, partners, commercialPartners)
-  - Convert divs to buttons for clickable cards to maintain accessibility
-  - Use `text-left` class on buttons to preserve left-aligned content layout
-  - ExternalLink icon from lucide-react is good for indicating navigation/links
-  - Hover border colors provide good visual feedback for interactive cards
----
-
-## 2026-01-21 ~18:00 - US-017
-- What was implemented: Updated fees dashboard API commission_summary to match exact acceptance criteria
-  - Dashboard API already had commission_summary from US-015/US-016 with most fields
-  - Changed by_entity_type structure to use `paid` instead of `paid_ytd` to match acceptance criteria exactly
-  - Updated OverviewTab's CommissionSummary interface to reflect API change
-  - Updated all 3 entity type card UI references from `.paid_ytd` to `.paid`
-- Files changed:
-  - `versotech-portal/src/app/api/staff/fees/dashboard/route.ts`
-  - `versotech-portal/src/components/fees/OverviewTab.tsx`
-- **Learnings for future iterations:**
-  - API structure should exactly match acceptance criteria for consistency
-  - When API response shape changes, update both the interface definition and all UI references
-  - US-015/US-016 had already implemented most of the commission_summary logic - US-017 was mostly verification and standardization
----
-
-## 2026-01-21 ~18:10 - US-018
-- What was implemented: Added reconciliation navigation links to dashboard
-  - Added "View Reconciliation" button in Commissions section CardHeader, navigates to `/versotech_main/arranger-reconciliation`
-  - Made Outstanding Invoices KPI card clickable with "View Invoices" link, navigates to `/versotech_main/reconciliation`
-  - Added ArrowRight icon to both links for visual consistency
-  - Added hover states with `hover:bg-accent/50` for Outstanding Invoices card
-  - Restructured Commissions CardHeader to `flex flex-row items-start justify-between` layout for button placement
-- Files changed:
-  - `versotech-portal/src/components/fees/OverviewTab.tsx`
-- **Learnings for future iterations:**
-  - Main reconciliation page at `/versotech_main/reconciliation` handles invoice matching (staff page)
-  - Arranger reconciliation at `/versotech_main/arranger-reconciliation` handles commission reconciliation
-  - Button component with variant="outline" and size="sm" works well for CardHeader action buttons
-  - ArrowRight icon from lucide-react is good for navigation links within cards
-  - Clicking KPI cards can navigate to detailed views - use cursor-pointer and hover states
----
-
-## 2026-01-21 ~18:30 - US-019
-- What was implemented: Added Commission Status tab to lawyer reconciliation page
-  - Updated server page to fetch all 3 commission types (introducer, partner, commercial_partner) with investor data
-  - Added UnifiedCommission type with entity_type discriminator for normalized commission data
-  - Added Commission Status tab showing all commissions across entity types
-  - Table columns: Entity Type (with icon), Entity Name, Deal, Investor, Amount, Status, Invoice
-  - Status filter dropdown (All, Accrued, Invoice Requested, Invoiced, Paid)
-  - Entity type icons/colors: UserCheck (blue) for introducers, Handshake (green) for partners, Briefcase (purple) for commercial partners
-  - Commission status badges with appropriate colors: blue for accrued, amber for invoice_requested, purple for invoiced, green for paid
-- Files changed:
-  - `versotech-portal/src/app/(main)/versotech_main/lawyer-reconciliation/page.tsx`
-  - `versotech-portal/src/components/lawyer/lawyer-reconciliation-client.tsx`
-- **Learnings for future iterations:**
-  - Lawyer reconciliation page at `/versotech_main/lawyer-reconciliation` supports both lawyer and arranger personas
-  - Commission tables have consistent structure across all 3 types (introducer_commissions, partner_commissions, commercial_partner_commissions)
-  - Use discriminated union type (entity_type field) for unified commission objects
-  - Server page processes commission data into unified format before passing to client
-  - Entity type config pattern: Record<string, { label, icon, color }> for consistent rendering
----
-
-## 2026-01-21 ~19:00 - US-020
-- What was implemented: Verified and enhanced arranger reconciliation structure
-  - Verified three tabs exist: Introducers, Partners, Commercial Partners (already present in unified-reconciliation-client.tsx)
-  - Each tab uses CommissionTab component with respective API endpoint
-  - Added Investor column to data table (using investor_name from API response)
-  - Added Actions column with Request Invoice and Mark Paid buttons
-  - Request Invoice button (Mail icon, blue) - shown for 'accrued' status commissions
-  - Mark Paid button (CheckCircle icon, green) - shown for 'accrued', 'invoice_requested', 'invoiced' statuses
-  - Integrated RequestInvoiceDialog component from @/components/commissions/request-invoice-dialog
-  - Added toast notifications for action feedback using sonner
-  - Added typeToCommissionType mapping for dialog commission type
-- Files changed:
-  - `versotech-portal/src/components/arranger/reconciliation-tabs/commission-tab.tsx`
-- **Learnings for future iterations:**
-  - Arranger reconciliation uses reusable CommissionTab component for all 3 entity types
-  - API endpoints: introducer-reconciliation, partner-reconciliation, commercial-partner-reconciliation all return investor_name field
-  - Request Invoice API: `/api/arrangers/me/{type}-commissions/{id}/request-invoice` (type: introducer, partner, commercial-partner)
-  - Mark Paid API: `/api/staff/fees/commissions/{id}/mark-paid` with entity_type body param
-  - CommissionType for dialog maps: introducer -> 'introducer', partner -> 'partner', commercial_partner -> 'commercial-partner' (hyphenated)
-  - Action buttons show conditionally based on commission status
----
-
-## 2026-01-21 ~19:30 - US-021
-- What was implemented: Added reconciliation summary view to reconciliation page
-  - Added Reconciliation Summary Card at top of page (before tabs)
-  - Summary includes: Match Rate percentage (large display), Progress bar (Radix Progress component)
-  - Three KPIs: Total Outstanding (amber), Total Matched (green), Total Unmatched (red)
-  - Each KPI shows amount and transaction count
-  - Summary updates based on current filter selection via useMemo on filteredTransactions
-  - Shows "(filtered view)" indicator when filters are active
-  - Imported Progress component from @/components/ui/progress and TrendingUp icon from lucide-react
-- Files changed:
-  - `versotech-portal/src/app/(staff)/versotech/staff/reconciliation/components/reconciliation-page-client.tsx`
-- **Learnings for future iterations:**
-  - Radix Progress component available at @/components/ui/progress, accepts value prop (0-100)
-  - Reconciliation page has dual data sources: rawData (bank transactions) and invoices
-  - filteredTransactions is already computed via useMemo - can derive additional stats from it
-  - Stats API returns: total, matched, partiallyMatched, unmatched, totalAmount, matchedAmount, unmatchedAmount
-  - Use useMemo for derived summary stats to update when filters change
-  - Color convention: emerald for matched/success, amber for outstanding/pending, rose for unmatched/error
----
-
-## 2026-01-21 ~20:00 - US-022
-- What was implemented: Audited invoice generation accuracy and added validation
-  - Reviewed invoice generation endpoints: `/api/staff/fees/invoices/generate/route.ts`, `/api/staff/fees/invoices/route.ts`
-  - Verified formula: invoice.total = SUM(fee_events.computed_amount) + SUM(custom_line_items.amount)
-  - Added `validateInvoiceTotal()` function in calculations.ts with comprehensive validation
-  - Added `InvoiceLineWithFeeEvent` interface for type-safe validation input
-  - Updated GET `/api/staff/fees/invoices/[id]` to include validation result in response
-  - Updated GET `/api/staff/fees/invoices` to add `has_discrepancy` and `discrepancy_amount` to each invoice
-  - Added console warning in invoice generation endpoint if total doesn't match expected
-  - Validation includes: line-level checks, subtotal vs total verification, discrepancy percentage
-- Files changed:
-  - `versotech-portal/src/lib/fees/calculations.ts` (added validateInvoiceTotal and InvoiceLineWithFeeEvent)
-  - `versotech-portal/src/app/api/staff/fees/invoices/[id]/route.ts` (added validation to GET response)
-  - `versotech-portal/src/app/api/staff/fees/invoices/route.ts` (added has_discrepancy to list response)
-  - `versotech-portal/src/app/api/staff/fees/invoices/generate/route.ts` (added console warning)
-- **Learnings for future iterations:**
-  - Invoice generation endpoints are in `/api/staff/fees/invoices/` directory
-  - InvoiceLine type already exists in `/lib/fees/types.ts` - created InvoiceLineWithFeeEvent to avoid conflict
-  - Invoice list API fetches invoice lines via nested select, so validation can run on response
-  - formatCurrency() helper in calculations.ts for consistent currency formatting in logs/messages
-  - Allow 0.01 tolerance for rounding differences in validation
----
-
-## 2026-01-21 ~18:15 - US-023
-- What was implemented: Added invoice discrepancy warning badge with popover details
-  - Added AlertTriangle icon import and Popover component import to InvoicesTab
-  - Added amber "Discrepancy" badge next to invoice number in card header
-  - Badge only shows when invoice.has_discrepancy is true (API already returns this from US-022)
-  - Clicking badge opens Popover showing:
-    - "Invoice Discrepancy Detected" header with warning icon
-    - Explanation text about total mismatch
-    - Invoice Total amount
-    - Expected Total amount (calculated as total - discrepancy_amount)
-    - Discrepancy amount highlighted in amber
-    - Help text to review line items
-  - Updated InvoiceWithLines interface in types.ts to include has_discrepancy and discrepancy_amount optional fields
-- Files changed:
-  - `versotech-portal/src/components/fees/InvoicesTab.tsx`
-  - `versotech-portal/src/lib/fees/types.ts`
-- **Learnings for future iterations:**
-  - API already returns has_discrepancy and discrepancy_amount from US-022 validateInvoiceTotal() call
-  - Use Popover from @/components/ui/popover for click-to-reveal details
-  - AlertTriangle icon from lucide-react is standard for warnings
-  - Amber color scheme (amber-600, amber-100, dark:amber-900/30) for warning badges
-  - When API adds new fields, remember to update TypeScript interfaces in types.ts
----
-
-## 2026-01-21 ~20:30 - US-024
-- What was implemented: Clarified invoice UI labeling to distinguish investor invoices from entity invoices
-  - Updated page title from "Invoices" to "Investor Invoices"
-  - Added helper text: "Invoices sent to investors for fee collection"
-  - Wrapped title in a div to accommodate the new helper text below it
-  - Verified entity invoice uploads are in separate commission flow (/components/commissions/)
-- Files changed:
-  - `versotech-portal/src/components/fees/InvoicesTab.tsx`
-- **Learnings for future iterations:**
-  - Entity invoices are handled in `/components/commissions/` directory: submit-invoice-dialog.tsx, view-invoice-dialog.tsx
-  - The Fees > Invoices tab is specifically for investor fee collection (subscription fees, management fees, etc.)
-  - Commission invoice uploads go through `/api/commissions/[type]/[id]/invoice` endpoint (separate from staff fee invoices)
-  - Keep UI labeling clear to distinguish different invoice flows in the system
----
-
-## 2026-01-21 ~21:00 - US-025
-- What was implemented: Audited and verified existing spread fee calculation implementation
-  - Reviewed subscription-fee-calculator.ts (lines 191-203): spread fee events created with fee_type='spread_markup'
-  - Verified computed_amount = spread_fee_amount from subscription data
-  - Spread calculation in deal-close-handler.ts: spreadFeeAmount = (pricePerShare - costPerShare) × numShares
-  - Also set in approvals/[id]/action/route.ts during subscription creation
-  - createFeeEvents() function links fee events to subscription via allocation_id field (line 364)
-  - calculateSpread() utility function exists in calculations.ts with unit tests (lines 518-539 in test file)
-  - All acceptance criteria already satisfied by existing implementation - audit confirms correctness
-- Files reviewed (no changes made - audit only):
-  - `versotech-portal/src/lib/fees/subscription-fee-calculator.ts`
-  - `versotech-portal/src/lib/fees/calculations.ts`
-  - `versotech-portal/src/lib/deals/deal-close-handler.ts`
-  - `versotech-portal/src/app/api/approvals/[id]/action/route.ts`
-  - `versotech-portal/src/__tests__/lib/fees/calculations.test.ts`
-- **Learnings for future iterations:**
-  - Spread fees come from secondary trades where investor price > cost price
-  - spread_fee_amount is calculated at deal close or subscription approval time
-  - Formula: spreadFeeAmount = (pricePerShare - costPerShare) × numShares
-  - subscription-fee-calculator.ts reads spread_fee_amount from subscription and creates corresponding fee event
-  - Spread fee events use fee_type='spread_markup' (not 'spread')
-  - calculateSpread() in calculations.ts is a pure utility for price-based spread calculation
+  - Browser file download pattern: `response.blob()` → `URL.createObjectURL()` → create `<a>` element → `click()` → `URL.revokeObjectURL()`
+  - Always call `URL.revokeObjectURL()` after download to prevent memory leaks
+  - Use `toast.loading()` which returns an ID, then `toast.dismiss(id)` for clean loading state management
+  - Extract filename from Content-Disposition header with regex: `/filename="([^"]+)"/`
+  - Add `clearSelection` to useCallback dependencies when calling it inside the callback
 ---
