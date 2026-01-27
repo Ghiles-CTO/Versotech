@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo } from 'react'
 import { createPortal } from 'react-dom'
-import { X, Download, Loader2, AlertCircle, FileText } from 'lucide-react'
+import { X, Download, Loader2, AlertCircle, FileText, AlertTriangle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { formatFileSize } from '@/lib/utils'
 import { DocumentReference } from '@/types/document-viewer.types'
@@ -26,6 +26,25 @@ function isPdfFile(fileName?: string | null, url?: string | null): boolean {
   // Supabase signed URLs have the file path in them
   if (url?.includes('deal-documents') && url?.includes('.pdf')) return true
   return false
+}
+
+/**
+ * Check if a document has expired based on its expiry date
+ */
+function isDocumentExpired(expiryDate?: string | null): boolean {
+  if (!expiryDate) return false
+  return new Date(expiryDate) < new Date()
+}
+
+/**
+ * Format expiry date for display
+ */
+function formatExpiryDate(expiryDate: string): string {
+  return new Date(expiryDate).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  })
 }
 
 /**
@@ -106,9 +125,9 @@ export function DocumentViewerFullscreen({
 
   // Use portal to render at body level, escaping backdrop-blur containing blocks
   const modalContent = (
-    <div className="fixed inset-0 z-[9999] bg-black/95 overflow-hidden">
+    <div className="fixed inset-0 z-[9999] bg-black/95 overflow-hidden flex flex-col">
       {/* Toolbar */}
-      <div className="h-16 bg-white border-b shadow-md flex items-center justify-between px-6">
+      <div className="h-16 bg-white border-b shadow-md flex items-center justify-between px-6 flex-shrink-0">
         <div className="flex items-center gap-4 flex-1 min-w-0">
           <FileText className="h-5 w-5 text-gray-500 flex-shrink-0" />
           <div className="min-w-0 flex-1">
@@ -151,8 +170,18 @@ export function DocumentViewerFullscreen({
         </div>
       </div>
 
+      {/* Expired Document Banner */}
+      {isDocumentExpired(document?.document_expiry_date) && (
+        <div className="flex items-center gap-3 px-6 py-3 bg-amber-50 border-b border-amber-200">
+          <AlertTriangle className="h-5 w-5 text-amber-600 flex-shrink-0" />
+          <p className="text-sm font-medium text-amber-800">
+            This document expired on {formatExpiryDate(document!.document_expiry_date!)}
+          </p>
+        </div>
+      )}
+
       {/* Main viewport */}
-      <div className="h-[calc(100vh-4rem)] bg-gray-900">
+      <div className="flex-1 bg-gray-900 min-h-0">
         {/* Loading/error states need centering */}
         {(isLoading || error || iframeError) && (
           <div className="w-full h-full flex items-center justify-center">

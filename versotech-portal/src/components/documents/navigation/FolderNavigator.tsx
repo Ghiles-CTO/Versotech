@@ -34,6 +34,7 @@ import {
   Archive,
   Tag,
   History,
+  AlertTriangle,
 } from 'lucide-react'
 import {
   DropdownMenu,
@@ -50,6 +51,12 @@ import { DocumentCard } from '../document-card'
 import { TagBadges } from '../tag-badges'
 import { TagManagementPopover } from '../tag-management-popover'
 import { TagFilterDropdown } from '../tag-filter-dropdown'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -727,10 +734,26 @@ function SearchResultCard({
           <DocIcon className="w-5 h-5 text-primary" strokeWidth={2} />
         </div>
         <div className="flex-1 min-w-0">
-          {/* Name */}
-          <h4 className="text-sm font-medium text-foreground truncate group-hover:text-primary transition-colors">
-            {result.name}
-          </h4>
+          {/* Name with Expired Warning */}
+          <div className="flex items-center gap-2">
+            <h4 className="text-sm font-medium text-foreground truncate group-hover:text-primary transition-colors flex-1">
+              {result.name}
+            </h4>
+            {isDocumentExpired(result.document_expiry_date) && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex-shrink-0">
+                      <AlertTriangle className="w-4 h-4 text-amber-500" strokeWidth={2} />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Expired on {formatExpiryDate(result.document_expiry_date!)}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+          </div>
           {/* Path */}
           <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
             <ChevronRight className="w-3 h-3" />
@@ -791,6 +814,21 @@ function SearchResultRow({
       <div className="flex items-center gap-3 min-w-0">
         <DocIcon className="w-5 h-5 text-primary flex-shrink-0" strokeWidth={2} />
         <span className="text-sm font-medium text-foreground truncate">{result.name}</span>
+        {/* Expired Warning */}
+        {isDocumentExpired(result.document_expiry_date) && (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="flex-shrink-0">
+                  <AlertTriangle className="w-4 h-4 text-amber-500" strokeWidth={2} />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Expired on {formatExpiryDate(result.document_expiry_date!)}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
       </div>
 
       {/* Location Column */}
@@ -885,6 +923,25 @@ function formatFileSize(bytes?: number): string {
   if (bytes < 1024) return bytes + ' B'
   if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'
   return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
+}
+
+/**
+ * Check if a document has expired based on its expiry date
+ */
+function isDocumentExpired(expiryDate?: string | null): boolean {
+  if (!expiryDate) return false
+  return new Date(expiryDate) < new Date()
+}
+
+/**
+ * Format expiry date for display
+ */
+function formatExpiryDate(expiryDate: string): string {
+  return new Date(expiryDate).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  })
 }
 
 /**
@@ -984,6 +1041,21 @@ function DocumentListRow({
       <div className="flex items-center gap-3 min-w-0">
         <DocIcon className="w-5 h-5 text-primary flex-shrink-0" strokeWidth={2} />
         <span className="text-sm font-medium text-foreground truncate">{displayName}</span>
+        {/* Expired Warning - show AlertTriangle for expired documents */}
+        {isDocumentExpired(document.document_expiry_date) && (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="flex-shrink-0">
+                  <AlertTriangle className="w-4 h-4 text-amber-500" strokeWidth={2} />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Expired on {formatExpiryDate(document.document_expiry_date!)}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
         {/* Version Badge - only show for versioned documents */}
         {document.current_version && document.current_version > 1 && (
           <button

@@ -25,6 +25,7 @@ import {
   Tag,
   History,
   Upload,
+  AlertTriangle,
 } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
@@ -38,6 +39,12 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { TagBadges } from './tag-badges'
 import { TagManagementPopover } from './tag-management-popover'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 
 interface DocumentCardProps {
   document: Document
@@ -91,6 +98,25 @@ function formatDocumentType(type: DocumentType | string) {
     .split(' ')
     .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
     .join(' ')
+}
+
+/**
+ * Check if a document has expired based on its expiry date
+ */
+function isDocumentExpired(expiryDate?: string | null): boolean {
+  if (!expiryDate) return false
+  return new Date(expiryDate) < new Date()
+}
+
+/**
+ * Format expiry date for display
+ */
+function formatExpiryDate(expiryDate: string): string {
+  return new Date(expiryDate).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  })
 }
 
 
@@ -257,6 +283,21 @@ export function DocumentCard({
               <h3 className="font-semibold text-foreground text-sm leading-tight break-words line-clamp-2 flex-1">
                 {displayName}
               </h3>
+              {/* Expired Warning - show AlertTriangle for expired documents */}
+              {isDocumentExpired(document.document_expiry_date) && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="flex-shrink-0 p-1">
+                        <AlertTriangle className="w-4 h-4 text-amber-500" strokeWidth={2} />
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Expired on {formatExpiryDate(document.document_expiry_date!)}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
               {/* Version Badge - only show for versioned documents */}
               {document.current_version && document.current_version > 1 && (
                 <button
