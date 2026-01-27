@@ -48,6 +48,7 @@ import { FolderCard, FolderCardSkeleton } from './FolderCard'
 import { DocumentCard } from '../document-card'
 import { TagBadges } from '../tag-badges'
 import { TagManagementPopover } from '../tag-management-popover'
+import { TagFilterDropdown } from '../tag-filter-dropdown'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -126,6 +127,9 @@ interface FolderNavigatorProps {
   draggingDocumentId?: string | null
   onDocumentDragStart?: (e: React.DragEvent, documentId: string, documentName: string) => void
   onDocumentDragEnd?: (e: React.DragEvent) => void
+  // Tag filter props
+  selectedTagFilters?: Set<string>
+  onTagFiltersChange?: (tags: Set<string>) => void
 }
 
 /**
@@ -186,6 +190,9 @@ export function FolderNavigator({
   draggingDocumentId = null,
   onDocumentDragStart,
   onDocumentDragEnd,
+  // Tag filter props
+  selectedTagFilters = new Set<string>(),
+  onTagFiltersChange,
 }: FolderNavigatorProps) {
   const isEmpty = !isLoading && !isSearchMode && subfolders.length === 0 && documents.length === 0
   const hasContent = subfolders.length > 0 || documents.length > 0
@@ -273,6 +280,13 @@ export function FolderNavigator({
             </button>
           )}
           </div>
+          {/* Tag Filter Dropdown */}
+          {onTagFiltersChange && (
+            <TagFilterDropdown
+              selectedTags={selectedTagFilters}
+              onTagsChange={onTagFiltersChange}
+            />
+          )}
         </div>
 
         {/* Right: Controls */}

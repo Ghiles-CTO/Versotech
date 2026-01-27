@@ -158,6 +158,7 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [sortBy, setSortBy] = useState<'name' | 'date' | 'size'>('date')
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
+  const [selectedTagFilters, setSelectedTagFilters] = useState<Set<string>>(new Set())
 
   // Global Document Search State
   const [globalSearchQuery, setGlobalSearchQuery] = useState('')
@@ -178,16 +179,22 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
     }
   }, [])
 
-  // Load sort preferences from URL on mount
+  // Load sort preferences and tag filters from URL on mount
   useEffect(() => {
     const sortParam = searchParams.get('sort')
     const dirParam = searchParams.get('dir')
+    const tagsParam = searchParams.get('tags')
 
     if (sortParam === 'name' || sortParam === 'date' || sortParam === 'size') {
       setSortBy(sortParam)
     }
     if (dirParam === 'asc' || dirParam === 'desc') {
       setSortDir(dirParam)
+    }
+    // Load tag filters from URL (format: ?tags=urgent,review)
+    if (tagsParam) {
+      const tags = tagsParam.split(',').filter(t => t.trim())
+      setSelectedTagFilters(new Set(tags))
     }
   }, [searchParams])
 
@@ -221,6 +228,20 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
     setSortDir(newDir)
     updateSortUrl(sortBy, newDir)
   }, [sortBy, updateSortUrl])
+
+  // Handle tag filter changes and persist to URL
+  const handleTagFiltersChange = useCallback((newTags: Set<string>) => {
+    setSelectedTagFilters(newTags)
+
+    // Update URL params
+    const params = new URLSearchParams(searchParams.toString())
+    if (newTags.size > 0) {
+      params.set('tags', Array.from(newTags).join(','))
+    } else {
+      params.delete('tags')
+    }
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false })
+  }, [searchParams, router, pathname])
 
   // Global document search function (searches all documents globally)
   const performSearch = useCallback(async (query: string) => {
@@ -771,6 +792,14 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
       })
     }
 
+    // Tag filter - documents where tags[] contains ANY selected tag
+    if (selectedTagFilters.size > 0) {
+      result = result.filter(doc => {
+        if (!doc.tags || doc.tags.length === 0) return false
+        return doc.tags.some(tag => selectedTagFilters.has(tag))
+      })
+    }
+
     // Sort with direction support
     result = [...result].sort((a, b) => {
       let comparison = 0
@@ -788,7 +817,7 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
     })
 
     return result
-  }, [documents, searchQuery, sortBy, sortDir])
+  }, [documents, searchQuery, sortBy, sortDir, selectedTagFilters])
 
   // Select all visible/filtered documents (defined after filteredDocuments)
   const selectAllDocuments = useCallback(() => {
@@ -1865,6 +1894,9 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
               draggingDocumentId={draggingDocumentId}
               onDocumentDragStart={handleDocumentDragStart}
               onDocumentDragEnd={handleDocumentDragEnd}
+              // Tag filter props
+              selectedTagFilters={selectedTagFilters}
+              onTagFiltersChange={handleTagFiltersChange}
             />
           </div>
         </main>
