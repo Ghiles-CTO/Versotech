@@ -348,10 +348,10 @@ export function DocumentCard({
               {document.watermark && (
                 <Badge
                   variant="outline"
-                  className="text-xs border-emerald-200 bg-emerald-50 text-emerald-700"
+                  className="text-xs border-red-200 bg-red-50 text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-400"
                 >
                   <Shield className="w-3.5 h-3.5 mr-1" strokeWidth={2} />
-                  Watermarked
+                  CONFIDENTIAL
                 </Badge>
               )}
             </div>

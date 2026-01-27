@@ -35,6 +35,7 @@ import {
   Tag,
   History,
   AlertTriangle,
+  Shield,
 } from 'lucide-react'
 import {
   DropdownMenu,
@@ -762,6 +763,19 @@ function SearchResultCard({
         </div>
       </div>
 
+      {/* CONFIDENTIAL Badge */}
+      {!!result.watermark && (
+        <div className="mt-2">
+          <Badge
+            variant="outline"
+            className="text-xs border-red-200 bg-red-50 text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-400"
+          >
+            <Shield className="w-3 h-3 mr-1" strokeWidth={2} />
+            CONFIDENTIAL
+          </Badge>
+        </div>
+      )}
+
       {/* Tags */}
       {result.tags && result.tags.length > 0 && (
         <div className="mt-2">
@@ -828,6 +842,16 @@ function SearchResultRow({
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
+        )}
+        {/* CONFIDENTIAL Badge */}
+        {!!result.watermark && (
+          <Badge
+            variant="outline"
+            className="text-xs border-red-200 bg-red-50 text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-400 flex-shrink-0"
+          >
+            <Shield className="w-3 h-3 mr-1" strokeWidth={2} />
+            CONFIDENTIAL
+          </Badge>
         )}
       </div>
 
@@ -1068,6 +1092,16 @@ function DocumentListRow({
           >
             v{document.current_version}
           </button>
+        )}
+        {/* CONFIDENTIAL Badge - show for watermarked documents */}
+        {document.watermark && (
+          <Badge
+            variant="outline"
+            className="text-xs border-red-200 bg-red-50 text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-400 flex-shrink-0"
+          >
+            <Shield className="w-3 h-3 mr-1" strokeWidth={2} />
+            CONFIDENTIAL
+          </Badge>
         )}
       </div>
 

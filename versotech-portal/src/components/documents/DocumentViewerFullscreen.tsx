@@ -181,7 +181,7 @@ export function DocumentViewerFullscreen({
       )}
 
       {/* Main viewport */}
-      <div className="flex-1 bg-gray-900 min-h-0">
+      <div className="flex-1 bg-gray-900 min-h-0 relative">
         {/* Loading/error states need centering */}
         {(isLoading || error || iframeError) && (
           <div className="w-full h-full flex items-center justify-center">
@@ -239,6 +239,24 @@ export function DocumentViewerFullscreen({
               setIframeError(true)
             }}
           />
+        )}
+
+        {/* CONFIDENTIAL Watermark Overlay for watermarked documents */}
+        {document?.watermark && !isLoading && !error && !iframeError && (
+          <div
+            className="absolute inset-0 pointer-events-none flex items-center justify-center overflow-hidden"
+            aria-hidden="true"
+          >
+            <div
+              className="text-6xl md:text-8xl font-bold text-red-500 whitespace-nowrap select-none"
+              style={{
+                transform: 'rotate(-45deg)',
+                opacity: 0.3,
+              }}
+            >
+              CONFIDENTIAL - VERSO Holdings
+            </div>
+          </div>
         )}
       </div>
 
