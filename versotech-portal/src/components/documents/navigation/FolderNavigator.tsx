@@ -45,6 +45,7 @@ import { toast } from 'sonner'
 import { DocumentFolder, Document } from '@/types/documents'
 import { FolderCard, FolderCardSkeleton } from './FolderCard'
 import { DocumentCard } from '../document-card'
+import { TagBadges } from '../tag-badges'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -381,9 +382,10 @@ export function FolderNavigator({
                 {viewMode === 'list' && (
                   <div className="border border-border rounded-lg overflow-hidden">
                     {/* Table Header */}
-                    <div className="grid grid-cols-[1fr_200px_100px_140px] gap-4 px-4 py-3 bg-muted/50 border-b border-border text-sm font-medium text-muted-foreground">
+                    <div className="grid grid-cols-[1fr_200px_150px_100px_140px] gap-4 px-4 py-3 bg-muted/50 border-b border-border text-sm font-medium text-muted-foreground">
                       <div>Name</div>
                       <div>Location</div>
+                      <div>Tags</div>
                       <div>Size</div>
                       <div>Date</div>
                     </div>
@@ -518,7 +520,7 @@ export function FolderNavigator({
                     {/* Table Header - Clickable for sorting */}
                     <div className={cn(
                       "gap-4 px-4 py-3 bg-muted/50 border-b border-border text-sm font-medium text-muted-foreground grid",
-                      onToggleSelection ? "grid-cols-[40px_1fr_100px_140px_80px]" : "grid-cols-[1fr_100px_140px_80px]"
+                      onToggleSelection ? "grid-cols-[40px_1fr_150px_100px_140px_80px]" : "grid-cols-[1fr_150px_100px_140px_80px]"
                     )}>
                       {/* Checkbox Header */}
                       {onToggleSelection && (
@@ -553,6 +555,7 @@ export function FolderNavigator({
                           )
                         )}
                       </button>
+                      <div>Tags</div>
                       <button
                         onClick={() => onSortChange?.('size')}
                         className={cn(
@@ -703,6 +706,13 @@ function SearchResultCard({
         </div>
       </div>
 
+      {/* Tags */}
+      {result.tags && result.tags.length > 0 && (
+        <div className="mt-2">
+          <TagBadges tags={result.tags} maxVisible={2} size="sm" />
+        </div>
+      )}
+
       {/* Metadata */}
       <div className="flex items-center gap-4 mt-3 text-xs text-muted-foreground">
         <span>{formattedSize}</span>
@@ -742,7 +752,7 @@ function SearchResultRow({
   return (
     <div
       onClick={onClick}
-      className="grid grid-cols-[1fr_200px_100px_140px] gap-4 px-4 py-3 hover:bg-muted/50 transition-colors cursor-pointer items-center"
+      className="grid grid-cols-[1fr_200px_150px_100px_140px] gap-4 px-4 py-3 hover:bg-muted/50 transition-colors cursor-pointer items-center"
     >
       {/* Name Column */}
       <div className="flex items-center gap-3 min-w-0">
@@ -754,6 +764,11 @@ function SearchResultRow({
       <div className="flex items-center gap-1 text-sm text-muted-foreground truncate">
         <ChevronRight className="w-3 h-3 flex-shrink-0" />
         <span className="truncate">{pathDisplay}</span>
+      </div>
+
+      {/* Tags Column */}
+      <div className="overflow-hidden">
+        <TagBadges tags={result.tags} maxVisible={2} size="sm" />
       </div>
 
       {/* Size Column */}
@@ -909,7 +924,7 @@ function DocumentListRow({
       onDragEnd={onDragEnd}
       className={cn(
         "gap-4 px-4 py-3 hover:bg-muted/50 transition-colors cursor-pointer items-center grid",
-        showCheckbox ? "grid-cols-[40px_1fr_100px_140px_80px]" : "grid-cols-[1fr_100px_140px_80px]",
+        showCheckbox ? "grid-cols-[40px_1fr_150px_100px_140px_80px]" : "grid-cols-[1fr_150px_100px_140px_80px]",
         isSelected && "bg-primary/5",
         isDragging && "opacity-50 ring-2 ring-primary",
         onDragStart && "cursor-grab active:cursor-grabbing"
@@ -930,6 +945,11 @@ function DocumentListRow({
       <div className="flex items-center gap-3 min-w-0">
         <DocIcon className="w-5 h-5 text-primary flex-shrink-0" strokeWidth={2} />
         <span className="text-sm font-medium text-foreground truncate">{displayName}</span>
+      </div>
+
+      {/* Tags Column */}
+      <div className="overflow-hidden">
+        <TagBadges tags={document.tags} maxVisible={2} size="sm" />
       </div>
 
       {/* Size Column */}

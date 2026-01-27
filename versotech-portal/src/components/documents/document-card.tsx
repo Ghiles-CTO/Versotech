@@ -33,6 +33,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { TagBadges } from './tag-badges'
 
 interface DocumentCardProps {
   document: Document
@@ -288,6 +289,9 @@ export function DocumentCard({
                 </Badge>
               )}
             </div>
+
+            {/* Tags - Grid View: Show below document name */}
+            <TagBadges tags={document.tags} maxVisible={2} className="mt-2" />
           </div>
 
           {/* Context Menu */}

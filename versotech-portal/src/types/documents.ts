@@ -59,6 +59,12 @@ export interface Document {
     name: string
     path: string
   }
+  /** Document tags for categorization */
+  tags?: string[] | null
+  /** Current version number (for versioned documents) */
+  current_version?: number | null
+  /** Expiry date for time-sensitive documents */
+  document_expiry_date?: string | null
 }
 
 export interface DocumentFilters {
