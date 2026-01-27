@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import {
   Upload,
@@ -10,7 +10,8 @@ import {
   ArrowLeft,
   Home,
   Building2,
-  Package
+  Package,
+  Loader2
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -68,6 +69,25 @@ interface StaffDocument {
   }
 }
 
+// Search result from /api/staff/documents/search
+interface SearchResult {
+  id: string
+  name: string
+  type: string
+  file_size: number
+  status: string
+  created_at: string
+  updated_at: string
+  tags: string[] | null
+  current_version: number | null
+  document_expiry_date: string | null
+  watermark: unknown
+  folder_id: string | null
+  folder_name: string | null
+  vehicle_id: string | null
+  vehicle_name: string | null
+}
+
 interface StaffDocumentsClientProps {
   initialVehicles: Vehicle[]
   userProfile: {
@@ -115,6 +135,14 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [sortBy, setSortBy] = useState<'name' | 'date' | 'size'>('date')
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
+
+  // Global Document Search State
+  const [globalSearchQuery, setGlobalSearchQuery] = useState('')
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([])
+  const [isSearching, setIsSearching] = useState(false)
+  const [isSearchMode, setIsSearchMode] = useState(false)
+  const [searchTotal, setSearchTotal] = useState(0)
+  const searchDebounceRef = useRef<NodeJS.Timeout | null>(null)
 
   // Load viewMode from localStorage on mount (client-side only)
   useEffect(() => {
@@ -167,6 +195,85 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
     setSortDir(newDir)
     updateSortUrl(sortBy, newDir)
   }, [sortBy, updateSortUrl])
+
+  // Global document search function (searches all documents globally)
+  const performSearch = useCallback(async (query: string) => {
+    if (!query.trim()) {
+      setSearchResults([])
+      setIsSearchMode(false)
+      setSearchTotal(0)
+      return
+    }
+
+    setIsSearching(true)
+    setIsSearchMode(true)
+
+    try {
+      const params = new URLSearchParams({ q: query })
+
+      const response = await fetch(`/api/staff/documents/search?${params.toString()}`)
+
+      if (response.ok) {
+        const data = await response.json()
+        setSearchResults(data.results || [])
+        setSearchTotal(data.total || 0)
+      } else {
+        toast.error('Search failed')
+        setSearchResults([])
+        setSearchTotal(0)
+      }
+    } catch (error) {
+      console.error('Search error:', error)
+      toast.error('Search failed')
+      setSearchResults([])
+      setSearchTotal(0)
+    } finally {
+      setIsSearching(false)
+    }
+  }, [])
+
+  // Debounced search handler (300ms)
+  const handleGlobalSearchChange = useCallback((query: string) => {
+    setGlobalSearchQuery(query)
+
+    // Clear previous timeout
+    if (searchDebounceRef.current) {
+      clearTimeout(searchDebounceRef.current)
+    }
+
+    // If empty, exit search mode immediately
+    if (!query.trim()) {
+      setSearchResults([])
+      setIsSearchMode(false)
+      setSearchTotal(0)
+      return
+    }
+
+    // Debounce search API call
+    searchDebounceRef.current = setTimeout(() => {
+      performSearch(query)
+    }, 300)
+  }, [performSearch])
+
+  // Clear search and return to folder view
+  const clearSearch = useCallback(() => {
+    setGlobalSearchQuery('')
+    setSearchResults([])
+    setIsSearchMode(false)
+    setSearchTotal(0)
+    if (searchDebounceRef.current) {
+      clearTimeout(searchDebounceRef.current)
+    }
+  }, [])
+
+  // Cleanup debounce on unmount
+  useEffect(() => {
+    return () => {
+      if (searchDebounceRef.current) {
+        clearTimeout(searchDebounceRef.current)
+      }
+    }
+  }, [])
 
   // Tree Sidebar State
   const [treeSearchQuery, setTreeSearchQuery] = useState('')
@@ -1140,8 +1247,26 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
               searchQuery={searchQuery}
               onNavigateToFolder={navigateToFolder}
               onDocumentClick={(docId) => {
-                const doc = documents.find(d => d.id === docId)
-                if (doc) handlePreview(doc)
+                // Handle click from search results or regular documents
+                if (isSearchMode) {
+                  // For search results, find in search results and open preview
+                  const searchResult = searchResults.find(r => r.id === docId)
+                  if (searchResult) {
+                    // Convert search result to preview format
+                    handlePreview({
+                      id: searchResult.id,
+                      name: searchResult.name,
+                      type: searchResult.type,
+                      status: searchResult.status,
+                      file_size_bytes: searchResult.file_size,
+                      is_published: true,
+                      created_at: searchResult.created_at,
+                    })
+                  }
+                } else {
+                  const doc = documents.find(d => d.id === docId)
+                  if (doc) handlePreview(doc)
+                }
               }}
               onUploadClick={() => setUploadDialogOpen(true)}
               onCreateFolderClick={() => handleCreateFolder()}
@@ -1154,6 +1279,14 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
               onSortChange={handleSortChange}
               onSortDirChange={handleSortDirChange}
               onSearchChange={setSearchQuery}
+              // Global search props
+              globalSearchQuery={globalSearchQuery}
+              onGlobalSearchChange={handleGlobalSearchChange}
+              onClearSearch={clearSearch}
+              isSearchMode={isSearchMode}
+              isSearching={isSearching}
+              searchResults={searchResults}
+              searchTotal={searchTotal}
             />
           </div>
         </main>

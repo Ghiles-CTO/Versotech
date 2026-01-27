@@ -26,6 +26,9 @@ import {
   FileSignature,
   Clipboard,
   UserCheck,
+  X,
+  Loader2,
+  ChevronRight,
 } from 'lucide-react'
 import {
   DropdownMenu,
@@ -49,6 +52,25 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+
+// Search result from server-side search API
+interface SearchResult {
+  id: string
+  name: string
+  type: string
+  file_size: number
+  status: string
+  created_at: string
+  updated_at: string
+  tags: string[] | null
+  current_version: number | null
+  document_expiry_date: string | null
+  watermark: unknown
+  folder_id: string | null
+  folder_name: string | null
+  vehicle_id: string | null
+  vehicle_name: string | null
+}
 
 interface FolderNavigatorProps {
   currentFolderId: string | null
@@ -74,6 +96,14 @@ interface FolderNavigatorProps {
   onSearchChange?: (query: string) => void
   searchQuery?: string
   className?: string
+  // Global search props
+  globalSearchQuery?: string
+  onGlobalSearchChange?: (query: string) => void
+  onClearSearch?: () => void
+  isSearchMode?: boolean
+  isSearching?: boolean
+  searchResults?: SearchResult[]
+  searchTotal?: number
 }
 
 /**
@@ -112,24 +142,48 @@ export function FolderNavigator({
   onSearchChange,
   searchQuery = '',
   className,
+  // Global search props
+  globalSearchQuery = '',
+  onGlobalSearchChange,
+  onClearSearch,
+  isSearchMode = false,
+  isSearching = false,
+  searchResults = [],
+  searchTotal = 0,
 }: FolderNavigatorProps) {
-  const isEmpty = !isLoading && subfolders.length === 0 && documents.length === 0
+  const isEmpty = !isLoading && !isSearchMode && subfolders.length === 0 && documents.length === 0
   const hasContent = subfolders.length > 0 || documents.length > 0
 
   return (
     <div className={cn('flex flex-col h-full bg-background', className)}>
       {/* Toolbar - Always visible for search access */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 px-6 py-4 bg-muted/50 border-b border-border">
-        {/* Left: Search */}
+        {/* Left: Global Search */}
         <div className="relative w-full sm:w-auto sm:min-w-[300px]">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" strokeWidth={2} />
+          {isSearching ? (
+            <Loader2 className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-primary animate-spin" strokeWidth={2} />
+          ) : (
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" strokeWidth={2} />
+          )}
           <Input
             type="text"
-            placeholder="Search folders and documents..."
-            value={searchQuery}
-            onChange={(e) => onSearchChange?.(e.target.value)}
-            className="pl-10 h-9 text-sm"
+            placeholder="Search all documents..."
+            value={globalSearchQuery}
+            onChange={(e) => onGlobalSearchChange?.(e.target.value)}
+            className={cn(
+              "pl-10 h-9 text-sm",
+              globalSearchQuery && "pr-10"
+            )}
           />
+          {globalSearchQuery && (
+            <button
+              onClick={onClearSearch}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+              aria-label="Clear search"
+            >
+              <X className="w-4 h-4" strokeWidth={2} />
+            </button>
+          )}
         </div>
 
         {/* Right: Controls */}
@@ -198,26 +252,97 @@ export function FolderNavigator({
 
       {/* Content Area */}
       <div className="flex-1 overflow-auto">
-        {/* Loading State */}
-        {isLoading && (
+        {/* Search Mode - Show Search Results */}
+        {isSearchMode && (
           <div className="p-6">
-            <div
-              className={cn(
-                'grid gap-4',
-                viewMode === 'grid'
-                  ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
-                  : 'grid-cols-1'
-              )}
-            >
-              {Array.from({ length: 8 }).map((_, i) => (
-                <FolderCardSkeleton key={i} />
-              ))}
+            {/* Search Results Header */}
+            <div className="flex items-center gap-3 mb-6">
+              <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                Search Results
+              </h2>
+              <div className="flex-1 h-px bg-border" />
+              <span className="text-xs text-muted-foreground">
+                {isSearching ? 'Searching...' : `${searchTotal} result${searchTotal !== 1 ? 's' : ''}`}
+              </span>
             </div>
+
+            {/* Searching Loading State */}
+            {isSearching && (
+              <div className="flex flex-col items-center justify-center py-16">
+                <Loader2 className="w-8 h-8 text-primary animate-spin mb-4" strokeWidth={2} />
+                <p className="text-sm text-muted-foreground">Searching documents...</p>
+              </div>
+            )}
+
+            {/* Empty Search Results */}
+            {!isSearching && searchResults.length === 0 && (
+              <SearchEmptyState query={globalSearchQuery} onClearSearch={onClearSearch} />
+            )}
+
+            {/* Search Results Grid/List */}
+            {!isSearching && searchResults.length > 0 && (
+              <>
+                {viewMode === 'grid' && (
+                  <div className="grid gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-4">
+                    {searchResults.map((result) => (
+                      <SearchResultCard
+                        key={result.id}
+                        result={result}
+                        onClick={() => onDocumentClick(result.id)}
+                      />
+                    ))}
+                  </div>
+                )}
+
+                {viewMode === 'list' && (
+                  <div className="border border-border rounded-lg overflow-hidden">
+                    {/* Table Header */}
+                    <div className="grid grid-cols-[1fr_200px_100px_140px] gap-4 px-4 py-3 bg-muted/50 border-b border-border text-sm font-medium text-muted-foreground">
+                      <div>Name</div>
+                      <div>Location</div>
+                      <div>Size</div>
+                      <div>Date</div>
+                    </div>
+                    {/* Table Body */}
+                    <div className="divide-y divide-border">
+                      {searchResults.map((result) => (
+                        <SearchResultRow
+                          key={result.id}
+                          result={result}
+                          onClick={() => onDocumentClick(result.id)}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
           </div>
         )}
 
-        {/* Empty State */}
-        {isEmpty && !isLoading && <EmptyState onUploadClick={onUploadClick} onCreateFolderClick={onCreateFolderClick} />}
+        {/* Non-Search Mode Content */}
+        {!isSearchMode && (
+          <>
+            {/* Loading State */}
+            {isLoading && (
+              <div className="p-6">
+                <div
+                  className={cn(
+                    'grid gap-4',
+                    viewMode === 'grid'
+                      ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+                      : 'grid-cols-1'
+                  )}
+                >
+                  {Array.from({ length: 8 }).map((_, i) => (
+                    <FolderCardSkeleton key={i} />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Empty State */}
+            {isEmpty && !isLoading && <EmptyState onUploadClick={onUploadClick} onCreateFolderClick={onCreateFolderClick} />}
 
         {/* Content Grid */}
         {!isEmpty && !isLoading && (
@@ -355,6 +480,158 @@ export function FolderNavigator({
             )}
           </div>
         )}
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
+
+/**
+ * Search Empty State Component
+ */
+function SearchEmptyState({
+  query,
+  onClearSearch,
+}: {
+  query: string
+  onClearSearch?: () => void
+}) {
+  return (
+    <div className="flex flex-col items-center justify-center py-16 px-4">
+      {/* Icon */}
+      <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mb-6 border border-border">
+        <Search className="w-10 h-10 text-muted-foreground" strokeWidth={1.5} />
+      </div>
+
+      {/* Heading */}
+      <h3 className="text-lg font-semibold text-foreground mb-2">
+        No results for &ldquo;{query}&rdquo;
+      </h3>
+
+      {/* Description */}
+      <p className="text-sm text-muted-foreground mb-8 text-center max-w-md leading-relaxed">
+        Try adjusting your search terms or browse the folder tree to find what you&apos;re looking for.
+      </p>
+
+      {/* Actions */}
+      {onClearSearch && (
+        <Button onClick={onClearSearch} variant="outline" size="default">
+          <X className="w-4 h-4 mr-2" strokeWidth={2} />
+          Clear Search
+        </Button>
+      )}
+    </div>
+  )
+}
+
+/**
+ * Search Result Card Component (Grid View)
+ */
+function SearchResultCard({
+  result,
+  onClick,
+}: {
+  result: SearchResult
+  onClick: () => void
+}) {
+  const DocIcon = getDocumentIcon(result.type)
+  const formattedSize = formatFileSize(result.file_size)
+  const formattedDate = new Date(result.created_at).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  })
+
+  // Build path: Vehicle > Folder
+  const pathParts: string[] = []
+  if (result.vehicle_name) pathParts.push(result.vehicle_name)
+  if (result.folder_name) pathParts.push(result.folder_name)
+  const pathDisplay = pathParts.length > 0 ? pathParts.join(' > ') : 'Root'
+
+  return (
+    <div
+      onClick={onClick}
+      className="group relative p-4 rounded-lg border border-border bg-card hover:bg-accent/50 cursor-pointer transition-all duration-200 hover:shadow-md"
+    >
+      {/* Document Icon */}
+      <div className="flex items-start gap-3">
+        <div className="p-2 rounded-lg bg-primary/10">
+          <DocIcon className="w-5 h-5 text-primary" strokeWidth={2} />
+        </div>
+        <div className="flex-1 min-w-0">
+          {/* Name */}
+          <h4 className="text-sm font-medium text-foreground truncate group-hover:text-primary transition-colors">
+            {result.name}
+          </h4>
+          {/* Path */}
+          <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
+            <ChevronRight className="w-3 h-3" />
+            <span className="truncate">{pathDisplay}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Metadata */}
+      <div className="flex items-center gap-4 mt-3 text-xs text-muted-foreground">
+        <span>{formattedSize}</span>
+        <span className="flex items-center gap-1">
+          <Clock className="w-3 h-3" />
+          {formattedDate}
+        </span>
+      </div>
+    </div>
+  )
+}
+
+/**
+ * Search Result Row Component (List View)
+ */
+function SearchResultRow({
+  result,
+  onClick,
+}: {
+  result: SearchResult
+  onClick: () => void
+}) {
+  const DocIcon = getDocumentIcon(result.type)
+  const formattedSize = formatFileSize(result.file_size)
+  const formattedDate = new Date(result.created_at).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  })
+
+  // Build path: Vehicle > Folder
+  const pathParts: string[] = []
+  if (result.vehicle_name) pathParts.push(result.vehicle_name)
+  if (result.folder_name) pathParts.push(result.folder_name)
+  const pathDisplay = pathParts.length > 0 ? pathParts.join(' > ') : 'Root'
+
+  return (
+    <div
+      onClick={onClick}
+      className="grid grid-cols-[1fr_200px_100px_140px] gap-4 px-4 py-3 hover:bg-muted/50 transition-colors cursor-pointer items-center"
+    >
+      {/* Name Column */}
+      <div className="flex items-center gap-3 min-w-0">
+        <DocIcon className="w-5 h-5 text-primary flex-shrink-0" strokeWidth={2} />
+        <span className="text-sm font-medium text-foreground truncate">{result.name}</span>
+      </div>
+
+      {/* Location Column */}
+      <div className="flex items-center gap-1 text-sm text-muted-foreground truncate">
+        <ChevronRight className="w-3 h-3 flex-shrink-0" />
+        <span className="truncate">{pathDisplay}</span>
+      </div>
+
+      {/* Size Column */}
+      <div className="text-sm text-muted-foreground">{formattedSize}</div>
+
+      {/* Date Column */}
+      <div className="text-sm text-muted-foreground flex items-center gap-1">
+        <Clock className="w-3.5 h-3.5" strokeWidth={2} />
+        {formattedDate}
       </div>
     </div>
   )
