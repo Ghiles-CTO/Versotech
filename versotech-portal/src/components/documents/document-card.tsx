@@ -22,6 +22,7 @@ import {
   MoreVertical,
   Edit,
   Trash2,
+  Tag,
 } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
@@ -34,12 +35,14 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { TagBadges } from './tag-badges'
+import { TagManagementPopover } from './tag-management-popover'
 
 interface DocumentCardProps {
   document: Document
   onPreview?: (document: Document) => void
   onRename?: (documentId: string) => void
   onDelete?: (documentId: string) => void
+  onTagsUpdated?: (documentId: string, newTags: string[]) => void
   variant?: 'default' | 'compact'
   className?: string
   // Selection props
@@ -104,6 +107,7 @@ export function DocumentCard({
   onPreview,
   onRename,
   onDelete,
+  onTagsUpdated,
   variant = 'default',
   className,
   isSelected = false,
@@ -350,6 +354,20 @@ export function DocumentCard({
                   <span>Rename</span>
                 </DropdownMenuItem>
               )}
+              <TagManagementPopover
+                documentId={document.id}
+                documentName={displayName}
+                currentTags={document.tags || []}
+                onTagsUpdated={(newTags) => onTagsUpdated?.(document.id, newTags)}
+                trigger={
+                  <DropdownMenuItem
+                    onSelect={(e) => e.preventDefault()}
+                  >
+                    <Tag className="w-4 h-4 mr-2 text-muted-foreground" strokeWidth={2} />
+                    <span>Manage Tags</span>
+                  </DropdownMenuItem>
+                }
+              />
               {onDelete && (
                 <>
                   <DropdownMenuSeparator />

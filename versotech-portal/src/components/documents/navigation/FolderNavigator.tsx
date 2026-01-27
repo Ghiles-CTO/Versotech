@@ -32,6 +32,7 @@ import {
   ChevronDown,
   FolderInput,
   Archive,
+  Tag,
 } from 'lucide-react'
 import {
   DropdownMenu,
@@ -46,6 +47,7 @@ import { DocumentFolder, Document } from '@/types/documents'
 import { FolderCard, FolderCardSkeleton } from './FolderCard'
 import { DocumentCard } from '../document-card'
 import { TagBadges } from '../tag-badges'
+import { TagManagementPopover } from '../tag-management-popover'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -96,6 +98,7 @@ interface FolderNavigatorProps {
   onCreateSubfolder?: (parentId: string) => void
   onRenameDocument?: (documentId: string) => void
   onDeleteDocument?: (documentId: string) => void
+  onTagsUpdated?: (documentId: string, newTags: string[]) => void
   onViewModeChange?: (mode: 'grid' | 'list') => void
   onSortChange?: (sort: 'name' | 'date' | 'size') => void
   onSortDirChange?: (dir: 'asc' | 'desc') => void
@@ -155,6 +158,7 @@ export function FolderNavigator({
   onCreateSubfolder,
   onRenameDocument,
   onDeleteDocument,
+  onTagsUpdated,
   onViewModeChange,
   onSortChange,
   onSortDirChange,
@@ -503,6 +507,7 @@ export function FolderNavigator({
                         onPreview={() => onDocumentClick(document.id)}
                         onRename={onRenameDocument}
                         onDelete={onDeleteDocument}
+                        onTagsUpdated={onTagsUpdated}
                         variant="default"
                         isSelected={selectedDocuments.has(document.id)}
                         onSelectToggle={onToggleSelection ? () => onToggleSelection(document.id) : undefined}
@@ -599,6 +604,7 @@ export function FolderNavigator({
                           onPreview={() => onDocumentClick(document.id)}
                           onRename={onRenameDocument}
                           onDelete={onDeleteDocument}
+                          onTagsUpdated={onTagsUpdated}
                           isSelected={selectedDocuments.has(document.id)}
                           onSelectToggle={onToggleSelection ? () => onToggleSelection(document.id) : undefined}
                           showCheckbox={!!onToggleSelection}
@@ -862,6 +868,7 @@ function DocumentListRow({
   onPreview,
   onRename,
   onDelete,
+  onTagsUpdated,
   isSelected = false,
   onSelectToggle,
   showCheckbox = false,
@@ -873,6 +880,7 @@ function DocumentListRow({
   onPreview: () => void
   onRename?: (id: string) => void
   onDelete?: (id: string) => void
+  onTagsUpdated?: (documentId: string, newTags: string[]) => void
   isSelected?: boolean
   onSelectToggle?: () => void
   showCheckbox?: boolean
@@ -1014,6 +1022,20 @@ function DocumentListRow({
                 <span>Rename</span>
               </DropdownMenuItem>
             )}
+            <TagManagementPopover
+              documentId={document.id}
+              documentName={displayName}
+              currentTags={document.tags || []}
+              onTagsUpdated={(newTags) => onTagsUpdated?.(document.id, newTags)}
+              trigger={
+                <DropdownMenuItem
+                  onSelect={(e) => e.preventDefault()}
+                >
+                  <Tag className="w-4 h-4 mr-2 text-muted-foreground" strokeWidth={2} />
+                  <span>Manage Tags</span>
+                </DropdownMenuItem>
+              }
+            />
             {onDelete && (
               <>
                 <DropdownMenuSeparator />

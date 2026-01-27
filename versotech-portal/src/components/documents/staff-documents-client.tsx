@@ -57,6 +57,7 @@ interface StaffDocument {
   is_published: boolean
   created_at: string
   mime_type?: string
+  tags?: string[]
   folder?: {
     id: string
     name: string
@@ -1234,6 +1235,13 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
     }
   }
 
+  // Handle tags updated - optimistically update local state
+  const handleTagsUpdated = useCallback((documentId: string, newTags: string[]) => {
+    setDocuments(prevDocs => prevDocs.map(doc =>
+      doc.id === documentId ? { ...doc, tags: newTags } as StaffDocument : doc
+    ))
+  }, [])
+
   const handlePublishDocument = async (documentId: string) => {
     try {
       const response = await fetch(`/api/staff/documents/${documentId}/publish`, {
@@ -1831,6 +1839,7 @@ export function StaffDocumentsClient({ initialVehicles, userProfile }: StaffDocu
               onCreateSubfolder={handleCreateFolder}
               onRenameDocument={handleRenameDocument}
               onDeleteDocument={handleDeleteDocument}
+              onTagsUpdated={handleTagsUpdated}
               onViewModeChange={setViewMode}
               onSortChange={handleSortChange}
               onSortDirChange={handleSortDirChange}
